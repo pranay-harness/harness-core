@@ -129,8 +129,8 @@ public abstract class ContainerServiceSetup extends State {
           clusterName, containerInfrastructureMapping, containerTask);
 
       ContainerServiceElement containerServiceElement =
-          buildContainerServiceElement(phaseElement, serviceId, context.getWorkflowId(), containerInfrastructureMapping,
-              getContainerServiceNameFromExecutionData(executionData));
+          buildContainerServiceElement(phaseElement, serviceId, context.getWorkflowId(), context.getAppId(),
+              containerInfrastructureMapping, getContainerServiceNameFromExecutionData(executionData));
 
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -187,7 +187,8 @@ public abstract class ContainerServiceSetup extends State {
       imageDetails.name = dockerArtifactStream.getImageName();
       imageDetails.sourceName = dockerArtifactStream.getSourceName();
       DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
-      encryptionService.decrypt(dockerConfig, kmsService.getEncryptionDetails(dockerConfig, context.getWorkflowId()));
+      encryptionService.decrypt(
+          dockerConfig, kmsService.getEncryptionDetails(dockerConfig, context.getWorkflowId(), context.getAppId()));
       imageDetails.registryUrl = dockerConfig.getDockerRegistryUrl();
       imageDetails.username = dockerConfig.getUsername();
       imageDetails.password = new String(dockerConfig.getPassword());
@@ -207,7 +208,8 @@ public abstract class ContainerServiceSetup extends State {
       // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
       if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
         AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-        encryptionService.decrypt(awsConfig, kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId()));
+        encryptionService.decrypt(
+            awsConfig, kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId()));
         imageDetails.password = awsHelperService.getAmazonEcrAuthToken(imageUrl.substring(0, imageUrl.indexOf('.')),
             ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       } else {
@@ -215,7 +217,7 @@ public abstract class ContainerServiceSetup extends State {
         // migration happens. The deployment code handles both the cases.
         EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
         imageDetails.password = awsHelperService.getAmazonEcrAuthToken(
-            ecrConfig, kmsService.getEncryptionDetails(ecrConfig, context.getWorkflowId()));
+            ecrConfig, kmsService.getEncryptionDetails(ecrConfig, context.getWorkflowId(), context.getAppId()));
       }
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
@@ -228,8 +230,8 @@ public abstract class ContainerServiceSetup extends State {
       imageDetails.name = artifactoryArtifactStream.getImageName();
       imageDetails.sourceName = artifactoryArtifactStream.getSourceName();
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
-      encryptionService.decrypt(
-          artifactoryConfig, kmsService.getEncryptionDetails(artifactoryConfig, context.getWorkflowId()));
+      encryptionService.decrypt(artifactoryConfig,
+          kmsService.getEncryptionDetails(artifactoryConfig, context.getWorkflowId(), context.getAppId()));
       imageDetails.registryUrl = artifactoryConfig.getArtifactoryUrl();
       imageDetails.username = artifactoryConfig.getUsername();
       imageDetails.password = new String(artifactoryConfig.getPassword());
@@ -245,7 +247,8 @@ public abstract class ContainerServiceSetup extends State {
     SettingValue value = settingAttribute.getValue();
     if (SettingVariableTypes.AWS.name().equals(value.getType())) {
       AwsConfig awsConfig = (AwsConfig) value;
-      return ecrService.getEcrImageUrl(awsConfig, kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId()),
+      return ecrService.getEcrImageUrl(awsConfig,
+          kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId()),
           ecrArtifactStream.getRegion(), ecrArtifactStream);
     } else {
       EcrConfig ecrConfig = (EcrConfig) value;
@@ -276,5 +279,6 @@ public abstract class ContainerServiceSetup extends State {
   protected abstract boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping);
 
   protected abstract ContainerServiceElement buildContainerServiceElement(PhaseElement phaseElement, String serviceId,
-      String workflowId, ContainerInfrastructureMapping infrastructureMapping, String containerServiceName);
+      String workflowId, String appId, ContainerInfrastructureMapping infrastructureMapping,
+      String containerServiceName);
 }

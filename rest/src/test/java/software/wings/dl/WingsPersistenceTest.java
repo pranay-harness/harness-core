@@ -539,7 +539,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     // decrypt and compare
     encryptionService.decrypt(
-        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null));
+        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null, null));
     assertEquals(password, new String(((JenkinsConfig) result.getValue()).getPassword()));
   }
 
@@ -572,7 +572,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(Arrays.equals(newPassword, ((JenkinsConfig) undecryptedResult.getValue()).getPassword())).isFalse();
 
     encryptionService.decrypt(
-        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null));
+        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null, null));
     assertTrue(Arrays.equals(newPassword, ((JenkinsConfig) result.getValue()).getPassword()));
   }
 

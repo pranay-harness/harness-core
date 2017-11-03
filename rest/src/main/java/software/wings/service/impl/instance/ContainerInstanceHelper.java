@@ -351,9 +351,9 @@ public class ContainerInstanceHelper {
 
     ContainerSyncRequest instanceSyncRequest = ContainerSyncRequest.builder().filter(containerFilter).build();
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      return kubernetesSyncService.getInstances(instanceSyncRequest, workflowId);
+      return kubernetesSyncService.getInstances(instanceSyncRequest, workflowId, appId);
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
-      return ecsSyncService.getInstances(instanceSyncRequest, workflowId);
+      return ecsSyncService.getInstances(instanceSyncRequest, workflowId, appId);
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);
@@ -370,7 +370,7 @@ public class ContainerInstanceHelper {
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
       containerFilter = KubernetesFilter.builder()
                             .replicationControllerNameSet(containerSvcNameSet)
-                            .kubernetesConfig(getKubernetesConfig(infrastructureMapping, workflowId))
+                            .kubernetesConfig(getKubernetesConfig(infrastructureMapping, workflowId, appId))
                             .build();
       containerFilter.setClusterName(clusterName);
 
@@ -397,7 +397,8 @@ public class ContainerInstanceHelper {
     return containerFilter;
   }
 
-  private KubernetesConfig getKubernetesConfig(InfrastructureMapping infrastructureMapping, String workflowId) {
+  private KubernetesConfig getKubernetesConfig(
+      InfrastructureMapping infrastructureMapping, String workflowId, String appId) {
     KubernetesConfig kubernetesConfig;
 
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
@@ -405,7 +406,7 @@ public class ContainerInstanceHelper {
       SettingAttribute computeProviderSetting =
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), workflowId),
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), workflowId, appId),
           gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
     } else {
       kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();

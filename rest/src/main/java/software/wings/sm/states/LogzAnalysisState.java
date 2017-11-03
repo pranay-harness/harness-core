@@ -56,11 +56,12 @@ public class LogzAnalysisState extends ElkAnalysisState {
     final LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final LogzDataCollectionInfo dataCollectionInfo = new LogzDataCollectionInfo(logzConfig,
-        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, hostnameField,
-        messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT, logCollectionStartTimeStamp, 0,
-        Integer.parseInt(timeDuration), hosts, kmsService.getEncryptionDetails(logzConfig, context.getWorkflowId()));
+    final LogzDataCollectionInfo dataCollectionInfo =
+        new LogzDataCollectionInfo(logzConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
+            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
+            getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
+            logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
+            kmsService.getEncryptionDetails(logzConfig, context.getWorkflowId(), context.getAppId()));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)

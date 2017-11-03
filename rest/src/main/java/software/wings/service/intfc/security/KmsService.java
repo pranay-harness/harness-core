@@ -41,7 +41,7 @@ public interface KmsService {
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 
-  List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workFlowId);
+  List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workFlowId, String appId);
 
   String getEncryptedYamlRef(Encryptable object, String appId, String fieldName, String entityName)
       throws IllegalAccessException;

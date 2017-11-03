@@ -104,7 +104,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   protected StateExecutionData createService(ExecutionContext context, String serviceName, ImageDetails imageDetails,
       String appName, String envName, String clusterName, ContainerInfrastructureMapping infrastructureMapping,
       ContainerTask containerTask) {
-    KubernetesConfig kubernetesConfig = fetchKubernetesConfig(infrastructureMapping, context.getWorkflowId());
+    KubernetesConfig kubernetesConfig =
+        fetchKubernetesConfig(infrastructureMapping, context.getWorkflowId(), context.getAppId());
 
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
@@ -196,11 +197,11 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   }
 
   private KubernetesConfig fetchKubernetesConfig(
-      ContainerInfrastructureMapping infrastructureMapping, String workflowId) {
+      ContainerInfrastructureMapping infrastructureMapping, String workflowId, String appId) {
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       return gkeClusterService.getCluster(settingAttribute,
-          kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId),
+          kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
           infrastructureMapping.getClusterName(),
           ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace());
     } else {
@@ -215,14 +216,15 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
 
   @Override
   protected ContainerServiceElement buildContainerServiceElement(PhaseElement phaseElement, String serviceId,
-      String workflowId, ContainerInfrastructureMapping infrastructureMapping, String containerServiceName) {
+      String workflowId, String appId, ContainerInfrastructureMapping infrastructureMapping,
+      String containerServiceName) {
     return aContainerServiceElement()
         .withUuid(serviceId)
         .withName(containerServiceName)
         .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
         .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
         .withClusterName(infrastructureMapping.getClusterName())
-        .withNamespace(fetchKubernetesConfig(infrastructureMapping, workflowId).getNamespace())
+        .withNamespace(fetchKubernetesConfig(infrastructureMapping, workflowId, appId).getNamespace())
         .withDeploymentType(DeploymentType.KUBERNETES)
         .withInfraMappingId(phaseElement.getInfraMappingId())
         .build();

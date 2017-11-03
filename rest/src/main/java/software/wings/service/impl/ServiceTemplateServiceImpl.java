@@ -367,8 +367,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ServiceVariable> templateServiceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), false);
 
-    return overrideServiceSettings(overrideServiceSettings(serviceVariables, allServiceVariables, workflowId),
-        templateServiceVariables, workflowId);
+    return overrideServiceSettings(overrideServiceSettings(serviceVariables, allServiceVariables, workflowId, appId),
+        templateServiceVariables, workflowId, appId);
   }
 
   /* (non-Javadoc)
@@ -399,8 +399,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * @param workflowId
    * @return the list
    */
-  private List<ServiceVariable> overrideServiceSettings(
-      List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables, String workflowId) {
+  private List<ServiceVariable> overrideServiceSettings(List<ServiceVariable> existingServiceVariables,
+      List<ServiceVariable> newServiceVariables, String workflowId, String appId) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (existingServiceVariables.size() != 0 || newServiceVariables.size() != 0) {
       logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
@@ -415,7 +415,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     logger.info("Service variables after overrides [{}]", mergedServiceSettings.toString());
     mergedServiceSettings.forEach(serviceVariable -> {
       if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-        encryptionService.decrypt(serviceVariable, kmsService.getEncryptionDetails(serviceVariable, workflowId));
+        encryptionService.decrypt(serviceVariable, kmsService.getEncryptionDetails(serviceVariable, workflowId, appId));
       }
     });
     return mergedServiceSettings;

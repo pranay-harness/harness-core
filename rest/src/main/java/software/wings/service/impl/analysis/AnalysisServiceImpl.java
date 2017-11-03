@@ -474,7 +474,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType) {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     List<EncryptedDataDetail> encryptedDataDetails =
-        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null);
+        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }

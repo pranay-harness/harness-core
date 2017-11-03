@@ -100,7 +100,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     }
 
     TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName, taskFamily,
-        region, settingAttribute, context.getServiceVariables(), context.getWorkflowId());
+        region, settingAttribute, context.getServiceVariables(), context.getWorkflowId(), context.getAppId());
 
     String containerServiceName = EcsConvention.getServiceName(taskFamily, taskDefinition.getRevision());
 
@@ -136,18 +136,20 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
     logger.info("Creating ECS service {} in cluster {}", containerServiceName, clusterName);
     awsClusterService.createService(region, settingAttribute,
-        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), context.getWorkflowId()),
+        kmsService.getEncryptionDetails(
+            (Encryptable) settingAttribute.getValue(), context.getWorkflowId(), context.getAppId()),
         createServiceRequest);
 
     logger.info("Cleaning up old versions");
-    cleanup(settingAttribute, region, containerServiceName, clusterName, context.getWorkflowId());
+    cleanup(settingAttribute, region, containerServiceName, clusterName, context.getWorkflowId(), context.getAppId());
 
     return buildExecutionData(clusterName, dockerImageName, exposePort, containerServiceName);
   }
 
   @Override
   protected ContainerServiceElement buildContainerServiceElement(PhaseElement phaseElement, String serviceId,
-      String workflowId, ContainerInfrastructureMapping infrastructureMapping, String containerServiceName) {
+      String workflowId, String appId, ContainerInfrastructureMapping infrastructureMapping,
+      String containerServiceName) {
     return aContainerServiceElement()
         .withUuid(serviceId)
         .withName(containerServiceName)
@@ -191,7 +193,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,
       String dockerImageName, String taskFamily, String region, SettingAttribute settingAttribute,
-      Map<String, String> serviceVariables, String workflowId) {
+      Map<String, String> serviceVariables, String workflowId, String appId) {
     String configTemplate;
     if (StringUtils.isNotEmpty(ecsContainerTask.getAdvancedConfig())) {
       configTemplate = ecsContainerTask.fetchAdvancedConfigNoComments();
@@ -230,19 +232,20 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
     logger.info("Creating task definition {} with container image {}", taskFamily, dockerImageName);
     return awsClusterService.createTask(region, settingAttribute,
-        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId),
+        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
         registerTaskDefinitionRequest);
   }
 
   private void cleanup(SettingAttribute settingAttribute, String region, String containerServiceName,
-      String clusterName, String workflowId) {
+      String clusterName, String workflowId, String appId) {
     int revision = getRevisionFromServiceName(containerServiceName);
     if (revision > KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - KEEP_N_REVISIONS;
       String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
       awsClusterService
           .getServices(region, settingAttribute,
-              kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId), clusterName)
+              kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
+              clusterName)
           .stream()
           .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
           .collect(Collectors.toList())
@@ -251,8 +254,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
               logger.info("Deleting old version: " + oldServiceName);
               awsClusterService.deleteService(region, settingAttribute,
-                  kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId), clusterName,
-                  oldServiceName);
+                  kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
+                  clusterName, oldServiceName);
             }
           });
     }

@@ -26,7 +26,7 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
   @Inject private KubernetesContainerService kubernetesContainerService;
 
   @Override
-  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId) {
+  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId, String appId) {
     KubernetesFilter filter = (KubernetesFilter) syncRequest.getFilter();
     List<ContainerInfo> result = new ArrayList<>();
     Set<String> replicationControllerNameSet = filter.getReplicationControllerNameSet();

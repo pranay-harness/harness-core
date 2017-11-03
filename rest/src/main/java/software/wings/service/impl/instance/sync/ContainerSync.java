@@ -8,5 +8,5 @@ import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
  * @author rktummala on 09/01/17
  */
 public interface ContainerSync {
-  ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId);
+  ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId, String appId);
 }

@@ -355,7 +355,7 @@ public class KmsServiceImpl implements KmsService {
   }
 
   @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workflowId) {
+  public List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workflowId, String appId) {
     if (object.isDecrypted()) {
       return Collections.emptyList();
     }
@@ -381,11 +381,13 @@ public class KmsServiceImpl implements KmsService {
                                        .fieldName(f.getName())
                                        .build());
           if (!StringUtils.isBlank(workflowId)) {
-            wingsPersistence.save(SecretUsageLog.builder()
-                                      .encryptedDataId(encryptedData.getUuid())
-                                      .workflowId(workflowId)
-                                      .accountId(encryptedData.getAccountId())
-                                      .build());
+            SecretUsageLog usageLog = SecretUsageLog.builder()
+                                          .encryptedDataId(encryptedData.getUuid())
+                                          .workflowId(workflowId)
+                                          .accountId(encryptedData.getAccountId())
+                                          .build();
+            usageLog.setAppId(appId);
+            wingsPersistence.save(usageLog);
           }
         } else if (f.get(object) != null) {
           encryptedDataDetails.add(
