@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
@@ -24,8 +23,6 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
-import software.wings.service.impl.logz.LogzSettingProvider;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoSettingProvider;
 import software.wings.sm.ContextElementType;
@@ -88,6 +85,11 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Sumo Logic Server")
   public String getAnalysisServerConfigId() {
     return analysisServerConfigId;
+  }
+
+  @Attributes(title = "Execute with previous steps")
+  public boolean getExecuteWithPreviousSteps() {
+    return super.isExecuteWithPreviousSteps();
   }
 
   @Override

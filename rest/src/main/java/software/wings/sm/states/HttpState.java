@@ -230,6 +230,11 @@ public class HttpState extends State {
     return asList(url, body, header, assertion);
   }
 
+  @Attributes(title = "Execute with previous steps")
+  public boolean getExecuteWithPreviousSteps() {
+    return super.isExecuteWithPreviousSteps();
+  }
+
   /**
    * {@inheritDoc}
    */

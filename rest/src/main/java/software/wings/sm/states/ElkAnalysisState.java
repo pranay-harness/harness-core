@@ -131,6 +131,11 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     return query;
   }
 
+  @Attributes(title = "Execute with previous steps")
+  public boolean getExecuteWithPreviousSteps() {
+    return super.isExecuteWithPreviousSteps();
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     final String timestampField = DEFAULT_TIME_FIELD;

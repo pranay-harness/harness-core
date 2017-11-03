@@ -168,6 +168,11 @@ public class JenkinsState extends State {
     return super.getWaitInterval();
   }
 
+  @Attributes(title = "Execute with previous steps")
+  public boolean getExecuteWithPreviousSteps() {
+    return super.isExecuteWithPreviousSteps();
+  }
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);

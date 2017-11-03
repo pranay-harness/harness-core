@@ -134,4 +134,9 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   public Logger getLogger() {
     return logger;
   }
+
+  @Attributes(title = "Execute with previous steps")
+  public boolean getExecuteWithPreviousSteps() {
+    return super.isExecuteWithPreviousSteps();
+  }
 }
