@@ -116,7 +116,8 @@ public class CloudWatchState extends State {
       throw new StateExecutionException("AWS account setting not found");
     }
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId());
+    List<EncryptedDataDetail> encryptionDetails =
+        kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId());
     ContextElement contextElement = (ContextElement) context.evaluateExpression("${instance}");
     if (contextElement != null) {
       HostElement hostElement = ((InstanceElement) contextElement).getHost();

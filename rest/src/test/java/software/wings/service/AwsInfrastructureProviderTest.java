@@ -67,7 +67,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   private AwsConfig awsConfig = (AwsConfig) awsSetting.getValue();
   @Before
   public void setUp() throws Exception {
-    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(infrastructureProvider, "kmsService", kmsService);
   }
 
@@ -200,7 +200,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     when(awsHelperService.getHostnameFromPrivateDnsName(HOST_NAME)).thenReturn(HOST_NAME);
 
     List<Host> hosts =
-        infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(null, infrastructureMapping, awsSetting);
+        infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(null, null, infrastructureMapping, awsSetting);
 
     assertThat(hosts)
         .hasSize(1)

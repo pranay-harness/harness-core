@@ -436,7 +436,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
       return infrastructureProvider
           .listHosts(awsInfraMapping, computeProviderSetting,
-              kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null),
+              kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
               new PageRequest<>())
           .getResponse();
     } else {
@@ -480,7 +480,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       GcpInfrastructureProvider infrastructureProvider =
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return emptyList();
   }
@@ -728,7 +728,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
     List<EncryptedDataDetail> encryptionDetails =
-        kmsService.getEncryptionDetails((Encryptable) hostConnectionSetting.getValue(), null);
+        kmsService.getEncryptionDetails((Encryptable) hostConnectionSetting.getValue(), null, null);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(hostConnectionSetting.getAccountId()).withAppId(validationRequest.getAppId()).build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
@@ -750,7 +750,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listApplications(region, computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return ImmutableList.of();
   }
@@ -762,7 +762,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return ImmutableList.of();
   }
@@ -774,7 +774,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return ImmutableList.of();
   }
@@ -816,11 +816,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      List<Host> hosts = infrastructureProvider
-                             .listHosts(awsInfrastructureMapping, computeProviderSetting,
-                                 kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null),
-                                 new PageRequest<>())
-                             .getResponse();
+      List<Host> hosts =
+          infrastructureProvider
+              .listHosts(awsInfrastructureMapping, computeProviderSetting,
+                  kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
+                  new PageRequest<>())
+              .getResponse();
       List<String> hostDisplayNames = new ArrayList<>();
       for (Host host : hosts) {
         String displayName = host.getPublicDns();
@@ -879,7 +880,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
       return awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
-          workflowId, awsInfrastructureMapping, computeProviderSetting);
+          workflowId, appId, awsInfrastructureMapping, computeProviderSetting);
     } else {
       throw new WingsException(
           INVALID_REQUEST, "message", "Auto Scale groups are only supported for AWS infrastructure mapping");

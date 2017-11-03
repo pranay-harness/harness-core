@@ -41,12 +41,12 @@ public class EcsContainerSyncImpl implements ContainerSync {
   @Inject private KmsService kmsService;
 
   @Override
-  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId) {
+  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId, String appId) {
     EcsFilter filter = (EcsFilter) syncRequest.getFilter();
     String nextToken = null;
     SettingAttribute settingAttribute = settingsService.get(filter.getAwsComputeProviderId());
     List<EncryptedDataDetail> encryptionDetails =
-        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId);
+        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId);
     Validator.notNullCheck("SettingAttribute", settingAttribute);
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptionDetails);
     Validator.notNullCheck("AwsConfig", awsConfig);

@@ -221,17 +221,18 @@ public class BambooState extends State {
     final String finalPlanName = evaluatedPlanName;
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = DelegateTask.Builder.aDelegateTask()
-                                    .withTaskType(getTaskType())
-                                    .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                    .withWaitId(activityId)
-                                    .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .withParameters(new Object[] {bambooConfig,
-                                        kmsService.getEncryptionDetails(bambooConfig, context.getWorkflowId()),
-                                        finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.Builder.aDelegateTask()
+            .withTaskType(getTaskType())
+            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .withWaitId(activityId)
+            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+            .withParameters(new Object[] {bambooConfig,
+                kmsService.getEncryptionDetails(bambooConfig, context.getWorkflowId(), context.getAppId()),
+                finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
+            .withEnvId(envId)
+            .withInfrastructureMappingId(infrastructureMappingId)
+            .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
