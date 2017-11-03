@@ -232,7 +232,7 @@ public class CommandStateTest extends WingsBaseTest {
     commandState.setExecutorService(executorService);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(aJenkinsArtifactStream().withUuid(ARTIFACT_STREAM_ID).withAppId(APP_ID).build());
-    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(commandState, "kmsService", kmsService);
   }
 
@@ -307,6 +307,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getServiceVariables();
     verify(context, times(1)).getSafeDisplayServiceVariables();
     verify(context, times(3)).getWorkflowId();
+    verify(context, times(2)).getAppId();
     verify(context).getStateExecutionData();
 
     verify(context, times(4)).renderExpression(anyString());
@@ -425,6 +426,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getServiceVariables();
     verify(context, times(1)).getSafeDisplayServiceVariables();
     verify(context, times(3)).getWorkflowId();
+    verify(context, times(2)).getAppId();
     verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
@@ -478,6 +480,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(2)).get(anyString());
     verify(context, times(3)).getWorkflowId();
+    verify(context, times(2)).getAppId();
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementFailed(eq(APP_ID), anyString(), eq(1));

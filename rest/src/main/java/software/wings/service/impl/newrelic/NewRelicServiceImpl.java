@@ -69,7 +69,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
-          kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null);
+          kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       switch (stateType) {

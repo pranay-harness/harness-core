@@ -28,7 +28,8 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   @Override
   public List<String> listNamespaces(String settingId, String region) {
     AwsConfig awsConfig = getAwsConfig(settingId);
-    return awsHelperService.getCloudWatchMetrics(awsConfig, kmsService.getEncryptionDetails(awsConfig, null), region)
+    return awsHelperService
+        .getCloudWatchMetrics(awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region)
         .stream()
         .map(Metric::getNamespace)
         .distinct()
@@ -41,7 +42,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     listMetricsRequest.setNamespace(namespace);
     AwsConfig awsConfig = getAwsConfig(settingId);
     List<Metric> metrics = awsHelperService.getCloudWatchMetrics(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null), region, listMetricsRequest);
+        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region, listMetricsRequest);
     return metrics.stream().map(Metric::getMetricName).distinct().collect(Collectors.toList());
   }
 
@@ -51,7 +52,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     listMetricsRequest.withNamespace(namespace).withMetricName(metricName);
     AwsConfig awsConfig = getAwsConfig(settingId);
     List<Metric> metrics = awsHelperService.getCloudWatchMetrics(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null), region, listMetricsRequest);
+        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region, listMetricsRequest);
     return metrics.stream()
         .flatMap(metric -> metric.getDimensions().stream().map(Dimension::getName))
         .distinct()

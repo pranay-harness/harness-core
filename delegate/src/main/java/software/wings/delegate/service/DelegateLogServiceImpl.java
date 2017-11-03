@@ -33,26 +33,27 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   @Inject
   public DelegateLogServiceImpl(ManagerClient managerClient, ExecutorService executorService) {
-    this.cache =
-        Caffeine.newBuilder()
-            .executor(executorService)
-            .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
-            .removalListener((String accountId, List<Log> logs, RemovalCause removalCause) -> {
-              if (accountId == null || logs.size() == 0) {
-                logger.error("Unexpected Cache eviction accountId={}, logs={}", accountId, logs);
-                return;
-              }
-              try {
-                RestResponse<List<String>> restResponse = execute(managerClient.batchedSaveLogs(accountId, logs));
-                logger.info("{} log lines dispatched for accountId: {}", restResponse.getResource().size(), accountId);
-              } catch (IOException e) {
-                e.printStackTrace();
-                logger.error("Dispatch log failed. printing lost logs[{}]", logs.size());
-                logs.forEach(log -> logger.error(log.toString()));
-                logger.error("Finished printing lost logs");
-              }
-            })
-            .build();
+    this.cache = Caffeine.newBuilder()
+                     .executor(executorService)
+                     .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
+                     .removalListener((String accountId, List<Log> logs, RemovalCause removalCause) -> {
+                       if (accountId == null || logs.size() == 0) {
+                         logger.error("Unexpected Cache eviction accountId={}, logs={}", accountId, logs);
+                         return;
+                       }
+                       try {
+                         RestResponse<List<String>> restResponse =
+                             execute(managerClient.batchedSaveLogs(accountId, logs));
+                         logger.info("{} log lines dispatched for accountId: {}",
+                             restResponse.getResource() != null ? restResponse.getResource().size() : 0, accountId);
+                       } catch (IOException e) {
+                         e.printStackTrace();
+                         logger.error("Dispatch log failed. printing lost logs[{}]", logs.size());
+                         logs.forEach(log -> logger.error(log.toString()));
+                         logger.error("Finished printing lost logs");
+                       }
+                     })
+                     .build();
     Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
         () -> this.cache.cleanUp(), 1000, 1000, TimeUnit.MILLISECONDS); // periodic cleanup for expired keys
   }

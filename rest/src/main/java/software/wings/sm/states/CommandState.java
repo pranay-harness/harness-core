@@ -288,14 +288,14 @@ public class CommandState extends State {
       if (isNotEmpty(host.getHostConnAttr())) {
         SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
         commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
-        commandExecutionContextBuilder.withHostConnectionCredentials(
-            kmsService.getEncryptionDetails((Encryptable) hostConnectionAttribute.getValue(), context.getWorkflowId()));
+        commandExecutionContextBuilder.withHostConnectionCredentials(kmsService.getEncryptionDetails(
+            (Encryptable) hostConnectionAttribute.getValue(), context.getWorkflowId(), context.getAppId()));
       }
       if (isNotEmpty(host.getBastionConnAttr())) {
         SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
         commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
         commandExecutionContextBuilder.withBastionConnectionCredentials(kmsService.getEncryptionDetails(
-            (Encryptable) bastionConnectionAttribute.getValue(), context.getWorkflowId()));
+            (Encryptable) bastionConnectionAttribute.getValue(), context.getWorkflowId(), context.getAppId()));
       }
 
       if (command.isArtifactNeeded()) {

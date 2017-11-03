@@ -88,7 +88,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute()
                         .withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
                         .build());
-    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(cloudWatchState, "kmsService", kmsService);
   }
 

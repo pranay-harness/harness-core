@@ -151,11 +151,12 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final ElkDataCollectionInfo dataCollectionInfo = new ElkDataCollectionInfo(elkConfig,
-        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, indices,
-        hostnameField, messageField, timestampField, timestampFieldFormat, logCollectionStartTimeStamp, 0,
-        Integer.parseInt(timeDuration), hosts, kmsService.getEncryptionDetails(elkConfig, context.getWorkflowId()));
+    final ElkDataCollectionInfo dataCollectionInfo =
+        new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
+            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
+            getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
+            timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
+            kmsService.getEncryptionDetails(elkConfig, context.getWorkflowId(), context.getAppId()));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
