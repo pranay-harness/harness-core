@@ -573,7 +573,10 @@ public class DelegateServiceImpl implements DelegateService {
     assignDelegateService.saveConnectionResults(results);
 
     if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
-      return assignTask(delegateId, taskId, getUnassignedDelegateTask(accountId, taskId));
+      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+      if (delegateTask != null) {
+        return assignTask(delegateId, taskId, delegateTask);
+      }
     }
     return null;
   }
