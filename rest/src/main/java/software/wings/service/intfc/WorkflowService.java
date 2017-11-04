@@ -86,10 +86,11 @@ public interface WorkflowService {
    * @param workflow the workflow
    * @param inframappingChanged Inframapping changed or not
    * @param envChanged Env changed or not
+   * @param cloned cloned request or not
    * @return the workflow
    */
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
-      boolean inframappingChanged, boolean envChanged);
+      boolean inframappingChanged, boolean envChanged, boolean cloned);
 
   /**
    * Delete workflow.
