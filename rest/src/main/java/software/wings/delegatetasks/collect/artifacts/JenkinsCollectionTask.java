@@ -14,6 +14,7 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.waitnotify.ListNotifyResponseData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
@@ -25,15 +26,15 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 12/14/16.
  */
-public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNotifyResponseData> {
+public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(JenkinsCollectionTask.class);
 
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private EncryptionService encryptionService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public JenkinsCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<ListNotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
+  public JenkinsCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+      Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 

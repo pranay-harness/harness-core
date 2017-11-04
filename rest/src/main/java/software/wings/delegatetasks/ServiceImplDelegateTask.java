@@ -9,6 +9,7 @@ import com.google.inject.Key;
 
 import org.joor.ReflectException;
 import software.wings.beans.DelegateTask;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -16,11 +17,11 @@ import java.util.function.Supplier;
 /**
  * Created by peeyushaggarwal on 1/12/17.
  */
-public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask<RemoteMethodReturnValueData> {
+public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private Injector injector;
 
-  public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask,
-      Consumer<RemoteMethodReturnValueData> postExecute, Supplier<Boolean> preExecute) {
+  public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+      Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 
