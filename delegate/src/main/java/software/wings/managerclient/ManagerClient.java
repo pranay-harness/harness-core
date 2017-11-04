@@ -21,7 +21,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.dl.PageResponse;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -38,6 +38,16 @@ public interface ManagerClient {
   @POST("delegates/register")
   Call<RestResponse<Delegate>> registerDelegate(@Query("accountId") String accountId, @Body Delegate delegate);
 
+  @PUT("delegates/{delegateId}")
+  Call<RestResponse<Delegate>> sendHeartbeat(
+      @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body Delegate delegate);
+
+  @Headers({"Accept: application/x-kryo"})
+  @KryoResponse
+  @GET("delegates/{delegateId}/tasks")
+  Call<RestResponse<PageResponse<DelegateTask>>> getTasks(
+      @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+
   @Headers({"Content-Type: application/x-kryo"})
   @KryoRequest
   @POST("delegates/{delegateId}/tasks/{taskId}")
@@ -51,6 +61,10 @@ public interface ManagerClient {
 
   @GET("delegates/{delegateId}/upgrade")
   Call<RestResponse<DelegateScripts>> checkForUpgrade(
+      @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+
+  @GET("delegates/{delegateId}/upgrade-check")
+  Call<RestResponse<DelegateScripts>> checkForUpgradeScripts(
       @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
   @GET("service-templates/{templateId}/compute-files")
@@ -119,16 +133,6 @@ public interface ManagerClient {
   @KryoResponse
   @PUT("delegates/{delegateId}/tasks/{taskId}/acquire")
   Call<DelegateTask> acquireTask(
-      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
-
-  @KryoResponse
-  @POST("delegates/{delegateId}/tasks/{taskId}/report")
-  Call<DelegateTask> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
-      @Query("accountId") String accountId, @Body List<DelegateConnectionResult> results);
-
-  @KryoResponse
-  @GET("delegates/{delegateId}/tasks/{taskId}/proceed")
-  Call<DelegateTask> shouldProceedAnyway(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
   @KryoResponse

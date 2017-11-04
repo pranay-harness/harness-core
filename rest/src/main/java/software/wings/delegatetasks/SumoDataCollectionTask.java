@@ -16,7 +16,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -37,8 +36,8 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
-  public SumoDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
-      Supplier<Boolean> preExecute) {
+  public SumoDataCollectionTask(String delegateId, DelegateTask delegateTask,
+      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

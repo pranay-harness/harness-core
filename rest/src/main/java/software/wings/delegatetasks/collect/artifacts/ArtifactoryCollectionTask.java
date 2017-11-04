@@ -8,7 +8,6 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -19,13 +18,13 @@ import javax.inject.Inject;
 /**
  * Created by srinivas on 4/4/17.
  */
-public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
+public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<ListNotifyResponseData> {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactoryCollectionTask.class);
 
   @Inject private ArtifactoryService artifactoryService;
 
   public ArtifactoryCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
+      Consumer<ListNotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 

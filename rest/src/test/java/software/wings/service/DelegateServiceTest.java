@@ -5,7 +5,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -54,7 +53,6 @@ import software.wings.rules.Cache;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionStatus;
@@ -65,7 +63,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
-import java.util.Set;
 import javax.inject.Inject;
 
 /**
@@ -89,9 +86,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private Broadcaster broadcaster;
   @Mock private CacheHelper cacheHelper;
   @Mock private javax.cache.Cache<String, DelegateTask> cache;
-  @Mock private javax.cache.Cache<String, Set> validationCache;
   @Mock private FeatureFlagService featureFlagService;
-  @Mock private AssignDelegateService assignDelegateService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -118,7 +113,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     when(cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class)).thenReturn(cache);
-    when(cacheHelper.getCache("delegateValidationCache", String.class, Set.class)).thenReturn(validationCache);
   }
 
   @Test
@@ -175,6 +169,19 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldSaveDelegateTask() throws Exception {
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    delegateService.queueTask(delegateTask);
+    assertThat(wingsPersistence.get(DelegateTask.class, aPageRequest().build())).isEqualTo(delegateTask);
+  }
+
+  @Test
   public void shouldGetDelegateTasks() throws Exception {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
@@ -187,19 +194,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, UUIDGenerator.getUuid()))
         .hasSize(1)
         .containsExactly(delegateTask);
-  }
-
-  @Test
-  public void shouldSaveDelegateTask() throws Exception {
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withWaitId(UUIDGenerator.getUuid())
-                                    .withTaskType(TaskType.HTTP)
-                                    .withAppId(APP_ID)
-                                    .withParameters(new Object[] {})
-                                    .build();
-    delegateService.queueTask(delegateTask);
-    assertThat(wingsPersistence.get(DelegateTask.class, aPageRequest().build())).isEqualTo(delegateTask);
   }
 
   @Test
@@ -354,8 +348,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Cache
   @Test
   public void shouldAcquireTaskWhenQueued() throws Exception {
-    when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(true);
-    when(assignDelegateService.canAssign(any(DelegateTask.class), any(String.class))).thenReturn(true);
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)

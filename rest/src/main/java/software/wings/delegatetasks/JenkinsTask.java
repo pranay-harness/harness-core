@@ -22,7 +22,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,13 +33,13 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 12/14/16.
  */
-public class JenkinsTask extends AbstractDelegateRunnableTask {
+public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionResponse> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private EncryptionService encryptionService;
 
-  public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<JenkinsExecutionResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

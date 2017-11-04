@@ -185,26 +185,6 @@ public class WingsApplication extends Application<MainConfiguration> {
           }
         });
 
-    Caching.getCachingProvider().getCacheManager().createCache(
-        "delegateValidationCache", new Configuration<String, Set>() {
-          public static final long serialVersionUID = 1l;
-
-          @Override
-          public Class<String> getKeyType() {
-            return String.class;
-          }
-
-          @Override
-          public Class<Set> getValueType() {
-            return Set.class;
-          }
-
-          @Override
-          public boolean isStoreByValue() {
-            return true;
-          }
-        });
-
     Caching.getCachingProvider().getCacheManager().createCache("userCache", new Configuration<String, User>() {
       public static final long serialVersionUID = 1l;
 
