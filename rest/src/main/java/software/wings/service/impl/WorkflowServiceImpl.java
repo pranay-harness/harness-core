@@ -478,17 +478,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
     validateServiceandInframapping(workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
-    return updateWorkflow(workflow, orchestrationWorkflow, true, false, false);
+    return updateWorkflow(workflow, orchestrationWorkflow, true, false, false, false);
   }
 
   @Override
-  public Workflow updateWorkflow(
-      Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean inframappingChanged, boolean envChanged) {
-    return updateWorkflow(workflow, orchestrationWorkflow, true, inframappingChanged, envChanged);
+  public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
+      boolean inframappingChanged, boolean envChanged, boolean cloned) {
+    return updateWorkflow(workflow, orchestrationWorkflow, true, inframappingChanged, envChanged, cloned);
   }
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
-      boolean onSaveCallNeeded, boolean inframappingChanged, boolean envChanged) {
+      boolean onSaveCallNeeded, boolean inframappingChanged, boolean envChanged, boolean cloned) {
     UpdateOperations<Workflow> ops = wingsPersistence.createUpdateOperations(Workflow.class);
     setUnset(ops, "description", workflow.getDescription());
     setUnset(ops, "name", workflow.getName());
@@ -525,10 +525,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
         updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       }
-
-      EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), WORKFLOW,
-          workflow.getUuid(), workflow.getName(), ChangeType.UPDATED, workflow.getNotes());
-      workflow.setDefaultVersion(entityVersion.getVersion());
+      if (!cloned) {
+        EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), WORKFLOW,
+            workflow.getUuid(), workflow.getName(), ChangeType.UPDATED, workflow.getNotes());
+        workflow.setDefaultVersion(entityVersion.getVersion());
+      }
 
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
@@ -1447,7 +1448,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, inframappingChanged, false)
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, inframappingChanged, false, false)
             .getOrchestrationWorkflow();
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
@@ -1531,7 +1532,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (originalWorkflow.getOrchestrationWorkflow() != null) {
       savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
     }
-    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false);
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false, true);
   }
 
   @Override
@@ -1561,7 +1562,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         clonedOrchestrationWorkflow.setCloneMetadata(cloneMetadata.getServiceMapping());
         savedWorkflow.setOrchestrationWorkflow(clonedOrchestrationWorkflow);
       }
-      return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, true, true);
+      return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, true, true, true);
     }
   }
 
