@@ -585,7 +585,10 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
     // Tell delegate whether to proceed anyway because all eligible delegates failed.
     if (!cacheHelper.getCache("delegateValidationCache", String.class, Set.class).containsKey(taskId)) {
-      return assignTask(delegateId, taskId, getUnassignedDelegateTask(accountId, taskId));
+      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+      if (delegateTask != null) {
+        return assignTask(delegateId, taskId, delegateTask);
+      }
     }
     return null;
   }
