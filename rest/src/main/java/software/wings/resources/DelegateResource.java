@@ -20,6 +20,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -90,16 +91,6 @@ public class DelegateResource {
     return new RestResponse<>(delegateService.get(accountId, delegateId));
   }
 
-  @DELETE
-  @Path("{delegateId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Void> delete(
-      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    delegateService.delete(accountId, delegateId);
-    return new RestResponse<Void>();
-  }
-
   @DelegateAuth
   @PUT
   @Path("{delegateId}")
@@ -110,6 +101,16 @@ public class DelegateResource {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
     return new RestResponse<>(delegateService.update(delegate));
+  }
+
+  @DELETE
+  @Path("{delegateId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Void> delete(
+      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+    delegateService.delete(accountId, delegateId);
+    return new RestResponse<>();
   }
 
   @DelegateAuth
@@ -247,6 +248,29 @@ public class DelegateResource {
   }
 
   @DelegateAuth
+  @POST
+  @Produces("application/x-kryo")
+  @Path("{delegateId}/tasks/{taskId}/report")
+  @Timed
+  @ExceptionMetered
+  public DelegateTask reportConnectionResults(@PathParam("delegateId") String delegateId,
+      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
+      List<DelegateConnectionResult> results) {
+    return delegateService.reportConnectionResults(accountId, delegateId, taskId, results);
+  }
+
+  @DelegateAuth
+  @GET
+  @Produces("application/x-kryo")
+  @Path("{delegateId}/tasks/{taskId}/proceed")
+  @Timed
+  @ExceptionMetered
+  public DelegateTask shouldProceedAnyway(@PathParam("delegateId") String delegateId,
+      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return delegateService.shouldProceedAnyway(accountId, delegateId, taskId);
+  }
+
+  @DelegateAuth
   @PUT
   @Produces("application/x-kryo")
   @Path("{delegateId}/tasks/{taskId}/start")
@@ -258,35 +282,21 @@ public class DelegateResource {
   }
 
   @DelegateAuth
+  @PUT
+  @Path("{delegateId}/clear-connection-results")
+  @Timed
+  @ExceptionMetered
+  public void clearConnectionResults(
+      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+    delegateService.clearConnectionResults(delegateId);
+  }
+
+  @DelegateAuth
   @GET
   @Path("{delegateId}/upgrade")
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
-      @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
-      @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
-    return new RestResponse<>(delegateService.checkForUpgrade(
-        accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
-  }
-
-  @DelegateAuth
-  @PUT
-  @Path("{delegateId}/upgrading")
-  @Timed
-  @ExceptionMetered
-  public RestResponse setUpgradePending(@Context HttpServletRequest request,
-      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("upgrading") boolean upgrading) throws IOException, TemplateException {
-    // TODO(brett) - Remove this method once delegates have all upgraded past 1.0.235
-    return new RestResponse();
-  }
-
-  @DelegateAuth
-  @GET
-  @Path("{delegateId}/upgrade-check")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<DelegateScripts> checkForUpgradeScripts(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(delegateService.checkForUpgrade(

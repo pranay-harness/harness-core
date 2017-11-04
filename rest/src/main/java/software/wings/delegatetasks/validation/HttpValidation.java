@@ -1,12 +1,10 @@
-package software.wings.delegatetasks;
+package software.wings.delegatetasks.validation;
 
 import static com.google.common.base.Ascii.toUpperCase;
-import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
-import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
+import static java.util.Collections.singletonList;
 
 import com.google.common.base.Splitter;
 
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
@@ -16,18 +14,12 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.DelegateTask;
-import software.wings.sm.ExecutionStatus;
-import software.wings.waitnotify.NotifyResponseData;
+import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,32 +28,29 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
- * Created by peeyushaggarwal on 12/7/16.
+ * Created by brett on 11/2/17
  */
-public class HttpTask extends AbstractDelegateRunnableTask {
+public class HttpValidation extends AbstractDelegateValidateTask {
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
-
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+  public HttpValidation(
+      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTask, postExecute);
   }
 
   @Override
-  public HttpStateExecutionData run(Object[] parameters) {
-    return run((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
+  public List<DelegateConnectionResult> validate() {
+    Object[] parameters = getParameters();
+    return validate((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
         (Integer) parameters[4]);
   }
 
-  public HttpStateExecutionData run(String method, String url, String body, String headers, int socketTimeoutMillis) {
-    HttpStateExecutionData.Builder executionDataBuilder =
-        aHttpStateExecutionData().withHttpUrl(url).withHttpMethod(method);
+  private List<DelegateConnectionResult> validate(
+      String method, String url, String body, String headers, int socketTimeoutMillis) {
+    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
 
     SSLContextBuilder builder = new SSLContextBuilder();
     try {
@@ -83,6 +72,25 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     CloseableHttpClient httpclient =
         HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
 
+    HttpUriRequest httpUriRequest = getHttpUriRequest(method, url, body, headers);
+
+    resultBuilder.criteria(httpUriRequest.getURI().toString());
+    try {
+      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
+      int responseCode = httpResponse.getStatusLine().getStatusCode();
+      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
+        resultBuilder.validated(true);
+      } else {
+        resultBuilder.validated(false);
+      }
+    } catch (IOException e) {
+      resultBuilder.validated(false);
+    }
+
+    return singletonList(resultBuilder.build());
+  }
+
+  private HttpUriRequest getHttpUriRequest(String method, String url, String body, String headers) {
     HttpUriRequest httpUriRequest;
 
     switch (toUpperCase(method)) {
@@ -120,60 +128,15 @@ public class HttpTask extends AbstractDelegateRunnableTask {
         }
       }
     }
-
-    executionDataBuilder.withStatus(ExecutionStatus.SUCCESS);
-    try {
-      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-      executionDataBuilder.withHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
-      HttpEntity entity = httpResponse.getEntity();
-      executionDataBuilder.withHttpResponseBody(
-          entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
-    } catch (IOException e) {
-      logger.error("Exception occurred during HTTP task execution", e);
-      executionDataBuilder.withHttpResponseCode(500)
-          .withHttpResponseBody(getMessage(e))
-          .withErrorMsg(getMessage(e))
-          .withStatus(ExecutionStatus.ERROR);
-    }
-
-    return executionDataBuilder.build();
+    return httpUriRequest;
   }
 
-  public static final class Builder {
-    private String delegateId;
-    private DelegateTask delegateTask;
-    private Consumer<NotifyResponseData> postExecute;
-    private Supplier<Boolean> preExecute;
-
-    private Builder() {}
-
-    public static Builder aHttpTask() {
-      return new Builder();
-    }
-
-    public Builder withDelegateId(String delegateId) {
-      this.delegateId = delegateId;
-      return this;
-    }
-
-    public Builder withDelegateTask(DelegateTask delegateTask) {
-      this.delegateTask = delegateTask;
-      return this;
-    }
-
-    public Builder withPostExecute(Consumer<NotifyResponseData> postExecute) {
-      this.postExecute = postExecute;
-      return this;
-    }
-
-    public Builder withPreExecute(Supplier<Boolean> preExecute) {
-      this.preExecute = preExecute;
-      return this;
-    }
-
-    public HttpTask build() {
-      HttpTask httpTask = new HttpTask(delegateId, delegateTask, postExecute, preExecute);
-      return httpTask;
-    }
+  @Override
+  public List<String> getCriteria() {
+    Object[] parameters = getParameters();
+    return singletonList(getHttpUriRequest(
+        (String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3])
+                             .getURI()
+                             .toString());
   }
 }
