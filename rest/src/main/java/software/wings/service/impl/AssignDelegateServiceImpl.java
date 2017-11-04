@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -11,15 +9,10 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by brett on 7/20/17
@@ -30,7 +23,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
-  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public boolean canAssign(DelegateTask task, String delegateId) {
@@ -86,46 +78,5 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
 
     return match;
-  }
-
-  @Override
-  public boolean isWhitelisted(DelegateTask task, String delegateId) {
-    for (String criteria : task.getTaskType().getCriteria(task)) {
-      if (isNotBlank(criteria)) {
-        DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                              .field("delegateId")
-                                              .equal(delegateId)
-                                              .field("criteria")
-                                              .equal(criteria)
-                                              .get();
-        if (result != null && result.isValidated()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  @Override
-  public void saveConnectionResults(List<DelegateConnectionResult> results) {
-    results.forEach(result
-        -> result.setUuid(Optional
-                              .ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                              .field("accountId")
-                                              .equal(result.getAccountId())
-                                              .field("delegateId")
-                                              .equal(result.getDelegateId())
-                                              .field("criteria")
-                                              .equal(result.getCriteria())
-                                              .get())
-                              .orElse(result)
-                              .getUuid()));
-    wingsPersistence.save(results);
-  }
-
-  @Override
-  public void clearConnectionResults(String delegateId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(DelegateConnectionResult.class).field("delegateId").equal(delegateId));
   }
 }

@@ -9,7 +9,6 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
@@ -20,13 +19,15 @@ import javax.inject.Inject;
 /**
  * Created by rktummala on 7/30/17.
  */
-public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
+public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask<ListNotifyResponseData> {
   private final Logger logger = LoggerFactory.getLogger(AmazonS3CollectionTask.class);
 
-  @Inject private AmazonS3Service amazonS3Service;
+  @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public AmazonS3CollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
-      Supplier<Boolean> preExecute) {
+  @SuppressWarnings("Unused") @Inject private AmazonS3Service amazonS3Service;
+
+  public AmazonS3CollectionTask(String delegateId, DelegateTask delegateTask,
+      Consumer<ListNotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 

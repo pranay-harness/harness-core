@@ -26,7 +26,6 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -54,8 +53,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
   @Inject private MetricDataStoreService metricStoreService;
 
-  public NewRelicDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
-      Supplier<Boolean> preExecute) {
+  public NewRelicDataCollectionTask(String delegateId, DelegateTask delegateTask,
+      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

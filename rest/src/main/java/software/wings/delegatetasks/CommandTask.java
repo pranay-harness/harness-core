@@ -15,7 +15,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceCommandExecutorService;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -24,12 +23,12 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 1/6/17.
  */
-public class CommandTask extends AbstractDelegateRunnableTask {
+public class CommandTask extends AbstractDelegateRunnableTask<CommandExecutionResult> {
   private static final Logger logger = LoggerFactory.getLogger(CommandTask.class);
 
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
 
-  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<CommandExecutionResult> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

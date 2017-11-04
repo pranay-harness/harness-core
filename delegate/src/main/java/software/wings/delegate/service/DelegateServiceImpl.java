@@ -41,14 +41,11 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.exception.WingsException;
 import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,13 +63,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
@@ -484,133 +478,87 @@ public class DelegateServiceImpl implements DelegateService {
 
     try {
       logger.info(
-          "Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(), accountId);
-
+          "DelegateTask trying to acquire - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(), accountId);
       DelegateTask delegateTask =
           execute(managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-
-      if (delegateTask == null) {
-        logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}",
-            delegateTaskEvent.getDelegateTaskId(), delegateTaskEvent.getAccountId());
+      if (delegateTask != null) {
+        logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
+            delegateTask.getTaskType());
+        DelegateRunnableTask delegateRunnableTask =
+            delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask,
+                notifyResponseData
+                -> {
+                  Response<ResponseBody> response = null;
+                  try {
+                    response = managerClient
+                                   .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
+                                       aDelegateTaskResponse()
+                                           .withTask(delegateTask)
+                                           .withAccountId(accountId)
+                                           .withResponse(notifyResponseData)
+                                           .build())
+                                   .execute();
+                    logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
+                  } catch (IOException e) {
+                    logger.error("Unable to send response to manager", e);
+                  } finally {
+                    currentlyExecutingTasks.remove(delegateTask.getUuid());
+                    if (response != null && !response.isSuccessful()) {
+                      response.errorBody().close();
+                    }
+                    if (response != null && response.isSuccessful()) {
+                      response.body().close();
+                    }
+                  }
+                },
+                () -> {
+                  try {
+                    DelegateTask delegateTask1 =
+                        execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+                    boolean taskAcquired = delegateTask1 != null;
+                    if (taskAcquired) {
+                      if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
+                        logger.error(
+                            "Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
+                        return false;
+                      }
+                      currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
+                    }
+                    return taskAcquired;
+                  } catch (IOException e) {
+                    logger.error("Unable to update task status on manager", e);
+                    return false;
+                  }
+                });
+        injector.injectMembers(delegateRunnableTask);
+        currentlyExecutingFutures.putIfAbsent(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
+        executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
+        logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
+      } else {
+        logger.info("DelegateTask already executing - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
+            delegateTaskEvent.getAccountId());
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
-        return;
-      }
-
-      if (StringUtils.isEmpty(delegateTask.getDelegateId())) {
-        // Not whitelisted. Perform validation.
-        DelegateValidateTask delegateValidateTask = delegateTask.getTaskType().getDelegateValidateTask(
-            delegateId, delegateTask, getPostValidationMethod(delegateTaskEvent, delegateTask));
-        injector.injectMembers(delegateValidateTask);
-        currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
-        logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
-      } else if (delegateId.equals(delegateTask.getDelegateId())) {
-        // Whitelisted. Proceed immediately.
-        logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId,
-            delegateTaskEvent.getDelegateTaskId(), accountId);
-        executeTask(delegateTaskEvent, delegateTask);
       }
     } catch (IOException e) {
-      logger.error("Unable to get task for validation", e);
+      logger.error("Unable to acquire task", e);
     }
   }
 
-  private Consumer<List<DelegateConnectionResult>> getPostValidationMethod(
-      DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
-    return delegateConnectionResults -> {
-      String taskId = delegateTask.getUuid();
-      currentlyExecutingTasks.remove(taskId);
-      if (delegateConnectionResults != null) {
-        try {
-          DelegateTask delegateTask1 = execute(managerClient.reportConnectionResults(
-              delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, delegateConnectionResults));
-          if (delegateTask1 != null && delegateId.equals(delegateTask1.getDelegateId())) {
-            logger.info("Validation succeeded for task {}. Got the go-ahead to proceed.", taskId);
-            executeTask(delegateTaskEvent, delegateTask1);
-          } else {
-            logger.info("Did not validate task {}", taskId);
-            try {
-              logger.info("Waiting 2 seconds to give other delegates a chance to validate task {}.", taskId);
-              Thread.sleep(2000);
-            } catch (InterruptedException e) {
-              logger.warn("Sleep interrupted.", e);
-            }
-            try {
-              logger.info("Checking whether all delegates failed for task {}", taskId);
-              DelegateTask delegateTask2 = execute(
-                  managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-              if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
-                logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
-                executeTask(delegateTaskEvent, delegateTask2);
-              }
-            } catch (IOException e) {
-              logger.error("Unable to check whether to proceed", e);
-            }
-          }
-        } catch (IOException e) {
-          logger.error("Unable to report validation results", e);
-        }
-      }
-    };
+  private boolean isUpgradePending() {
+    return upgradePending;
   }
 
-  private void executeTask(DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
-    logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
-        delegateTask.getTaskType());
-    DelegateRunnableTask delegateRunnableTask = delegateTask.getTaskType().getDelegateRunnableTask(delegateId,
-        delegateTask, getPostExecutionMethod(delegateTask), getPreExecutionMethod(delegateTaskEvent, delegateTask));
-    injector.injectMembers(delegateRunnableTask);
-    currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
-    executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
-    logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
+  private void setUpgradePending(boolean upgradePending) {
+    logger.info("Setting delegate {} upgrade pending: {}", delegateId, upgradePending);
+    this.upgradePending = upgradePending;
   }
 
-  private Supplier<Boolean> getPreExecutionMethod(
-      DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
-    return () -> {
-      try {
-        DelegateTask delegateTask1 =
-            execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-        boolean taskAcquired = delegateTask1 != null;
-        if (taskAcquired) {
-          if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
-            logger.error("Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
-            return false;
-          }
-          currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
-        }
-        return taskAcquired;
-      } catch (IOException e) {
-        logger.error("Unable to update task status on manager", e);
-        return false;
-      }
-    };
+  private boolean isAcquireTasks() {
+    return acquireTasks;
   }
 
-  private Consumer<NotifyResponseData> getPostExecutionMethod(@NotNull DelegateTask delegateTask) {
-    return notifyResponseData -> {
-      Response<ResponseBody> response = null;
-      try {
-        response = managerClient
-                       .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
-                           aDelegateTaskResponse()
-                               .withTask(delegateTask)
-                               .withAccountId(accountId)
-                               .withResponse(notifyResponseData)
-                               .build())
-                       .execute();
-        logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
-      } catch (IOException e) {
-        logger.error("Unable to send response to manager", e);
-      } finally {
-        currentlyExecutingTasks.remove(delegateTask.getUuid());
-        if (response != null && !response.isSuccessful()) {
-          response.errorBody().close();
-        }
-        if (response != null && response.isSuccessful()) {
-          response.body().close();
-        }
-      }
-    };
+  public void setAcquireTasks(boolean acquireTasks) {
+    this.acquireTasks = acquireTasks;
   }
 
   private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
@@ -631,23 +579,6 @@ public class DelegateServiceImpl implements DelegateService {
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
     }
-  }
-
-  private boolean isUpgradePending() {
-    return upgradePending;
-  }
-
-  private void setUpgradePending(boolean upgradePending) {
-    logger.info("Setting delegate {} upgrade pending: {}", delegateId, upgradePending);
-    this.upgradePending = upgradePending;
-  }
-
-  private boolean isAcquireTasks() {
-    return acquireTasks;
-  }
-
-  public void setAcquireTasks(boolean acquireTasks) {
-    this.acquireTasks = acquireTasks;
   }
 
   private String getVersion() {

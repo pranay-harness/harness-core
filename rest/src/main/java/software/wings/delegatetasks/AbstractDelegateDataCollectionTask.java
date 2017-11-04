@@ -6,7 +6,6 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -20,7 +19,8 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 9/11/17.
  */
-public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegateRunnableTask {
+public abstract class AbstractDelegateDataCollectionTask
+    extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
   public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
 
   protected static final int RETRIES = 3;
@@ -30,7 +30,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   @Inject protected EncryptionService encryptionService;
 
   public AbstractDelegateDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

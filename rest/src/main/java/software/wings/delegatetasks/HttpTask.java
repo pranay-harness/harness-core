@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.DelegateTask;
 import software.wings.sm.ExecutionStatus;
-import software.wings.waitnotify.NotifyResponseData;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,14 +41,14 @@ import java.util.function.Supplier;
 /**
  * Created by peeyushaggarwal on 12/7/16.
  */
-public class HttpTask extends AbstractDelegateRunnableTask {
+public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionData> {
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<HttpStateExecutionData> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
@@ -66,13 +66,17 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     SSLContextBuilder builder = new SSLContextBuilder();
     try {
       builder.loadTrustMaterial((x509Certificates, s) -> true);
-    } catch (NoSuchAlgorithmException | KeyStoreException e) {
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    } catch (KeyStoreException e) {
       e.printStackTrace();
     }
     SSLConnectionSocketFactory sslsf = null;
     try {
       sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);
-    } catch (NoSuchAlgorithmException | KeyManagementException e) {
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    } catch (KeyManagementException e) {
       e.printStackTrace();
     }
 
@@ -83,32 +87,37 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     CloseableHttpClient httpclient =
         HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
 
-    HttpUriRequest httpUriRequest;
+    HttpUriRequest httpUriRequest = null;
 
     switch (toUpperCase(method)) {
-      case "GET":
+      case "GET": {
         httpUriRequest = new HttpGet(url);
         break;
-      case "POST":
+      }
+      case "POST": {
         HttpPost post = new HttpPost(url);
         if (body != null) {
           post.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
         }
         httpUriRequest = post;
         break;
-      case "PUT":
+      }
+      case "PUT": {
         HttpPut put = new HttpPut(url);
         if (body != null) {
           put.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
         }
         httpUriRequest = put;
         break;
-      case "DELETE":
+      }
+      case "DELETE": {
         httpUriRequest = new HttpDelete(url);
         break;
-      case "HEAD":
-      default:
+      }
+      case "HEAD": {
         httpUriRequest = new HttpHead(url);
+        break;
+      }
     }
 
     if (headers != null) {
@@ -142,7 +151,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
   public static final class Builder {
     private String delegateId;
     private DelegateTask delegateTask;
-    private Consumer<NotifyResponseData> postExecute;
+    private Consumer<HttpStateExecutionData> postExecute;
     private Supplier<Boolean> preExecute;
 
     private Builder() {}
@@ -161,7 +170,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
       return this;
     }
 
-    public Builder withPostExecute(Consumer<NotifyResponseData> postExecute) {
+    public Builder withPostExecute(Consumer<HttpStateExecutionData> postExecute) {
       this.postExecute = postExecute;
       return this;
     }
