@@ -55,6 +55,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -120,7 +121,7 @@ public class AwsCodeDeployState extends State {
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
 
-  @Inject @Transient protected transient KmsService kmsService;
+  @Inject @Transient protected transient SecretManager secretManager;
 
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
@@ -151,7 +152,7 @@ public class AwsCodeDeployState extends State {
             app.getUuid(), phaseElement.getInfraMappingId());
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails(
+    List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (Encryptable) cloudProviderSetting.getValue(), context.getWorkflowId(), context.getAppId());
     String region = infrastructureMapping.getRegion();
 

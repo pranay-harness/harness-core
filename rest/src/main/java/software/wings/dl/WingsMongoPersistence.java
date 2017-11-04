@@ -42,6 +42,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ import javax.inject.Named;
  */
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
 
@@ -330,9 +331,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
             if (shouldEncryptWhileUpdating(f, object, keyValuePairs)) {
               String accountId = object.getAccountId();
-              if (kmsService.shouldUseKms(accountId)) {
+              if (secretManager.getEncryptionType(accountId) != EncryptionType.LOCAL) {
                 Field encryptedField = getEncryptedRefField(f, object);
-                String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
+                String encryptedId =
+                    encrypt(object, (char[]) value, encryptedField, null, secretManager.getEncryptionType(accountId));
                 operations.set(encryptedField.getName(), encryptedId);
                 operations.unset(f.getName());
                 continue;
@@ -627,9 +629,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         String accountId = object.getAccountId();
         f.setAccessible(true);
         char[] secret = (char[]) f.get(object);
-        if (kmsService.shouldUseKms(accountId)) {
+        if (secretManager.getEncryptionType(accountId) != EncryptionType.LOCAL) {
           Field encryptedField = getEncryptedRefField(f, object);
-          encrypt(object, secret, encryptedField, savedObject);
+          encrypt(object, secret, encryptedField, savedObject, secretManager.getEncryptionType(accountId));
           f.set(object, null);
         } else {
           char[] outputChars = new SimpleEncryption(accountId).encryptChars((char[]) f.get(object));
@@ -643,15 +645,17 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
   }
 
-  private String encrypt(Encryptable object, char[] secret, Field encryptedField, Encryptable savedObject)
-      throws IllegalAccessException {
+  private String encrypt(Encryptable object, char[] secret, Field encryptedField, Encryptable savedObject,
+      EncryptionType encryptionType) throws IllegalAccessException {
     encryptedField.setAccessible(true);
+    String decryptedFieldName = getDecryptedField(encryptedField, object).getName();
     final String accountId = object.getAccountId();
     String encryptedId =
         savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
     EncryptedData encryptedData = StringUtils.isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
-    final KmsConfig kmsConfig = kmsService.getKmsConfig(accountId);
-    EncryptedData encryptedPair = kmsService.encrypt(secret, accountId, kmsConfig);
+    EncryptedData encryptedPair = secretManager.encrypt(
+        encryptionType, accountId, object.getSettingType(), secret, decryptedFieldName, encryptedData);
+
     String changeLogDescription = "";
 
     if (encryptedData == null) {
@@ -662,13 +666,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     } else {
       encryptedData.setEncryptionKey(encryptedPair.getEncryptionKey());
       encryptedData.setEncryptedValue(encryptedPair.getEncryptedValue());
-      changeLogDescription = "Changed " + getDecryptedField(encryptedField, object).getName();
+      changeLogDescription = "Changed " + decryptedFieldName;
     }
 
-    if (kmsConfig != null) {
-      encryptedData.setKmsId(kmsConfig.getUuid());
-    }
-    encryptedData.setEncryptionType(EncryptionType.KMS);
     encryptedId = save(encryptedData);
     save(SecretChangeLog.builder()
              .accountId(accountId)
@@ -737,36 +737,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
         delete(encryptedData);
       }
-    }
-  }
-
-  private void decrypt(Encryptable object) {
-    try {
-      List<Field> encryptedFields = object.getEncryptedFields();
-      for (Field f : encryptedFields) {
-        f.setAccessible(true);
-        String accountId = object.getAccountId();
-        char[] input = (char[]) f.get(object);
-
-        char[] outputChars;
-        Field encryptedField = getEncryptedRefField(f, object);
-        encryptedField.setAccessible(true);
-        String encryptedId = (String) encryptedField.get(object);
-        final EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
-        // this was encrypted using kms
-        if (input == null && encryptedData != null) {
-          final KmsConfig kmsConfig = kmsService.getKmsConfig(accountId);
-          outputChars = kmsService.decrypt(encryptedData, accountId, kmsConfig);
-        } else {
-          SimpleEncryption encryption = new SimpleEncryption(accountId);
-          outputChars = encryption.decryptChars(input);
-        }
-        f.set(object, outputChars);
-      }
-    } catch (SecurityException e) {
-      throw new WingsException("Security exception in encrypt", e);
-    } catch (IllegalAccessException e) {
-      throw new WingsException("Illegal access exception in encrypt", e);
     }
   }
 

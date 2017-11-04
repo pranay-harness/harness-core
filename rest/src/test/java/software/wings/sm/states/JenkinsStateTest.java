@@ -34,6 +34,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -59,7 +60,7 @@ public class JenkinsStateTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private DelegateService delegateService;
-  @Mock private KmsService kmsService;
+  @Mock private SecretManager secretManager;
 
   @InjectMocks private JenkinsState jenkinsState = new JenkinsState("jenkins");
 

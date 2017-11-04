@@ -10,6 +10,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateExecutionException;
 
 import java.util.List;
@@ -23,13 +24,13 @@ import javax.inject.Inject;
 public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public List<String> listNamespaces(String settingId, String region) {
     AwsConfig awsConfig = getAwsConfig(settingId);
     return awsHelperService
-        .getCloudWatchMetrics(awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region)
+        .getCloudWatchMetrics(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region)
         .stream()
         .map(Metric::getNamespace)
         .distinct()
@@ -42,7 +43,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     listMetricsRequest.setNamespace(namespace);
     AwsConfig awsConfig = getAwsConfig(settingId);
     List<Metric> metrics = awsHelperService.getCloudWatchMetrics(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region, listMetricsRequest);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, listMetricsRequest);
     return metrics.stream().map(Metric::getMetricName).distinct().collect(Collectors.toList());
   }
 
@@ -52,7 +53,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     listMetricsRequest.withNamespace(namespace).withMetricName(metricName);
     AwsConfig awsConfig = getAwsConfig(settingId);
     List<Metric> metrics = awsHelperService.getCloudWatchMetrics(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region, listMetricsRequest);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, listMetricsRequest);
     return metrics.stream()
         .flatMap(metric -> metric.getDimensions().stream().map(Dimension::getName))
         .distinct()

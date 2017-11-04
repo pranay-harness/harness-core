@@ -12,33 +12,19 @@ import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Base;
-import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.ServiceTemplate;
-import software.wings.beans.ServiceVariable;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.UuidAware;
-import software.wings.core.queue.Queue;
-import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
@@ -47,29 +33,21 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/29/17.
  */
-public class KmsServiceImpl implements KmsService {
-  private static final Logger logger = LoggerFactory.getLogger(KmsServiceImpl.class);
+public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   public static final String SECRET_MASK = "**************";
 
-  @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject private FeatureFlagService featureFlagService;
 
-  @Override
-  public boolean shouldUseKms(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.KMS, accountId) && getKmsConfig(accountId) != null;
+  private boolean shouldUseKms(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.KMS, accountId) && getSecretConfig(accountId) != null;
   }
 
   @Override
@@ -79,7 +57,7 @@ public class KmsServiceImpl implements KmsService {
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).encrypt(value, kmsConfig);
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).encrypt(value, kmsConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }
@@ -92,14 +70,14 @@ public class KmsServiceImpl implements KmsService {
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }
   }
 
   @Override
-  public KmsConfig getKmsConfig(String accountId) {
+  public KmsConfig getSecretConfig(String accountId) {
     KmsConfig kmsConfig = null;
     Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
                                     .field("accountId")
@@ -206,6 +184,8 @@ public class KmsServiceImpl implements KmsService {
                                         .equal(accountId)
                                         .field("kmsId")
                                         .equal(kmsConfigId)
+                                        .field("encryptionType")
+                                        .equal(EncryptionType.KMS)
                                         .fetch(new FindOptions().limit(1));
 
     if (query.hasNext()) {
@@ -218,25 +198,6 @@ public class KmsServiceImpl implements KmsService {
     Query<EncryptedData> deleteQuery =
         wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(kmsConfigId);
     return wingsPersistence.delete(deleteQuery);
-  }
-
-  @Override
-  public Collection<UuidAware> listEncryptedValues(String accountId) {
-    Map<String, UuidAware> rv = new HashMap<>();
-    Iterator<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("accountId").equal(accountId).fetch();
-    while (query.hasNext()) {
-      EncryptedData data = query.next();
-      if (data.getType() != SettingVariableTypes.KMS) {
-        UuidAware parent = fetchParent(data);
-        if (parent == null) {
-          logger.error("No parent found for {}", data);
-          continue;
-        }
-        rv.put(data.getParentId(), fetchParent(data));
-      }
-    }
-    return rv.values();
   }
 
   @Override
@@ -282,22 +243,7 @@ public class KmsServiceImpl implements KmsService {
 
   @Override
   public boolean transitionKms(String accountId, String fromKmsId, String toKmsId) {
-    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("kmsId")
-                                        .equal(fromKmsId)
-                                        .fetch();
-    while (query.hasNext()) {
-      EncryptedData dataToTransition = query.next();
-      transitionKmsQueue.send(KmsTransitionEvent.builder()
-                                  .accountId(accountId)
-                                  .entityId(dataToTransition.getUuid())
-                                  .fromKmsId(fromKmsId)
-                                  .toKmsId(toKmsId)
-                                  .build());
-    }
-    return true;
+    return transitionSecretStore(accountId, fromKmsId, toKmsId, EncryptionType.KMS);
   }
 
   @Override
@@ -319,9 +265,9 @@ public class KmsServiceImpl implements KmsService {
   }
 
   @Override
-  public EncryptedData encryptFile(BoundedInputStream inputStream, String accountId) {
+  public EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid) {
     try {
-      KmsConfig kmsConfig = getKmsConfig(accountId);
+      KmsConfig kmsConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(kmsConfig);
       byte[] bytes = ByteStreams.toByteArray(inputStream);
       EncryptedData fileData = encrypt(new String(bytes).toCharArray(), accountId, kmsConfig);
@@ -329,6 +275,7 @@ public class KmsServiceImpl implements KmsService {
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
       char[] encryptedValue = fileData.getEncryptedValue();
       fileData.setEncryptedValue(null);
+      fileData.setUuid(uuid);
       wingsPersistence.save(fileData);
 
       fileData.setEncryptedValue(encryptedValue);
@@ -341,7 +288,7 @@ public class KmsServiceImpl implements KmsService {
   @Override
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
-      KmsConfig kmsConfig = getKmsConfig(accountId);
+      KmsConfig kmsConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(kmsConfig);
       Preconditions.checkNotNull(encryptedData);
       byte[] bytes = Files.toByteArray(file);
@@ -354,127 +301,12 @@ public class KmsServiceImpl implements KmsService {
     }
   }
 
-  @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workflowId, String appId) {
-    if (object.isDecrypted()) {
-      return Collections.emptyList();
-    }
-
-    List<Field> encryptedFields = object.getEncryptedFields();
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    try {
-      for (Field f : encryptedFields) {
-        f.setAccessible(true);
-        if (shouldUseKms(object.getAccountId()) && f.get(object) == null) {
-          Field encryptedRefField = getEncryptedRefField(f, object);
-          encryptedRefField.setAccessible(true);
-          EncryptedData encryptedData =
-              wingsPersistence.get(EncryptedData.class, (String) encryptedRefField.get(object));
-          Preconditions.checkNotNull(encryptedData,
-              "field " + f.getName() + " has no reference for " + f.get(object) + "  for encryptable " + object);
-
-          KmsConfig kmsConfig = getKmsConfig(object.getAccountId(), encryptedData.getKmsId());
-          encryptedDataDetails.add(EncryptedDataDetail.builder()
-                                       .encryptionType(EncryptionType.KMS)
-                                       .encryptedData(encryptedData)
-                                       .kmsConfig(kmsConfig)
-                                       .fieldName(f.getName())
-                                       .build());
-          if (!StringUtils.isBlank(workflowId)) {
-            SecretUsageLog usageLog = SecretUsageLog.builder()
-                                          .encryptedDataId(encryptedData.getUuid())
-                                          .workflowId(workflowId)
-                                          .accountId(encryptedData.getAccountId())
-                                          .build();
-            usageLog.setAppId(appId);
-            wingsPersistence.save(usageLog);
-          }
-        } else if (f.get(object) != null) {
-          encryptedDataDetails.add(
-              EncryptedDataDetail.builder()
-                  .encryptionType(EncryptionType.LOCAL)
-                  .encryptedData(EncryptedData.builder().encryptedValue((char[]) f.get(object)).build())
-                  .fieldName(f.getName())
-                  .build());
-        }
-      }
-    } catch (IllegalAccessException e) {
-      throw new WingsException(e);
-    }
-
-    return encryptedDataDetails;
-  }
-
-  @Override
-  public String getEncryptedYamlRef(Encryptable object, String appId, String fieldName, String entityName)
-      throws IllegalAccessException {
-    List<Field> encryptedFields = object.getEncryptedFields();
-    Field encryptedField = null;
-    for (Field f : encryptedFields) {
-      if (f.getName().equals(fieldName)) {
-        encryptedField = f;
-        break;
-      }
-    }
-    Preconditions.checkNotNull(encryptedField, fieldName + " is not found in encrypted fields " + encryptedFields);
-
-    encryptedField.setAccessible(true);
-
-    // locally encrypted
-    if (encryptedField.get(object) != null) {
-      return EncryptionType.LOCAL + ":" + object.getAccountId() + ":" + appId + ":" + object.getSettingType() + ":"
-          + entityName + ":" + fieldName;
-    }
-
-    if (shouldUseKms(object.getAccountId())) {
-      Field encryptedFieldRef = getEncryptedRefField(encryptedField, object);
-      Preconditions.checkNotNull(encryptedField, "ref null for " + object);
-      encryptedFieldRef.setAccessible(true);
-      return EncryptionType.KMS + ":" + object.getAccountId() + ":" + appId + ":" + object.getSettingType() + ":"
-          + entityName + ":" + encryptedFieldRef.getName();
-    }
-
-    throw new IllegalStateException("Illegal encryption state for " + object);
-  }
-
-  @Override
-  public char[] decryptYamlRef(String encryptedYamlRef) throws NoSuchFieldException, IllegalAccessException {
-    Preconditions.checkState(!StringUtils.isBlank(encryptedYamlRef));
-    logger.info("Decrypting: {}", encryptedYamlRef);
-    String[] tags = encryptedYamlRef.split(":");
-    EncryptionType encryptionType = EncryptionType.valueOf(tags[0]);
-    String accountId = tags[1];
-    String appId = tags[2];
-    SettingVariableTypes variableType = SettingVariableTypes.valueOf(tags[3]);
-    String entityName = tags[4];
-    String fieldName = tags[5];
-
-    Encryptable entity = getEntityByName(accountId, appId, variableType, entityName);
-    Field field = entity.getClass().getDeclaredField(fieldName);
-    field.setAccessible(true);
-    switch (encryptionType) {
-      case LOCAL:
-        return decrypt(
-            EncryptedData.builder().encryptionKey(accountId).encryptedValue((char[]) field.get(entity)).build(), null,
-            null);
-
-      case KMS:
-        EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, (String) field.get(entity));
-        Preconditions.checkNotNull("No encrypted ref found for " + encryptedYamlRef);
-        Preconditions.checkState(!StringUtils.isBlank(encryptedData.getKmsId()), "KmsId null for " + encryptedYamlRef);
-        KmsConfig kmsConfig = getKmsConfig(accountId, encryptedData.getKmsId());
-        return decrypt(encryptedData, accountId, kmsConfig);
-
-      default:
-        throw new IllegalStateException("Invalid encryptionType: " + encryptionType);
-    }
-  }
-
   private void validateKms(String accountId, KmsConfig kmsConfig) {
     encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
   }
 
-  private KmsConfig getKmsConfig(String accountId, String entityId) {
+  @Override
+  public KmsConfig getKmsConfig(String accountId, String entityId) {
     KmsConfig kmsConfig = null;
     Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
                                     .field("accountId")
@@ -500,115 +332,15 @@ public class KmsServiceImpl implements KmsService {
     final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptionKey);
     char[] encryptChars = simpleEncryption.encryptChars(value);
 
-    return EncryptedData.builder().encryptionKey(encryptionKey).encryptedValue(encryptChars).build();
+    return EncryptedData.builder()
+        .encryptionKey(encryptionKey)
+        .encryptedValue(encryptChars)
+        .encryptionType(EncryptionType.LOCAL)
+        .build();
   }
 
   private char[] decryptLocal(EncryptedData data) {
     final SimpleEncryption simpleEncryption = new SimpleEncryption(data.getEncryptionKey());
     return simpleEncryption.decryptChars(data.getEncryptedValue());
-  }
-
-  private UuidAware fetchParent(EncryptedData data) {
-    switch (data.getType()) {
-      case KMS:
-        return getKmsConfig(data.getAccountId());
-
-      case SERVICE_VARIABLE:
-        Iterator<ServiceVariable> serviceVaribaleQuery = wingsPersistence.createQuery(ServiceVariable.class)
-                                                             .field("_id")
-                                                             .equal(data.getParentId())
-                                                             .fetch(new FindOptions().limit(1));
-        if (serviceVaribaleQuery.hasNext()) {
-          ServiceVariable serviceVariable = serviceVaribaleQuery.next();
-          serviceVariable.setValue(SECRET_MASK.toCharArray());
-          if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-            ServiceTemplate serviceTemplate =
-                wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
-            Preconditions.checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
-            serviceVariable.setServiceId(serviceTemplate.getServiceId());
-          }
-          return serviceVariable;
-        }
-        return null;
-
-      case CONFIG_FILE:
-        Iterator<ConfigFile> configFileQuery = wingsPersistence.createQuery(ConfigFile.class)
-                                                   .field("_id")
-                                                   .equal(data.getParentId())
-                                                   .fetch(new FindOptions().limit(1));
-        if (configFileQuery.hasNext()) {
-          ConfigFile configFile = configFileQuery.next();
-          if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-            ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, configFile.getEntityId());
-            Preconditions.checkNotNull(serviceTemplate, "can't find service template " + configFile);
-            configFile.setServiceId(serviceTemplate.getServiceId());
-          }
-          return configFile;
-        }
-        return null;
-
-      default:
-        Iterator<SettingAttribute> settingAttributeQuery = wingsPersistence.createQuery(SettingAttribute.class)
-                                                               .field("_id")
-                                                               .equal(data.getParentId())
-                                                               .fetch(new FindOptions().limit(1));
-        if (settingAttributeQuery.hasNext()) {
-          return settingAttributeQuery.next();
-        }
-        return null;
-    }
-  }
-
-  private Encryptable getEntityByName(
-      String accountId, String appId, SettingVariableTypes variableType, String entityName) {
-    Encryptable rv = null;
-    switch (variableType) {
-      case SERVICE_VARIABLE:
-        Iterator<ServiceVariable> serviceVaribaleQuery = wingsPersistence.createQuery(ServiceVariable.class)
-                                                             .field("accountId")
-                                                             .equal(accountId)
-                                                             .field("appId")
-                                                             .equal(appId)
-                                                             .field("name")
-                                                             .equal(entityName)
-                                                             .fetch(new FindOptions().limit(1));
-        if (serviceVaribaleQuery.hasNext()) {
-          ServiceVariable serviceVariable = serviceVaribaleQuery.next();
-          rv = serviceVariable;
-        }
-        break;
-
-      case CONFIG_FILE:
-        Iterator<ConfigFile> configFileQuery = wingsPersistence.createQuery(ConfigFile.class)
-                                                   .field("accountId")
-                                                   .equal(accountId)
-                                                   .field("appId")
-                                                   .equal(appId)
-                                                   .field("name")
-                                                   .equal(entityName)
-                                                   .fetch(new FindOptions().limit(1));
-        if (configFileQuery.hasNext()) {
-          rv = configFileQuery.next();
-        }
-        break;
-
-      default:
-        Iterator<SettingAttribute> settingAttributeQuery = wingsPersistence.createQuery(SettingAttribute.class)
-                                                               .field("accountId")
-                                                               .equal(accountId)
-                                                               .field("name")
-                                                               .equal(entityName)
-                                                               .field("value.type")
-                                                               .equal(variableType)
-                                                               .fetch(new FindOptions().limit(1));
-        if (settingAttributeQuery.hasNext()) {
-          rv = (Encryptable) settingAttributeQuery.next().getValue();
-        }
-        break;
-    }
-
-    Preconditions.checkNotNull(
-        rv, "Could not find entity accountId: " + accountId + " type: " + variableType + " name: " + entityName);
-    return rv;
   }
 }

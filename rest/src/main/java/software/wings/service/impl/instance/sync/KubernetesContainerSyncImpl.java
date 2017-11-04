@@ -25,7 +25,7 @@ import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Validator;
 
 import java.util.Collection;
@@ -43,7 +43,7 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
   @Inject private SettingsService settingsService;
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private GkeClusterService gkeClusterService;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest) {
@@ -107,7 +107,7 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
       SettingAttribute computeProviderSetting =
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting,
-          kmsService.getEncryptionDetails(
+          secretManager.getEncryptionDetails(
               (Encryptable) computeProviderSetting.getValue(), workflowId, infrastructureMapping.getAppId()),
           gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
     } else {

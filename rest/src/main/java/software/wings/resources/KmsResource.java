@@ -11,6 +11,7 @@ import software.wings.beans.UuidAware;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Collection;
 import javax.ws.rs.GET;
@@ -28,6 +29,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class KmsResource {
   @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @POST
   @Path("/save-global-kms")
@@ -68,7 +70,7 @@ public class KmsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Collection<UuidAware>> listEncryptedValues(@QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(kmsService.listEncryptedValues(accountId));
+    return new RestResponse<>(secretManager.listEncryptedValues(accountId));
   }
 
   @GET

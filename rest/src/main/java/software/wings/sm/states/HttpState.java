@@ -37,6 +37,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -83,7 +84,7 @@ public class HttpState extends State {
   @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject protected EncryptionService encryptionService;
-  @Inject protected KmsService kmsService;
+  @Inject protected SecretManager secretManager;
 
   @Inject @Transient private transient ActivityService activityService;
 

@@ -136,7 +136,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
     logger.info("Creating ECS service {} in cluster {}", containerServiceName, clusterName);
     awsClusterService.createService(region, settingAttribute,
-        kmsService.getEncryptionDetails(
+        secretManager.getEncryptionDetails(
             (Encryptable) settingAttribute.getValue(), context.getWorkflowId(), context.getAppId()),
         createServiceRequest);
 
@@ -232,7 +232,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
     logger.info("Creating task definition {} with container image {}", taskFamily, dockerImageName);
     return awsClusterService.createTask(region, settingAttribute,
-        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
         registerTaskDefinitionRequest);
   }
 
@@ -244,7 +244,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
       String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
       awsClusterService
           .getServices(region, settingAttribute,
-              kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
+              secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
               clusterName)
           .stream()
           .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
@@ -254,7 +254,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
               logger.info("Deleting old version: " + oldServiceName);
               awsClusterService.deleteService(region, settingAttribute,
-                  kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
+                  secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
                   clusterName, oldServiceName);
             }
           });

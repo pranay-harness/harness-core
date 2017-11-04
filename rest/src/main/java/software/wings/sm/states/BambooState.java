@@ -31,7 +31,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.BambooSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -71,7 +71,7 @@ public class BambooState extends State {
   @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   public BambooState(String name) {
     super(name, StateType.BAMBOO.name());
@@ -228,7 +228,7 @@ public class BambooState extends State {
             .withWaitId(activityId)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {bambooConfig,
-                kmsService.getEncryptionDetails(bambooConfig, context.getWorkflowId(), context.getAppId()),
+                secretManager.getEncryptionDetails(bambooConfig, context.getWorkflowId(), context.getAppId()),
                 finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)

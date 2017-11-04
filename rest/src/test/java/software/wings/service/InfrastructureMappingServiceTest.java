@@ -78,6 +78,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
@@ -104,7 +105,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
   @Mock private WorkflowService workflowService;
   @Mock private FieldEnd end;
-  @Mock private KmsService kmsService;
+  @Mock private SecretManager secretManager;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -116,8 +117,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(InfrastructureMapping.class)).thenReturn(updateOperations);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
-    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(infrastructureMappingService, "kmsService", kmsService);
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(infrastructureMappingService, "secretManager", secretManager);
   }
 
   @Test

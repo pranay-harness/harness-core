@@ -39,6 +39,7 @@ import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -67,7 +68,7 @@ public class CloudWatchState extends State {
   @Transient @Inject private SettingsService settingsService;
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private AwsHelperService awsHelperService;
-  @Transient @Inject private KmsService kmsService;
+  @Transient @Inject private SecretManager secretManager;
 
   @EnumData(enumDataProvider = AwsSettingProvider.class)
   @Attributes(required = true, title = "AWS account")
@@ -117,7 +118,7 @@ public class CloudWatchState extends State {
     }
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails =
-        kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId());
+        secretManager.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId());
     ContextElement contextElement = (ContextElement) context.evaluateExpression("${instance}");
     if (contextElement != null) {
       HostElement hostElement = ((InstanceElement) contextElement).getHost();

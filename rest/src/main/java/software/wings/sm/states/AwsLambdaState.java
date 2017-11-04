@@ -63,7 +63,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -112,7 +112,7 @@ public class AwsLambdaState extends State {
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
 
-  @Inject @Transient private transient KmsService kmsService;
+  @Inject @Transient private transient SecretManager secretManager;
 
   @Inject @Transient private transient LogService logService;
 
@@ -222,7 +222,7 @@ public class AwsLambdaState extends State {
     List<FunctionMeta> functionArns = new ArrayList<>();
 
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(awsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, null, null);
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
     AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()

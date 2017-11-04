@@ -58,7 +58,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.SetupScheduler;
-import software.wings.service.impl.security.KmsDelegateServiceImpl;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -130,7 +130,8 @@ public class DataGenUtil extends BaseIntegrationTest {
     assertThat(TAG_HIERARCHY_DEPTH).isBetween(1, 10);
 
     dropDBAndEnsureIndexes();
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(new KmsDelegateServiceImpl());
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
+        .thenReturn(new SecretManagementDelegateServiceImpl());
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
   }
 

@@ -93,6 +93,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -176,7 +177,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private HostService hostService;
   @Mock private DelegateService delegateService;
-  @Mock private KmsService kmsService;
+  @Mock private SecretManager secretManager;
 
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
@@ -232,8 +233,8 @@ public class CommandStateTest extends WingsBaseTest {
     commandState.setExecutorService(executorService);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(aJenkinsArtifactStream().withUuid(ARTIFACT_STREAM_ID).withAppId(APP_ID).build());
-    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(commandState, "kmsService", kmsService);
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(commandState, "secretManager", secretManager);
   }
 
   /**

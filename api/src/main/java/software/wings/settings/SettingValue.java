@@ -205,7 +205,9 @@ public abstract class SettingValue implements ExtensionPoint {
 
     CONFIG_FILE,
 
-    KMS;
+    KMS,
+
+    VAULT;
 
     private String displayName;
 

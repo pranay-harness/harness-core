@@ -126,9 +126,10 @@ import software.wings.service.impl.instance.sync.EcsContainerSyncImpl;
 import software.wings.service.impl.instance.sync.KubernetesContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
-import software.wings.service.impl.security.KmsDelegateServiceImpl;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
+import software.wings.service.impl.security.VaultServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
 import software.wings.service.impl.yaml.ServiceYamlResourceServiceImpl;
@@ -203,9 +204,10 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsDelegateService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
@@ -334,9 +336,10 @@ public class WingsModule extends AbstractModule {
     bind(KmsService.class).to(KmsServiceImpl.class);
     bind(AlertService.class).to(AlertServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
-    bind(KmsDelegateService.class).to(KmsDelegateServiceImpl.class);
+    bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
     bind(TriggerService.class).to(TriggerServiceImpl.class);
+    bind(VaultService.class).to(VaultServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

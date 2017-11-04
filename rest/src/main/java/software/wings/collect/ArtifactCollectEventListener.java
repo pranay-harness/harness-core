@@ -36,6 +36,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -58,7 +59,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private EventEmitter eventEmitter;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
@@ -100,7 +101,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(jenkinsArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {jenkinsConfig, kmsService.getEncryptionDetails(jenkinsConfig, null, null),
+            .withParameters(new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
                 jenkinsArtifactStream.getJobname(), jenkinsArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
@@ -114,7 +115,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(bambooArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {bambooConfig, kmsService.getEncryptionDetails(bambooConfig, null, null),
+            .withParameters(new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
                 bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
@@ -128,7 +129,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(nexusArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {nexusConfig, kmsService.getEncryptionDetails(nexusConfig, null, null),
+            .withParameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
                 nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
                 nexusArtifactStream.getArtifactPaths()})
             .build();
@@ -143,10 +144,11 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(artifactoryArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {artifactoryConfig,
-                kmsService.getEncryptionDetails(artifactoryConfig, null, null), artifactoryArtifactStream.getJobname(),
-                artifactoryArtifactStream.getGroupId(), artifactoryArtifactStream.getArtifactPaths(),
-                artifactoryArtifactStream.getArtifactPattern(), artifact.getMetadata()})
+            .withParameters(
+                new Object[] {artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, null),
+                    artifactoryArtifactStream.getJobname(), artifactoryArtifactStream.getGroupId(),
+                    artifactoryArtifactStream.getArtifactPaths(), artifactoryArtifactStream.getArtifactPattern(),
+                    artifact.getMetadata()})
             .build();
       }
       case AMAZON_S3: {
@@ -159,7 +161,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(amazonS3ArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null),
+            .withParameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
                 amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
             .build();
       }

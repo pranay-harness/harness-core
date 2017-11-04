@@ -6,8 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.KmsConfig;
 import software.wings.security.EncryptionType;
+import software.wings.service.intfc.security.EncryptionConfig;
 
-import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  * Created by rsingh on 10/17/17.
@@ -19,6 +20,6 @@ import java.lang.reflect.Field;
 public class EncryptedDataDetail {
   private EncryptionType encryptionType;
   private EncryptedData encryptedData;
-  private KmsConfig kmsConfig;
+  private EncryptionConfig encryptionConfig;
   private String fieldName;
 }

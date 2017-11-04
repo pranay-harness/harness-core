@@ -28,6 +28,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretUsageLog;
@@ -40,7 +41,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
@@ -53,6 +54,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -76,7 +78,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private EnvironmentService environmentService;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ActivityService activityService;
 
@@ -232,7 +234,7 @@ public class ConfigServiceImpl implements ConfigService {
                                   .accountId(encryptedData.getAccountId())
                                   .build());
       }
-      return kmsService.decryptFile(file, configFile.getAccountId(), encryptedData);
+      return secretManager.decryptFile(file, configFile.getAccountId(), encryptedData);
     } else {
       return EncryptionUtils.decrypt(file, configFile.getAccountId());
     }
@@ -303,7 +305,9 @@ public class ConfigServiceImpl implements ConfigService {
       if (!StringUtils.isBlank(configFile.getUuid())) {
         wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
       }
-      EncryptedData encryptedData = kmsService.encryptFile(inputStream, configFile.getAccountId());
+      String fileUuid = UUID.randomUUID().toString();
+      EncryptedData encryptedData = secretManager.encryptFile(inputStream, configFile.getAccountId(), fileUuid);
+      encryptedData.setUuid(fileUuid);
       if (!StringUtils.isBlank(configFile.getUuid())) {
         encryptedData.setParentId(configFile.getUuid());
         wingsPersistence.save(encryptedData);
@@ -422,6 +426,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   private boolean shouldUseKms(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.KMS, accountId) && kmsService.getKmsConfig(accountId) != null;
+    return featureFlagService.isEnabled(FeatureName.KMS, accountId)
+        && secretManager.getEncryptionType(accountId) != EncryptionType.LOCAL;
   }
 }

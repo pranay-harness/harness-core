@@ -16,7 +16,6 @@ import static software.wings.integration.DataGenUtil.HARNESS_DOCKER_REGISTRY;
 import static software.wings.integration.DataGenUtil.HARNESS_NEXUS;
 import static software.wings.utils.ArtifactType.*;
 
-import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +53,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.DataGenUtil;
 import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ArtifactoryBuildService;
@@ -64,8 +62,9 @@ import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
-import software.wings.service.intfc.security.KmsDelegateService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 
@@ -107,7 +106,8 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Inject private ArtifactoryBuildService artifactoryBuildService;
   @Inject private EcrBuildService ecrBuildService;
   @Inject private KmsService kmsService;
-  @Inject private KmsDelegateService kmsDelegateService;
+  @Inject private SecretManager secretManager;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -153,9 +153,11 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     initMocks(this);
-    when(kmsDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(kmsDelegateService);
+    when(kmsDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
+        .thenReturn(secretManagementDelegateService);
     setInternalState(kmsService, "delegateProxyFactory", kmsDelegateProxyFactory);
-    setInternalState(wingsPersistence, "kmsService", kmsService);
+    setInternalState(wingsPersistence, "secretManager", secretManager);
+    setInternalState(secretManager, "kmsService", kmsService);
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     wingsPersistence.save(user);

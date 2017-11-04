@@ -22,6 +22,7 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -47,14 +48,15 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceLocator serviceLocator;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     List<JobDetails> jobs = getBuildService(settingAttribute, appId)
                                 .getJobs(value, encryptedDataDetails, Optional.ofNullable(parentJobName));
     // Sorting the job details by name before returning
@@ -69,7 +71,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     return getBuildService(settingAttribute, appId, artifactStreamType).getPlans(value, encryptedDataDetails);
   }
 
@@ -81,7 +84,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     Service service = serviceResourceService.get(appId, serviceId);
     notNullCheck("Service", service);
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     return getBuildService(settingAttribute, appId)
         .getPlans(value, encryptedDataDetails, service.getArtifactType(), repositoryType);
   }
@@ -92,7 +96,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
                                .getArtifactPaths(jobName, groupId, value, encryptedDataDetails));
   }
@@ -109,7 +114,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     String artifactStreamType = artifactStream.getArtifactStreamType();
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, value, encryptedDataDetails);
@@ -130,7 +136,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     String artifactStreamType = artifactStream.getArtifactStreamType();
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getLastSuccessfulBuild(appId, artifactStreamAttributes, value, encryptedDataDetails);
@@ -145,7 +152,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     return Sets.newTreeSet(getBuildService(settingAttribute, appId).getGroupIds(repoType, value, encryptedDataDetails));
   }
 
@@ -155,7 +163,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     SettingValue value = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null, null);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) value, null, null);
     return getBuildService(settingAttribute, appId)
         .validateArtifactSource(value, encryptedDataDetails, artifactStreamAttributes);
   }

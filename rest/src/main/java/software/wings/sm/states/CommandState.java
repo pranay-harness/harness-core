@@ -69,6 +69,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -132,7 +133,7 @@ public class CommandState extends State {
 
   @Transient @Inject private transient ArtifactService artifactService;
 
-  @Transient @Inject private transient KmsService kmsService;
+  @Transient @Inject private transient SecretManager secretManager;
 
   @Attributes(title = "Command")
   @Expand(dataProvider = CommandStateEnumDataProvider.class)
@@ -290,13 +291,13 @@ public class CommandState extends State {
       if (isNotEmpty(host.getHostConnAttr())) {
         SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
         commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
-        commandExecutionContextBuilder.withHostConnectionCredentials(kmsService.getEncryptionDetails(
+        commandExecutionContextBuilder.withHostConnectionCredentials(secretManager.getEncryptionDetails(
             (Encryptable) hostConnectionAttribute.getValue(), context.getWorkflowId(), context.getAppId()));
       }
       if (isNotEmpty(host.getBastionConnAttr())) {
         SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
         commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
-        commandExecutionContextBuilder.withBastionConnectionCredentials(kmsService.getEncryptionDetails(
+        commandExecutionContextBuilder.withBastionConnectionCredentials(secretManager.getEncryptionDetails(
             (Encryptable) bastionConnectionAttribute.getValue(), context.getWorkflowId(), context.getAppId()));
       }
 

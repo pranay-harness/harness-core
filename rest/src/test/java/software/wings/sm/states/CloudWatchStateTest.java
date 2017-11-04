@@ -18,7 +18,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ASSERTION;
@@ -47,7 +46,7 @@ import software.wings.beans.Base;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
@@ -75,7 +74,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
 
   @Mock private ExecutionContextImpl context;
   @Mock private AmazonCloudWatchClient amazonCloudWatchClient;
-  @Mock private KmsService kmsService;
+  @Mock private SecretManager secretManager;
 
   @InjectMocks private CloudWatchState cloudWatchState = new CloudWatchState(StateType.CLOUD_WATCH.name());
 
@@ -88,8 +87,8 @@ public class CloudWatchStateTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute()
                         .withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
                         .build());
-    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(cloudWatchState, "kmsService", kmsService);
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(cloudWatchState, "secretManager", secretManager);
   }
 
   @Test

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
+import software.wings.security.EncryptionType;
 
 /**
  * Created by rsingh on 10/6/17.
@@ -20,4 +21,5 @@ public class KmsTransitionEvent extends Queuable {
   private String fromKmsId;
   private String toKmsId;
   private String accountId;
+  private EncryptionType encryptionType;
 }

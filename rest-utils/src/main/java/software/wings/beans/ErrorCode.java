@@ -454,7 +454,9 @@ public enum ErrorCode {
                                            */
   ARTIFACT_SERVER_ERROR("ARTIFACT_SERVER_ERROR"),
 
-  KMS_OPERATION_ERROR("KMS_OPERATION_ERROR");
+  KMS_OPERATION_ERROR("KMS_OPERATION_ERROR"),
+
+  VAULT_OPERATION_ERROR("VAULT_OPERATION_ERROR");
 
   /**
    * The constant ARGS_NAME.

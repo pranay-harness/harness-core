@@ -62,6 +62,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -92,7 +93,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
 
-  @Inject @Transient protected transient KmsService kmsService;
+  @Inject @Transient protected transient SecretManager secretManager;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -469,7 +470,7 @@ public abstract class ContainerServiceDeploy extends State {
                 .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
                 .build()
           : containerServiceDeploy.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      encryptedDataDetails = containerServiceDeploy.kmsService.getEncryptionDetails(
+      encryptedDataDetails = containerServiceDeploy.secretManager.getEncryptionDetails(
           (Encryptable) settingAttribute.getValue(), context.getWorkflowId(), context.getAppId());
       region = infrastructureMapping instanceof EcsInfrastructureMapping
           ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()

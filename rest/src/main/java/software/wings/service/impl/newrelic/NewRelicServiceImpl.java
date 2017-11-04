@@ -12,16 +12,14 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
 
 import java.util.List;
@@ -36,7 +34,7 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public void validateConfig(SettingAttribute settingAttribute, StateType stateType) {
@@ -69,7 +67,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
-          kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       switch (stateType) {

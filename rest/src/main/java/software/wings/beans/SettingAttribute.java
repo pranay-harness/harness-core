@@ -29,6 +29,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -36,6 +37,8 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -59,6 +62,8 @@ public class SettingAttribute extends Base {
   @Valid private SettingValue value;
   private Category category = Category.SETTING;
   private List<String> appIds;
+
+  @SchemaIgnore @Transient private EncryptionType encryptionType;
 
   public enum Category {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP, DIRECT)),

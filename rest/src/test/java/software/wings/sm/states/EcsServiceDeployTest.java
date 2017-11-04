@@ -83,6 +83,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -108,7 +109,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
-  @Mock private KmsService kmsService;
+  @Mock private SecretManager secretManager;
   private ExecutionContextImpl context;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
@@ -150,8 +151,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(ecsServiceDeploy, "kmsService", kmsService);
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(ecsServiceDeploy, "secretManager", secretManager);
     context = new ExecutionContextImpl(stateExecutionInstance);
   }
 

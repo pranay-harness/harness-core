@@ -156,7 +156,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
             context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
             getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
             timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
-            kmsService.getEncryptionDetails(elkConfig, context.getWorkflowId(), context.getAppId()));
+            secretManager.getEncryptionDetails(elkConfig, context.getWorkflowId(), context.getAppId()));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)

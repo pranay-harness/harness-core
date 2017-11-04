@@ -8,11 +8,19 @@ import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.VaultConfig;
+import software.wings.helpers.ext.vault.VaultRestClient;
+import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.intfc.security.KmsDelegateService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -23,9 +31,7 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.TreeSet;
+import java.util.UUID;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -35,9 +41,9 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * Created by rsingh on 10/2/17.
  */
-public class KmsDelegateServiceImpl implements KmsDelegateService {
+public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   public static int NUM_OF_RETRIES = 3;
-  private static final Logger logger = LoggerFactory.getLogger(KmsDelegateServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 
   @Override
   public EncryptedData encrypt(char[] value, KmsConfig kmsConfig) throws IOException {
@@ -62,7 +68,7 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
         return EncryptedData.builder()
             .encryptionKey(encryptedKeyString)
             .encryptedValue(encryptedValue)
-            .type(SettingVariableTypes.KMS)
+            .encryptionType(EncryptionType.KMS)
             .kmsId(kmsConfig.getUuid())
             .build();
       } catch (Exception e) {
@@ -119,6 +125,66 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
     throw new IllegalStateException("Decryption failed. This state should never have been reached");
   }
 
+  @Override
+  public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
+      VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
+    String uuid = getSecretUuid(savedEncryptedData);
+    String keyUrl = accountId + "/" + settingType + "/" + name + "/" + uuid;
+    if (value == null) {
+      char[] encryptedValue = savedEncryptedData == null ? null : keyUrl.toCharArray();
+      return EncryptedData.builder()
+          .encryptionKey(keyUrl)
+          .encryptedValue(encryptedValue)
+          .encryptionType(EncryptionType.VAULT)
+          .enabled(true)
+          .kmsId(vaultConfig.getUuid())
+          .build();
+    }
+    Call<Void> request = getVaultRestClient(vaultConfig)
+                             .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, accountId, settingType,
+                                 uuid, VaultSecretValue.builder().value(value).build());
+
+    Response<Void> response = request.execute();
+    if (response.isSuccessful()) {
+      return EncryptedData.builder()
+          .encryptionKey(keyUrl)
+          .encryptedValue(keyUrl.toCharArray())
+          .encryptionType(EncryptionType.VAULT)
+          .enabled(true)
+          .kmsId(vaultConfig.getUuid())
+          .build();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new IOException(response.errorBody().string());
+    }
+  }
+
+  @Override
+  public char[] decrypt(EncryptedData data, VaultConfig vaultConfig) throws IOException {
+    if (data.getEncryptedValue() == null) {
+      return null;
+    }
+    Call<VaultReadResponse> request =
+        getVaultRestClient(vaultConfig).readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
+
+    Response<VaultReadResponse> response = request.execute();
+
+    if (response.isSuccessful()) {
+      return response.body().getData().getValue().toCharArray();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new IOException(response.errorBody().string());
+    }
+  }
+
+  private String getSecretUuid(EncryptedData encryptedData) {
+    if (encryptedData == null || StringUtils.isBlank(encryptedData.getEncryptionKey())) {
+      return UUID.randomUUID().toString();
+    }
+
+    return encryptedData.getEncryptionKey().substring(encryptedData.getEncryptionKey().lastIndexOf("/") + 1);
+  }
+
   private char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
                                                      InvalidKeyException, IllegalBlockSizeException,
                                                      BadPaddingException, InvalidAlgorithmParameterException {
@@ -147,5 +213,13 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
     byte[] byteArray = new byte[b.remaining()];
     b.get(byteArray);
     return byteArray;
+  }
+
+  private VaultRestClient getVaultRestClient(final VaultConfig vaultConfig) {
+    final Retrofit retrofit = new Retrofit.Builder()
+                                  .baseUrl(vaultConfig.getVaultUrl())
+                                  .addConverterFactory(JacksonConverterFactory.create())
+                                  .build();
+    return retrofit.create(VaultRestClient.class);
   }
 }
