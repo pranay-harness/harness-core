@@ -194,4 +194,25 @@ public class Misc {
      */
     T run() throws Exception;
   }
+
+  /**
+   * Replace dot with the unicode value so
+   * the string can be used as Map keys in
+   * mongo.
+   * @param str a string containing dots
+   * @return replaced string
+   */
+  public static String replaceDotWithUnicode(String str) {
+    return str.replace(".", "\u2024");
+  }
+
+  /**
+   * Replace "\u2024" with the dot char. Reverses the
+   * replaceDotWithUnicode action above
+   * @param str a string containing \u2024
+   * @return replaced string
+   */
+  public static String replaceUnicodeWithDot(String str) {
+    return str.replace("\u2024", ".");
+  }
 }
