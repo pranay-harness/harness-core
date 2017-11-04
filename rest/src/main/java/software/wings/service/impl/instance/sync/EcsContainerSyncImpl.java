@@ -28,6 +28,7 @@ import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public class EcsContainerSyncImpl implements ContainerSync {
 
   @Inject private AwsHelperService awsHelperService;
   @Inject private SettingsService settingsService;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
   @Inject private InfrastructureMappingService infraMappingService;
 
   @Override
@@ -56,7 +57,7 @@ public class EcsContainerSyncImpl implements ContainerSync {
         String nextToken = null;
         SettingAttribute settingAttribute = settingsService.get(containerDeploymentInfo.getComputeProviderId());
         List<EncryptedDataDetail> encryptionDetails =
-            kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(),
+            secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(),
                 containerDeploymentInfo.getWorkflowId(), containerDeploymentInfo.getAppId());
         Validator.notNullCheck("SettingAttribute", settingAttribute);
         AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptionDetails);

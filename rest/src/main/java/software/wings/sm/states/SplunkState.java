@@ -161,7 +161,7 @@ public class SplunkState extends HttpState {
             .get(0);
     SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
     encryptionService.decrypt(
-        splunkConfig, kmsService.getEncryptionDetails(splunkConfig, context.getWorkflowId(), context.getAppId()));
+        splunkConfig, secretManager.getEncryptionDetails(splunkConfig, context.getWorkflowId(), context.getAppId()));
     return "Authorization: Basic "
         + Base64.encodeBase64URLSafeString((splunkConfig.getUsername() + ":" + new String(splunkConfig.getPassword()))
                                                .getBytes(StandardCharsets.UTF_8));

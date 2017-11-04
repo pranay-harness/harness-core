@@ -29,17 +29,16 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
-import software.wings.service.impl.security.KmsDelegateServiceImpl;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -54,7 +53,8 @@ import javax.inject.Inject;
 @RunWith(Parameterized.class)
 public class AppdynamicsTest extends WingsBaseTest {
   @Inject private KmsService kmsService;
-  @Inject private KmsDelegateServiceImpl kmsDelegateService;
+  @Inject private SecretManager secretManager;
+  @Inject private SecretManagementDelegateServiceImpl kmsDelegateService;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptionService encryptionService;
@@ -84,7 +84,8 @@ public class AppdynamicsTest extends WingsBaseTest {
     when(kmsDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(kmsDelegateService);
     setInternalState(kmsService, "delegateProxyFactory", kmsDelegateProxyFactory);
     setInternalState(appdynamicsService, "delegateProxyFactory", appdDelegateProxyFactory);
-    setInternalState(wingsPersistence, "kmsService", kmsService);
+    setInternalState(wingsPersistence, "secretManager", secretManager);
+    setInternalState(secretManager, "kmsService", kmsService);
 
     accountId = UUID.randomUUID().toString();
 

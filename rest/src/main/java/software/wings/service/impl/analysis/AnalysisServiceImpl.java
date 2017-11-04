@@ -40,7 +40,7 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.sm.ExecutionStatus;
@@ -82,7 +82,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject protected WorkflowExecutionService workflowExecutionService;
   @Inject protected MainConfiguration configuration;
   @Inject protected DelegateServiceImpl delegateService;
-  @Inject protected KmsService kmsService;
+  @Inject protected SecretManager secretManager;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -525,7 +525,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType) {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     List<EncryptedDataDetail> encryptedDataDetails =
-        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }

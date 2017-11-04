@@ -201,7 +201,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       return gkeClusterService.getCluster(settingAttribute,
-          kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
+          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId, appId),
           infrastructureMapping.getClusterName(),
           ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace());
     } else {

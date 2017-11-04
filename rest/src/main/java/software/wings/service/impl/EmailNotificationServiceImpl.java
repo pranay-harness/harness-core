@@ -14,7 +14,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
   @Inject private MainConfiguration mainConfiguration;
 
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.EmailNotificationService#send(java.lang.Object)
@@ -45,7 +45,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         emailData.isSystem() ? mainConfiguration.getSmtpConfig() : getSmtpConfig(emailData.getAccountId());
 
     List<EncryptedDataDetail> encryptionDetails =
-        emailData.isSystem() ? Collections.emptyList() : kmsService.getEncryptionDetails(config, null, null);
+        emailData.isSystem() ? Collections.emptyList() : secretManager.getEncryptionDetails(config, null, null);
     mailer.send(config, encryptionDetails, emailData);
   }
 

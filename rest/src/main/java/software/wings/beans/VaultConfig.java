@@ -13,11 +13,16 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.security.EncryptionType;
 import software.wings.service.intfc.security.EncryptionConfig;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+
+import java.util.List;
 
 /**
- * Created by rsingh on 9/29/17.
+ * Created by rsingh on 11/02/17.
  */
 
 @Data
@@ -27,19 +32,19 @@ import software.wings.service.intfc.security.EncryptionConfig;
 @Indexes({
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
-@Entity(value = "kmsConfig", noClassnameStored = true)
-public class KmsConfig extends Base implements EncryptionConfig {
+@Entity(value = "vaultConfig", noClassnameStored = true)
+public class VaultConfig extends Base implements EncryptionConfig {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
+  @Attributes(title = "Vault Url", required = true) private String vaultUrl;
 
-  @Attributes(title = "AWS Secret Key", required = true) @Encrypted private String secretKey;
-
-  @Attributes(title = "AWS key ARN", required = true) @Encrypted private String kmsArn;
+  @Attributes(title = "Auth token", required = true) private String authToken;
 
   private boolean isDefault = true;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
   @SchemaIgnore @Transient private int numOfEncryptedValue;
+
+  @SchemaIgnore @Transient private EncryptionType encryptionType;
 }

@@ -87,7 +87,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -112,7 +112,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private KubernetesConfig kubernetesConfig;
-  @Mock private KmsService kmsService;
+  @Mock private SecretManager secretManager;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -285,8 +285,8 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null)).thenReturn(emptyList());
-    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(kubernetesReplicationControllerSetup, "kmsService", kmsService);
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(kubernetesReplicationControllerSetup, "secretManager", secretManager);
     setInternalState(kubernetesReplicationControllerSetup, "encryptionService", new EncryptionServiceImpl());
   }
 

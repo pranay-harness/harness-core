@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
 import software.wings.utils.validation.Create;
@@ -74,6 +75,8 @@ public class ServiceVariable extends Base implements Encryptable {
   @SchemaIgnore @Transient private boolean decrypted;
 
   @SchemaIgnore @Transient private String serviceId;
+
+  @SchemaIgnore @Transient private EncryptionType encryptionType;
 
   @Override
   @SchemaIgnore

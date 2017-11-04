@@ -27,7 +27,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.scheduler.JobScheduler;
-import software.wings.service.impl.security.KmsDelegateServiceImpl;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
@@ -71,7 +71,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
     deleteAllDocuments(Arrays.asList(Application.class, ConfigFile.class, Service.class));
 
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(new KmsDelegateServiceImpl());
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
+        .thenReturn(new SecretManagementDelegateServiceImpl());
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(configService, "kmsService", kmsService);
 

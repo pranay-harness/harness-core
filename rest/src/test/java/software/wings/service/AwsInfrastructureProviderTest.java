@@ -44,6 +44,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -55,7 +56,7 @@ import javax.inject.Inject;
 public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private AwsHelperService awsHelperService;
-  @Mock private KmsService kmsService;
+  @Mock private SecretManager secretManager;
 
   @Inject @InjectMocks private AwsInfrastructureProvider infrastructureProvider = new AwsInfrastructureProvider();
 
@@ -67,8 +68,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   private AwsConfig awsConfig = (AwsConfig) awsSetting.getValue();
   @Before
   public void setUp() throws Exception {
-    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(infrastructureProvider, "kmsService", kmsService);
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(infrastructureProvider, "secretManager", secretManager);
   }
 
   @Test

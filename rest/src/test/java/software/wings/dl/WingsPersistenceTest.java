@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -17,7 +16,6 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.base.MoreObjects;
 
 import org.assertj.core.util.Lists;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Query;
@@ -38,6 +36,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,6 +61,7 @@ import javax.ws.rs.core.UriInfo;
 public class WingsPersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
   @Inject private EncryptionService encryptionService;
 
   /**
@@ -538,8 +538,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
         .isFalse();
 
     // decrypt and compare
-    encryptionService.decrypt(
-        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null, null));
+    encryptionService.decrypt((Encryptable) result.getValue(),
+        secretManager.getEncryptionDetails((Encryptable) result.getValue(), null, null));
     assertEquals(password, new String(((JenkinsConfig) result.getValue()).getPassword()));
   }
 
@@ -571,8 +571,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(undecryptedResult).isNotNull();
     assertThat(Arrays.equals(newPassword, ((JenkinsConfig) undecryptedResult.getValue()).getPassword())).isFalse();
 
-    encryptionService.decrypt(
-        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null, null));
+    encryptionService.decrypt((Encryptable) result.getValue(),
+        secretManager.getEncryptionDetails((Encryptable) result.getValue(), null, null));
     assertTrue(Arrays.equals(newPassword, ((JenkinsConfig) result.getValue()).getPassword()));
   }
 

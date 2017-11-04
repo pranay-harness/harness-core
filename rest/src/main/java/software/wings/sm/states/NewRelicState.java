@@ -114,7 +114,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .newRelicAppId(Long.parseLong(applicationId))
             .dataCollectionMinute(0)
             .encryptedDataDetails(
-                kmsService.getEncryptionDetails(newRelicConfig, context.getWorkflowId(), context.getAppId()))
+                secretManager.getEncryptionDetails(newRelicConfig, context.getWorkflowId(), context.getAppId()))
             .build();
 
     String waitId = UUIDGenerator.getUuid();

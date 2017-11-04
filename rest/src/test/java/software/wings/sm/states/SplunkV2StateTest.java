@@ -42,6 +42,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -79,7 +80,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private MainConfiguration configuration;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
   @Mock private QuartzScheduler jobScheduler;
   private SplunkV2State splunkState;
 
@@ -122,7 +123,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     setInternalState(splunkState, "waitNotifyEngine", waitNotifyEngine);
     setInternalState(splunkState, "delegateService", delegateService);
     setInternalState(splunkState, "jobScheduler", jobScheduler);
-    setInternalState(splunkState, "kmsService", kmsService);
+    setInternalState(splunkState, "secretManager", secretManager);
   }
 
   @Test

@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
+import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
 
@@ -88,6 +89,8 @@ public class ConfigFile extends BaseFile implements Encryptable {
   private String encryptedFileId;
 
   @SchemaIgnore @Transient private String serviceId;
+
+  @SchemaIgnore @Transient private EncryptionType encryptionType;
 
   /**
    * Gets version for env.

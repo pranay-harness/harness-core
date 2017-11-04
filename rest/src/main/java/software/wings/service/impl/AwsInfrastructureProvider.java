@@ -43,6 +43,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +62,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsHelperService awsHelperService;
   @Inject private HostService hostService;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -168,7 +169,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   public List<Host> maybeSetAutoScaleCapacityAndGetHosts(String workflowId, String appId,
       AwsInfrastructureMapping infrastructureMapping, SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(awsConfig, workflowId, appId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, workflowId, appId);
 
     if (infrastructureMapping.isSetDesiredCapacity()) {
       awsHelperService.setAutoScalingGroupCapacity(awsConfig, encryptionDetails, infrastructureMapping);
@@ -196,7 +197,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(awsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, null, null);
     try {
       ListClustersResult listClustersResult =
           awsHelperService.listClusters(region, awsConfig, encryptionDetails, new ListClustersRequest());
@@ -215,7 +216,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           Lists
               .newArrayList(
                   awsHelperService
-                      .decribeEc2Images(awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region,
+                      .decribeEc2Images(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region,
                           new DescribeImagesRequest().withFilters(new Filter("is-public").withValues("false"),
                               new Filter("state").withValues("available"),
                               new Filter("virtualization-type").withValues("hvm")))
@@ -232,7 +233,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listRegions(SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsHelperService.listRegions(awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null));
+    return awsHelperService.listRegions(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
   }
 
   public List<String> listInstanceTypes(SettingAttribute computeProviderSetting) {
@@ -246,42 +247,42 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public Map<String, String> listIAMRoles(SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsHelperService.listIAMRoles(awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null));
+    return awsHelperService.listIAMRoles(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
   }
 
   public List<String> listVPCs(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsHelperService.listVPCs(awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region);
+    return awsHelperService.listVPCs(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   public List<String> listSecurityGroups(SettingAttribute computeProviderSetting, String region, List<String> vpcIds) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listSecurityGroupIds(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
   }
 
   public List<String> listSubnets(SettingAttribute computeProviderSetting, String region, List<String> vpcIds) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listSubnetIds(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
   }
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listApplicationLoadBalancers(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listClassicLoadBalancers(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {
     AwsConfig awsConfig = AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build();
     return awsHelperService.listApplicationLoadBalancers(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   public Map<String, String> listTargetGroups(
@@ -289,7 +290,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     try {
       List<TargetGroup> targetGroups = awsHelperService.listTargetGroupsForElb(
-          region, awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), loadBalancerName);
+          region, awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), loadBalancerName);
       return targetGroups.stream().collect(
           Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
     } catch (AmazonServiceException amazonServiceException) {
@@ -313,12 +314,12 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public Set<String> listTags(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsHelperService.listTags(awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region);
+    return awsHelperService.listTags(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   public List<String> listAutoScalingGroups(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listAutoScalingGroups(
-        awsConfig, kmsService.getEncryptionDetails(awsConfig, null, null), region);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 }

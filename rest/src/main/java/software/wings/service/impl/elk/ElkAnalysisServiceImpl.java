@@ -31,7 +31,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
   public Map<String, ElkIndexTemplate> getIndices(String accountId, String analysisServerConfigId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     List<EncryptedDataDetail> encryptedDataDetails =
-        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
     if (settingAttribute == null) {
       throw new WingsException("No elk setting with id: " + analysisServerConfigId + " found");
     }

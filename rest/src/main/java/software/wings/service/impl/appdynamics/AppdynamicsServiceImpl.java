@@ -16,7 +16,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +36,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
@@ -44,7 +44,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getAllApplications(appDynamicsConfig, encryptionDetails);
   }
@@ -55,7 +55,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
   }
@@ -68,7 +68,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
 
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getBusinessTransactions(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
   }
@@ -81,7 +81,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTierBTMetrics(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
   }
@@ -94,7 +94,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTierBTMetricData(
             appDynamicsConfig, appdynamicsAppId, tierId, btName, durantionInMinutes, encryptionDetails);

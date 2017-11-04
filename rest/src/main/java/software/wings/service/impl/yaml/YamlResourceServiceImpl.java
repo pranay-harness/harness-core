@@ -58,7 +58,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
@@ -126,7 +126,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private WorkflowService workflowService;
   @Inject private SettingsService settingsService;
   @Inject private YamlGitSyncService yamlGitSyncService;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -943,8 +943,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
-            String dockerPasswordRef =
-                kmsService.getEncryptedYamlRef(dockerConfig, Base.GLOBAL_APP_ID, "password", dockerYaml.getName());
+            String dockerPasswordRef = secretManager.getEncryptedYamlRef(
+                dockerConfig, settingAttribute.getUuid(), SettingVariableTypes.DOCKER);
             settingAttribute.setName(dockerYaml.getName());
             config = DockerConfig.builder()
                          .accountId(accountId)
@@ -1101,8 +1101,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-            String passwordRef = kmsService.getEncryptedYamlRef(
-                appDynamicsConfig, Base.GLOBAL_APP_ID, "password", appDynamicsYaml.getName());
+            String passwordRef = secretManager.getEncryptedYamlRef(
+                appDynamicsConfig, settingAttribute.getUuid(), SettingVariableTypes.APP_DYNAMICS);
             settingAttribute.setName(appDynamicsYaml.getName());
             config = AppDynamicsConfig.builder()
                          .accountId(accountId)
@@ -1129,8 +1129,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
-            String splunkPasswordRef =
-                kmsService.getEncryptedYamlRef(splunkConfig, Base.GLOBAL_APP_ID, "password", splunkYaml.getName());
+            String splunkPasswordRef = secretManager.getEncryptedYamlRef(
+                splunkConfig, settingAttribute.getUuid(), SettingVariableTypes.SPLUNK);
             settingAttribute.setName(splunkYaml.getName());
             config = SplunkConfig.builder()
                          .accountId(accountId)

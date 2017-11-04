@@ -75,6 +75,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -115,7 +116,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private WorkflowService workflowService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -436,7 +437,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
       return infrastructureProvider
           .listHosts(awsInfraMapping, computeProviderSetting,
-              kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
+              secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
               new PageRequest<>())
           .getResponse();
     } else {
@@ -480,7 +481,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       GcpInfrastructureProvider infrastructureProvider =
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return emptyList();
   }
@@ -728,7 +729,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
     List<EncryptedDataDetail> encryptionDetails =
-        kmsService.getEncryptionDetails((Encryptable) hostConnectionSetting.getValue(), null, null);
+        secretManager.getEncryptionDetails((Encryptable) hostConnectionSetting.getValue(), null, null);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(hostConnectionSetting.getAccountId()).withAppId(validationRequest.getAppId()).build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
@@ -750,7 +751,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listApplications(region, computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return ImmutableList.of();
   }
@@ -762,7 +763,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return ImmutableList.of();
   }
@@ -774,7 +775,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
     }
     return ImmutableList.of();
   }
@@ -819,7 +820,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       List<Host> hosts =
           infrastructureProvider
               .listHosts(awsInfrastructureMapping, computeProviderSetting,
-                  kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
+                  secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
                   new PageRequest<>())
               .getResponse();
       List<String> hostDisplayNames = new ArrayList<>();

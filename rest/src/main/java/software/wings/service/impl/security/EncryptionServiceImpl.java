@@ -5,15 +5,15 @@ import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.delegatetasks.CommandTask;
+import software.wings.beans.KmsConfig;
+import software.wings.beans.VaultConfig;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsDelegateService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.utils.WingsReflectionUtils;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 import javax.inject.Inject;
@@ -23,7 +23,7 @@ import javax.inject.Inject;
  */
 public class EncryptionServiceImpl implements EncryptionService {
   private static final Logger logger = LoggerFactory.getLogger(EncryptionServiceImpl.class);
-  @Inject private KmsDelegateService kmsDelegateService;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override
   public void decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -51,8 +51,13 @@ public class EncryptionServiceImpl implements EncryptionService {
             break;
 
           case KMS:
-            decryptedValue =
-                kmsDelegateService.decrypt(encryptedDataDetail.getEncryptedData(), encryptedDataDetail.getKmsConfig());
+            decryptedValue = secretManagementDelegateService.decrypt(
+                encryptedDataDetail.getEncryptedData(), (KmsConfig) encryptedDataDetail.getEncryptionConfig());
+            break;
+
+          case VAULT:
+            decryptedValue = secretManagementDelegateService.decrypt(
+                encryptedDataDetail.getEncryptedData(), (VaultConfig) encryptedDataDetail.getEncryptionConfig());
             break;
 
           default:

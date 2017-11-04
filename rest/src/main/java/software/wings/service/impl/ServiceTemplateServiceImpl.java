@@ -38,7 +38,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
@@ -69,7 +69,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private HostService hostService;
-  @Transient @Inject private transient KmsService kmsService;
+  @Transient @Inject private transient SecretManager secretManager;
 
   @Transient @Inject private transient EncryptionService encryptionService;
 
@@ -415,7 +415,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     logger.info("Service variables after overrides [{}]", mergedServiceSettings.toString());
     mergedServiceSettings.forEach(serviceVariable -> {
       if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-        encryptionService.decrypt(serviceVariable, kmsService.getEncryptionDetails(serviceVariable, workflowId, appId));
+        encryptionService.decrypt(
+            serviceVariable, secretManager.getEncryptionDetails(serviceVariable, workflowId, appId));
       }
     });
     return mergedServiceSettings;

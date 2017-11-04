@@ -37,7 +37,7 @@ import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -82,7 +82,7 @@ public class JenkinsState extends State {
   @Transient @Inject private ExecutorService executorService;
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Transient @Inject private KmsService kmsService;
+  @Transient @Inject private SecretManager secretManager;
 
   @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
 
@@ -267,7 +267,7 @@ public class JenkinsState extends State {
             .withWaitId(activityId)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {jenkinsConfig,
-                kmsService.getEncryptionDetails(jenkinsConfig, context.getWorkflowId(), context.getAppId()),
+                secretManager.getEncryptionDetails(jenkinsConfig, context.getWorkflowId(), context.getAppId()),
                 finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)

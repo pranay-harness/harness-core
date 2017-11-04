@@ -33,6 +33,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -73,7 +74,7 @@ public class AwsClusterSetup extends State {
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
-  @Inject @Transient private transient KmsService kmsService;
+  @Inject @Transient private transient SecretManager secretManager;
 
   /**
    * Instantiates a new state.
@@ -103,7 +104,7 @@ public class AwsClusterSetup extends State {
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (Encryptable) computeProviderSetting.getValue(), context.getWorkflowId(), context.getAppId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();

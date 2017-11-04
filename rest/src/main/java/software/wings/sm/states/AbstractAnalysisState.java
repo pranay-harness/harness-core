@@ -33,6 +33,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -69,7 +70,7 @@ public abstract class AbstractAnalysisState extends State {
 
   @Transient @Inject protected DelegateService delegateService;
 
-  @Inject @Transient protected KmsService kmsService;
+  @Inject @Transient protected SecretManager secretManager;
 
   @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
 

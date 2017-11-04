@@ -61,7 +61,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
             context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
             getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
             logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
-            kmsService.getEncryptionDetails(logzConfig, context.getWorkflowId(), context.getAppId()));
+            secretManager.getEncryptionDetails(logzConfig, context.getWorkflowId(), context.getAppId()));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
