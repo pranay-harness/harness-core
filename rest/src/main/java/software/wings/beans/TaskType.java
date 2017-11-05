@@ -24,7 +24,9 @@ import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
+import software.wings.delegatetasks.validation.DockerValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
+import software.wings.delegatetasks.validation.GcrValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
@@ -59,16 +61,16 @@ public enum TaskType {
   BAMBOO_LAST_SUCCESSFUL_BUILD(TaskGroup.BAMBOO, ServiceImplDelegateTask.class, BambooValidation.class),
   BAMBOO_GET_PLANS(TaskGroup.BAMBOO, ServiceImplDelegateTask.class, BambooValidation.class),
   BAMBOO_VALIDATE_ARTIFACT_SERVER(TaskGroup.BAMBOO, ServiceImplDelegateTask.class, BambooValidation.class),
-  DOCKER_GET_BUILDS(TaskGroup.DOCKER, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  DOCKER_VALIDATE_ARTIFACT_SERVER(TaskGroup.DOCKER, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  DOCKER_VALIDATE_ARTIFACT_STREAM(TaskGroup.DOCKER, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  DOCKER_GET_BUILDS(TaskGroup.DOCKER, ServiceImplDelegateTask.class, DockerValidation.class),
+  DOCKER_VALIDATE_ARTIFACT_SERVER(TaskGroup.DOCKER, ServiceImplDelegateTask.class, DockerValidation.class),
+  DOCKER_VALIDATE_ARTIFACT_STREAM(TaskGroup.DOCKER, ServiceImplDelegateTask.class, DockerValidation.class),
   ECR_GET_BUILDS(TaskGroup.ECR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   ECR_VALIDATE_ARTIFACT_SERVER(TaskGroup.ECR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   ECR_GET_PLANS(TaskGroup.ECR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   ECR_GET_ARTIFACT_PATHS(TaskGroup.ECR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   ECR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ECR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  GCR_GET_BUILDS(TaskGroup.GCR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  GCR_GET_BUILDS(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
+  GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
   GCR_GET_PLANS(TaskGroup.GCR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   NEXUS_GET_JOBS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
   NEXUS_GET_PLANS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
