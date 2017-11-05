@@ -1,22 +1,22 @@
 package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
-
-import com.google.common.collect.Sets;
+import static software.wings.utils.HttpUtil.connectableHttpUrl;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.core.ssh.executors.SshSessionFactory;
+import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.SshHelperUtil;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
@@ -40,29 +40,28 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validate(Command command, CommandExecutionContext context) {
-    Set<String> nonSshDeploymentType = Sets.newHashSet(
-        DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
-    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
-      return validateHost(context.getHost().getPublicDns(), context);
+    if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
+      return validateHostSsh(context.getHost().getPublicDns(), context);
     } else {
-      return validateNonSshCommand(command, context);
+      return validateNonSshConfig(context);
     }
   }
 
-  private DelegateConnectionResult validateNonSshCommand(Command command, CommandExecutionContext context) {
-    try {
-      // TODO(brett) - Validate non-ssh commands as well
-      return DelegateConnectionResult.builder().criteria(NON_SSH_COMMAND_ALWAYS_TRUE).validated(true).build();
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      throw ex;
+  private DelegateConnectionResult validateNonSshConfig(CommandExecutionContext context) {
+    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
+    if (context.getCloudProviderSetting() != null
+        && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
+      KubernetesConfig config = (KubernetesConfig) context.getCloudProviderSetting().getValue();
+      resultBuilder.criteria(config.getMasterUrl()).validated(connectableHttpUrl(config.getMasterUrl()));
+    } else {
+      resultBuilder.criteria(NON_SSH_COMMAND_ALWAYS_TRUE).validated(true);
     }
+    return resultBuilder.build();
   }
 
-  private DelegateConnectionResult validateHost(String hostName, CommandExecutionContext context) {
-    DelegateConnectionResult.DelegateConnectionResultBuilder resultBuilder =
-        DelegateConnectionResult.builder().criteria(hostName);
+  private DelegateConnectionResult validateHostSsh(String hostName, CommandExecutionContext context) {
+    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(hostName);
     try {
       SshSessionFactory.getSSHSession(SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context))
           .disconnect();
@@ -95,10 +94,11 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private String getCriteria(Command command, CommandExecutionContext context) {
-    Set<String> nonSshDeploymentType = Sets.newHashSet(
-        DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
-    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
+    if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
       return context.getHost().getPublicDns();
+    } else if (context.getCloudProviderSetting() != null
+        && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
+      return ((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl();
     } else {
       return NON_SSH_COMMAND_ALWAYS_TRUE;
     }
