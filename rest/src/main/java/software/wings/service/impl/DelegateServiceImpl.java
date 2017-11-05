@@ -606,12 +606,9 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateTask getUnassignedDelegateTask(String accountId, String taskId) {
-    DelegateTask delegateTask;
-    Cache<String, DelegateTask> delegateSyncCache =
-        cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class);
-    if (delegateSyncCache.containsKey(taskId)) {
+    DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    if (delegateTask != null) {
       // Sync
-      delegateTask = delegateSyncCache.get(taskId);
       logger.info("Delegate task from cache: {}", delegateTask.getUuid());
       if (!isBlank(delegateTask.getDelegateId())) {
         logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
