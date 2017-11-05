@@ -20,7 +20,7 @@ public class AlwaysTrueValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    return singletonList(DelegateConnectionResult.builder().validated(true).criteria(ALWAYS_TRUE_CRITERIA).build());
+    return singletonList(DelegateConnectionResult.builder().criteria(ALWAYS_TRUE_CRITERIA).validated(true).build());
   }
 
   @Override

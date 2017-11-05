@@ -5,7 +5,6 @@ import static java.util.Collections.singletonList;
 
 import com.google.common.base.Splitter;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -15,7 +14,6 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import software.wings.beans.DelegateTask;
@@ -50,8 +48,6 @@ public class HttpValidation extends AbstractDelegateValidateTask {
 
   private List<DelegateConnectionResult> validate(
       String method, String url, String body, String headers, int socketTimeoutMillis) {
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
-
     SSLContextBuilder builder = new SSLContextBuilder();
     try {
       builder.loadTrustMaterial((x509Certificates, s) -> true);
@@ -64,29 +60,24 @@ public class HttpValidation extends AbstractDelegateValidateTask {
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
       e.printStackTrace();
     }
-
-    RequestConfig.Builder requestBuilder = RequestConfig.custom();
-    requestBuilder = requestBuilder.setConnectTimeout(2000);
-    requestBuilder = requestBuilder.setSocketTimeout(socketTimeoutMillis);
-
-    CloseableHttpClient httpclient =
-        HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
-
     HttpUriRequest httpUriRequest = getHttpUriRequest(method, url, body, headers);
-
-    resultBuilder.criteria(httpUriRequest.getURI().toString());
+    DelegateConnectionResultBuilder resultBuilder =
+        DelegateConnectionResult.builder().criteria(httpUriRequest.getURI().toString());
     try {
-      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-      int responseCode = httpResponse.getStatusLine().getStatusCode();
-      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
-        resultBuilder.validated(true);
-      } else {
-        resultBuilder.validated(false);
-      }
+      int responseCode =
+          HttpClients.custom()
+              .setSSLSocketFactory(sslsf)
+              .setDefaultRequestConfig(
+                  RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(socketTimeoutMillis).build())
+              .build()
+              .execute(httpUriRequest)
+              .getStatusLine()
+              .getStatusCode();
+      resultBuilder.validated(
+          (responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403);
     } catch (IOException e) {
       resultBuilder.validated(false);
     }
-
     return singletonList(resultBuilder.build());
   }
 
@@ -122,7 +113,6 @@ public class HttpValidation extends AbstractDelegateValidateTask {
     if (headers != null) {
       for (String header : HEADERS_SPLITTER.split(headers)) {
         List<String> headerPair = HEADER_SPLITTER.splitToList(header);
-
         if (headerPair.size() == 2) {
           httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
         }
