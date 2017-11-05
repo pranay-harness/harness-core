@@ -17,10 +17,10 @@ import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.states.BambooState;
 import software.wings.sm.states.FilePathAssertionEntry;
 import software.wings.sm.states.ParameterEntry;
 import software.wings.utils.Misc;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,12 +32,12 @@ import javax.inject.Inject;
 /**
  * Created by sgurubelli on 8/29/17.
  */
-public class BambooTask extends AbstractDelegateRunnableTask<BambooState.BambooExecutionResponse> {
+public class BambooTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(BambooTask.class);
 
   @Inject private BambooService bambooService;
 
-  public BambooTask(String delegateId, DelegateTask delegateTask, Consumer<BambooExecutionResponse> postExecute,
+  public BambooTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

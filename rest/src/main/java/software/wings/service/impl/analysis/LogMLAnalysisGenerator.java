@@ -74,6 +74,7 @@ public class LogMLAnalysisGenerator implements Runnable {
   private void generateAnalysis() {
     try {
       for (String query : queries) {
+        // TODO fix this
         if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
             && !analysisService.isLogDataCollected(
                    applicationId, context.getStateExecutionId(), query, logAnalysisMinute, context.getStateType())) {
@@ -97,7 +98,7 @@ public class LogMLAnalysisGenerator implements Runnable {
         final String logAnalysisSaveUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
             + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
-            + "&logCollectionMinute=" + logAnalysisMinute;
+            + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated;
         final String logAnalysisGetUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId;
         final List<String> command = new ArrayList<>();

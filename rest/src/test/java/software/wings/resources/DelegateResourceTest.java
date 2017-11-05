@@ -21,6 +21,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -88,6 +89,27 @@ public class DelegateResourceTest {
   }
 
   @Test
+  public void shouldRegisterDelegate() throws Exception {
+    when(DELEGATE_SERVICE.register(any(Delegate.class)))
+        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
+    RestResponse<Delegate> restResponse =
+        RESOURCES.client()
+            .target("/delegates/register?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(Entity.entity(aDelegate().withUuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<Delegate>>() {});
+
+    ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
+    verify(DELEGATE_SERVICE).register(captor.capture());
+    Delegate captorValue = captor.getValue();
+    assertThat(captorValue.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(captorValue.getUuid()).isEqualTo(ID_KEY);
+    Delegate resource = restResponse.getResource();
+    assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(resource.getUuid()).isEqualTo(ID_KEY);
+  }
+
+  @Test
   public void shouldAddDelegate() throws Exception {
     Delegate delegate = aDelegate().build();
 
@@ -98,8 +120,13 @@ public class DelegateResourceTest {
             .target("/delegates?accountId=" + ACCOUNT_ID)
             .request()
             .post(Entity.entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
-    verify(DELEGATE_SERVICE).add(delegate);
-    assertThat(restResponse.getResource()).isEqualTo(delegate);
+
+    ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
+    verify(DELEGATE_SERVICE).add(captor.capture());
+    Delegate captorValue = captor.getValue();
+    assertThat(captorValue.getAccountId()).isEqualTo(ACCOUNT_ID);
+    Delegate resource = restResponse.getResource();
+    assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 
   @Test
@@ -114,8 +141,14 @@ public class DelegateResourceTest {
             .request()
             .put(Entity.entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
 
-    verify(DELEGATE_SERVICE).update(delegate);
-    assertThat(restResponse.getResource()).isEqualTo(delegate);
+    ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
+    verify(DELEGATE_SERVICE).update(captor.capture());
+    Delegate captorValue = captor.getValue();
+    assertThat(captorValue.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(captorValue.getUuid()).isEqualTo(ID_KEY);
+    Delegate resource = restResponse.getResource();
+    assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(resource.getUuid()).isEqualTo(ID_KEY);
   }
 
   @Test

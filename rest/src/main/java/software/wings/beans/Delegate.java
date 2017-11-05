@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -12,6 +14,8 @@ import java.util.List;
  */
 @Entity(value = "delegates", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class Delegate extends Base {
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
@@ -26,184 +30,6 @@ public class Delegate extends Base {
 
   private List<DelegateScope> includeScopes;
   private List<DelegateScope> excludeScopes;
-
-  public List<DelegateScope> getIncludeScopes() {
-    return includeScopes;
-  }
-
-  public void setIncludeScopes(List<DelegateScope> includeScopes) {
-    this.includeScopes = includeScopes;
-  }
-
-  public List<DelegateScope> getExcludeScopes() {
-    return excludeScopes;
-  }
-
-  public void setExcludeScopes(List<DelegateScope> excludeScopes) {
-    this.excludeScopes = excludeScopes;
-  }
-
-  /**
-   * Getter for property 'accountId'.
-   *
-   * @return Value for property 'accountId'.
-   */
-  public String getAccountId() {
-    return accountId;
-  }
-
-  /**
-   * Setter for property 'accountId'.
-   *
-   * @param accountId Value to set for property 'accountId'.
-   */
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
-  }
-
-  /**
-   * Getter for property 'status'.
-   *
-   * @return Value for property 'status'.
-   */
-  public Status getStatus() {
-    return status;
-  }
-
-  /**
-   * Setter for property 'status'.
-   *
-   * @param status Value to set for property 'status'.
-   */
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  /**
-   * Getter for property 'ip'.
-   *
-   * @return Value for property 'ip'.
-   */
-  public String getIp() {
-    return ip;
-  }
-
-  /**
-   * Setter for property 'ip'.
-   *
-   * @param ip Value to set for property 'ip'.
-   */
-  public void setIp(String ip) {
-    this.ip = ip;
-  }
-
-  /**
-   * Getter for property 'hostName'.
-   *
-   * @return Value for property 'hostName'.
-   */
-  public String getHostName() {
-    return hostName;
-  }
-
-  /**
-   * Setter for property 'hostName'.
-   *
-   * @param hostName Value to set for property 'hostName'.
-   */
-  public void setHostName(String hostName) {
-    this.hostName = hostName;
-  }
-
-  /**
-   * Getter for property 'lastHeartBeat'.
-   *
-   * @return Value for property 'lastHeartBeat'.
-   */
-  public long getLastHeartBeat() {
-    return lastHeartBeat;
-  }
-
-  /**
-   * Setter for property 'lastHeartBeat'.
-   *
-   * @param lastHeartBeat Value to set for property 'lastHeartBeat'.
-   */
-  public void setLastHeartBeat(long lastHeartBeat) {
-    this.lastHeartBeat = lastHeartBeat;
-  }
-
-  /**
-   * Getter for property 'version'.
-   *
-   * @return Value for property 'version'.
-   */
-  public String getVersion() {
-    return version;
-  }
-
-  /**
-   * Setter for property 'version'.
-   *
-   * @param version Value to set for property 'version'.
-   */
-  public void setVersion(String version) {
-    this.version = version;
-  }
-
-  /**
-   * Getter for property 'connected'.
-   *
-   * @return Value for property 'connected'.
-   */
-  public boolean isConnected() {
-    return connected;
-  }
-
-  /**
-   * Setter for property 'connected'.
-   *
-   * @param connected Value to set for property 'connected'.
-   */
-  public void setConnected(boolean connected) {
-    this.connected = connected;
-  }
-
-  /**
-   * Getter for property 'supportedTaskTypes'.
-   *
-   * @return Value for property 'supportedTaskTypes'.
-   */
-  public List<TaskType> getSupportedTaskTypes() {
-    return supportedTaskTypes;
-  }
-
-  /**
-   * Getter for property 'currentlyExecutingDelegateTasks'.
-   *
-   * @return Value for property 'currentlyExecutingDelegateTasks'.
-   */
-  public List<DelegateTask> getCurrentlyExecutingDelegateTasks() {
-    return currentlyExecutingDelegateTasks;
-  }
-
-  /**
-   * Setter for property 'currentlyExecutingDelegateTasks'.
-   *
-   * @param currentlyExecutingDelegateTasks Value to set for property 'currentlyExecutingDelegateTasks'.
-   */
-  public void setCurrentlyExecutingDelegateTasks(List<DelegateTask> currentlyExecutingDelegateTasks) {
-    this.currentlyExecutingDelegateTasks = currentlyExecutingDelegateTasks;
-  }
-
-  /**
-   * Setter for property 'supportedTaskTypes'.
-   *
-   * @param supportedTaskTypes Value to set for property 'supportedTaskTypes'.
-   */
-  public void setSupportedTaskTypes(List<TaskType> supportedTaskTypes) {
-    this.supportedTaskTypes = supportedTaskTypes;
-  }
 
   public enum Status { ENABLED, DISABLED }
 
@@ -359,14 +185,5 @@ public class Delegate extends Base {
       delegate.setLastUpdatedAt(lastUpdatedAt);
       return delegate;
     }
-  }
-
-  @Override
-  public String toString() {
-    return "Delegate{"
-        + "accountId='" + accountId + '\'' + ", status=" + status + ", connected=" + connected + ", ip='" + ip + '\''
-        + ", hostName='" + hostName + '\'' + ", lastHeartBeat=" + lastHeartBeat + ", version='" + version + '\''
-        + ", supportedTaskTypes=" + supportedTaskTypes + ", includeScopes=" + includeScopes
-        + ", excludeScopes=" + excludeScopes + '}';
   }
 }

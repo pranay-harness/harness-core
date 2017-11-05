@@ -553,11 +553,14 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
     Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
+    Set<String> hosts = new HashSet<>();
     for (int i = 0; i < numOfUnknownClusters; i++) {
       SplunkAnalysisCluster cluster = getRandomClusterEvent();
       clusterEvents.add(cluster);
       Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
-      hostMap.put(UUID.randomUUID().toString(), cluster);
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      hosts.add(host);
       unknownClusters.put(UUID.randomUUID().toString(), hostMap);
     }
 
@@ -568,7 +571,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     record.setLogCollectionMinute(0);
     record.setQuery(UUID.randomUUID().toString());
     record.setUnknown_clusters(unknownClusters);
-    wingsPersistence.save(record);
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2);
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -578,6 +581,13 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     assertTrue(analysisSummary.getTestClusters().isEmpty());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     assertEquals(numOfUnknownClusters + " anomalous clusters found", analysisSummary.getAnalysisSummaryMessage());
+    for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getUnknownClusters()) {
+      for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
+        assert (hosts.contains(hostname));
+        hosts.remove(hostname);
+      }
+    }
+    assert (hosts.isEmpty());
   }
 
   @Test
@@ -586,11 +596,14 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     int numOfTestClusters = 1 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
     Map<String, Map<String, SplunkAnalysisCluster>> testClusters = new HashMap<>();
+    Set<String> hosts = new HashSet<>();
     for (int i = 0; i < numOfTestClusters; i++) {
       SplunkAnalysisCluster cluster = getRandomClusterEvent();
       clusterEvents.add(cluster);
       Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
-      hostMap.put(UUID.randomUUID().toString(), cluster);
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      hosts.add(host);
       testClusters.put(UUID.randomUUID().toString(), hostMap);
     }
 
@@ -601,7 +614,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     record.setLogCollectionMinute(0);
     record.setQuery(UUID.randomUUID().toString());
     record.setTest_clusters(testClusters);
-    wingsPersistence.save(record);
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2);
 
     int numOfUnexpectedFreq = 0;
     for (SplunkAnalysisCluster cluster : clusterEvents) {
@@ -619,13 +632,67 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     String message;
     if (numOfUnexpectedFreq == 0) {
-      message = "No anomaly found";
+      message = "No new data for the given queries";
     } else if (numOfUnexpectedFreq == 1) {
       message = numOfUnexpectedFreq + " anomalous cluster found";
     } else {
       message = numOfUnexpectedFreq + " anomalous clusters found";
     }
     assertEquals(message, analysisSummary.getAnalysisSummaryMessage());
+
+    for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getTestClusters()) {
+      for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
+        assert (hosts.contains(hostname));
+        hosts.remove(hostname);
+      }
+    }
+    assert (hosts.isEmpty());
+  }
+
+  @Test
+  @RealMongo
+  public void testAnalysisSummaryControlClusters() throws Exception {
+    int numOfControlClusters = 1 + r.nextInt(10);
+    List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+    Map<String, Map<String, SplunkAnalysisCluster>> controlClusters = new HashMap<>();
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfControlClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      clusterEvents.add(cluster);
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      hosts.add(host);
+      controlClusters.put(UUID.randomUUID().toString(), hostMap);
+    }
+
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId(stateExecutionId);
+    record.setApplicationId(appId);
+    record.setStateType(StateType.SPLUNKV2);
+    record.setLogCollectionMinute(0);
+    record.setQuery(UUID.randomUUID().toString());
+    record.setControl_clusters(controlClusters);
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2);
+
+    LogMLAnalysisSummary analysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    assertNotNull(analysisSummary);
+    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
+    assertEquals(numOfControlClusters, analysisSummary.getControlClusters().size());
+    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
+    assertTrue(analysisSummary.getTestClusters().isEmpty());
+    String message = "No new data for the given queries. Showing baseline data if any.";
+
+    assertEquals(message, analysisSummary.getAnalysisSummaryMessage());
+
+    for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getControlClusters()) {
+      for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
+        assert (hosts.contains(hostname));
+        hosts.remove(hostname);
+      }
+    }
+    assert (hosts.isEmpty());
   }
 
   @Test

@@ -19,6 +19,7 @@ import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDele
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
@@ -55,6 +56,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -75,9 +77,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.cache.Cache;
 import javax.cache.Caching;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -443,6 +448,11 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId) {
+    return wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
+  }
+
+  @Override
   public String queueTask(DelegateTask task) {
     logger.info("Queueing task uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(), task.getAccountId(),
         task.getTaskType(), task.isAsync());
@@ -453,7 +463,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
-    ensureDelegateAvailableToExecuteTask(task);
+    List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
+    if (isEmpty(eligibleDelegateIds)) {
+      throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
+    }
     String taskId = UUIDGenerator.getUuid();
     task.setQueueName(taskId);
     task.setUuid(taskId);
@@ -471,7 +484,7 @@ public class DelegateServiceImpl implements DelegateService {
     return responseData;
   }
 
-  private void ensureDelegateAvailableToExecuteTask(DelegateTask task) {
+  private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
     if (task == null) {
       logger.warn("Delegate task is null");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate task is null");
@@ -504,67 +517,136 @@ public class DelegateServiceImpl implements DelegateService {
     } else if (eligibleDelegates.size() == 0) {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
-      if (featureFlagService.isEnabled(FeatureName.NO_ELIGIBLE_DELEGATES_ALERTS, task.getAccountId())) {
-        alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-            aNoEligibleDelegatesAlert().withTask(task).build());
-      }
-      throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
+      alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
+          aNoEligibleDelegatesAlert().withTask(task).build());
     }
 
+    List<String> eligibleDelegateIds =
+        eligibleDelegates.stream().map(delegateKey -> delegateKey.getId().toString()).collect(Collectors.toList());
     logger.info("{} delegates [{}] eligible to execute the task", eligibleDelegates.size(),
-        eligibleDelegates.stream()
-            .map(delegateKey -> delegateKey.getId().toString())
-            .collect(Collectors.joining(", ")));
-  }
-
-  @Override
-  public PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId) {
-    return wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
+        Joiner.on(", ").join(eligibleDelegateIds));
+    return eligibleDelegateIds;
   }
 
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
-    if (delegateTask == null) {
-      // Async
-      logger.info("Delegate task from cache is null for task {}", taskId);
-      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                      .field("accountId")
-                                      .equal(accountId)
-                                      .field("status")
-                                      .equal(DelegateTask.Status.QUEUED)
-                                      .field("delegateId")
-                                      .doesNotExist()
-                                      .field(ID_KEY)
-                                      .equal(taskId);
-      DelegateTask task = wingsPersistence.executeGetOneQuery(query);
-      if (task == null) {
-        logger.warn("Delegate task {} is null (async)", taskId);
-      } else if (!assignDelegateService.canAssign(task, delegateId)) {
-        logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
-        ensureDelegateAvailableToExecuteTask(task);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    if (delegateTask != null && !assignDelegateService.canAssign(delegateTask, delegateId)) {
+      logger.info("Delegate {} does not accept task {}", delegateId, taskId);
+      ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
+      delegateTask = null;
+    }
+    if (delegateTask != null) {
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)
+          || !featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VALIDATION, accountId)) {
+        return assignTask(delegateId, taskId, delegateTask);
       } else {
-        logger.info("Assigning task {} to delegate {} (async)", taskId, delegateId);
-        UpdateOperations<DelegateTask> updateOperations =
-            wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
-        delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+        logger.info(
+            "Delegate {} to validate task {} {}", delegateId, taskId, delegateTask.isAsync() ? "(async)" : "(sync)");
+        // Store delegateId as validation response pending
+        addToValidationCache(delegateId, taskId);
       }
-    } else {
+    }
+    return delegateTask;
+  }
+
+  @Override
+  public DelegateTask reportConnectionResults(
+      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
+    // Remove delegateId from pending validation responses
+    removeFromValidationCache(delegateId, taskId);
+
+    assignDelegateService.saveConnectionResults(results);
+
+    if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
+      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+      if (delegateTask != null) {
+        return assignTask(delegateId, taskId, delegateTask);
+      }
+    }
+    return null;
+  }
+
+  private void addToValidationCache(String delegateId, String taskId) {
+    Cache<String, Set> delegateValidationCache =
+        cacheHelper.getCache("delegateValidationCache", String.class, Set.class);
+    Set<String> validatingDelegates = delegateValidationCache.get(taskId);
+    if (validatingDelegates == null) {
+      validatingDelegates = new HashSet<>();
+    }
+    validatingDelegates.add(delegateId);
+    delegateValidationCache.put(taskId, validatingDelegates);
+  }
+
+  private void removeFromValidationCache(String delegateId, String taskId) {
+    Cache<String, Set> delegateValidationCache =
+        cacheHelper.getCache("delegateValidationCache", String.class, Set.class);
+    Set<String> validatingDelegates = delegateValidationCache.get(taskId);
+    if (validatingDelegates != null) {
+      validatingDelegates.remove(delegateId);
+      if (validatingDelegates.isEmpty()) {
+        delegateValidationCache.remove(taskId);
+      } else {
+        delegateValidationCache.put(taskId, validatingDelegates);
+      }
+    }
+  }
+
+  @Override
+  public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
+    // Tell delegate whether to proceed anyway because all eligible delegates failed.
+    if (!cacheHelper.getCache("delegateValidationCache", String.class, Set.class).containsKey(taskId)) {
+      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+      if (delegateTask != null) {
+        return assignTask(delegateId, taskId, delegateTask);
+      }
+    }
+    return null;
+  }
+
+  private DelegateTask getUnassignedDelegateTask(String accountId, String taskId) {
+    DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    if (delegateTask != null) {
       // Sync
       logger.info("Delegate task from cache: {}", delegateTask.getUuid());
       if (!isBlank(delegateTask.getDelegateId())) {
         logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
         delegateTask = null;
-      } else if (!assignDelegateService.canAssign(delegateTask, delegateId)) {
-        logger.info("Delegate {} does not accept task {}", delegateId, taskId);
-        ensureDelegateAvailableToExecuteTask(delegateTask);
-        delegateTask = null;
-      } else {
-        logger.info("Assigning task {} to delegate {}", taskId, delegateId);
-        delegateTask.setDelegateId(delegateId);
-        Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
       }
+    } else {
+      // Async
+      delegateTask = wingsPersistence.createQuery(DelegateTask.class)
+                         .field("accountId")
+                         .equal(accountId)
+                         .field("status")
+                         .equal(DelegateTask.Status.QUEUED)
+                         .field("delegateId")
+                         .doesNotExist()
+                         .field(ID_KEY)
+                         .equal(taskId)
+                         .get();
+      if (delegateTask != null) {
+        logger.info("Delegate task from database: {}", delegateTask.getUuid());
+        delegateTask.setAsync(true);
+      } else {
+        logger.warn("Delegate task {} is not available", taskId);
+      }
+    }
+    return delegateTask;
+  }
+
+  private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
+    // Clear pending validations. No longer need to track since we're assigning
+    cacheHelper.getCache("delegateValidationCache", String.class, Set.class).remove(taskId);
+
+    logger.info(
+        "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
+    delegateTask.setDelegateId(delegateId);
+    if (delegateTask.isAsync()) {
+      delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, delegateTask);
+    } else {
+      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
     }
     return delegateTask;
   }
@@ -592,6 +674,11 @@ public class DelegateServiceImpl implements DelegateService {
       Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
     }
     return delegateTask;
+  }
+
+  @Override
+  public void clearConnectionResults(String delegateId) {
+    assignDelegateService.clearConnectionResults(delegateId);
   }
 
   @Override

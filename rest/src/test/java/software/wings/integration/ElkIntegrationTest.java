@@ -388,7 +388,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(logMLAnalysisSummary.getControlClusters().size(), 1);
     assertEquals(logMLAnalysisSummary.getTestClusters().size(), 0);
-    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(), "No new data for the given queries");
+    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(),
+        "No new data for the given queries. Showing baseline data if any.");
   }
 
   @Test
@@ -502,7 +503,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
-    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(), "No baseline data for the given queries");
+    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(),
+        "No baseline data for the given queries. This will be baseline for the next run.");
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
     assertNull(logAnalysisRecord.getControl_clusters());

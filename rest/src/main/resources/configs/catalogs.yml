@@ -303,6 +303,12 @@ TASK_TYPES:
       value: ELK
     - name: Logz
       value: LOGZ
+    - name: New Relic
+      value: NEWRELIC
+    - name: Sumo Logic
+      value: SUMO
+    - name: Key Management Service
+      value: KMS
 
 EXECUTION_STATUS:
     - name: Aborted
