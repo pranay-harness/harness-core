@@ -23,6 +23,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -50,7 +51,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   @Inject private MetricDataStoreService metricStoreService;
 
   public AppdynamicsDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

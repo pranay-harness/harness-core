@@ -19,6 +19,7 @@ import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -42,8 +43,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   private LogDataCollectionInfo dataCollectionInfo;
 
-  public ElkLogzDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+  public ElkLogzDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+      Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
