@@ -7,7 +7,6 @@ import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentEvent;
 import software.wings.api.ContainerServiceData;
@@ -15,13 +14,10 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KubernetesConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
@@ -30,22 +26,17 @@ import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
-import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.request.ContainerFilter;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
-import software.wings.service.impl.instance.sync.request.EcsFilter;
-import software.wings.service.impl.instance.sync.request.KubernetesFilter;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
@@ -74,9 +65,6 @@ public class ContainerInstanceHelper {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private InstanceHelper instanceHelper;
   @Inject private InstanceService instanceService;
-  @Inject private SettingsService settingsService;
-  @Inject private GkeClusterService gkeClusterService;
-  @Inject private KmsService kmsService;
 
   @Inject @Named("KubernetesInstanceSync") private ContainerSync kubernetesSyncService;
   @Inject @Named("EcsInstanceSync") private ContainerSync ecsSyncService;
@@ -342,76 +330,20 @@ public class ContainerInstanceHelper {
         .build();
   }
 
-  public ContainerSyncResponse getLatestInstancesFromContainerServer(Set<String> containerSvcNameSet,
-      InstanceType instanceType, String appId, String infraMappingId, String clusterName, String computeProviderId,
-      String workflowId) {
-    ContainerFilter containerFilter = getContainerFilter(
-        containerSvcNameSet, instanceType, appId, infraMappingId, clusterName, computeProviderId, workflowId);
-    Validator.notNullCheck("ContainerFilter", containerFilter);
+  public ContainerSyncResponse getLatestInstancesFromContainerServer(
+      Collection<ContainerDeploymentInfo> containerDeploymentInfoCollection, InstanceType instanceType) {
+    ContainerFilter containerFilter =
+        ContainerFilter.builder().containerDeploymentInfoCollection(containerDeploymentInfoCollection).build();
 
     ContainerSyncRequest instanceSyncRequest = ContainerSyncRequest.builder().filter(containerFilter).build();
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      return kubernetesSyncService.getInstances(instanceSyncRequest, workflowId, appId);
+      return kubernetesSyncService.getInstances(instanceSyncRequest);
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
-      return ecsSyncService.getInstances(instanceSyncRequest, workflowId, appId);
+      return ecsSyncService.getInstances(instanceSyncRequest);
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);
       throw new WingsException(msg);
     }
-  }
-
-  private ContainerFilter getContainerFilter(Set<String> containerSvcNameSet, InstanceType instanceType, String appId,
-      String infraMappingId, String clusterName, String computeProviderId, String workflowId) {
-    ContainerFilter containerFilter;
-    Validator.notNullCheck("InstanceType", instanceType);
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
-    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      containerFilter = KubernetesFilter.builder()
-                            .replicationControllerNameSet(containerSvcNameSet)
-                            .kubernetesConfig(getKubernetesConfig(infrastructureMapping, workflowId, appId))
-                            .build();
-      containerFilter.setClusterName(clusterName);
-
-    } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
-      if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
-        String msg = "Ecs doesn't support infrastructure mapping type :" + infrastructureMapping.getInfraMappingType();
-        logger.error(msg);
-        throw new WingsException(msg);
-      }
-      EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-      containerFilter = EcsFilter.builder()
-                            .serviceNameSet(containerSvcNameSet)
-                            .awsComputeProviderId(computeProviderId)
-                            .region(ecsInfrastructureMapping.getRegion())
-                            .build();
-      ecsInfrastructureMapping.setClusterName(clusterName);
-
-    } else {
-      String msg = "Unsupported container instance type:" + instanceType;
-      logger.error(msg);
-      throw new WingsException(msg);
-    }
-
-    return containerFilter;
-  }
-
-  private KubernetesConfig getKubernetesConfig(
-      InfrastructureMapping infrastructureMapping, String workflowId, String appId) {
-    KubernetesConfig kubernetesConfig;
-
-    if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
-      SettingAttribute computeProviderSetting =
-          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting,
-          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), workflowId, appId),
-          gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
-    } else {
-      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
-    }
-
-    return kubernetesConfig;
   }
 }
