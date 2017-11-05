@@ -86,11 +86,13 @@ public class LogClusterManagerJob implements Job {
       try {
         // TODO handle pause
         while (keepProcessing) {
+          logger.info("Running cluster task for " + context.getStateExecutionId());
           /*
            * Work flow is invalid
            * exit immediately
            */
           if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+            logger.info("Log Cluster : State no longer valid. skipping." + context.getStateExecutionId());
             break;
           }
 
@@ -111,6 +113,8 @@ public class LogClusterManagerJob implements Job {
                           Collections.singleton(log.getHost()), log.getLogCollectionMinute());
 
                       if (hasDataRecords) {
+                        logger.info("Running cluster task for " + context.getStateExecutionId() + " , minute "
+                            + logRequest.getLogCollectionMinute());
                         new LogMLClusterGenerator(
                             context.getClusterContext(), ClusterLevel.L0, ClusterLevel.L1, logRequest)
                             .run();
@@ -118,11 +122,16 @@ public class LogClusterManagerJob implements Job {
                         analysisService.deleteClusterLevel(context.getStateType(), context.getStateExecutionId(),
                             context.getAppId(), logRequest.getQuery(), logRequest.getNodes(),
                             logRequest.getLogCollectionMinute(), ClusterLevel.L0);
+                      } else {
+                        logger.info(" skipping cluster task no data found. for " + context.getStateExecutionId()
+                            + " , minute " + logRequest.getLogCollectionMinute());
                       }
                       analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
                           context.getAppId(), logRequest.getQuery(), logRequest.getNodes(),
                           logRequest.getLogCollectionMinute(), ClusterLevel.getHeartBeatLevel(ClusterLevel.L0),
                           ClusterLevel.getHeartBeatLevel(ClusterLevel.L0).next());
+                      logger.info(" finish cluster task for " + context.getStateExecutionId() + " , minute "
+                          + logRequest.getLogCollectionMinute());
                       return true;
                     } catch (Exception ex) {
                       logger.error("Unknown error ", ex);
