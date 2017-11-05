@@ -7,7 +7,6 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -20,7 +19,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
-import software.wings.utils.Misc;
 
 import javax.validation.executable.ValidateOnExecution;
 
@@ -31,13 +29,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  /**
-   * The Log service.
-   */
+
   @Inject private DelegateLogService logService;
-
-  @Inject private TimeLimiter timeLimiter;
-
   @Inject private Injector injector;
 
   @Override
