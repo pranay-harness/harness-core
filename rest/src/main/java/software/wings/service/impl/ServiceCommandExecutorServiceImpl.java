@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import software.wings.annotation.Encryptable;
@@ -20,7 +19,6 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -30,10 +28,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
-  /**
-   * The Command unit executor service.
-   */
-
   @Inject private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
   @Inject private EncryptionService encryptionService;
 
@@ -43,18 +37,15 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public CommandExecutionStatus execute(Command command, CommandExecutionContext context) {
-    Set<String> nonSshDeploymentType = Sets.newHashSet(
-        DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
-    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
+    if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
       return executeSshCommand(command, context);
     } else {
-      return executeNonSshDeploymentCommand(
-          command, context, commandUnitExecutorServiceMap.get(command.getDeploymentType()));
+      return executeNonSshCommand(command, context, commandUnitExecutorServiceMap.get(command.getDeploymentType()));
     }
   }
 
-  private CommandExecutionStatus executeNonSshDeploymentCommand(
+  private CommandExecutionStatus executeNonSshCommand(
       Command command, CommandExecutionContext context, CommandUnitExecutorService commandUnitExecutorService) {
     try {
       CommandExecutionStatus commandExecutionStatus = commandUnitExecutorService.execute(
@@ -68,7 +59,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
   }
 
-  public CommandExecutionStatus executeSshCommand(Command command, CommandExecutionContext context) {
+  private CommandExecutionStatus executeSshCommand(Command command, CommandExecutionContext context) {
     CommandUnitExecutorService commandUnitExecutorService =
         commandUnitExecutorServiceMap.get(DeploymentType.SSH.name());
     try {
@@ -104,20 +95,18 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     return commandExecutionStatus;
   }
 
-  private void decryptCredentials(CommandExecutionContext commandExecutionContext) {
-    if (commandExecutionContext.getHostConnectionAttributes() != null) {
-      encryptionService.decrypt((Encryptable) commandExecutionContext.getHostConnectionAttributes().getValue(),
-          commandExecutionContext.getHostConnectionCredentials());
+  private void decryptCredentials(CommandExecutionContext context) {
+    if (context.getHostConnectionAttributes() != null) {
+      encryptionService.decrypt(
+          (Encryptable) context.getHostConnectionAttributes().getValue(), context.getHostConnectionCredentials());
     }
-
-    if (commandExecutionContext.getBastionConnectionAttributes() != null) {
-      encryptionService.decrypt((Encryptable) commandExecutionContext.getBastionConnectionAttributes().getValue(),
-          commandExecutionContext.getBastionConnectionCredentials());
+    if (context.getBastionConnectionAttributes() != null) {
+      encryptionService.decrypt(
+          (Encryptable) context.getBastionConnectionAttributes().getValue(), context.getBastionConnectionCredentials());
     }
-
-    if (commandExecutionContext.getCloudProviderSetting() != null) {
-      encryptionService.decrypt((Encryptable) commandExecutionContext.getCloudProviderSetting().getValue(),
-          commandExecutionContext.getCloudProviderCredentials());
+    if (context.getCloudProviderSetting() != null) {
+      encryptionService.decrypt(
+          (Encryptable) context.getCloudProviderSetting().getValue(), context.getCloudProviderCredentials());
     }
   }
 }

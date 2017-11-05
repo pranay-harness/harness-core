@@ -72,11 +72,13 @@ public class SplunkResource implements LogAnalysisResource {
   @ExternalServiceAuth
   public RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("logCollectionMinute") Integer logCollectionMinute, LogMLAnalysisRecord mlAnalysisResponse)
+      @QueryParam("logCollectionMinute") Integer logCollectionMinute,
+      @QueryParam("isBaselineCreated") boolean isBaselineCreated, LogMLAnalysisRecord mlAnalysisResponse)
       throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
+    mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
     return new RestResponse<>(analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.SPLUNKV2));
   }
 

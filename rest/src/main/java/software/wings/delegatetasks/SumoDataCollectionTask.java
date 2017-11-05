@@ -16,6 +16,7 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -36,8 +37,8 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
-  public SumoDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+  public SumoDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+      Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
@@ -132,7 +133,12 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
               hostStr = " (" + hostStr + ") ";
 
-              final String searchQuery = query + hostStr + " | timeslice 1m";
+              String searchQuery = "";
+              if (!query.startsWith("(") && !query.endsWith(")")) {
+                searchQuery = " (" + query + ") " + hostStr + " | timeslice 1m";
+              } else {
+                searchQuery = query + hostStr + " | timeslice 1m";
+              }
 
               final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
               logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime

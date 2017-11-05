@@ -82,7 +82,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     Set<String> canaryNewHostNames = context.getTestNodes();
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
       getLogger().error("Could not find test nodes to compare the data");
-      return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
+      return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find hosts to analyze!");
     }
 
     Set<String> lastExecutionNodes = context.getControlNodes();
@@ -90,7 +90,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
-            "Skipping analysis due to lack of baseline data (First time deployment).");
+            "Skipping analysis due to lack of baseline hosts. Rerun workflow after this succeeds.");
       }
 
       getLogger().warn(
@@ -101,7 +101,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         && lastExecutionNodes.equals(canaryNewHostNames)) {
       getLogger().error("Control and test nodes are same. Will not be running Log analysis");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED,
-          "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
+          "Skipping analysis. Baseline and new hosts are the same. (Minimum two phases are required).");
     }
 
     final LogAnalysisExecutionData executionData =
