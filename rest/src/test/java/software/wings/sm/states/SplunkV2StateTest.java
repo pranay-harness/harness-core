@@ -142,7 +142,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.FAILED, response.getExecutionStatus());
-    assertEquals("Could not find test nodes to compare the data", response.getErrorMessage());
+    assertEquals("Could not find hosts to analyze!", response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -166,7 +166,8 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
-    assertEquals("Skipping analysis due to lack of baseline data (First time deployment).", response.getErrorMessage());
+    assertEquals("Skipping analysis due to lack of baseline hosts. Rerun workflow after this succeeds.",
+        response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -190,7 +191,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.FAILED, response.getExecutionStatus());
-    assertEquals("Skipping analysis due to lack of baseline data (Minimum two phases are required).",
+    assertEquals("Skipping analysis. Baseline and new hosts are the same. (Minimum two phases are required).",
         response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =
