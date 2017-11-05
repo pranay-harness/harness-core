@@ -51,9 +51,9 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
-import software.wings.cloudprovider.aws.AwsLambdaService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -62,6 +62,8 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -110,11 +112,13 @@ public class AwsLambdaState extends State {
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
 
-  @Inject @Transient private transient AwsLambdaService awsLambdaService;
+  @Inject @Transient private transient KmsService kmsService;
 
   @Inject @Transient private transient LogService logService;
 
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
+
+  @Inject @Transient private transient EncryptionService encryptionService;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
@@ -217,8 +221,12 @@ public class AwsLambdaState extends State {
 
     List<FunctionMeta> functionArns = new ArrayList<>();
 
+    AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
+    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(awsConfig, null, null);
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+
     AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
-                                                          .withAwsConfig((AwsConfig) cloudProviderSetting.getValue())
+                                                          .withAwsConfig(awsConfig)
                                                           .withRegion(region)
                                                           .withFunctionArns(functionArns)
                                                           .build();
