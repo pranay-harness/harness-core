@@ -259,7 +259,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
-        // populateGraph(workflowExecution, null, null, null, false);
         try {
           populateNodeHierarchy(workflowExecution, includeGraph, includeStatus);
         } catch (Exception e) {
@@ -1148,17 +1147,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  //  @Override
-  //  public List<WorkflowExecution> getWorkflowExecutionHistory(String serviceId, String envType, int limit) {
-  //    PageRequest pageRequest = Builder.aPageRequest()
-  //        .addFilter("serviceExecutionSummaries.contextElement.className",
-  //        Operator.EQ,"software.wings.api.ServiceElement") .addFilter("serviceExecutionSummaries.contextElement.uuid",
-  //        Operator.EQ, serviceId) .addFilter("envType", Operator.EQ, EnvironmentType.PROD) .addOrder("startTs",
-  //        OrderType.DESC).withLimit(String.valueOf(limit)).build();
-  //
-  //    return wingsPersistence.query(WorkflowExecution.class, pageRequest, true);
-  //  }
-
   /**
    * Trigger simple execution workflow execution.
    *
@@ -1727,7 +1715,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecution.getStateMachineId());
+    StateMachine sm =
+        wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> req =
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)

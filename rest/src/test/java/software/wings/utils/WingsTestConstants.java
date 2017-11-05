@@ -202,6 +202,7 @@ public class WingsTestConstants {
    */
   public static final String WORKFLOW_NAME = "WORKFLOW_NAME";
 
+  public static final Integer DEFAULT_VERSION = 1000;
   /**
    * The constant PIPELINE_ID.
    */
