@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import software.wings.annotation.Encryptable;
@@ -19,6 +20,7 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -37,8 +39,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public CommandExecutionStatus execute(Command command, CommandExecutionContext context) {
+    Set<String> nonSshDeploymentType = Sets.newHashSet(
+        DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
-    if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
+    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
       return executeSshCommand(command, context);
     } else {
       return executeNonSshCommand(command, context, commandUnitExecutorServiceMap.get(command.getDeploymentType()));
