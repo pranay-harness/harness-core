@@ -56,12 +56,7 @@ public class GcrServiceImpl implements GcrService {
   }
 
   private String getUrl(String gcrHostName) {
-    StringBuilder sb = new StringBuilder("https://");
-    sb.append(gcrHostName);
-    if (!gcrHostName.endsWith("/")) {
-      sb.append("/");
-    }
-    return sb.toString();
+    return "https://" + gcrHostName + (gcrHostName.endsWith("/") ? "" : "/");
   }
 
   @Override
