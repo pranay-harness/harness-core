@@ -517,10 +517,8 @@ public class DelegateServiceImpl implements DelegateService {
     } else if (eligibleDelegates.size() == 0) {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
-      if (featureFlagService.isEnabled(FeatureName.NO_ELIGIBLE_DELEGATES_ALERTS, task.getAccountId())) {
-        alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-            aNoEligibleDelegatesAlert().withTask(task).build());
-      }
+      alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
+          aNoEligibleDelegatesAlert().withTask(task).build());
     }
 
     List<String> eligibleDelegateIds =
