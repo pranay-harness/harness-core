@@ -5,6 +5,7 @@ package software.wings.beans;
  */
 
 public enum TaskGroup {
+  // *** NOTE: If you add an item to this list then also add an entry in catalogs.yml in the TASK_TYPES section. ***
   HTTP,
   SPLUNK,
   APPDYNAMICS,
