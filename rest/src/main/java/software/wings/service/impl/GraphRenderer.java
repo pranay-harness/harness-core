@@ -52,7 +52,7 @@ public class GraphRenderer {
    * @param allExpanded      the all expanded
    * @return the node
    */
-  Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
+  public Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
       List<String> expandedGroupIds, Boolean expandLastOnly, boolean allExpanded) {
     logger.debug(
         "generateSubworkflows request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
