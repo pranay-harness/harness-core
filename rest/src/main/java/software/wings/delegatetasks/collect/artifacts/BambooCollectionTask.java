@@ -12,6 +12,7 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
@@ -23,14 +24,14 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 12/14/16.
  */
-public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotifyResponseData> {
+public class BambooCollectionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(BambooCollectionTask.class);
 
   @Inject private BambooService bambooService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public BambooCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<ListNotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
+  public BambooCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+      Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 

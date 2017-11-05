@@ -11,10 +11,10 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -22,7 +22,7 @@ import javax.inject.Inject;
 /**
  * Created by srinivas on 4/4/17.
  */
-public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotifyResponseData> {
+public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(NexusCollectionTask.class);
 
   @Inject private NexusService nexusService;
@@ -31,7 +31,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public NexusCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<ListNotifyResponseData> postExecute,
+  public NexusCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
