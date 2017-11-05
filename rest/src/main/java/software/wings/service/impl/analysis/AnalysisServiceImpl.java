@@ -46,6 +46,7 @@ import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -319,6 +320,49 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType) {
     mlAnalysisResponse.setStateType(stateType);
+
+    // replace dots in test cluster
+    if (mlAnalysisResponse.getControl_clusters() != null) {
+      Map<String, Map<String, SplunkAnalysisCluster>> controlClustersMap = new HashMap<>();
+      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
+          mlAnalysisResponse.getControl_clusters().entrySet()) {
+        controlClustersMap.put(clusterEntry.getKey(), new HashMap<>());
+        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
+          controlClustersMap.get(clusterEntry.getKey())
+              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
+        }
+      }
+      mlAnalysisResponse.setControl_clusters(controlClustersMap);
+    }
+
+    // replace dots in test cluster
+    if (mlAnalysisResponse.getTest_clusters() != null) {
+      Map<String, Map<String, SplunkAnalysisCluster>> testClustersMap = new HashMap<>();
+      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
+          mlAnalysisResponse.getTest_clusters().entrySet()) {
+        testClustersMap.put(clusterEntry.getKey(), new HashMap<>());
+        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
+          testClustersMap.get(clusterEntry.getKey())
+              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
+        }
+      }
+      mlAnalysisResponse.setTest_clusters(testClustersMap);
+    }
+
+    // replace dots in test cluster
+    if (mlAnalysisResponse.getUnknown_clusters() != null) {
+      Map<String, Map<String, SplunkAnalysisCluster>> unknownClustersMap = new HashMap<>();
+      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
+          mlAnalysisResponse.getUnknown_clusters().entrySet()) {
+        unknownClustersMap.put(clusterEntry.getKey(), new HashMap<>());
+        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
+          unknownClustersMap.get(clusterEntry.getKey())
+              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
+        }
+      }
+      mlAnalysisResponse.setUnknown_clusters(unknownClustersMap);
+    }
+
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     logger.debug(
         "inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
@@ -374,12 +418,19 @@ public class AnalysisServiceImpl implements AnalysisService {
     analysisSummary.setUnknownClusters(
         computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
 
+    if (!analysisRecord.isBaseLineCreated()) {
+      analysisSummary.setTestClusters(analysisSummary.getControlClusters());
+      analysisSummary.setControlClusters(new ArrayList<>());
+    }
+
     RiskLevel riskLevel = RiskLevel.NA;
     String analysisSummaryMsg =
         analysisRecord.getAnalysisSummaryMessage() == null || analysisRecord.getAnalysisSummaryMessage().isEmpty()
-        ? analysisRecord.getControl_clusters() == null
-            ? "No baseline data for the given queries"
-            : analysisRecord.getTest_clusters() == null ? "No new data for the given queries" : "No anomaly found"
+        ? analysisSummary.getControlClusters().size() == 0
+            ? "No baseline data for the given queries. This will be baseline for the next run."
+            : analysisSummary.getTestClusters().size() == 0
+                ? "No new data for the given queries. Showing baseline data if any."
+                : "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();
 
     int unknownClusters = 0;
@@ -520,7 +571,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         hostSummary.setFrequencies(getFrequencies(analysisCluster));
         clusterSummary.setLogText(analysisCluster.getText());
         clusterSummary.setTags(analysisCluster.getTags());
-        clusterSummary.getHostSummary().put(hostEntry.getKey(), hostSummary);
+        clusterSummary.getHostSummary().put(Misc.replaceUnicodeWithDot(hostEntry.getKey()), hostSummary);
         double score = 0.0;
         if (clusterScores != null && clusterScores.containsKey(labelEntry.getKey())) {
           switch (cluster_type) {

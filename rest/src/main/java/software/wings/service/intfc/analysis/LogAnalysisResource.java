@@ -76,7 +76,8 @@ public interface LogAnalysisResource {
 
   RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("logCollectionMinute") Integer logCollectionMinute, LogMLAnalysisRecord mlAnalysisResponse)
+      @QueryParam("logCollectionMinute") Integer logCollectionMinute,
+      @QueryParam("isBaselineCreated") boolean isBaselineCreated, LogMLAnalysisRecord mlAnalysisResponse)
       throws IOException;
 
   RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(
