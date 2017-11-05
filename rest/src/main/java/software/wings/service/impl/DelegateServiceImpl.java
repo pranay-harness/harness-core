@@ -613,6 +613,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (!isBlank(delegateTask.getDelegateId())) {
         logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
         delegateTask = null;
+      } else {
+        delegateTask.setAccountId(accountId);
       }
     } else {
       // Async

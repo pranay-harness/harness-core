@@ -3,6 +3,8 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 
+import com.google.common.collect.Sets;
+
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.Encryptable;
@@ -17,6 +19,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.SshHelperUtil;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
@@ -40,8 +43,10 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validate(Command command, CommandExecutionContext context) {
+    Set<String> nonSshDeploymentType = Sets.newHashSet(
+        DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
-    if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
+    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
       return validateHostSsh(context.getHost().getPublicDns(), context);
     } else {
       return validateNonSshConfig(context);
@@ -94,7 +99,9 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private String getCriteria(Command command, CommandExecutionContext context) {
-    if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
+    Set<String> nonSshDeploymentType = Sets.newHashSet(
+        DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
+    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
       return context.getHost().getPublicDns();
     } else if (context.getCloudProviderSetting() != null
         && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
