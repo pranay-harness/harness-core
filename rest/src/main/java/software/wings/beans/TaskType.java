@@ -22,6 +22,7 @@ import software.wings.delegatetasks.validation.AlwaysTrueValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
+import software.wings.delegatetasks.validation.CommandValidation;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.delegatetasks.validation.DockerValidation;
@@ -42,8 +43,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public enum TaskType {
-  COMMAND(TaskGroup.COMMAND, CommandTask.class,
-      AlwaysTrueValidation.class), // TODO - Need CommandValidation using same criteria as HostValidationValidation.
+  COMMAND(TaskGroup.COMMAND, CommandTask.class, CommandValidation.class),
   HTTP(TaskGroup.HTTP, HttpTask.class, HttpValidation.class),
   JENKINS(TaskGroup.JENKINS, JenkinsTask.class, JenkinsValidation.class),
   JENKINS_COLLECTION(TaskGroup.JENKINS, JenkinsCollectionTask.class, JenkinsValidation.class),

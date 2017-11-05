@@ -42,11 +42,11 @@ public class HttpValidation extends AbstractDelegateValidateTask {
   @Override
   public List<DelegateConnectionResult> validate() {
     Object[] parameters = getParameters();
-    return validate((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
-        (Integer) parameters[4]);
+    return singletonList(validate((String) parameters[0], (String) parameters[1], (String) parameters[2],
+        (String) parameters[3], (Integer) parameters[4]));
   }
 
-  private List<DelegateConnectionResult> validate(
+  private DelegateConnectionResult validate(
       String method, String url, String body, String headers, int socketTimeoutMillis) {
     SSLContextBuilder builder = new SSLContextBuilder();
     try {
@@ -78,7 +78,7 @@ public class HttpValidation extends AbstractDelegateValidateTask {
     } catch (IOException e) {
       resultBuilder.validated(false);
     }
-    return singletonList(resultBuilder.build());
+    return resultBuilder.build();
   }
 
   private HttpUriRequest getHttpUriRequest(String method, String url, String body, String headers) {
