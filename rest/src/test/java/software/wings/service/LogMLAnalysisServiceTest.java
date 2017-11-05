@@ -453,6 +453,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  @Ignore
   public void testIsBaseLineCreatedNoRecords() throws Exception {
     final WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setStateMachineId(UUID.randomUUID().toString());
@@ -504,6 +505,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  @Ignore
   public void testIsBaseLineCreate() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
@@ -592,6 +594,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  @Ignore
   public void testAnalysisSummaryTestClusters() throws Exception {
     int numOfTestClusters = 1 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
