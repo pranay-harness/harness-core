@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -139,15 +140,21 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     String delegateScopeId = delegateScope.getUuid();
     List<Delegate> delegates =
         wingsPersistence.createQuery(Delegate.class).field("accountId").equal(accountId).asList();
-    List<String> delegateNames =
-        delegates.stream()
-            .filter(delegate
-                -> delegate.getIncludeScopes().stream().anyMatch(scope -> scope.getUuid().equals(delegateScopeId))
-                    || delegate.getExcludeScopes().stream().anyMatch(scope -> scope.getUuid().equals(delegateScopeId)))
-            .map(Delegate::getHostName)
-            .collect(Collectors.toList());
-    String message = String.format("Delegate scope [%s] couldn't be deleted because it's used by these delegates [%s]",
-        delegateScope.getName(), Joiner.on(", ").join(delegateNames));
-    throw new WingsException(INVALID_REQUEST, "message", message);
+    List<String> delegateNames = delegates.stream()
+                                     .filter(delegate
+                                         -> (isNotEmpty(delegate.getIncludeScopes())
+                                                && delegate.getIncludeScopes().stream().anyMatch(
+                                                       scope -> scope.getUuid().equals(delegateScopeId)))
+                                             || (isNotEmpty(delegate.getExcludeScopes())
+                                                    && delegate.getExcludeScopes().stream().anyMatch(
+                                                           scope -> scope.getUuid().equals(delegateScopeId))))
+                                     .map(Delegate::getHostName)
+                                     .collect(Collectors.toList());
+    if (isNotEmpty(delegateNames)) {
+      String message =
+          String.format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
+              delegateScope.getName(), Joiner.on(", ").join(delegateNames));
+      throw new WingsException(INVALID_REQUEST, "message", message);
+    }
   }
 }
