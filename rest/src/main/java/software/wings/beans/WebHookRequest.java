@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,8 +15,9 @@ import java.util.Map;
 @Data
 public class WebHookRequest {
   @NotEmpty private String application;
-  @NotEmpty private String artifactSource;
+  private String artifactSource;
   private String buildNumber;
   private String dockerImageTag;
   private Map<String, String> parameters;
+  private List<Map<String, String>> artifacts = new ArrayList();
 }

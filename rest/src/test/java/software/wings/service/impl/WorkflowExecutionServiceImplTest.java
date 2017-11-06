@@ -1920,7 +1920,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    *@param templateInfraMapping @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public String triggerTemplateWorkflow(String appId, Environment env, Service service,
+  private String triggerTemplateWorkflow(String appId, Environment env, Service service,
       InfrastructureMapping infrastructureMapping, Service templateService, InfrastructureMapping templateInfraMapping)
       throws InterruptedException {
     Workflow workflow = createTemplateWorkflow(appId, env, service, infrastructureMapping);
