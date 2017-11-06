@@ -2,10 +2,12 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
@@ -23,6 +25,7 @@ import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -119,11 +122,32 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
 
   @Override
   public void delete(String accountId, String delegateScopeId) {
-    logger.info("Deleting delegate scope: {}", delegateScopeId);
-    wingsPersistence.delete(wingsPersistence.createQuery(DelegateScope.class)
-                                .field("accountId")
-                                .equal(accountId)
-                                .field(ID_KEY)
-                                .equal(delegateScopeId));
+    DelegateScope delegateScope = wingsPersistence.createQuery(DelegateScope.class)
+                                      .field("accountId")
+                                      .equal(accountId)
+                                      .field(ID_KEY)
+                                      .equal(delegateScopeId)
+                                      .get();
+    if (delegateScope != null) {
+      ensureScopeSafeToDelete(accountId, delegateScope);
+      logger.info("Deleting delegate scope: {}", delegateScopeId);
+      wingsPersistence.delete(delegateScope);
+    }
+  }
+
+  private void ensureScopeSafeToDelete(String accountId, DelegateScope delegateScope) {
+    String delegateScopeId = delegateScope.getUuid();
+    List<Delegate> delegates =
+        wingsPersistence.createQuery(Delegate.class).field("accountId").equal(accountId).asList();
+    List<String> delegateNames =
+        delegates.stream()
+            .filter(delegate
+                -> delegate.getIncludeScopes().stream().anyMatch(scope -> scope.getUuid().equals(delegateScopeId))
+                    || delegate.getExcludeScopes().stream().anyMatch(scope -> scope.getUuid().equals(delegateScopeId)))
+            .map(Delegate::getHostName)
+            .collect(Collectors.toList());
+    String message = String.format("Delegate scope [%s] couldn't be deleted because it's used by these delegates [%s]",
+        delegateScope.getName(), Joiner.on(", ").join(delegateNames));
+    throw new WingsException(INVALID_REQUEST, "message", message);
   }
 }
