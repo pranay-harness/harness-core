@@ -520,35 +520,45 @@ public class DelegateServiceImpl implements DelegateService {
       String taskId = delegateTask.getUuid();
       currentlyExecutingTasks.remove(taskId);
       if (delegateConnectionResults != null) {
+        boolean validated = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
+        if (validated) {
+          logger.info("Validation succeeded for task {}.", taskId);
+        } else {
+          logger.info("Validation failed for task {}", taskId);
+        }
         try {
           DelegateTask delegateTask1 = execute(managerClient.reportConnectionResults(
               delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, delegateConnectionResults));
           if (delegateTask1 != null && delegateId.equals(delegateTask1.getDelegateId())) {
-            logger.info("Validation succeeded for task {}. Got the go-ahead to proceed.", taskId);
+            logger.info("Got the go-ahead to proceed for task {}.", taskId);
             executeTask(delegateTaskEvent, delegateTask1);
           } else {
-            logger.info("Did not validate task {}", taskId);
-            try {
-              logger.info(
-                  "Waiting 2 seconds to give other delegates a chance to register as validators for task {}.", taskId);
-              Thread.sleep(2000);
-            } catch (InterruptedException e) {
-              logger.warn("Sleep interrupted.", e);
-            }
-            try {
-              logger.info("Checking whether all delegates failed for task {}", taskId);
-              DelegateTask delegateTask2 = execute(
-                  managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-              if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
-                logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
-                executeTask(delegateTaskEvent, delegateTask2);
+            logger.info("Did not get the go-ahead to proceed for task {}.", taskId);
+            if (validated) {
+              logger.info("Task {} validated but was assigned to another delegate.", taskId);
+            } else {
+              try {
+                logger.info("Waiting 2 seconds to give other delegates a chance to register as validators for task {}.",
+                    taskId);
+                Thread.sleep(2000);
+              } catch (InterruptedException e) {
+                logger.warn("Sleep interrupted. Task {}", taskId, e);
               }
-            } catch (IOException e) {
-              logger.error("Unable to check whether to proceed", e);
+              try {
+                logger.info("Checking whether all delegates failed for task {}", taskId);
+                DelegateTask delegateTask2 = execute(
+                    managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+                if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
+                  logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
+                  executeTask(delegateTaskEvent, delegateTask2);
+                }
+              } catch (IOException e) {
+                logger.error("Unable to check whether to proceed. Task {}", taskId, e);
+              }
             }
           }
         } catch (IOException e) {
-          logger.error("Unable to report validation results", e);
+          logger.error("Unable to report validation results. Task {}", taskId, e);
         }
       }
     };
