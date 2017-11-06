@@ -1098,9 +1098,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       } while (retryCount-- > 0);
     } catch (Exception ex) {
       logger.error("Wait for service steady state failed with exception ", ex);
+      if (ex instanceof InterruptedException) {
+        String msg = "Timed out waiting for service to reach steady state.";
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+        throw new WingsException(INVALID_REQUEST, "message", msg);
+      }
       throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
     }
-    executionLogCallback.saveExecutionLog(String.format("Service failed to reach a steady state"), LogLevel.ERROR);
+    executionLogCallback.saveExecutionLog("Service failed to reach a steady state", LogLevel.ERROR);
     throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach a steady state");
   }
 
