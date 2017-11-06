@@ -119,6 +119,10 @@ public class DelegateModule extends AbstractModule {
         .annotatedWith(Names.named("upgradeExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("UpgradeCheck-Thread").setPriority(Thread.MAX_PRIORITY).build()));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("verificationExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(
+            2, new ThreadFactoryBuilder().setNameFormat("Verification-Thread-%d").setPriority(7).build()));
 
     int cores = Runtime.getRuntime().availableProcessors();
     bind(ExecutorService.class)

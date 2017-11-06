@@ -428,34 +428,35 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public boolean isStateValid(String appdId, String stateExecutionID) {
     StateExecutionInstance stateExecutionInstance =
         workflowExecutionService.getStateExecutionData(appdId, stateExecutionID);
-    return (stateExecutionInstance == null || stateExecutionInstance.getStatus().isFinalStatus()) ? false : true;
+    return stateExecutionInstance != null && !stateExecutionInstance.getStatus().isFinalStatus();
   }
 
   @Override
   public int getCollectionMinuteToProcess(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId) {
-    Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .field("stateType")
-                                                .equal(stateType)
-                                                .field("workflowExecutionId")
-                                                .equal(workflowExecutionId)
-                                                .field("stateExecutionId")
-                                                .equal(stateExecutionId)
-                                                .field("serviceId")
-                                                .equal(serviceId)
-                                                .field("level")
-                                                .equal(ClusterLevel.HF)
-                                                .order("-dataCollectionMinute")
-                                                .limit(1);
+    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                            .field("stateType")
+                                                            .equal(stateType)
+                                                            .field("workflowExecutionId")
+                                                            .equal(workflowExecutionId)
+                                                            .field("stateExecutionId")
+                                                            .equal(stateExecutionId)
+                                                            .field("serviceId")
+                                                            .equal(serviceId)
+                                                            .field("level")
+                                                            .equal(ClusterLevel.HF)
+                                                            .order("-dataCollectionMinute")
+                                                            .limit(1)
+                                                            .get();
 
-    if (query.asList().size() == 0) {
+    if (newRelicMetricDataRecord == null) {
       logger.info(
           "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}. Will be running analysis for minute 0",
           ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
       return 0;
     }
 
-    return query.asList().get(0).getDataCollectionMinute() + 1;
+    return newRelicMetricDataRecord.getDataCollectionMinute() + 1;
   }
 
   @Override
