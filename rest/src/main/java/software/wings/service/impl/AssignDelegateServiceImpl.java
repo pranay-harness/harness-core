@@ -20,6 +20,7 @@ import software.wings.service.intfc.EnvironmentService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 7/20/17
@@ -108,21 +109,21 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public void saveConnectionResults(List<DelegateConnectionResult> results) {
-    results.stream()
-        .filter(result -> isNotBlank(result.getCriteria()))
-        .forEach(result
-            -> result.setUuid(Optional
-                                  .ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                  .field("accountId")
-                                                  .equal(result.getAccountId())
-                                                  .field("delegateId")
-                                                  .equal(result.getDelegateId())
-                                                  .field("criteria")
-                                                  .equal(result.getCriteria())
-                                                  .get())
-                                  .orElse(result)
-                                  .getUuid()));
-    wingsPersistence.save(results);
+    List<DelegateConnectionResult> resultsToSave =
+        results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(Collectors.toList());
+    resultsToSave.forEach(result
+        -> result.setUuid(Optional
+                              .ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                              .field("accountId")
+                                              .equal(result.getAccountId())
+                                              .field("delegateId")
+                                              .equal(result.getDelegateId())
+                                              .field("criteria")
+                                              .equal(result.getCriteria())
+                                              .get())
+                              .orElse(result)
+                              .getUuid()));
+    wingsPersistence.save(resultsToSave);
   }
 
   @Override
