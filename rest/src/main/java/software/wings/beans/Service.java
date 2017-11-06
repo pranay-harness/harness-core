@@ -53,6 +53,7 @@ public class Service extends Base {
   @Transient private Activity lastDeploymentActivity;
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
+  @Transient private boolean artifactNeeded;
 
   public Service clone() {
     return aService()
@@ -270,6 +271,14 @@ public class Service extends Base {
     return 31 * super.hashCode()
         + Objects.hash(name, description, artifactType, serviceCommands, appContainer, configFiles,
               lastDeploymentActivity, lastProdDeploymentActivity);
+  }
+
+  public boolean isArtifactNeeded() {
+    return artifactNeeded;
+  }
+
+  public void setArtifactNeeded(boolean artifactNeeded) {
+    this.artifactNeeded = artifactNeeded;
   }
 
   /**

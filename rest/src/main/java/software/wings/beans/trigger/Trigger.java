@@ -9,7 +9,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.WorkflowType;
 
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class Trigger extends Base {
     private String description;
     private TriggerCondition condition;
     private String pipelineId;
-    private List<ArtifactSelection> advanceConfigurations;
+    private List<ArtifactSelection> artifactSelections;
 
     private Builder() {}
 
@@ -64,8 +63,8 @@ public class Trigger extends Base {
       return this;
     }
 
-    public Builder withAdvanceConfigurations(List<ArtifactSelection> advanceConfigurations) {
-      this.advanceConfigurations = advanceConfigurations;
+    public Builder withArtifactSelections(List<ArtifactSelection> artifactSelections) {
+      this.artifactSelections = artifactSelections;
       return this;
     }
 
@@ -79,28 +78,13 @@ public class Trigger extends Base {
       return this;
     }
 
-    public Builder withWorkflowType(WorkflowType workflowType) {
-      return this;
-    }
-
-    public Builder but() {
-      return aDeploymentTrigger()
-          .withName(name)
-          .withDescription(description)
-          .withCondition(condition)
-          .withPipelineId(pipelineId)
-          .withAdvanceConfigurations(advanceConfigurations)
-          .withAppId(appId)
-          .withUuid(uuid);
-    }
-
     public Trigger build() {
       Trigger trigger = new Trigger();
       trigger.setName(name);
       trigger.setDescription(description);
       trigger.setCondition(condition);
       trigger.setPipelineId(pipelineId);
-      trigger.setArtifactSelections(advanceConfigurations);
+      trigger.setArtifactSelections(artifactSelections);
       trigger.setAppId(appId);
       trigger.setUuid(uuid);
       return trigger;

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static java.util.Arrays.asList;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
@@ -13,7 +14,6 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -29,6 +29,7 @@ import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -73,10 +74,12 @@ public class EnvState extends State {
     String appId = ((ExecutionContextImpl) context).getApp().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    List<String> artifactIds = workflowStandardParams.getArtifactIds();
-    List<Artifact> artifacts = artifactIds.stream()
-                                   .map(artifactId -> Builder.anArtifact().withUuid(artifactId).build())
-                                   .collect(Collectors.toList());
+    List<Artifact> artifacts = workflowStandardParams.getArtifactIds() == null
+        ? new ArrayList<>()
+        : workflowStandardParams.getArtifactIds()
+              .stream()
+              .map(artifactId -> anArtifact().withUuid(artifactId).build())
+              .collect(Collectors.toList());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);

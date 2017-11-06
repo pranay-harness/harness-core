@@ -496,4 +496,15 @@ public class WingsTestConstants {
    * The constant TRIGGER_ID
    */
   public static final String ARTIFACT_FILTER = "ARTIFACT_FILTER";
+
+  /**
+   * The constant WEBHOOK_TOKEN.
+   */
+  public static final String WEBHOOK_TOKEN = "WEBHOOK_TOKEN";
+
+  /**
+   * The constant WEBHOOK_REQUEST_BODY
+   */
+
+  public static final String WEBHOOK_REQUEST_BODY = "WEBHOOK_REQUEST_BODY";
 }

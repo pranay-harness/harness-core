@@ -119,7 +119,7 @@ public class TriggerResource {
    * Delete.
    *
    * @param appId the app id
-   * @param id    the id
+   * @param triggerId    the id
    * @return the rest response
    */
   @DELETE
