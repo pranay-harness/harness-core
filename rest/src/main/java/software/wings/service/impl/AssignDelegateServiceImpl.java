@@ -108,18 +108,20 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public void saveConnectionResults(List<DelegateConnectionResult> results) {
-    results.forEach(result
-        -> result.setUuid(Optional
-                              .ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                              .field("accountId")
-                                              .equal(result.getAccountId())
-                                              .field("delegateId")
-                                              .equal(result.getDelegateId())
-                                              .field("criteria")
-                                              .equal(result.getCriteria())
-                                              .get())
-                              .orElse(result)
-                              .getUuid()));
+    results.stream()
+        .filter(result -> isNotBlank(result.getCriteria()))
+        .forEach(result
+            -> result.setUuid(Optional
+                                  .ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                  .field("accountId")
+                                                  .equal(result.getAccountId())
+                                                  .field("delegateId")
+                                                  .equal(result.getDelegateId())
+                                                  .field("criteria")
+                                                  .equal(result.getCriteria())
+                                                  .get())
+                                  .orElse(result)
+                                  .getUuid()));
     wingsPersistence.save(results);
   }
 
