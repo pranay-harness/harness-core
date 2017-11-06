@@ -52,6 +52,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -192,7 +193,7 @@ public class CommandState extends State {
 
     updateWorflowExecutionStatsInProgress(context);
 
-    String delegateTaskId = null;
+    String delegateTaskId;
     try {
       if (instanceElement == null) {
         throw new StateExecutionException("No InstanceElement present in context");
@@ -227,8 +228,9 @@ public class CommandState extends State {
       }
 
       executionDataBuilder.withCommandName(actualCommand);
-      Command command =
-          serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand).getCommand();
+      ServiceCommand serviceCommand =
+          serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand);
+      Command command = serviceCommand != null ? serviceCommand.getCommand() : null;
 
       if (command == null) {
         throw new StateExecutionException(
