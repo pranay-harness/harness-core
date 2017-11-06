@@ -60,6 +60,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
       KubernetesConfig config = (KubernetesConfig) context.getCloudProviderSetting().getValue();
       resultBuilder.criteria(config.getMasterUrl()).validated(connectableHttpUrl(config.getMasterUrl()));
     } else {
+      // TODO(brett): For ECS check region for container ID meta data info to work
       resultBuilder.criteria(NON_SSH_COMMAND_ALWAYS_TRUE).validated(true);
     }
     return resultBuilder.build();

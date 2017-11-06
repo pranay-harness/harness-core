@@ -638,7 +638,7 @@ public class DelegateServiceImpl implements DelegateService {
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }
     if (stillRunning) {
-      logger.info("Task timed out: {}", delegateTask.getUuid());
+      logger.info("Task {} timed out after {} milliseconds", delegateTask.getUuid(), delegateTask.getTimeout());
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
     }
