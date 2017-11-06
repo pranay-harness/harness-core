@@ -538,8 +538,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateTask = null;
     }
     if (delegateTask != null) {
-      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)
-          || !featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VALIDATION, accountId)) {
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
         return assignTask(delegateId, taskId, delegateTask);
       } else {
         logger.info(
