@@ -283,12 +283,12 @@ public class DelegateResource {
 
   @DelegateAuth
   @PUT
-  @Path("{delegateId}/clear-connection-results")
+  @Path("{delegateId}/clear-cache")
   @Timed
   @ExceptionMetered
-  public void clearConnectionResults(
+  public void clearCache(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    delegateService.clearConnectionResults(delegateId);
+    delegateService.clearCache(delegateId);
   }
 
   @DelegateAuth
