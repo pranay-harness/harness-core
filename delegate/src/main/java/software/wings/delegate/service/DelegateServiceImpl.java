@@ -499,7 +499,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (StringUtils.isEmpty(delegateTask.getDelegateId())) {
         // Not whitelisted. Perform validation.
         DelegateValidateTask delegateValidateTask = delegateTask.getTaskType().getDelegateValidateTask(
-            delegateId, delegateTask, getPostValidationMethod(delegateTaskEvent, delegateTask));
+            delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
         currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
@@ -514,7 +514,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private Consumer<List<DelegateConnectionResult>> getPostValidationMethod(
+  private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
       DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
     return delegateConnectionResults -> {
       String taskId = delegateTask.getUuid();
@@ -558,14 +558,14 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
         delegateTask.getTaskType());
     DelegateRunnableTask delegateRunnableTask = delegateTask.getTaskType().getDelegateRunnableTask(delegateId,
-        delegateTask, getPostExecutionMethod(delegateTask), getPreExecutionMethod(delegateTaskEvent, delegateTask));
+        delegateTask, getPostExecutionFunction(delegateTask), getPreExecutionFunction(delegateTaskEvent, delegateTask));
     injector.injectMembers(delegateRunnableTask);
     currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
     executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
 
-  private Supplier<Boolean> getPreExecutionMethod(
+  private Supplier<Boolean> getPreExecutionFunction(
       DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
     return () -> {
       try {
@@ -587,7 +587,7 @@ public class DelegateServiceImpl implements DelegateService {
     };
   }
 
-  private Consumer<NotifyResponseData> getPostExecutionMethod(@NotNull DelegateTask delegateTask) {
+  private Consumer<NotifyResponseData> getPostExecutionFunction(@NotNull DelegateTask delegateTask) {
     return notifyResponseData -> {
       Response<ResponseBody> response = null;
       try {
