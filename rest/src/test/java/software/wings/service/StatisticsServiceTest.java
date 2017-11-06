@@ -623,7 +623,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                                     .withStatus(SUCCESS)
                                                     .withWorkflowType(ORCHESTRATION)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
-                                                    .withCreatedAt(endEpoch)
+                                                    .withCreatedAt(startEpoch)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
@@ -631,7 +631,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withStatus(SUCCESS)
             .withWorkflowType(ORCHESTRATION)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
-            .withCreatedAt(endEpoch)
+            .withCreatedAt(startEpoch)
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
@@ -670,7 +670,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     assertThat(aggregatedProdDayStats.getInstancesCount()).isEqualTo(2);
     assertThat(aggregatedProdDayStats.getTotalCount()).isEqualTo(2);
     assertThat(aggregatedProdDayStats.getDaysStats().size()).isEqualTo(30);
-    assertThat(aggregatedProdDayStats.getDaysStats().get(29)).isEqualTo(new DayStat(2, 0, 2, endEpoch));
+    assertThat(aggregatedProdDayStats.getDaysStats().get(0)).isEqualTo(new DayStat(2, 0, 2, startEpoch));
   }
 
   @Test
