@@ -678,7 +678,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void clearConnectionResults(String delegateId) {
+  public void clearCache(String delegateId) {
     assignDelegateService.clearConnectionResults(delegateId);
   }
 

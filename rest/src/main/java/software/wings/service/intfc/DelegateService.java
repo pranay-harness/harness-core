@@ -56,7 +56,7 @@ public interface DelegateService {
 
   DelegateTask startDelegateTask(String accountId, String delegateId, String taskId);
 
-  void clearConnectionResults(String delegateId);
+  void clearCache(String delegateId);
 
   void processDelegateResponse(@Valid DelegateTaskResponse response);
 

@@ -67,7 +67,7 @@ public class DelegateScopeResource {
   public RestResponse<Void> delete(@PathParam("delegateScopeId") @NotEmpty String delegateScopeId,
       @QueryParam("accountId") @NotEmpty String accountId) {
     delegateScopeService.delete(accountId, delegateScopeId);
-    return new RestResponse<Void>();
+    return new RestResponse<>();
   }
 
   @DelegateAuth
