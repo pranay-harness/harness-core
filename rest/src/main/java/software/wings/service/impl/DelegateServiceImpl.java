@@ -690,13 +690,15 @@ public class DelegateServiceImpl implements DelegateService {
               .addFilter("accountId", EQ, response.getAccountId())
               .addFilter(ID_KEY, EQ, response.getTask().getUuid())
               .build());
-      String waitId = delegateTask.getWaitId();
-      waitNotifyEngine.notify(waitId, response.getResponse());
-      wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
-                                  .field("accountId")
-                                  .equal(response.getAccountId())
-                                  .field(ID_KEY)
-                                  .equal(delegateTask.getUuid()));
+      if (delegateTask != null) {
+        String waitId = delegateTask.getWaitId();
+        waitNotifyEngine.notify(waitId, response.getResponse());
+        wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
+                                    .field("accountId")
+                                    .equal(response.getAccountId())
+                                    .field(ID_KEY)
+                                    .equal(delegateTask.getUuid()));
+      }
     } else {
       String topicName = response.getTask().getQueueName();
       // do the haze
