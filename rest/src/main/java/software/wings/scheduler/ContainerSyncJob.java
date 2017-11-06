@@ -66,16 +66,10 @@ public class ContainerSyncJob implements Job {
     // The workflow and stateExecutionInstanceId and other attributes might be different
     String appId = containerDeploymentInfo.getAppId();
     InstanceType instanceType = containerDeploymentInfo.getInstanceType();
-    String infraMappingId = containerDeploymentInfo.getInfraMappingId();
-    String clusterName = containerDeploymentInfo.getClusterName();
-    String computeProviderId = containerDeploymentInfo.getComputeProviderId();
     String containerSvcNameNoRevision = containerDeploymentInfo.getContainerSvcNameNoRevision();
-    String workflowId = containerDeploymentInfo.getWorkflowId();
-
-    Set<String> containerServiceNameSet = containerSvcNameDeploymentInfoMap.keySet();
 
     ContainerSyncResponse instanceSyncResponse = containerInstanceHelper.getLatestInstancesFromContainerServer(
-        containerServiceNameSet, instanceType, appId, infraMappingId, clusterName, computeProviderId, workflowId);
+        containerSvcNameDeploymentInfoMap.values(), instanceType);
 
     Validator.notNullCheck("InstanceSyncResponse", instanceSyncResponse);
 
