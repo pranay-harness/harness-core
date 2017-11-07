@@ -25,6 +25,10 @@
 
 7. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
 
+Run this script to test if JCE is installed properly:
+
+```$JAVA_HOME/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'```
+
 ### Build
 
 1) Clone form git repository: https://github.com/wings-software/wings
