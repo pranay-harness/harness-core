@@ -153,7 +153,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetAllServiceVariableExpressions() {
     when(serviceResourceService.list(
-        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFieldsIncluded("uuid").build(), false,
+        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(), false,
         false));
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
 
