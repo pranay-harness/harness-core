@@ -31,11 +31,11 @@ Run this script to test if JCE is installed properly:
 
 If you are under Ubuntu:
 
-`
+```
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt update
 sudo apt install oracle-java8-unlimited-jce-policy 
-`
+```
 
 ### Build
 
