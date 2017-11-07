@@ -14,6 +14,7 @@ import software.wings.WingsBaseTest;
 import software.wings.rules.Integration;
 import software.wings.scheduler.DataCleanUpJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
 
@@ -23,12 +24,14 @@ import software.wings.service.intfc.AuditService;
 @Integration
 @Ignore
 public class DataCleanUpJobUtil extends WingsBaseTest {
-  @Inject private ArtifactService artifactService;
-  @Inject private AuditService auditService;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
-
   private static final long ARTIFACT_RETENTION_SIZE = 1L;
   private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
+  private static final long ALERT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
+
+  @Inject private ArtifactService artifactService;
+  @Inject private AuditService auditService;
+  @Inject private AlertService alertService;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Test
   public void deleteArtifacts() {
@@ -64,6 +67,19 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       e.printStackTrace();
     }
     System.out.println("Deleting audit records completed");
+  }
+
+  @Test
+  public void deleteAlerts() {
+    System.out.println("Deleting alerts");
+    try {
+      alertService.deleteOldAlerts(ALERT_RETENTION_TIME);
+      System.out.println("Deleting alerts success");
+    } catch (Exception e) {
+      System.out.println("Deleting alerts failed.");
+      e.printStackTrace();
+    }
+    System.out.println("Deleting alerts completed");
   }
 
   /**
