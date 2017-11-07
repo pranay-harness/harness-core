@@ -19,6 +19,8 @@ import java.util.List;
  * Created by rsingh on 10/30/17.
  */
 public interface SecretManager {
+  List<EncryptionConfig> listEncryptionConfig(String accountId);
+
   EncryptionType getEncryptionType(String accountId);
 
   List<SecretUsageLog> getUsageLogs(final String entityId, SettingValue.SettingVariableTypes variableType)
@@ -41,4 +43,6 @@ public interface SecretManager {
       throws IllegalAccessException;
 
   char[] decryptYamlRef(String encryptedYamlRef) throws NoSuchFieldException, IllegalAccessException;
+
+  boolean transitionSecrets(String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType);
 }

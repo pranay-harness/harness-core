@@ -11,9 +11,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.security.VaultService;
 
-import java.util.Collection;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -43,21 +41,5 @@ public class VaultResource {
   public RestResponse<Boolean> deleteVaultConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("vaultConfigId") final String vaultConfigId) {
     return new RestResponse<>(vaultService.deleteVaultConfig(accountId, vaultConfigId));
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Collection<VaultConfig>> lisVaultConfigs(@QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(vaultService.listVaultConfigs(accountId));
-  }
-
-  @GET
-  @Path("/transition-vault")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> transitionVault(@QueryParam("accountId") final String accountId,
-      @QueryParam("fromVaultId") String fromVaultId, @QueryParam("toVaultId") String toVaultId) {
-    return new RestResponse<>(vaultService.transitionVault(accountId, fromVaultId, toVaultId));
   }
 }
