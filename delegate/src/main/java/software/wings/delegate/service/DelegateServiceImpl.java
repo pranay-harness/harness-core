@@ -627,7 +627,8 @@ public class DelegateServiceImpl implements DelegateService {
   private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
     long startTime = System.currentTimeMillis();
     boolean stillRunning = true;
-    while (stillRunning && System.currentTimeMillis() - startTime < delegateTask.getTimeout()) {
+    long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
+    while (stillRunning && System.currentTimeMillis() - startTime < timeout) {
       try {
         Thread.sleep(5000);
       } catch (InterruptedException e) {
@@ -638,7 +639,7 @@ public class DelegateServiceImpl implements DelegateService {
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }
     if (stillRunning) {
-      logger.info("Task {} timed out after {} milliseconds", delegateTask.getUuid(), delegateTask.getTimeout());
+      logger.info("Task {} timed out after {} milliseconds", delegateTask.getUuid(), timeout);
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
     }
