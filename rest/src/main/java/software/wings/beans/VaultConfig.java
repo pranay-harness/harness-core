@@ -13,13 +13,8 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
 import software.wings.security.EncryptionType;
 import software.wings.service.intfc.security.EncryptionConfig;
-import software.wings.settings.SettingValue.SettingVariableTypes;
-
-import java.util.List;
 
 /**
  * Created by rsingh on 11/02/17.
