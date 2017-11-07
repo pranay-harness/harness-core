@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -446,8 +447,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("level")
                                                             .equal(ClusterLevel.HF)
                                                             .order("-dataCollectionMinute")
-                                                            .limit(1)
-                                                            .get();
+                                                            .get(new FindOptions().limit(1));
 
     if (newRelicMetricDataRecord == null) {
       logger.info(
