@@ -1,12 +1,19 @@
 package software.wings.beans.alert;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Application;
 import software.wings.beans.CatalogItem;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskGroup;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +22,10 @@ import javax.inject.Inject;
 
 public class NoEligibleDelegatesAlert implements AlertData {
   @Inject @Transient @SchemaIgnore private transient EnvironmentService environmentService;
+
+  @Inject @Transient @SchemaIgnore private transient AppService appService;
+
+  @Inject @Transient @SchemaIgnore private transient InfrastructureMappingService infrastructureMappingService;
 
   @Inject @Transient @SchemaIgnore private transient CatalogService catalogService;
 
@@ -40,7 +51,26 @@ public class NoEligibleDelegatesAlert implements AlertData {
 
   @Override
   public String buildTitle() {
-    return String.format("No delegates can execute %s tasks", getTaskTypeDisplayName());
+    StringBuilder title = new StringBuilder();
+    title.append("No delegates can execute ").append(getTaskTypeDisplayName()).append("tasks ");
+    if (task.getAppId() != null && !task.getAppId().equals(GLOBAL_APP_ID)) {
+      Application app = appService.get(task.getAppId());
+      title.append("for application ").append(app.getName()).append(" ");
+      if (task.getEnvId() != null) {
+        Environment env = environmentService.get(app.getAppId(), task.getEnvId(), false);
+        title.append("in ")
+            .append(env.getName())
+            .append(" environment (")
+            .append(env.getEnvironmentType().name())
+            .append(") ");
+      }
+      if (task.getInfrastructureMappingId() != null) {
+        InfrastructureMapping infrastructureMapping =
+            infrastructureMappingService.get(app.getAppId(), task.getInfrastructureMappingId());
+        title.append("with service infrastructure ").append(infrastructureMapping.getDisplayName());
+      }
+    }
+    return title.toString();
   }
 
   private String getTaskTypeDisplayName() {
