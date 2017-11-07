@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.alerts.AlertType;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
 import software.wings.dl.PageRequest;

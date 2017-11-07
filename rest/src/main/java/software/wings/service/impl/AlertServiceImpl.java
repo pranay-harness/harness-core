@@ -7,10 +7,10 @@ import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
-import static software.wings.alerts.AlertType.ApprovalNeeded;
-import static software.wings.alerts.AlertType.ManualInterventionNeeded;
-import static software.wings.alerts.AlertType.NoActiveDelegates;
-import static software.wings.alerts.AlertType.NoEligibleDelegates;
+import static software.wings.beans.alert.AlertType.ApprovalNeeded;
+import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
+import static software.wings.beans.alert.AlertType.NoActiveDelegates;
+import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 
@@ -22,7 +22,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.alerts.AlertType;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.ApprovalAlert;
@@ -32,6 +33,7 @@ import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
@@ -129,6 +131,12 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    if (!alertType.getAlertDataClass().isAssignableFrom(alertData.getClass())) {
+      String errorMsg = String.format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
+          alertType.getAlertDataClass().getName(), alertData.getClass().getName());
+      logger.error(errorMsg);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", errorMsg);
+    }
     injector.injectMembers(alertData);
     Query<Alert> query =
         wingsPersistence.createQuery(Alert.class).field("type").equal(alertType).field("status").equal(Open);

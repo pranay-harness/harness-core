@@ -17,7 +17,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.alerts.AlertType;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.User;
 import software.wings.beans.alert.ApprovalAlert;
 import software.wings.dl.PageResponse;

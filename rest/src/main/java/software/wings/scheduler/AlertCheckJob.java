@@ -8,7 +8,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.alerts.AlertType;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.Delegate;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
