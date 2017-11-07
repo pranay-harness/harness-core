@@ -7,7 +7,6 @@ import org.mongodb.morphia.annotations.Indexed;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
-import software.wings.alerts.AlertType;
 import software.wings.beans.Base;
 
 /**

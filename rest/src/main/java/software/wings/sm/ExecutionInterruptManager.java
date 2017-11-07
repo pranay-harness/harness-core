@@ -4,7 +4,7 @@
 
 package software.wings.sm;
 
-import static software.wings.alerts.AlertType.ManualInterventionNeeded;
+import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
