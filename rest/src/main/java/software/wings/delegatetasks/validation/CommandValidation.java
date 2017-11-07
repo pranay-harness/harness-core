@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DelegateTask;
@@ -18,8 +19,14 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult.Delegate
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.SshHelperUtil;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
@@ -49,16 +56,35 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
       return validateHostSsh(context.getHost().getPublicDns(), context);
     } else {
-      return validateNonSshConfig(context);
+      return validateNonSshConfig(context, command.getDeploymentType());
     }
   }
 
-  private DelegateConnectionResult validateNonSshConfig(CommandExecutionContext context) {
+  private DelegateConnectionResult validateNonSshConfig(CommandExecutionContext context, String deploymentType) {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
-    if (context.getCloudProviderSetting() != null
+    if (DeploymentType.KUBERNETES.name().equals(deploymentType) && context.getCloudProviderSetting() != null
         && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
       KubernetesConfig config = (KubernetesConfig) context.getCloudProviderSetting().getValue();
       resultBuilder.criteria(config.getMasterUrl()).validated(connectableHttpUrl(config.getMasterUrl()));
+    } else if (DeploymentType.ECS.name().equals(deploymentType)) {
+      resultBuilder.criteria(DeploymentType.ECS.name() + ":" + context.getRegion());
+      try {
+        String regionCommand =
+            "echo \"$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)\" | "
+            + "sed -e 's:\\([0-9][0-9]*\\)[a-z]*\\$:\\\\1:'";
+        PipedInputStream pipedInputStream = new PipedInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
+        new ProcessExecutor()
+            .timeout(5, TimeUnit.SECONDS)
+            .command(regionCommand)
+            .redirectOutput(new PipedOutputStream(pipedInputStream))
+            .readOutput(true)
+            .start();
+        String line = reader.readLine();
+        resultBuilder.validated(StringUtils.startsWith(line, context.getRegion()));
+      } catch (IOException e) {
+        resultBuilder.validated(false);
+      }
     } else {
       resultBuilder.criteria(NON_SSH_COMMAND_ALWAYS_TRUE).validated(true);
     }
@@ -103,9 +129,12 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
       return context.getHost().getPublicDns();
-    } else if (context.getCloudProviderSetting() != null
+    } else if (DeploymentType.KUBERNETES.name().equals(command.getDeploymentType())
+        && context.getCloudProviderSetting() != null
         && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
       return ((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl();
+    } else if (DeploymentType.ECS.name().equals(command.getDeploymentType())) {
+      return DeploymentType.ECS.name() + ":" + context.getRegion();
     } else {
       return NON_SSH_COMMAND_ALWAYS_TRUE;
     }
