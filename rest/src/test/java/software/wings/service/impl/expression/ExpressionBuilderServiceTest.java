@@ -17,6 +17,7 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -35,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -141,20 +143,13 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldGetAllServiceVariableExpressionsNoServiceIds() {
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
-
-    Set<String> expressions = builderService.listExpressions(APP_ID, "All", SERVICE);
-    assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("service.name")).isTrue();
-    assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME")).isFalse();
-  }
-
-  @Test
   public void shouldGetAllServiceVariableExpressions() {
     when(serviceResourceService.list(
-        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(), false,
-        false));
+             aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
+             false, false))
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build()))
+                        .build());
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
 
     Set<String> expressions = builderService.listExpressions(APP_ID, "All", SERVICE);
