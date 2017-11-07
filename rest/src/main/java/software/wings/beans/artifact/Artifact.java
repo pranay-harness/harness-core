@@ -1,5 +1,11 @@
 package software.wings.beans.artifact;
 
+import static software.wings.common.Constants.ARTIFACT_PATH;
+import static software.wings.common.Constants.BUCKET_NAME;
+import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.common.Constants.KEY;
+import static software.wings.common.Constants.URL;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -13,7 +19,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Service;
-import software.wings.common.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +53,7 @@ public class Artifact extends Base {
    */
   public String getBuildNo() {
     if (getMetadata() != null) {
-      return getMetadata().get(Constants.BUILD_NO);
+      return getMetadata().get(BUILD_NO);
     }
     return null;
   }
@@ -60,7 +65,43 @@ public class Artifact extends Base {
    */
   public String getArtifactPath() {
     if (getMetadata() != null) {
-      return getMetadata().get(Constants.ARTIFACT_PATH);
+      return getMetadata().get(ARTIFACT_PATH);
+    }
+    return null;
+  }
+
+  /**
+   * Gets Bucket Name
+   *
+   * @return the bucket name
+   */
+  public String getBucketName() {
+    if (getMetadata() != null) {
+      return getMetadata().get(BUCKET_NAME);
+    }
+    return null;
+  }
+
+  /**
+   * Gets Key
+   *
+   * @return the bucket name
+   */
+  public String getKey() {
+    if (getMetadata() != null) {
+      return getMetadata().get(KEY);
+    }
+    return null;
+  }
+
+  /**
+   * Gets Key
+   *
+   * @return the bucket name
+   */
+  public String getUrl() {
+    if (getMetadata() != null) {
+      return getMetadata().get(URL);
     }
     return null;
   }
