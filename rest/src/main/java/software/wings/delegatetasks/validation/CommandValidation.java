@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -57,24 +56,27 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validate(Command command, CommandExecutionContext context) {
+    DelegateConnectionResultBuilder resultBuilder =
+        DelegateConnectionResult.builder().criteria(getCriteria(command.getDeploymentType(), context));
     Set<String> nonSshDeploymentType = Sets.newHashSet(
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
     if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
-      return validateHostSsh(context.getHost().getPublicDns(), context);
+      validateHostSsh(resultBuilder, context.getHost().getPublicDns(), context);
     } else {
-      return validateNonSshConfig(context, command.getDeploymentType());
+      validateNonSshConfig(resultBuilder, context, command.getDeploymentType());
     }
+    return resultBuilder.build();
   }
 
-  private DelegateConnectionResult validateNonSshConfig(CommandExecutionContext context, String deploymentType) {
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
+  private void validateNonSshConfig(
+      DelegateConnectionResultBuilder resultBuilder, CommandExecutionContext context, String deploymentType) {
     if (DeploymentType.KUBERNETES.name().equals(deploymentType) && context.getCloudProviderSetting() != null
         && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
       KubernetesConfig config = (KubernetesConfig) context.getCloudProviderSetting().getValue();
-      resultBuilder.criteria(config.getMasterUrl()).validated(connectableHttpUrl(config.getMasterUrl()));
-    } else if (DeploymentType.ECS.name().equals(deploymentType)) {
-      resultBuilder.criteria(DeploymentType.ECS.name() + ":" + context.getRegion());
+      resultBuilder.validated(connectableHttpUrl(config.getMasterUrl()));
+    } else if (DeploymentType.ECS.name().equals(deploymentType)
+        || DeploymentType.AWS_CODEDEPLOY.name().equals(deploymentType)) {
       CloseableHttpClient httpclient =
           HttpClients.custom()
               .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(2000).build())
@@ -82,25 +84,22 @@ public class CommandValidation extends AbstractDelegateValidateTask {
       HttpUriRequest httpUriRequest =
           new HttpGet("http://169.254.169.254/latest/meta-data/placement/availability-zone");
       try {
-        HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-        int statusCode = httpResponse.getStatusLine().getStatusCode();
-        logger.info("Status code checking region: " + statusCode);
-        HttpEntity entity = httpResponse.getEntity();
-        String content =
-            entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "";
-        logger.info("Delegate AWS region: " + content);
-        resultBuilder.validated(StringUtils.startsWith(content, context.getRegion()));
+        HttpEntity entity = httpclient.execute(httpUriRequest).getEntity();
+        String availabilityZone =
+            entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "none";
+        logger.info("Delegate AWS availability zone: " + availabilityZone);
+        resultBuilder.validated(StringUtils.startsWith(availabilityZone, context.getRegion()));
       } catch (IOException e) {
+        logger.info("Can't get AWS region");
         resultBuilder.validated(false);
       }
     } else {
-      resultBuilder.criteria(NON_SSH_COMMAND_ALWAYS_TRUE).validated(true);
+      resultBuilder.validated(true);
     }
-    return resultBuilder.build();
   }
 
-  private DelegateConnectionResult validateHostSsh(String hostName, CommandExecutionContext context) {
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(hostName);
+  private void validateHostSsh(
+      DelegateConnectionResultBuilder resultBuilder, String hostName, CommandExecutionContext context) {
     try {
       SshSessionFactory.getSSHSession(SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context))
           .disconnect();
@@ -109,7 +108,6 @@ public class CommandValidation extends AbstractDelegateValidateTask {
       // Invalid credentials error is still a valid connection
       resultBuilder.validated(StringUtils.contains(jschEx.getMessage(), "Auth"));
     }
-    return resultBuilder.build();
   }
 
   private void decryptCredentials(CommandExecutionContext context) {
@@ -129,20 +127,21 @@ public class CommandValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(getCriteria((Command) getParameters()[0], (CommandExecutionContext) getParameters()[1]));
+    return singletonList(
+        getCriteria(((Command) getParameters()[0]).getDeploymentType(), (CommandExecutionContext) getParameters()[1]));
   }
 
-  private String getCriteria(Command command, CommandExecutionContext context) {
+  private String getCriteria(String deploymentType, CommandExecutionContext context) {
     Set<String> nonSshDeploymentType = Sets.newHashSet(
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
-    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
+    if (!nonSshDeploymentType.contains(deploymentType)) {
       return context.getHost().getPublicDns();
-    } else if (DeploymentType.KUBERNETES.name().equals(command.getDeploymentType())
-        && context.getCloudProviderSetting() != null
+    } else if (DeploymentType.KUBERNETES.name().equals(deploymentType) && context.getCloudProviderSetting() != null
         && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
       return ((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl();
-    } else if (DeploymentType.ECS.name().equals(command.getDeploymentType())) {
-      return DeploymentType.ECS.name() + ":" + context.getRegion();
+    } else if (DeploymentType.ECS.name().equals(deploymentType)
+        || DeploymentType.AWS_CODEDEPLOY.name().equals(deploymentType)) {
+      return "AWS:" + context.getRegion();
     } else {
       return NON_SSH_COMMAND_ALWAYS_TRUE;
     }
