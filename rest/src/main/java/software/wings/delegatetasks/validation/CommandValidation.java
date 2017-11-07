@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -38,6 +37,8 @@ import javax.inject.Inject;
  * Created by brett on 11/5/17
  */
 public class CommandValidation extends AbstractDelegateValidateTask {
+  private static final String AWS_AVAILABILITY_ZONE_CHECK =
+      "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   private static final String NON_SSH_COMMAND_ALWAYS_TRUE = "NON_SSH_COMMAND_ALWAYS_TRUE";
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -61,30 +62,28 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     Set<String> nonSshDeploymentType = Sets.newHashSet(
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
-    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
-      validateHostSsh(resultBuilder, context.getHost().getPublicDns(), context);
+    if (nonSshDeploymentType.contains(command.getDeploymentType())) {
+      validateNonSsh(resultBuilder, context, command.getDeploymentType());
     } else {
-      validateNonSshConfig(resultBuilder, context, command.getDeploymentType());
+      validateHostSsh(resultBuilder, context.getHost().getPublicDns(), context);
     }
     return resultBuilder.build();
   }
 
-  private void validateNonSshConfig(
+  private void validateNonSsh(
       DelegateConnectionResultBuilder resultBuilder, CommandExecutionContext context, String deploymentType) {
     if (DeploymentType.KUBERNETES.name().equals(deploymentType) && context.getCloudProviderSetting() != null
         && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
-      KubernetesConfig config = (KubernetesConfig) context.getCloudProviderSetting().getValue();
-      resultBuilder.validated(connectableHttpUrl(config.getMasterUrl()));
+      resultBuilder.validated(
+          connectableHttpUrl(((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl()));
     } else if (DeploymentType.ECS.name().equals(deploymentType)
         || DeploymentType.AWS_CODEDEPLOY.name().equals(deploymentType)) {
       CloseableHttpClient httpclient =
           HttpClients.custom()
               .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(2000).build())
               .build();
-      HttpUriRequest httpUriRequest =
-          new HttpGet("http://169.254.169.254/latest/meta-data/placement/availability-zone");
       try {
-        HttpEntity entity = httpclient.execute(httpUriRequest).getEntity();
+        HttpEntity entity = httpclient.execute(new HttpGet(AWS_AVAILABILITY_ZONE_CHECK)).getEntity();
         String availabilityZone =
             entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "none";
         logger.info("Delegate AWS availability zone: " + availabilityZone);
