@@ -68,10 +68,16 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
         return taskResult;
       }
 
-      future =
-          verificationExecutor.scheduleAtFixedRate(()
-                                                       -> executorService.submit(() -> getDataCollector(taskResult)),
-              SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
+      future = verificationExecutor.scheduleAtFixedRate(() -> {
+        try {
+          executorService.submit(getDataCollector(taskResult));
+        } catch (IOException e) {
+          getLogger().error("Unable to schedule task", e);
+          taskResult.setErrorMessage("Unable to schedule task");
+          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+          shutDownCollection();
+        }
+      }, SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
       getLogger().info("going to collect data for " + parameters[0]);
       waitForCompletion();
       getLogger().info(" finish data collection for " + parameters[0] + ". result is " + taskResult);
