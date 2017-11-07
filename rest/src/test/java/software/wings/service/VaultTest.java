@@ -91,7 +91,7 @@ import javax.inject.Inject;
  */
 @RunWith(Parameterized.class)
 public class VaultTest extends WingsBaseTest {
-  private static String VAULT_TOKEN = System.getProperty("VAULT_TOKEN");
+  private static String VAULT_TOKEN = System.getenv("VAULT_TOKEN");
 
   private final int numOfEncryptedValsForKms = 3;
   private final int numOfEncryptedValsForVault = 1;
