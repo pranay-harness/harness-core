@@ -408,6 +408,17 @@ public interface Constants {
   String WINGS_RUNTIME_PATH = "WINGS_RUNTIME_PATH";
   String WINGS_STAGING_PATH = "WINGS_STAGING_PATH";
   String WINGS_BACKUP_PATH = "WINGS_BACKUP_PATH";
+  /**
+   * Constants for HTTP state
+   */
+  String HTTP_URL = "httpUrl";
+  String HTTP_RESPONSE_METHOD = "httpResponseMethod";
+  String HTTP_RESPONSE_CODE = "httpResponseCode";
+  String HTTP_RESPONSE_BODY = "httpResponseBody";
+  String ASSERTION_STATEMENT = "assertionStatement";
+  String ASSERTION_STATUS = "assertionStatus";
+  String XPATH = "xpath('//status/text()')";
+  String JSONPATH = "jsonpath('health.status')";
 
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
 }
