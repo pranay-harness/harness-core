@@ -87,7 +87,7 @@ public class WatcherServiceImpl implements WatcherService {
             String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
             String bucketName =
                 watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-            String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/"));
+            String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
             S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
             BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
             String watcherMetadata = reader.readLine();
