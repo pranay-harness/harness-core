@@ -1,7 +1,5 @@
 package software.wings.beans.alert;
 
-import com.google.inject.Injector;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,12 +15,12 @@ public class ManualInterventionNeededAlert implements AlertData {
   private String envId;
 
   @Override
-  public boolean matches(AlertData alertData, Injector injector) {
+  public boolean matches(AlertData alertData) {
     return stateExecutionInstanceId.equals(((ManualInterventionNeededAlert) alertData).getStateExecutionInstanceId());
   }
 
   @Override
-  public String buildTitle(Injector injector) {
+  public String buildTitle() {
     return name + " requires manual action";
   }
 }

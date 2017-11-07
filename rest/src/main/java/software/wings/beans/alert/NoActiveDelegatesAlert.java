@@ -1,7 +1,5 @@
 package software.wings.beans.alert;
 
-import com.google.inject.Injector;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,12 +9,12 @@ public class NoActiveDelegatesAlert implements AlertData {
   private String accountId;
 
   @Override
-  public boolean matches(AlertData alertData, Injector injector) {
+  public boolean matches(AlertData alertData) {
     return accountId.equals(((NoActiveDelegatesAlert) alertData).getAccountId());
   }
 
   @Override
-  public String buildTitle(Injector injector) {
+  public String buildTitle() {
     return "No delegates are available";
   }
 }
