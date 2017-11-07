@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -7,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -43,7 +44,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   private static final Logger logger = LoggerFactory.getLogger(MetricDataAnalysisServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject protected DelegateServiceImpl delegateService;
 
@@ -106,8 +106,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         .field("workflowExecutionIds")
         .in(workflowExecutionIds)
         .order("-createdAt")
-        .limit(limit)
-        .asList();
+        .asList(new FindOptions().limit(limit));
   }
 
   @Override
@@ -190,8 +189,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("serviceId")
                                                             .equal(serviceId)
                                                             .order("-dataCollectionMinute")
-                                                            .limit(1)
-                                                            .get();
+                                                            .get(new FindOptions().limit(1));
 
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
   }
@@ -200,7 +198,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public String getLastSuccessfulWorkflowExecutionIdWithData(StateType stateType, String workflowId, String serviceId) {
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(workflowId);
     for (String successfulExecution : successfulExecutions) {
-      Query<NewRelicMetricDataRecord> lastSuccessfulRecordQuery =
+      List<NewRelicMetricDataRecord> lastSuccessfulRecords =
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
               .field("stateType")
               .equal(stateType)
@@ -210,10 +208,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
               .equal(successfulExecution)
               .field("serviceId")
               .equal(serviceId)
-              .limit(1);
-
-      List<NewRelicMetricDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();
-      if (lastSuccessfulRecords != null && lastSuccessfulRecords.size() > 0) {
+              .asList(new FindOptions().limit(1));
+      if (isNotEmpty(lastSuccessfulRecords)) {
         return successfulExecution;
       }
     }
@@ -273,8 +269,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             .equal(stateExecutionId)
             .field("workflowExecutionId")
             .equal(workflowExecutionId)
-            .order("-analysisMinute")
-            .limit(1);
+            .order("-analysisMinute");
 
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
