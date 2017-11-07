@@ -74,10 +74,10 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void deploymentCompleted(String appId, String executionId) {
-    executorService.submit(() -> deploymentAbortedInternal(appId, executionId));
+    executorService.submit(() -> deploymentCompletedInternal(appId, executionId));
   }
 
-  private void deploymentAbortedInternal(String appId, String executionId) {
+  private void deploymentCompletedInternal(String appId, String executionId) {
     wingsPersistence.createQuery(Alert.class)
         .field("appId")
         .equal(appId)
