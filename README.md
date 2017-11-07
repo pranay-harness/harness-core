@@ -27,7 +27,15 @@
 
 Run this script to test if JCE is installed properly:
 
-```$JAVA_HOME/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'```
+`$JAVA_HOME/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'`
+
+If you are under Ubuntu:
+
+`
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt update
+sudo apt install oracle-java8-unlimited-jce-policy 
+`
 
 ### Build
 
