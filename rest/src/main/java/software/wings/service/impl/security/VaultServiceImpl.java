@@ -189,6 +189,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           wingsPersistence.createQuery(EncryptedData.class).field("kmsId").equal(vaultConfig.getUuid());
       vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
       vaultConfig.setAuthToken(SECRET_MASK);
+      vaultConfig.setEncryptionType(EncryptionType.VAULT);
       rv.add(vaultConfig);
     }
     return rv;

@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encrypted;
+import software.wings.security.EncryptionType;
 import software.wings.service.intfc.security.EncryptionConfig;
 
 /**
@@ -42,4 +43,6 @@ public class KmsConfig extends Base implements EncryptionConfig {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @SchemaIgnore @Transient private int numOfEncryptedValue;
+
+  @SchemaIgnore @Transient private EncryptionType encryptionType;
 }

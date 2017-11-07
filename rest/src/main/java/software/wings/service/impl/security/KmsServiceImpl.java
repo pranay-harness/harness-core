@@ -232,6 +232,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       kmsConfig.setKmsArn(new String(decrypt(arnData, null, null)));
 
       kmsConfig.setSecretKey(SECRET_MASK);
+      kmsConfig.setEncryptionType(EncryptionType.KMS);
       rv.add(kmsConfig);
     }
 
