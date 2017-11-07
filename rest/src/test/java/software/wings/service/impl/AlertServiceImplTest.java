@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -121,8 +120,6 @@ public class AlertServiceImplTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
     when(end.lessThan(any())).thenReturn(query);
     when(end.in(any())).thenReturn(query);
-    when(query.limit(anyInt())).thenReturn(query);
-    when(query.batchSize(anyInt())).thenReturn(query);
   }
 
   @Test
@@ -200,7 +197,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   }
   @Test
   public void shouldDeleteOldAlerts() {
-    when(query.asList()).thenReturn(asList(noActive, noEligible));
+    when(query.asList(any())).thenReturn(asList(noActive, noEligible));
     when(wingsPersistence.getCollection("alerts")).thenReturn(alertsCollection);
 
     alertService.deleteOldAlerts(0);
