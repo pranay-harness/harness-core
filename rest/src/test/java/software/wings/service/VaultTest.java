@@ -92,6 +92,10 @@ import javax.inject.Inject;
 @RunWith(Parameterized.class)
 public class VaultTest extends WingsBaseTest {
   private static String VAULT_TOKEN = System.getenv("VAULT_TOKEN");
+  static {
+    System.out.println("VAULT TOKEN: " + VAULT_TOKEN);
+    System.out.println("ENVs: " + System.getenv());
+  }
 
   private final int numOfEncryptedValsForKms = 3;
   private final int numOfEncryptedValsForVault = 1;
@@ -1208,6 +1212,5 @@ public class VaultTest extends WingsBaseTest {
   private void stopTransitionListener(Thread thread) throws InterruptedException {
     transitionEventListener.shutDown();
     thread.join();
-    //    thread.interrupt();
   }
 }
