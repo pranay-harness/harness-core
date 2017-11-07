@@ -56,7 +56,7 @@ public class AlertCheckJobTriggerMigratorUtil extends WingsBaseTest {
     });
   }
 
-  void addCronForAlertCheck(Account account) {
+  private void addCronForAlertCheck(Account account) {
     JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
                         .withIdentity(account.getUuid(), ALERT_CHECK_CRON_GROUP)
                         .usingJobData("accountId", account.getUuid())

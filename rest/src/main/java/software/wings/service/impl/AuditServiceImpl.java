@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.types.ObjectId;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -151,11 +152,9 @@ public class AuditServiceImpl implements AuditService {
       logger.info("Start: Deleting audit records older than {} days", days);
       with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {
         List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class)
-                                             .limit(limit)
-                                             .batchSize(batchSize)
                                              .field("createdAt")
                                              .lessThan(System.currentTimeMillis() - retentionMillis)
-                                             .asList();
+                                             .asList(new FindOptions().limit(limit).batchSize(batchSize));
         if (CollectionUtils.isEmpty(auditHeaders)) {
           logger.info("No more audit records older than {} days", days);
           return true;

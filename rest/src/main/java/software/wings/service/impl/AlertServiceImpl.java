@@ -17,6 +17,7 @@ import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import com.google.inject.Injector;
 
 import com.mongodb.BasicDBObject;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -176,13 +177,11 @@ public class AlertServiceImpl implements AlertService {
       logger.info("Start: Deleting alerts older than {} days", days);
       with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {
         List<Alert> alerts = wingsPersistence.createQuery(Alert.class)
-                                 .limit(limit)
-                                 .batchSize(batchSize)
                                  .field("status")
                                  .equal(Closed)
                                  .field("createdAt")
                                  .lessThan(System.currentTimeMillis() - retentionMillis)
-                                 .asList();
+                                 .asList(new FindOptions().limit(limit).batchSize(batchSize));
         if (isEmpty(alerts)) {
           logger.info("No more alerts older than {} days", days);
           return true;
