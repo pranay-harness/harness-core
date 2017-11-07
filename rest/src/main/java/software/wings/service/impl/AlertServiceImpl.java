@@ -93,6 +93,7 @@ public class AlertServiceImpl implements AlertService {
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
     if (!findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
+      injector.injectMembers(alertData);
       Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
           anAlert()
               .withAppId(appId)
@@ -100,7 +101,7 @@ public class AlertServiceImpl implements AlertService {
               .withType(alertType)
               .withStatus(Open)
               .withAlertData(alertData)
-              .withTitle(alertData.buildTitle(injector))
+              .withTitle(alertData.buildTitle())
               .withCategory(alertType.getCategory())
               .withSeverity(alertType.getSeverity())
               .build());
@@ -127,11 +128,18 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    injector.injectMembers(alertData);
     Query<Alert> query =
         wingsPersistence.createQuery(Alert.class).field("type").equal(alertType).field("status").equal(Open);
     query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.field("accountId").equal(accountId)
                                                          : query.field("appId").equal(appId);
-    return query.asList().stream().filter(alert -> alertData.matches(alert.getAlertData(), injector)).findFirst();
+    return query.asList()
+        .stream()
+        .filter(alert -> {
+          injector.injectMembers(alert.getAlertData());
+          return alertData.matches(alert.getAlertData());
+        })
+        .findFirst();
   }
 
   private void close(Alert alert) {

@@ -1,7 +1,7 @@
 package software.wings.beans.alert;
 
-import com.google.inject.Injector;
-
+import com.github.reinert.jjschema.SchemaIgnore;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.CatalogItem;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskGroup;
@@ -11,14 +11,18 @@ import software.wings.service.intfc.EnvironmentService;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.inject.Inject;
 
 public class NoEligibleDelegatesAlert implements AlertData {
+  @Inject @Transient @SchemaIgnore private transient EnvironmentService environmentService;
+
+  @Inject @Transient @SchemaIgnore private transient CatalogService catalogService;
+
   private DelegateTask task;
   private TaskGroup taskType;
 
   @Override
-  public boolean matches(AlertData alertData, Injector injector) {
-    EnvironmentService environmentService = injector.getInstance(EnvironmentService.class);
+  public boolean matches(AlertData alertData) {
     NoEligibleDelegatesAlert otherAlertData = (NoEligibleDelegatesAlert) alertData;
     DelegateTask otherTask = otherAlertData.getTask();
 
@@ -35,12 +39,11 @@ public class NoEligibleDelegatesAlert implements AlertData {
   }
 
   @Override
-  public String buildTitle(Injector injector) {
-    return String.format("No delegates can execute %s tasks", getTaskTypeDisplayName(injector));
+  public String buildTitle() {
+    return String.format("No delegates can execute %s tasks", getTaskTypeDisplayName());
   }
 
-  private String getTaskTypeDisplayName(Injector injector) {
-    CatalogService catalogService = injector.getInstance(CatalogService.class);
+  private String getTaskTypeDisplayName() {
     List<CatalogItem> taskTypes = catalogService.getCatalogItems("TASK_TYPES");
     if (taskTypes != null) {
       Optional<CatalogItem> taskTypeCatalogItem =
