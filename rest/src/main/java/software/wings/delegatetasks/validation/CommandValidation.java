@@ -7,7 +7,17 @@ import com.google.common.collect.Sets;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DelegateTask;
@@ -19,14 +29,9 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult.Delegate
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.SshHelperUtil;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
@@ -35,6 +40,8 @@ import javax.inject.Inject;
  */
 public class CommandValidation extends AbstractDelegateValidateTask {
   private static final String NON_SSH_COMMAND_ALWAYS_TRUE = "NON_SSH_COMMAND_ALWAYS_TRUE";
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private EncryptionService encryptionService;
 
@@ -68,20 +75,21 @@ public class CommandValidation extends AbstractDelegateValidateTask {
       resultBuilder.criteria(config.getMasterUrl()).validated(connectableHttpUrl(config.getMasterUrl()));
     } else if (DeploymentType.ECS.name().equals(deploymentType)) {
       resultBuilder.criteria(DeploymentType.ECS.name() + ":" + context.getRegion());
+      CloseableHttpClient httpclient =
+          HttpClients.custom()
+              .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(2000).build())
+              .build();
+      HttpUriRequest httpUriRequest =
+          new HttpGet("http://169.254.169.254/latest/meta-data/placement/availability-zone");
       try {
-        String regionCommand =
-            "echo \"$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)\" | "
-            + "sed -e 's:\\([0-9][0-9]*\\)[a-z]*\\$:\\\\1:'";
-        PipedInputStream pipedInputStream = new PipedInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
-        new ProcessExecutor()
-            .timeout(5, TimeUnit.SECONDS)
-            .command(regionCommand)
-            .redirectOutput(new PipedOutputStream(pipedInputStream))
-            .readOutput(true)
-            .start();
-        String line = reader.readLine();
-        resultBuilder.validated(StringUtils.startsWith(line, context.getRegion()));
+        HttpResponse httpResponse = httpclient.execute(httpUriRequest);
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
+        logger.info("Status code checking region: " + statusCode);
+        HttpEntity entity = httpResponse.getEntity();
+        String content =
+            entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "";
+        logger.info("Delegate AWS region: " + content);
+        resultBuilder.validated(StringUtils.startsWith(content, context.getRegion()));
       } catch (IOException e) {
         resultBuilder.validated(false);
       }
