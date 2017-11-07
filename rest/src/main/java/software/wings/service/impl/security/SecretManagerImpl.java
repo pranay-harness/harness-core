@@ -76,6 +76,22 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public List<EncryptionConfig> listEncryptionConfig(String accountId) {
+    List<EncryptionConfig> rv = new ArrayList<>();
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId);
+
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      rv.add(kmsConfig);
+    }
+
+    for (VaultConfig vaultConfig : vaultConfigs) {
+      rv.add(vaultConfig);
+    }
+    return rv;
+  }
+
+  @Override
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
       char[] secret, String decryptedFieldName, EncryptedData encryptedData) {
     switch (encryptionType) {
@@ -313,6 +329,21 @@ public class SecretManagerImpl implements SecretManager {
 
       default:
         throw new IllegalStateException("Invalid encryptionType: " + encryptionType);
+    }
+  }
+
+  @Override
+  public boolean transitionSecrets(
+      String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType) {
+    switch (encryptionType) {
+      case KMS:
+        return kmsService.transitionKms(accountId, fromVaultId, toVaultId);
+
+      case VAULT:
+        return vaultService.transitionVault(accountId, fromVaultId, toVaultId);
+
+      default:
+        throw new IllegalArgumentException("Invalid type: " + encryptionType);
     }
   }
 
