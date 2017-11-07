@@ -7,13 +7,10 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.RestResponse;
-import software.wings.beans.UuidAware;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.service.intfc.security.SecretManager;
 
-import java.util.Collection;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -29,7 +26,6 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class KmsResource {
   @Inject private KmsService kmsService;
-  @Inject private SecretManager secretManager;
 
   @POST
   @Path("/save-global-kms")
@@ -55,30 +51,5 @@ public class KmsResource {
   public RestResponse<Boolean> deleteKmsConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("kmsConfigId") final String kmsConfigId) {
     return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
-  }
-
-  @GET
-  @Path("/list-kms")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Collection<KmsConfig>> lisKmsConfigs(@QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(kmsService.listKmsConfigs(accountId));
-  }
-
-  @GET
-  @Path("/list-values")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Collection<UuidAware>> listEncryptedValues(@QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(secretManager.listEncryptedValues(accountId));
-  }
-
-  @GET
-  @Path("/transition-kms")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> transitionKms(@QueryParam("accountId") final String accountId,
-      @QueryParam("fromKmsId") String fromKmsId, @QueryParam("toKmsId") String toKmsId) {
-    return new RestResponse<>(kmsService.transitionKms(accountId, fromKmsId, toKmsId));
   }
 }
