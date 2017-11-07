@@ -9,13 +9,15 @@ import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by rsingh on 9/11/17.
@@ -25,9 +27,12 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
 
   protected static final int RETRIES = 3;
   protected final AtomicBoolean completed = new AtomicBoolean(false);
-  protected ScheduledExecutorService collectionService;
   protected final Object lockObject = new Object();
   @Inject protected EncryptionService encryptionService;
+  @Inject private ExecutorService executorService;
+  @Inject @Named("verificationExecutor") private ScheduledExecutorService verificationExecutor;
+
+  private ScheduledFuture future;
 
   public AbstractDelegateDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
@@ -50,17 +55,10 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
      * from the worker threads before the job is aborted
      */
     completed.set(true);
-    collectionService.shutdownNow();
+    future.cancel(true);
     synchronized (lockObject) {
       lockObject.notifyAll();
     }
-  }
-
-  protected ScheduledExecutorService scheduleDataCollection(DataCollectionTaskResult taskResult) throws IOException {
-    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(
-        getDataCollector(taskResult), SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
-    return scheduledExecutorService;
   }
 
   public DataCollectionTaskResult run(Object[] parameters) {
@@ -70,7 +68,10 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
         return taskResult;
       }
 
-      collectionService = scheduleDataCollection(taskResult);
+      future =
+          verificationExecutor.scheduleAtFixedRate(()
+                                                       -> executorService.submit(() -> getDataCollector(taskResult)),
+              SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
       getLogger().info("going to collect data for " + parameters[0]);
       waitForCompletion();
       getLogger().info(" finish data collection for " + parameters[0] + ". result is " + taskResult);
