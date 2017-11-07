@@ -1,14 +1,40 @@
 package software.wings.service.impl.expression;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.common.Constants.ASSERTION_STATEMENT;
+import static software.wings.common.Constants.ASSERTION_STATUS;
+import static software.wings.common.Constants.BUCKET_NAME;
+import static software.wings.common.Constants.HTTP_RESPONSE_BODY;
+import static software.wings.common.Constants.HTTP_RESPONSE_CODE;
+import static software.wings.common.Constants.HTTP_RESPONSE_METHOD;
+import static software.wings.common.Constants.HTTP_URL;
+import static software.wings.common.Constants.JSONPATH;
+import static software.wings.common.Constants.KEY;
+import static software.wings.common.Constants.URL;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
+import static software.wings.common.Constants.XPATH;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Inject;
+
+import org.apache.commons.collections.CollectionUtils;
+import software.wings.beans.EntityType;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
+import software.wings.dl.PageRequest;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.sm.StateType;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Created by sgurubelli on 8/7/17.
@@ -57,15 +83,6 @@ public abstract class ExpressionBuilder {
   protected static final String STATUS = "status";
   protected static final String ERROR_MSG = "errorMsg";
 
-  protected static final String HTTP_URL = "httpUrl";
-  protected static final String HTTP_RESPONSE_METHOD = "httpResponseMethod";
-  protected static final String HTTP_RESPONSE_CODE = "httpResponseCode";
-  protected static final String HTTP_RESPONSE_BODY = "httpResponseBody";
-  protected static final String ASSERTION_STATEMENT = "assertionStatement";
-  protected static final String ASSERTION_STATUS = "assertionStatus";
-  protected static final String XPATH = "xpath('//status/text()')";
-  protected static final String JSONPATH = "jsonpath('health.status')";
-
   protected static final String APPROVEDBY_NAME = "approvedBy.name";
   protected static final String APPROVEDBY_EMAIL = "approvedBy.email";
 
@@ -73,6 +90,9 @@ public abstract class ExpressionBuilder {
   protected static final String EMAIL_CC_ADDRESS = "ccAddress";
   protected static final String EMAIL_SUBJECT = "subject";
   protected static final String EMAIL_BODY = "body";
+
+  @Inject private ServiceVariableService serviceVariablesService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   public Set<String> getExpressions(String appId, String entityId, String serviceId) {
     return getExpressions(appId, entityId);
@@ -94,7 +114,7 @@ public abstract class ExpressionBuilder {
   }
 
   Set<String> getStaticExpressions() {
-    Set<String> expressions = new HashSet<>();
+    Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
     expressions.addAll(
         asList(ARTIFACT_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION, ARTIFACT_FILE_NAME));
@@ -113,7 +133,7 @@ public abstract class ExpressionBuilder {
   }
 
   protected Set<String> getStateTypeExpressions(StateType stateType) {
-    Set<String> expressions = new HashSet<>();
+    Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(START_TS, END_TS, STATUS, ERROR_MSG));
     switch (stateType) {
       case HTTP:
@@ -128,8 +148,40 @@ public abstract class ExpressionBuilder {
         break;
       case COMMAND:
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
+        break;
+      case AWS_CODEDEPLOY_STATE:
+        expressions.addAll(asList(BUCKET_NAME, KEY, URL));
     }
 
     return expressions;
+  }
+
+  protected Set<String> getServiceVariables(String appId, List<String> entityIds) {
+    return getServiceVariables(appId, entityIds, null);
+  }
+
+  protected Set<String> getServiceVariables(String appId, List<String> entityIds, EntityType entityType) {
+    if (CollectionUtils.isEmpty(entityIds)) {
+      return new TreeSet<>();
+    }
+    PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
+                                                                  .withLimit(PageRequest.UNLIMITED)
+                                                                  .addFilter("appId", EQ, appId)
+                                                                  .addFilter("entityId", IN, entityIds.toArray())
+                                                                  .build();
+    if (entityType != null) {
+      serviceVariablePageRequest.addFilter("entityType", entityType, EQ);
+    }
+    List<ServiceVariable> serviceVariables = serviceVariablesService.list(serviceVariablePageRequest, true);
+
+    return serviceVariables.stream()
+        .map(serviceVariable -> "serviceVariable." + serviceVariable.getName())
+        .collect(Collectors.toSet());
+  }
+
+  protected Set<String> getServiceVariablesOfTemplates(String appId, PageRequest<ServiceTemplate> pageRequest) {
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, false);
+    return getServiceVariables(
+        appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toList()));
   }
 }
