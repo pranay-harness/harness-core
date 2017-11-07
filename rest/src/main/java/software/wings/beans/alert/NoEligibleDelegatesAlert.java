@@ -52,7 +52,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
   @Override
   public String buildTitle() {
     StringBuilder title = new StringBuilder();
-    title.append("No delegates can execute ").append(getTaskTypeDisplayName()).append("tasks ");
+    title.append("No delegates can execute ").append(getTaskTypeDisplayName()).append(" tasks ");
     if (task.getAppId() != null && !task.getAppId().equals(GLOBAL_APP_ID)) {
       Application app = appService.get(task.getAppId());
       title.append("for application ").append(app.getName()).append(" ");
