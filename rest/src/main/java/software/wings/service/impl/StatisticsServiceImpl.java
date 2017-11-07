@@ -92,10 +92,6 @@ import javax.inject.Inject;
  */
 @Singleton
 public class StatisticsServiceImpl implements StatisticsService {
-  /**
-   * The constant MILLIS_IN_A_DAY.
-   */
-  public static final long MILLIS_IN_A_DAY = 86400000;
   @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
@@ -470,7 +466,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       int failureCount = 0;
       int instanceCount = 0;
 
-      Long timeOffset = fromDateEpochMilli + idx * MILLIS_IN_A_DAY;
+      Long timeOffset = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays - idx);
       List<WorkflowExecution> wflExecutions = wflExecutionByDate.get(timeOffset);
       if (wflExecutions != null) {
         totalCount = wflExecutions.size();
