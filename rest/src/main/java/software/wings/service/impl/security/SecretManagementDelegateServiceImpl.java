@@ -70,6 +70,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             .encryptedValue(encryptedValue)
             .encryptionType(EncryptionType.KMS)
             .kmsId(kmsConfig.getUuid())
+            .enabled(true)
             .build();
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {

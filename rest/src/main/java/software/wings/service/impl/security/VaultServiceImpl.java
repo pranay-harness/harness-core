@@ -141,7 +141,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     String encryptedDataId = wingsPersistence.save(encryptedData);
     vaultConfig.setAuthToken(encryptedDataId);
     String vaultConfigId = wingsPersistence.save(vaultConfig);
-    encryptedData.setParentId(vaultConfigId);
+    encryptedData.addParent(vaultConfigId);
     encryptedData.setType(SettingVariableTypes.VAULT);
     wingsPersistence.save(encryptedData);
 

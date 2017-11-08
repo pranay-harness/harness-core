@@ -12,6 +12,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public interface SecretManager {
   List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
 
   EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, String decryptedFieldName, EncryptedData encryptedData);
+      char[] secret, Field decryptedField, EncryptedData encryptedData);
 
   List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workflowId, String appId);
 
@@ -39,10 +40,9 @@ public interface SecretManager {
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 
-  String getEncryptedYamlRef(Encryptable object, String uuid, SettingVariableTypes type, String... fieldName)
-      throws IllegalAccessException;
+  String getEncryptedYamlRef(Encryptable object, String... fieldName) throws IllegalAccessException;
 
-  char[] decryptYamlRef(String encryptedYamlRef) throws NoSuchFieldException, IllegalAccessException;
+  EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
 
   boolean transitionSecrets(String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType);
 }

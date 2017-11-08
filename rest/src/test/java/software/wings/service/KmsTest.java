@@ -236,12 +236,15 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     appDynamicsConfig.setPassword(password.toCharArray());
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    assertNotNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
+    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
     encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowId, appId));
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
-    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
+    assertNotNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
+    assertEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-    assertTrue(query.asList().isEmpty());
+    assertEquals(1, query.asList().size());
   }
 
   @Test
@@ -269,13 +272,15 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     appDynamicsConfig.setPassword(password.toCharArray());
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    assertNull((savedConfig).getEncryptedPassword());
+    assertNotNull((savedConfig).getEncryptedPassword());
+    assertNull((savedConfig).getPassword());
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowId, appId));
     assertEquals(appDynamicsConfig, savedConfig);
 
+    assertNotNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
     assertEquals(password, new String(savedConfig.getPassword()));
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-    assertTrue(query.asList().isEmpty());
+    assertEquals(1, query.asList().size());
   }
 
   @Test
@@ -304,9 +309,9 @@ public class KmsTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertNotEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
+    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
-    assertTrue(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
+    assertFalse(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
     enableKmsFeatureFlag();
     encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowId, appId));
@@ -343,7 +348,7 @@ public class KmsTest extends WingsBaseTest {
     assertFalse(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(settingAttribute.getUuid());
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
     assertEquals(1, query.asList().size());
     EncryptedData encryptedData = query.asList().get(0);
     assertEquals(kmsConfig.getUuid(), encryptedData.getKmsId());
@@ -390,7 +395,7 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
 
     Query<EncryptedData> encryptedDataQuery =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(settingAttribute.getUuid());
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
     assertEquals(1, encryptedDataQuery.asList().size());
     EncryptedData encryptedData = encryptedDataQuery.asList().get(0);
 
@@ -449,7 +454,7 @@ public class KmsTest extends WingsBaseTest {
       encryptionService.decrypt(
           appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowId, appId));
       assertEquals("password" + i, new String(appDynamicsConfig.getPassword()));
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(id);
+      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(id);
       assertEquals(1, query.asList().size());
       assertEquals(kmsConfig.getUuid(), query.asList().get(0).getKmsId());
     }
@@ -502,7 +507,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
     EncryptedData encryptedData = query.asList().get(0);
     assertEquals(kmsConfig.getUuid(), encryptedData.getKmsId());
@@ -526,7 +531,7 @@ public class KmsTest extends WingsBaseTest {
     UserThreadLocal.set(user2);
     wingsPersistence.save(savedAttribute);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
     changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
@@ -591,7 +596,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
     List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
@@ -632,7 +637,7 @@ public class KmsTest extends WingsBaseTest {
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowId, appId));
     assertEquals(newPassWord, String.valueOf(savedConfig.getPassword()));
 
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
     EncryptedData encryptedData = query.asList().get(0);
 
@@ -670,7 +675,7 @@ public class KmsTest extends WingsBaseTest {
     UserThreadLocal.set(user2);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
     encryptedData = query.asList().get(0);
 
@@ -832,7 +837,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
     Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
@@ -1812,7 +1817,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .equal(SettingVariableTypes.CONFIG_FILE)
                                                 .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
+    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
     // test update
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     configService.update(configFileBuilder.withUuid(configFileId).but().build(),
@@ -1826,7 +1831,7 @@ public class KmsTest extends WingsBaseTest {
                             .equal(SettingVariableTypes.CONFIG_FILE)
                             .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
+    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
 
     int numOfAccess = 7;
     for (int i = 0; i < numOfAccess; i++) {
@@ -1900,7 +1905,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .equal(SettingVariableTypes.CONFIG_FILE)
                                                 .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
+    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
     // test update
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     configService.update(configFileBuilder.withUuid(configFileId).but().build(),
@@ -1914,7 +1919,7 @@ public class KmsTest extends WingsBaseTest {
                             .equal(SettingVariableTypes.CONFIG_FILE)
                             .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
+    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
 
     Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
     assertEquals(1, uuidAwares.size());
@@ -1954,126 +1959,208 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void localEncryptionYaml() throws IllegalAccessException, NoSuchFieldException {
-    String password = UUID.randomUUID().toString();
-    String accountId = UUID.randomUUID().toString();
-    String name = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
+  public void reuseYamlPasswordNoEncryption() throws IOException, IllegalAccessException {
+    final String accountId = UUID.randomUUID().toString();
+
+    int numOfSettingAttributes = 5;
+    String password = "password";
+    Set<String> attributeIds = new HashSet<>();
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl(UUID.randomUUID().toString())
+                                              .username(UUID.randomUUID().toString())
+                                              .password(password.toCharArray())
+                                              .accountname(UUID.randomUUID().toString())
+                                              .build();
 
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(appDynamicsConfig.getAccountId())
+                                            .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
                                             .withCategory(Category.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
-                                            .withName(name)
+                                            .withName(UUID.randomUUID().toString())
                                             .build();
+    attributeIds.add(wingsPersistence.save(settingAttribute));
 
-    String savedAttributeId = wingsPersistence.save(settingAttribute);
-    appDynamicsConfig.setPassword(password.toCharArray());
-    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
 
-    String encryptedYamlRef = secretManager.getEncryptedYamlRef(
-        (Encryptable) savedAttribute.getValue(), savedAttribute.getUuid(), SettingVariableTypes.APP_DYNAMICS);
-    char[] decryptedPassword = secretManager.decryptYamlRef(encryptedYamlRef);
-    assertEquals(password, new String(decryptedPassword));
+    for (int i = 1; i < numOfSettingAttributes; i++) {
+      appDynamicsConfig = AppDynamicsConfig.builder()
+                              .accountId(accountId)
+                              .controllerUrl(UUID.randomUUID().toString())
+                              .username(UUID.randomUUID().toString())
+                              .password(null)
+                              .encryptedPassword(yamlRef)
+                              .accountname(UUID.randomUUID().toString())
+                              .build();
 
-    password = UUID.randomUUID().toString();
-    name = UUID.randomUUID().toString();
-    String appId = UUID.randomUUID().toString();
+      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                             .withAccountId(accountId)
+                             .withValue(appDynamicsConfig)
+                             .withAppId(UUID.randomUUID().toString())
+                             .withCategory(Category.CONNECTOR)
+                             .withEnvId(UUID.randomUUID().toString())
+                             .withName(UUID.randomUUID().toString())
+                             .build();
 
-    final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                .templateId(UUID.randomUUID().toString())
-                                                .envId(UUID.randomUUID().toString())
-                                                .entityType(EntityType.APPLICATION)
-                                                .entityId(UUID.randomUUID().toString())
-                                                .parentServiceVariableId(UUID.randomUUID().toString())
-                                                .overrideType(OverrideType.ALL)
-                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .expression(UUID.randomUUID().toString())
-                                                .accountId(accountId)
-                                                .name(name)
-                                                .value(password.toCharArray())
-                                                .type(Type.ENCRYPTED_TEXT)
-                                                .build();
-    serviceVariable.setAppId(appId);
+      attributeIds.add(wingsPersistence.save(settingAttribute));
+    }
 
-    savedAttributeId = wingsPersistence.save(serviceVariable);
-    ServiceVariable savedServiceVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    encryptedYamlRef = secretManager.getEncryptedYamlRef(
-        savedServiceVariable, savedServiceVariable.getUuid(), SettingVariableTypes.SERVICE_VARIABLE);
-    decryptedPassword = secretManager.decryptYamlRef(encryptedYamlRef);
-    assertEquals(password, new String(decryptedPassword));
+    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    List<EncryptedData> encryptedDatas =
+        wingsPersistence.createQuery(EncryptedData.class).field("encryptionType").notEqual(EncryptionType.KMS).asList();
+    assertEquals(1, encryptedDatas.size());
+    EncryptedData encryptedData = encryptedDatas.get(0);
+    assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertNull(encryptedData.getKmsId());
+    assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+    assertEquals(numOfSettingAttributes, encryptedData.getParentIds().size());
+    assertEquals(attributeIds, encryptedData.getParentIds());
+
+    for (String attributeId : attributeIds) {
+      SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
+      AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
+      assertEquals(accountId, savedConfig.getAccountId());
+      assertNull(savedConfig.getPassword());
+      assertFalse(StringUtils.isBlank(savedConfig.getEncryptedPassword()));
+
+      encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowId, appId));
+      assertEquals(password, String.valueOf(savedConfig.getPassword()));
+    }
+
+    // delete configs and check
+    int i = 0;
+    Set<String> remainingAttrs = new HashSet<>(attributeIds);
+    for (String attributeId : attributeIds) {
+      wingsPersistence.delete(SettingAttribute.class, attributeId);
+      remainingAttrs.remove(attributeId);
+      encryptedDatas = wingsPersistence.createQuery(EncryptedData.class).asList();
+      if (i == numOfSettingAttributes - 1) {
+        assertTrue(encryptedDatas.isEmpty());
+      } else {
+        assertEquals(1, encryptedDatas.size());
+        encryptedData = encryptedDatas.get(0);
+        assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
+        assertEquals(accountId, encryptedData.getAccountId());
+        assertTrue(encryptedData.isEnabled());
+        assertNull(encryptedData.getKmsId());
+        assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+        assertEquals(numOfSettingAttributes - (i + 1), encryptedData.getParentIds().size());
+
+        assertFalse(encryptedData.getParentIds().contains(attributeId));
+        assertEquals(remainingAttrs, encryptedData.getParentIds());
+      }
+      i++;
+    }
   }
 
   @Test
-  public void kmsEncryptionYaml() throws IllegalAccessException, NoSuchFieldException {
-    String password = UUID.randomUUID().toString();
-    String accountId = UUID.randomUUID().toString();
-    String name = UUID.randomUUID().toString();
-    final KmsConfig kmsConfig = getKmsConfig();
-    kmsService.saveKmsConfig(accountId, kmsConfig);
+  public void reuseYamlPasswordKmsEncryption() throws IOException, IllegalAccessException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
     enableKmsFeatureFlag();
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
+
+    int numOfSettingAttributes = 5;
+    String password = "password";
+    Set<String> attributeIds = new HashSet<>();
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl(UUID.randomUUID().toString())
+                                              .username(UUID.randomUUID().toString())
+                                              .password(password.toCharArray())
+                                              .accountname(UUID.randomUUID().toString())
+                                              .build();
 
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(appDynamicsConfig.getAccountId())
+                                            .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
                                             .withCategory(Category.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
-                                            .withName(name)
+                                            .withName(UUID.randomUUID().toString())
                                             .build();
+    attributeIds.add(wingsPersistence.save(settingAttribute));
 
-    String savedAttributeId = wingsPersistence.save(settingAttribute);
-    appDynamicsConfig.setPassword(password.toCharArray());
-    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+    for (int i = 1; i < numOfSettingAttributes; i++) {
+      appDynamicsConfig = AppDynamicsConfig.builder()
+                              .accountId(accountId)
+                              .controllerUrl(UUID.randomUUID().toString())
+                              .username(UUID.randomUUID().toString())
+                              .password(null)
+                              .encryptedPassword(yamlRef)
+                              .accountname(UUID.randomUUID().toString())
+                              .build();
 
-    String encryptedYamlRef = secretManager.getEncryptedYamlRef(
-        (Encryptable) savedAttribute.getValue(), null, SettingVariableTypes.APP_DYNAMICS);
-    assertTrue(encryptedYamlRef.startsWith(EncryptionType.KMS.name()));
-    char[] decryptedPassword = secretManager.decryptYamlRef(encryptedYamlRef);
-    assertEquals(password, new String(decryptedPassword));
+      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                             .withAccountId(accountId)
+                             .withValue(appDynamicsConfig)
+                             .withAppId(UUID.randomUUID().toString())
+                             .withCategory(Category.CONNECTOR)
+                             .withEnvId(UUID.randomUUID().toString())
+                             .withName(UUID.randomUUID().toString())
+                             .build();
 
-    password = UUID.randomUUID().toString();
-    name = UUID.randomUUID().toString();
-    String appId = UUID.randomUUID().toString();
+      attributeIds.add(wingsPersistence.save(settingAttribute));
+    }
 
-    final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                .templateId(UUID.randomUUID().toString())
-                                                .envId(UUID.randomUUID().toString())
-                                                .entityType(EntityType.APPLICATION)
-                                                .entityId(UUID.randomUUID().toString())
-                                                .parentServiceVariableId(UUID.randomUUID().toString())
-                                                .overrideType(OverrideType.ALL)
-                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .expression(UUID.randomUUID().toString())
-                                                .accountId(accountId)
-                                                .name(name)
-                                                .value(password.toCharArray())
-                                                .type(Type.ENCRYPTED_TEXT)
-                                                .build();
-    serviceVariable.setAppId(appId);
+    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
-    savedAttributeId = wingsPersistence.save(serviceVariable);
-    ServiceVariable savedServiceVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    encryptedYamlRef =
-        secretManager.getEncryptedYamlRef(savedServiceVariable, null, SettingVariableTypes.SERVICE_VARIABLE);
-    assertTrue(encryptedYamlRef.startsWith(EncryptionType.KMS.name()));
-    decryptedPassword = secretManager.decryptYamlRef(encryptedYamlRef);
-    assertEquals(password, new String(decryptedPassword));
+    List<EncryptedData> encryptedDatas =
+        wingsPersistence.createQuery(EncryptedData.class).field("encryptionType").equal(EncryptionType.KMS).asList();
+    assertEquals(1, encryptedDatas.size());
+    EncryptedData encryptedData = encryptedDatas.get(0);
+    assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertEquals(fromConfig.getUuid(), encryptedData.getKmsId());
+    assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+    assertEquals(numOfSettingAttributes, encryptedData.getParentIds().size());
+    assertEquals(attributeIds, encryptedData.getParentIds());
+
+    for (String attributeId : attributeIds) {
+      SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
+      AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
+      assertEquals(accountId, savedConfig.getAccountId());
+      assertNull(savedConfig.getPassword());
+      assertFalse(StringUtils.isBlank(savedConfig.getEncryptedPassword()));
+
+      encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowId, appId));
+      assertEquals(password, String.valueOf(savedConfig.getPassword()));
+    }
+
+    // delete configs and check
+    int i = 0;
+    Set<String> remainingAttrs = new HashSet<>(attributeIds);
+    for (String attributeId : attributeIds) {
+      wingsPersistence.delete(SettingAttribute.class, attributeId);
+      remainingAttrs.remove(attributeId);
+      encryptedDatas =
+          wingsPersistence.createQuery(EncryptedData.class).field("encryptionType").equal(EncryptionType.KMS).asList();
+      if (i == numOfSettingAttributes - 1) {
+        assertTrue(encryptedDatas.isEmpty());
+      } else {
+        assertEquals(1, encryptedDatas.size());
+        encryptedData = encryptedDatas.get(0);
+        assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
+        assertEquals(accountId, encryptedData.getAccountId());
+        assertTrue(encryptedData.isEnabled());
+        assertEquals(fromConfig.getUuid(), encryptedData.getKmsId());
+        assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+        assertEquals(numOfSettingAttributes - (i + 1), encryptedData.getParentIds().size());
+
+        assertFalse(encryptedData.getParentIds().contains(attributeId));
+        assertEquals(remainingAttrs, encryptedData.getParentIds());
+      }
+      i++;
+    }
   }
 
   @Test
