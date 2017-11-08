@@ -9,7 +9,9 @@ import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,8 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   @Inject @Named("verificationExecutor") private ScheduledExecutorService verificationExecutor;
 
   private ScheduledFuture future;
+  private volatile Future taskFuture;
+  private volatile boolean pendingTask = false;
 
   public AbstractDelegateDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
@@ -68,14 +72,27 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
         return taskResult;
       }
 
+      final Runnable runnable = getDataCollector(taskResult);
       future = verificationExecutor.scheduleAtFixedRate(() -> {
-        try {
-          executorService.submit(getDataCollector(taskResult));
-        } catch (IOException e) {
-          getLogger().error("Unable to schedule task", e);
-          taskResult.setErrorMessage("Unable to schedule task");
-          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-          shutDownCollection();
+        if (taskFuture == null || taskFuture.isCancelled() || taskFuture.isDone()) {
+          taskFuture = executorService.submit(runnable);
+        } else {
+          if (!pendingTask) {
+            executorService.submit(() -> {
+              try {
+                getLogger().info("queuing pending task");
+                taskFuture.get();
+                taskFuture = executorService.submit(runnable);
+              } catch (Exception e) {
+                getLogger().error("Unable to queue collection task ", e);
+                shutDownCollection();
+              }
+              pendingTask = false;
+            });
+          } else {
+            getLogger().info("task already in queue");
+          }
+          pendingTask = true;
         }
       }, SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
       getLogger().info("going to collect data for " + parameters[0]);
