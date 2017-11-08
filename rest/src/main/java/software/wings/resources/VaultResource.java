@@ -30,7 +30,7 @@ public class VaultResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> saveVaultConfig(
+  public RestResponse<String> saveVaultConfig(
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
     return new RestResponse<>(vaultService.saveVaultConfig(accountId, vaultConfig));
   }

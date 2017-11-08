@@ -1,7 +1,6 @@
 package software.wings.service.intfc.security;
 
 import software.wings.beans.KmsConfig;
-import software.wings.annotation.Encryptable;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.utils.BoundedInputStream;
 
@@ -20,9 +19,9 @@ public interface KmsService {
 
   KmsConfig getKmsConfig(String accountId, String entityId);
 
-  boolean saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig);
+  String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig);
 
-  boolean saveKmsConfig(String accountId, KmsConfig kmsConfig);
+  String saveKmsConfig(String accountId, KmsConfig kmsConfig);
 
   boolean deleteKmsConfig(String accountId, String kmsConfigId);
 

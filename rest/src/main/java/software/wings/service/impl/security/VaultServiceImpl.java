@@ -115,7 +115,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public boolean saveVaultConfig(String accountId, VaultConfig vaultConfig) {
+  public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
     try {
       validateVaultConfig(accountId, vaultConfig);
     } catch (WingsException e) {
@@ -124,9 +124,12 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     vaultConfig.setAccountId(accountId);
     Query<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class).field("accountId").equal(accountId);
-    Collection<VaultConfig> savedConfigs = query.asList();
+    List<VaultConfig> savedConfigs = query.asList();
 
-    if (savedConfigs.isEmpty()) {
+    Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).field("accountId").equal(accountId);
+    List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
+
+    if (savedConfigs.isEmpty() && kmsConfigs.isEmpty()) {
       vaultConfig.setDefault(true);
     }
 
@@ -140,17 +143,26 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     encryptedData.setType(SettingVariableTypes.VAULT);
     wingsPersistence.save(encryptedData);
 
-    if (vaultConfig.isDefault() && !savedConfigs.isEmpty()) {
+    if (vaultConfig.isDefault() && (!savedConfigs.isEmpty() || !kmsConfigs.isEmpty())) {
       for (VaultConfig savedConfig : savedConfigs) {
         if (vaultConfig.getUuid().equals(savedConfig.getUuid())) {
           continue;
         }
-        savedConfig.setDefault(false);
-        wingsPersistence.save(savedConfig);
+        if (savedConfig.isDefault()) {
+          savedConfig.setDefault(false);
+          wingsPersistence.save(savedConfig);
+        }
+      }
+
+      for (KmsConfig kmsConfig : kmsConfigs) {
+        if (kmsConfig.isDefault()) {
+          kmsConfig.setDefault(false);
+          wingsPersistence.save(kmsConfig);
+        }
       }
     }
 
-    return true;
+    return vaultConfigId;
   }
 
   @Override

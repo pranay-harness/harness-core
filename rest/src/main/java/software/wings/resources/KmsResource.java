@@ -31,7 +31,7 @@ public class KmsResource {
   @Path("/save-global-kms")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> saveGlobalKmsConfig(
+  public RestResponse<String> saveGlobalKmsConfig(
       @QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
     return new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
   }
@@ -40,7 +40,7 @@ public class KmsResource {
   @Path("/save-kms")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> saveKmsConfig(@QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
+  public RestResponse<String> saveKmsConfig(@QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
     return new RestResponse<>(kmsService.saveKmsConfig(accountId, kmsConfig));
   }
 

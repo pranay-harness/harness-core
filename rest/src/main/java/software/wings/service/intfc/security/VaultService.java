@@ -19,7 +19,7 @@ public interface VaultService {
 
   VaultConfig getSecretConfig(String accountId);
 
-  boolean saveVaultConfig(String accountId, VaultConfig vaultConfig);
+  String saveVaultConfig(String accountId, VaultConfig vaultConfig);
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
 

@@ -2,22 +2,20 @@ package software.wings.service.impl.security;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
-import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-import software.wings.annotation.Encryptable;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.VaultConfig;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -30,7 +28,6 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -114,13 +111,13 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   @Override
-  public boolean saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
+  public String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
     validateKms(accountId, kmsConfig);
     return saveKmsConfigInternal(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
   }
 
   @Override
-  public boolean saveKmsConfig(String accountId, KmsConfig kmsConfig) {
+  public String saveKmsConfig(String accountId, KmsConfig kmsConfig) {
     try {
       validateKms(accountId, kmsConfig);
     } catch (Exception e) {
@@ -130,10 +127,13 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     return saveKmsConfigInternal(accountId, kmsConfig);
   }
 
-  private boolean saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
+  private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
     Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).field("accountId").equal(accountId);
     Collection<KmsConfig> savedConfigs = query.asList();
+    Query<VaultConfig> vaultConfigQuery =
+        wingsPersistence.createQuery(VaultConfig.class).field("accountId").equal(accountId);
+    List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
 
     EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
     accessKeyData.setAccountId(accountId);
@@ -164,17 +164,26 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     arnKeyData.setParentId(parentId);
     wingsPersistence.save(arnKeyData);
 
-    if (kmsConfig.isDefault() && !savedConfigs.isEmpty()) {
+    if (kmsConfig.isDefault() && (!savedConfigs.isEmpty() || !vaultConfigs.isEmpty())) {
       for (KmsConfig savedConfig : savedConfigs) {
         if (kmsConfig.getUuid().equals(savedConfig.getUuid())) {
           continue;
         }
-        savedConfig.setDefault(false);
-        wingsPersistence.save(savedConfig);
+        if (savedConfig.isDefault()) {
+          savedConfig.setDefault(false);
+          wingsPersistence.save(savedConfig);
+        }
+      }
+
+      for (VaultConfig vaultConfig : vaultConfigs) {
+        if (vaultConfig.isDefault()) {
+          vaultConfig.setDefault(false);
+          wingsPersistence.save(vaultConfig);
+        }
       }
     }
 
-    return true;
+    return parentId;
   }
 
   @Override
