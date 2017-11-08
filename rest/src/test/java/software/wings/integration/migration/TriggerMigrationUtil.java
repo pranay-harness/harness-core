@@ -20,6 +20,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
+import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
@@ -105,8 +106,11 @@ public class TriggerMigrationUtil extends WingsBaseTest {
             } else if (artifactStreamAction.isWebHook()) {
               System.out.println("Migrating webhook trigger to new WebHookTriggerCondition = " + artifactStreamAction);
               triggerCondition = WebHookTriggerCondition.builder()
-                                     .webHookToken(artifactStreamAction.getWebHookToken())
-                                     .requestBody(artifactStreamAction.getRequestBody())
+                                     .webHookToken(WebHookToken.builder()
+                                                       .webHookToken(artifactStreamAction.getWebHookToken())
+                                                       .httpMethod("POST")
+                                                       .payload(artifactStreamAction.getRequestBody())
+                                                       .build())
                                      .artifactStreamId(artifactStream.getUuid())
                                      .build();
             } else {

@@ -10,7 +10,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
+import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by sgurubelli on 10/25/17.
@@ -23,10 +25,10 @@ import java.util.List;
 public class Trigger extends Base {
   @NotEmpty private String name;
   private String description;
-  private TriggerCondition condition;
+  @NotNull private TriggerCondition condition;
   @NotEmpty private String pipelineId;
 
-  private List<ArtifactSelection> artifactSelections;
+  private List<ArtifactSelection> artifactSelections = new ArrayList<>();
 
   public static final class Builder {
     protected String appId;
@@ -35,7 +37,7 @@ public class Trigger extends Base {
     private String description;
     private TriggerCondition condition;
     private String pipelineId;
-    private List<ArtifactSelection> artifactSelections;
+    private List<ArtifactSelection> artifactSelections = new ArrayList<>();
 
     private Builder() {}
 

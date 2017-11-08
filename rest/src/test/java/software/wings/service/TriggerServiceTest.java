@@ -65,6 +65,7 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -126,7 +127,10 @@ public class TriggerServiceTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withName(TRIGGER_NAME)
           .withCondition(
-              WebHookTriggerCondition.builder().webHookToken(WEBHOOK_TOKEN).requestBody(WEBHOOK_REQUEST_BODY).build())
+              WebHookTriggerCondition.builder()
+                  .webHookToken(
+                      WebHookToken.builder().webHookToken(WEBHOOK_TOKEN).payload(WEBHOOK_REQUEST_BODY).build())
+                  .build())
           .build();
 
   private Pipeline pipeline = aPipeline()
@@ -293,7 +297,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(trigger.getUuid()).isEqualTo(TRIGGER_ID);
     assertThat(trigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
     assertThat(((WebHookTriggerCondition) trigger.getCondition()).getWebHookToken()).isNotNull();
-    assertThat(((WebHookTriggerCondition) trigger.getCondition()).getRequestBody()).isNotNull();
+    assertThat(((WebHookTriggerCondition) trigger.getCondition()).getWebHookToken().getWebHookToken()).isNotNull();
     verify(wingsPersistence).saveAndGet(any(), any(Trigger.class));
   }
 
@@ -310,8 +314,9 @@ public class TriggerServiceTest extends WingsBaseTest {
     Trigger updatedTrigger = triggerService.update(webhookConditionTrigger);
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
     assertThat(updatedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
-    assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getRequestBody()).isNotNull();
-    assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken()).isNotNull();
+    assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken().getPayload()).isNotNull();
+    assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken().getWebHookToken())
+        .isNotNull();
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
         .extracting(artifactSelection -> artifactSelection.getType())
@@ -343,7 +348,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     Trigger updatedTrigger = triggerService.update(webhookConditionTrigger);
 
     assertThat(updatedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
-    assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getRequestBody()).isNotNull();
+    assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken().getPayload()).isNotNull();
     assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken()).isNotNull();
     assertThat(updatedTrigger.getArtifactSelections())
         .isNotNull()
@@ -863,5 +868,30 @@ public class TriggerServiceTest extends WingsBaseTest {
         triggerService.getTriggersHasArtifactStreamAction(APP_ID, ARTIFACT_STREAM_ID);
     ;
     assertThat(triggersHasArtifactStreamAction).isNotEmpty();
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldValidateArtifactStreamSelections() {
+    when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
+    webhookConditionTrigger.setArtifactSelections(asList(
+        builder().type(LAST_COLLECTED).artifactFilter(ARTIFACT_FILTER).build(), builder().type(LAST_DEPLOYED).build()));
+
+    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+        .thenReturn(webhookConditionTrigger);
+
+    triggerService.save(webhookConditionTrigger);
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldValidateUpdateArtifactStreamSelections() {
+    when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
+    webhookConditionTrigger.setArtifactSelections(
+        asList(builder().type(LAST_COLLECTED).artifactFilter(ARTIFACT_FILTER).build(),
+            builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
+
+    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+        .thenReturn(webhookConditionTrigger);
+
+    triggerService.update(webhookConditionTrigger);
   }
 }
