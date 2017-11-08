@@ -83,7 +83,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + vaultConfig);
 
-      char[] decrypt = kmsService.decrypt(encryptedData, accountId, kmsService.getSecretConfig(accountId));
+      char[] decrypt =
+          kmsService.decrypt(encryptedData, accountId, kmsService.getKmsConfig(accountId, encryptedData.getKmsId()));
       vaultConfig.setAuthToken(String.valueOf(decrypt));
     }
 
@@ -107,7 +108,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + vaultConfig);
 
-      char[] decrypt = kmsService.decrypt(encryptedData, accountId, kmsService.getSecretConfig(accountId));
+      char[] decrypt =
+          kmsService.decrypt(encryptedData, accountId, kmsService.getKmsConfig(accountId, encryptedData.getKmsId()));
       vaultConfig.setAuthToken(String.valueOf(decrypt));
     }
 
