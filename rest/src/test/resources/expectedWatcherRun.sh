@@ -47,6 +47,7 @@ then
   curl -#kLO $JVM_URL
   echo "Extracting JRE packages..."
   tar xzf $JVM_TAR_FILENAME
+  mv $JRE_DIR_OLD $JRE_DIR
   ln -s $JRE_DIR jre
 fi
 
@@ -58,13 +59,6 @@ if [ ! -e watcher.jar ]
 then
   echo "Downloading Watcher..."
   curl -#k $REMOTE_WATCHER_URL -o watcher.jar
-else
-  CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-  if [[ $REMOTE_WATCHER_VERSION != $CURRENT_VERSION ]]
-  then
-    echo "Downloading Watcher..."
-    curl -#k $REMOTE_WATCHER_URL -o watcher.jar
-  fi
 fi
 
 if [ ! -e config-watcher.yml ]
@@ -74,7 +68,6 @@ then
   echo "upgradeCheckLocation: http://localhost:8888/watcherci.txt" >> config-watcher.yml
   echo "upgradeCheckIntervalSeconds: 300" >> config-watcher.yml
 fi
-
 
 if [[ $1 == "upgrade" ]]
 then
