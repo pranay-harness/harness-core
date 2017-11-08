@@ -44,9 +44,11 @@ public class UpgradeServiceImpl implements UpgradeService {
 
     File watcherJarFile = new File("watcher.jar");
     File watcherJarFileNew = new File("watcher-new.jar");
+    File watcherJarFileOld = new File("watcher-old.jar");
     IOUtils.copy(newVersionJarStream, new FileOutputStream(watcherJarFileNew));
-    FileUtils.forceDelete(watcherJarFile);
+    FileUtils.moveFile(watcherJarFile, watcherJarFileOld);
     FileUtils.moveFile(watcherJarFileNew, watcherJarFile);
+    FileUtils.forceDelete(watcherJarFileOld);
 
     StartedProcess process = null;
     try {
