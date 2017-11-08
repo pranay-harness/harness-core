@@ -4,6 +4,7 @@ import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
 import software.wings.beans.SumoConfig;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
@@ -24,12 +25,12 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       getSumoClient(sumoConfig, encryptedDataDetails).search("*exception*");
     } catch (Throwable t) {
       if (t instanceof MalformedURLException) {
-        throw new MalformedURLException(sumoConfig.getSumoUrl() + " is not a valid url");
+        throw new WingsException(sumoConfig.getSumoUrl() + " is not a valid url. ", t);
       }
       if (t instanceof SumoServerException) {
-        throw new RuntimeException(((SumoServerException) t).getErrorMessage());
+        throw new WingsException("Error from Sumo xxxxxxxx " + ((SumoServerException) t).getErrorMessage(), t);
       }
-      throw new RuntimeException(t.getMessage());
+      throw new WingsException("An error occurred connecting to Sumo xxxxxxxx " + t.getMessage(), t);
     }
   }
 
