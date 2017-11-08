@@ -36,7 +36,7 @@ import javax.inject.Inject;
  */
 public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
-  public static final int DELAY_MINUTES = 2;
+  public static final int DELAY_MINUTES = 1;
   public static final int RETRY_SLEEP_SECS = 30;
 
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
