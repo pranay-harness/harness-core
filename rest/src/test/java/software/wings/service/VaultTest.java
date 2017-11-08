@@ -16,7 +16,6 @@ import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -75,6 +74,7 @@ import software.wings.utils.BoundedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,12 +92,8 @@ import javax.inject.Inject;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
-@Ignore
 public class VaultTest extends WingsBaseTest {
   private static String VAULT_TOKEN = System.getProperty("vault.token");
-  static {
-    System.out.println("VAULT TOKEN: " + VAULT_TOKEN);
-  }
 
   private final int numOfEncryptedValsForKms = 3;
   private final int numOfEncryptedValsForVault = 1;
@@ -1201,7 +1197,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void vaultEncryptionYaml() throws IllegalAccessException, NoSuchFieldException {
+  public void vaultEncryptionYaml() throws IllegalAccessException, NoSuchFieldException, IOException {
     String password = UUID.randomUUID().toString();
     String accountId = UUID.randomUUID().toString();
     String name = UUID.randomUUID().toString();
@@ -1264,7 +1260,17 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(password, new String(decryptedPassword));
   }
 
-  private VaultConfig getVaultConfig() {
+  private VaultConfig getVaultConfig() throws IOException {
+    URL resource = getClass().getClassLoader().getResource("vault_token.txt");
+
+    if (resource == null) {
+      System.out.println("reading vault token from environment variable");
+      System.out.println("VAULT_TOKEN: " + VAULT_TOKEN);
+    } else {
+      System.out.println("reading vault token from file");
+      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()));
+      System.out.println("VAULT_TOKEN: " + VAULT_TOKEN);
+    }
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
         .authToken(VAULT_TOKEN)
