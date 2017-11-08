@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -115,8 +116,15 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger save(Trigger trigger) {
+    validateArtifactSelections(trigger);
     validateCronExpression(trigger);
-
+    if (trigger.getCondition().getConditionType().equals(WEBHOOK)) {
+      WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      if (webHookTriggerCondition.getWebHookToken() == null
+          || Misc.isNullOrEmpty(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
+        webHookTriggerCondition.setWebHookToken(generateWebHookToken(trigger.getAppId(), trigger.getPipelineId()));
+      }
+    }
     Trigger savedTrigger =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     Validator.notNullCheck("Trigger", savedTrigger);
@@ -128,16 +136,10 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger update(Trigger trigger) {
+    validateArtifactSelections(trigger);
     validateCronExpression(trigger);
     Trigger existingTrigger = wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid());
     Validator.notNullCheck("Trigger", existingTrigger);
-    if (existingTrigger.getCondition().getConditionType().equals(WEBHOOK)
-        && trigger.getCondition().getConditionType().equals(WEBHOOK)) {
-      if (StringUtils.isEmpty(((WebHookTriggerCondition) trigger.getCondition()).getWebHookToken())) {
-        ((WebHookTriggerCondition) trigger.getCondition())
-            .setWebHookToken(((WebHookTriggerCondition) existingTrigger.getCondition()).getWebHookToken());
-      }
-    }
     Trigger updatedTrigger =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     addOrUpdateCronForScheduledJob(trigger, existingTrigger);
@@ -232,12 +234,6 @@ public class TriggerServiceImpl implements TriggerService {
     }
     payload.put("artifacts", artifactList);
 
-    //    if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-    //      payload.put("dockerImageTag", "${DOCKER_IMAGE_TAG}");
-    //    } else {
-    //      payload.put("buildNumber", "${BUILD_NUMBER}");
-    //    }
-
     webHookToken.setPayload(new Gson().toJson(payload));
     return webHookToken;
   }
@@ -302,13 +298,15 @@ public class TriggerServiceImpl implements TriggerService {
 
   private Trigger getTrigger(String appId, String webHookToken) {
     List<Trigger> triggers = getTriggersByApp(appId);
-    Trigger trigger =
-        triggers.stream()
-            .filter(tr
-                -> tr.getCondition().getConditionType().equals(WEBHOOK)
-                    && ((WebHookTriggerCondition) tr.getCondition()).getWebHookToken().equals(webHookToken))
-            .findFirst()
-            .orElse(null);
+    Trigger trigger = triggers.stream()
+                          .filter(tr
+                              -> tr.getCondition().getConditionType().equals(WEBHOOK)
+                                  && ((WebHookTriggerCondition) tr.getCondition())
+                                         .getWebHookToken()
+                                         .getWebHookToken()
+                                         .equals(webHookToken))
+                          .findFirst()
+                          .orElse(null);
     if (trigger == null) {
       throw new WingsException("Invalid WebHook token");
     }
@@ -655,6 +653,33 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
+  private void validateArtifactSelections(Trigger trigger) {
+    List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
+    if (CollectionUtils.isEmpty(artifactSelections)) {
+      return;
+    }
+    artifactSelections.forEach(artifactSelection -> {
+      switch (artifactSelection.getType()) {
+        case LAST_DEPLOYED:
+          if (Misc.isNullOrEmpty(artifactSelection.getPipelineId())) {
+            throw new WingsException(INVALID_REQUEST, "message", "Pipeline cannot be empty for Last deployed type");
+          }
+          break;
+        case LAST_COLLECTED:
+        case WEBHOOK_VARIABLE:
+          if (Misc.isNullOrEmpty(artifactSelection.getArtifactStreamId())) {
+            throw new WingsException(
+                INVALID_REQUEST, "message", "Artifact Source cannot be empty for Last collected type");
+          }
+          break;
+        case ARTIFACT_SOURCE:
+        case PIPELINE_SOURCE:
+          break;
+        default:
+          throw new WingsException(INVALID_REQUEST, "message", "Invalid artifact selection type");
+      }
+    });
+  }
   public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Map<Object, Boolean> seen = new ConcurrentHashMap<>();
     return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
