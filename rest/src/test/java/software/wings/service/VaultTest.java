@@ -80,9 +80,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -439,7 +441,7 @@ public class VaultTest extends WingsBaseTest {
     assertFalse(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(settingAttribute.getUuid());
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
     assertEquals(1, query.asList().size());
     EncryptedData encryptedData = query.asList().get(0);
     assertEquals(vaultConfig.getUuid(), encryptedData.getKmsId());
@@ -507,7 +509,7 @@ public class VaultTest extends WingsBaseTest {
       encryptionService.decrypt(
           appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowId, appId));
       assertEquals("password" + i, new String(appDynamicsConfig.getPassword()));
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(id);
+      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(id);
       assertEquals(1, query.asList().size());
       assertEquals(vaultConfig.getUuid(), query.asList().get(0).getKmsId());
     }
@@ -558,7 +560,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
     EncryptedData encryptedData = query.asList().get(0);
     assertEquals(vaultConfig.getUuid(), encryptedData.getKmsId());
@@ -582,7 +584,7 @@ public class VaultTest extends WingsBaseTest {
     UserThreadLocal.set(user2);
     wingsPersistence.save(savedAttribute);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
     changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
@@ -645,7 +647,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
     List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
@@ -679,7 +681,7 @@ public class VaultTest extends WingsBaseTest {
     UserThreadLocal.set(user1);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
     EncryptedData encryptedData = query.asList().get(0);
 
@@ -717,7 +719,7 @@ public class VaultTest extends WingsBaseTest {
     UserThreadLocal.set(user2);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
     encryptedData = query.asList().get(0);
 
@@ -783,7 +785,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
     Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
@@ -871,7 +873,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionDeleteSettingAttribute() throws IOException {
+  public void vaultEncryptionDeleteSettingAttribute() throws IOException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
@@ -912,7 +914,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
+  public void vaultEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
@@ -968,7 +970,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void transitionKms() throws IOException, InterruptedException {
+  public void transitionVault() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
       VaultConfig fromConfig = getVaultConfig();
@@ -1167,7 +1169,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .equal(SettingVariableTypes.CONFIG_FILE)
                                                 .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
+    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
     // test update
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     configService.update(configFileBuilder.withUuid(configFileId).but().build(),
@@ -1181,7 +1183,7 @@ public class VaultTest extends WingsBaseTest {
                             .equal(SettingVariableTypes.CONFIG_FILE)
                             .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
+    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
 
     int numOfAccess = 7;
     for (int i = 0; i < numOfAccess; i++) {
@@ -1197,67 +1199,107 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void vaultEncryptionYaml() throws IllegalAccessException, NoSuchFieldException, IOException {
-    String password = UUID.randomUUID().toString();
-    String accountId = UUID.randomUUID().toString();
-    String name = UUID.randomUUID().toString();
+  public void reuseYamlPasswordVaultEncryption() throws IOException, IllegalAccessException {
     VaultConfig fromConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, fromConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
+    int numOfSettingAttributes = 5;
+    String password = "password";
+    Set<String> attributeIds = new HashSet<>();
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl(UUID.randomUUID().toString())
+                                              .username(UUID.randomUUID().toString())
+                                              .password(password.toCharArray())
+                                              .accountname(UUID.randomUUID().toString())
+                                              .build();
 
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(appDynamicsConfig.getAccountId())
+                                            .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
                                             .withCategory(Category.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
-                                            .withName(name)
+                                            .withName(UUID.randomUUID().toString())
                                             .build();
+    attributeIds.add(wingsPersistence.save(settingAttribute));
 
-    String savedAttributeId = wingsPersistence.save(settingAttribute);
-    appDynamicsConfig.setPassword(password.toCharArray());
-    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+    for (int i = 1; i < numOfSettingAttributes; i++) {
+      appDynamicsConfig = AppDynamicsConfig.builder()
+                              .accountId(accountId)
+                              .controllerUrl(UUID.randomUUID().toString())
+                              .username(UUID.randomUUID().toString())
+                              .password(null)
+                              .encryptedPassword(yamlRef)
+                              .accountname(UUID.randomUUID().toString())
+                              .build();
 
-    String encryptedYamlRef = secretManager.getEncryptedYamlRef(
-        (Encryptable) savedAttribute.getValue(), null, SettingVariableTypes.APP_DYNAMICS);
-    assertTrue(encryptedYamlRef.startsWith(EncryptionType.VAULT.name()));
-    char[] decryptedPassword = secretManager.decryptYamlRef(encryptedYamlRef);
-    assertEquals(password, new String(decryptedPassword));
+      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                             .withAccountId(accountId)
+                             .withValue(appDynamicsConfig)
+                             .withAppId(UUID.randomUUID().toString())
+                             .withCategory(Category.CONNECTOR)
+                             .withEnvId(UUID.randomUUID().toString())
+                             .withName(UUID.randomUUID().toString())
+                             .build();
 
-    password = UUID.randomUUID().toString();
-    name = UUID.randomUUID().toString();
-    String appId = UUID.randomUUID().toString();
+      attributeIds.add(wingsPersistence.save(settingAttribute));
+    }
 
-    final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                .templateId(UUID.randomUUID().toString())
-                                                .envId(UUID.randomUUID().toString())
-                                                .entityType(EntityType.APPLICATION)
-                                                .entityId(UUID.randomUUID().toString())
-                                                .parentServiceVariableId(UUID.randomUUID().toString())
-                                                .overrideType(OverrideType.ALL)
-                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .expression(UUID.randomUUID().toString())
-                                                .accountId(accountId)
-                                                .name(name)
-                                                .value(password.toCharArray())
-                                                .type(Type.ENCRYPTED_TEXT)
-                                                .build();
-    serviceVariable.setAppId(appId);
+    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
-    savedAttributeId = wingsPersistence.save(serviceVariable);
-    ServiceVariable savedServiceVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    encryptedYamlRef =
-        secretManager.getEncryptedYamlRef(savedServiceVariable, null, SettingVariableTypes.SERVICE_VARIABLE);
-    assertTrue(encryptedYamlRef.startsWith(EncryptionType.VAULT.name()));
-    decryptedPassword = secretManager.decryptYamlRef(encryptedYamlRef);
-    assertEquals(password, new String(decryptedPassword));
+    List<EncryptedData> encryptedDatas =
+        wingsPersistence.createQuery(EncryptedData.class).field("encryptionType").equal(EncryptionType.VAULT).asList();
+    assertEquals(1, encryptedDatas.size());
+    EncryptedData encryptedData = encryptedDatas.get(0);
+    assertEquals(EncryptionType.VAULT, encryptedData.getEncryptionType());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertEquals(fromConfig.getUuid(), encryptedData.getKmsId());
+    assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+    assertEquals(numOfSettingAttributes, encryptedData.getParentIds().size());
+    assertEquals(attributeIds, encryptedData.getParentIds());
+
+    for (String attributeId : attributeIds) {
+      SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
+      AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
+      assertEquals(accountId, savedConfig.getAccountId());
+      assertNull(savedConfig.getPassword());
+      assertFalse(StringUtils.isBlank(savedConfig.getEncryptedPassword()));
+
+      encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowId, appId));
+      assertEquals(password, String.valueOf(savedConfig.getPassword()));
+    }
+
+    // delete configs and check
+    int i = 0;
+    Set<String> remainingAttrs = new HashSet<>(attributeIds);
+    for (String attributeId : attributeIds) {
+      wingsPersistence.delete(SettingAttribute.class, attributeId);
+      remainingAttrs.remove(attributeId);
+      encryptedDatas = wingsPersistence.createQuery(EncryptedData.class)
+                           .field("encryptionType")
+                           .equal(EncryptionType.VAULT)
+                           .asList();
+      if (i == numOfSettingAttributes - 1) {
+        assertTrue(encryptedDatas.isEmpty());
+      } else {
+        assertEquals(1, encryptedDatas.size());
+        encryptedData = encryptedDatas.get(0);
+        assertEquals(EncryptionType.VAULT, encryptedData.getEncryptionType());
+        assertEquals(accountId, encryptedData.getAccountId());
+        assertTrue(encryptedData.isEnabled());
+        assertEquals(fromConfig.getUuid(), encryptedData.getKmsId());
+        assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+        assertEquals(numOfSettingAttributes - (i + 1), encryptedData.getParentIds().size());
+
+        assertFalse(encryptedData.getParentIds().contains(attributeId));
+        assertEquals(remainingAttrs, encryptedData.getParentIds());
+      }
+      i++;
+    }
   }
 
   private VaultConfig getVaultConfig() throws IOException {

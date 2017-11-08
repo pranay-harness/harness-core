@@ -124,7 +124,7 @@ public class ConfigServiceImpl implements ConfigService {
   private void updateParentForEncryptedData(ConfigFile configFile) {
     if (!StringUtils.isBlank(configFile.getEncryptedFileId())) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-      encryptedData.setParentId(configFile.getUuid());
+      encryptedData.addParent(configFile.getUuid());
       wingsPersistence.save(encryptedData);
     }
   }
@@ -309,7 +309,7 @@ public class ConfigServiceImpl implements ConfigService {
       EncryptedData encryptedData = secretManager.encryptFile(inputStream, configFile.getAccountId(), fileUuid);
       encryptedData.setUuid(fileUuid);
       if (!StringUtils.isBlank(configFile.getUuid())) {
-        encryptedData.setParentId(configFile.getUuid());
+        encryptedData.addParent(configFile.getUuid());
         wingsPersistence.save(encryptedData);
       }
       configFile.setEncryptedFileId(encryptedData.getUuid());
