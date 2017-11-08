@@ -154,7 +154,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           .kmsId(vaultConfig.getUuid())
           .build();
     } else {
-      logger.error("Request not successful. Reason: {}", response);
+      logger.error("Request not successful. Reason: {}, headers: {}", response, response.raw().request().headers());
       throw new IOException(response.errorBody().string());
     }
   }

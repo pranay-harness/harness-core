@@ -1265,12 +1265,11 @@ public class VaultTest extends WingsBaseTest {
 
     if (resource == null) {
       System.out.println("reading vault token from environment variable");
-      System.out.println("VAULT_TOKEN: " + VAULT_TOKEN);
     } else {
       System.out.println("reading vault token from file");
       VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()));
-      System.out.println("VAULT_TOKEN: " + VAULT_TOKEN);
     }
+    System.out.println("VAULT_TOKEN: " + VAULT_TOKEN);
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
         .authToken(VAULT_TOKEN)
