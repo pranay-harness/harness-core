@@ -43,15 +43,10 @@ public class UpgradeServiceImpl implements UpgradeService {
     // TODO - replace run script
 
     File watcherJarFile = new File("watcher.jar");
-    if (watcherJarFile.exists()) {
-      if (!watcherJarFile.delete()) {
-        logger.error("Could not delete file.");
-      }
-    }
-    if (!watcherJarFile.createNewFile()) {
-      logger.error("Could not create file.");
-    }
-    IOUtils.copy(newVersionJarStream, new FileOutputStream(watcherJarFile));
+    File watcherJarFileNew = new File("watcher-new.jar");
+    IOUtils.copy(newVersionJarStream, new FileOutputStream(watcherJarFileNew));
+    FileUtils.forceDelete(watcherJarFile);
+    FileUtils.moveFile(watcherJarFileNew, watcherJarFile);
 
     StartedProcess process = null;
     try {
