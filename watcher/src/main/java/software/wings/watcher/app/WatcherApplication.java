@@ -51,7 +51,7 @@ public class WatcherApplication {
     }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("My watch has ended.");
+      logger.info("My watch has ended");
       LogManager.shutdown();
     }));
     logger.info("Starting Watcher");

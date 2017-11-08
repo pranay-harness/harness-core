@@ -65,12 +65,12 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .start();
       BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
       if (process.getProcess().isAlive() && waitForStringOnStream(reader, "watchstarted", 15)) {
-        logger.info("[Old] Watcher upgraded. Stopping.");
+        logger.info("[Old] Watcher upgraded. Stopping");
         removeWatcherVersionFromCapsule(version, newVersion);
         cleanupOldWatcherVersionFromBackup(version, newVersion);
         watcherService.stop();
       } else {
-        logger.error("[Old] Failed to upgrade watcher.");
+        logger.error("[Old] Failed to upgrade watcher");
         process.getProcess().destroy();
         process.getProcess().waitFor();
       }
@@ -92,7 +92,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             }
           }
         } catch (Exception ex) {
-          logger.error("[Old] ALERT: Couldn't kill forcibly.", ex);
+          logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
         }
       }
     }

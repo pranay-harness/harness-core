@@ -44,7 +44,7 @@ public class WatcherServiceImpl implements WatcherService {
       amazonS3Client = (AmazonS3Client) AmazonS3ClientBuilder.standard().withRegion("us-east-1").build();
 
       if (upgrade) {
-        logger.info("[New] Upgraded watcher process started. Sending confirmation.");
+        logger.info("[New] Upgraded watcher process started. Sending confirmation");
         System.out.println("watchstarted"); // Don't remove this. It is used as message in upgrade flow.
       } else {
         logger.info("Watcher process started");
@@ -57,9 +57,9 @@ public class WatcherServiceImpl implements WatcherService {
       startWatcher();
 
       if (upgrade) {
-        logger.info("[New] Watcher upgraded.");
+        logger.info("[New] Watcher upgraded");
       } else {
-        logger.info("Watcher started.");
+        logger.info("Watcher started");
       }
 
       synchronized (waiter) {
@@ -96,7 +96,7 @@ public class WatcherServiceImpl implements WatcherService {
             String version = getVersion();
             boolean upgrade = !StringUtils.equals(version, latestVersion);
             if (upgrade) {
-              logger.info("[Old] Upgrading watcher.");
+              logger.info("[Old] Upgrading watcher");
               S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
 
               upgradeService.doUpgrade(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
