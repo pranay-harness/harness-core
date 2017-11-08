@@ -38,7 +38,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       }
       throw new WingsException(response.errorBody().string());
     } catch (Throwable t) {
-      throw new WingsException(t.getMessage());
+      throw new WingsException("Error validating LOGZ config " + t.getMessage(), t);
     }
   }
 

@@ -59,7 +59,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         getIndices(elkConfig, encryptedDataDetails);
       }
     } catch (Throwable t) {
-      throw new WingsException(t.getMessage());
+      throw new WingsException(t.getMessage(), t);
     }
   }
 
@@ -154,10 +154,10 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         return response.headers().get("kbn-version");
       } catch (Exception ex) {
         logger.warn("Unable to get Kibana version", ex);
-        throw new RuntimeException("Unable to get version. Check url");
+        throw new WingsException("Unable to get version. Check url " + ex.getMessage(), ex);
       }
     } else {
-      throw new RuntimeException("Get version is supported only for the Kibana connector");
+      throw new WingsException("Get version is supported only for the Kibana connector");
     }
   }
 
@@ -246,7 +246,7 @@ builder.hostnameVerifier((hostname, session) -> true);
 return builder;
 }
 catch (Exception e) {
-  throw new RuntimeException(e);
+  throw new WingsException("Unexpected error " + e.getMessage(), e);
 }
 }
 }
