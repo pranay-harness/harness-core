@@ -64,6 +64,7 @@ import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -118,6 +119,7 @@ public class VaultTest extends WingsBaseTest {
   private String workflowId;
   private String workflowName;
   private KmsTransitionEventListener transitionEventListener;
+  private String kmsId;
 
   @Parameters
   public static Collection<Object[]> data() {
@@ -147,7 +149,7 @@ public class VaultTest extends WingsBaseTest {
     numOfEncRecords = numOfEncryptedValsForVault;
     if (isKmsEnabled) {
       final KmsConfig kmsConfig = getKmsConfig();
-      kmsService.saveKmsConfig(accountId, kmsConfig);
+      kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
       numOfEncRecords = numOfEncryptedValsForKms + numOfEncryptedValsForVault;
     }
   }
@@ -168,19 +170,108 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   public void saveConfig() throws IOException {
+    if (isKmsEnabled) {
+      kmsService.deleteKmsConfig(accountId, kmsId);
+    }
+
     VaultConfig vaultConfig = getVaultConfig();
-    vaultService.saveVaultConfig(accountId, vaultConfig);
     vaultConfig.setDefault(false);
+    String vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId);
-    assertEquals(1, vaultConfigs.size());
-    VaultConfig next = vaultConfigs.iterator().next();
-
+    List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    assertEquals(1, encryptionConfigs.size());
+    VaultConfig next = (VaultConfig) encryptionConfigs.get(0);
+    assertTrue(next.isDefault());
     assertEquals(accountId, next.getAccountId());
     assertEquals(SECRET_MASK, String.valueOf(next.getAuthToken()));
     assertEquals(vaultConfig.getName(), next.getName());
     assertEquals(vaultConfig.getVaultUrl(), next.getVaultUrl());
     assertTrue(next.isDefault());
+
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setDefault(true);
+    kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    assertEquals(2, encryptionConfigs.size());
+    int numOfVaultDefaults = 0;
+    int numOfKmsDefaults = 0;
+
+    for (EncryptionConfig encryptionConfig : encryptionConfigs) {
+      if (encryptionConfig.getEncryptionType() == EncryptionType.KMS) {
+        assertTrue(encryptionConfig.isDefault());
+        assertEquals(kmsId, encryptionConfig.getUuid());
+        numOfKmsDefaults++;
+      }
+
+      if (encryptionConfig.getEncryptionType() == EncryptionType.VAULT) {
+        assertFalse(encryptionConfig.isDefault());
+        assertEquals(vaultConfigId, encryptionConfig.getUuid());
+        numOfVaultDefaults++;
+      }
+    }
+
+    assertEquals(1, numOfKmsDefaults);
+    assertEquals(1, numOfVaultDefaults);
+
+    vaultConfig = getVaultConfig();
+    vaultConfig.setDefault(true);
+    vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
+
+    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    assertEquals(3, encryptionConfigs.size());
+
+    numOfVaultDefaults = 0;
+    numOfKmsDefaults = 0;
+
+    for (EncryptionConfig encryptionConfig : encryptionConfigs) {
+      if (encryptionConfig.getEncryptionType() == EncryptionType.KMS) {
+        assertFalse(encryptionConfig.isDefault());
+        assertEquals(kmsId, encryptionConfig.getUuid());
+        numOfKmsDefaults++;
+      }
+
+      if (encryptionConfig.getEncryptionType() == EncryptionType.VAULT) {
+        if (encryptionConfig.getUuid().equals(vaultConfigId)) {
+          assertTrue(encryptionConfig.isDefault());
+          numOfVaultDefaults++;
+        } else {
+          assertFalse(encryptionConfig.isDefault());
+        }
+      }
+    }
+
+    assertEquals(1, numOfKmsDefaults);
+    assertEquals(1, numOfVaultDefaults);
+
+    kmsConfig = getKmsConfig();
+    kmsConfig.setDefault(true);
+    kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    assertEquals(4, encryptionConfigs.size());
+
+    numOfVaultDefaults = 0;
+    numOfKmsDefaults = 0;
+
+    for (EncryptionConfig encryptionConfig : encryptionConfigs) {
+      if (encryptionConfig.getEncryptionType() == EncryptionType.KMS) {
+        if (encryptionConfig.getUuid().equals(kmsId)) {
+          assertTrue(encryptionConfig.isDefault());
+          numOfKmsDefaults++;
+        } else {
+          assertFalse(encryptionConfig.isDefault());
+        }
+      }
+
+      if (encryptionConfig.getEncryptionType() == EncryptionType.VAULT) {
+        assertFalse(encryptionConfig.isDefault());
+        numOfVaultDefaults++;
+      }
+    }
+
+    assertEquals(1, numOfKmsDefaults);
+    assertEquals(2, numOfVaultDefaults);
   }
 
   @Test
