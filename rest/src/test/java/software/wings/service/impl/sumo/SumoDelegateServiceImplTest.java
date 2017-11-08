@@ -1,8 +1,6 @@
 package software.wings.service.impl.sumo;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyObject;
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -18,17 +16,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.beans.SumoConfig;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.security.EncryptionServiceImpl;
-import software.wings.service.intfc.security.EncryptionService;
-import sun.awt.SunHints.Value;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Collections;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 9/12/17.
@@ -46,12 +40,18 @@ public class SumoDelegateServiceImplTest {
     when(sumoConfig.getSumoUrl()).thenReturn("https://localhost:9000/");
   }
 
-  @Test(expected = MalformedURLException.class)
+  @Test
   public void testValidateConfigBadUrl() throws IOException {
     when(sumoConfig.getSumoUrl()).thenReturn("htt//localhost:9000/");
     SumoDelegateServiceImpl sumoDelegateService = new SumoDelegateServiceImpl();
     setInternalState(sumoDelegateService, "encryptionService", new EncryptionServiceImpl());
-    sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());
+    String exceptionMsg = "";
+    try {
+      sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());
+    } catch (WingsException e) {
+      exceptionMsg = e.getMessage();
+    }
+    assertThat(exceptionMsg).contains("is not a valid url");
   }
 
   @Test(expected = SumoClientException.class)
@@ -64,11 +64,10 @@ public class SumoDelegateServiceImplTest {
     String exceptionMsg = "";
     try {
       sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());
-    } catch (RuntimeException ex) {
+    } catch (WingsException ex) {
       exceptionMsg = ex.getMessage();
     }
-
-    assertEquals(msg, exceptionMsg);
+    assertThat(exceptionMsg).isEqualTo(msg);
   }
 
   @Test
