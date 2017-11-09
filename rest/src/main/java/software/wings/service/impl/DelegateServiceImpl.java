@@ -422,7 +422,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate register(Delegate delegate) {
-    logger.info("Registering delegate: " + delegate.getUuid());
+    logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
+        delegate.getHostName(), delegate.getIp());
     // Please do not remove Fields Excluded
     Delegate existingDelegate = wingsPersistence.get(Delegate.class,
         aPageRequest()
