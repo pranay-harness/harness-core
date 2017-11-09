@@ -100,7 +100,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   private void validateHostSsh(
       DelegateConnectionResultBuilder resultBuilder, String hostName, CommandExecutionContext context) {
     try {
-      SshSessionFactory.getSSHSession(SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context))
+      SshSessionFactory.getSSHSession(SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context, 20))
           .disconnect();
       resultBuilder.validated(true);
     } catch (JSchException jschEx) {

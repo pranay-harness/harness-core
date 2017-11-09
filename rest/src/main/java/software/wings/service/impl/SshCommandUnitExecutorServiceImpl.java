@@ -32,7 +32,6 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
-import software.wings.utils.Misc;
 import software.wings.utils.SshHelperUtil;
 
 import java.util.concurrent.ExecutionException;
@@ -83,7 +82,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     SshSessionConfig sshSessionConfig =
-        SshHelperUtil.getSshSessionConfig(host.getPublicDns(), commandUnit.getName(), context);
+        SshHelperUtil.getSshSessionConfig(host.getPublicDns(), commandUnit.getName(), context, null);
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
     executor.init(sshSessionConfig);
 

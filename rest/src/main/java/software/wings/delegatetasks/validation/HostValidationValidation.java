@@ -58,7 +58,8 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
                       aCommandExecutionContext()
                           .withHostConnectionAttributes(connectionSetting)
                           .withExecutionCredential(executionCredential)
-                          .build()))
+                          .build(),
+                      20))
                   .disconnect();
               resultBuilder.validated(true);
             } catch (JSchException jschEx) {

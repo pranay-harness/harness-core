@@ -35,6 +35,8 @@ import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Created by anubhaw on 2/23/17.
@@ -101,7 +103,7 @@ public class SshHelperUtil {
   }
 
   public static SshSessionConfig getSshSessionConfig(
-      String hostName, String commandName, CommandExecutionContext context) {
+      String hostName, String commandName, CommandExecutionContext context, @Nullable Integer connectTimeoutSeconds) {
     ExecutorType executorType = getExecutorType(context);
 
     SSHExecutionCredential sshExecutionCredential = (SSHExecutionCredential) context.getExecutionCredential();
@@ -131,12 +133,15 @@ public class SshHelperUtil {
     if (context.getBastionConnectionAttributes() != null) {
       SettingAttribute settingAttribute = context.getBastionConnectionAttributes();
       BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) settingAttribute.getValue();
-      builder.withBastionHostConfig(aSshSessionConfig()
-                                        .withHost(bastionAttrs.getHostName())
-                                        .withKey(bastionAttrs.getKey())
-                                        .withKeyName(settingAttribute.getUuid())
-                                        .withUserName(bastionAttrs.getUserName())
-                                        .build());
+      Builder sshSessionConfig = aSshSessionConfig()
+                                     .withHost(bastionAttrs.getHostName())
+                                     .withKey(bastionAttrs.getKey())
+                                     .withKeyName(settingAttribute.getUuid())
+                                     .withUserName(bastionAttrs.getUserName());
+      if (connectTimeoutSeconds != null) {
+        sshSessionConfig.withSshConnectionTimeout((int) TimeUnit.SECONDS.toMillis(connectTimeoutSeconds));
+      }
+      builder.withBastionHostConfig(sshSessionConfig.build());
     }
     return builder.build();
   }
