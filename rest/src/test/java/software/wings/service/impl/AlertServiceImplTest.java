@@ -9,13 +9,12 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -35,7 +34,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
-import software.wings.beans.TaskType;
+import software.wings.beans.TaskGroup;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.ApprovalAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
@@ -72,7 +71,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   private final NoActiveDelegatesAlert noActiveDelegatesAlert =
       NoActiveDelegatesAlert.builder().accountId(ACCOUNT_ID).build();
   private final NoEligibleDelegatesAlert noEligibleDelegatesAlert =
-      aNoEligibleDelegatesAlert().withTask(aDelegateTask().withTaskType(TaskType.JENKINS).build()).build();
+      aNoEligibleDelegatesAlert().withAppId(GLOBAL_APP_ID).withTaskGroup(TaskGroup.JENKINS).build();
 
   private final Alert noActive = anAlert()
                                      .withAccountId(ACCOUNT_ID)
@@ -181,7 +180,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldCloseAlertsWhenDelegateUpdated() {
     when(query.asList()).thenReturn(singletonList(noActive)).thenReturn(singletonList(noEligible));
-    when(assignDelegateService.canAssign(any(), eq(DELEGATE_ID))).thenReturn(true);
+    when(assignDelegateService.canAssign(eq(DELEGATE_ID), any(), any(), any(), any(), any())).thenReturn(true);
 
     alertService.activeDelegateUpdated(ACCOUNT_ID, DELEGATE_ID);
 

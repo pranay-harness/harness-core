@@ -55,7 +55,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isTrue();
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
   @Test
@@ -69,7 +69,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isTrue();
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
   @Test
@@ -83,7 +83,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isFalse();
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 
   @Test
@@ -97,7 +97,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isTrue();
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
   @Test
@@ -111,6 +111,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isFalse();
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 }

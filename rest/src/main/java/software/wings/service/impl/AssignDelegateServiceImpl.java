@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
@@ -11,6 +12,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.TaskGroup;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -34,15 +36,22 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public boolean canAssign(DelegateTask task, String delegateId) {
-    Delegate delegate = delegateService.get(task.getAccountId(), delegateId);
+  public boolean canAssign(String delegateId, DelegateTask task) {
+    return canAssign(delegateId, task.getAccountId(), task.getAppId(), task.getEnvId(),
+        task.getInfrastructureMappingId(), task.getTaskType().getTaskGroup());
+  }
+
+  @Override
+  public boolean canAssign(
+      String delegateId, String accountId, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
+    Delegate delegate = delegateService.get(accountId, delegateId);
     if (delegate == null) {
       return false;
     }
     boolean assign = delegate.getIncludeScopes() == null || delegate.getIncludeScopes().isEmpty();
     if (delegate.getIncludeScopes() != null) {
       for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
-        if (scopeMatch(delegateScope, task)) {
+        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup)) {
           assign = true;
           break;
         }
@@ -50,7 +59,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
     if (assign && delegate.getExcludeScopes() != null) {
       for (DelegateScope delegateScope : delegate.getExcludeScopes()) {
-        if (scopeMatch(delegateScope, task)) {
+        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup)) {
           assign = false;
           break;
         }
@@ -59,31 +68,30 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return assign;
   }
 
-  private boolean scopeMatch(DelegateScope delegateScope, DelegateTask task) {
+  private boolean scopeMatch(
+      DelegateScope delegateScope, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
     if (!delegateScope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate scope cannot be empty.");
     }
     boolean match = true;
 
-    if (delegateScope.getEnvironmentTypes() != null && !delegateScope.getEnvironmentTypes().isEmpty()) {
-      match = task.getAppId() != null && task.getEnvId() != null
+    if (isNotEmpty(delegateScope.getEnvironmentTypes())) {
+      match = isNotBlank(appId) && isNotBlank(envId)
           && delegateScope.getEnvironmentTypes().contains(
-                 environmentService.get(task.getAppId(), task.getEnvId(), false).getEnvironmentType());
+                 environmentService.get(appId, envId, false).getEnvironmentType());
     }
-    if (match && delegateScope.getTaskTypes() != null && !delegateScope.getTaskTypes().isEmpty()) {
-      match = task.getTaskType() != null && delegateScope.getTaskTypes().contains(task.getTaskType().getTaskGroup());
+    if (match && isNotEmpty(delegateScope.getTaskTypes())) {
+      match = delegateScope.getTaskTypes().contains(taskGroup);
     }
-    if (match && delegateScope.getApplications() != null && !delegateScope.getApplications().isEmpty()) {
-      match = task.getAppId() != null && delegateScope.getApplications().contains(task.getAppId());
+    if (match && isNotEmpty(delegateScope.getApplications())) {
+      match = isNotBlank(appId) && delegateScope.getApplications().contains(appId);
     }
-    if (match && delegateScope.getEnvironments() != null && !delegateScope.getEnvironments().isEmpty()) {
-      match = task.getEnvId() != null && delegateScope.getEnvironments().contains(task.getEnvId());
+    if (match && isNotEmpty(delegateScope.getEnvironments())) {
+      match = isNotBlank(envId) && delegateScope.getEnvironments().contains(envId);
     }
-    if (match && delegateScope.getServiceInfrastructures() != null
-        && !delegateScope.getServiceInfrastructures().isEmpty()) {
-      match = task.getInfrastructureMappingId() != null
-          && delegateScope.getServiceInfrastructures().contains(task.getInfrastructureMappingId());
+    if (match && isNotEmpty(delegateScope.getServiceInfrastructures())) {
+      match = isNotBlank(infraMappingId) && delegateScope.getServiceInfrastructures().contains(infraMappingId);
     }
 
     return match;

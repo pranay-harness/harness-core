@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.DelegateTask;
+import software.wings.beans.TaskGroup;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
@@ -9,7 +10,10 @@ import java.util.List;
  * Created by brett on 7/20/17
  */
 public interface AssignDelegateService {
-  boolean canAssign(DelegateTask task, String delegateId);
+  boolean canAssign(String delegateId, DelegateTask task);
+
+  boolean canAssign(
+      String delegateId, String accountId, String appId, String envId, String infraMappingId, TaskGroup taskGroup);
 
   boolean isWhitelisted(DelegateTask task, String delegateId);
 

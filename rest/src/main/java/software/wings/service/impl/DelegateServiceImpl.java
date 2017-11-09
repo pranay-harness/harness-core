@@ -507,7 +507,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     List<Key<Delegate>> eligibleDelegates =
         activeDelegates.stream()
-            .filter(delegateKey -> assignDelegateService.canAssign(task, delegateKey.getId().toString()))
+            .filter(delegateKey -> assignDelegateService.canAssign(delegateKey.getId().toString(), task))
             .collect(toList());
 
     if (activeDelegates.size() == 0) {
@@ -518,7 +518,12 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-          aNoEligibleDelegatesAlert().withTask(task).build());
+          aNoEligibleDelegatesAlert()
+              .withAppId(task.getAppId())
+              .withEnvId(task.getEnvId())
+              .withInfraMappingId(task.getInfrastructureMappingId())
+              .withTaskGroup(task.getTaskType().getTaskGroup())
+              .build());
     }
 
     List<String> eligibleDelegateIds =
@@ -532,7 +537,7 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-    if (delegateTask != null && !assignDelegateService.canAssign(delegateTask, delegateId)) {
+    if (delegateTask != null && !assignDelegateService.canAssign(delegateId, delegateTask)) {
       logger.info("Delegate {} does not accept task {}", delegateId, taskId);
       ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
       delegateTask = null;
