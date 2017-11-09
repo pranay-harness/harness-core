@@ -5,6 +5,7 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import software.wings.beans.SplunkConfig;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
@@ -46,9 +47,9 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       Service.connect(loginArgs);
     } catch (Throwable t) {
       if (t instanceof MalformedURLException) {
-        throw new RuntimeException(splunkConfig.getSplunkUrl() + " is not a valid url");
+        throw new WingsException(splunkConfig.getSplunkUrl() + " is not a valid url", t);
       }
-      throw new RuntimeException(t.getMessage());
+      throw new WingsException("Error connecting to Splunk " + t.getMessage(), t);
     }
   }
 }
