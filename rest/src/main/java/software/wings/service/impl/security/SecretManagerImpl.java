@@ -149,8 +149,10 @@ public class SecretManagerImpl implements SecretManager {
         } else {
           EncryptedData encryptedData =
               wingsPersistence.get(EncryptedData.class, (String) encryptedRefField.get(object));
-          Preconditions.checkNotNull(encryptedData,
-              "field " + f.getName() + " has no reference for " + f.get(object) + "  for encryptable " + object);
+          if (encryptedData == null) {
+            logger.info("No encrypted record set for field {} for object {}", f.getName(), object);
+            continue;
+          }
           EncryptionConfig encryptionConfig =
               getEncryptionConfig(object.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
