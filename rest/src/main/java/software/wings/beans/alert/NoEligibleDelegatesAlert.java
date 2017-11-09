@@ -1,12 +1,13 @@
 package software.wings.beans.alert;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.CatalogItem;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskGroup;
@@ -16,7 +17,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import javax.inject.Inject;
 
@@ -29,21 +29,22 @@ public class NoEligibleDelegatesAlert implements AlertData {
 
   @Inject @Transient @SchemaIgnore private transient CatalogService catalogService;
 
-  private DelegateTask task;
-  private TaskGroup taskType;
+  private String appId;
+  private String envId;
+  private String infraMappingId;
+  private TaskGroup taskGroup;
 
   @Override
   public boolean matches(AlertData alertData) {
     NoEligibleDelegatesAlert otherAlertData = (NoEligibleDelegatesAlert) alertData;
-    DelegateTask otherTask = otherAlertData.getTask();
 
-    boolean match = taskType == otherAlertData.getTaskType() && Objects.equals(task.getAppId(), otherTask.getAppId())
-        && Objects.equals(task.getEnvId(), otherTask.getEnvId())
-        && Objects.equals(task.getInfrastructureMappingId(), otherTask.getInfrastructureMappingId());
+    boolean match = taskGroup == otherAlertData.getTaskGroup() && StringUtils.equals(appId, otherAlertData.getAppId())
+        && StringUtils.equals(envId, otherAlertData.getEnvId())
+        && StringUtils.equals(infraMappingId, otherAlertData.getInfraMappingId());
 
-    if (match && task.getAppId() != null && task.getEnvId() != null) {
-      match = environmentService.get(task.getAppId(), task.getEnvId(), false).getEnvironmentType()
-          == environmentService.get(otherTask.getAppId(), otherTask.getEnvId(), false).getEnvironmentType();
+    if (match && isNotBlank(appId) && isNotBlank(envId)) {
+      match = environmentService.get(appId, envId, false).getEnvironmentType()
+          == environmentService.get(otherAlertData.getAppId(), otherAlertData.getEnvId(), false).getEnvironmentType();
     }
 
     return match;
@@ -53,20 +54,19 @@ public class NoEligibleDelegatesAlert implements AlertData {
   public String buildTitle() {
     StringBuilder title = new StringBuilder();
     title.append("No delegates can execute ").append(getTaskTypeDisplayName()).append(" tasks ");
-    if (task.getAppId() != null && !task.getAppId().equals(GLOBAL_APP_ID)) {
-      Application app = appService.get(task.getAppId());
+    if (isNotBlank(appId) && !appId.equals(GLOBAL_APP_ID)) {
+      Application app = appService.get(appId);
       title.append("for application ").append(app.getName()).append(" ");
-      if (task.getEnvId() != null) {
-        Environment env = environmentService.get(app.getAppId(), task.getEnvId(), false);
+      if (isNotBlank(envId)) {
+        Environment env = environmentService.get(app.getAppId(), envId, false);
         title.append("in ")
             .append(env.getName())
             .append(" environment (")
             .append(env.getEnvironmentType().name())
             .append(") ");
       }
-      if (task.getInfrastructureMappingId() != null) {
-        InfrastructureMapping infrastructureMapping =
-            infrastructureMappingService.get(app.getAppId(), task.getInfrastructureMappingId());
+      if (isNotBlank(infraMappingId)) {
+        InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
         title.append("with service infrastructure ").append(infrastructureMapping.getDisplayName());
       }
     }
@@ -77,25 +77,44 @@ public class NoEligibleDelegatesAlert implements AlertData {
     List<CatalogItem> taskTypes = catalogService.getCatalogItems("TASK_TYPES");
     if (taskTypes != null) {
       Optional<CatalogItem> taskTypeCatalogItem =
-          taskTypes.stream().filter(catalogItem -> catalogItem.getValue().equals(taskType.name())).findFirst();
+          taskTypes.stream().filter(catalogItem -> catalogItem.getValue().equals(taskGroup.name())).findFirst();
       if (taskTypeCatalogItem.isPresent()) {
         return taskTypeCatalogItem.get().getDisplayText();
       }
     }
-    return taskType.name();
+    return taskGroup.name();
   }
 
-  public DelegateTask getTask() {
-    return task;
+  public String getAppId() {
+    return appId;
   }
 
-  public void setTask(DelegateTask task) {
-    this.task = task;
-    this.taskType = task.getTaskType().getTaskGroup();
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
-  public TaskGroup getTaskType() {
-    return taskType;
+  public String getEnvId() {
+    return envId;
+  }
+
+  public void setEnvId(String envId) {
+    this.envId = envId;
+  }
+
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
+  }
+
+  public TaskGroup getTaskGroup() {
+    return taskGroup;
+  }
+
+  public void setTaskGroup(TaskGroup taskGroup) {
+    this.taskGroup = taskGroup;
   }
 
   public static final class NoEligibleDelegatesAlertBuilder {
@@ -109,13 +128,32 @@ public class NoEligibleDelegatesAlert implements AlertData {
       return new NoEligibleDelegatesAlertBuilder();
     }
 
-    public NoEligibleDelegatesAlertBuilder withTask(DelegateTask task) {
-      noEligibleDelegatesAlert.setTask(task);
+    public NoEligibleDelegatesAlertBuilder withAppId(String appId) {
+      noEligibleDelegatesAlert.setAppId(appId);
+      return this;
+    }
+
+    public NoEligibleDelegatesAlertBuilder withEnvId(String envId) {
+      noEligibleDelegatesAlert.setEnvId(envId);
+      return this;
+    }
+
+    public NoEligibleDelegatesAlertBuilder withInfraMappingId(String infraMappingId) {
+      noEligibleDelegatesAlert.setInfraMappingId(infraMappingId);
+      return this;
+    }
+
+    public NoEligibleDelegatesAlertBuilder withTaskGroup(TaskGroup taskGroup) {
+      noEligibleDelegatesAlert.setTaskGroup(taskGroup);
       return this;
     }
 
     public NoEligibleDelegatesAlertBuilder but() {
-      return aNoEligibleDelegatesAlert().withTask(noEligibleDelegatesAlert.getTask());
+      return aNoEligibleDelegatesAlert()
+          .withAppId(noEligibleDelegatesAlert.getAppId())
+          .withEnvId(noEligibleDelegatesAlert.getEnvId())
+          .withInfraMappingId(noEligibleDelegatesAlert.getInfraMappingId())
+          .withTaskGroup(noEligibleDelegatesAlert.getTaskGroup());
     }
 
     public NoEligibleDelegatesAlert build() {

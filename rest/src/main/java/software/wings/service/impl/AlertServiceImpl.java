@@ -7,12 +7,12 @@ import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 
 import com.google.inject.Injector;
 
@@ -23,9 +23,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
@@ -37,6 +37,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -125,8 +126,11 @@ public class AlertServiceImpl implements AlertService {
         .equal(Open)
         .asList()
         .stream()
-        .filter(alert
-            -> assignDelegateService.canAssign(((NoEligibleDelegatesAlert) alert.getAlertData()).getTask(), delegateId))
+        .filter(alert -> {
+          NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
+          return assignDelegateService.canAssign(
+              delegateId, accountId, data.getAppId(), data.getEnvId(), data.getInfraMappingId(), data.getTaskGroup());
+        })
         .forEach(this ::close);
   }
 
@@ -184,17 +188,18 @@ public class AlertServiceImpl implements AlertService {
     try {
       logger.info("Start: Deleting alerts older than {} days", days);
       with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {
-        List<Alert> alerts = wingsPersistence.createQuery(Alert.class)
-                                 .field("status")
-                                 .equal(Closed)
-                                 .field("createdAt")
-                                 .lessThan(System.currentTimeMillis() - retentionMillis)
-                                 .asList(new FindOptions().limit(limit).batchSize(batchSize));
-        if (isEmpty(alerts)) {
-          logger.info("No more alerts older than {} days", days);
-          return true;
-        }
+        List<Alert> alerts = new ArrayList<>();
         try {
+          alerts.addAll(wingsPersistence.createQuery(Alert.class)
+                            .field("status")
+                            .equal(Closed)
+                            .field("createdAt")
+                            .lessThan(System.currentTimeMillis() - retentionMillis)
+                            .asList(new FindOptions().limit(limit).batchSize(batchSize)));
+          if (isEmpty(alerts)) {
+            logger.info("No more alerts older than {} days", days);
+            return true;
+          }
           logger.info("Deleting {} alerts", alerts.size());
           List<String> alertIds = alerts.stream().map(Alert::getUuid).collect(Collectors.toList());
           wingsPersistence.getCollection("alerts").remove(

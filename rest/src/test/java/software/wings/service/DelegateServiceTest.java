@@ -355,7 +355,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldAcquireTaskWhenQueued() throws Exception {
     when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(true);
-    when(assignDelegateService.canAssign(any(DelegateTask.class), any(String.class))).thenReturn(true);
+    when(assignDelegateService.canAssign(any(String.class), any(DelegateTask.class))).thenReturn(true);
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
