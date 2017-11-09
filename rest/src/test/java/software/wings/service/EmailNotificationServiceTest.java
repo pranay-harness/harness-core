@@ -23,6 +23,7 @@ import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Collections;
@@ -53,6 +54,8 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
 
   @Mock private Queue<EmailData> queue;
+
+  @Mock private SecretManager secretManager;
   /**
    * The Verify.
    */

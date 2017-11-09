@@ -34,6 +34,7 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -78,7 +79,8 @@ public class SecretMigrationUtil extends WingsBaseTest {
         encryptedData.addParent(parentId);
       }
       String kmsId = (String) next.get("kmsId");
-      if (StringUtils.isBlank(kmsId)) {
+      SettingVariableTypes type = SettingVariableTypes.valueOf((String) next.get("type"));
+      if (StringUtils.isBlank(kmsId) || type == SettingVariableTypes.KMS) {
         encryptedData.setEncryptionType(EncryptionType.LOCAL);
       } else {
         encryptedData.setEncryptionType(EncryptionType.KMS);
