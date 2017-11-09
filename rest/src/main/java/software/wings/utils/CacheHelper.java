@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static software.wings.common.Constants.USER_CACHE;
+
 import software.wings.beans.User;
 
 import java.util.Optional;
@@ -33,6 +35,6 @@ public class CacheHelper {
   }
 
   public Cache<String, User> getUserCache() {
-    return getCache("userCache", String.class, User.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
+    return getCache(USER_CACHE, String.class, User.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
   }
 }

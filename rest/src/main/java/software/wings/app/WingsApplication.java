@@ -3,6 +3,9 @@ package software.wings.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static software.wings.app.LoggingInitializer.initializeLogging;
+import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
+import static software.wings.common.Constants.DELEGATE_VALIDATION_CACHE;
+import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -166,7 +169,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         new QueueModule(databaseModule.getPrimaryDatastore()));
 
     Caching.getCachingProvider().getCacheManager().createCache(
-        "delegateSyncCache", new Configuration<String, DelegateTask>() {
+        DELEGATE_SYNC_CACHE, new Configuration<String, DelegateTask>() {
           public static final long serialVersionUID = 1l;
 
           @Override
@@ -186,7 +189,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         });
 
     Caching.getCachingProvider().getCacheManager().createCache(
-        "delegateValidationCache", new Configuration<String, Set>() {
+        DELEGATE_VALIDATION_CACHE, new Configuration<String, Set>() {
           public static final long serialVersionUID = 1l;
 
           @Override
@@ -205,7 +208,7 @@ public class WingsApplication extends Application<MainConfiguration> {
           }
         });
 
-    Caching.getCachingProvider().getCacheManager().createCache("userCache", new Configuration<String, User>() {
+    Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
       public static final long serialVersionUID = 1l;
 
       @Override

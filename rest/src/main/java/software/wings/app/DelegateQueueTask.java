@@ -1,6 +1,7 @@
 package software.wings.app;
 
 import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
@@ -112,7 +113,7 @@ public class DelegateQueueTask implements Runnable {
 
       // Re-broadcast queued sync tasks not picked up by any Delegate
       Cache<String, DelegateTask> delegateSyncCache =
-          cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class);
+          cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
       try {
         delegateSyncCache.forEach(stringDelegateTaskEntry -> {
           try {
@@ -126,7 +127,7 @@ public class DelegateQueueTask implements Runnable {
           } catch (Exception ex) {
             logger.error("Could not fetch delegate task from queue ", ex);
             logger.warn("Remove Delegate task [{}] from cache", stringDelegateTaskEntry.getKey());
-            Caching.getCache("delegateSyncCache", String.class, DelegateTask.class)
+            Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
                 .remove(stringDelegateTaskEntry.getKey());
           }
         });
