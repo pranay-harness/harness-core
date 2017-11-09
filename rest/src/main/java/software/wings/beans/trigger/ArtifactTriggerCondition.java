@@ -17,15 +17,17 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = true)
 public class ArtifactTriggerCondition extends TriggerCondition {
   @NotEmpty private String artifactStreamId;
+  private String artifactSourceName;
   private String artifactFilter;
 
   public ArtifactTriggerCondition() {
     super(NEW_ARTIFACT);
   }
 
-  public ArtifactTriggerCondition(String artifactStreamId, String artifactFilter) {
+  public ArtifactTriggerCondition(String artifactStreamId, String artifactFilter, String artifactSourceName) {
     this();
     this.artifactStreamId = artifactStreamId;
     this.artifactFilter = artifactFilter;
+    this.artifactSourceName = artifactSourceName;
   }
 }

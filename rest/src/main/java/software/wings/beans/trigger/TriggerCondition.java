@@ -19,8 +19,14 @@ import javax.validation.constraints.NotNull;
 @Data
 public abstract class TriggerCondition {
   @NotNull private TriggerConditionType conditionType;
+  private String conditionDisplayName;
 
   public TriggerCondition(TriggerConditionType conditionType) {
     this.conditionType = conditionType;
+  }
+
+  public TriggerCondition(TriggerConditionType conditionType, String conditionDisplayName) {
+    this.conditionType = conditionType;
+    this.conditionDisplayName = conditionDisplayName;
   }
 }

@@ -27,6 +27,7 @@ public class Trigger extends Base {
   private String description;
   @NotNull private TriggerCondition condition;
   @NotEmpty private String pipelineId;
+  private String pielineName;
 
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
 

@@ -116,15 +116,14 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger save(Trigger trigger) {
-    validateArtifactSelections(trigger);
-    validateCronExpression(trigger);
-    if (trigger.getCondition().getConditionType().equals(WEBHOOK)) {
-      WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
-      if (webHookTriggerCondition.getWebHookToken() == null
-          || Misc.isNullOrEmpty(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
-        webHookTriggerCondition.setWebHookToken(generateWebHookToken(trigger.getAppId(), trigger.getPipelineId()));
-      }
-    }
+    Pipeline executePipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getPipelineId(), true);
+    Validator.notNullCheck("ExecutePipeline", executePipeline);
+    trigger.setPielineName(executePipeline.getName());
+
+    validateAndSetTriggerCondition(trigger);
+    validateAndSetArtifactSelections(trigger, executePipeline.getServices());
+    validateAndSetCronExpression(trigger);
+
     Trigger savedTrigger =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     Validator.notNullCheck("Trigger", savedTrigger);
@@ -136,8 +135,14 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger update(Trigger trigger) {
-    validateArtifactSelections(trigger);
-    validateCronExpression(trigger);
+    Pipeline executePipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getPipelineId(), true);
+    Validator.notNullCheck("ExecutePipeline", executePipeline);
+    trigger.setPielineName(executePipeline.getName());
+
+    validateAndSetTriggerCondition(trigger);
+    validateAndSetArtifactSelections(trigger, executePipeline.getServices());
+    validateAndSetCronExpression(trigger);
+
     Trigger existingTrigger = wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid());
     Validator.notNullCheck("Trigger", existingTrigger);
     Trigger updatedTrigger =
@@ -626,7 +631,7 @@ public class TriggerServiceImpl implements TriggerService {
         .build();
   }
 
-  private void validateCronExpression(Trigger trigger) {
+  private void validateAndSetCronExpression(Trigger trigger) {
     try {
       if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
         return;
@@ -653,19 +658,37 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void validateArtifactSelections(Trigger trigger) {
+  private void validateAndSetArtifactSelections(Trigger trigger, List<Service> services) {
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
     if (CollectionUtils.isEmpty(artifactSelections)) {
       return;
     }
+    if (CollectionUtils.isEmpty(services)) {
+      throw new WingsException(INVALID_REQUEST, "message", "Pipeline services can not be empty");
+    }
+    Map<String, String> serviceIdNames =
+        services.stream().collect(Collectors.toMap(Service::getUuid, Service::getName));
     artifactSelections.forEach(artifactSelection -> {
       switch (artifactSelection.getType()) {
         case LAST_DEPLOYED:
           if (Misc.isNullOrEmpty(artifactSelection.getPipelineId())) {
             throw new WingsException(INVALID_REQUEST, "message", "Pipeline cannot be empty for Last deployed type");
           }
+          Pipeline pipeline =
+              pipelineService.readPipeline(trigger.getAppId(), artifactSelection.getPipelineId(), false);
+          Validator.notNullCheck("LastDeployedPipeline", pipeline);
+          artifactSelection.setPipelineName(pipeline.getName());
           break;
         case LAST_COLLECTED:
+          if (Misc.isNullOrEmpty(artifactSelection.getArtifactStreamId())) {
+            throw new WingsException(
+                INVALID_REQUEST, "message", "Artifact Source cannot be empty for Last collected type");
+          }
+          ArtifactStream artifactStream =
+              artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
+          Validator.notNullCheck("LastCollectedArtifactSource", artifactStream);
+          artifactSelection.setArtifactSourceName(artifactStream.getSourceName());
+          break;
         case WEBHOOK_VARIABLE:
           if (Misc.isNullOrEmpty(artifactSelection.getArtifactStreamId())) {
             throw new WingsException(
@@ -678,8 +701,38 @@ public class TriggerServiceImpl implements TriggerService {
         default:
           throw new WingsException(INVALID_REQUEST, "message", "Invalid artifact selection type");
       }
+      artifactSelection.setServiceName(serviceIdNames.get(artifactSelection.getServiceId()));
     });
   }
+
+  private void validateAndSetTriggerCondition(Trigger trigger) {
+    switch (trigger.getCondition().getConditionType()) {
+      case NEW_ARTIFACT:
+        ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+        ArtifactStream artifactStream =
+            artifactStreamService.get(trigger.getAppId(), artifactTriggerCondition.getArtifactStreamId());
+        Validator.notNullCheck("ArtifactSource", artifactStream);
+        artifactTriggerCondition.setArtifactSourceName(artifactStream.getSourceName());
+        break;
+      case PIPELINE_COMPLETION:
+        PipelineTriggerCondition pipelineTriggerCondition = (PipelineTriggerCondition) trigger.getCondition();
+        Pipeline pipeline =
+            pipelineService.readPipeline(trigger.getAppId(), pipelineTriggerCondition.getPipelineId(), false);
+        Validator.notNullCheck("SourcePipeline", pipeline);
+        pipelineTriggerCondition.setPipelineName(pipeline.getName());
+        break;
+      case WEBHOOK:
+        WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+        if (webHookTriggerCondition.getWebHookToken() == null
+            || Misc.isNullOrEmpty(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
+          webHookTriggerCondition.setWebHookToken(generateWebHookToken(trigger.getAppId(), trigger.getPipelineId()));
+        }
+        break;
+      default:
+        throw new WingsException(INVALID_REQUEST, "message", "Invalid artifact selection type");
+    }
+  }
+
   public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Map<Object, Boolean> seen = new ConcurrentHashMap<>();
     return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
