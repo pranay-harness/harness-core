@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
@@ -33,7 +32,6 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
@@ -58,7 +56,6 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private FileService fileService;
-  @Inject private KmsService kmsService;
 
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Application app;
@@ -73,8 +70,6 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
         .thenReturn(new SecretManagementDelegateServiceImpl());
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(configService, "kmsService", kmsService);
 
     app = appService.save(anApplication().withAccountId(accountId).withName("AppA").build());
     service =
