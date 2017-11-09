@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.GcpConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
@@ -35,7 +34,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.WingsReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -124,6 +122,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
         SimpleEncryption simpleEncryption = new SimpleEncryption(toMigrate.getAccountId());
         char[] decryptedValue = simpleEncryption.decryptChars(encryptedValue);
 
+        System.out.println("uuid: " + settingAttribute.getUuid());
         System.out.println(
             "going to encrypt " + String.valueOf(decryptedValue) + " for object uuid: " + settingAttribute.getUuid());
         encryptedField.set(toMigrate, decryptedValue);
@@ -185,4 +184,33 @@ public class SecretMigrationUtil extends WingsBaseTest {
 
     System.out.println("Complete. Updated " + changedObject + " setting attributes.");
   }
+
+  //  @Test
+  //  public void test() throws InterruptedException, IllegalAccessException {
+  //    List<String> ids = Arrays.asList("5qBdkRoRSMyUDXFk64_t4g", "TsN2TvImTUWRIU-J1tC85A", "XP-HW0H8Sb2nNxUVoB-a6g",
+  //    "Z3NSq6fqTwSj3QgC88cwiA", "s_YVIj9ERFm6ab-rZEY5ww", "yYbYQkJuToOOP7Tq1Fvq8w", "MlkJA6LhQkyFaSLAIdBnlQ");
+  //    for(String id : ids) {
+  //      SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, id);
+  //      SettingValue value = settingAttribute.getValue();
+  //      if (!Encryptable.class.isInstance(value)) {
+  //        System.out.println("nothing to do for " + settingAttribute);
+  //        continue;
+  //      }
+  //
+  //      List<Field> encryptedFields = getEncryptedFields(value.getClass());
+  //      for(Field f : encryptedFields) {
+  //        f.setAccessible(true);
+  //
+  //        SimpleEncryption simpleEncryption = new SimpleEncryption(settingAttribute.getAccountId());
+  //        char[] decryptChars = simpleEncryption.decryptChars((char[]) f.get(value));
+  //        System.out.println("decrypt1: " + String.valueOf(decryptChars));
+  //
+  //        System.out.println("Again: " + String.valueOf(simpleEncryption.decryptChars(decryptChars)));
+  //
+  //        f.set(value, simpleEncryption.decryptChars(decryptChars));
+  //        wingsPersistence.save(settingAttribute);
+  //      }
+  //    }
+  //
+  //  }
 }
