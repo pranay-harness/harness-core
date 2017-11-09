@@ -108,7 +108,7 @@ public class SecretManagerImpl implements SecretManager {
       char[] secret, Field decryptedField, EncryptedData encryptedData) {
     switch (encryptionType) {
       case LOCAL:
-        char[] encryptedChars = new SimpleEncryption(accountId).encryptChars(secret);
+        char[] encryptedChars = secret == null ? null : new SimpleEncryption(accountId).encryptChars(secret);
         return EncryptedData.builder()
             .encryptionKey(accountId)
             .encryptedValue(encryptedChars)
