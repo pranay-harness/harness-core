@@ -540,12 +540,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public boolean isServiceTemplatized() {
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
-        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
-        if (templateExpressions != null) {
-          if (templateExpressions.stream().anyMatch(
-                  templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
-            return true;
-          }
+        if (workflowPhase.isServiceTemplatized()) {
+          return true;
         }
       }
     }
