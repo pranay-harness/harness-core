@@ -1,7 +1,9 @@
 package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
+import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
+import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 
 import com.google.common.collect.Sets;
 
@@ -22,10 +24,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.core.ssh.executors.SshSessionFactory;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.SshHelperUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -100,8 +100,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   private void validateHostSsh(
       DelegateConnectionResultBuilder resultBuilder, String hostName, CommandExecutionContext context) {
     try {
-      SshSessionFactory.getSSHSession(SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context, 20))
-          .disconnect();
+      getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context, 20)).disconnect();
       resultBuilder.validated(true);
     } catch (JSchException jschEx) {
       // Invalid credentials error is still a valid connection
