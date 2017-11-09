@@ -45,6 +45,7 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.beans.UuidAware;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest.Builder;
@@ -243,6 +244,37 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertNotNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
     assertEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
+    assertEquals(1, query.asList().size());
+  }
+
+  @Test
+  public void localEncryptionWhileSavingNullEncryptedData() {
+    final ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder()
+                                                    .accountId(UUID.randomUUID().toString())
+                                                    .artifactoryUrl(UUID.randomUUID().toString())
+                                                    .username(UUID.randomUUID().toString())
+                                                    .password(null)
+                                                    .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(artifactoryConfig.getAccountId())
+                                            .withValue(artifactoryConfig)
+                                            .withAppId(UUID.randomUUID().toString())
+                                            .withCategory(Category.CONNECTOR)
+                                            .withEnvId(UUID.randomUUID().toString())
+                                            .withName(UUID.randomUUID().toString())
+                                            .build();
+
+    String savedAttributeId = wingsPersistence.save(settingAttribute);
+    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    assertNotNull(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword());
+    assertNull(((ArtifactoryConfig) savedAttribute.getValue()).getPassword());
+    encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
+        secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowId, appId));
+    assertEquals(artifactoryConfig, savedAttribute.getValue());
+    assertNotNull(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword());
+    assertNull(((ArtifactoryConfig) savedAttribute.getValue()).getPassword());
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(1, query.asList().size());
   }
