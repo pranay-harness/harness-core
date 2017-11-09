@@ -6,6 +6,7 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.PHASE;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
@@ -267,6 +268,7 @@ public class WorkflowPhase implements UuidAware {
     return clonedWorkflowPhase;
   }
 
+  @JsonIgnore
   public boolean isServiceTemplatized() {
     if (templateExpressions != null) {
       if (templateExpressions.stream().anyMatch(
