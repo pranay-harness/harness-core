@@ -42,6 +42,7 @@ import javax.inject.Named;
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
   protected static final int SMOOTH_WINDOW = 3;
   protected static final int TOLERANCE = 1;
+  protected static final int MIN_REQUESTS_PER_MINUTE = 10;
 
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
@@ -102,7 +103,15 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .correlationId(analysisContext.getCorrelationId())
             .build();
     executionData.setStatus(ExecutionStatus.RUNNING);
-    String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), null);
+    Set<String> hostsToCollect = new HashSet<>();
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+      hostsToCollect.addAll(canaryNewHostNames);
+    } else {
+      hostsToCollect.addAll(canaryNewHostNames);
+      hostsToCollect.addAll(lastExecutionNodes);
+    }
+
+    String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
 
     final MetricDataAnalysisResponse response =
         MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
@@ -224,6 +233,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .correlationId(correlationId)
           .smooth_window(SMOOTH_WINDOW)
           .tolerance(TOLERANCE)
+          .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
           .build();
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);

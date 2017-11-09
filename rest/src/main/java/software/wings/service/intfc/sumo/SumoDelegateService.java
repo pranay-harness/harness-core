@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
  * Created by sriram_parthasarathy on 9/11/17.
  */
 public interface SumoDelegateService {
-  @DelegateTaskType(TaskType.NEWRELIC_VALIDATE_CONFIGURATION_TASK)
+  @DelegateTaskType(TaskType.SUMO_VALIDATE_CONFIGURATION_TASK)
   void validateConfig(@NotNull SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException;
 }
