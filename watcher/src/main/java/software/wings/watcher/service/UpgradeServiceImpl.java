@@ -40,8 +40,6 @@ public class UpgradeServiceImpl implements UpgradeService {
   @Override
   public void doUpgrade(InputStream newVersionJarStream, String version, String newVersion)
       throws IOException, TimeoutException, InterruptedException {
-    // TODO - replace run script
-
     File watcherJarFile = new File("watcher.jar");
     File watcherJarFileNew = new File("watcher-new.jar");
     File watcherJarFileOld = new File("watcher-old.jar");
@@ -52,7 +50,7 @@ public class UpgradeServiceImpl implements UpgradeService {
 
     StartedProcess process = null;
     try {
-      logger.info("[Old] Upgrading the watcher.");
+      logger.info("[Old] Upgrading the watcher");
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)

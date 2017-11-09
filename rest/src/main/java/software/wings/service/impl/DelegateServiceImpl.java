@@ -207,6 +207,13 @@ public class DelegateServiceImpl implements DelegateService {
       delegateScripts.setDoUpgrade(true);
       delegateScripts.setVersion((String) scriptParams.get("upgradeVersion"));
 
+      if (featureFlagService.isEnabled(FeatureName.WATCHER, accountId)) {
+        try (StringWriter stringWriter = new StringWriter()) {
+          cfg.getTemplate("watch.sh.ftl").process(scriptParams, stringWriter);
+          delegateScripts.setWatchScript(stringWriter.toString());
+        }
+      }
+
       try (StringWriter stringWriter = new StringWriter()) {
         cfg.getTemplate("upgrade.sh.ftl").process(scriptParams, stringWriter);
         delegateScripts.setUpgradeScript(stringWriter.toString());
