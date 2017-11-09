@@ -38,6 +38,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
@@ -115,6 +116,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   private static final Command.Builder commandBuilder = aCommand().withName("START").addCommandUnits(
       anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build());
   private static final ServiceCommand.Builder serviceCommandBuilder = aServiceCommand()
+                                                                          .withServiceId(SERVICE_ID)
                                                                           .withUuid(SERVICE_COMMAND_ID)
                                                                           .withAppId(APP_ID)
                                                                           .withName("START")
@@ -752,6 +754,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                     aCanaryOrchestrationWorkflow()
                                         .withWorkflowPhases(asList(
                                             aWorkflowPhase()
+                                                .withServiceId(SERVICE_ID)
                                                 .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
                                                                   .addStep(aNode()
                                                                                .withType("COMMAND")
@@ -768,6 +771,51 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(ServiceCommand.class, APP_ID, SERVICE_COMMAND_ID);
     verify(workflowService).listWorkflows(any(PageResponse.class));
+  }
+
+  @Test
+  public void shouldNotThrowExceptionOnReferencedServiceCommandDelete() {
+    ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(
+                            Workflow.WorkflowBuilder.aWorkflow()
+                                .withName(WORKFLOW_NAME)
+                                .withServices(asList(Service.Builder.aService()
+                                                         .withUuid(SERVICE_ID_CHANGED)
+                                                         .withAppId(APP_ID)
+                                                         .withCommands(asList(serviceCommand))
+                                                         .build()))
+                                .withOrchestrationWorkflow(
+                                    aCanaryOrchestrationWorkflow()
+                                        .withWorkflowPhases(asList(
+                                            aWorkflowPhase()
+                                                .withServiceId(SERVICE_ID_CHANGED)
+                                                .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
+                                                                  .addStep(aNode()
+                                                                               .withType("COMMAND")
+                                                                               .addProperty("commandName", "START")
+                                                                               .build())
+                                                                  .build())
+                                                .build()))
+                                        .build())
+                                .build()))
+                        .build());
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
+    when(wingsPersistence.delete(any(ServiceCommand.class))).thenReturn(true);
+
+    srs.deleteCommand(APP_ID, SERVICE_ID, SERVICE_COMMAND_ID);
+
+    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+    verify(wingsPersistence, times(1)).get(ServiceCommand.class, APP_ID, SERVICE_COMMAND_ID);
+    verify(workflowService, times(1)).listWorkflows(any(PageResponse.class));
+    verify(wingsPersistence, times(1)).createUpdateOperations(Service.class);
+    verify(wingsPersistence, times(1)).createQuery(Service.class);
+    verify(wingsPersistence, times(1)).createQuery(Command.class);
+    verify(wingsPersistence, times(1)).delete(any(ServiceCommand.class));
+    verify(wingsPersistence, times(1)).delete(any(Query.class));
+    verify(wingsPersistence, times(1)).update(any(Query.class), any());
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
   /**
