@@ -213,8 +213,12 @@ public class DelegateServiceImpl implements DelegateService {
           delegateScripts.setWatchScript(stringWriter.toString());
         }
         try (StringWriter stringWriter = new StringWriter()) {
-          cfg.getTemplate("stopwatch.sh.ftl").process(scriptParams, stringWriter);
+          cfg.getTemplate("stopwatch.sh.ftl").process(null, stringWriter);
           delegateScripts.setStopWatchScript(stringWriter.toString());
+        }
+        try (StringWriter stringWriter = new StringWriter()) {
+          cfg.getTemplate("delegate.sh.ftl").process(scriptParams, stringWriter);
+          delegateScripts.setDelegateScript(stringWriter.toString());
         }
       }
 
@@ -360,6 +364,22 @@ public class DelegateServiceImpl implements DelegateService {
       stopwatchZipArchiveEntry.addExtraField(permissions);
       out.putArchiveEntry(stopwatchZipArchiveEntry);
       try (FileInputStream fis = new FileInputStream(stopwatch)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      File delegate = File.createTempFile("delegate", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(delegate))) {
+        cfg.getTemplate("delegate.sh.ftl").process(scriptParams, fileWriter);
+      }
+      delegate = new File(delegate.getAbsolutePath());
+      ZipArchiveEntry delegateZipArchiveEntry = new ZipArchiveEntry(delegate, Constants.DELEGATE_DIR + "/delegate.sh");
+      delegateZipArchiveEntry.setUnixMode(0755 << 16L);
+      permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      delegateZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(delegateZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(delegate)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
