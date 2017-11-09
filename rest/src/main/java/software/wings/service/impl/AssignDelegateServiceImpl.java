@@ -38,7 +38,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
     return canAssign(delegateId, task.getAccountId(), task.getAppId(), task.getEnvId(),
-        task.getInfrastructureMappingId(), task.getTaskType().getTaskGroup());
+        task.getInfrastructureMappingId(), task.getTaskType() != null ? task.getTaskType().getTaskGroup() : null);
   }
 
   @Override
