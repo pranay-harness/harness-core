@@ -37,6 +37,7 @@ public class AnalysisContext {
   private int smooth_window;
   private int tolerance;
   private String prevWorkflowExecutionId;
+  private int minimumRequestsPerMinute;
 
   public LogClusterContext getClusterContext() {
     return LogClusterContext.builder()

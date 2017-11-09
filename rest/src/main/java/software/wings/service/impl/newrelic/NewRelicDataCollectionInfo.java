@@ -10,6 +10,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -30,4 +31,5 @@ public class NewRelicDataCollectionInfo {
   private long newRelicAppId;
   private int dataCollectionMinute;
   List<EncryptedDataDetail> encryptedDataDetails;
+  private Set<String> hosts;
 }

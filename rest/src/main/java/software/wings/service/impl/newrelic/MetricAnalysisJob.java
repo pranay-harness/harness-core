@@ -235,6 +235,8 @@ public class MetricAnalysisJob implements Job {
       command.add(String.valueOf(context.getSmooth_window()));
       command.add("--tolerance");
       command.add(String.valueOf(context.getTolerance()));
+      command.add("--min_rpm");
+      command.add(String.valueOf(context.getMinimumRequestsPerMinute()));
 
       int attempt = 0;
       for (; attempt < PYTHON_JOB_RETRIES; attempt++) {
@@ -294,32 +296,25 @@ public class MetricAnalysisJob implements Job {
         logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
 
         if (analysisMinute > context.getTimeDuration() - 1) {
-          logger.info("time series analysis finished after running for {minutes}", analysisMinute);
+          logger.info("time series analysis finished after running for {} minutes", analysisMinute);
           completeCron = true;
           return;
         }
-        if (context.getStateType() == StateType.NEW_RELIC
-            && featureFlagService.isEnabled(FeatureName.TIME_SERIES_ML, context.getAccountId())) {
-          if (context.getControlNodes() != null && context.getControlNodes().size() > 0) {
-            int maxControlMinute = Integer.MAX_VALUE;
-            if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-              maxControlMinute = analysisService.getMaxControlMinute(context.getStateType(), context.getServiceId(),
-                  context.getWorkflowId(), context.getPrevWorkflowExecutionId());
-            }
-            if (analysisMinute <= maxControlMinute) {
-              timeSeriesML(analysisMinute);
-            } else {
-              logger.warn("Not enough control data. analysis minute = " + analysisMinute
-                  + " , max control minute = " + maxControlMinute);
-            }
+
+        int maxControlMinute = Integer.MAX_VALUE;
+        if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+          maxControlMinute = analysisService.getMaxControlMinute(context.getStateType(), context.getServiceId(),
+              context.getWorkflowId(), context.getPrevWorkflowExecutionId());
+        }
+
+        boolean isBaseLineCreated =
+            context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT || maxControlMinute > -1;
+        if (isBaseLineCreated && context.getStateType() == StateType.NEW_RELIC) {
+          if (analysisMinute <= maxControlMinute) {
+            timeSeriesML(analysisMinute);
           } else {
-            analysisService.saveAnalysisRecords(NewRelicMetricAnalysisRecord.builder()
-                                                    .analysisMinute(analysisMinute)
-                                                    .applicationId(context.getAppId())
-                                                    .message("No baseline found. This will be the new baseline.")
-                                                    .stateExecutionId(context.getStateExecutionId())
-                                                    .workflowExecutionId(context.getWorkflowExecutionId())
-                                                    .build());
+            logger.warn("Not enough control data. analysis minute = " + analysisMinute
+                + " , max control minute = " + maxControlMinute);
           }
         } else {
           NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute);
