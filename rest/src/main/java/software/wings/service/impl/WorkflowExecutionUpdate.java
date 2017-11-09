@@ -11,6 +11,7 @@ import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.QUEUED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
@@ -128,7 +129,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       if (needToNotifyPipeline) {
         waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
       }
-      triggerService.triggerExecutionPostPipelineCompletionAsync(appId, context.getWorkflowId());
+    } else {
+      if (status.isFinalStatus() && status.equals(SUCCESS)) {
+        triggerService.triggerExecutionPostPipelineCompletionAsync(appId, context.getWorkflowId());
+      }
     }
     if (status.isFinalStatus()) {
       alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());

@@ -516,17 +516,17 @@ public class TriggerServiceImpl implements TriggerService {
    */
   private List<Artifact> getLastDeployedArtifacts(String appId, String pipelineId, String serviceId) {
     List<Artifact> lastDeployedArtifacts = new ArrayList<>();
-    PageRequest pageRequest = aPageRequest()
-                                  .withLimit("1")
-                                  .addFilter("workflowType", EQ, PIPELINE)
-                                  .addFilter("workflowId", EQ, pipelineId)
-                                  .addFilter("appId", EQ, appId)
-                                  .addFilter("status", EQ, SUCCESS)
-                                  .addOrder(aSortOrder().withField("createdAt", DESC).build())
-                                  .addFieldsIncluded("uuid", "appId", "workflowType", "executionArgs")
-                                  .build();
+    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
+                                                     .withLimit("1")
+                                                     .addFilter("workflowType", EQ, PIPELINE)
+                                                     .addFilter("workflowId", EQ, pipelineId)
+                                                     .addFilter("appId", EQ, appId)
+                                                     .addFilter("status", EQ, SUCCESS)
+                                                     .addOrder(aSortOrder().withField("createdAt", DESC).build())
+                                                     .build();
 
-    PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(pageRequest, false);
+    PageResponse<WorkflowExecution> pageResponse =
+        workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
     if (pageResponse != null && pageResponse.getResponse() != null && pageResponse.getResponse().size() != 0) {
       if (pageResponse.getResponse().get(0).getExecutionArgs() != null) {
         lastDeployedArtifacts = pageResponse.getResponse().get(0).getExecutionArgs().getArtifacts();

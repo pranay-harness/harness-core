@@ -32,16 +32,15 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -53,7 +52,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
-import software.wings.waitnotify.WaitNotifyEngine;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -76,14 +74,12 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
-  @Inject private ArtifactService artifactService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private TriggerService triggerService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -285,7 +281,6 @@ public class PipelineServiceImpl implements PipelineService {
                 if (!serviceIds.contains(service.getUuid())) {
                   services.add(service);
                   serviceIds.add(service.getUuid());
-                  service.setArtifactNeeded(serviceResourceService.isArtifactNeeded(service));
                 }
               });
             } else {
@@ -295,7 +290,6 @@ public class PipelineServiceImpl implements PipelineService {
                   if (!serviceIds.contains(resolvedService.getUuid())) {
                     services.add(resolvedService);
                     serviceIds.add(resolvedService.getUuid());
-                    resolvedService.setArtifactNeeded(serviceResourceService.isArtifactNeeded(resolvedService));
                   }
                 }
               }
