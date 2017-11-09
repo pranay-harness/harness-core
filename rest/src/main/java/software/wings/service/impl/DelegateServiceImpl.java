@@ -16,6 +16,8 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
+import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
+import static software.wings.common.Constants.DELEGATE_VALIDATION_CACHE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -472,14 +474,14 @@ public class DelegateServiceImpl implements DelegateService {
     task.setQueueName(taskId);
     task.setUuid(taskId);
     IQueue<T> topic = hazelcastInstance.getQueue(taskId);
-    cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, task);
+    cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     logger.info("Broadcast new task: uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(), task.getAccountId(),
         task.getTaskType(), task.isAsync());
     T responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
     if (responseData == null) {
       logger.warn("Task [{}] timed out. remove it from cache", task.toString());
-      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
+      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", Constants.DELEGATE_NAME);
     }
     return responseData;
@@ -575,7 +577,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void addToValidationCache(String delegateId, String taskId) {
     Cache<String, Set> delegateValidationCache =
-        cacheHelper.getCache("delegateValidationCache", String.class, Set.class);
+        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
     Set<String> validatingDelegates = delegateValidationCache.get(taskId);
     if (validatingDelegates == null) {
       validatingDelegates = new HashSet<>();
@@ -586,7 +588,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void removeFromValidationCache(String delegateId, String taskId) {
     Cache<String, Set> delegateValidationCache =
-        cacheHelper.getCache("delegateValidationCache", String.class, Set.class);
+        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
     Set<String> validatingDelegates = delegateValidationCache.get(taskId);
     if (validatingDelegates != null) {
       validatingDelegates.remove(delegateId);
@@ -601,7 +603,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
     // Tell delegate whether to proceed anyway because all eligible delegates failed.
-    if (!cacheHelper.getCache("delegateValidationCache", String.class, Set.class).containsKey(taskId)) {
+    if (!cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).containsKey(taskId)) {
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
       if (delegateTask != null) {
         return assignTask(delegateId, taskId, delegateTask);
@@ -611,7 +613,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateTask getUnassignedDelegateTask(String accountId, String taskId) {
-    DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    DelegateTask delegateTask = cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).get(taskId);
     if (delegateTask != null) {
       // Sync
       logger.info("Delegate task from cache: {}", delegateTask.getUuid());
@@ -643,7 +645,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning
-    cacheHelper.getCache("delegateValidationCache", String.class, Set.class).remove(taskId);
+    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove(taskId);
 
     logger.info(
         "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
@@ -651,7 +653,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (delegateTask.isAsync()) {
       delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, delegateTask);
     } else {
-      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
+      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, delegateTask);
     }
     return delegateTask;
   }
@@ -659,7 +661,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTask startDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Starting task {} with delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    DelegateTask delegateTask = cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).get(taskId);
     if (delegateTask == null) {
       logger.info("Delegate task from cache is null for task {}", taskId);
       Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
@@ -676,7 +678,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
       logger.info("Delegate task from cache: {}", delegateTask.getUuid());
-      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
+      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
     }
     return delegateTask;
   }

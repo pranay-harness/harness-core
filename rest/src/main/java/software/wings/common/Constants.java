@@ -378,6 +378,10 @@ public interface Constants {
    */
   String ARTIFACT_FILE_NAME = "artifactFileName";
 
+  String DELEGATE_VALIDATION_CACHE = "delegateValidationCache";
+  String DELEGATE_SYNC_CACHE = "delegateSyncCache";
+  String USER_CACHE = "userCache";
+
   /**
    * Template expression constants
    */

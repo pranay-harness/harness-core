@@ -15,6 +15,8 @@ import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
+import static software.wings.common.Constants.DELEGATE_VALIDATION_CACHE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -117,8 +119,8 @@ public class DelegateServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "text/plain")));
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
-    when(cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class)).thenReturn(cache);
-    when(cacheHelper.getCache("delegateValidationCache", String.class, Set.class)).thenReturn(validationCache);
+    when(cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)).thenReturn(cache);
+    when(cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class)).thenReturn(validationCache);
   }
 
   @Test
