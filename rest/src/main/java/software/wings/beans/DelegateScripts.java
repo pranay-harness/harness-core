@@ -16,6 +16,7 @@ public class DelegateScripts {
   @Transient private String stopScript;
   @Transient private String watchScript;
   @Transient private String stopWatchScript;
+  @Transient private String delegateScript;
 
   public String getDelegateId() {
     return delegateId;
@@ -81,6 +82,14 @@ public class DelegateScripts {
     this.stopWatchScript = stopWatchScript;
   }
 
+  public String getDelegateScript() {
+    return delegateScript;
+  }
+
+  public void setDelegateScript(String delegateScript) {
+    this.delegateScript = delegateScript;
+  }
+
   public String getScriptByName(String fileName) {
     switch (fileName) {
       case "upgrade.sh":
@@ -93,6 +102,8 @@ public class DelegateScripts {
         return getWatchScript();
       case "stopwatch.sh":
         return getStopWatchScript();
+      case "delegate.sh":
+        return getDelegateScript();
       default:
         return null;
     }
