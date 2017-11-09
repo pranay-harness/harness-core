@@ -41,6 +41,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
@@ -512,10 +513,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     StringBuilder sb = new StringBuilder();
     for (Workflow workflow : workflows) {
-      if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
-        List<WorkflowPhase> workflowPhases =
-            ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases();
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+        if (orchestrationWorkflow.isServiceTemplatized()) {
+          continue;
+        }
+        List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
         for (WorkflowPhase workflowPhase : workflowPhases) {
+          if (workflowPhase.isServiceTemplatized() || !service.getUuid().equals(workflowPhase.getServiceId())) {
+            continue;
+          }
           for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
             if (phaseStep.getSteps() == null) {
               continue;
