@@ -212,6 +212,10 @@ public class DelegateServiceImpl implements DelegateService {
           cfg.getTemplate("watch.sh.ftl").process(scriptParams, stringWriter);
           delegateScripts.setWatchScript(stringWriter.toString());
         }
+        try (StringWriter stringWriter = new StringWriter()) {
+          cfg.getTemplate("stopwatch.sh.ftl").process(scriptParams, stringWriter);
+          delegateScripts.setStopWatchScript(stringWriter.toString());
+        }
       }
 
       try (StringWriter stringWriter = new StringWriter()) {
