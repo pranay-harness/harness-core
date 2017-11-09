@@ -28,6 +28,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -272,6 +273,36 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(2, numOfVaultDefaults);
   }
 
+  @Test
+  public void saveConfigDefaultWithDefaultKms() throws IOException {
+    if (isKmsEnabled) {
+      wingsPersistence.delete(KmsConfig.class, kmsId);
+    }
+    // set kms default config
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
+    kmsService.saveGlobalKmsConfig(accountId, kmsConfig);
+
+    List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    assertEquals(1, encryptionConfigs.size());
+    KmsConfig savedKmsConfig = (KmsConfig) encryptionConfigs.get(0);
+    assertTrue(savedKmsConfig.isDefault());
+    assertEquals(Base.GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
+
+    VaultConfig vaultConfig = getVaultConfig();
+    vaultService.saveVaultConfig(accountId, vaultConfig);
+
+    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    assertEquals(2, encryptionConfigs.size());
+
+    VaultConfig savedVaultConfig = (VaultConfig) encryptionConfigs.get(0);
+    assertTrue(savedVaultConfig.isDefault());
+    assertEquals(accountId, savedVaultConfig.getAccountId());
+
+    savedKmsConfig = (KmsConfig) encryptionConfigs.get(1);
+    assertFalse(savedKmsConfig.isDefault());
+    assertEquals(Base.GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
+  }
   @Test
   public void saveConfigDefault() throws IOException {
     VaultConfig vaultConfig = getVaultConfig();

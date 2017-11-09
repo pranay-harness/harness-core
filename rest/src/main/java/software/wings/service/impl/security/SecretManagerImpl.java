@@ -11,6 +11,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
@@ -79,16 +80,26 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public List<EncryptionConfig> listEncryptionConfig(String accountId) {
     List<EncryptionConfig> rv = new ArrayList<>();
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
     Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+
+    boolean defaultVaultSet = false;
+    for (VaultConfig vaultConfig : vaultConfigs) {
+      if (vaultConfig.isDefault()) {
+        defaultVaultSet = true;
+      }
+      rv.add(vaultConfig);
+    }
 
     for (KmsConfig kmsConfig : kmsConfigs) {
+      if (defaultVaultSet && kmsConfig.isDefault()) {
+        Preconditions.checkState(
+            kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID), "found both kms and vault configs to be default");
+        kmsConfig.setDefault(false);
+      }
       rv.add(kmsConfig);
     }
 
-    for (VaultConfig vaultConfig : vaultConfigs) {
-      rv.add(vaultConfig);
-    }
     return rv;
   }
 
