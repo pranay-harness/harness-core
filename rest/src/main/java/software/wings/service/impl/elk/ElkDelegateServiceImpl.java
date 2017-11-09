@@ -154,7 +154,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         return response.headers().get("kbn-version");
       } catch (Exception ex) {
         logger.warn("Unable to get Kibana version", ex);
-        throw new WingsException("Unable to get version. Check url " + ex.getMessage(), ex);
+        throw new WingsException("Unable to get version. Check url : " + ex.getMessage(), ex);
       }
     } else {
       throw new WingsException("Get version is supported only for the Kibana connector");
@@ -246,7 +246,7 @@ builder.hostnameVerifier((hostname, session) -> true);
 return builder;
 }
 catch (Exception e) {
-  throw new WingsException("Unexpected error " + e.getMessage(), e);
+  throw new WingsException("Unexpected error : " + e.getMessage(), e);
 }
 }
 }

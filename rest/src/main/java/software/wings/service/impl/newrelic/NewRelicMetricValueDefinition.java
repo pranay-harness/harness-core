@@ -45,6 +45,23 @@ public class NewRelicMetricValueDefinition {
                  .medium(50)
                  .build());
 
+    // requestsPerMinute
+    NEW_RELIC_VALUES_TO_ANALYZE.put("requestsPerMinute", new ArrayList<>());
+    NEW_RELIC_VALUES_TO_ANALYZE.get("requestsPerMinute")
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                 .comparisonType(ThresholdComparisonType.RATIO)
+                 .high(0.5)
+                 .medium(0.75)
+                 .build());
+    NEW_RELIC_VALUES_TO_ANALYZE.get("requestsPerMinute")
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.DELTA)
+                 .high(100)
+                 .medium(50)
+                 .build());
+
     // averageResponseTime
     NEW_RELIC_VALUES_TO_ANALYZE.put("averageResponseTime", new ArrayList<>());
     NEW_RELIC_VALUES_TO_ANALYZE.get("averageResponseTime")
