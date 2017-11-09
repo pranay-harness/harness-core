@@ -943,8 +943,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
-            String dockerPasswordRef = secretManager.getEncryptedYamlRef(
-                dockerConfig, settingAttribute.getUuid(), SettingVariableTypes.DOCKER);
+            String dockerPasswordRef = secretManager.getEncryptedYamlRef(dockerConfig);
             settingAttribute.setName(dockerYaml.getName());
             config = DockerConfig.builder()
                          .accountId(accountId)
@@ -1101,8 +1100,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-            String passwordRef = secretManager.getEncryptedYamlRef(
-                appDynamicsConfig, settingAttribute.getUuid(), SettingVariableTypes.APP_DYNAMICS);
+            String passwordRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
             settingAttribute.setName(appDynamicsYaml.getName());
             config = AppDynamicsConfig.builder()
                          .accountId(accountId)
@@ -1129,8 +1127,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
-            String splunkPasswordRef = secretManager.getEncryptedYamlRef(
-                splunkConfig, settingAttribute.getUuid(), SettingVariableTypes.SPLUNK);
+            String splunkPasswordRef = secretManager.getEncryptedYamlRef(splunkConfig);
             settingAttribute.setName(splunkYaml.getName());
             config = SplunkConfig.builder()
                          .accountId(accountId)

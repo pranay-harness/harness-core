@@ -28,6 +28,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.KmsService;
@@ -93,8 +94,19 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, String decryptedFieldName, EncryptedData encryptedData) {
+      char[] secret, Field decryptedField, EncryptedData encryptedData) {
     switch (encryptionType) {
+      case LOCAL:
+        char[] encryptedChars = new SimpleEncryption(accountId).encryptChars(secret);
+        return EncryptedData.builder()
+            .encryptionKey(accountId)
+            .encryptedValue(encryptedChars)
+            .encryptionType(EncryptionType.LOCAL)
+            .accountId(accountId)
+            .type(settingType)
+            .enabled(true)
+            .build();
+
       case KMS:
         final KmsConfig kmsConfig = kmsService.getSecretConfig(accountId);
         return kmsService.encrypt(secret, accountId, kmsConfig);
@@ -102,7 +114,8 @@ public class SecretManagerImpl implements SecretManager {
       case VAULT:
         final VaultConfig vaultConfig = vaultService.getSecretConfig(accountId);
         String toEncrypt = secret == null ? null : String.valueOf(secret);
-        return vaultService.encrypt(decryptedFieldName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
+        return vaultService.encrypt(
+            decryptedField.getName(), toEncrypt, accountId, settingType, vaultConfig, encryptedData);
 
       default:
         throw new IllegalStateException("Invalid type:  " + encryptionType);
@@ -120,26 +133,36 @@ public class SecretManagerImpl implements SecretManager {
     try {
       for (Field f : encryptedFields) {
         f.setAccessible(true);
-        EncryptionType encryptionType = getEncryptionType(object.getAccountId());
-        if (encryptionType != EncryptionType.LOCAL && f.get(object) == null) {
-          Field encryptedRefField = getEncryptedRefField(f, object);
-          encryptedRefField.setAccessible(true);
+        Field encryptedRefField = getEncryptedRefField(f, object);
+        encryptedRefField.setAccessible(true);
+        if (f.get(object) != null) {
+          Preconditions.checkState(
+              encryptedRefField.get(object) == null, "both encrypted and non encrypted field set for " + object);
+          encryptedDataDetails.add(EncryptedDataDetail.builder()
+                                       .encryptionType(EncryptionType.LOCAL)
+                                       .encryptedData(EncryptedData.builder()
+                                                          .encryptionKey(object.getAccountId())
+                                                          .encryptedValue((char[]) f.get(object))
+                                                          .build())
+                                       .fieldName(f.getName())
+                                       .build());
+        } else {
           EncryptedData encryptedData =
               wingsPersistence.get(EncryptedData.class, (String) encryptedRefField.get(object));
           Preconditions.checkNotNull(encryptedData,
               "field " + f.getName() + " has no reference for " + f.get(object) + "  for encryptable " + object);
-
           EncryptionConfig encryptionConfig =
-              getEncryptionConfig(object.getAccountId(), encryptedData.getKmsId(), encryptionType);
+              getEncryptionConfig(object.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
           EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder()
-                                                        .encryptionType(encryptionType)
+                                                        .encryptionType(encryptedData.getEncryptionType())
                                                         .encryptedData(encryptedData)
                                                         .encryptionConfig(encryptionConfig)
                                                         .fieldName(f.getName())
                                                         .build();
 
           encryptedDataDetails.add(encryptedDataDetail);
+
           if (!StringUtils.isBlank(workflowId)) {
             SecretUsageLog usageLog = SecretUsageLog.builder()
                                           .encryptedDataId(encryptedData.getUuid())
@@ -149,13 +172,6 @@ public class SecretManagerImpl implements SecretManager {
             usageLog.setAppId(appId);
             wingsPersistence.save(usageLog);
           }
-        } else if (f.get(object) != null) {
-          encryptedDataDetails.add(
-              EncryptedDataDetail.builder()
-                  .encryptionType(EncryptionType.LOCAL)
-                  .encryptedData(EncryptedData.builder().encryptedValue((char[]) f.get(object)).build())
-                  .fieldName(f.getName())
-                  .build());
         }
       }
     } catch (IllegalAccessException e) {
@@ -208,12 +224,14 @@ public class SecretManagerImpl implements SecretManager {
     while (query.hasNext()) {
       EncryptedData data = query.next();
       if (data.getType() != SettingVariableTypes.KMS) {
-        UuidAware parent = fetchParent(data.getType(), accountId, data.getParentId(), true, data.getEncryptionType());
-        if (parent == null) {
-          logger.error("No parent found for {}", data);
-          continue;
+        for (String parentId : data.getParentIds()) {
+          UuidAware parent = fetchParent(data.getType(), accountId, parentId, true, data.getEncryptionType());
+          if (parent == null) {
+            logger.error("No parent found for {}", data);
+            continue;
+          }
+          rv.put(parentId, parent);
         }
-        rv.put(data.getParentId(), parent);
       }
     }
     return rv.values();
@@ -250,8 +268,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String getEncryptedYamlRef(Encryptable object, String uuid, SettingVariableTypes type, String... fieldNames)
-      throws IllegalAccessException {
+  public String getEncryptedYamlRef(Encryptable object, String... fieldNames) throws IllegalAccessException {
     Preconditions.checkState(fieldNames.length <= 1, "can't give more than one field in the call");
     Field encryptedField = null;
     if (fieldNames.length == 0) {
@@ -272,8 +289,7 @@ public class SecretManagerImpl implements SecretManager {
 
     // locally encrypted
     if (encryptedField.get(object) != null) {
-      Preconditions.checkState(!StringUtils.isBlank(uuid), "uuid can't be empty");
-      return EncryptionType.LOCAL + ":" + object.getAccountId() + ":" + type + ":" + uuid;
+      throw new IllegalAccessException("trying to get a yaml reference which wasn't encrypted using secret management");
     }
 
     Field encryptedFieldRef = getEncryptedRefField(encryptedField, object);
@@ -282,54 +298,17 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
     Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + object);
 
-    return encryptedData.getEncryptionType() + ":" + object.getAccountId() + ":" + type + ":" + encryptedFieldRefId;
+    return encryptedData.getEncryptionType() + ":" + encryptedFieldRefId;
   }
 
   @Override
-  public char[] decryptYamlRef(String encryptedYamlRef) throws NoSuchFieldException, IllegalAccessException {
+  public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException {
     Preconditions.checkState(!StringUtils.isBlank(encryptedYamlRef));
     logger.info("Decrypting: {}", encryptedYamlRef);
     String[] tags = encryptedYamlRef.split(":");
     EncryptionType encryptionType = EncryptionType.valueOf(tags[0]);
-    String accountId = tags[1];
-    SettingVariableTypes type = SettingVariableTypes.valueOf(tags[2]);
-    String fieldRefId = tags[3];
-
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, fieldRefId);
-    switch (encryptionType) {
-      case LOCAL:
-        UuidAware uuidAware = fetchParent(type, accountId, fieldRefId, false, encryptionType);
-        Preconditions.checkState(
-            SettingAttribute.class.isInstance(uuidAware) || Encryptable.class.isInstance(uuidAware),
-            "Only setting attributes and encryptable classes can be decrypted");
-        Object toDecrypt = uuidAware;
-        if (SettingAttribute.class.isInstance(uuidAware)) {
-          toDecrypt = ((SettingAttribute) uuidAware).getValue();
-        }
-
-        if (Encryptable.class.isInstance(toDecrypt)) {
-          Encryptable encrypted = (Encryptable) toDecrypt;
-          Field encryptedField = encrypted.getEncryptedFields().get(0);
-          encryptedField.setAccessible(true);
-          return kmsService.decrypt(EncryptedData.builder()
-                                        .encryptionKey(accountId)
-                                        .encryptedValue((char[]) encryptedField.get(encrypted))
-                                        .build(),
-              accountId, null);
-        }
-
-        throw new IllegalArgumentException("Can't find encryptable field for " + encryptedYamlRef);
-      case KMS:
-        return kmsService.decrypt(
-            encryptedData, accountId, kmsService.getKmsConfig(accountId, encryptedData.getKmsId()));
-
-      case VAULT:
-        return vaultService.decrypt(
-            encryptedData, accountId, vaultService.getVaultConfig(accountId, encryptedData.getKmsId()));
-
-      default:
-        throw new IllegalStateException("Invalid encryptionType: " + encryptionType);
-    }
+    String fieldRefId = tags[1];
+    return wingsPersistence.get(EncryptedData.class, fieldRefId);
   }
 
   @Override
@@ -349,6 +328,8 @@ public class SecretManagerImpl implements SecretManager {
 
   private EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
     switch (encryptionType) {
+      case LOCAL:
+        return null;
       case KMS:
         return kmsService.getKmsConfig(accountId, entityId);
       case VAULT:

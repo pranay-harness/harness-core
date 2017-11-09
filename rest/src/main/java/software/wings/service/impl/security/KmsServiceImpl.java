@@ -155,13 +155,13 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     String parentId = wingsPersistence.save(kmsConfig);
 
-    accessKeyData.setParentId(parentId);
+    accessKeyData.addParent(parentId);
     wingsPersistence.save(accessKeyData);
 
-    secretKeyData.setParentId(parentId);
+    secretKeyData.addParent(parentId);
     wingsPersistence.save(secretKeyData);
 
-    arnKeyData.setParentId(parentId);
+    arnKeyData.addParent(parentId);
     wingsPersistence.save(arnKeyData);
 
     if (kmsConfig.isDefault() && (!savedConfigs.isEmpty() || !vaultConfigs.isEmpty())) {
@@ -205,7 +205,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     wingsPersistence.delete(KmsConfig.class, kmsConfigId);
     Query<EncryptedData> deleteQuery =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(kmsConfigId);
+        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(kmsConfigId);
     return wingsPersistence.delete(deleteQuery);
   }
 
