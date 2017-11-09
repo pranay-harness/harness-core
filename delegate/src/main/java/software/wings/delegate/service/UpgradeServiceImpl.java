@@ -211,7 +211,7 @@ public class UpgradeServiceImpl implements UpgradeService {
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
-    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh")) {
+    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh", "watch.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);
@@ -227,7 +227,7 @@ public class UpgradeServiceImpl implements UpgradeService {
                 PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
         logger.info("[Old] Done setting file permissions");
       } else {
-        logger.error("[Old] Couldn't find script for file [{}]", scriptFile);
+        logger.error("[Old] Script for file [{}] was not replaced", scriptFile);
       }
     }
   }
