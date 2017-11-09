@@ -641,10 +641,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   private String encrypt(Encryptable object, char[] secret, Field encryptedField, Encryptable savedObject,
       EncryptionType encryptionType) throws IllegalAccessException {
-    if (secret == null) {
-      return null;
-    }
-
     encryptedField.setAccessible(true);
     Field decryptedField = getDecryptedField(encryptedField, object);
     decryptedField.setAccessible(true);
@@ -676,16 +672,18 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
 
     encryptedId = save(encryptedData);
-    save(SecretChangeLog.builder()
-             .accountId(accountId)
-             .encryptedDataId(encryptedId)
-             .description(changeLogDescription)
-             .user(EmbeddedUser.builder()
-                       .uuid(UserThreadLocal.get().getUuid())
-                       .email(UserThreadLocal.get().getEmail())
-                       .name(UserThreadLocal.get().getName())
-                       .build())
-             .build());
+    if (UserThreadLocal.get() != null) {
+      save(SecretChangeLog.builder()
+               .accountId(accountId)
+               .encryptedDataId(encryptedId)
+               .description(changeLogDescription)
+               .user(EmbeddedUser.builder()
+                         .uuid(UserThreadLocal.get().getUuid())
+                         .email(UserThreadLocal.get().getEmail())
+                         .name(UserThreadLocal.get().getName())
+                         .build())
+               .build());
+    }
     encryptedField.set(object, encryptedId);
     return encryptedId;
   }
