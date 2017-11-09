@@ -114,10 +114,10 @@ public class DelegateServiceImpl implements DelegateService {
       accountId = delegateConfiguration.getAccountId();
 
       if (upgrade) {
-        logger.info("[New] Upgraded delegate process started. Sending confirmation.");
+        logger.info("[New] Upgraded delegate process started. Sending confirmation");
         System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
 
-        logger.info("[New] Waiting for go ahead from old delegate.");
+        logger.info("[New] Waiting for go ahead from old delegate");
         int secs = 0;
         File goaheadFile = new File("goahead");
         while (!goaheadFile.exists() && secs++ < MAX_UPGRADE_WAIT_SECS) {
@@ -126,9 +126,9 @@ public class DelegateServiceImpl implements DelegateService {
         }
 
         if (secs < MAX_UPGRADE_WAIT_SECS) {
-          logger.info("[New] Go ahead received from old delegate. Sending confirmation.");
+          logger.info("[New] Go ahead received from old delegate. Sending confirmation");
         } else {
-          logger.info("[New] Timed out waiting for go ahead. Proceeding anyway.");
+          logger.info("[New] Timed out waiting for go ahead. Proceeding anyway");
         }
         System.out.println("proceeding"); // Don't remove this. It is used as message in upgrade flow.
       } else if (restart) {
@@ -220,11 +220,11 @@ public class DelegateServiceImpl implements DelegateService {
       startUpgradeCheck(getVersion());
 
       if (upgrade) {
-        logger.info("[New] Delegate upgraded.");
+        logger.info("[New] Delegate upgraded");
       } else if (restart) {
-        logger.info("[New] Delegate restarted.");
+        logger.info("[New] Delegate restarted");
       } else {
-        logger.info("Delegate started.");
+        logger.info("Delegate started");
       }
 
       synchronized (waiter) {
@@ -257,7 +257,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void handleError(Exception e) {
     logger.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
     if (e instanceof SSLException) {
-      logger.info("Reopening connection to manager.");
+      logger.info("Reopening connection to manager");
       try {
         socket.close();
       } catch (Exception ex) {
@@ -269,7 +269,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.error("Unable to open socket", e);
       }
     } else if (e instanceof ConnectException) {
-      logger.warn("Failed to connect after {} attempts. Restarting delegate.", MAX_CONNECT_ATTEMPTS);
+      logger.warn("Failed to connect after {} attempts. Restarting delegate", MAX_CONNECT_ATTEMPTS);
       restartDelegate();
     } else {
       logger.error("Exception: " + e.getMessage(), e);
@@ -354,7 +354,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
         if (delegateResponse == null || delegateResponse.getResource() == null) {
           logger.error(
-              "Error occurred while registering elegate with manager for account {}. Please see the manager log for more information.",
+              "Error occurred while registering elegate with manager for account {}. Please see the manager log for more information",
               accountId);
           Thread.sleep(55000);
           return null;
@@ -387,7 +387,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startUpgradeCheck(String version) {
     if (!delegateConfiguration.isDoUpgrade()) {
-      logger.info("Auto upgrade is disabled in configuration.");
+      logger.info("Auto upgrade is disabled in configuration");
       logger.info("Delegate stays on version: [{}]", version);
       return;
     }
@@ -403,7 +403,7 @@ public class DelegateServiceImpl implements DelegateService {
               execute(managerClient.checkForUpgrade(version, delegateId, accountId));
           if (restResponse.getResource().isDoUpgrade()) {
             setUpgradePending(true);
-            logger.info("[Old] Upgrading delegate. Stop acquiring async tasks.");
+            logger.info("[Old] Upgrading delegate. Stop acquiring async tasks");
             upgradeService.doUpgrade(restResponse.getResource(), getVersion());
           } else {
             logger.info("Delegate up to date");
@@ -522,7 +522,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateConnectionResults != null) {
         boolean validated = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
         if (validated) {
-          logger.info("Validation succeeded for task {}.", taskId);
+          logger.info("Validation succeeded for task {}", taskId);
         } else {
           logger.info("Validation failed for task {}", taskId);
         }
@@ -533,13 +533,13 @@ public class DelegateServiceImpl implements DelegateService {
             logger.info("Got the go-ahead to proceed for task {}.", taskId);
             executeTask(delegateTaskEvent, delegateTask1);
           } else {
-            logger.info("Did not get the go-ahead to proceed for task {}.", taskId);
+            logger.info("Did not get the go-ahead to proceed for task {}", taskId);
             if (validated) {
-              logger.info("Task {} validated but was assigned to another delegate.", taskId);
+              logger.info("Task {} validated but was assigned to another delegate", taskId);
             } else {
               try {
-                logger.info("Waiting 2 seconds to give other delegates a chance to register as validators for task {}.",
-                    taskId);
+                logger.info(
+                    "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
                 Thread.sleep(2000);
               } catch (InterruptedException e) {
                 logger.warn("Sleep interrupted. Task {}", taskId, e);
@@ -584,7 +584,7 @@ public class DelegateServiceImpl implements DelegateService {
         boolean taskAcquired = delegateTask1 != null;
         if (taskAcquired) {
           if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
-            logger.error("Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
+            logger.error("Delegate task {} already in executing tasks for this delegate", delegateTask.getUuid());
             return false;
           }
           currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
@@ -632,7 +632,7 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         Thread.sleep(5000);
       } catch (InterruptedException e) {
-        logger.warn("Time limiter thread interrupted.", e);
+        logger.warn("Time limiter thread interrupted", e);
       }
 
       Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());

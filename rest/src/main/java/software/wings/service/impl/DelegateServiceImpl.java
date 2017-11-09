@@ -539,7 +539,7 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
     if (delegateTask != null && !assignDelegateService.canAssign(delegateId, delegateTask)) {
-      logger.info("Delegate {} does not accept task {}", delegateId, taskId);
+      logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
       ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
       delegateTask = null;
     }
@@ -635,7 +635,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Delegate task from database: {}", delegateTask.getUuid());
         delegateTask.setAsync(true);
       } else {
-        logger.warn("Delegate task {} is not available", taskId);
+        logger.warn("Delegate task {} is already assigned", taskId);
       }
     }
     return delegateTask;

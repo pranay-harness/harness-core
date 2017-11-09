@@ -64,17 +64,17 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
-      logger.info("[Old] Upgrade script executed: {}. Waiting for process to start.", process.getProcess().isAlive());
+      logger.info("[Old] Upgrade script executed: {}. Waiting for process to start", process.getProcess().isAlive());
 
       BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
       if (process.getProcess().isAlive() && waitForStringOnStream(reader, "botstarted", 15)) {
         try {
-          logger.info("[Old] New delegate process started.");
+          logger.info("[Old] New delegate process started");
           if (goaheadFile.createNewFile()) {
-            logger.info("[Old] Sent go ahead to new delegate.");
+            logger.info("[Old] Sent go ahead to new delegate");
 
             if (waitForStringOnStream(reader, "proceeding", 5)) {
-              logger.info("[Old] Handshake with new delegate complete. Stop acquiring tasks.");
+              logger.info("[Old] Handshake with new delegate complete. Stop acquiring tasks");
 
               delegateService.setAcquireTasks(false);
               int secs = 0;
@@ -85,13 +85,13 @@ public class UpgradeServiceImpl implements UpgradeService {
               }
 
               if (secs < MAX_UPGRADE_WAIT_SECS) {
-                logger.info("[Old] Delegate finished with tasks. Pausing.");
+                logger.info("[Old] Delegate finished with tasks. Pausing");
               } else {
-                logger.info("[Old] Timed out waiting to complete tasks. Pausing.");
+                logger.info("[Old] Timed out waiting to complete tasks. Pausing");
               }
 
               signalService.pause();
-              logger.info("[Old] Shutting down.");
+              logger.info("[Old] Shutting down");
 
               removeDelegateVersionFromCapsule(delegateScripts, version);
               cleanupOldDelegateVersionFromBackup(delegateScripts, version);
@@ -102,11 +102,11 @@ public class UpgradeServiceImpl implements UpgradeService {
               process.getProcess().waitFor();
             }
           } else {
-            logger.error("[Old] Could not create go ahead file.");
+            logger.error("[Old] Could not create go ahead file");
           }
         } finally {
           if (!goaheadFile.delete()) {
-            logger.error("[Old] Could not delete go ahead file.");
+            logger.error("[Old] Could not delete go ahead file");
           }
           signalService.resume();
         }
@@ -116,7 +116,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("[Old] Exception while upgrading.", e);
+      logger.error("[Old] Exception while upgrading", e);
       if (process != null) {
         try {
           process.getProcess().destroy();
@@ -132,7 +132,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             }
           }
         } catch (Exception ex) {
-          logger.error("[Old] ALERT: Couldn't kill forcibly.", ex);
+          logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
         }
       }
     }
@@ -142,9 +142,9 @@ public class UpgradeServiceImpl implements UpgradeService {
   public void doRestart() throws IOException, TimeoutException, InterruptedException {
     StartedProcess process = null;
     try {
-      logger.info("[Old] Restarting the delegate.");
+      logger.info("[Old] Restarting the delegate");
       signalService.pause();
-      logger.info("[Old] Previous delegate paused.");
+      logger.info("[Old] Previous delegate paused");
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)
@@ -156,14 +156,14 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
       if (process.getProcess().isAlive()) {
-        logger.info("[Old] New delegate restarted. Stopping.");
+        logger.info("[Old] New delegate restarted. Stopping");
         try {
           signalService.stop();
         } finally {
           signalService.resume();
         }
       } else {
-        logger.error("[Old] Failed to restart delegate.");
+        logger.error("[Old] Failed to restart delegate");
         process.getProcess().destroy();
         process.getProcess().waitFor();
       }
@@ -185,7 +185,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             }
           }
         } catch (Exception ex) {
-          logger.error("[Old] ALERT: Couldn't kill forcibly.", ex);
+          logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
         }
       }
     }

@@ -2,6 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
@@ -11,11 +13,9 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
-import software.wings.core.ssh.executors.SshSessionFactory;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.SshHelperUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,13 +53,12 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
             DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(hostName);
             long startTime = System.currentTimeMillis();
             try {
-              SshSessionFactory
-                  .getSSHSession(SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST",
-                      aCommandExecutionContext()
-                          .withHostConnectionAttributes(connectionSetting)
-                          .withExecutionCredential(executionCredential)
-                          .build(),
-                      20))
+              getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST",
+                                aCommandExecutionContext()
+                                    .withHostConnectionAttributes(connectionSetting)
+                                    .withExecutionCredential(executionCredential)
+                                    .build(),
+                                20))
                   .disconnect();
               resultBuilder.validated(true);
             } catch (JSchException jschEx) {
