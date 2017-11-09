@@ -29,6 +29,7 @@ class TSAnomlyDetector(object):
         self.raw_control_txns = control_txns
         self.raw_test_txns = test_txns
         self.metric_names = ['callCount', 'averageResponseTime', 'requestsPerMinute', 'throughput', 'error', 'apdexScore']
+        self.min_rpm = options.min_rpm
 
     def group_txns(self, transactions):
         result = {}
@@ -50,16 +51,22 @@ class TSAnomlyDetector(object):
                     continue
                 result[txn_name][metric_name][host]['data'][data_collection_minute] = transaction.get(metric_name)
 
-        return self.sanitize_data(result)
+        return self.sanitize_data(result, self.min_rpm)
 
     @staticmethod
-    def sanitize_data(txns):
+    def sanitize_data(txns, min_rpm):
         for txn_data_dict in txns.values():
             for metric_name, metric_data_dict in txn_data_dict.items():
                 if metric_name == 'averageResponseTime':
                     for host, metric_host_data_dict in metric_data_dict.items():
                         metric_host_data_dict['data'][np.where(txn_data_dict['callCount'][host]['data'] == 0)[0]] \
                             = np.nan
+                if metric_name == 'requestsPerMinute':
+                    for host, metric_host_data_dict in metric_data_dict.items():
+                        if np.nansum(metric_host_data_dict['data']) < min_rpm:
+                            metric_host_data_dict['skip'] = True
+                        else:
+                            metric_host_data_dict['skip'] = False
         return txns
 
     @staticmethod
@@ -155,8 +162,12 @@ class TSAnomlyDetector(object):
                                                                                 index])).filled(
                     0).tolist()
                 response['results'][host]['control_cuts'] = result['control_cuts'][index].tolist()
-                response['results'][host]['risk'] = result['risk'][index]
-                response['max_risk'] = max(response['max_risk'], response['results'][host]['risk'])
+                if test_txn_data_dict['requestsPerMinute'][host]['skip']:
+                    # TODO -1 implies risk NA. Make this an enum
+                    response['results'][host]['risk'] = -1
+                else:
+                    response['results'][host]['risk'] = result['risk'][index]
+                    response['max_risk'] = max(response['max_risk'], response['results'][host]['risk'])
                 response['results'][host]['control_index'] = result['nn'][index]
                 response['results'][host]['test_index'] = index
 
@@ -244,6 +255,7 @@ def parse(cli_args):
     parser.add_argument("--tolerance", type=int, required=True)
     parser.add_argument("--smooth_window", type=int, required=True)
     parser.add_argument("--debug", required=False)
+    parser.add_argument("--min_rpm", type=int, required=True)
 
     return parser.parse_args(cli_args)
 
@@ -253,7 +265,9 @@ def run_debug():
     parser.add_argument("--analysis_minute", type=int, required=True)
     parser.add_argument("--tolerance", type=int, required=True)
     parser.add_argument("--smooth_window", type=int, required=True)
-    options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3'])
+    parser.add_argument("--min_rpm", type=int, required=True)
+    options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3',
+                                 '--min_rpm', '10'])
 
     logger.info("Running Time Series analysis ")
     with open("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json",
@@ -280,7 +294,9 @@ def run_live():
     parser.add_argument("--analysis_minute", type=int, required=True)
     parser.add_argument("--tolerance", type=int, required=True)
     parser.add_argument("--smooth_window", type=int, required=True)
-    options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3'])
+    parser.add_argument("--min_rpm", type=int, required=True)
+    options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3',
+                                 '--min_rpm', '10'])
     control_data, test_data = source.live_analysis({'ip-172-31-8-144', 'ip-172-31-12-79', 'ip-172-31-1-92'},
                                                    {'ip-172-31-13-153'}, from_time,
                                                    to_time)

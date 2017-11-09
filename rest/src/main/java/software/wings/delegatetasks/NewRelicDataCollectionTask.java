@@ -212,6 +212,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
             for (NewRelicApplicationInstance node : instances) {
+              if (!dataCollectionInfo.getHosts().contains(node.getHost())) {
+                logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
+                    dataCollectionInfo.getStateExecutionId());
+                continue;
+              }
+
               List<Collection<String>> metricBatches = batchMetricsToCollect();
 
               for (Collection<String> metricNames : metricBatches) {
@@ -242,6 +248,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                     .timeStamp(collectionStartTime)
                     .level(ClusterLevel.H0)
                     .build());
+            logger.info("Sending heartbeat new relic metric record to the server for minute " + dataCollectionMinute);
 
             metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
                 dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(),
