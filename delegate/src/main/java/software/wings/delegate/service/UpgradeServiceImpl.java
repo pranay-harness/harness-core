@@ -211,7 +211,7 @@ public class UpgradeServiceImpl implements UpgradeService {
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
-    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh", "watch.sh")) {
+    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh", "watch.sh", "stopwatch.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);
