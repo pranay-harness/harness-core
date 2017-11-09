@@ -267,6 +267,16 @@ public class WorkflowPhase implements UuidAware {
     return clonedWorkflowPhase;
   }
 
+  public boolean isServiceTemplatized() {
+    if (templateExpressions != null) {
+      if (templateExpressions.stream().anyMatch(
+              templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static final class WorkflowPhaseBuilder {
     private String uuid = UUIDGenerator.getUuid();
     private String name;
