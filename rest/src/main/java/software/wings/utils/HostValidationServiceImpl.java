@@ -2,6 +2,7 @@ package software.wings.utils;
 
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.inject.Singleton;
@@ -47,7 +48,7 @@ public class HostValidationServiceImpl implements HostValidationService {
                                                                 .withExecutionCredential(executionCredential)
                                                                 .build();
           SshSessionConfig sshSessionConfig =
-              SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", commandExecutionContext);
+              getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", commandExecutionContext, 60);
 
           HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
                                                 .withHostName(hostName)
