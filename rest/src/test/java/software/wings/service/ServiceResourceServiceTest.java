@@ -48,7 +48,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -58,6 +57,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -107,6 +107,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Created by anubhaw on 5/4/16.
@@ -133,6 +134,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
+  private static Answer executeRunnable(ArgumentCaptor<Runnable> runnableCaptor) {
+    return invocation -> {
+      runnableCaptor.getValue().run();
+      return null;
+    };
+  }
+
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;
   @Mock private SetupService setupService;
@@ -147,6 +155,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private AppService appService;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private ExecutorService executorService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -201,7 +210,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should save service.
    */
   @Test
-  @Ignore
   public void shouldSaveService() {
     Service service = serviceBuilder.but().build();
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(), eq(true));
@@ -263,6 +271,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                           .withArtifactType(WAR)
                           .withAppContainer(anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build())
                           .build();
+    ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+    when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
+
     srs.update(service);
     verify(wingsPersistence).update(any(Service.class), any(UpdateOperations.class));
     verify(wingsPersistence).createUpdateOperations(Service.class);
@@ -282,6 +293,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList()).build());
+    ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+    when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
     srs.delete(APP_ID, SERVICE_ID);
     InOrder inOrder = inOrder(wingsPersistence, workflowService, notificationService, serviceTemplateService,
         configService, serviceVariableService, artifactStreamService);
