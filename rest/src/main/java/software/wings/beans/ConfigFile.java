@@ -90,9 +90,9 @@ public class ConfigFile extends BaseFile implements Encryptable {
 
   @SchemaIgnore @Transient private String serviceId;
 
-  @SchemaIgnore @Transient private EncryptionType encryptionType;
+  @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
-  @SchemaIgnore @Transient private String encryptedBy;
+  @SchemaIgnore @Transient private transient String encryptedBy;
 
   /**
    * Gets version for env.
