@@ -54,7 +54,7 @@ public class WatcherServiceImpl implements WatcherService {
         startUpgradeCheck();
       }
 
-      startWatcher();
+      startWatching();
 
       if (upgrade) {
         logger.info("[New] Watcher upgraded");
@@ -111,7 +111,7 @@ public class WatcherServiceImpl implements WatcherService {
         TimeUnit.SECONDS);
   }
 
-  private void startWatcher() {
+  private void startWatching() {
     watchExecutor.scheduleWithFixedDelay(
         ()
             -> {

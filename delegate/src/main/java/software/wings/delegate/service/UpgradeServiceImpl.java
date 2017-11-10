@@ -70,45 +70,40 @@ public class UpgradeServiceImpl implements UpgradeService {
       if (process.getProcess().isAlive() && waitForStringOnStream(reader, "botstarted", 15)) {
         try {
           logger.info("[Old] New delegate process started");
-          if (goaheadFile.createNewFile()) {
-            logger.info("[Old] Sent go ahead to new delegate");
+          FileUtils.touch(goaheadFile);
+          logger.info("[Old] Sent go ahead to new delegate");
 
-            if (waitForStringOnStream(reader, "proceeding", 5)) {
-              logger.info("[Old] Handshake with new delegate complete. Stop acquiring tasks");
+          if (waitForStringOnStream(reader, "proceeding", 5)) {
+            logger.info("[Old] Handshake with new delegate complete. Stop acquiring tasks");
 
-              delegateService.setAcquireTasks(false);
-              int secs = 0;
-              while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
-                Thread.sleep(1000);
-                logger.info(
-                    "[Old] Completing {} tasks... ({} seconds elapsed)", delegateService.getRunningTaskCount(), secs);
-              }
-
-              if (secs < MAX_UPGRADE_WAIT_SECS) {
-                logger.info("[Old] Delegate finished with tasks. Pausing");
-              } else {
-                logger.info("[Old] Timed out waiting to complete tasks. Pausing");
-              }
-
-              signalService.pause();
-              logger.info("[Old] Shutting down");
-
-              removeDelegateVersionFromCapsule(delegateScripts, version);
-              cleanupOldDelegateVersionFromBackup(delegateScripts, version);
-
-              signalService.stop();
-            } else {
-              process.getProcess().destroy();
-              process.getProcess().waitFor();
+            delegateService.setAcquireTasks(false);
+            int secs = 0;
+            while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
+              Thread.sleep(1000);
+              logger.info(
+                  "[Old] Completing {} tasks... ({} seconds elapsed)", delegateService.getRunningTaskCount(), secs);
             }
+
+            if (secs < MAX_UPGRADE_WAIT_SECS) {
+              logger.info("[Old] Delegate finished with tasks. Pausing");
+            } else {
+              logger.info("[Old] Timed out waiting to complete tasks. Pausing");
+            }
+
+            signalService.pause();
+            logger.info("[Old] Shutting down");
+
+            removeDelegateVersionFromCapsule(delegateScripts, version);
+            cleanupOldDelegateVersionFromBackup(delegateScripts, version);
+
+            signalService.stop();
           } else {
-            logger.error("[Old] Could not create go ahead file");
+            process.getProcess().destroy();
+            process.getProcess().waitFor();
           }
         } finally {
-          if (!goaheadFile.delete()) {
-            logger.error("[Old] Could not delete go ahead file");
-          }
           signalService.resume();
+          FileUtils.forceDelete(goaheadFile);
         }
       } else {
         process.getProcess().destroy();
