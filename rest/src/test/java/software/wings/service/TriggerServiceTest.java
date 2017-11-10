@@ -21,7 +21,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 import static software.wings.beans.trigger.ArtifactSelection.builder;
-import static software.wings.beans.trigger.Trigger.Builder.aDeploymentTrigger;
+import static software.wings.beans.trigger.Trigger.Builder.aTrigger;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.service.impl.TriggerServiceImpl.SCHEDULED_TRIGGER_CRON_GROUP;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -70,6 +70,7 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
@@ -90,11 +91,12 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Inject @InjectMocks private TriggerService triggerService;
 
-  private Trigger trigger = aDeploymentTrigger().withUuid(TRIGGER_ID).withAppId(APP_ID).withName(TRIGGER_NAME).build();
-  private Trigger artifactConditionTrigger = aDeploymentTrigger()
+  private Trigger trigger = aTrigger().withUuid(TRIGGER_ID).withAppId(APP_ID).withName(TRIGGER_NAME).build();
+  private Trigger artifactConditionTrigger = aTrigger()
                                                  .withPipelineId(PIPELINE_ID)
                                                  .withUuid(TRIGGER_ID)
                                                  .withAppId(APP_ID)
@@ -105,7 +107,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                                                                     .build())
                                                  .build();
   private Trigger pipelineConditionTrigger =
-      aDeploymentTrigger()
+      aTrigger()
           .withPipelineId(PIPELINE_ID)
           .withUuid(TRIGGER_ID)
           .withAppId(APP_ID)
@@ -113,7 +115,7 @@ public class TriggerServiceTest extends WingsBaseTest {
           .withCondition(PipelineTriggerCondition.builder().pipelineId(PIPELINE_ID).build())
           .build();
   private Trigger scheduledConditionTrigger =
-      aDeploymentTrigger()
+      aTrigger()
           .withPipelineId(PIPELINE_ID)
           .withUuid(TRIGGER_ID)
           .withAppId(APP_ID)
@@ -121,7 +123,7 @@ public class TriggerServiceTest extends WingsBaseTest {
           .withCondition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build())
           .build();
   private Trigger webhookConditionTrigger =
-      aDeploymentTrigger()
+      aTrigger()
           .withPipelineId(PIPELINE_ID)
           .withUuid(TRIGGER_ID)
           .withAppId(APP_ID)
@@ -158,7 +160,10 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(end.lessThan(any())).thenReturn(query);
     when(end.in(any())).thenReturn(query);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(pipeline);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withName("Catalog").build());
   }
 
   @Test
@@ -569,7 +574,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, jenkinsArtifactStream.getSourceName());
-    verify(workflowExecutionService).listExecutions(any(PageRequest.class), anyBoolean());
+    verify(workflowExecutionService)
+        .listExecutions(any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
   }
 
   @Test
@@ -638,7 +644,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, jenkinsArtifactStream.getSourceName());
-    verify(workflowExecutionService, times(2)).listExecutions(any(PageRequest.class), anyBoolean());
+    verify(workflowExecutionService, times(2))
+        .listExecutions(any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
   }
 
   @Test
@@ -776,7 +783,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(artifactStreamService, times(2)).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, jenkinsArtifactStream.getSourceName());
-    verify(workflowExecutionService).listExecutions(any(PageRequest.class), anyBoolean());
+    verify(workflowExecutionService)
+        .listExecutions(any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
     verify(artifactService).fetchLatestArtifactForArtifactStream(any(), any(), anyString());
   }
 
@@ -826,7 +834,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(artifactService)
         .fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, jenkinsArtifactStream.getSourceName());
 
-    verify(workflowExecutionService).listExecutions(any(PageRequest.class), anyBoolean());
+    verify(workflowExecutionService)
+        .listExecutions(any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
     verify(artifactService).getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, "123");
   }
 

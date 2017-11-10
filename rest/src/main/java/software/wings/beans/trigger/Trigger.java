@@ -27,7 +27,7 @@ public class Trigger extends Base {
   private String description;
   @NotNull private TriggerCondition condition;
   @NotEmpty private String pipelineId;
-  private String pielineName;
+  private String pipelineName;
 
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
 
@@ -42,7 +42,7 @@ public class Trigger extends Base {
 
     private Builder() {}
 
-    public static Builder aDeploymentTrigger() {
+    public static Builder aTrigger() {
       return new Builder();
     }
 
