@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -28,6 +29,8 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -280,7 +283,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       KmsConfig kmsConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(kmsConfig);
       byte[] bytes = ByteStreams.toByteArray(inputStream);
-      EncryptedData fileData = encrypt(new String(bytes).toCharArray(), accountId, kmsConfig);
+      EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
       fileData.setAccountId(accountId);
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
       char[] encryptedValue = fileData.getEncryptedValue();
@@ -302,9 +305,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       Preconditions.checkNotNull(kmsConfig);
       Preconditions.checkNotNull(encryptedData);
       byte[] bytes = Files.toByteArray(file);
-      encryptedData.setEncryptedValue(new String(bytes).toCharArray());
+      encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
-      Files.write(new String(decrypt).getBytes(), file);
+      Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

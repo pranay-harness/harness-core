@@ -33,7 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
  * Created by mike@ on 4/24/17.
  */
 public class SimpleEncryption implements EncryptionInterface {
-  @JsonIgnore private static final Charset CHARSET = Charsets.ISO_8859_1;
+  @JsonIgnore public static final Charset CHARSET = Charsets.ISO_8859_1;
   @JsonIgnore private static final int AES_256_KEY_LENGTH = 32;
 
   // IV and KEY both need to be AES_256_KEY_LENGTH characters long.

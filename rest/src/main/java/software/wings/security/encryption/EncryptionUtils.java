@@ -1,13 +1,13 @@
 package software.wings.security.encryption;
 
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import software.wings.exception.WingsException;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,10 +50,11 @@ public class EncryptionUtils {
     return bytes;
   }
 
-  public static InputStream encrypt(InputStream content, String containerId) {
+  public static char[] encrypt(InputStream content, String containerId) {
     try {
       SimpleEncryption encryption = new SimpleEncryption(containerId);
-      return new ByteArrayInputStream(encryption.encrypt(ByteStreams.toByteArray(content)));
+      byte[] encryptedBytes = encryption.encrypt(ByteStreams.toByteArray(content));
+      return CHARSET.decode(ByteBuffer.wrap(encryptedBytes)).array();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }

@@ -5,6 +5,7 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
@@ -27,6 +28,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.SimpleEncryption;
@@ -254,6 +256,21 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid) {
     EncryptionType encryptionType = getEncryptionType(accountId);
     switch (encryptionType) {
+      case LOCAL:
+        char[] encryptedFileData = EncryptionUtils.encrypt(inputStream, accountId);
+        EncryptedData encryptedData = EncryptedData.builder()
+                                          .accountId(accountId)
+                                          .encryptionKey(accountId)
+                                          .encryptionType(EncryptionType.LOCAL)
+                                          .kmsId(null)
+                                          .type(SettingVariableTypes.CONFIG_FILE)
+                                          .enabled(true)
+                                          .build();
+        encryptedData.setUuid(uuid);
+        wingsPersistence.save(encryptedData);
+        encryptedData.setEncryptedValue(encryptedFileData);
+        return encryptedData;
+
       case KMS:
         return kmsService.encryptFile(inputStream, accountId, uuid);
 
@@ -267,8 +284,11 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
-    EncryptionType encryptionType = getEncryptionType(accountId);
+    EncryptionType encryptionType = encryptedData.getEncryptionType();
     switch (encryptionType) {
+      case LOCAL:
+        return EncryptionUtils.decrypt(file, encryptedData.getEncryptionKey());
+
       case KMS:
         return kmsService.decryptFile(file, accountId, encryptedData);
 

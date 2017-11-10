@@ -1681,7 +1681,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void saveUpdateConfigFileNoKms() throws IOException, InterruptedException {
+  public void saveUpdateConfigFileNoKms() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     System.out.println("seed: " + seed);
     Random r = new Random(seed);
@@ -1723,6 +1723,7 @@ public class KmsTest extends WingsBaseTest {
     ConfigFile savedConfigFile = configService.get(appId, configFileId);
     assertFalse(savedConfigFile.isEncrypted());
     assertTrue(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
+    assertTrue(wingsPersistence.createQuery(EncryptedData.class).asList().isEmpty());
 
     // now make the same file encrypted
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
@@ -1732,9 +1733,18 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
     savedConfigFile = configService.get(appId, configFileId);
     assertTrue(savedConfigFile.isEncrypted());
-    assertTrue(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
+    assertFalse(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
 
-    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class).asList().get(0);
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertEquals(1, encryptedData.getParentIds().size());
+    assertTrue(encryptedData.getParentIds().contains(configFileId));
+    assertEquals(accountId, encryptedData.getEncryptionKey());
+    assertEquals(SettingVariableTypes.CONFIG_FILE, encryptedData.getType());
+    assertTrue(encryptedData.isEnabled());
+    assertTrue(StringUtils.isBlank(encryptedData.getKmsId()));
+    assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
 
     // now make the same file not encrypted
     fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
@@ -1747,6 +1757,15 @@ public class KmsTest extends WingsBaseTest {
     assertTrue(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
 
     assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(configFileId, SettingVariableTypes.CONFIG_FILE);
+    assertEquals(1, changeLogs.size());
+    SecretChangeLog changeLog = changeLogs.get(0);
+    assertEquals(accountId, changeLog.getAccountId());
+    assertEquals(configFileId, changeLog.getEncryptedDataId());
+    assertEquals(userName, changeLog.getUser().getName());
+    assertEquals(userEmail, changeLog.getUser().getEmail());
+    assertEquals(user.getUuid(), changeLog.getUser().getUuid());
+    assertEquals("File updated", changeLog.getDescription());
   }
 
   @Test
@@ -1876,6 +1895,24 @@ public class KmsTest extends WingsBaseTest {
       assertEquals(workflowName, usageLog.getWorkflowName());
       assertEquals(accountId, usageLog.getAccountId());
     }
+
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(configFileId, SettingVariableTypes.CONFIG_FILE);
+    assertEquals(2, changeLogs.size());
+    SecretChangeLog changeLog = changeLogs.get(0);
+    assertEquals(accountId, changeLog.getAccountId());
+    assertEquals(configFileId, changeLog.getEncryptedDataId());
+    assertEquals(userName, changeLog.getUser().getName());
+    assertEquals(userEmail, changeLog.getUser().getEmail());
+    assertEquals(user.getUuid(), changeLog.getUser().getUuid());
+    assertEquals("File updated", changeLog.getDescription());
+
+    changeLog = changeLogs.get(1);
+    assertEquals(accountId, changeLog.getAccountId());
+    assertEquals(configFileId, changeLog.getEncryptedDataId());
+    assertEquals(userName, changeLog.getUser().getName());
+    assertEquals(userEmail, changeLog.getUser().getEmail());
+    assertEquals(user.getUuid(), changeLog.getUser().getUuid());
+    assertEquals("File uploaded", changeLog.getDescription());
   }
 
   @Test

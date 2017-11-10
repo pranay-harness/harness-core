@@ -4,12 +4,15 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -17,6 +20,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.Encryptable;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
@@ -26,15 +30,23 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.BoundedInputStream;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -49,6 +61,8 @@ public class SecretMigrationUtil extends WingsBaseTest {
   @Inject private SecretManager secretManager;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
+  @Inject private FileService fileService;
+  @Inject private ConfigService configService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
   @Before
@@ -183,6 +197,29 @@ public class SecretMigrationUtil extends WingsBaseTest {
     }
 
     System.out.println("Complete. Updated " + changedObject + " setting attributes.");
+  }
+
+  @Test
+  public void migrateConfigFiles() throws InterruptedException, IllegalAccessException, IOException {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class).asList();
+
+    System.out.println("will go through " + configFiles.size() + " records");
+
+    int changedObject = 0;
+    for (ConfigFile configFile : configFiles) {
+      if (!configFile.isEncrypted()) {
+        continue;
+      }
+      File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
+      fileService.download(configFile.getFileUuid(), file, CONFIGS);
+      System.out.println("processing " + configFile);
+      System.out.println("going to save " + FileUtils.readFileToString(file));
+
+      //      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
+      changedObject++;
+    }
+
+    System.out.println("Complete. Updated " + changedObject + " file attributes.");
   }
 
   //  @Test
