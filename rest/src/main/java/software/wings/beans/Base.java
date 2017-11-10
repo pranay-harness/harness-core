@@ -55,7 +55,7 @@ public class Base implements UuidAware {
   @SchemaIgnore
   @JsonIgnore
   @Transient
-  public String entityYamlPath; // TODO:: remove it with changeSet batching
+  public transient String entityYamlPath; // TODO:: remove it with changeSet batching
 
   /**
    * Invoked before inserting document in mongo by morphia.

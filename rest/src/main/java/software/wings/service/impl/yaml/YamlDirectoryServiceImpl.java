@@ -759,6 +759,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case LOGZ:
         sb.append(VERIFICATION_PROVIDERS_FOLDER);
         break;
+      case HOST_CONNECTION_ATTRIBUTES:
+        break;
       default:
         throw new WingsException(ErrorCode.GENERAL_YAML_ERROR);
     }

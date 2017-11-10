@@ -18,6 +18,9 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.NewRelicConfig;
@@ -70,6 +73,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlSyncService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
@@ -103,6 +107,7 @@ import software.wings.yaml.settingAttribute.DockerYaml;
 import software.wings.yaml.settingAttribute.ElbYaml;
 import software.wings.yaml.settingAttribute.ElkYaml;
 import software.wings.yaml.settingAttribute.GcpYaml;
+import software.wings.yaml.settingAttribute.HostConnectionAttributesYaml;
 import software.wings.yaml.settingAttribute.JenkinsYaml;
 import software.wings.yaml.settingAttribute.LogzYaml;
 import software.wings.yaml.settingAttribute.NewRelicYaml;
@@ -837,6 +842,19 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         settingAttributeYaml = logzYaml;
         break;
 
+      case HOST_CONNECTION_ATTRIBUTES:
+        HostConnectionAttributesYaml yaml = new HostConnectionAttributesYaml(settingAttribute);
+        HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+
+        try {
+          String key = secretManager.getEncryptedYamlRef(hostConnectionAttributes);
+          yaml.setKey(key);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid key. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = yaml;
+        break;
+
       default:
         // handle not found
         RestResponse rr = new RestResponse<>();
@@ -1347,6 +1365,38 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             logzConfig.setToken(null);
             logzConfig.setEncryptedToken(logzYaml.getToken());
             settingAttribute.setValue(logzConfig);
+            break;
+
+          case HOST_CONNECTION_ATTRIBUTES:
+            HostConnectionAttributesYaml beforeHostConnAttrYaml =
+                mapper.readValue(beforeYaml, HostConnectionAttributesYaml.class);
+            if (beforeHostConnAttrYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeHostConnAttrYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            HostConnectionAttributesYaml hostConnAttrYaml = mapper.readValue(yaml, HostConnectionAttributesYaml.class);
+            if (hostConnAttrYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "hostConnAttrYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            settingAttribute.setName(hostConnAttrYaml.getName());
+
+            AccessType accessType = Util.getEnumFromString(AccessType.class, hostConnAttrYaml.getAccessType());
+            ConnectionType connectionType =
+                Util.getEnumFromString(ConnectionType.class, hostConnAttrYaml.getConnectionType());
+            config = HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                         .withAccessType(accessType)
+                         .withAccountId(accountId)
+                         .withConnectionType(connectionType)
+                         .withKey(null)
+                         .withEncyptedKey(hostConnAttrYaml.getKey())
+                         .withUserName(hostConnAttrYaml.getUserName())
+                         .build();
+            settingAttribute.setValue(config);
             break;
 
           default:
