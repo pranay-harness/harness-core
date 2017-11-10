@@ -60,9 +60,9 @@ public class SettingAttribute extends Base {
   private Category category = Category.SETTING;
   private List<String> appIds;
 
-  @SchemaIgnore @Transient private EncryptionType encryptionType;
+  @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
-  @SchemaIgnore @Transient private String encryptedBy;
+  @SchemaIgnore @Transient private transient String encryptedBy;
 
   public enum Category {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP)),
