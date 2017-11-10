@@ -21,7 +21,6 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.HTTP_URL;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
@@ -367,7 +366,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("env.name"));
     assertThat(expressions.contains("workflow.variables.name1")).isTrue();
-    assertThat(expressions.contains(BUCKET_NAME)).isTrue();
+    assertThat(expressions.contains("artifact.bucketName")).isTrue();
   }
 
   @Test
