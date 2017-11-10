@@ -173,17 +173,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String id = wingsPersistence.save(artifactStream);
     addCronForAutoArtifactCollection(artifactStream);
 
-    // check whether we need to push changes (through git sync)
-    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
+    executorService.submit(() -> {
+      String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
 
-      // add GitSyncFiles for trigger (artifact stream)
-      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
+        // add GitSyncFiles for trigger (artifact stream)
+        changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
 
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+    });
 
     return get(artifactStream.getAppId(), id);
   }
@@ -226,18 +227,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
     }
 
-    // check whether we need to push changes (through git sync)
-    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
+    ArtifactStream finalArtifactStream = artifactStream;
+    executorService.submit(() -> {
+      String accountId = appService.getAccountIdByAppId(finalArtifactStream.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
 
-      // add GitSyncFiles for trigger (artifact stream)
-      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
+        changeSet.add(
+            entityUpdateService.getArtifactStreamGitSyncFile(accountId, finalArtifactStream, ChangeType.MODIFY));
 
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
-    //-------------------
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+    });
 
     return artifactStream;
   }
@@ -255,19 +257,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(streamAction.getWorkflowId(), artifactStreamId));
 
-      //-------------------
-      // check whether we need to push changes (through git sync)
-      String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
+      executorService.submit(() -> {
+        String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+        if (ygs != null) {
+          List<GitFileChange> changeSet = new ArrayList<>();
 
-        // add GitSyncFiles for trigger (artifact stream)
-        changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.DELETE));
+          changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.DELETE));
 
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-      //-------------------
+          yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        }
+      });
     }
     return deleted;
   }
