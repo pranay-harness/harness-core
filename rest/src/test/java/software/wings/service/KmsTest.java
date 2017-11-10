@@ -16,6 +16,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
@@ -1180,6 +1181,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void listEncryptedValues() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
