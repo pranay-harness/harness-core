@@ -9,11 +9,13 @@ import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -21,6 +23,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class WebHookServiceImpl implements WebHookService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
+  @Inject private TriggerService triggerService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -29,46 +32,47 @@ public class WebHookServiceImpl implements WebHookService {
     try {
       String appId = webHookRequest.getApplication();
       String artifactStreamId = webHookRequest.getArtifactSource();
-
-      ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-      if (artifactStream == null) {
-        return WebHookResponse.builder().error("Invalid request payload").build();
-      }
-
-      ArtifactStreamAction streamAction = artifactStream.getStreamActions()
-                                              .stream()
-                                              .filter(sa -> token.equals(sa.getWebHookToken()))
-                                              .findFirst()
-                                              .orElse(null);
-      if (streamAction == null) {
-        return WebHookResponse.builder().error("Invalid WebHook token").build();
-      }
-
-      Artifact artifact = null;
-      if (isNullOrEmpty(webHookRequest.getBuildNumber()) && isNullOrEmpty(webHookRequest.getDockerImageTag())) {
-        artifact = artifactService.fetchLatestArtifactForArtifactStream(
-            appId, artifactStreamId, artifactStream.getSourceName());
-      } else {
-        String requestBuildNumber = isNullOrEmpty(webHookRequest.getBuildNumber()) ? webHookRequest.getDockerImageTag()
-                                                                                   : webHookRequest.getBuildNumber();
-        artifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId, requestBuildNumber);
-        if (artifact == null) {
-          // do collection and then run
-          logger.warn("Artifact not found for webhook request " + webHookRequest);
-
-          // commenting as trigger can happen to collect artifact.
-          // return WebHookResponse.builder().status(ERROR.name()).error("Artifact doesn't exist").build();
+      WorkflowExecution workflowExecution;
+      if (artifactStreamId != null) {
+        // TODO: For backward compatible purpose
+        ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+        if (artifactStream == null) {
+          return WebHookResponse.builder().error("Invalid request payload").build();
         }
+        Artifact artifact;
+        if (isNullOrEmpty(webHookRequest.getBuildNumber()) && isNullOrEmpty(webHookRequest.getDockerImageTag())) {
+          artifact = artifactService.fetchLatestArtifactForArtifactStream(
+              appId, artifactStreamId, artifactStream.getSourceName());
+        } else {
+          String requestBuildNumber = isNullOrEmpty(webHookRequest.getBuildNumber())
+              ? webHookRequest.getDockerImageTag()
+              : webHookRequest.getBuildNumber();
+          artifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId, requestBuildNumber);
+          if (artifact == null) {
+            // do collection and then run
+            logger.warn("Artifact not found for webhook request " + webHookRequest);
+          }
+        }
+        workflowExecution =
+            triggerService.triggerExecutionByWebHook(appId, token, artifact, webHookRequest.getParameters());
+      } else {
+        Map<String, String> serviceBuildNumbers = new HashMap<>();
+        if (webHookRequest.getArtifacts() != null) {
+          for (Map<String, String> artifact : webHookRequest.getArtifacts()) {
+            if (artifact.get("service") != null) {
+              serviceBuildNumbers.put(artifact.get("service"), artifact.get("buildNumber"));
+            }
+          }
+        }
+        workflowExecution =
+            triggerService.triggerExecutionByWebHook(appId, token, serviceBuildNumbers, webHookRequest.getParameters());
       }
-      WorkflowExecution workflowExecution =
-          artifactStreamService.triggerStreamAction(appId, artifact, streamAction, webHookRequest.getParameters());
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
           .build();
-      // Collect artifact and then execute
     } catch (Exception ex) {
-      logger.error("Webhook call failed [%s]", token, ex);
+      logger.error("WebHook call failed [%s]", token, ex);
       return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
     }
   }

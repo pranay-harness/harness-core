@@ -38,6 +38,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.MavenVersionCompareUtil;
 import software.wings.utils.Validator;
@@ -58,6 +59,7 @@ public class ArtifactCollectionJob implements Job {
   @Inject private BuildSourceService buildSourceService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
+  @Inject private TriggerService triggerService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
@@ -92,7 +94,8 @@ public class ArtifactCollectionJob implements Job {
       artifacts.forEach(artifact -> logger.info(artifact.toString()));
       Artifact latestArtifact = artifacts.get(artifacts.size() - 1);
       if (latestArtifact.getStatus().equals(READY) || latestArtifact.getStatus().equals(APPROVED)) {
-        artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(latestArtifact);
+        triggerService.triggerExecutionPostArtifactCollectionAsync(latestArtifact);
+        // artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(latestArtifact);
       } else {
         logger.info("Artifact is not yet READY to trigger post artifact collection deployment");
       }
@@ -343,26 +346,5 @@ public class ArtifactCollectionJob implements Job {
    */
   public static int versionCompare(String str1, String str2) {
     return MavenVersionCompareUtil.compare(str1).with(str2);
-    /* String[] vals1 = str1.split("\\.");
-     String[] vals2 = str2.split("\\.");
-     int i = 0;
-     // set index to first non-equal ordinal or length of shortest version string
-     while (i < vals1.length && i < vals2.length && vals1[i].equals(vals2[i])) {
-       i++;
-     }
-     // compare first non-equal ordinal number
-     if (i < vals1.length && i < vals2.length) {
-       int diff = Integer.valueOf(vals1[i]).compareTo(Integer.valueOf(vals2[i]));
-       return Integer.signum(diff);
-     }
-     // the strings are equal or one string is a substring of the other
-     // e.g. "1.2.3" = "1.2.3" or "1.2.3" < "1.2.3.4"
-     return Integer.signum(vals1.length - vals2.length);*/
-  }
-
-  public static void main(String... args) {
-    System.out.println("Version compare " + versionCompare("1.0-2017", "1.0-2017-1"));
-
-    System.out.println("Snap shot version compare " + versionCompare("3.0-SNAPSHOT", "3.1-SNAPSHOT"));
   }
 }
