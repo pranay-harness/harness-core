@@ -344,7 +344,7 @@ CONNECTOR_TYPES:
     - name: Bamboo
       value: BAMBOO
     - name: Docker
-      value: DOCKER REGISTRY
+      value: DOCKER
     - name: Nexus
       value: NEXUS
     - name: Artifactory
