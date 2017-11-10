@@ -201,7 +201,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
-    executorService.submit(() -> queueYamlChangeSet(savedInfraMapping, ChangeType.ADD));
+    queueYamlChangeSet(savedInfraMapping, ChangeType.ADD);
     return savedInfraMapping;
   }
 
@@ -380,7 +380,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     wingsPersistence.update(savedInfraMapping, updateOperations);
 
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-    executorService.submit(() -> queueYamlChangeSet(updatedInfraMapping, ChangeType.MODIFY));
+    queueYamlChangeSet(updatedInfraMapping, ChangeType.MODIFY);
     return updatedInfraMapping;
   }
 

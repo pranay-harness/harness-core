@@ -79,6 +79,8 @@ public class ServiceVariable extends Base implements Encryptable {
 
   @SchemaIgnore @Transient private EncryptionType encryptionType;
 
+  @SchemaIgnore @Transient private String encryptedBy;
+
   @Override
   @SchemaIgnore
   public SettingVariableTypes getSettingType() {

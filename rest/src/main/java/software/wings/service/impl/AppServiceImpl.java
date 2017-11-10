@@ -134,9 +134,7 @@ public class AppServiceImpl implements AppService {
     addCronForStateMachineExecutionCleanup(application);
     addCronForContainerSync(application);
 
-    executorService.submit(()
-                               -> queueApplicationYamlChange(app.getAccountId(),
-                                   entityUpdateService.getAppGitSyncFile(application, ChangeType.ADD)));
+    queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(application, ChangeType.ADD));
 
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
@@ -326,14 +324,12 @@ public class AppServiceImpl implements AppService {
                                                    .set("description", app.getDescription());
     wingsPersistence.update(query, operations);
     Application updatedApp = get(app.getUuid());
-
-    executorService.submit(() -> {
-      if (!savedApp.getName().equals(app.getName())) {
-        queueMoveApplicationYamlChange(savedApp, updatedApp);
-      } else {
-        queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, ChangeType.MODIFY));
-      }
-    });
+    // check whether we need to push changes (through git sync)
+    if (!savedApp.getName().equals(app.getName())) {
+      queueMoveApplicationYamlChange(savedApp, updatedApp);
+    } else {
+      queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, ChangeType.MODIFY));
+    }
     return updatedApp;
   }
 
@@ -395,9 +391,9 @@ public class AppServiceImpl implements AppService {
       deleteCronForStateMachineExecutionCleanup(appId);
       deleteCronForContainerSync(appId);
 
-      executorService.submit(()
-                                 -> queueApplicationYamlChange(application.getAccountId(),
-                                     entityUpdateService.getAppGitSyncFile(application, ChangeType.DELETE)));
+      // check whether we need to push changes (through git sync)
+      queueApplicationYamlChange(
+          application.getAccountId(), entityUpdateService.getAppGitSyncFile(application, ChangeType.DELETE));
     }
   }
 

@@ -55,6 +55,7 @@ import javax.inject.Inject;
  * Created by rsingh on 10/30/17.
  */
 public class SecretManagerImpl implements SecretManager {
+  public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
   protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
   @Inject private WingsPersistence wingsPersistence;
@@ -240,7 +241,8 @@ public class SecretManagerImpl implements SecretManager {
       EncryptedData data = query.next();
       if (data.getType() != SettingVariableTypes.KMS) {
         for (String parentId : data.getParentIds()) {
-          UuidAware parent = fetchParent(data.getType(), accountId, parentId, true, data.getEncryptionType());
+          UuidAware parent =
+              fetchParent(data.getType(), accountId, parentId, data.getKmsId(), data.getEncryptionType());
           if (parent == null) {
             logger.error("No parent found for {}", data);
             continue;
@@ -417,7 +419,8 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private UuidAware fetchParent(
-      SettingVariableTypes type, String accountId, String parentId, boolean maskSecret, EncryptionType encryptionType) {
+      SettingVariableTypes type, String accountId, String parentId, String kmsId, EncryptionType encryptionType) {
+    String encryptedBy = getSecretManagerName(type, parentId, kmsId, encryptionType);
     switch (type) {
       case KMS:
         return kmsService.getSecretConfig(accountId);
@@ -429,9 +432,7 @@ public class SecretManagerImpl implements SecretManager {
                                                              .fetch(new FindOptions().limit(1));
         if (serviceVaribaleQuery.hasNext()) {
           ServiceVariable serviceVariable = serviceVaribaleQuery.next();
-          if (maskSecret) {
-            serviceVariable.setValue(SECRET_MASK.toCharArray());
-          }
+          serviceVariable.setValue(SECRET_MASK.toCharArray());
           if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
             ServiceTemplate serviceTemplate =
                 wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
@@ -439,6 +440,7 @@ public class SecretManagerImpl implements SecretManager {
             serviceVariable.setServiceId(serviceTemplate.getServiceId());
           }
           serviceVariable.setEncryptionType(encryptionType);
+          serviceVariable.setEncryptedBy(encryptedBy);
           return serviceVariable;
         }
         return null;
@@ -456,6 +458,7 @@ public class SecretManagerImpl implements SecretManager {
             configFile.setServiceId(serviceTemplate.getServiceId());
           }
           configFile.setEncryptionType(encryptionType);
+          configFile.setEncryptedBy(encryptedBy);
           return configFile;
         }
         return null;
@@ -468,6 +471,7 @@ public class SecretManagerImpl implements SecretManager {
         if (vaultConfigIterator.hasNext()) {
           VaultConfig vaultConfig = vaultConfigIterator.next();
           vaultConfig.setEncryptionType(encryptionType);
+          vaultConfig.setEncryptedBy(encryptedBy);
           return vaultConfig;
         }
         return null;
@@ -480,9 +484,34 @@ public class SecretManagerImpl implements SecretManager {
         if (settingAttributeQuery.hasNext()) {
           SettingAttribute settingAttribute = settingAttributeQuery.next();
           settingAttribute.setEncryptionType(encryptionType);
+          settingAttribute.setEncryptedBy(encryptedBy);
           return settingAttribute;
         }
         return null;
+    }
+  }
+
+  private String getSecretManagerName(
+      SettingVariableTypes type, String parentId, String kmsId, EncryptionType encryptionType) {
+    if (StringUtils.isBlank(kmsId)) {
+      return HARNESS_DEFAULT_SECRET_MANAGER;
+    } else {
+      switch (encryptionType) {
+        case KMS:
+          KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsId);
+          Preconditions.checkNotNull(kmsConfig,
+              "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
+                  + encryptionType);
+          return kmsConfig.getName();
+        case VAULT:
+          VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, kmsId);
+          Preconditions.checkNotNull(vaultConfig,
+              "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
+                  + encryptionType);
+          return vaultConfig.getName();
+        default:
+          throw new IllegalArgumentException("Invalid type: " + type);
+      }
     }
   }
 }

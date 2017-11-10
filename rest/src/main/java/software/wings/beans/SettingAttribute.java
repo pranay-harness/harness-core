@@ -62,6 +62,8 @@ public class SettingAttribute extends Base {
 
   @SchemaIgnore @Transient private EncryptionType encryptionType;
 
+  @SchemaIgnore @Transient private String encryptedBy;
+
   public enum Category {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP)),
 

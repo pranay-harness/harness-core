@@ -41,7 +41,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -58,7 +57,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;
   @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private ExecutorService executorService;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -99,16 +97,17 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return null;
     }
 
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(newServiceVariable.getAppId());
-      Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.ADD));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    String accountId = appService.getAccountIdByAppId(newServiceVariable.getAppId());
+    Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFile for service
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.ADD));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
 
     return newServiceVariable;
   }
@@ -144,16 +143,19 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return null;
     }
 
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(updatedServiceVariable.getAppId());
-      Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.MODIFY));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(updatedServiceVariable.getAppId());
+    Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFile for service
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
 
     return updatedServiceVariable;
   }
@@ -186,15 +188,20 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         wingsPersistence.createQuery(ServiceVariable.class).field("appId").equal(appId).field(ID_KEY).equal(settingId));
 
     if (deleted) {
+      //-------------------
+      // check whether we need to push changes (through git sync)
       String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
       Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
       YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
       if (ygs != null) {
         List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for service
         changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.DELETE));
 
         yamlChangeSetService.queueChangeSet(ygs, changeSet);
       }
+      //-------------------
     }
   }
 

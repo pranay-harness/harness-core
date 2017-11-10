@@ -1209,6 +1209,7 @@ public class KmsTest extends WingsBaseTest {
       wingsPersistence.save(settingAttribute);
       appDynamicsConfig.setPassword(null);
       settingAttribute.setEncryptionType(EncryptionType.KMS);
+      settingAttribute.setEncryptedBy(kmsConfig.getName());
       encryptedEntities.add(settingAttribute);
     }
 
