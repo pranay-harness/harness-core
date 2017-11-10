@@ -72,6 +72,7 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
+import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -165,8 +166,8 @@ public class WingsApplication extends Application<MainConfiguration> {
             bind(MetricRegistry.class).toInstance(metricRegistry);
           }
         },
-        new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new ExecutorModule(),
-        new QueueModule(databaseModule.getPrimaryDatastore()));
+        new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new YamlModule(),
+        new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
 
     Caching.getCachingProvider().getCacheManager().createCache(
         DELEGATE_SYNC_CACHE, new Configuration<String, DelegateTask>() {
@@ -337,6 +338,8 @@ public class WingsApplication extends Application<MainConfiguration> {
             injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30000L, TimeUnit.MILLISECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 5000L, TimeUnit.MILLISECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
+        .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2000L, TimeUnit.MILLISECONDS);
   }
 
   private void registerJerseyProviders(Environment environment) {

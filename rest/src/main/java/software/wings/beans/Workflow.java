@@ -8,7 +8,6 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.yaml.YamlSerialize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +20,14 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "workflows", noClassnameStored = true)
 public class Workflow extends Base {
-  @YamlSerialize @NotNull private String name;
-  @YamlSerialize private String description;
+  @NotNull private String name;
+  private String description;
 
-  @YamlSerialize private WorkflowType workflowType;
+  private WorkflowType workflowType;
 
   private String envId;
 
-  @YamlSerialize private Integer defaultVersion;
+  private Integer defaultVersion;
 
   private boolean templatized;
 
@@ -194,6 +193,29 @@ public class Workflow extends Base {
         .withTemplatized(isTemplatized())
         .withTemplateExpressions(getTemplateExpressions())
         .build();
+  }
+
+  public Workflow.WorkflowBuilder toBuilder() {
+    return aWorkflow()
+        .withAppId(getAppId())
+        .withCreatedAt(getCreatedAt())
+        .withCreatedBy(getCreatedBy())
+        .withDefaultVersion(getDefaultVersion())
+        .withDescription(getDescription())
+        .withEnvId(getEnvId())
+        .withInfraMappingId(getInfraMappingId())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withName(getName())
+        .withNotes(getNotes())
+        .withOrchestrationWorkflow(getOrchestrationWorkflow())
+        .withServiceId(getServiceId())
+        .withServices(getServices())
+        .withTemplatized(isTemplatized())
+        .withTemplateExpressions(getTemplateExpressions())
+        .withUuid(getUuid())
+        .withWorkflowType(getWorkflowType())
+        .withWorkflowExecutions(getWorkflowExecutions());
   }
 
   public static final class WorkflowBuilder {

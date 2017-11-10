@@ -1,10 +1,8 @@
 package software.wings.yaml.command;
 
-import software.wings.yaml.YamlSerialize;
-
 public class CommandRefCommandUnitYaml extends CommandUnitYaml {
-  @YamlSerialize public String referenceId;
-  @YamlSerialize public String commandType;
+  public String referenceId;
+  public String commandType;
 
   public CommandRefCommandUnitYaml() {
     super();

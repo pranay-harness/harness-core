@@ -53,6 +53,7 @@ import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
 import software.wings.app.WingsModule;
+import software.wings.app.YamlModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
@@ -214,7 +215,7 @@ public class WingsRule implements MethodRule {
           }
         },
         new LicenseModule(), new ValidationModule(validatorFactory),
-        new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
+        new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration), new YamlModule(),
         new ExecutorModule(executorService), new WingsTestModule());
 
     if (fakeMongo) {

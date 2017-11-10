@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
-import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
+import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;

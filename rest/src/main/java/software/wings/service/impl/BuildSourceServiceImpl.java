@@ -47,7 +47,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private ServiceLocator serviceLocator;
+  @Inject private ServiceClassLocator serviceLocator;
   @Inject private SecretManager secretManager;
 
   @Override

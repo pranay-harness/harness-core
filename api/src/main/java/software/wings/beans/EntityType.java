@@ -86,5 +86,9 @@ public enum EntityType {
   INFRASTRUCTURE_MAPPING, /**
                            * User entity type
                            */
-  USER
+  USER,
+  /**
+   * Artifact Stream entity type
+   */
+  ARTIFACT_STREAM
 }

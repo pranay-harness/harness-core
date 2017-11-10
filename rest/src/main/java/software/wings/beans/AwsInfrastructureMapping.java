@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -10,6 +10,8 @@ import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
@@ -17,8 +19,11 @@ import software.wings.exception.WingsException;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -43,7 +48,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
 
-  @Attributes(title = "Display Name") private String customName;
+  @Deprecated @SchemaIgnore private String customName;
 
   @Attributes(title = "Use Public DNS for SSH connection") private boolean usePublicDns;
 
@@ -62,6 +67,211 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    */
   public AwsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_SSH.name());
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends InfrastructureMapping.Yaml {
+    // maps to restrictionType
+    private String restrictions;
+    // maps to restrictionExpression
+    private String expression;
+    private String region = "us-east-1";
+    // maps to hostConnectionAttrs
+    private String connectionType;
+    private String loadBalancer;
+    private boolean usePublicDns;
+    private boolean provisionInstances;
+    private String autoScalingGroup;
+    private int desiredCapacity;
+
+    // These four fields map to AwsInstanceFilter
+    private List<String> vpcs = new ArrayList<>();
+    private List<String> subnetIds = new ArrayList<>();
+    private List<String> securityGroupIds = new ArrayList<>();
+    private List<NameValuePair.Yaml> tags = new ArrayList<>();
+
+    public static final class Builder {
+      private String computeProviderType;
+      // maps to restrictionType
+      private String restrictions;
+      private String serviceName;
+      // maps to restrictionExpression
+      private String expression;
+      private String infraMappingType;
+      private String type;
+      private String region = "us-east-1";
+      private String deploymentType;
+      private String computeProviderName;
+      // maps to hostConnectionAttrs
+      private String connectionType;
+      private String name;
+      private String loadBalancer;
+      private boolean usePublicDns;
+      private boolean provisionInstances;
+      private String autoScalingGroup;
+      private int desiredCapacity;
+      // These four fields map to AwsInstanceFilter
+      private List<String> vpcs = new ArrayList<>();
+      private List<String> subnetIds = new ArrayList<>();
+      private List<String> securityGroupIds = new ArrayList<>();
+      private List<NameValuePair.Yaml> tags = new ArrayList<>();
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      public Builder withRestrictions(String restrictions) {
+        this.restrictions = restrictions;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      public Builder withExpression(String expression) {
+        this.expression = expression;
+        return this;
+      }
+
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withRegion(String region) {
+        this.region = region;
+        return this;
+      }
+
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withConnectionType(String connectionType) {
+        this.connectionType = connectionType;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withLoadBalancer(String loadBalancer) {
+        this.loadBalancer = loadBalancer;
+        return this;
+      }
+
+      public Builder withUsePublicDns(boolean usePublicDns) {
+        this.usePublicDns = usePublicDns;
+        return this;
+      }
+
+      public Builder withProvisionInstances(boolean provisionInstances) {
+        this.provisionInstances = provisionInstances;
+        return this;
+      }
+
+      public Builder withAutoScalingGroup(String autoScalingGroup) {
+        this.autoScalingGroup = autoScalingGroup;
+        return this;
+      }
+
+      public Builder withDesiredCapacity(int desiredCapacity) {
+        this.desiredCapacity = desiredCapacity;
+        return this;
+      }
+
+      public Builder withVpcs(List<String> vpcs) {
+        this.vpcs = vpcs;
+        return this;
+      }
+
+      public Builder withSubnetIds(List<String> subnetIds) {
+        this.subnetIds = subnetIds;
+        return this;
+      }
+
+      public Builder withSecurityGroupIds(List<String> securityGroupIds) {
+        this.securityGroupIds = securityGroupIds;
+        return this;
+      }
+
+      public Builder withTags(List<NameValuePair.Yaml> tags) {
+        this.tags = tags;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withComputeProviderType(computeProviderType)
+            .withRestrictions(restrictions)
+            .withServiceName(serviceName)
+            .withExpression(expression)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withRegion(region)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withConnectionType(connectionType)
+            .withName(name)
+            .withLoadBalancer(loadBalancer)
+            .withUsePublicDns(usePublicDns)
+            .withProvisionInstances(provisionInstances)
+            .withAutoScalingGroup(autoScalingGroup)
+            .withDesiredCapacity(desiredCapacity)
+            .withVpcs(vpcs)
+            .withSubnetIds(subnetIds)
+            .withSecurityGroupIds(securityGroupIds)
+            .withTags(tags);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setRestrictions(restrictions);
+        yaml.setServiceName(serviceName);
+        yaml.setExpression(expression);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setRegion(region);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setConnectionType(connectionType);
+        yaml.setName(name);
+        yaml.setLoadBalancer(loadBalancer);
+        yaml.setUsePublicDns(usePublicDns);
+        yaml.setProvisionInstances(provisionInstances);
+        yaml.setAutoScalingGroup(autoScalingGroup);
+        yaml.setDesiredCapacity(desiredCapacity);
+        yaml.setVpcs(vpcs);
+        yaml.setSubnetIds(subnetIds);
+        yaml.setSecurityGroupIds(securityGroupIds);
+        yaml.setTags(tags);
+        return yaml;
+      }
+    }
   }
 
   public void validate() {
@@ -142,10 +352,10 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   @SchemaIgnore
   @Override
-  public String getDisplayName() {
-    return String.format("%s%s (AWS/SSH) %s", isNotEmpty(customName) ? (customName + " - ") : "",
+  public String getDefaultName() {
+    return Util.normalize(String.format("%s%s (AWS_SSH) %s", Util.isNotEmpty(customName) ? (customName + " - ") : "",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getRegion());
+        this.getRegion()));
   }
 
   /**
@@ -235,6 +445,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.autoScalingGroupName = autoScalingGroupName;
   }
 
+  @SchemaIgnore
   public String getCustomName() {
     return customName;
   }
@@ -328,6 +539,40 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
+  /**
+   * Clone and return builder.
+   * @return the builder
+   */
+  public Builder deepClone() {
+    return anAwsInfrastructureMapping()
+        .withRestrictionType(getRestrictionType())
+        .withRestrictionExpression(getRestrictionExpression())
+        .withRegion(getRegion())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withHostConnectionAttrs(getHostConnectionAttrs())
+        .withCreatedBy(getCreatedBy())
+        .withLoadBalancerId(getLoadBalancerId())
+        .withCreatedAt(getCreatedAt())
+        .withLoadBalancerName(getLoadBalancerName())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withComputeProviderSettingId(getComputeProviderSettingId())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withEnvId(getEnvId())
+        .withUsePublicDns(isUsePublicDns())
+        .withServiceTemplateId(getServiceTemplateId())
+        .withProvisionInstances(isProvisionInstances())
+        .withServiceId(getServiceId())
+        .withComputeProviderType(getComputeProviderType())
+        .withAwsInstanceFilter(getAwsInstanceFilter())
+        .withInfraMappingType(getInfraMappingType())
+        .withAutoScalingGroupName(getAutoScalingGroupName())
+        .withDeploymentType(getDeploymentType())
+        .withComputeProviderName(getComputeProviderName())
+        .withName(getName())
+        .withSetDesiredCapacity(isSetDesiredCapacity());
+  }
+
   public static final class Builder {
     protected String appId;
     private String restrictionType;
@@ -353,7 +598,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String autoScalingGroupName;
     private String deploymentType;
     private String computeProviderName;
-    private String displayName;
+    private String name;
     private boolean setDesiredCapacity;
     private int desiredCapacity;
 
@@ -483,8 +728,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
+    public Builder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -524,7 +769,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withAutoScalingGroupName(autoScalingGroupName)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withDisplayName(displayName)
+          .withName(name)
           .withSetDesiredCapacity(setDesiredCapacity);
     }
 
@@ -553,7 +798,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setAutoScalingGroupName(autoScalingGroupName);
       awsInfrastructureMapping.setDeploymentType(deploymentType);
       awsInfrastructureMapping.setComputeProviderName(computeProviderName);
-      awsInfrastructureMapping.setDisplayName(displayName);
+      awsInfrastructureMapping.setName(name);
       awsInfrastructureMapping.setSetDesiredCapacity(setDesiredCapacity);
       awsInfrastructureMapping.setDesiredCapacity(desiredCapacity);
       return awsInfrastructureMapping;

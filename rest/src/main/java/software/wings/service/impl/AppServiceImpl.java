@@ -34,6 +34,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.stats.AppKeyStatistics;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -58,8 +60,11 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -103,8 +108,10 @@ public class AppServiceImpl implements AppService {
   @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private EntityUpdateService entityUpdateService;
   @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -127,25 +134,19 @@ public class AppServiceImpl implements AppService {
     addCronForStateMachineExecutionCleanup(application);
     addCronForContainerSync(application);
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
-
-    // see if we need to perform any Git Sync operations for the account (setup)
-    Account account = accountService.get(app.getAccountId());
-    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
-
-    // see if we need to perform any Git Sync operations for the app
-    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_CREATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
+    queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(application, ChangeType.ADD));
 
     return get(application.getUuid(), INCOMPLETE, true, 0);
+  }
+
+  private void queueApplicationYamlChange(String accountId, GitFileChange gitFileChange) {
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      if (gitFileChange.getChangeType().equals("DELETE")) {
+        gitFileChange.setFilePath(null);
+      }
+      yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(gitFileChange));
+    }
   }
 
   List<Role> createDefaultRoles(Application app) {
@@ -297,36 +298,61 @@ public class AppServiceImpl implements AppService {
     return application;
   }
 
+  @Override
+  public Application getAppByName(String accountId, String appName) {
+    Application application = wingsPersistence.createQuery(Application.class)
+                                  .field("accountId")
+                                  .equal(accountId)
+                                  .field("name")
+                                  .equal(appName)
+                                  .get();
+    if (application == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Application - '" + appName + "' doesn't exist");
+    }
+    return application;
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#update(software.wings.beans.Application)
    */
   @Override
   public Application update(Application app) {
+    Application savedApp = get(app.getUuid());
     Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
     UpdateOperations<Application> operations = wingsPersistence.createUpdateOperations(Application.class)
                                                    .set("name", app.getName())
                                                    .set("description", app.getDescription());
     wingsPersistence.update(query, operations);
+    Application updatedApp = get(app.getUuid());
+    // check whether we need to push changes (through git sync)
+    if (!savedApp.getName().equals(app.getName())) {
+      queueMoveApplicationYamlChange(savedApp, updatedApp);
+    } else {
+      queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, ChangeType.MODIFY));
+    }
+    return updatedApp;
+  }
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+  private void queueMoveApplicationYamlChange(Application oldApp, Application newApp) {
+    String accountId = newApp.getAccountId();
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-    // see if we need to perform any Git Sync operations for the account (setup)
-    Account account = accountService.get(app.getAccountId());
-    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
+      String oldPath = yamlDirectoryService.getRootPathByApp(oldApp);
 
-    // see if we need to perform any Git Sync operations for the app
-    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
+      String newPath = yamlDirectoryService.getRootPathByApp(newApp);
 
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
-
-    return wingsPersistence.get(Application.class, app.getUuid());
+      changeSet.add(entityUpdateService.getAppGitSyncFile(oldApp, ChangeType.DELETE));
+      changeSet.add(GitFileChange.Builder.aGitFileChange()
+                        .withAccountId(accountId)
+                        .withChangeType(ChangeType.RENAME)
+                        .withFilePath(newPath)
+                        .withOldFilePath(oldPath)
+                        .build());
+      changeSet.add(entityUpdateService.getAppGitSyncFile(newApp, ChangeType.ADD));
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
   }
 
   /* (non-Javadoc)
@@ -340,16 +366,16 @@ public class AppServiceImpl implements AppService {
     }
 
     boolean deleted = wingsPersistence.delete(Application.class, appId);
+    application.setEntityYamlPath(yamlDirectoryService.getRootPathByApp(application));
     if (deleted) {
       executorService.submit(() -> {
         notificationService.deleteByApplication(appId);
-        environmentService.deleteByApp(appId);
-        artifactStreamService.deleteByApplication(appId);
+        environmentService.deleteByApp(application);
         artifactService.deleteByApplication(appId);
         workflowService.deleteWorkflowByApplication(appId);
         workflowService.deleteStateMachinesByApplication(appId);
         pipelineService.deletePipelineByApplication(appId);
-        serviceResourceService.deleteByApp(appId);
+        serviceResourceService.deleteByApp(application);
         instanceService.deleteByApp(appId);
         alertService.deleteByApp(appId);
         triggerService.deleteByApp(appId);
@@ -364,6 +390,10 @@ public class AppServiceImpl implements AppService {
       });
       deleteCronForStateMachineExecutionCleanup(appId);
       deleteCronForContainerSync(appId);
+
+      // check whether we need to push changes (through git sync)
+      queueApplicationYamlChange(
+          application.getAccountId(), entityUpdateService.getAppGitSyncFile(application, ChangeType.DELETE));
     }
   }
 
@@ -429,5 +459,20 @@ public class AppServiceImpl implements AppService {
       application.setSetup(setupService.getApplicationSetupStatus(application));
     }
     return application;
+  }
+
+  @Override
+  public String getAccountIdByAppId(String appId) {
+    if (appId == null || appId.isEmpty()) {
+      return null;
+    }
+
+    Application app = get(appId);
+
+    if (app == null) {
+      return null;
+    }
+
+    return app.getAccountId();
   }
 }

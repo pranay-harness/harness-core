@@ -1,17 +1,16 @@
 package software.wings.service.intfc.yaml;
 
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.yaml.gitSync.EntityUpdateEvent;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 
 /**
  * Entity Update Service.
@@ -19,25 +18,23 @@ import software.wings.yaml.gitSync.EntityUpdateListEvent;
  * @author bsollish
  */
 public interface EntityUpdateService {
-  public void queueEntityUpdateList(EntityUpdateListEvent entityUpdateListEvent);
+  GitFileChange getAppGitSyncFile(Application app, ChangeType changeType);
 
-  public EntityUpdateEvent setupListUpdate(Account account, SourceType sourceType);
+  GitFileChange getServiceGitSyncFile(String accountId, Service service, ChangeType changeType);
 
-  // public EntityUpdateEvent folderListUpdate(String path, Account account, SourceType sourceType);
+  GitFileChange getCommandGitSyncFile(
+      String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType);
 
-  public EntityUpdateEvent appListUpdate(Application app, SourceType sourceType);
+  GitFileChange getEnvironmentGitSyncFile(String accountId, Environment environment, ChangeType changeType);
 
-  public EntityUpdateEvent serviceListUpdate(Service service, SourceType sourceType);
+  GitFileChange getInfraMappingGitSyncFile(String accountId, InfrastructureMapping infraMapping, ChangeType changeType);
 
-  public EntityUpdateEvent serviceCommandListUpdate(ServiceCommand serviceCommand, SourceType sourceType);
+  GitFileChange getWorkflowGitSyncFile(String accountId, Workflow workflow, ChangeType changeType);
 
-  public EntityUpdateEvent environmentListUpdate(Environment environment, SourceType sourceType);
+  GitFileChange getPipelineGitSyncFile(String accountId, Pipeline pipeline, ChangeType changeType);
 
-  public EntityUpdateEvent workflowListUpdate(Workflow workflow, SourceType sourceType);
+  GitFileChange getArtifactStreamGitSyncFile(String accountId, ArtifactStream ArtifactStream, ChangeType changeType);
 
-  public EntityUpdateEvent pipelineListUpdate(Pipeline pipeline, SourceType sourceType);
-
-  public EntityUpdateEvent triggerListUpdate(ArtifactStream artifactStream, SourceType sourceType);
-
-  public EntityUpdateEvent settingAttributeListUpdate(SettingAttribute settingAttribute, SourceType sourceType);
+  GitFileChange getSettingAttributeGitSyncFile(
+      String accountId, SettingAttribute settingAttribute, ChangeType changeType);
 }

@@ -3,11 +3,10 @@ package software.wings.yaml.settingAttribute;
 import lombok.Data;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.yaml.YamlSerialize;
 
 @Data
 public class GcpYaml extends SettingAttributeYaml {
-  @YamlSerialize private char[] serviceAccountKeyFileContent;
+  private String serviceAccountKeyFileContent;
 
   public GcpYaml() {
     super();
@@ -17,6 +16,7 @@ public class GcpYaml extends SettingAttributeYaml {
     super(settingAttribute);
 
     GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
-    this.serviceAccountKeyFileContent = gcpConfig.getServiceAccountKeyFileContent();
+    this.serviceAccountKeyFileContent = new String("dummy_config");
+    // new String(gcpConfig.getServiceAccountKeyFileContent());
   }
 }

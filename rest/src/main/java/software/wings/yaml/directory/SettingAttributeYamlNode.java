@@ -1,6 +1,6 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlVersion.Type;
 
 public class SettingAttributeYamlNode extends YamlNode {
@@ -10,9 +10,9 @@ public class SettingAttributeYamlNode extends YamlNode {
     super();
   }
 
-  public SettingAttributeYamlNode(String uuid, String settingVariableType, String name, Class theClass,
-      DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
-    super(uuid, name, theClass, directoryPath, yamlGitSyncService, Type.SETTING);
+  public SettingAttributeYamlNode(String accountId, String uuid, String settingVariableType, String name,
+      Class theClass, DirectoryPath directoryPath, YamlGitService yamlGitSyncService) {
+    super(accountId, uuid, name, theClass, directoryPath, yamlGitSyncService, Type.SETTING);
     this.settingVariableType = settingVariableType;
   }
 

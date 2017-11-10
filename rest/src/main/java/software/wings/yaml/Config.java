@@ -1,7 +1,7 @@
 package software.wings.yaml;
 
 public class Config {
-  @YamlSerialize private ConfigFromYaml config;
+  private ConfigFromYaml config;
 
   public ConfigFromYaml getConfig() {
     return config;

@@ -25,6 +25,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -70,6 +71,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.StaticInfrastructureProvider;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
@@ -99,6 +101,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SettingsService settingsService;
+  @Mock private AppService appService;
   @Mock private HostService hostService;
 
   @Mock private Query<InfrastructureMapping> query;
@@ -144,6 +147,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   public void shouldSave() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
+            .withName("NAME")
             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
             .withComputeProviderSettingId(SETTING_ID)
             .withAppId(APP_ID)
@@ -157,6 +161,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     PhysicalInfrastructureMapping savedPhysicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
+            .withName("NAME")
             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
             .withComputeProviderSettingId(SETTING_ID)
             .withUuid(WingsTestConstants.INFRA_MAPPING_ID)
@@ -169,7 +174,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(singletonList(HOST_NAME))
             .build();
-
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(wingsPersistence.saveAndGet(InfrastructureMapping.class, physicalInfrastructureMapping))
         .thenReturn(savedPhysicalInfrastructureMapping);
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
@@ -234,7 +239,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withServiceTemplateId(TEMPLATE_ID)
                                                      .withHostNames(singletonList("HOST_NAME_1"))
                                                      .build();
-
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID)).thenReturn(savedInfra);
     when(settingsService.get(COMPUTE_PROVIDER_ID))
         .thenReturn(

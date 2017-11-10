@@ -27,7 +27,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AppService;
@@ -35,9 +34,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import javax.inject.Inject;
@@ -79,7 +76,6 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
       waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getAppId(), artifact.getUuid()), waitId);
       delegateService.queueTask(delegateTask);
-
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);

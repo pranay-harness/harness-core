@@ -40,6 +40,8 @@ public interface PipelineService {
    */
   Pipeline readPipeline(String appId, String pipelineId, boolean withServices);
 
+  public Pipeline getPipelineByName(String accountId, String pipelineName);
+
   /**
    * Create pipeline pipeline.
    *

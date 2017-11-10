@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -38,11 +39,11 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WebHookRequest;
@@ -54,9 +55,12 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -74,6 +78,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
@@ -85,8 +90,10 @@ import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -122,6 +129,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;
   @Inject private TriggerService triggerService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -137,6 +145,22 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
+  public ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName) {
+    ArtifactStream artifactStream = wingsPersistence.createQuery(ArtifactStream.class)
+                                        .field("appId")
+                                        .equal(appId)
+                                        .field("serviceId")
+                                        .equal(serviceId)
+                                        .field("sourceName")
+                                        .equal(artifactStreamName)
+                                        .get();
+    if (artifactStream == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "ArtifactStream - '" + artifactStreamName + "' doesn't exist");
+    }
+    return artifactStream;
+  }
+
+  @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
     if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
@@ -148,6 +172,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     String id = wingsPersistence.save(artifactStream);
     addCronForAutoArtifactCollection(artifactStream);
+
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for trigger (artifact stream)
+      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
 
     return get(artifactStream.getAppId(), id);
   }
@@ -190,19 +226,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
     }
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-    // see if we need to perform any Git Sync operations for the trigger (artifactStream)
-    eule.addEntityUpdateEvent(entityUpdateService.triggerListUpdate(artifactStream, SourceType.ENTITY_UPDATE));
+      // add GitSyncFiles for trigger (artifact stream)
+      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
 
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(artifactStream.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
     //-------------------
 
     return artifactStream;
@@ -220,6 +254,20 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
       artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(streamAction.getWorkflowId(), artifactStreamId));
+
+      //-------------------
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for trigger (artifact stream)
+        changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.DELETE));
+
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+      //-------------------
     }
     return deleted;
   }
@@ -421,6 +469,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     webHookToken.setPayload(new Gson().toJson(payload));
     return webHookToken;
+  }
+
+  @Override
+  public List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId) {
+    PageRequest pageRequest = Builder.aPageRequest()
+                                  .addFilter("appId", Operator.EQ, appId)
+                                  .addFilter("serviceId", Operator.EQ, serviceId)
+                                  .addOrder("createdAt", OrderType.ASC)
+                                  .build();
+    PageResponse pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
+    return pageResponse.getResponse();
   }
 
   @Override

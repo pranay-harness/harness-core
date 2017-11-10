@@ -22,7 +22,6 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -31,6 +30,8 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -43,11 +44,13 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 import software.wings.waitnotify.WaitNotifyEngine;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -74,6 +77,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -152,22 +156,21 @@ public class PipelineServiceImpl implements PipelineService {
                                 .equal(pipeline.getUuid()),
         ops);
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
-
-    // see if we need to perform any Git Sync operations for the pipeline
-    eule.addEntityUpdateEvent(entityUpdateService.pipelineListUpdate(pipeline, SourceType.ENTITY_UPDATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(pipeline.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
-
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
+
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for pipeline
+      changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
+
     return pipeline;
   }
 
@@ -200,6 +203,20 @@ public class PipelineServiceImpl implements PipelineService {
     }
     if (deleted) {
       executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, pipelineId));
+
+      //-------------------
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for pipeline
+        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.DELETE));
+
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+      //-------------------
     }
     return deleted;
   }
@@ -231,6 +248,15 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     if (withServices) {
       populateAssociatedWorkflowServices(pipeline);
+    }
+    return pipeline;
+  }
+
+  @Override
+  public Pipeline getPipelineByName(String accountId, String pipelineName) {
+    Pipeline pipeline = wingsPersistence.createQuery(Pipeline.class).field("name").equal(pipelineName).get();
+    if (pipeline == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Pipeline - '" + pipelineName + "' doesn't exist");
     }
     return pipeline;
   }
@@ -344,6 +370,21 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(null, null, null);
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
+
+    //-------------------
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for pipeline
+      changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.ADD));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
+
     return pipeline;
   }
 

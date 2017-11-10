@@ -1040,6 +1040,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withName("NAME")
                         .withServiceId(SERVICE_ID_CHANGED)
                         .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
@@ -1214,6 +1215,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withName("NAME")
                         .withServiceId(SERVICE_ID_CHANGED)
                         .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
@@ -1385,6 +1387,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withName("NAME")
                         .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
@@ -1398,6 +1401,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withName("NAME")
                         .withServiceId(SERVICE_ID_CHANGED)
                         .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())

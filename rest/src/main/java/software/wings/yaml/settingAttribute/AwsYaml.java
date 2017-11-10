@@ -4,11 +4,10 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.yaml.YamlSerialize;
 
 public class AwsYaml extends SettingAttributeYaml {
-  @YamlSerialize private String accessKey;
-  @YamlSerialize private String secretKey = ENCRYPTED_VALUE_STR;
+  private String accessKey;
+  private String secretKey = ENCRYPTED_VALUE_STR;
 
   public AwsYaml() {
     super();

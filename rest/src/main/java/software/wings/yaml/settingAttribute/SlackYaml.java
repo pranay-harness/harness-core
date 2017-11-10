@@ -2,10 +2,9 @@ package software.wings.yaml.settingAttribute;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
-import software.wings.yaml.YamlSerialize;
 
 public class SlackYaml extends SettingAttributeYaml {
-  @YamlSerialize private String outgoingWebhookUrl;
+  private String outgoingWebhookUrl;
 
   public SlackYaml() {
     super();

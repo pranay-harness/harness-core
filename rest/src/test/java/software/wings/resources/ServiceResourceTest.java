@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -139,7 +140,8 @@ public class ServiceResourceTest {
    */
   @Test
   public void shouldAddCommand() {
-    when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class))).thenReturn(aSERVICE);
+    when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), anyBoolean()))
+        .thenReturn(aSERVICE);
 
     RestResponse<Service> restResponse = RESOURCES.client()
                                              .target(format("/services/%s/commands?appId=%s", SERVICE_ID, APP_ID))
@@ -147,7 +149,7 @@ public class ServiceResourceTest {
                                              .post(Entity.entity(aServiceCommand().build(), APPLICATION_JSON),
                                                  new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(RESOURCE_SERVICE).addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class));
+    verify(RESOURCE_SERVICE).addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), anyBoolean());
   }
 
   /**

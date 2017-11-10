@@ -1,13 +1,18 @@
 package software.wings.beans;
 
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
+
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Util;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +37,116 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    */
   public PhysicalInfrastructureMapping() {
     super(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name());
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends InfrastructureMapping.Yaml {
+    // maps to hostConnectionAttrs
+    // This would either be a username/password / ssh key id
+    private String connection;
+    private List<String> hostNames;
+    private String loadBalancer;
+
+    public static final class Builder {
+      private String computeProviderType;
+      // maps to hostConnectionAttrs
+      // This would either be a username/password / ssh key id
+      private String connection;
+      private String serviceName;
+      private List<String> hostNames;
+      private String infraMappingType;
+      private String type;
+      private String loadBalancer;
+      private String deploymentType;
+      private String computeProviderName;
+      private String name;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      public Builder withConnection(String connection) {
+        this.connection = connection;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      public Builder withHostNames(List<String> hostNames) {
+        this.hostNames = hostNames;
+        return this;
+      }
+
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withLoadBalancer(String loadBalancer) {
+        this.loadBalancer = loadBalancer;
+        return this;
+      }
+
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withComputeProviderType(computeProviderType)
+            .withConnection(connection)
+            .withServiceName(serviceName)
+            .withHostNames(hostNames)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withLoadBalancer(loadBalancer)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withName(name);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setConnection(connection);
+        yaml.setServiceName(serviceName);
+        yaml.setHostNames(hostNames);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setLoadBalancer(loadBalancer);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setName(name);
+        return yaml;
+      }
+    }
   }
 
   /**
@@ -59,9 +174,9 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
 
   @SchemaIgnore
   @Override
-  public String getDisplayName() {
-    return String.format(
-        "%s (Data Center/SSH)", Optional.ofNullable(this.getComputeProviderName()).orElse("data-center"));
+  public String getDefaultName() {
+    return Util.normalize(String.format(
+        "%s (Data Center_SSH)", Optional.ofNullable(this.getComputeProviderName()).orElse("data-center")));
   }
 
   @Override
@@ -119,6 +234,27 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     this.loadBalancerName = loadBalancerName;
   }
 
+  public Builder deepClone() {
+    return aPhysicalInfrastructureMapping()
+        .withHostConnectionAttrs(getHostConnectionAttrs())
+        .withHostNames(getHostNames())
+        .withLoadBalancerId(getLoadBalancerId())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withComputeProviderSettingId(getComputeProviderSettingId())
+        .withEnvId(getEnvId())
+        .withServiceTemplateId(getServiceTemplateId())
+        .withServiceId(getServiceId())
+        .withComputeProviderType(getComputeProviderType())
+        .withDeploymentType(getDeploymentType())
+        .withComputeProviderName(getComputeProviderName())
+        .withName(getName());
+  }
+
   /**
    * The type Builder.
    */
@@ -139,7 +275,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderType;
     private String deploymentType;
     private String computeProviderName;
-    private String displayName;
+    private String name;
 
     private Builder() {}
 
@@ -329,13 +465,13 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With display name builder.
+     * With name builder.
      *
-     * @param displayName the display name
+     * @param name the name
      * @return the builder
      */
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
+    public Builder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -362,7 +498,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withDisplayName(displayName);
+          .withName(name);
     }
 
     /**
@@ -388,7 +524,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
       physicalInfrastructureMapping.setComputeProviderType(computeProviderType);
       physicalInfrastructureMapping.setDeploymentType(deploymentType);
       physicalInfrastructureMapping.setComputeProviderName(computeProviderName);
-      physicalInfrastructureMapping.setDisplayName(displayName);
+      physicalInfrastructureMapping.setName(name);
       return physicalInfrastructureMapping;
     }
   }

@@ -56,6 +56,8 @@ public interface WorkflowService {
    */
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId);
 
+  Workflow readWorkflowByName(String appId, String workflowName);
+
   /**
    * Creates the workflow.
    *

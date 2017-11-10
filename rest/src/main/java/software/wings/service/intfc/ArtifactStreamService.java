@@ -37,6 +37,8 @@ public interface ArtifactStreamService {
    */
   ArtifactStream get(String appId, String artifactStreamId);
 
+  ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName);
+
   /**
    * Create artifact stream.
    *
@@ -170,4 +172,6 @@ public interface ArtifactStreamService {
    * @return the web hook token
    */
   WebHookToken generateWebHookToken(String appId, String streamId);
+
+  List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId);
 }

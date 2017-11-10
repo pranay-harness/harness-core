@@ -1,6 +1,7 @@
 package software.wings.annotation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
 
@@ -15,17 +16,19 @@ public interface Encryptable {
 
   void setAccountId(String accountId);
 
-  SettingVariableTypes getSettingType();
+  @JsonIgnore @SchemaIgnore SettingVariableTypes getSettingType();
 
   @JsonIgnore
+  @SchemaIgnore
   default List<Field> getEncryptedFields() {
     return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
-  default boolean
-    isDecrypted() {
-      return false;
-    }
+  @JsonIgnore
+  @SchemaIgnore
+  default boolean isDecrypted() {
+    return false;
+  }
 
   default void
     setDecrypted(boolean decrypted) {}

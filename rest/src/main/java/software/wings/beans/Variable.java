@@ -8,8 +8,11 @@ import static software.wings.common.Constants.STATE_TYPE;
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.sm.StateType;
 import software.wings.utils.ArtifactType;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.beans.Transient;
 import java.util.Map;
@@ -232,6 +235,82 @@ public class Variable {
       variable.setType(type);
       variable.setMetadata(metadata);
       return variable;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseEntityYaml {
+    private String name;
+    private String description;
+    private boolean mandatory;
+    private String value;
+    private boolean fixed;
+
+    public static final class Builder {
+      private String name;
+      private String description;
+      private boolean mandatory;
+      private String value;
+      private boolean fixed;
+      private String type;
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withDescription(String description) {
+        this.description = description;
+        return this;
+      }
+
+      public Builder withMandatory(boolean mandatory) {
+        this.mandatory = mandatory;
+        return this;
+      }
+
+      public Builder withValue(String value) {
+        this.value = value;
+        return this;
+      }
+
+      public Builder withFixed(boolean fixed) {
+        this.fixed = fixed;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml()
+            .withName(name)
+            .withDescription(description)
+            .withMandatory(mandatory)
+            .withValue(value)
+            .withFixed(fixed)
+            .withType(type);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setName(name);
+        yaml.setDescription(description);
+        yaml.setMandatory(mandatory);
+        yaml.setValue(value);
+        yaml.setFixed(fixed);
+        yaml.setType(type);
+        return yaml;
+      }
     }
   }
 }

@@ -6,6 +6,8 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.PHASE;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
@@ -14,6 +16,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.TransitionType;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -386,6 +389,101 @@ public class WorkflowPhase implements UuidAware {
       workflowPhase.setPhaseSteps(phaseSteps);
       workflowPhase.setTemplateExpressions(templateExpressions);
       return workflowPhase;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseEntityYaml {
+    private String name;
+    @NotNull private String infraMappingName;
+    private String computeProviderName;
+    private boolean provisionNodes;
+    private String phaseNameForRollback;
+    private List<TemplateExpression.Yaml> templateExpressions;
+    private List<PhaseStep.Yaml> phaseSteps = new ArrayList<>();
+    //  private DeploymentType deploymentType;
+
+    public static final class Builder {
+      private String name;
+      private String infraMappingName;
+      private String computeProviderName;
+      private boolean provisionNodes;
+      private String type;
+      private String phaseNameForRollback;
+      private List<TemplateExpression.Yaml> templateExpressions;
+      private List<PhaseStep.Yaml> phaseSteps = new ArrayList<>();
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withInfraMappingName(String infraMappingName) {
+        this.infraMappingName = infraMappingName;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withProvisionNodes(boolean provisionNodes) {
+        this.provisionNodes = provisionNodes;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withPhaseNameForRollback(String phaseNameForRollback) {
+        this.phaseNameForRollback = phaseNameForRollback;
+        return this;
+      }
+
+      public Builder withTemplateExpressions(List<TemplateExpression.Yaml> templateExpressions) {
+        this.templateExpressions = templateExpressions;
+        return this;
+      }
+
+      public Builder withPhaseSteps(List<PhaseStep.Yaml> phaseSteps) {
+        this.phaseSteps = phaseSteps;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml()
+            .withName(name)
+            .withInfraMappingName(infraMappingName)
+            .withComputeProviderName(computeProviderName)
+            .withProvisionNodes(provisionNodes)
+            .withType(type)
+            .withPhaseNameForRollback(phaseNameForRollback)
+            .withTemplateExpressions(templateExpressions)
+            .withPhaseSteps(phaseSteps);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setName(name);
+        yaml.setInfraMappingName(infraMappingName);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setProvisionNodes(provisionNodes);
+        yaml.setType(type);
+        yaml.setPhaseNameForRollback(phaseNameForRollback);
+        yaml.setTemplateExpressions(templateExpressions);
+        yaml.setPhaseSteps(phaseSteps);
+        return yaml;
+      }
     }
   }
 }

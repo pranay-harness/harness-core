@@ -8,8 +8,11 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 
 import com.google.common.base.MoreObjects;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,6 +191,20 @@ public class Pipeline extends Base {
         .withPipelineStages(getPipelineStages())
         .withStateEtaMap(getStateEtaMap())
         .build();
+  }
+
+  public Builder toBuilder() {
+    return aPipeline()
+        .withName(getName())
+        .withDescription(getDescription())
+        .withPipelineStages(getPipelineStages())
+        .withStateEtaMap(getStateEtaMap())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   /**
@@ -376,6 +393,53 @@ public class Pipeline extends Base {
       pipeline.setLastUpdatedAt(lastUpdatedAt);
       pipeline.setServices(services);
       return pipeline;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseYaml {
+    private String name;
+    private String description;
+    private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
+
+    public static final class Builder {
+      private String name;
+      private String description;
+      private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withDescription(String description) {
+        this.description = description;
+        return this;
+      }
+
+      public Builder withPipelineStages(List<PipelineStage.Yaml> pipelineStages) {
+        this.pipelineStages = pipelineStages;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml().withName(name).withDescription(description).withPipelineStages(pipelineStages);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setName(name);
+        yaml.setDescription(description);
+        yaml.setPipelineStages(pipelineStages);
+        return yaml;
+      }
     }
   }
 }

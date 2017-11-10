@@ -116,7 +116,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                 SettingValue.SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType())
                     .getDisplayName())
             .withInfraMappingId(infrastructureMapping.getUuid())
-            .withInfraMappingName(infrastructureMapping.getDisplayName())
+            .withInfraMappingName(infrastructureMapping.getName())
             .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).getDisplayName())
             .withServiceId(service.getUuid())
             .withServiceName(service.getName())

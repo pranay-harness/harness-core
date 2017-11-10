@@ -1,14 +1,13 @@
 package software.wings.yaml.command;
 
 import software.wings.beans.command.TailFilePatternEntry;
-import software.wings.yaml.YamlSerialize;
 
 import java.util.List;
 
 public class ExecCommandUnitYaml extends SshCommandUnitYaml {
-  @YamlSerialize public String commandPath;
-  @YamlSerialize public String commandString;
-  @YamlSerialize public List<TailFilePatternEntry> tailPatterns;
+  public String commandPath;
+  public String commandString;
+  public List<TailFilePatternEntry> tailPatterns;
 
   public ExecCommandUnitYaml() {
     super();

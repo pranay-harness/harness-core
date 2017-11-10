@@ -7,6 +7,8 @@ import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDocker
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -29,6 +31,78 @@ public class DockerArtifactStream extends ArtifactStream {
     super(DOCKER.name());
     super.setAutoApproveForProduction(true);
     super.setAutoDownload(true);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends ArtifactStream.Yaml {
+    private String imageName;
+
+    public static final class Builder {
+      private String imageName;
+      private String sourceName;
+      private String settingName;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withImageName(String imageName) {
+        this.imageName = imageName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withImageName(imageName)
+            .withSourceName(sourceName)
+            .withSettingName(settingName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setImageName(imageName);
+        yaml.setSourceName(sourceName);
+        yaml.setSettingName(settingName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        return yaml;
+      }
+    }
   }
 
   @Override
@@ -91,6 +165,27 @@ public class DockerArtifactStream extends ArtifactStream {
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withImageName(getImageName())
         .build();
+  }
+
+  /**
+   * clone and return builder
+   * @return
+   */
+  public Builder deepClone() {
+    return DockerArtifactStream.Builder.aDockerArtifactStream()
+        .withImageName(getImageName())
+        .withSourceName(getSourceName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withAutoDownload(isAutoDownload())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
+        .withStreamActions(getStreamActions());
   }
 
   /**

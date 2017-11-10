@@ -3,6 +3,8 @@ package software.wings.beans;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -10,7 +12,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.yaml.YamlSerialize;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,9 +27,9 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Environment extends Base {
-  @NotEmpty @YamlSerialize private String name;
-  @YamlSerialize private String description;
-  @NotNull @YamlSerialize private EnvironmentType environmentType = NON_PROD;
+  @NotEmpty private String name;
+  private String description;
+  @NotNull private EnvironmentType environmentType = NON_PROD;
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
@@ -186,6 +188,20 @@ public class Environment extends Base {
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.environmentType, other.environmentType)
         && Objects.equals(this.configFiles, other.configFiles);
+  }
+
+  public Builder toBuilder() {
+    return anEnvironment()
+        .withName(getName())
+        .withDescription(getDescription())
+        .withEnvironmentType(getEnvironmentType())
+        .withConfigFiles(getConfigFiles())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   /**
@@ -377,6 +393,60 @@ public class Environment extends Base {
       environment.setLastUpdatedBy(lastUpdatedBy);
       environment.setLastUpdatedAt(lastUpdatedAt);
       return environment;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseEntityYaml {
+    private String name;
+    private String description;
+    private String environmentType = "NON_PROD";
+
+    public static final class Builder {
+      private String name;
+      private String description;
+      private String environmentType = "NON_PROD";
+      private String type;
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withDescription(String description) {
+        this.description = description;
+        return this;
+      }
+
+      public Builder withEnvironmentType(String environmentType) {
+        this.environmentType = environmentType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml().withName(name).withDescription(description).withEnvironmentType(environmentType).withType(type);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setName(name);
+        yaml.setDescription(description);
+        yaml.setEnvironmentType(environmentType);
+        yaml.setType(type);
+        return yaml;
+      }
     }
   }
 }

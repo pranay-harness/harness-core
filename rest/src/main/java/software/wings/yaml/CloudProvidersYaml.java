@@ -3,10 +3,10 @@ package software.wings.yaml;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CloudProvidersYaml extends GenericYaml {
-  @YamlSerialize public List<String> AWS = new ArrayList<>();
-  @YamlSerialize public List<String> googleCloudPlatform = new ArrayList<>();
-  @YamlSerialize public List<String> physicalDataCenters = new ArrayList<>();
+public class CloudProvidersYaml extends BaseYaml {
+  private List<String> AWS = new ArrayList<>();
+  private List<String> googleCloudPlatform = new ArrayList<>();
+  private List<String> physicalDataCenters = new ArrayList<>();
 
   public List<String> getAWS() {
     return AWS;

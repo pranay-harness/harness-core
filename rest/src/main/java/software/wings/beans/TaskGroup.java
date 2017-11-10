@@ -23,5 +23,6 @@ public enum TaskGroup {
   SUMO,
   ARTIFACTORY,
   HOST_VALIDATION,
-  KMS
+  KMS,
+  GIT
 }

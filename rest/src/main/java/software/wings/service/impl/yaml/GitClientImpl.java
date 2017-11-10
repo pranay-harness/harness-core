@@ -1,0 +1,340 @@
+package software.wings.service.impl.yaml;
+
+import groovy.lang.Singleton;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PullResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevSort;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.GitConfig;
+import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.GitCheckoutResult;
+import software.wings.beans.yaml.GitCloneResult;
+import software.wings.beans.yaml.GitCommitAndPushResult;
+import software.wings.beans.yaml.GitCommitRequest;
+import software.wings.beans.yaml.GitCommitResult;
+import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFileChange;
+import software.wings.beans.yaml.GitPushResult;
+import software.wings.beans.yaml.GitPushResult.RefUpdate;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.yaml.GitClient;
+import software.wings.utils.Misc;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by anubhaw on 10/16/17.
+ */
+
+@Singleton
+public class GitClientImpl implements GitClient {
+  private static final String GIT_REPO_BASE_DIR = "./repository/yaml/ACCOUNT_ID/REPO_NAME";
+  private static final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
+  /**
+   * The constant DEFAULT_BRANCH.
+   */
+  public static final String DEFAULT_BRANCH = "master";
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Override
+  synchronized public GitCloneResult clone(GitConfig gitConfig) {
+    String gitRepoDirectory = getRepoDirectory(gitConfig);
+
+    try (Git git = Git.cloneRepository()
+                       .setURI(gitConfig.getRepoUrl())
+                       .setCredentialsProvider(
+                           new UsernamePasswordCredentialsProvider(gitConfig.getUsername(), gitConfig.getPassword()))
+                       .setDirectory(new File(gitRepoDirectory))
+                       .setBranch(gitConfig.getBranch())
+                       .call()) {
+      return GitCloneResult.builder().build();
+    } catch (GitAPIException ex) {
+      logger.error("Exception: ", ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in cloning repo");
+    }
+  }
+
+  private String getRepoDirectory(GitConfig gitConfig) {
+    String repoName = gitConfig.getRepoUrl()
+                          .substring(gitConfig.getRepoUrl().lastIndexOf('/') + 1)
+                          .split("\\.")[0]; // TODO:: support more url types and validation
+    return GIT_REPO_BASE_DIR.replace("ACCOUNT_ID", gitConfig.getAccountId()).replace("REPO_NAME", repoName);
+  }
+
+  private Change.ChangeType getChangeType(ChangeType gitDiffChangeType) {
+    switch (gitDiffChangeType) {
+      case ADD:
+        return Change.ChangeType.ADD;
+      case MODIFY:
+        return Change.ChangeType.MODIFY;
+      case DELETE:
+        return Change.ChangeType.DELETE;
+      case RENAME:
+        return Change.ChangeType.RENAME;
+    }
+    return null;
+  }
+
+  @Override
+  synchronized public GitDiffResult diff(GitConfig gitConfig, String startCommitId) {
+    ensureRepoLocallyCloned(gitConfig);
+
+    GitDiffResult diffResult = GitDiffResult.builder()
+                                   .branch(gitConfig.getBranch())
+                                   .repoName(gitConfig.getRepoUrl())
+                                   .gitFileChanges(new ArrayList<>())
+                                   .build();
+    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      git.checkout().setName(gitConfig.getBranch()).call();
+      git.pull()
+          .setCredentialsProvider(
+              new UsernamePasswordCredentialsProvider(gitConfig.getUsername(), gitConfig.getPassword()))
+          .call();
+      Repository repository = git.getRepository();
+      ObjectId headCommitId = repository.resolve("HEAD");
+      diffResult.setCommitId(headCommitId.getName());
+
+      if (startCommitId == null) { // Find oldest commit
+        RevWalk revWalk = new RevWalk(repository);
+        RevCommit headRevCommit = revWalk.parseCommit(headCommitId);
+        revWalk.sort(RevSort.REVERSE);
+        revWalk.markStart(headRevCommit);
+        RevCommit firstCommit = revWalk.next();
+        startCommitId = firstCommit.getName();
+      }
+
+      ObjectId head = repository.resolve("HEAD^{tree}");
+      ObjectId oldHead = repository.resolve(startCommitId + "^{tree}");
+
+      try (ObjectReader reader = repository.newObjectReader()) {
+        CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+        oldTreeIter.reset(reader, oldHead);
+        CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+        newTreeIter.reset(reader, head);
+
+        List<DiffEntry> diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
+        for (DiffEntry entry : diffs) {
+          ObjectId objectId = entry.getNewId().toObjectId();
+          String content = null;
+          if (!entry.getChangeType().equals(ChangeType.DELETE)) {
+            ObjectLoader loader = repository.open(objectId);
+            content = new String(loader.getBytes(), Charset.forName("utf-8"));
+          }
+          GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
+                                            .withCommitId(headCommitId.getName())
+                                            .withChangeType(getChangeType(entry.getChangeType()))
+                                            .withFilePath(entry.getNewPath())
+                                            .withFileContent(content)
+                                            .withObjectId(objectId.name())
+                                            .withAccountId(gitConfig.getAccountId())
+                                            .build();
+          diffResult.addChangeFile(gitFileChange);
+        }
+      }
+    } catch (IOException | GitAPIException ex) {
+      logger.error("Exception: ", ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in getting commit diff");
+    }
+    return diffResult;
+  }
+
+  @Override
+  synchronized public GitCheckoutResult checkout(GitConfig gitConfig) {
+    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      Ref ref = git.checkout().setName(gitConfig.getBranch()).call();
+      return GitCheckoutResult.builder().build();
+    } catch (IOException | GitAPIException ex) {
+      logger.error("Exception: ", ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in getting commit diff");
+    }
+  }
+
+  @Override
+  synchronized public GitCommitResult commit(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
+    ensureRepoLocallyCloned(gitConfig);
+    // TODO:: pull latest remote branch??
+    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
+      StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync. \n");
+
+      gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
+        String repoDirectory = getRepoDirectory(gitConfig);
+        String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
+        File file = new File(filePath);
+        switch (gitFileChange.getChangeType()) {
+          case ADD:
+          case MODIFY:
+            try {
+              logger.info("Adding git file " + gitFileChange.toString());
+              file.getParentFile().mkdirs();
+              file.createNewFile();
+              try (FileWriter writer = new FileWriter(file)) {
+                writer.write(gitFileChange.getFileContent());
+                writer.close();
+              }
+              git.add().addFilepattern(".").call();
+              commitMessage.append(
+                  String.format("%s: %s\n", gitFileChange.getChangeType(), gitFileChange.getFilePath()));
+            } catch (IOException | GitAPIException ex) {
+              logger.error("Exception in adding/modifying file to git " + ex);
+              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in ADD/MODIFY git operation");
+            }
+            break;
+            //          case COPY:
+            //            throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Unhandled git operation: "
+            //            + gitFileChange.getChangeType());
+          case RENAME:
+            try {
+              logger.info("Old path:[{}], new path: [{}]", gitFileChange.getOldFilePath(), gitFileChange.getFilePath());
+              String oldFilePath = repoDirectory + "/" + gitFileChange.getOldFilePath();
+              String newFilePath = repoDirectory + "/" + gitFileChange.getFilePath();
+
+              File oldFile = new File(oldFilePath);
+              File newFile = new File(newFilePath);
+
+              if (oldFile.exists()) {
+                Path path = Files.move(oldFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                git.add().addFilepattern(gitFileChange.getFilePath()).call();
+                git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
+                commitMessage.append(String.format("%s: %s -> %s\n", gitFileChange.getChangeType(),
+                    gitFileChange.getOldFilePath(), gitFileChange.getFilePath()));
+              } else {
+                logger.warn("File doesn't exist. path: [{}]", gitFileChange.getOldFilePath());
+              }
+            } catch (IOException | GitAPIException ex) {
+              logger.error("Exception in moving file", ex);
+              // TODO:: check before moving and then uncomment this exception
+              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in RENAME git operation");
+            }
+            break;
+          case DELETE:
+            try {
+              File fileToBeDeleted = new File(repoDirectory + "/" + gitFileChange.getFilePath());
+              if (fileToBeDeleted.exists()) {
+                logger.info("Deleting git file " + gitFileChange.toString());
+                git.rm().addFilepattern(gitFileChange.getFilePath()).call();
+                commitMessage.append(
+                    String.format("%s: %s\n", gitFileChange.getChangeType(), gitFileChange.getFilePath()));
+              } else {
+                logger.warn("File already deleted. path: [{}]", gitFileChange.getFilePath());
+              }
+            } catch (GitAPIException ex) {
+              logger.error("Exception in deleting file" + ex);
+              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in DELETE git operation");
+            }
+            break;
+        }
+      });
+      Status status = git.status().call();
+      if (status.getAdded().size() == 0 && status.getChanged().size() == 0 && status.getRemoved().size() == 0) {
+        logger.warn("No git change to commit. GitCommitRequest: [{}]", gitCommitRequest);
+        return GitCommitResult.builder().build(); // do nothing
+      }
+      RevCommit revCommit = git.commit()
+                                .setCommitter(gitConfig.getUsername(), "")
+                                .setAuthor("Harness.io", "support@harness.io")
+                                .setAll(true)
+                                .setMessage(commitMessage.toString())
+                                .call();
+      return GitCommitResult.builder().commitId(revCommit.getName()).commitTime(revCommit.getCommitTime()).build();
+
+    } catch (IOException | GitAPIException ex) {
+      logger.error("Exception: ", ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in writing commit");
+    }
+  }
+
+  @Override
+  synchronized public GitPushResult push(GitConfig gitConfig) {
+    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      Iterable<PushResult> pushResults = git.push()
+                                             .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+                                                 gitConfig.getUsername(), gitConfig.getPassword()))
+                                             .setRemote("origin")
+                                             .setRefSpecs(new RefSpec(gitConfig.getBranch()))
+                                             .call();
+
+      RemoteRefUpdate remoteRefUpdate = pushResults.iterator().next().getRemoteUpdates().iterator().next();
+      RefUpdate refUpdate = RefUpdate.builder()
+                                .status(remoteRefUpdate.getStatus().name())
+                                .expectedOldObjectId(remoteRefUpdate.getExpectedOldObjectId().name())
+                                .newObjectId(remoteRefUpdate.getNewObjectId().name())
+                                .forceUpdate(remoteRefUpdate.isForceUpdate())
+                                .message(remoteRefUpdate.getMessage())
+                                .build();
+      return GitPushResult.builder().refUpdate(refUpdate).build();
+    } catch (IOException | GitAPIException ex) {
+      logger.error("Exception: ", ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in writing commit");
+    }
+  }
+
+  @Override
+  public synchronized GitCommitAndPushResult commitAndPush(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
+    GitCommitResult commitResult = commit(gitConfig, gitCommitRequest);
+    GitCommitAndPushResult gitCommitAndPushResult =
+        GitCommitAndPushResult.builder().gitCommitResult(commitResult).build();
+    if (!Misc.isNullOrEmpty(commitResult.getCommitId())) {
+      gitCommitAndPushResult.setGitPushResult(push(gitConfig));
+    } else {
+      logger.warn("Null commitId. Nothing to push for request [{}]", gitCommitRequest);
+    }
+    return gitCommitAndPushResult;
+  }
+
+  @Override
+  synchronized public PullResult pull(GitConfig gitConfig) {
+    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      git.checkout().setName(gitConfig.getBranch()).call();
+      return git.pull()
+          .setCredentialsProvider(
+              new UsernamePasswordCredentialsProvider(gitConfig.getUsername(), gitConfig.getPassword()))
+          .call();
+    } catch (IOException | GitAPIException ex) {
+      logger.error("Exception: ", ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in getting commit diff");
+    }
+  }
+
+  /**
+   * Ensure repo locally cloned.
+   *
+   * @param gitConfig the git config
+   */
+  synchronized void ensureRepoLocallyCloned(GitConfig gitConfig) {
+    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      return;
+    } catch (IOException ignored) {
+    }
+    // Repo doesn't exists. do fresh clone
+    clone(gitConfig);
+  }
+}

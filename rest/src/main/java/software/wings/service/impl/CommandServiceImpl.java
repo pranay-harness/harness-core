@@ -6,18 +6,23 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.Application;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -31,6 +36,7 @@ public class CommandServiceImpl implements CommandService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   @Override
   public Command getCommand(String appId, String originEntityId, int version) {
@@ -62,55 +68,43 @@ public class CommandServiceImpl implements CommandService {
   }
 
   @Override
-  public Command save(Command command) {
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+  public Command save(Command command, boolean isDefaultCommand) {
+    Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
 
-    // see if we need to perform any Git Sync operations for the service
-    String serviceCommandId = command.getOriginEntityId();
-    ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+    if (savedCommand != null) {
+      String accountId = appService.getAccountIdByAppId(command.getAppId());
+      String serviceCommandId = command.getOriginEntityId();
+      ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+      Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
 
-    Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
-
-    // see if we need to perform any Git Sync operations for the service command
-    eule.addEntityUpdateEvent(entityUpdateService.serviceCommandListUpdate(serviceCommand, SourceType.ENTITY_UPDATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(command.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
-
-    return wingsPersistence.saveAndGet(Command.class, command);
+      if (!isDefaultCommand) { // Don't do yaml generation for default commands. We group them with service
+        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+        if (ygs != null) {
+          List<GitFileChange> changeSet = new ArrayList<>();
+          changeSet.add(entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD));
+          yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        }
+      }
+    }
+    return savedCommand;
   }
 
   @Override
   public Command update(Command command) {
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
-
-    // see if we need to perform any Git Sync operations for the service
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(command.getAppId());
     String serviceCommandId = command.getOriginEntityId();
     ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
-
     Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-    // see if we need to perform any Git Sync operations for the service command
-    eule.addEntityUpdateEvent(entityUpdateService.serviceCommandListUpdate(serviceCommand, SourceType.ENTITY_CREATE));
+      // add GitSyncFiles for the command
+      changeSet.add(entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.MODIFY));
 
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(command.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
 
     return wingsPersistence.saveAndGet(Command.class, command);
   }

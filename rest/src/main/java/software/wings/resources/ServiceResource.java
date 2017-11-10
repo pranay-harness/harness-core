@@ -166,7 +166,7 @@ public class ServiceResource {
   public RestResponse<Service> saveCommand(@ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
       @ApiParam(name = "command", required = true) ServiceCommand command) {
-    return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command));
+    return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command, false));
   }
 
   @GET

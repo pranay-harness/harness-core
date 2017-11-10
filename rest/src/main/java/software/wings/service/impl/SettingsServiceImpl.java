@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
@@ -13,6 +14,7 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
+import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -20,25 +22,32 @@ import com.google.common.collect.ImmutableMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.annotation.Encryptable;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -59,6 +68,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -85,28 +96,45 @@ public class SettingsServiceImpl implements SettingsService {
       }
     }
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+    SettingAttribute newSettingAttribute =
+        Validator.duplicateCheck(()
+                                     -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
+            "name", settingAttribute.getName());
+    queueSettingYamlChange(newSettingAttribute,
+        entityUpdateService.getSettingAttributeGitSyncFile(
+            settingAttribute.getAccountId(), newSettingAttribute, ChangeType.ADD));
+    return newSettingAttribute;
+  }
 
-    // see if we need to perform any Git Sync operations for the account (setup)
-    Account account = accountService.get(settingAttribute.getAccountId());
-    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
+  private void queueSettingYamlChange(SettingAttribute newSettingAttribute, GitFileChange settingAttributeGitSyncFile) {
+    String accountId = newSettingAttribute.getAccountId();
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(settingAttributeGitSyncFile));
+    }
+  }
 
-    // see if we need to perform any Git Sync operations for the setting attribute
-    eule.addEntityUpdateEvent(entityUpdateService.settingAttributeListUpdate(settingAttribute,
-    SourceType.ENTITY_CREATE));
+  private void queueMoveSettingChange(SettingAttribute oldSettingAttribute, SettingAttribute newSettingAttribute) {
+    String accountId = appService.getAccountIdByAppId(newSettingAttribute.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
+      String oldEnvnPath = yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + "/"
+          + oldSettingAttribute.getName() + YAML_EXTENSION;
 
-    yamlDirectoryService.pushDirectory(settingAttribute.getAccountId(), false);
-    //-------------------
+      GitFileChange newEnvGitSyncFile =
+          entityUpdateService.getSettingAttributeGitSyncFile(accountId, newSettingAttribute, ChangeType.MODIFY);
 
-    return Validator.duplicateCheck(()
-                                        -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
-        "name", settingAttribute.getName());
+      changeSet.add(GitFileChange.Builder.aGitFileChange()
+                        .withAccountId(newEnvGitSyncFile.getAccountId())
+                        .withChangeType(ChangeType.RENAME)
+                        .withFilePath(newEnvGitSyncFile.getFilePath())
+                        .withOldFilePath(oldEnvnPath)
+                        .build());
+      changeSet.add(newEnvGitSyncFile);
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
   }
 
   /* (non-Javadoc)
@@ -137,6 +165,17 @@ public class SettingsServiceImpl implements SettingsService {
     return wingsPersistence.get(SettingAttribute.class, varId);
   }
 
+  @Override
+  public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
+    SettingAttribute settingAttribute =
+        wingsPersistence.createQuery(SettingAttribute.class).field("name").equal(settingAttributeName).get();
+    if (settingAttribute == null) {
+      throw new WingsException(
+          INVALID_ARGUMENT, "args", "SettingAttribute - '" + settingAttributeName + "' doesn't exist");
+    }
+    return settingAttribute;
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#update(software.wings.beans.SettingAttribute)
    */
@@ -149,6 +188,8 @@ public class SettingsServiceImpl implements SettingsService {
 
     settingValidationService.validate(settingAttribute);
 
+    SettingAttribute savedSettingAttributes = get(settingAttribute.getUuid());
+
     ImmutableMap.Builder<String, Object> fields =
         ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
     if (settingAttribute.getValue() != null) {
@@ -159,26 +200,16 @@ public class SettingsServiceImpl implements SettingsService {
     }
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+    SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
 
-    // see if we need to perform any Git Sync operations for the account (setup)
-    Account account = accountService.get(settingAttribute.getAccountId());
-    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
-
-    // see if we need to perform any Git Sync operations for the setting attribute
-    eule.addEntityUpdateEvent(entityUpdateService.settingAttributeListUpdate(settingAttribute,
-    SourceType.ENTITY_UPDATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    yamlDirectoryService.pushDirectory(settingAttribute.getAccountId(), false);
-    //-------------------
-
-    return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    if (!updatedSettingAttribute.getName().equals(settingAttribute.getName())) {
+      queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
+    } else {
+      queueSettingYamlChange(updatedSettingAttribute,
+          entityUpdateService.getSettingAttributeGitSyncFile(
+              settingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
+    }
+    return updatedSettingAttribute;
   }
 
   /* (non-Javadoc)
@@ -189,7 +220,12 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute settingAttribute = get(varId);
     Validator.notNullCheck("Setting Value", settingAttribute);
     ensureSettingAttributeSafeToDelete(settingAttribute);
-    wingsPersistence.delete(settingAttribute);
+    boolean deleted = wingsPersistence.delete(settingAttribute);
+    if (deleted) {
+      queueSettingYamlChange(settingAttribute,
+          entityUpdateService.getSettingAttributeGitSyncFile(
+              settingAttribute.getAccountId(), settingAttribute, ChangeType.DELETE));
+    }
   }
 
   private void ensureSettingAttributeSafeToDelete(SettingAttribute settingAttribute) {
@@ -216,14 +252,13 @@ public class SettingsServiceImpl implements SettingsService {
                         .build(),
                   true)
               .getResponse();
-      if (infrastructureMappings.size() > 0) {
-        List<String> infraMappingNames =
-            infrastructureMappings.stream().map(InfrastructureMapping::getDisplayName).collect(Collectors.toList());
-        throw new WingsException(INVALID_REQUEST, "message",
-            String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].",
-                connectorSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
-                Joiner.on(", ").join(infraMappingNames)));
-      }
+
+      List<String> infraMappingNames =
+          infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
+      throw new WingsException(INVALID_REQUEST, "message",
+          String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].", connectorSetting.getName(),
+              infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+              Joiner.on(", ").join(infraMappingNames)));
     } else {
       List<ArtifactStream> artifactStreams =
           artifactStreamService.list(aPageRequest().addFilter("settingId", EQ, connectorSetting.getUuid()).build())
@@ -253,7 +288,7 @@ public class SettingsServiceImpl implements SettingsService {
             .getResponse();
     if (infrastructureMappings.size() > 0) {
       List<String> infraMappingNames =
-          infrastructureMappings.stream().map(InfrastructureMapping::getDisplayName).collect(Collectors.toList());
+          infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
       throw new WingsException(INVALID_REQUEST, "message",
           String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
               clodProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",

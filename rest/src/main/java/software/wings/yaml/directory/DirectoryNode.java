@@ -2,11 +2,12 @@ package software.wings.yaml.directory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
-import software.wings.service.intfc.yaml.YamlGitSyncService;
-import software.wings.yaml.gitSync.YamlGitSync;
-import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
+import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.yaml.gitSync.YamlGitConfig;
+import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
 public class DirectoryNode {
+  private String accountId;
   private NodeType type;
   private String name;
   @JsonIgnore private Class theClass;
@@ -19,7 +20,8 @@ public class DirectoryNode {
 
   public DirectoryNode() {}
 
-  public DirectoryNode(String name, Class theClass) {
+  public DirectoryNode(String accountId, String name, Class theClass) {
+    this.accountId = accountId;
     this.name = name;
     this.theClass = theClass;
     this.className = theClass.getName();
@@ -33,7 +35,7 @@ public class DirectoryNode {
     } else if (this.shortClassName.equals("ServiceCommand")) {
       this.restName = "service-commands";
     } else if (this.shortClassName.equals("ArtifactStream")) {
-      this.restName = "triggers";
+      this.restName = "artifact-streams";
     } else if (this.shortClassName.equals("Account")) {
       this.restName = "setup";
     } else {
@@ -41,9 +43,9 @@ public class DirectoryNode {
     }
   }
 
-  public DirectoryNode(
-      String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService, NodeType type) {
-    this(name, theClass);
+  public DirectoryNode(String accountId, String name, Class theClass, DirectoryPath directoryPath,
+      YamlGitService yamlGitSyncService, NodeType type) {
+    this(accountId, name, theClass);
     this.directoryPath = directoryPath;
     this.type = type;
 
@@ -67,22 +69,21 @@ public class DirectoryNode {
     }
   }
 
-  private void determineSyncMode(YamlGitSyncService yamlGitSyncService) {
+  private void determineSyncMode(YamlGitService yamlGitSyncService) {
     // we need to check YamlGitSync by using the directoryPath as the EntityId for a folder, or the last part of the
     // path for everything else
     String path = this.directoryPath.getPath();
     String[] pathParts = path.split("/");
+    String entityId = accountId;
 
     if (pathParts == null || pathParts.length == 0) {
       this.syncMode = SyncMode.NONE;
     } else {
-      String entityId = pathParts[pathParts.length - 1];
-
       if (type == NodeType.FOLDER) {
         entityId = this.directoryPath.getPath();
       }
 
-      YamlGitSync ygs = yamlGitSyncService.get(entityId);
+      YamlGitConfig ygs = yamlGitSyncService.get(accountId, entityId);
 
       if (ygs != null) {
         this.syncMode = ygs.getSyncMode();
@@ -91,6 +92,14 @@ public class DirectoryNode {
         this.syncMode = SyncMode.NONE;
       }
     }
+  }
+
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   public NodeType getType() {

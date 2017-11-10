@@ -1,15 +1,15 @@
 package software.wings.beans.artifact;
 
-import static software.wings.beans.artifact.AmazonS3ArtifactStream.Builder.anAmazonS3ArtifactStream;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.artifact.ArtifactoryArtifactStream.Builder;
 import software.wings.stencils.UIOrder;
 
 import java.util.ArrayList;
@@ -33,6 +33,96 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
 
   public AmazonS3ArtifactStream() {
     super(ArtifactStreamType.AMAZON_S3.name());
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends ArtifactStream.Yaml {
+    private String awsCloudProviderName;
+    private String bucketName;
+    private List<String> artifactPaths;
+
+    public static final class Builder {
+      private String sourceName;
+      private String awsCloudProviderName;
+      private String settingName;
+      private String bucketName;
+      private boolean autoApproveForProduction = false;
+      private List<String> artifactPaths;
+      private boolean metadataOnly = false;
+      private String type;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withAwsCloudProviderName(String awsCloudProviderName) {
+        this.awsCloudProviderName = awsCloudProviderName;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withBucketName(String bucketName) {
+        this.bucketName = bucketName;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withArtifactPaths(List<String> artifactPaths) {
+        this.artifactPaths = artifactPaths;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withSourceName(sourceName)
+            .withAwsCloudProviderName(awsCloudProviderName)
+            .withSettingName(settingName)
+            .withBucketName(bucketName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withArtifactPaths(artifactPaths)
+            .withMetadataOnly(metadataOnly)
+            .withType(type);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setSourceName(sourceName);
+        yaml.setAwsCloudProviderName(awsCloudProviderName);
+        yaml.setSettingName(settingName);
+        yaml.setBucketName(bucketName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setArtifactPaths(artifactPaths);
+        yaml.setMetadataOnly(metadataOnly);
+        yaml.setType(type);
+        return yaml;
+      }
+    }
   }
 
   @SchemaIgnore
@@ -117,6 +207,28 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
         .withArtifactPaths(getArtifactPaths())
         .withMetadataOnly(getMetadataOnly())
         .build();
+  }
+
+  /**
+   * Clone and return builder.
+   * @return the builder
+   */
+  public AmazonS3ArtifactStream.Builder deepClone() {
+    return AmazonS3ArtifactStream.Builder.anAmazonS3ArtifactStream()
+        .withJobname(getJobname())
+        .withArtifactPaths(getArtifactPaths())
+        .withSourceName(getSourceName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withStreamActions(getStreamActions())
+        .withMetadataOnly(getMetadataOnly());
   }
 
   /**
@@ -319,7 +431,6 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoApproveForProduction(autoApproveForProduction)
           .withStreamActions(streamActions)
-          .withMetadataOnly(metadataOnly)
           .withMetadataOnly(metadataOnly);
     }
 

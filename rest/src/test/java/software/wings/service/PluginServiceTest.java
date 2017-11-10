@@ -18,6 +18,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.NewRelicConfig;
@@ -44,7 +45,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(18)
+        .hasSize(19)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -83,6 +84,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Artifactory")
                 .withType("ARTIFACTORY")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(GitConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Git")
+                .withType("GIT")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
@@ -196,9 +205,9 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(18)
+        .hasSize(19)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ",
             "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY");
+            "ARTIFACTORY", "GIT");
   }
 }

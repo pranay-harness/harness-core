@@ -16,11 +16,13 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -30,10 +32,13 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +56,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -84,24 +90,26 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     serviceVariable.setEnvId(envId);
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
-
-    // see if we need to perform any Git Sync operations
-    Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(serviceVariable.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
-
-    return Validator.duplicateCheck(
+    ServiceVariable newServiceVariable = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
+
+    if (newServiceVariable == null) {
+      return null;
+    }
+
+    String accountId = appService.getAccountIdByAppId(newServiceVariable.getAppId());
+    Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFile for service
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.ADD));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+
+    return newServiceVariable;
   }
 
   @Override
@@ -129,23 +137,27 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
         ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()));
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+    ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
 
-    // see if we need to perform any Git Sync operations
+    if (updatedServiceVariable == null) {
+      return null;
+    }
+
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(updatedServiceVariable.getAppId());
     Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
+      // add GitSyncFile for service
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.MODIFY));
 
-    Application app = appService.get(serviceVariable.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
     //-------------------
 
-    return get(serviceVariable.getAppId(), serviceVariable.getUuid());
+    return updatedServiceVariable;
   }
 
   private void updateVariableNameForServiceAndOverrides(ServiceVariable existingServiceVariable, String name) {
@@ -171,8 +183,26 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public void delete(@NotEmpty String appId, @NotEmpty String settingId) {
-    wingsPersistence.delete(
+    ServiceVariable serviceVariable = get(appId, settingId);
+    boolean deleted = wingsPersistence.delete(
         wingsPersistence.createQuery(ServiceVariable.class).field("appId").equal(appId).field(ID_KEY).equal(settingId));
+
+    if (deleted) {
+      //-------------------
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
+      Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for service
+        changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.DELETE));
+
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+      //-------------------
+    }
   }
 
   @Override

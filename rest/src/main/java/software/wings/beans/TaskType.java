@@ -7,6 +7,7 @@ import software.wings.delegatetasks.BambooTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
+import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
@@ -28,6 +29,7 @@ import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.delegatetasks.validation.DockerValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
 import software.wings.delegatetasks.validation.GcrValidation;
+import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
@@ -132,6 +134,7 @@ public enum TaskType {
       TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
   KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
   VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class);

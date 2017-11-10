@@ -2,8 +2,11 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
+import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +27,74 @@ public class NotificationRule {
   private boolean batchNotifications;
 
   private boolean active = true;
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseYaml {
+    private List<String> conditions = new ArrayList<>();
+    private String executionScope;
+    @NotNull @Size(min = 1) private List<NotificationGroup.Yaml> notificationGroups = new ArrayList<>();
+    private boolean batchNotifications;
+    private boolean active = true;
+
+    public static final class Builder {
+      private List<String> conditions = new ArrayList<>();
+      private String executionScope;
+      private List<NotificationGroup.Yaml> notificationGroups = new ArrayList<>();
+      private boolean batchNotifications;
+      private boolean active = true;
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withConditions(List<String> conditions) {
+        this.conditions = conditions;
+        return this;
+      }
+
+      public Builder withExecutionScope(String executionScope) {
+        this.executionScope = executionScope;
+        return this;
+      }
+
+      public Builder withNotificationGroups(List<NotificationGroup.Yaml> notificationGroups) {
+        this.notificationGroups = notificationGroups;
+        return this;
+      }
+
+      public Builder withBatchNotifications(boolean batchNotifications) {
+        this.batchNotifications = batchNotifications;
+        return this;
+      }
+
+      public Builder withActive(boolean active) {
+        this.active = active;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml()
+            .withConditions(conditions)
+            .withExecutionScope(executionScope)
+            .withNotificationGroups(notificationGroups)
+            .withBatchNotifications(batchNotifications)
+            .withActive(active);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setConditions(conditions);
+        yaml.setExecutionScope(executionScope);
+        yaml.setNotificationGroups(notificationGroups);
+        yaml.setBatchNotifications(batchNotifications);
+        yaml.setActive(active);
+        return yaml;
+      }
+    }
+  }
 
   /**
    * Gets notification groups.

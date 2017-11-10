@@ -10,6 +10,7 @@ import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -36,7 +37,6 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
-import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
 import software.wings.beans.LambdaSpecification;
@@ -58,6 +58,8 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -75,6 +77,8 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -83,6 +87,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -125,6 +130,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   /**
    * {@inheritDoc}
@@ -185,25 +192,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
-
-    // see if we need to perform any Git Sync operations for the app
-    Application app = appService.get(service.getAppId());
-    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
-
-    // see if we need to perform any Git Sync operations for the service
-    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_CREATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(service.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
-
+    queueServiceYamlChangeSet(savedService, ChangeType.ADD);
     return savedService;
   }
 
@@ -219,7 +208,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     originalService.getServiceCommands().forEach(serviceCommand -> {
       ServiceCommand clonedServiceCommand = serviceCommand.clone();
-      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand);
+      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, false);
     });
 
     List<ServiceTemplate> serviceTemplates = serviceTemplateService
@@ -272,7 +261,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                            .orElse(null);
     ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
     clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
-    return addCommand(appId, serviceId, clonedServiceCommand);
+    return addCommand(appId, serviceId, clonedServiceCommand, false);
   }
 
   @Override
@@ -323,7 +312,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service serviceToReturn = service;
     for (Command command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
+          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true);
     }
 
     return serviceToReturn;
@@ -334,43 +323,71 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service update(Service service) {
-    Service savedService = wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
-    if (service.getDescription() == null) {
-      service.setDescription("");
-    }
+    Service savedService = get(service.getAppId(), service.getUuid(), false);
+    Validator.notNullCheck("Service", savedService);
 
-    // TODO - this ImmutableMap is a problem - it requires a non-null appContainer when one may not be available
-    // (logically)
+    UpdateOperations<Service> updateOperations =
+        wingsPersistence.createUpdateOperations(Service.class)
+            .set("name", service.getName().trim())
+            .set("description", service.getDescription() == null ? "" : service.getDescription());
 
-    wingsPersistence.updateFields(Service.class, service.getUuid(),
-        ImmutableMap.of("name", service.getName().trim(), "description", service.getDescription(), "artifactType",
-            service.getArtifactType(), "appContainer", service.getAppContainer()));
-    if (!savedService.getName().equals(service.getName())) {
+    wingsPersistence.update(savedService, updateOperations);
+    Service updatedService = get(service.getAppId(), service.getUuid(), false);
+
+    if (!savedService.getName().equals(service.getName())) { // Service name changed
       executorService.submit(()
                                  -> serviceTemplateService.updateDefaultServiceTemplateName(service.getAppId(),
                                      service.getUuid(), savedService.getName(), service.getName().trim()));
+      queueMoveServiceChange(savedService, service);
+    } else {
+      queueServiceYamlChangeSet(updatedService, ChangeType.MODIFY);
     }
+    return updatedService;
+  }
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+  private void queueMoveServiceChange(Service oldService, Service newService) {
+    String accountId = appService.getAccountIdByAppId(newService.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-    // see if we need to perform any Git Sync operations for the app
-    Application app = appService.get(service.getAppId());
-    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
+      String oldPath = yamlDirectoryService.getRootPathByService(oldService);
 
-    // see if we need to perform any Git Sync operations for the service
-    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
+      String newPath = yamlDirectoryService.getRootPathByService(newService);
 
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
+      /*
+      delete old service yaml
+      move all remaining files
+      add new Service yaml
+       */
 
-    Application app = appService.get(service.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, oldService, ChangeType.DELETE));
+      changeSet.add(GitFileChange.Builder.aGitFileChange()
+                        .withAccountId(accountId)
+                        .withChangeType(ChangeType.RENAME)
+                        .withFilePath(newPath)
+                        .withOldFilePath(oldPath)
+                        .build());
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.ADD));
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+  }
 
-    return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
+  private void queueServiceYamlChangeSet(Service service, ChangeType crudType) {
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, crudType));
+      if (crudType.equals(ChangeType.ADD)) {
+        service.getServiceCommands().forEach(serviceCommand
+            -> changeSet.add(
+                entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
+      }
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
   }
 
   /**
@@ -382,18 +399,35 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public Service getServiceByName(String appId, String serviceName) {
+    Service service =
+        wingsPersistence.createQuery(Service.class).field("appId").equal(appId).field("name").equal(serviceName).get();
+    if (service == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Service - '" + serviceName + "' doesn't exist");
+    }
+
+    setServiceDetails(service, appId);
+    return service;
+  }
+
+  @Override
   public Service get(String appId, String serviceId, boolean includeDetails) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service != null && includeDetails) {
-      service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
-      service.setServiceVariables(serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false));
-      service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
-      service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
-      service.getServiceCommands().forEach(serviceCommand
-          -> serviceCommand.setCommand(
-              commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+      setServiceDetails(service, appId);
     }
     return service;
+  }
+
+  private void setServiceDetails(Service service, String appId) {
+    service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
+    service.setServiceVariables(serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false));
+    service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, service.getUuid()));
+    service.setLastProdDeploymentActivity(
+        activityService.getLastProductionActivityForService(appId, service.getUuid()));
+    service.getServiceCommands().forEach(serviceCommand
+        -> serviceCommand.setCommand(
+            commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
   }
 
   @Override
@@ -412,21 +446,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public void delete(String appId, String serviceId) {
-    delete(appId, serviceId, false);
-  }
-
-  private void delete(String appId, String serviceId, boolean forceDelete) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service == null) {
       return;
     }
+    delete(service, false);
+  }
 
+  private void delete(Service service, boolean forceDelete) {
     if (!forceDelete) {
       // Ensure service is safe to delete
       ensureServiceSafeToDelete(service);
     }
 
     // safe to delete
+    String serviceId = service.getUuid();
+    String appId = service.getAppId();
     boolean deleted = wingsPersistence.delete(Service.class, serviceId);
     if (deleted) {
       executorService.submit(() -> deleteCommands(service));
@@ -441,6 +476,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               .withNotificationTemplateVariables(
                   ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
               .build());
+
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(service.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for app and service
+        GitFileChange gitFileChange = entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.DELETE);
+        gitFileChange.setFilePath(null); // delete the directory
+        changeSet.add(gitFileChange);
+
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
     }
   }
 
@@ -467,8 +516,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void deleteCommands(Service service) {
-    service.getServiceCommands().forEach(serviceCommand
-        -> deleteCommand(serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand.getUuid()));
+    service.getServiceCommands().forEach(serviceCommand -> deleteCommand(serviceCommand, service));
   }
 
   /**
@@ -478,17 +526,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service deleteCommand(String appId, String serviceId, String commandId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
+    ServiceCommand serviceCommand = wingsPersistence.get(ServiceCommand.class, service.getAppId(), commandId);
+    deleteCommand(serviceCommand, service);
+    return get(service.getAppId(), service.getUuid());
+  }
 
-    ServiceCommand serviceCommand = wingsPersistence.get(ServiceCommand.class, appId, commandId);
-
+  private void deleteCommand(ServiceCommand serviceCommand, Service service) {
     ensureServiceCommandSafeToDelete(service, serviceCommand);
 
-    wingsPersistence.update(
-        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
-        wingsPersistence.createUpdateOperations(Service.class).removeAll("serviceCommands", commandId));
+    wingsPersistence.update(wingsPersistence.createQuery(Service.class)
+                                .field(ID_KEY)
+                                .equal(service.getUuid())
+                                .field("appId")
+                                .equal(service.getAppId()),
+        wingsPersistence.createUpdateOperations(Service.class).removeAll("serviceCommands", serviceCommand.getUuid()));
 
     deleteServiceCommand(service, serviceCommand);
-    return get(appId, serviceId);
   }
 
   private void deleteServiceCommand(Service service, ServiceCommand serviceCommand) {
@@ -499,6 +552,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                   .equal(service.getAppId())
                                   .field("originEntityId")
                                   .equal(serviceCommand.getUuid()));
+
+      String accountId = appService.getAccountIdByAppId(service.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+        changeSet.add(entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.DELETE));
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
     }
   }
 
@@ -552,12 +613,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void deleteByApp(String appId) {
+  public void deleteByApp(Application application) {
     wingsPersistence.createQuery(Service.class)
         .field("appId")
-        .equal(appId)
+        .equal(application.getUuid())
         .asList()
-        .forEach(service -> delete(appId, service.getUuid(), true));
+        .forEach(service -> {
+          service.setEntityYamlPath(yamlDirectoryService.getRootPathByService(service, application.entityYamlPath));
+          delete(service, true);
+        });
   }
 
   @Override
@@ -627,7 +691,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public Service addCommand(String appId, String serviceId, ServiceCommand serviceCommand) {
+  public Service addCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean isDefaultCommand) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
@@ -648,7 +712,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
     entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
-        serviceCommand.getName(), ChangeType.CREATED, notes);
+        serviceCommand.getName(), EntityVersion.ChangeType.CREATED, notes);
 
     command.transformGraph();
     command.setVersion(1L);
@@ -658,7 +722,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
 
-    commandService.save(command);
+    commandService.save(command, isDefaultCommand);
 
     service.getServiceCommands().add(serviceCommand);
 
@@ -712,13 +776,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       if (commandUnitDiff.hasChanges()) {
         EntityVersion entityVersion =
             entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
-                serviceCommand.getName(), ChangeType.UPDATED, serviceCommand.getNotes());
+                serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
         command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
         // Copy the old command values
         command.setDeploymentType(oldCommand.getDeploymentType());
         command.setCommandType(oldCommand.getCommandType());
         command.setArtifactType(oldCommand.getArtifactType());
-        commandService.save(command);
+        commandService.save(command, false);
 
         if (serviceCommand.getSetAsDefault()) {
           serviceCommand.setDefaultVersion(entityVersion.getVersion());

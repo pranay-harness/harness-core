@@ -6,27 +6,37 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.PublicApi;
+import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
-import software.wings.service.intfc.yaml.ServiceYamlResourceService;
-import software.wings.service.intfc.yaml.SetupYamlResourceService;
+import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.yaml.SetupYaml;
+import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.DirectoryNode;
+import software.wings.yaml.gitSync.GitSyncWebhook;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -42,25 +52,32 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class YamlResource {
   private YamlResourceService yamlResourceService;
-  private ServiceYamlResourceService serviceYamlResourceService;
   private AppYamlResourceService appYamlResourceService;
-  private SetupYamlResourceService setupYamlResourceService;
+  private YamlArtifactStreamService yamlArtifactStreamService;
+  private YamlSyncService yamlSyncService;
   private YamlDirectoryService yamlDirectoryService;
+  private YamlGitService yamlGitSyncService;
 
   /**
    * Instantiates a new service resource.
    *
-   * @param yamlResourceService the yaml resource service
+   * @param yamlResourceService        the yaml resource servicewe
+   * @param appYamlResourceService     the app yaml resource service
+   * @param yamlDirectoryService       the yaml directory service
+   * @param yamlArtifactStreamService  the yaml artifact stream service
+   * @param yamlSyncService            the yaml sync service
+   * @param yamlGitSyncService
    */
   @Inject
-  public YamlResource(YamlResourceService yamlResourceService, ServiceYamlResourceService serviceYamlResourceService,
-      AppYamlResourceService appYamlResourceService, SetupYamlResourceService setupYamlResourceService,
-      YamlDirectoryService yamlDirectoryService) {
+  public YamlResource(YamlResourceService yamlResourceService, AppYamlResourceService appYamlResourceService,
+      YamlDirectoryService yamlDirectoryService, YamlArtifactStreamService yamlArtifactStreamService,
+      YamlSyncService yamlSyncService, YamlGitService yamlGitSyncService) {
     this.yamlResourceService = yamlResourceService;
-    this.serviceYamlResourceService = serviceYamlResourceService;
     this.appYamlResourceService = appYamlResourceService;
-    this.setupYamlResourceService = setupYamlResourceService;
     this.yamlDirectoryService = yamlDirectoryService;
+    this.yamlArtifactStreamService = yamlArtifactStreamService;
+    this.yamlSyncService = yamlSyncService;
+    this.yamlGitSyncService = yamlGitSyncService;
   }
 
   /**
@@ -103,6 +120,7 @@ public class YamlResource {
    * @param appId            the app id
    * @param artifactStreamId the artifact stream id
    * @param yamlPayload      the yaml version of the service command
+   * @param deleteEnabled    the delete enabled
    * @return the rest response
    */
   @PUT
@@ -134,19 +152,26 @@ public class YamlResource {
   /**
    * Update a pipeline that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param appId       the app id
-   * @param pipelineId  the pipeline id
-   * @param yamlPayload the yaml version of the service command
+   * @param appId         the app id
+   * @param yamlPayload   the yaml version of the service command
    * @return the rest response
    */
   @PUT
-  @Path("/pipelines/{pipelines}")
+  @Path("/pipelines/{pipelineId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Pipeline> updatePipeline(@QueryParam("appId") String appId,
-      @PathParam("pipelineId") String pipelineId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlResourceService.updatePipeline(appId, pipelineId, yamlPayload, deleteEnabled);
+  public RestResponse<Pipeline> updatePipeline(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlResourceService.updatePipeline(accountId, yamlPayload);
+  }
+
+  @PUT
+  @Path("/workflows/{workflowId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Workflow> updateWorkflow(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlResourceService.updateWorkflow(accountId, yamlPayload);
   }
 
   /**
@@ -171,6 +196,7 @@ public class YamlResource {
    * @param appId            the app id
    * @param serviceCommandId the service command id
    * @param yamlPayload      the yaml version of the service command
+   * @param deleteEnabled    the delete enabled
    * @return the rest response
    */
   @PUT
@@ -186,8 +212,8 @@ public class YamlResource {
   /**
    * Gets all the setting attributes of a given type by accountId
    *
-   * @param accountId   the account id
-   * @param type        the SettingVariableTypes
+   * @param accountId the account id
+   * @param type      the SettingVariableTypes
    * @return the rest response
    */
   @GET
@@ -218,10 +244,11 @@ public class YamlResource {
   /**
    * Update setting attribute sent as Yaml (in a JSON "wrapper")
    *
-   * @param accountId   the account id
-   * @param uuid        the uid of the setting attribute
-   * @param type        the SettingVariableTypes
-   * @param yamlPayload the yaml version of setup
+   * @param accountId     the account id
+   * @param uuid          the uid of the setting attribute
+   * @param type          the SettingVariableTypes
+   * @param yamlPayload   the yaml version of setup
+   * @param deleteEnabled the delete enabled
    * @return the rest response
    */
   @PUT
@@ -237,39 +264,40 @@ public class YamlResource {
   /**
    * Gets the yaml version of an environment by envId
    *
-   * @param appId   the app id
-   * @param envId   the environment id
+   * @param appId the app id
+   * @param envId the environment id
    * @return the rest response
    */
   @GET
   @Path("/environments/{envId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> get(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
+  public RestResponse<YamlPayload> getEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return yamlResourceService.getEnvironment(appId, envId);
   }
 
   /**
    * Update a environment that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param envId  the environment id
-   * @param yamlPayload the yaml version of environment
+   * @param accountId         the account id
+   * @param appId         the app id
+   * @param yamlPayload   the yaml version of environment
    * @return the rest response
    */
   @PUT
   @Path("/environments/{envId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Environment> update(@QueryParam("appId") String appId, @PathParam("envId") String envId,
-      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlResourceService.updateEnvironment(appId, envId, yamlPayload, deleteEnabled);
+  public RestResponse<Environment> updateEnvironment(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlResourceService.updateEnvironment(accountId, yamlPayload);
   }
 
   /**
    * Gets the yaml version of a service by serviceId
    *
-   * @param appId  the app id
-   * @param serviceId  the service id
+   * @param appId     the app id
+   * @param serviceId the service id
    * @return the rest response
    */
   @GET
@@ -278,30 +306,30 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<YamlPayload> getService(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return serviceYamlResourceService.getService(appId, serviceId);
+    return yamlResourceService.getService(appId, serviceId);
   }
 
   /**
    * Update a service that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param serviceId  the service id
-   * @param yamlPayload the yaml version of service
+   * @param appId         the app id
+   * @param accountId         the account id
+   * @param yamlPayload   the yaml version of service
    * @return the rest response
    */
   @PUT
   @Path("/services/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Service> updateService(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return serviceYamlResourceService.updateService(appId, serviceId, yamlPayload, deleteEnabled);
+  public RestResponse<Service> updateService(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlResourceService.updateService(accountId, yamlPayload);
   }
 
   /**
    * Gets the yaml version of an app by appId
    *
-   * @param appId  the app id
+   * @param appId the app id
    * @return the rest response
    */
   @GET
@@ -315,8 +343,9 @@ public class YamlResource {
   /**
    * Update an app that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param appId  the app id
-   * @param yamlPayload the yaml version of app
+   * @param appId         the app id
+   * @param yamlPayload   the yaml version of app
+   * @param deleteEnabled the delete enabled
    * @return the rest response
    */
   @PUT
@@ -326,36 +355,6 @@ public class YamlResource {
   public RestResponse<Application> updateApp(@PathParam("appId") String appId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     return appYamlResourceService.updateApp(appId, yamlPayload, deleteEnabled);
-  }
-
-  /**
-   * Gets the setup yaml by accountId
-   *
-   * @param accountId  the account id
-   * @return the rest response
-   */
-  @GET
-  @Path("/setup")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<YamlPayload> getSetup(@QueryParam("accountId") String accountId) {
-    return setupYamlResourceService.getSetup(accountId);
-  }
-
-  /**
-   * Update setup that is sent as Yaml (in a JSON "wrapper")
-   *
-   * @param accountId  the account id
-   * @param yamlPayload the yaml version of setup
-   * @return the rest response
-   */
-  @PUT
-  @Path("/setup")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<SetupYaml> updateSetup(@QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return setupYamlResourceService.updateSetup(accountId, yamlPayload, deleteEnabled);
   }
 
   /**
@@ -372,16 +371,196 @@ public class YamlResource {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId));
   }
 
+  /**
+   * Push directory rest response.
+   *
+   * @param accountId the account id
+   * @return the rest response
+   */
   //-------------------------------------
   // TODO - I need an endpoint, at least temporarily, that will allow me to kick off pushing the full setup directory
   // "tree" to a synced git repo
   @GET
-  @Path("/push-directory")
+  @Path("push-directory")
   @Timed
   @ExceptionMetered
-  public RestResponse pushDirectory(
-      @QueryParam("accountId") String accountId, @QueryParam("filterCustomGitSync") boolean filterCustomGitSync) {
-    boolean success = yamlDirectoryService.pushDirectory(accountId, filterCustomGitSync);
+  public RestResponse pushDirectory(@QueryParam("accountId") String accountId) {
+    yamlGitSyncService.pushDirectory(accountId);
     return new RestResponse<>();
+  }
+
+  /**
+   * Gets artifact stream.
+   *
+   * @param appId            the app id
+   * @param artifactStreamId the artifact stream id
+   * @return the artifact stream
+   */
+  @GET
+  @Path("/artifact-streams/{artifactStreamId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getArtifactStream(
+      @QueryParam("appId") String appId, @PathParam("artifactStreamId") String artifactStreamId) {
+    return yamlArtifactStreamService.getArtifactStreamYaml(appId, artifactStreamId);
+  }
+
+  /**
+   * Update a config file that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param appId            app id
+   * @param artifactStreamId the artifact stream id
+   * @param yamlPayload      the yaml version of configFile
+   * @param deleteEnabled    the delete enabled
+   * @return rest response
+   */
+  @PUT
+  @Path("/artifact-streams/{artifactStreamId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Base> updateArtifactStream(@QueryParam("appId") String appId,
+      @PathParam("artifactStreamId") String artifactStreamId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlArtifactStreamService.updateArtifactStream(appId, artifactStreamId, yamlPayload, deleteEnabled);
+  }
+
+  @GET
+  @Path("/infrastructuremappings/{infraMappingId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getInfraMapping(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @PathParam("infraMappingId") String infraMappingId) {
+    return yamlResourceService.getInfraMapping(accountId, appId, infraMappingId);
+  }
+
+  @PUT
+  @Path("/infrastructuremappings/{infraMappingId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Base> updateInfraMapping(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlSyncService.update(yamlPayload, accountId);
+  }
+
+  /**
+   * Update yaml file
+   *
+   * @param accountId   account id
+   * @param yamlPayload yaml payload with payload as string
+   * @return rest response
+   */
+  @PUT
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Base> updateYaml(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
+    return yamlSyncService.update(yamlPayload, accountId);
+  }
+
+  /**
+   * Generic api to get any yaml file
+   *
+   * @param accountId the account id
+   * @param yamlPath  the yaml path
+   * @return rest response
+   */
+  @GET
+  @Timed
+  @ExceptionMetered
+  public RestResponse<BaseYaml> getYaml(
+      @QueryParam("accountId") String accountId, @QueryParam("yamlPath") String yamlPath) {
+    return yamlSyncService.getYaml(accountId, yamlPath);
+  }
+
+  /**
+   * Save git config rest response.
+   *
+   * @param accountId   the account id
+   * @param yamlGitSync the yaml git sync
+   * @return the rest response
+   */
+  @POST
+  @Path("git-config")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlGitConfig> saveGitConfig(
+      @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
+    yamlGitSync.setAccountId(accountId);
+    yamlGitSync.setAppId(Base.GLOBAL_APP_ID);
+    return new RestResponse<>(yamlGitSyncService.save(yamlGitSync));
+  }
+
+  /**
+   * Gets the yaml git sync info by uuid
+   *
+   * @param entityId  the entity id
+   * @param accountId the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("git-config/{entityId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlGitConfig> get(
+      @PathParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(yamlGitSyncService.get(accountId, entityId));
+  }
+
+  /**
+   * Update git config rest response.
+   *
+   * @param accountId   the account id
+   * @param yamlGitSync the yaml git sync
+   * @return the rest response
+   */
+  @PUT
+  @Path("git-config/{entityId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlGitConfig> updateGitConfig(
+      @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
+    yamlGitSync.setAccountId(accountId);
+    yamlGitSync.setAppId(Base.GLOBAL_APP_ID);
+    return new RestResponse<>(yamlGitSyncService.update(yamlGitSync));
+  }
+
+  /**
+   * Webhook catcher rest response.
+   *
+   * @param accountId          the account id
+   * @param entityToken        the entity token
+   * @param yamlWebHookPayload the yaml web hook payload
+   * @return the rest response
+   */
+  @POST
+  @Path("webhook/{entityToken}")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse webhookCatcher(@QueryParam("accountId") String accountId,
+      @PathParam("entityToken") String entityToken, YamlWebHookPayload yamlWebHookPayload) {
+    yamlGitSyncService.processWebhookPost(accountId, entityToken, yamlWebHookPayload);
+    return new RestResponse();
+  }
+
+  /**
+   * Gets existing or new webhook
+   *
+   * @param entityId  the uuid of the entity
+   * @param accountId the account id
+   * @return the git sync webhook
+   */
+  @GET
+  @Path("webhook/{entityId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<GitSyncWebhook> getWebhook(
+      @PathParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
+    try {
+      entityId = URLDecoder.decode(entityId, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    }
+    return new RestResponse<>(yamlGitSyncService.getWebhook(entityId, accountId));
   }
 }

@@ -72,6 +72,8 @@ public interface AppService {
    */
   Application get(@NotEmpty String appId, SetupStatus status, boolean overview, int overviewDays);
 
+  Application getAppByName(String accountId, String appName);
+
   /**
    * Update.
    *
@@ -117,4 +119,6 @@ public interface AppService {
    * @param accountId the account id
    */
   void deleteByAccountId(String accountId);
+
+  String getAccountIdByAppId(String appId);
 }

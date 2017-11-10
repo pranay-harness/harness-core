@@ -3,5 +3,6 @@
   "infraMappingType": { "ui:widget": "hidden" },
   "deploymentType": { "ui:widget": "hidden" },
   "namespace":{"ui:placeholder": "default"},
-  "ui:order": [ "deploymentType","computeProviderSettingId","clusterName","namespace","infraMappingType","computeProviderType"]
+  "ui:order": [ "name", "autoPopulate","serviceId", "deploymentType","computeProviderSettingId","clusterName","namespace","infraMappingType","computeProviderType"]
+
 }

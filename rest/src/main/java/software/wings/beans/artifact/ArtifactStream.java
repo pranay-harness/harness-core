@@ -5,12 +5,15 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.UIOrder;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -56,6 +59,15 @@ public abstract class ArtifactStream extends Base {
    */
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends BaseEntityYaml {
+    private String sourceName;
+    private String settingName;
+    private boolean autoApproveForProduction = false;
+    private boolean metadataOnly = false;
   }
 
   /**

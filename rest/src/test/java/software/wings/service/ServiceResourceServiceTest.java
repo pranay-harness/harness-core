@@ -11,7 +11,6 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
@@ -52,7 +51,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.Verifier;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
@@ -134,16 +132,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
-  /**
-   * The Verifier.
-   */
-  @Rule
-  public Verifier verifier = new Verifier() {
-    @Override
-    protected void verify() throws Throwable {
-      verifyNoMoreInteractions(configService, wingsPersistence);
-    }
-  };
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;
   @Mock private SetupService setupService;
@@ -166,6 +154,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Captor
   private ArgumentCaptor<ServiceCommand> serviceCommandArgumentCaptor = ArgumentCaptor.forClass(ServiceCommand.class);
 
+  @Mock private UpdateOperations<Service> updateOperations;
+
   /**
    * Sets the up.
    *
@@ -177,15 +167,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.but().build());
     when(wingsPersistence.get(ServiceCommand.class, APP_ID, SERVICE_COMMAND_ID))
         .thenReturn(serviceCommandBuilder.but().build());
-    when(wingsPersistence.createQuery(Service.class)).thenReturn(datastore.createQuery(Service.class));
-    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
-    when(wingsPersistence.createQuery(Command.class)).thenReturn(datastore.createQuery(Command.class));
-
-    when(wingsPersistence.createUpdateOperations(Service.class))
-        .thenReturn(datastore.createUpdateOperations(Service.class));
     when(appService.get(TARGET_APP_ID))
         .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
     when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+
+    when(wingsPersistence.createUpdateOperations(Service.class)).thenReturn(updateOperations);
+    when(updateOperations.set(anyString(), any())).thenReturn(updateOperations);
+
+    when(wingsPersistence.createQuery(Service.class)).thenReturn(datastore.createQuery(Service.class));
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
+    when(wingsPersistence.createQuery(Command.class)).thenReturn(datastore.createQuery(Command.class));
   }
 
   /**
@@ -211,14 +202,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldSaveService() {
     Service service = serviceBuilder.but().build();
-    doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any());
+    doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(), eq(true));
     Service savedService = spyServiceResourceService.save(service);
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
     verify(wingsPersistence).saveAndGet(Service.class, service);
     verify(serviceTemplateService).createDefaultTemplatesByService(savedService);
     verify(spyServiceResourceService, times(3))
-        .addCommand(eq(APP_ID), eq(SERVICE_ID), serviceCommandArgumentCaptor.capture());
+        .addCommand(eq(APP_ID), eq(SERVICE_ID), serviceCommandArgumentCaptor.capture(), eq(true));
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     List<ServiceCommand> allValues = serviceCommandArgumentCaptor.getAllValues();
     assertThat(
@@ -271,10 +262,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                           .withAppContainer(anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build())
                           .build();
     srs.update(service);
-    verify(wingsPersistence)
-        .updateFields(Service.class, SERVICE_ID,
-            ImmutableMap.of("name", "UPDATED_SERVICE_NAME", "description", "UPDATED_SERVICE_DESC", "artifactType", WAR,
-                "appContainer", anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build()));
+    verify(wingsPersistence).update(any(Service.class), any(UpdateOperations.class));
+    verify(wingsPersistence).createUpdateOperations(Service.class);
+    verify(updateOperations).set("name", "UPDATED_SERVICE_NAME");
+    verify(updateOperations).set("description", "UPDATED_SERVICE_DESC");
+
     verify(serviceTemplateService)
         .updateDefaultServiceTemplateName(APP_ID, SERVICE_ID, SERVICE_NAME, "UPDATED_SERVICE_NAME");
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
@@ -355,7 +347,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     doReturn(savedClonedService)
         .when(spyServiceResourceService)
-        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class));
+        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(false));
 
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(asList(aConfigFile().withAppId(APP_ID).withUuid("CONFIG_FILE_ID").build()));
@@ -446,7 +438,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.transformGraph();
 
     srs.addCommand(APP_ID, SERVICE_ID,
-        aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(commandGraph).build()).build());
+        aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(commandGraph).build()).build(),
+        false);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence)
@@ -709,7 +702,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).createQuery(ServiceCommand.class);
 
-    verify(commandService, never()).save(any(Command.class));
+    verify(commandService, never()).save(any(Command.class), eq(false));
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }

@@ -67,7 +67,7 @@ public interface BuildSourceService {
    * @param settingId        the setting id
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId);
+  List getBuilds(String appId, String artifactStreamId, String settingId);
 
   /**
    * Gets last successful build.

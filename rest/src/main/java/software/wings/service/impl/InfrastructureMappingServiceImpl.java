@@ -55,9 +55,12 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -66,6 +69,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
@@ -74,7 +78,9 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
@@ -82,6 +88,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,6 +99,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -108,6 +116,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private AppService appService;
   @Inject private SettingsService settingsService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -116,6 +125,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private WorkflowService workflowService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
+  private static final String FIRST_REVISION = ".1";
   @Inject private SecretManager secretManager;
 
   @Override
@@ -155,6 +168,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public InfrastructureMapping save(@Valid InfrastructureMapping infraMapping) {
+    // The default name uses a bunch of user inputs, which is why we generate it at the time of save.
+    if (infraMapping.isAutoPopulate()) {
+      setAutoPopulatedName(infraMapping);
+    }
+
     SettingAttribute computeProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
 
     ServiceTemplate serviceTemplate =
@@ -182,7 +200,71 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validatePyInfraMapping((PhysicalInfrastructureMapping) infraMapping);
     }
 
-    return wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
+    InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
+    queueYamlChangeSet(savedInfraMapping, ChangeType.ADD);
+    return savedInfraMapping;
+  }
+
+  private void queueYamlChangeSet(InfrastructureMapping infraMapping, ChangeType crudType) {
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getInfraMappingGitSyncFile(accountId, infraMapping, crudType));
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+  }
+
+  /**
+   * This method gets the default name, checks if another entry exists with the same name, if exists, it parses and
+   * extracts the revision and creates a name with the next revision.
+   * @param infraMapping
+   */
+  private void setAutoPopulatedName(InfrastructureMapping infraMapping) {
+    String name = infraMapping.getDefaultName();
+
+    String escapedString = Pattern.quote(name);
+
+    // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.
+    PageRequest<InfrastructureMapping> pageRequest = PageRequest.Builder.aPageRequest()
+                                                         .addFilter("appId", Operator.EQ, infraMapping.getAppId())
+                                                         .addFilter("envId", Operator.EQ, infraMapping.getEnvId())
+                                                         .addFilter("name", Operator.STARTS_WITH, escapedString)
+                                                         .addOrder("name", OrderType.DESC)
+                                                         .build();
+    PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
+
+    // If an entry exists with the given default name
+    if (response != null && response.size() > 0) {
+      String existingName = response.get(0).getName();
+      int index = existingName.lastIndexOf('.');
+      if (index == -1) {
+        name = name + FIRST_REVISION;
+      } else {
+        if (index < existingName.length() - 1) {
+          String revisionString = existingName.substring(index + 1);
+          int revision = -1;
+          try {
+            revision = Integer.parseInt(revisionString);
+          } catch (NumberFormatException ex) {
+          }
+
+          if (revision != -1) {
+            revision++;
+            name = name + "." + revision;
+          } else {
+            name = name + FIRST_REVISION;
+          }
+        } else {
+          name = name + FIRST_REVISION;
+        }
+      }
+
+      infraMapping.setName(name);
+    } else {
+      infraMapping.setName(infraMapping.getDefaultName());
+    }
   }
 
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
@@ -223,6 +305,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("hostConnectionAttrs", infrastructureMapping.getHostConnectionAttrs());
     }
 
+    if (isNotEmpty(infrastructureMapping.getName())) {
+      updateOperations.set("name", infrastructureMapping.getName());
+    } else {
+      updateOperations.unset("name");
+    }
+
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       validateEcsInfraMapping(ecsInfrastructureMapping, computeProviderSetting);
@@ -249,11 +337,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
       } else {
         updateOperations.unset("loadBalancerId");
-      }
-      if (isNotEmpty(awsInfrastructureMapping.getCustomName())) {
-        updateOperations.set("customName", awsInfrastructureMapping.getCustomName());
-      } else {
-        updateOperations.unset("customName");
       }
       updateOperations.set("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
       updateOperations.set("setDesiredCapacity", awsInfrastructureMapping.isSetDesiredCapacity());
@@ -296,7 +379,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     wingsPersistence.update(savedInfraMapping, updateOperations);
 
-    return get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    queueYamlChangeSet(updatedInfraMapping, ChangeType.MODIFY);
+    return updatedInfraMapping;
   }
 
   private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
@@ -844,6 +929,20 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
     return infrastructureProviders.get(computeProviderType);
+  }
+
+  @Override
+  public InfrastructureMapping getInfraMappingByName(String appId, String envId, String name) {
+    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                      .field("appId")
+                                                      .equal(appId)
+                                                      .field("envId")
+                                                      .equal(envId)
+                                                      .field("name")
+                                                      .equal(name)
+                                                      .get();
+    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    return infrastructureMapping;
   }
 
   @Override

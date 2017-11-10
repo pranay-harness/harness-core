@@ -1,12 +1,14 @@
 package software.wings.yaml;
 
+import software.wings.beans.Application;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderIndentTestYaml extends GenericYaml {
-  @YamlSerialize public String name;
-  @YamlSerialize public String description;
-  @YamlSerialize public List<AppYaml> applications = new ArrayList<AppYaml>();
+public class OrderIndentTestYaml extends BaseYaml {
+  private String name;
+  private String description;
+  private List<Application.Yaml> applications = new ArrayList<>();
 
   public String getName() {
     return name;
@@ -24,15 +26,15 @@ public class OrderIndentTestYaml extends GenericYaml {
     this.description = description;
   }
 
-  public List<AppYaml> getApplications() {
+  public List<Application.Yaml> getApplications() {
     return applications;
   }
 
-  public void setApplications(List<AppYaml> applications) {
+  public void setApplications(List<Application.Yaml> applications) {
     this.applications = applications;
   }
 
-  public void addApplication(AppYaml application) {
+  public void addApplication(Application.Yaml application) {
     this.applications.add(application);
   }
 }

@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import static software.wings.beans.Application.Builder.anApplication;
+
 import com.google.common.base.MoreObjects;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -12,8 +15,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.stats.AppKeyStatistics;
-import software.wings.yaml.YamlPayload;
-import software.wings.yaml.YamlSerialize;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,19 +30,64 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Application extends Base {
-  @NotEmpty @YamlSerialize private String name;
-  @YamlSerialize private String description;
+  @NotEmpty private String name;
+  private String description;
 
   @Indexed @NotEmpty private String accountId;
 
-  @Transient @YamlSerialize private List<Service> services = new ArrayList<>();
-  @Transient @YamlSerialize private List<Environment> environments = new ArrayList<>();
+  @Transient private List<Service> services = new ArrayList<>();
+  @Transient private List<Environment> environments = new ArrayList<>();
 
   @Transient private Setup setup;
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
   @Transient private AppKeyStatistics appKeyStatistics;
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseEntityYaml {
+    private String name;
+    private String description;
+
+    public static final class Builder {
+      private Yaml yaml;
+
+      private Builder() {
+        yaml = new Yaml();
+      }
+
+      public static Builder anApplicationYaml() {
+        return new Builder();
+      }
+
+      public Builder withName(String name) {
+        yaml.setName(name);
+        return this;
+      }
+
+      public Builder withDescription(String description) {
+        yaml.setDescription(description);
+        return this;
+      }
+
+      public Builder withType(String type) {
+        yaml.setType(type);
+        return this;
+      }
+
+      public Builder but() {
+        return anApplicationYaml()
+            .withName(yaml.getName())
+            .withDescription(yaml.getDescription())
+            .withType(yaml.getType());
+      }
+
+      public Yaml build() {
+        return yaml;
+      }
+    }
+  }
 
   /**
    * Gets name.
@@ -254,21 +301,23 @@ public class Application extends Base {
         .toString();
   }
 
-  public String toYaml() {
-    StringBuilder yamlSB = new StringBuilder();
-
-    yamlSB.append("--- ");
-    yamlSB.append("# app.yaml for appId: " + this.getAppId() + "\n");
-    yamlSB.append("name: " + this.getName() + "\n");
-    yamlSB.append("description: " + this.getDescription() + "\n");
-
-    boolean validYaml = YamlPayload.validateYamlString(yamlSB.toString());
-
-    if (!YamlPayload.validateYamlString(yamlSB.toString())) {
-      return "ERROR: Yaml constructed in Application.toYaml is not valid!";
-    }
-
-    return yamlSB.toString();
+  public Builder toBuilder() {
+    return anApplication()
+        .withName(getName())
+        .withDescription(getDescription())
+        .withAccountId(getAccountId())
+        .withServices(getServices())
+        .withEnvironments(getEnvironments())
+        .withSetup(getSetup())
+        .withRecentExecutions(getRecentExecutions())
+        .withNotifications(getNotifications())
+        .withNextDeploymentOn(getNextDeploymentOn())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   /**

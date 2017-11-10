@@ -1,10 +1,13 @@
 package software.wings.beans;
 
+import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.utils.Util;
 
 import java.util.Optional;
 
@@ -24,12 +27,128 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     super(InfrastructureMappingType.GCP_KUBERNETES.name());
   }
 
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
+    private String namespace;
+
+    public static final class Builder {
+      private String namespace;
+      private String cluster;
+      private String computeProviderType;
+      private String serviceName;
+      private String infraMappingType;
+      private String type;
+      private String deploymentType;
+      private String computeProviderName;
+      private String name;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withNamespace(String namespace) {
+        this.namespace = namespace;
+        return this;
+      }
+
+      public Builder withCluster(String cluster) {
+        this.cluster = cluster;
+        return this;
+      }
+
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withNamespace(namespace)
+            .withCluster(cluster)
+            .withComputeProviderType(computeProviderType)
+            .withServiceName(serviceName)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withName(name);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setNamespace(namespace);
+        yaml.setCluster(cluster);
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setServiceName(serviceName);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setName(name);
+        return yaml;
+      }
+    }
+  }
+
   @SchemaIgnore
   @Override
-  public String getDisplayName() {
-    return String.format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
+  public String getDefaultName() {
+    return Util.normalize(String.format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        Optional.ofNullable(this.getNamespace()).orElse("default"));
+        Optional.ofNullable(this.getNamespace()).orElse("default")));
+  }
+
+  public Builder deepClone() {
+    return aGcpKubernetesInfrastructureMapping()
+        .withName(getName())
+        .withClusterName(getClusterName())
+        .withNamespace(getNamespace())
+        .withComputeProviderSettingId(getComputeProviderSettingId())
+        .withEnvId(getEnvId())
+        .withServiceTemplateId(getServiceTemplateId())
+        .withServiceId(getServiceId())
+        .withComputeProviderType(getComputeProviderType())
+        .withDeploymentType(getDeploymentType())
+        .withComputeProviderName(getComputeProviderName())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   /**
@@ -51,6 +170,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String name;
 
     private Builder() {}
 
@@ -71,6 +191,17 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
      */
     public Builder withClusterName(String clusterName) {
       this.clusterName = clusterName;
+      return this;
+    }
+
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
+    public Builder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -229,6 +360,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
      */
     public Builder but() {
       return aGcpKubernetesInfrastructureMapping()
+          .withName(name)
           .withClusterName(clusterName)
           .withNamespace(namespace)
           .withComputeProviderSettingId(computeProviderSettingId)
@@ -253,6 +385,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
      */
     public GcpKubernetesInfrastructureMapping build() {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping = new GcpKubernetesInfrastructureMapping();
+      gcpKubernetesInfrastructureMapping.setName(name);
       gcpKubernetesInfrastructureMapping.setClusterName(clusterName);
       gcpKubernetesInfrastructureMapping.setNamespace(namespace);
       gcpKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);

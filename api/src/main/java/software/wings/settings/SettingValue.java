@@ -46,15 +46,30 @@ public abstract class SettingValue implements ExtensionPoint {
     this.type = type;
   }
 
+  /**
+   * Gets setting type.
+   *
+   * @return the setting type
+   */
   @SchemaIgnore
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.valueOf(type);
   }
 
+  /**
+   * Sets setting type.
+   *
+   * @param type the type
+   */
   public void setSettingType(SettingVariableTypes type) {
     //
   }
 
+  /**
+   * Gets encrypted fields.
+   *
+   * @return the encrypted fields
+   */
   @SchemaIgnore
   public boolean isDecrypted() {
     return decrypted;
@@ -199,13 +214,30 @@ public abstract class SettingValue implements ExtensionPoint {
      */
     AMAZON_S3("AmazonS3"),
 
+    /**
+     * Git setting variable types.
+     */
+    GIT("GIT"), /**
+                 * Ssh session config setting variable types.
+                 */
     SSH_SESSION_CONFIG,
 
+    /**
+     * Service variable setting variable types.
+     */
     SERVICE_VARIABLE,
 
+    /**
+     * Config file setting variable types.
+     */
     CONFIG_FILE,
 
+    /**
+     * Kms setting variable types.
+     */
     KMS,
+
+    YAML_GIT_SYNC,
 
     VAULT;
 
@@ -218,6 +250,11 @@ public abstract class SettingValue implements ExtensionPoint {
       this.displayName = displayName;
     }
 
+    /**
+     * Gets display name.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
       return displayName;
     }

@@ -9,6 +9,8 @@ import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.sm.StateType.FORK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
@@ -19,6 +21,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
+import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.workflow.StepYaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -476,6 +480,118 @@ public class PhaseStep {
       phaseStep.setArtifactNeeded(artifactNeeded);
       phaseStep.setWaitInterval(waitInterval);
       return phaseStep;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseEntityYaml {
+    private String name;
+    private String statusForRollback;
+    private boolean stepsInParallel;
+    private List<StepYaml> steps = new ArrayList<>();
+    private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
+    private boolean rollback;
+    private String phaseStepNameForRollback;
+    private boolean artifactNeeded;
+    private Integer waitInterval;
+
+    public static final class Builder {
+      private String name;
+      private String statusForRollback;
+      private List<StepYaml> steps = new ArrayList<>();
+      private boolean stepsInParallel;
+      private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
+      private boolean rollback;
+      private String type;
+      private String phaseStepNameForRollback;
+      private boolean artifactNeeded;
+      private Integer waitInterval;
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withStatusForRollback(String statusForRollback) {
+        this.statusForRollback = statusForRollback;
+        return this;
+      }
+
+      public Builder withSteps(List<StepYaml> steps) {
+        this.steps = steps;
+        return this;
+      }
+
+      public Builder withStepsInParallel(boolean stepsInParallel) {
+        this.stepsInParallel = stepsInParallel;
+        return this;
+      }
+
+      public Builder withFailureStrategies(List<FailureStrategy.Yaml> failureStrategies) {
+        this.failureStrategies = failureStrategies;
+        return this;
+      }
+
+      public Builder withRollback(boolean rollback) {
+        this.rollback = rollback;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withPhaseStepNameForRollback(String phaseStepNameForRollback) {
+        this.phaseStepNameForRollback = phaseStepNameForRollback;
+        return this;
+      }
+
+      public Builder withArtifactNeeded(boolean artifactNeeded) {
+        this.artifactNeeded = artifactNeeded;
+        return this;
+      }
+
+      public Builder withWaitInterval(Integer waitInterval) {
+        this.waitInterval = waitInterval;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml()
+            .withName(name)
+            .withStatusForRollback(statusForRollback)
+            .withSteps(steps)
+            .withStepsInParallel(stepsInParallel)
+            .withFailureStrategies(failureStrategies)
+            .withRollback(rollback)
+            .withType(type)
+            .withPhaseStepNameForRollback(phaseStepNameForRollback)
+            .withArtifactNeeded(artifactNeeded)
+            .withWaitInterval(waitInterval);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setName(name);
+        yaml.setStatusForRollback(statusForRollback);
+        yaml.setSteps(steps);
+        yaml.setStepsInParallel(stepsInParallel);
+        yaml.setFailureStrategies(failureStrategies);
+        yaml.setRollback(rollback);
+        yaml.setType(type);
+        yaml.setPhaseStepNameForRollback(phaseStepNameForRollback);
+        yaml.setArtifactNeeded(artifactNeeded);
+        yaml.setWaitInterval(waitInterval);
+        return yaml;
+      }
     }
   }
 }

@@ -2,12 +2,18 @@ package software.wings.beans;
 
 import static java.lang.System.currentTimeMillis;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
@@ -23,6 +29,8 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @EqualsAndHashCode(of = {"uuid", "appId"})
+@AllArgsConstructor
+@NoArgsConstructor
 public class Base implements UuidAware {
   /**
    * The constant GLOBAL_APP_ID.
@@ -42,6 +50,12 @@ public class Base implements UuidAware {
   @SchemaIgnore @Indexed private long createdAt;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore private long lastUpdatedAt;
+
+  @Getter(AccessLevel.NONE)
+  @SchemaIgnore
+  @JsonIgnore
+  @Transient
+  public String entityYamlPath; // TODO:: remove it with changeSet batching
 
   /**
    * Invoked before inserting document in mongo by morphia.

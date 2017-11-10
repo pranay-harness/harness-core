@@ -449,14 +449,21 @@ public enum ErrorCode {
   /**
    * General Yaml related error
    */
-  GENERAL_YAML_INFO("GENERAL_YAML_INFO"), /**
-                                           * Artifact server
-                                           */
+  GENERAL_YAML_INFO("GENERAL_YAML_INFO"),
+  /**
+   * Yaml Git Sync related error
+   */
+  YAML_GIT_SYNC_ERROR("YAML_GIT_SYNC_ERROR"),
+  /**
+   * Artifact server
+   */
   ARTIFACT_SERVER_ERROR("ARTIFACT_SERVER_ERROR"),
 
   KMS_OPERATION_ERROR("KMS_OPERATION_ERROR"),
 
-  VAULT_OPERATION_ERROR("VAULT_OPERATION_ERROR");
+  VAULT_OPERATION_ERROR("VAULT_OPERATION_ERROR"),
+
+  UNSUPPORTED_OPERATION_EXCEPTION("UNSUPPORTED_OPERATION_EXCEPTION");
 
   /**
    * The constant ARGS_NAME.

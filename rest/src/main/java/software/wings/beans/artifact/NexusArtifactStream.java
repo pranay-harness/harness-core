@@ -1,11 +1,13 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
-import static software.wings.beans.artifact.NexusArtifactStream.Builder.*;
+import static software.wings.beans.artifact.NexusArtifactStream.Builder.aNexusArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -45,6 +47,96 @@ public class NexusArtifactStream extends ArtifactStream {
   public NexusArtifactStream() {
     super(ArtifactStreamType.NEXUS.name());
     super.setAutoApproveForProduction(true);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends ArtifactStream.Yaml {
+    private String repositoryName;
+    private String groupId;
+    private List<String> artifactPaths;
+
+    public static final class Builder {
+      private String repositoryName;
+      private String sourceName;
+      private String groupId;
+      private String settingName;
+      private List<String> artifactPaths;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRepositoryName(String repositoryName) {
+        this.repositoryName = repositoryName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withGroupId(String groupId) {
+        this.groupId = groupId;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withArtifactPaths(List<String> artifactPaths) {
+        this.artifactPaths = artifactPaths;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRepositoryName(repositoryName)
+            .withSourceName(sourceName)
+            .withGroupId(groupId)
+            .withSettingName(settingName)
+            .withArtifactPaths(artifactPaths)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRepositoryName(repositoryName);
+        yaml.setSourceName(sourceName);
+        yaml.setGroupId(groupId);
+        yaml.setSettingName(settingName);
+        yaml.setArtifactPaths(artifactPaths);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        return yaml;
+      }
+    }
   }
 
   @Override
@@ -126,6 +218,29 @@ public class NexusArtifactStream extends ArtifactStream {
         .withMetadataOnly(getMetadataOnly())
         .withArtifactPaths(getArtifactPaths())
         .build();
+  }
+
+  /**
+   * clone and return builder
+   * @return
+   */
+  public Builder deepClone() {
+    return aNexusArtifactStream()
+        .withJobname(getJobname())
+        .withGroupId(getGroupId())
+        .withArtifactPaths(getArtifactPaths())
+        .withSourceName(getSourceName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
+        .withStreamActions(getStreamActions())
+        .withMetadataOnly(isMetadataOnly());
   }
 
   /**
