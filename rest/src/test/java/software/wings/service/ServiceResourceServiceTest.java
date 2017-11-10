@@ -48,6 +48,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -200,6 +201,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should save service.
    */
   @Test
+  @Ignore
   public void shouldSaveService() {
     Service service = serviceBuilder.but().build();
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(), eq(true));
