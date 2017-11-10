@@ -102,12 +102,16 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     SettingAttribute computeProvider = settingsService.getByName(appId, yaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Could not retrieve valid compute provider with name: " + yaml.getComputeProviderName(), computeProvider);
+    String computeProviderId;
+    if (computeProvider == null) {
+      computeProviderId = yaml.getComputeProviderName();
+    } else {
+      computeProviderId = computeProvider.getUuid();
+    }
 
     WorkflowPhase.WorkflowPhaseBuilder phase = WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, infraMapping.getDeploymentType());
-    phase.withComputeProviderId(computeProvider.getUuid())
+    phase.withComputeProviderId(computeProviderId)
         .withDeploymentType(deploymentType)
         .withInfraMappingId(infraMapping.getUuid())
         .withInfraMappingName(yaml.getInfraMappingName())
@@ -123,7 +127,12 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   @Override
   public Yaml toYaml(WorkflowPhase bean, String appId) {
     SettingAttribute settingAttribute = settingsService.get(bean.getComputeProviderId());
-    Validator.notNullCheck("Invalid setting for the given id: " + bean.getComputeProviderId(), settingAttribute);
+    String computeProviderName;
+    if (settingAttribute == null) {
+      computeProviderName = bean.getComputeProviderId();
+    } else {
+      computeProviderName = settingAttribute.getName();
+    }
 
     // template expressions
     List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
@@ -149,7 +158,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     return Yaml.Builder.anYaml()
-        .withComputeProviderName(settingAttribute.getName())
+        .withComputeProviderName(computeProviderName)
         .withInfraMappingName(bean.getInfraMappingName())
         .withName(bean.getName())
         .withPhaseNameForRollback(bean.getPhaseNameForRollback())
