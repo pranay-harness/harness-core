@@ -42,4 +42,6 @@ public class VaultConfig extends Base implements EncryptionConfig {
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 
   @SchemaIgnore @Transient private EncryptionType encryptionType;
+
+  @SchemaIgnore @Transient private String encryptedBy;
 }

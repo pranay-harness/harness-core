@@ -27,6 +27,7 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.Integration;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -221,6 +222,35 @@ public class SecretMigrationUtil extends WingsBaseTest {
     }
 
     System.out.println("Complete. Updated " + changedObject + " file attributes.");
+  }
+
+  @Test
+  public void migrateSMTPConfigs() throws InterruptedException, IllegalAccessException {
+    List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class).asList();
+
+    System.out.println("will go through " + settingAttributes.size() + " records");
+
+    int changedObject = 0;
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      SettingValue value = settingAttribute.getValue();
+      if (!(value instanceof SmtpConfig)) {
+        continue;
+      }
+      System.out.println("Processing " + settingAttribute.getUuid());
+
+      SmtpConfig config = (SmtpConfig) value;
+      if (StringUtils.isBlank(config.getEncryptedPassword())) {
+        System.out.println("-------- Found value to be migrated ----------");
+      } else {
+        System.out.println("All good, continuing");
+        continue;
+      }
+
+      //      wingsPersistence.save(settingAttribute);
+      changedObject++;
+    }
+
+    System.out.println("Complete. Updated " + changedObject + " setting attributes.");
   }
 
   //  @Test
