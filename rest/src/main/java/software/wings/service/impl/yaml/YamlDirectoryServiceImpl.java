@@ -773,8 +773,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case CONFIG_FILE:
       case SSH_SESSION_CONFIG:
       case YAML_GIT_SYNC:
-      case DIRECT:
-      case KUBERNETES:
         break;
       default:
         logger.warn("Unknown SettingVariable type:" + settingVariableType);

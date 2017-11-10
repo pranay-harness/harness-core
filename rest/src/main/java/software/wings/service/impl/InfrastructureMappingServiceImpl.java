@@ -997,7 +997,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
-      infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
+      infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP));
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AWS_LAMBDA) {
