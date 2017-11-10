@@ -10,7 +10,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--analysis_minute", type=int, required=True)
 parser.add_argument("--tolerance", type=int, required=True)
 parser.add_argument("--smooth_window", type=int, required=True)
-options = parser.parse_args(['--analysis_minute', '0', '--tolerance', '1', '--smooth_window', '3'])
+parser.add_argument("--min_rpm", type=int, required=True)
+options = parser.parse_args(['--analysis_minute', '0', '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10'])
 
 
 def test_load_input():

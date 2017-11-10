@@ -31,6 +31,8 @@ class SplunkIntelOptimized(object):
             try:
                 combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
                 combined_tfidf_matrix = combined_vectorizer.fit_transform(texts)
+                if combined_tfidf_matrix[np.diff(combined_tfidf_matrix.indptr) == 0].shape[0] > 0:
+                    raise ValueError('Unable to featurize text with max_df = ' + str(max_df))
                 logging.info("Finish create combined dist")
                 processed = True
             except ValueError:
@@ -269,20 +271,20 @@ def run_debug_live_traffic(options):
 
 
 def run_debug_prev_run(options):
-    control_start = 1
-    test_start = 1
+    control_start = 2
+    test_start = 2
     print(options)
     prev_out_file = None
-    while control_start <= 1 or test_start < 1:
+    while control_start <= 2 or test_start < 2:
 
         splunk_dataset = SplunkDatasetNew()
 
         print(control_start, control_start)
         print(test_start, test_start)
         splunk_dataset.load_prod_file_prev_run(
-            '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prev_run/control.json',
+            '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prev_run/control_unknown_cluster_fail.json',
             [control_start, control_start],
-            '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prev_run/test.json',
+            '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prev_run/test_unknown_cluster_fail.json',
             [test_start, test_start], prev_out_file)
 
         if splunk_dataset.new_data:
