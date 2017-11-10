@@ -487,15 +487,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
 
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.ADD));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    //-------------------
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for app and service
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.ADD));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
 
     return newWorkflow;
   }
@@ -580,16 +584,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
 
-    Workflow finalWorkflow = workflow;
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(finalWorkflow.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, finalWorkflow, ChangeType.MODIFY));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for app and service
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
+
     return workflow;
   }
 
@@ -1076,15 +1083,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (deleted) {
       executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, workflowId));
 
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-          changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
-        }
-      });
+      //-------------------
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for app and service
+        changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
+
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+      //-------------------
     }
     return deleted;
   }
@@ -1642,16 +1653,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflow = readWorkflow(appId, workflowId, defaultVersion);
 
-    Workflow finalWorkflow = workflow;
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(finalWorkflow.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, finalWorkflow, ChangeType.MODIFY));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for app and service
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
 
     return workflow;
   }
