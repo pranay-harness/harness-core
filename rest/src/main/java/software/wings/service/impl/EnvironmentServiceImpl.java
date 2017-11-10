@@ -208,7 +208,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
 
-    queueEnvironmentYamlChangeSet(savedEnvironment, ChangeType.ADD);
+    executorService.submit(() -> queueEnvironmentYamlChangeSet(savedEnvironment, ChangeType.ADD));
 
     return savedEnvironment;
   }
@@ -230,11 +230,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment updatedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    if (!savedEnvironment.getName().equals(environment.getName())) {
-      queueMoveEnvironmentChange(savedEnvironment, updatedEnvironment);
-    } else {
-      queueEnvironmentYamlChangeSet(updatedEnvironment, ChangeType.MODIFY);
-    }
+    executorService.submit(() -> {
+      if (!savedEnvironment.getName().equals(environment.getName())) {
+        queueMoveEnvironmentChange(savedEnvironment, updatedEnvironment);
+      } else {
+        queueEnvironmentYamlChangeSet(updatedEnvironment, ChangeType.MODIFY);
+      }
+    });
 
     return updatedEnvironment;
   }
@@ -369,17 +371,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                   ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
               .build());
 
-      //-------------------
-      // check whether we need to push changes (through git sync)
-      String accountId = appService.getAccountIdByAppId(environment.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
+      executorService.submit(() -> {
+        String accountId = appService.getAccountIdByAppId(environment.getAppId());
+        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+        if (ygs != null) {
+          List<GitFileChange> changeSet = new ArrayList<>();
 
-        // add GitSyncFiles for app and service
-        changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, ChangeType.DELETE));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
+          // add GitSyncFiles for app and service
+          changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, ChangeType.DELETE));
+          yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        }
+      });
     }
   }
 
