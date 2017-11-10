@@ -226,6 +226,11 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDelete() {
+    ServiceVariable variable = ServiceVariable.builder().entityType(EntityType.SERVICE_TEMPLATE).build();
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     when(wingsPersistence.delete(any(Query.class))).thenReturn(false);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
     serviceVariableService.delete(APP_ID, SERVICE_VARIABLE_ID);

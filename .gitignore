@@ -15,6 +15,7 @@ rest/wingsui
 access.log
 access*gz
 */delegate*.log
+delegate/repository
 */upgrade.sh
 python/**/*.pyc
 python/**/*-checkpoint.ipynb
