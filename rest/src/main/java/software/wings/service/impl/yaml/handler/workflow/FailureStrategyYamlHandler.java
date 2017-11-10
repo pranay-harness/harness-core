@@ -44,7 +44,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     List<String> failureTypeList =
         bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(Collectors.toList());
     return FailureStrategy.Yaml.Builder.anYaml()
-        .withExecutionScope(bean.getExecutionScope().name())
+        .withExecutionScope(bean.getExecutionScope() != null ? bean.getExecutionScope().name() : null)
         .withFailureTypes(failureTypeList)
         .withRepairActionCode(bean.getRepairActionCode().name())
         .withRepairActionCodeAfterRetry(
