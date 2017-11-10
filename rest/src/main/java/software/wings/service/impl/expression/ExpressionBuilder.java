@@ -5,14 +5,11 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ASSERTION_STATEMENT;
 import static software.wings.common.Constants.ASSERTION_STATUS;
-import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.HTTP_RESPONSE_BODY;
 import static software.wings.common.Constants.HTTP_RESPONSE_CODE;
 import static software.wings.common.Constants.HTTP_RESPONSE_METHOD;
 import static software.wings.common.Constants.HTTP_URL;
 import static software.wings.common.Constants.JSONPATH;
-import static software.wings.common.Constants.KEY;
-import static software.wings.common.Constants.URL;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
@@ -48,6 +45,9 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_BUILDNO = "artifact.buildNo";
   protected static final String ARTIFACT_REVISION = "artifact.revision";
   protected static final String ARTIFACT_FILE_NAME = "ARTIFACT_FILE_NAME";
+  protected static final String ARTIFACT_BUCKET_NAME = "artifact.bucketName";
+  protected static final String ARTIFACT_BUCKET_KEY = "artifact.key";
+  protected static final String ARTIFACT_BUCKET_URL = "artifact.url";
 
   protected static final String ENV_NAME = "env.name";
   protected static final String ENV_DESCRIPTION = "env.description";
@@ -150,7 +150,8 @@ public abstract class ExpressionBuilder {
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
         break;
       case AWS_CODEDEPLOY_STATE:
-        expressions.addAll(asList(BUCKET_NAME, KEY, URL));
+        expressions.addAll(asList(ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_BUCKET_URL));
+        break;
     }
 
     return expressions;
