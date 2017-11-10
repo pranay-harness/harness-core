@@ -157,6 +157,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
     when(end.lessThan(any())).thenReturn(query);
     when(end.in(any())).thenReturn(query);
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
   }
 
   @Test
