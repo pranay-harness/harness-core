@@ -213,7 +213,8 @@ public class SecretMigrationUtil extends WingsBaseTest {
       File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
       fileService.download(configFile.getFileUuid(), file, CONFIGS);
       System.out.println("processing " + configFile);
-      System.out.println("going to save " + FileUtils.readFileToString(file));
+      EncryptionUtils.decrypt(file, configFile.getAccountId());
+      System.out.println("going to save: " + FileUtils.readFileToString(file));
 
       //      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
       changedObject++;
