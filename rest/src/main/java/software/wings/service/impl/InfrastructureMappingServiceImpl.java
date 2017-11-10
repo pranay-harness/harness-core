@@ -479,14 +479,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public List<ServiceInstance> selectServiceInstances(
-      String appId, String infraMappingId, String workflowId, ServiceInstanceSelectionParams selectionParams) {
+      String appId, String infraMappingId, String workflowExecutionId, ServiceInstanceSelectionParams selectionParams) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
     List<Host> hosts;
     if (infrastructureMapping instanceof AwsInfrastructureMapping
         && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
-      hosts = getAutoScaleGroupNodes(appId, infraMappingId, workflowId);
+      hosts = getAutoScaleGroupNodes(appId, infraMappingId, workflowExecutionId);
     } else {
       hosts = listHosts(infrastructureMapping)
                   .stream()
@@ -967,7 +967,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowId) {
+  public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
@@ -982,7 +982,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
       return awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
-          workflowId, appId, awsInfrastructureMapping, computeProviderSetting);
+          appId, workflowExecutionId, awsInfrastructureMapping, computeProviderSetting);
     } else {
       throw new WingsException(
           INVALID_REQUEST, "message", "Auto Scale groups are only supported for AWS infrastructure mapping");

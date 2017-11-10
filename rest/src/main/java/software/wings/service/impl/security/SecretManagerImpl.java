@@ -5,7 +5,6 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
@@ -22,7 +21,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
-import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
@@ -137,7 +136,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workflowId, String appId) {
+  public List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId) {
     if (object.isDecrypted()) {
       return Collections.emptyList();
     }
@@ -179,14 +178,20 @@ public class SecretManagerImpl implements SecretManager {
 
           encryptedDataDetails.add(encryptedDataDetail);
 
-          if (!StringUtils.isBlank(workflowId)) {
-            SecretUsageLog usageLog = SecretUsageLog.builder()
-                                          .encryptedDataId(encryptedData.getUuid())
-                                          .workflowId(workflowId)
-                                          .accountId(encryptedData.getAccountId())
-                                          .build();
-            usageLog.setAppId(appId);
-            wingsPersistence.save(usageLog);
+          if (!StringUtils.isBlank(workflowExecutionId)) {
+            WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
+            if (workflowExecution == null) {
+              logger.warn("No workflow execution with id {} found.", workflowExecutionId);
+            } else {
+              SecretUsageLog usageLog = SecretUsageLog.builder()
+                                            .encryptedDataId(encryptedData.getUuid())
+                                            .workflowExecutionId(workflowExecutionId)
+                                            .accountId(encryptedData.getAccountId())
+                                            .envId(workflowExecution.getEnvId())
+                                            .build();
+              usageLog.setAppId(appId);
+              wingsPersistence.save(usageLog);
+            }
           }
         }
       }
@@ -207,8 +212,9 @@ public class SecretManagerImpl implements SecretManager {
         wingsPersistence.createQuery(SecretUsageLog.class).field("encryptedDataId").hasAnyOf(secretIds).fetch();
     while (usageLogQuery.hasNext()) {
       SecretUsageLog usageLog = usageLogQuery.next();
-      Workflow workflow = wingsPersistence.get(Workflow.class, usageLog.getWorkflowId());
-      usageLog.setWorkflowName(workflow.getName());
+      WorkflowExecution workflowExecution =
+          wingsPersistence.get(WorkflowExecution.class, usageLog.getWorkflowExecutionId());
+      usageLog.setWorkflowExecutionName(workflowExecution.getName());
 
       secretUsageLogs.add(usageLog);
     }

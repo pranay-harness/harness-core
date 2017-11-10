@@ -11,7 +11,6 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
@@ -35,6 +34,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -44,6 +44,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -206,7 +207,9 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     String body = String.join("\n\n", emailBodyList);
     String subject = emailSubjectList.get(emailSubjectList.size() - 1);
 
-    emailNotificationService.sendAsync(
-        anEmailData().withTo(toAddress).withRetries(2).withSubject(subject).withBody(body).withSystem(true).build());
+    EmailData emailData = EmailData.builder().to(toAddress).subject(subject).body(body).system(true).build();
+    emailData.setRetries(2);
+    emailData.setCc(Collections.emptyList());
+    emailNotificationService.sendAsync(emailData);
   }
 }

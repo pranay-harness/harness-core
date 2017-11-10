@@ -60,7 +60,7 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
             infrastructureMapping);
 
         KubernetesConfig kubernetesConfig =
-            getKubernetesConfig(infrastructureMapping, containerDeploymentInfo.getWorkflowId());
+            getKubernetesConfig(infrastructureMapping, containerDeploymentInfo.getWorkflowExecutionId());
         Validator.notNullCheck(
             "KubernetesConfig is null for given infraMappingId:" + containerDeploymentInfo.getInfraMappingId(),
             infrastructureMapping);
@@ -99,7 +99,8 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
     return ContainerSyncResponse.builder().containerInfoList(result).build();
   }
 
-  private KubernetesConfig getKubernetesConfig(InfrastructureMapping infrastructureMapping, String workflowId) {
+  private KubernetesConfig getKubernetesConfig(
+      InfrastructureMapping infrastructureMapping, String workflowExecutionId) {
     KubernetesConfig kubernetesConfig;
 
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
@@ -108,7 +109,7 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting,
           secretManager.getEncryptionDetails(
-              (Encryptable) computeProviderSetting.getValue(), workflowId, infrastructureMapping.getAppId()),
+              (Encryptable) computeProviderSetting.getValue(), infrastructureMapping.getAppId(), workflowExecutionId),
           gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
     } else {
       kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();

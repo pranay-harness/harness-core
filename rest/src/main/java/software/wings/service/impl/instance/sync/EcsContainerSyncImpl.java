@@ -58,7 +58,7 @@ public class EcsContainerSyncImpl implements ContainerSync {
         SettingAttribute settingAttribute = settingsService.get(containerDeploymentInfo.getComputeProviderId());
         List<EncryptedDataDetail> encryptionDetails =
             secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(),
-                containerDeploymentInfo.getWorkflowId(), containerDeploymentInfo.getAppId());
+                containerDeploymentInfo.getAppId(), containerDeploymentInfo.getWorkflowExecutionId());
         Validator.notNullCheck("SettingAttribute", settingAttribute);
         AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptionDetails);
         Validator.notNullCheck("AwsConfig", awsConfig);

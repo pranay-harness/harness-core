@@ -54,7 +54,8 @@ public interface ServiceTemplateService {
    * @param templateId the template id
    * @return the map
    */
-  List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId, String workflowId);
+  List<ServiceVariable> computeServiceVariables(
+      String appId, String envId, String templateId, String workflowExecutionId);
 
   /**
    * Override config files.

@@ -33,7 +33,7 @@ public interface SecretManager {
   EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
       char[] secret, Field decryptedField, EncryptedData encryptedData);
 
-  List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workflowId, String appId);
+  List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId);
 
   Collection<UuidAware> listEncryptedValues(String accountId);
 

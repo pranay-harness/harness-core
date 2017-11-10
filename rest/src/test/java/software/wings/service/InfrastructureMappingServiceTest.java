@@ -509,7 +509,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     Host provisionedHost = aHost().withHostName(HOST_NAME).build();
     when(awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
-             null, APP_ID, awsInfrastructureMapping, computeProviderSetting))
+             APP_ID, null, awsInfrastructureMapping, computeProviderSetting))
         .thenReturn(singletonList(provisionedHost));
 
     when(awsInfrastructureProvider.saveHost(provisionedHost)).thenReturn(provisionedHost);
@@ -530,7 +530,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
     verify(awsInfrastructureProvider)
-        .maybeSetAutoScaleCapacityAndGetHosts(null, APP_ID, awsInfrastructureMapping, computeProviderSetting);
+        .maybeSetAutoScaleCapacityAndGetHosts(APP_ID, null, awsInfrastructureMapping, computeProviderSetting);
     verify(awsInfrastructureProvider).saveHost(provisionedHost);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(serviceInstanceService)

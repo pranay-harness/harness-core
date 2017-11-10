@@ -113,8 +113,8 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .collectionTime(Integer.parseInt(timeDuration))
             .newRelicAppId(Long.parseLong(applicationId))
             .dataCollectionMinute(0)
-            .encryptedDataDetails(
-                secretManager.getEncryptionDetails(newRelicConfig, context.getWorkflowId(), context.getAppId()))
+            .encryptedDataDetails(secretManager.getEncryptionDetails(
+                newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
             .build();
 

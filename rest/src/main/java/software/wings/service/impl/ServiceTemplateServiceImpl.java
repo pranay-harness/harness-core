@@ -354,7 +354,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowId) {
+      String appId, String envId, String templateId, String workflowExecutionId) {
     ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
     if (serviceTemplate == null) {
       return new ArrayList<>();
@@ -367,8 +367,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ServiceVariable> templateServiceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), false);
 
-    return overrideServiceSettings(overrideServiceSettings(serviceVariables, allServiceVariables, workflowId, appId),
-        templateServiceVariables, workflowId, appId);
+    return overrideServiceSettings(
+        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId),
+        templateServiceVariables, appId, workflowExecutionId);
   }
 
   /* (non-Javadoc)
@@ -396,11 +397,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    *
    * @param existingServiceVariables the existing files
    * @param newServiceVariables      the new files
-   * @param workflowId
+   * @param workflowExecutionId
    * @return the list
    */
   private List<ServiceVariable> overrideServiceSettings(List<ServiceVariable> existingServiceVariables,
-      List<ServiceVariable> newServiceVariables, String workflowId, String appId) {
+      List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (existingServiceVariables.size() != 0 || newServiceVariables.size() != 0) {
       logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
@@ -416,7 +417,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     mergedServiceSettings.forEach(serviceVariable -> {
       if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
         encryptionService.decrypt(
-            serviceVariable, secretManager.getEncryptionDetails(serviceVariable, workflowId, appId));
+            serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
       }
     });
     return mergedServiceSettings;

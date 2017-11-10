@@ -91,7 +91,7 @@ public abstract class NodeSelectState extends State {
       logger.info(
           "Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
       List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
-          appId, infraMappingId, context.getWorkflowId(), selectionParams.build());
+          appId, infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
 
       String errorMessage = buildServiceInstancesErrorMessage(
           serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances);

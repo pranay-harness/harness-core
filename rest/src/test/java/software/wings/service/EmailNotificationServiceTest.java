@@ -5,7 +5,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -32,19 +31,19 @@ import java.util.Collections;
  * Created by peeyushaggarwal on 5/25/16.
  */
 public class EmailNotificationServiceTest extends WingsBaseTest {
-  private static final EmailData emailTemplateData = anEmailData()
-                                                         .withTo(newArrayList("to"))
-                                                         .withTo(newArrayList("cc"))
-                                                         .withTemplateName("templateName")
-                                                         .withTemplateModel("templateModel")
-                                                         .withAccountId(ACCOUNT_ID)
+  private static final EmailData emailTemplateData = EmailData.builder()
+                                                         .to(newArrayList("to"))
+                                                         .cc(newArrayList("cc"))
+                                                         .templateName("templateName")
+                                                         .templateModel("templateModel")
+                                                         .accountId(ACCOUNT_ID)
                                                          .build();
-  private static final EmailData emailBodyData = anEmailData()
-                                                     .withTo(newArrayList("to"))
-                                                     .withTo(newArrayList("cc"))
-                                                     .withBody("body")
-                                                     .withSubject("subject")
-                                                     .withAccountId(ACCOUNT_ID)
+  private static final EmailData emailBodyData = EmailData.builder()
+                                                     .to(newArrayList("to"))
+                                                     .cc(newArrayList("cc"))
+                                                     .body("body")
+                                                     .subject("subject")
+                                                     .accountId(ACCOUNT_ID)
                                                      .build();
 
   private static final SmtpConfig smtpConfig = SmtpConfig.builder().build();

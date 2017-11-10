@@ -81,6 +81,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -166,14 +167,15 @@ public class UserServiceImpl implements UserService {
       String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
           account.getCompanyName(), account.getCompanyName(), user.getEmail()));
 
-      EmailData emailData = EmailData.Builder.anEmailData()
-                                .withTo(asList(user.getEmail()))
-                                .withRetries(2)
-                                .withTemplateName("add_account")
-                                .withTemplateModel(ImmutableMap.of(
+      EmailData emailData = EmailData.builder()
+                                .to(asList(user.getEmail()))
+                                .templateName("add_account")
+                                .templateModel(ImmutableMap.of(
                                     "name", user.getName(), "url", loginUrl, "company", account.getCompanyName()))
-                                .withSystem(true)
+                                .system(true)
                                 .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
       logger.error("Add account email couldn't be sent", e);
@@ -218,13 +220,15 @@ public class UserServiceImpl implements UserService {
       String verificationUrl =
           buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken());
 
-      EmailData emailData = EmailData.Builder.anEmailData()
-                                .withTo(asList(user.getEmail()))
-                                .withRetries(2)
-                                .withTemplateName("signup")
-                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", verificationUrl))
-                                .withSystem(true)
+      EmailData emailData = EmailData.builder()
+                                .to(asList(user.getEmail()))
+                                .templateName("signup")
+                                .templateModel(ImmutableMap.of("name", user.getName(), "url", verificationUrl))
+                                .system(true)
                                 .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
+
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
       logger.error("Verification email couldn't be sent", e);
@@ -345,14 +349,15 @@ public class UserServiceImpl implements UserService {
           String.format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
               account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
 
-      EmailData emailData =
-          EmailData.Builder.anEmailData()
-              .withTo(asList(userInvite.getEmail()))
-              .withRetries(2)
-              .withTemplateName("invite")
-              .withTemplateModel(ImmutableMap.of("url", inviteUrl, "company", account.getCompanyName()))
-              .withSystem(true)
-              .build();
+      EmailData emailData = EmailData.builder()
+                                .to(asList(userInvite.getEmail()))
+                                .templateName("invite")
+                                .templateModel(ImmutableMap.of("url", inviteUrl, "company", account.getCompanyName()))
+                                .system(true)
+                                .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
+
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
       logger.error("Invitation email couldn't be sent ", e);
@@ -364,14 +369,16 @@ public class UserServiceImpl implements UserService {
       String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
           account.getCompanyName(), account.getCompanyName(), user.getEmail()));
 
-      EmailData emailData = EmailData.Builder.anEmailData()
-                                .withTo(asList(user.getEmail()))
-                                .withRetries(2)
-                                .withTemplateName("add_role")
-                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", loginUrl, "company",
+      EmailData emailData = EmailData.builder()
+                                .to(asList(user.getEmail()))
+                                .templateName("add_role")
+                                .templateModel(ImmutableMap.of("name", user.getName(), "url", loginUrl, "company",
                                     account.getCompanyName(), "roles", roles))
-                                .withSystem(true)
+                                .system(true)
                                 .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
+
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
       logger.error("Add account email couldn't be sent", e);
@@ -509,13 +516,15 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
 
-      EmailData emailData = EmailData.Builder.anEmailData()
-                                .withTo(asList(user.getEmail()))
-                                .withRetries(2)
-                                .withTemplateName("reset_password")
-                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", resetPasswordUrl))
-                                .withSystem(true)
+      EmailData emailData = EmailData.builder()
+                                .to(asList(user.getEmail()))
+                                .templateName("reset_password")
+                                .templateModel(ImmutableMap.of("name", user.getName(), "url", resetPasswordUrl))
+                                .system(true)
                                 .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
+
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
       logger.error("Reset password email couldn't be sent", e);

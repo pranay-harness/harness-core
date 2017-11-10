@@ -125,8 +125,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
             .appId(Long.parseLong(applicationId))
             .tierId(Long.parseLong(tierId))
             .dataCollectionMinute(0)
-            .encryptedDataDetails(
-                secretManager.getEncryptionDetails(appDynamicsConfig, context.getWorkflowId(), context.getAppId()))
+            .encryptedDataDetails(secretManager.getEncryptionDetails(
+                appDynamicsConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .build();
 
     String waitId = UUIDGenerator.getUuid();
