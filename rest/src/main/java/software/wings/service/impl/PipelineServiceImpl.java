@@ -158,16 +158,18 @@ public class PipelineServiceImpl implements PipelineService {
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
 
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.MODIFY));
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+      // add GitSyncFiles for pipeline
+      changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
 
     return pipeline;
   }
@@ -202,15 +204,19 @@ public class PipelineServiceImpl implements PipelineService {
     if (deleted) {
       executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, pipelineId));
 
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-          changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.DELETE));
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
-        }
-      });
+      //-------------------
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for pipeline
+        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.DELETE));
+
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+      //-------------------
     }
     return deleted;
   }
@@ -365,16 +371,19 @@ public class PipelineServiceImpl implements PipelineService {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(null, null, null);
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
 
-    Pipeline finalPipeline = pipeline;
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(finalPipeline.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, finalPipeline, ChangeType.ADD));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    //-------------------
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for pipeline
+      changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.ADD));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
 
     return pipeline;
   }

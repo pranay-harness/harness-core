@@ -49,7 +49,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -71,7 +70,6 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -102,10 +100,9 @@ public class SettingsServiceImpl implements SettingsService {
         Validator.duplicateCheck(()
                                      -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
             "name", settingAttribute.getName());
-    executorService.submit(()
-                               -> queueSettingYamlChange(newSettingAttribute,
-                                   entityUpdateService.getSettingAttributeGitSyncFile(
-                                       settingAttribute.getAccountId(), newSettingAttribute, ChangeType.ADD)));
+    queueSettingYamlChange(newSettingAttribute,
+        entityUpdateService.getSettingAttributeGitSyncFile(
+            settingAttribute.getAccountId(), newSettingAttribute, ChangeType.ADD));
     return newSettingAttribute;
   }
 
@@ -205,15 +202,13 @@ public class SettingsServiceImpl implements SettingsService {
 
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
 
-    executorService.submit(() -> {
-      if (!updatedSettingAttribute.getName().equals(settingAttribute.getName())) {
-        queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
-      } else {
-        queueSettingYamlChange(updatedSettingAttribute,
-            entityUpdateService.getSettingAttributeGitSyncFile(
-                settingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
-      }
-    });
+    if (!updatedSettingAttribute.getName().equals(settingAttribute.getName())) {
+      queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
+    } else {
+      queueSettingYamlChange(updatedSettingAttribute,
+          entityUpdateService.getSettingAttributeGitSyncFile(
+              settingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
+    }
     return updatedSettingAttribute;
   }
 
@@ -227,10 +222,9 @@ public class SettingsServiceImpl implements SettingsService {
     ensureSettingAttributeSafeToDelete(settingAttribute);
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted) {
-      executorService.submit(()
-                                 -> queueSettingYamlChange(settingAttribute,
-                                     entityUpdateService.getSettingAttributeGitSyncFile(
-                                         settingAttribute.getAccountId(), settingAttribute, ChangeType.DELETE)));
+      queueSettingYamlChange(settingAttribute,
+          entityUpdateService.getSettingAttributeGitSyncFile(
+              settingAttribute.getAccountId(), settingAttribute, ChangeType.DELETE));
     }
   }
 
