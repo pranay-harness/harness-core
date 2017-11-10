@@ -78,10 +78,10 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -91,6 +91,7 @@ import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -206,19 +207,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void queueYamlChangeSet(InfrastructureMapping infraMapping, ChangeType crudType) {
-    // check whether we need to push changes (through git sync)
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getInfraMappingGitSyncFile(accountId, infraMapping, crudType));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.queueChangeSet(
+          ygs, Arrays.asList(entityUpdateService.getInfraMappingGitSyncFile(accountId, infraMapping, crudType)));
     }
   }
 
   /**
    * This method gets the default name, checks if another entry exists with the same name, if exists, it parses and
    * extracts the revision and creates a name with the next revision.
+   *
    * @param infraMapping
    */
   private void setAutoPopulatedName(InfrastructureMapping infraMapping) {
@@ -395,6 +395,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Host names must be unique");
     }
   }
+
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
     if (lambdaInfraStructureMapping.getVpcId() != null) {
       if (lambdaInfraStructureMapping.getSubnetIds().size() == 0) {
@@ -423,6 +424,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType());
         executorService.submit(() -> infrastructureProvider.deleteHostByInfraMappingId(appId, infraMappingId));
         executorService.submit(() -> serviceInstanceService.deleteByInfraMappingId(appId, infraMappingId));
+        executorService.submit(() -> queueYamlChangeSet(infrastructureMapping, ChangeType.DELETE));
       }
     }
   }

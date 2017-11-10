@@ -480,18 +480,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                   ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
               .build());
 
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(service.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-          GitFileChange gitFileChange =
-              entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.DELETE);
-          gitFileChange.setFilePath(null); // delete the directory
-          changeSet.add(gitFileChange);
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
-        }
-      });
+      executorService.submit(() -> queueServiceYamlChangeSet(service, ChangeType.DELETE));
     }
   }
 
