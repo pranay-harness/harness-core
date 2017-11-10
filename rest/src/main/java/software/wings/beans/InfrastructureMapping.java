@@ -6,6 +6,7 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -230,7 +231,7 @@ public abstract class InfrastructureMapping extends Base {
     return name;
   }
 
-  @SchemaIgnore public abstract String getDefaultName();
+  @JsonIgnore @SchemaIgnore public abstract String getDefaultName();
 
   public void setName(String name) {
     this.name = name;
