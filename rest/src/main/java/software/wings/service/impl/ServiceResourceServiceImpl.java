@@ -943,4 +943,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .equal(serviceId)
         .get();
   }
+
+  @Override
+  public boolean isArtifactNeeded(Service service) {
+    return service.getServiceCommands().stream().anyMatch(serviceCommand
+        -> commandService.getCommand(service.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())
+               .isArtifactNeeded());
+  }
 }

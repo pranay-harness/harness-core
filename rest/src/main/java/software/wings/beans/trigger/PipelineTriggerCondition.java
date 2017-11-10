@@ -16,14 +16,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class PipelineTriggerCondition extends TriggerCondition {
-  @NotEmpty String pipelineId;
+  @NotEmpty private String pipelineId;
+  private String pipelineName;
 
   public PipelineTriggerCondition() {
     super(PIPELINE_COMPLETION);
   }
 
-  public PipelineTriggerCondition(String pipelineId) {
+  public PipelineTriggerCondition(String pipelineId, String pipelineName) {
     this();
     this.pipelineId = pipelineId;
+    this.pipelineName = pipelineName;
   }
 }

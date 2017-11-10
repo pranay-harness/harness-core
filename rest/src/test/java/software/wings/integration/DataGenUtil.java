@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.JUnitCore;
 import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
@@ -517,6 +518,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     names.remove(nameIdx);
     return name;
   }
+
   //  public static void main(String[] args) {
   //    System.out.println("Running tests!");
   //    JUnitCore.main(

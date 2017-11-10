@@ -20,6 +20,7 @@ import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
@@ -37,6 +38,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private EventEmitter eventEmitter;
   @Inject private NotificationService notificationService;
+  @Inject private TriggerService triggerService;
 
   private String appId;
   private String artifactId;
@@ -66,7 +68,9 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       if (artifactStream.isAutoApproveForProduction()) {
         artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED);
       }
-      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
+      artifact = artifactService.get(appId, artifactId);
+      triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+      //      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
       notificationService.sendNotificationAsync(
           anApprovalNotification()
               .withAppId(artifact.getAppId())

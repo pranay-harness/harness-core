@@ -11,6 +11,7 @@ import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 
@@ -75,6 +76,13 @@ public interface TriggerService {
   void deleteTriggersForPipeline(String appId, String pipelineId);
 
   /**
+   * Delete triggers for ArtifactStream
+   * @param appId
+   * @param artifactStreamId
+   */
+  void deleteTriggersForArtifactStream(String appId, String artifactStreamId);
+
+  /**
    * Generate web hook token web hook token.
    *
    * @param appId    the app id
@@ -105,6 +113,41 @@ public interface TriggerService {
    */
   void triggerScheduledExecutionAsync(String appId, String triggerId);
 
-  WorkflowExecution triggerExecutionByWebhook(
-      String appId, Artifact artifact, Trigger trigger, Map<String, String> parameters);
+  /**
+   * Trigger execution by webhook with the given service build numbers
+   * @param appId
+   * @param webHookToken
+   * @param serviceBuildNumbers
+   * @param parameters
+   * @return
+   */
+  WorkflowExecution triggerExecutionByWebHook(
+      String appId, String webHookToken, Map<String, String> serviceBuildNumbers, Map<String, String> parameters);
+
+  /**
+   * Trigger execution by webhook with the given artifact
+   * @param appId
+   * @param webHookToken
+   * @param artifact
+   * @param parameters
+   * @return
+   */
+  WorkflowExecution triggerExecutionByWebHook(
+      String appId, String webHookToken, Artifact artifact, Map<String, String> parameters);
+
+  /**
+   * Triggers that have actions on Pipeline
+   * @param appId
+   * @param pipelineId
+   * @return List<Trigger></Trigger>
+   */
+  List<Trigger> getTriggersHasPipelineAction(String appId, String pipelineId);
+
+  /**
+   * Triggers that have actions on Artifact Stream
+   * @param appId
+   * @param artifactStreamId
+   * @return List<Trigger></Trigger>
+   */
+  List<Trigger> getTriggersHasArtifactStreamAction(String appId, String artifactStreamId);
 }

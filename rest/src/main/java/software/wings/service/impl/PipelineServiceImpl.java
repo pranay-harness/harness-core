@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -14,6 +15,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.StateType.ENV_STATE;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
 import de.danielbechler.util.Collections;
@@ -30,6 +32,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
@@ -38,10 +41,10 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -49,7 +52,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
-import software.wings.waitnotify.WaitNotifyEngine;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -58,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -71,13 +74,12 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
-  @Inject private ArtifactService artifactService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private TriggerService triggerService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -193,7 +195,15 @@ public class PipelineServiceImpl implements PipelineService {
       if (pageResponse == null || CollectionUtils.isEmpty(pageResponse.getResponse())
           || pageResponse.getResponse().stream().allMatch(
                  pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
-        deleted = wingsPersistence.delete(pipeline);
+        List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(appId, pipelineId);
+        if (CollectionUtils.isEmpty(triggers)) {
+          deleted = wingsPersistence.delete(pipeline);
+        } else {
+          List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
+          throw new WingsException(INVALID_REQUEST, "message",
+              String.format(
+                  "Pipeline associated as a trigger action to triggers %", Joiner.on(", ").join(triggerNames)));
+        }
       } else {
         String message = String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName());
         throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message", message);
@@ -201,7 +211,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
     if (deleted) {
       executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, pipelineId));
-
+      executorService.submit(() -> triggerService.deleteTriggersForPipeline(appId, pipelineId));
       executorService.submit(() -> {
         String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
         YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);

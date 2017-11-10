@@ -11,6 +11,7 @@ import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.QUEUED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
@@ -23,6 +24,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -47,6 +49,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
   @javax.inject.Inject private Queue<ExecutionEvent> executionEventQueue;
   @javax.inject.Inject private AlertService alertService;
+  @Inject private TriggerService triggerService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -125,6 +128,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
       if (needToNotifyPipeline) {
         waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+      }
+    } else {
+      if (status.isFinalStatus() && status.equals(SUCCESS)) {
+        triggerService.triggerExecutionPostPipelineCompletionAsync(appId, context.getWorkflowId());
       }
     }
     if (status.isFinalStatus()) {

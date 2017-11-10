@@ -4,6 +4,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -16,6 +18,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.inject.Singleton;
@@ -246,7 +249,25 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public boolean delete(String appId, String artifactStreamId) {
+    return delete(appId, artifactStreamId, false);
+  }
+
+  private boolean delete(String appId, String artifactStreamId, boolean forceDelete) {
     ArtifactStream artifactStream = get(appId, artifactStreamId);
+    if (artifactStream == null) {
+      return true;
+    }
+    if (!forceDelete) {
+      List<software.wings.beans.trigger.Trigger> triggers =
+          triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+      if (!CollectionUtils.isEmpty(triggers)) {
+        List<String> triggerNames =
+            triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
+        throw new WingsException(INVALID_REQUEST, "message",
+            String.format(
+                "Artifact Source associated as a trigger action to triggers %", Joiner.on(", ").join(triggerNames)));
+      }
+    }
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
                                                   .field(ID_KEY)
                                                   .equal(artifactStreamId)
@@ -269,6 +290,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         }
       });
     }
+    triggerService.deleteTriggersForArtifactStream(appId, artifactStreamId);
     return deleted;
   }
 
@@ -278,7 +300,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .field("appId")
         .equal(appId)
         .asList()
-        .forEach(artifactSource -> delete(appId, artifactSource.getUuid()));
+        .forEach(artifactSource -> delete(appId, artifactSource.getUuid(), true));
   }
 
   @Override
@@ -708,7 +730,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .field("serviceId")
         .equal(serviceId)
         .asList()
-        .forEach(artifactSource -> delete(appId, artifactSource.getUuid()));
+        .forEach(artifactSource -> delete((String) appId, (String) artifactSource.getUuid()));
   }
 
   @Override

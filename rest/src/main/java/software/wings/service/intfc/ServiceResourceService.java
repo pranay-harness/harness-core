@@ -321,4 +321,11 @@ public interface ServiceResourceService {
    * @return the lambda specification
    */
   LambdaSpecification getLambdaSpecification(String appId, String serviceId);
+
+  /**
+   * Verifies whether services needs artifact or not
+   * @param service the service
+   * @return the artifact needed or not
+   */
+  boolean isArtifactNeeded(Service service);
 }
