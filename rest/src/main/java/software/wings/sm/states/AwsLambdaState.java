@@ -222,7 +222,8 @@ public class AwsLambdaState extends State {
     List<FunctionMeta> functionArns = new ArrayList<>();
 
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
     AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
@@ -313,7 +314,7 @@ public class AwsLambdaState extends State {
     Map<String, String> serviceVariables =
         serviceTemplateService
             .computeServiceVariables(
-                appId, envId, infrastructureMapping.getServiceTemplateId(), context.getWorkflowId())
+                appId, envId, infrastructureMapping.getServiceTemplateId(), context.getWorkflowExecutionId())
             .stream()
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));

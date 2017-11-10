@@ -91,7 +91,7 @@ public class GcpClusterSetup extends State {
     GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
     SettingAttribute computeProviderSetting = settingsService.get(gcpInfraMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) computeProviderSetting.getValue(), context.getWorkflowId(), context.getAppId());
+        (Encryptable) computeProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
     if (StringUtils.isEmpty(zone)) {

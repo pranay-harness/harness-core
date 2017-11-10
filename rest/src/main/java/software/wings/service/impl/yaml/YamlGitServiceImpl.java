@@ -124,7 +124,7 @@ public class YamlGitServiceImpl implements YamlGitService {
             .withAppId(GLOBAL_APP_ID)
             .withWaitId(waitId)
             .withParameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, yamlGitConfig.getGitConfig(),
-                secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), null, GLOBAL_APP_ID),
+                secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
                 GitCommitRequest.builder().gitFileChanges(gitFileChanges).build()})
             .build();
 
@@ -170,7 +170,7 @@ public class YamlGitServiceImpl implements YamlGitService {
               .withAppId(GLOBAL_APP_ID)
               .withWaitId(waitId)
               .withParameters(new Object[] {GitCommandType.DIFF, yamlGitConfig.getGitConfig(),
-                  secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), null, GLOBAL_APP_ID),
+                  secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
                   GitDiffRequest.builder().lastProcessedCommitId(processedCommit).build()})
               .build();
 

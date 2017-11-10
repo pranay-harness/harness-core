@@ -253,11 +253,14 @@ public class ConfigServiceImpl implements ConfigService {
     if (!StringUtils.isBlank(activityId)) {
       Activity activity = activityService.get(activityId, appId);
       Preconditions.checkNotNull(activity, "Could not find activity " + activityId + " for app " + appId);
-      wingsPersistence.save(SecretUsageLog.builder()
-                                .encryptedDataId(configFile.getUuid())
-                                .workflowId(activity.getWorkflowId())
-                                .accountId(encryptedData.getAccountId())
-                                .build());
+      SecretUsageLog secretUsageLog = SecretUsageLog.builder()
+                                          .encryptedDataId(configFile.getUuid())
+                                          .workflowExecutionId(activity.getWorkflowExecutionId())
+                                          .envId(activity.getEnvironmentId())
+                                          .accountId(encryptedData.getAccountId())
+                                          .build();
+      secretUsageLog.setAppId(configFile.getAppId());
+      wingsPersistence.save(secretUsageLog);
     }
     return secretManager.decryptFile(file, configFile.getAccountId(), encryptedData);
   }

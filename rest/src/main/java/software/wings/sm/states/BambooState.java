@@ -228,7 +228,7 @@ public class BambooState extends State {
             .withWaitId(activityId)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {bambooConfig,
-                secretManager.getEncryptionDetails(bambooConfig, context.getWorkflowId(), context.getAppId()),
+                secretManager.getEncryptionDetails(bambooConfig, context.getAppId(), context.getWorkflowExecutionId()),
                 finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)

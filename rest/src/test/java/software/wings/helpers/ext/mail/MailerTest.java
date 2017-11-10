@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -60,11 +59,12 @@ public class MailerTest extends WingsBaseTest {
                     .password(PASSWORD)
                     .build(),
         Collections.emptyList(),
-        anEmailData()
-            .withHasHtml(false)
-            .withBody("test")
-            .withSubject("test")
-            .withTo(Lists.newArrayList("recieve@email.com"))
+        EmailData.builder()
+            .hasHtml(false)
+            .body("test")
+            .subject("test")
+            .to(Lists.newArrayList("recieve@email.com"))
+            .cc(Collections.emptyList())
             .build());
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).isEqualTo("test");
@@ -95,11 +95,11 @@ public class MailerTest extends WingsBaseTest {
                     .password(PASSWORD)
                     .build(),
         Collections.emptyList(),
-        anEmailData()
-            .withHasHtml(true)
-            .withBody("test")
-            .withSubject("test")
-            .withTo(Lists.newArrayList("recieve@email.com"))
+        EmailData.builder()
+            .hasHtml(true)
+            .body("test")
+            .subject("test")
+            .to(Lists.newArrayList("recieve@email.com"))
             .build());
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).contains("Content-Type: text/html;");
@@ -130,12 +130,12 @@ public class MailerTest extends WingsBaseTest {
                     .password(PASSWORD)
                     .build(),
         Collections.emptyList(),
-        anEmailData()
-            .withHasHtml(false)
-            .withTemplateName("testmail")
-            .withTemplateModel(ImmutableMap.of("name", "test"))
-            .withTo(Lists.newArrayList("recieve@email.com"))
-            .withCc(Lists.newArrayList("recieve2@email.com"))
+        EmailData.builder()
+            .hasHtml(false)
+            .templateName("testmail")
+            .templateModel(ImmutableMap.of("name", "test"))
+            .to(Lists.newArrayList("recieve@email.com"))
+            .cc(Lists.newArrayList("recieve2@email.com"))
             .build());
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).isEqualTo("hello test");

@@ -1,7 +1,6 @@
 package software.wings.notification;
 
 import static org.mockito.Mockito.verify;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.inject.Inject;
 
@@ -16,7 +15,7 @@ import software.wings.service.intfc.EmailNotificationService;
  * Created by peeyushaggarwal on 5/25/16.
  */
 public class EmailNotificationListenerTest extends WingsBaseTest {
-  private static final EmailData testEmailData = anEmailData().build();
+  private static final EmailData testEmailData = EmailData.builder().build();
   @Mock private EmailNotificationService emailNotificationService;
 
   @InjectMocks @Inject private EmailNotificationListener emailNotificationListener;

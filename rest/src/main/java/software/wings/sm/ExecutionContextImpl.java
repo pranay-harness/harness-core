@@ -287,7 +287,8 @@ public class ExecutionContextImpl implements ExecutionContext {
       }
     }
 
-    context.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements(), getWorkflowId()));
+    context.putAll(
+        variableProcessor.getVariables(stateExecutionInstance.getContextElements(), getWorkflowExecutionId()));
 
     return context;
   }
@@ -419,8 +420,8 @@ public class ExecutionContextImpl implements ExecutionContext {
       return variables;
     }
     ServiceTemplate serviceTemplate = serviceTemplateService.get(getAppId(), (String) serviceTemplateKey.get().getId());
-    List<ServiceVariable> serviceVariables =
-        serviceTemplateService.computeServiceVariables(getAppId(), envId, serviceTemplate.getUuid(), getWorkflowId());
+    List<ServiceVariable> serviceVariables = serviceTemplateService.computeServiceVariables(
+        getAppId(), envId, serviceTemplate.getUuid(), getWorkflowExecutionId());
     serviceVariables.forEach(serviceVariable
         -> variables.put(renderExpression(serviceVariable.getName()),
             withEncryptedValues || serviceVariable.getType() != ENCRYPTED_TEXT

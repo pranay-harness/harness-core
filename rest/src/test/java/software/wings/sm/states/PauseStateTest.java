@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.common.collect.Lists;
@@ -19,6 +18,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.common.UUIDGenerator;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -89,13 +89,13 @@ public class PauseStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage()).isNull();
 
     verify(emailNotificationService)
-        .send(anEmailData()
-                  .withTo(Lists.newArrayList("to1", "to2"))
-                  .withAccountId(ACCOUNT_ID)
-                  .withCc(Lists.newArrayList("cc1", "cc2"))
-                  .withSubject("subject")
-                  .withBody("body")
-                  .withSystem(true)
+        .send(EmailData.builder()
+                  .to(Lists.newArrayList("to1", "to2"))
+                  .accountId(ACCOUNT_ID)
+                  .cc(Lists.newArrayList("cc1", "cc2"))
+                  .subject("subject")
+                  .body("body")
+                  .system(true)
                   .build());
   }
 }

@@ -48,7 +48,7 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
-import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest.Builder;
@@ -64,7 +64,6 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
-import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.EncryptionService;
@@ -117,10 +116,11 @@ public class VaultTest extends WingsBaseTest {
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
   private String accountId;
   private String appId;
-  private String workflowId;
+  private String workflowExecutionId;
   private String workflowName;
   private KmsTransitionEventListener transitionEventListener;
   private String kmsId;
+  private String envId;
 
   @Parameters
   public static Collection<Object[]> data() {
@@ -132,7 +132,9 @@ public class VaultTest extends WingsBaseTest {
     initMocks(this);
     appId = UUID.randomUUID().toString();
     workflowName = UUID.randomUUID().toString();
-    workflowId = wingsPersistence.save(WorkflowBuilder.aWorkflow().withName(workflowName).build());
+    envId = UUID.randomUUID().toString();
+    workflowExecutionId = wingsPersistence.save(
+        WorkflowExecutionBuilder.aWorkflowExecution().withName(workflowName).withEnvId(envId).build());
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
         .thenReturn(new SecretManagementDelegateServiceImpl());
     setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
@@ -493,7 +495,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfEncRecords + 1, query.asList().size());
 
     encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
-        secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowId, appId));
+        secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowExecutionId, appId));
 
     AppDynamicsConfig value = (AppDynamicsConfig) savedAttribute.getValue();
     assertEquals(password, String.valueOf(value.getPassword()));
@@ -540,7 +542,7 @@ public class VaultTest extends WingsBaseTest {
       assertNull(appDynamicsConfig.getPassword());
 
       encryptionService.decrypt(
-          appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowId, appId));
+          appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowExecutionId, appId));
       assertEquals("password" + i, new String(appDynamicsConfig.getPassword()));
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(id);
       assertEquals(1, query.asList().size());
@@ -780,7 +782,7 @@ public class VaultTest extends WingsBaseTest {
     savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
     assertNull(savedConfig.getPassword());
-    encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowId, appId));
+    encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
     assertEquals(newPassWord, String.valueOf(savedConfig.getPassword()));
   }
 
@@ -839,7 +841,8 @@ public class VaultTest extends WingsBaseTest {
 
     // decrypt and verify
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    encryptionService.decrypt(savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowId, appId));
+    encryptionService.decrypt(
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
     assertEquals("newValue", String.valueOf(savedVariable.getValue()));
 
     List<SecretChangeLog> changeLogs =
@@ -1156,14 +1159,13 @@ public class VaultTest extends WingsBaseTest {
     final long seed = System.currentTimeMillis();
     System.out.println("seed: " + seed);
     Random r = new Random(seed);
-    final String appId = UUID.randomUUID().toString();
     VaultConfig fromConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, fromConfig);
 
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
     wingsPersistence.save(service);
 
-    Activity activity = Activity.builder().workflowId(workflowId).build();
+    Activity activity = Activity.builder().workflowExecutionId(workflowExecutionId).environmentId(envId).build();
     activity.setAppId(appId);
     wingsPersistence.save(activity);
 
@@ -1226,8 +1228,10 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfAccess, usageLogs.size());
 
     for (SecretUsageLog usageLog : usageLogs) {
-      assertEquals(workflowName, usageLog.getWorkflowName());
+      assertEquals(workflowName, usageLog.getWorkflowExecutionName());
       assertEquals(accountId, usageLog.getAccountId());
+      assertEquals(envId, usageLog.getEnvId());
+      assertEquals(appId, usageLog.getAppId());
     }
   }
 
@@ -1302,7 +1306,8 @@ public class VaultTest extends WingsBaseTest {
       assertNull(savedConfig.getPassword());
       assertFalse(StringUtils.isBlank(savedConfig.getEncryptedPassword()));
 
-      encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowId, appId));
+      encryptionService.decrypt(
+          savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
       assertEquals(password, String.valueOf(savedConfig.getPassword()));
     }
 

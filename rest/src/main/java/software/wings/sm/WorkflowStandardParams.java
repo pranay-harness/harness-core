@@ -108,7 +108,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         }
         String templateId = (String) templateRefKeysByService.get(0).getId();
         List<ServiceVariable> serviceVariables =
-            serviceTemplateService.computeServiceVariables(appId, envId, templateId, context.getWorkflowId());
+            serviceTemplateService.computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId());
         if (serviceVariables == null || serviceVariables.isEmpty()) {
           return map;
         }

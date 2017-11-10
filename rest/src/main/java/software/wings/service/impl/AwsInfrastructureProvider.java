@@ -166,10 +166,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return hostService.saveHost(host);
   }
 
-  public List<Host> maybeSetAutoScaleCapacityAndGetHosts(String workflowId, String appId,
+  public List<Host> maybeSetAutoScaleCapacityAndGetHosts(String appId, String workflowExecutionId,
       AwsInfrastructureMapping infrastructureMapping, SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, workflowId, appId);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId);
 
     if (infrastructureMapping.isSetDesiredCapacity()) {
       awsHelperService.setAutoScalingGroupCapacity(awsConfig, encryptionDetails, infrastructureMapping);

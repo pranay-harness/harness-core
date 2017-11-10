@@ -104,7 +104,7 @@ public class AwsClusterSetup extends State {
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) computeProviderSetting.getValue(), context.getWorkflowId(), context.getAppId());
+        (Encryptable) computeProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
 
