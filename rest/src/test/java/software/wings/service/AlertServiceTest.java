@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -49,7 +49,7 @@ import software.wings.service.intfc.AssignDelegateService;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
-public class AlertServiceImplTest extends WingsBaseTest {
+public class AlertServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ExecutorService executorService;
   @Mock private AssignDelegateService assignDelegateService;
