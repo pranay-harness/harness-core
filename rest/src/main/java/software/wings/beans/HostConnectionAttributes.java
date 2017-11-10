@@ -87,6 +87,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private ConnectionType connectionType;
     private AccessType accessType;
     private char[] key;
+    private String encryptedKey;
     private String userName;
     private String accountId;
 
@@ -155,6 +156,12 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       this.accountId = accountId;
       return this;
     }
+
+    public Builder withEncyptedKey(String encryptedKey) {
+      this.encryptedKey = encryptedKey;
+      return this;
+    }
+
     /**
      * But.
      *
@@ -165,6 +172,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
           .withConnectionType(connectionType)
           .withAccessType(accessType)
           .withKey(key)
+          .withEncyptedKey(encryptedKey)
           .withUserName(userName)
           .withAccountId(accountId);
     }
@@ -179,6 +187,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setConnectionType(connectionType);
       hostConnectionAttributes.setAccessType(accessType);
       hostConnectionAttributes.setKey(key);
+      hostConnectionAttributes.setEncryptedKey(encryptedKey);
       hostConnectionAttributes.setUserName(userName);
       hostConnectionAttributes.setAccountId(accountId);
       return hostConnectionAttributes;
