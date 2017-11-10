@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter.Operator;
@@ -38,7 +37,6 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
@@ -737,6 +735,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case DOCKER:
       case NEXUS:
       case ARTIFACTORY:
+      case ECR:
+      case GCR:
+      case AMAZON_S3:
+      case GIT:
         sb.append(ARTIFACT_SOURCES_FOLDER);
         break;
 
@@ -757,12 +759,25 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case SPLUNK:
       case ELK:
       case LOGZ:
+      case SUMO:
+      case NEW_RELIC:
         sb.append(VERIFICATION_PROVIDERS_FOLDER);
         break;
       case HOST_CONNECTION_ATTRIBUTES:
+      case BASTION_HOST_CONNECTION_ATTRIBUTES:
+        break;
+      case KMS:
+      case VAULT:
+        break;
+      case SERVICE_VARIABLE:
+      case CONFIG_FILE:
+      case SSH_SESSION_CONFIG:
+      case YAML_GIT_SYNC:
+      case DIRECT:
+      case KUBERNETES:
         break;
       default:
-        throw new WingsException(ErrorCode.GENERAL_YAML_ERROR);
+        logger.warn("Unknown SettingVariable type:" + settingVariableType);
     }
     return sb.toString();
   }
