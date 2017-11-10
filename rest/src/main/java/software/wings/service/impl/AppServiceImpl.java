@@ -144,9 +144,6 @@ public class AppServiceImpl implements AppService {
   private void queueApplicationYamlChange(String accountId, GitFileChange gitFileChange) {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      if (gitFileChange.getChangeType().equals("DELETE")) {
-        gitFileChange.setFilePath(null);
-      }
       yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(gitFileChange));
     }
   }

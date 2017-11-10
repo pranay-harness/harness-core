@@ -69,6 +69,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -375,11 +376,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         String accountId = appService.getAccountIdByAppId(environment.getAppId());
         YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
         if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-
-          // add GitSyncFiles for app and service
-          changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, ChangeType.DELETE));
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
+          yamlChangeSetService.queueChangeSet(ygs,
+              Arrays.asList(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, ChangeType.DELETE)));
         }
       });
     }
