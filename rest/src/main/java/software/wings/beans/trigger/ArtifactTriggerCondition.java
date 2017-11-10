@@ -24,10 +24,10 @@ public class ArtifactTriggerCondition extends TriggerCondition {
     super(NEW_ARTIFACT);
   }
 
-  public ArtifactTriggerCondition(String artifactStreamId, String artifactFilter, String artifactSourceName) {
+  public ArtifactTriggerCondition(String artifactStreamId, String artifactSourceName, String artifactFilter) {
     this();
     this.artifactStreamId = artifactStreamId;
-    this.artifactFilter = artifactFilter;
     this.artifactSourceName = artifactSourceName;
+    this.artifactFilter = artifactFilter;
   }
 }

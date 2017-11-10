@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.trigger.Trigger.Builder.aDeploymentTrigger;
+import static software.wings.beans.trigger.Trigger.Builder.aTrigger;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -83,15 +83,15 @@ public class TriggerMigrationUtil extends WingsBaseTest {
         List<ArtifactStreamAction> streamActions = artifactStream.getStreamActions();
         if (CollectionUtils.isEmpty(streamActions)) {
           System.out.println("No stream actions defined for artifact stream = " + artifactStream);
+          continue;
         }
         for (ArtifactStreamAction artifactStreamAction : streamActions) {
-          Service service = serviceResourceService.get(app.getUuid(), artifactStream.getServiceId());
+          Service service = serviceResourceService.get(app.getUuid(), artifactStream.getServiceId(), false);
           Trigger trigger = triggerService.get(app.getUuid(), artifactStreamAction.getUuid());
           if (trigger == null) {
-            trigger = aDeploymentTrigger()
-                          .withUuid(artifactStreamAction.getUuid())
+            trigger = aTrigger()
                           .withName(String.format(
-                              "%s %s%s", artifactStream.getSourceName(), service.getName(), String.valueOf(nameIdx++)))
+                              "%s-%s-%s", artifactStream.getSourceName(), service.getName(), String.valueOf(nameIdx++)))
                           .withAppId(app.getUuid())
                           .withPipelineId(wrapWorkflowWithinPipeline(app.getUuid(), artifactStreamAction))
                           .build();
@@ -150,7 +150,7 @@ public class TriggerMigrationUtil extends WingsBaseTest {
     List<Pipeline> pipelines = pipelineService.listPipelines(pipelinePageRequest, false);
 
     for (Pipeline pipeline : pipelines) {
-      if (pipeline.getPipelineStages().size() >= 1) {
+      if (pipeline.getPipelineStages().size() == 1) {
         if (pipeline.getPipelineStages()
                 .stream()
                 .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
@@ -164,15 +164,15 @@ public class TriggerMigrationUtil extends WingsBaseTest {
       }
     }
 
-    PipelineStage stag1 = new PipelineStage(asList(new PipelineStageElement(workflow.getName(), ENV_STATE.name(),
+    PipelineStage stage = new PipelineStage(asList(new PipelineStageElement(workflow.getName(), ENV_STATE.name(),
         ImmutableMap.of("envId", workflow.getEnvId(), "workflowId", workflow.getUuid()))));
 
-    List<PipelineStage> pipelineStages = Collections.singletonList(stag1);
+    List<PipelineStage> pipelineStages = Collections.singletonList(stage);
 
     Pipeline pipeline = aPipeline()
                             .withAppId(workflow.getAppId())
-                            .withName(workflow.getName() + " Ported")
-                            .withDescription("Ported workflow to pipeline")
+                            .withName(workflow.getName())
+                            .withDescription("Wrapped workflow in Pipeline")
                             .withPipelineStages(pipelineStages)
                             .build();
     pipelineService.createPipeline(pipeline);
