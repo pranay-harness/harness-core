@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.helpers.ext.vault.VaultRestClient.BASE_VAULT_URL;
+import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 
 import com.google.common.base.Preconditions;
@@ -29,6 +30,8 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -246,8 +249,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       VaultConfig vaultConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(vaultConfig);
       byte[] bytes = ByteStreams.toByteArray(inputStream);
-      EncryptedData fileData =
-          encrypt("FILE", new String(bytes), accountId, SettingVariableTypes.CONFIG_FILE, vaultConfig, null);
+      EncryptedData fileData = encrypt("FILE", new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
+          SettingVariableTypes.CONFIG_FILE, vaultConfig, null);
       fileData.setAccountId(accountId);
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
       fileData.setUuid(uuid);
@@ -265,7 +268,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       Preconditions.checkNotNull(vaultConfig);
       Preconditions.checkNotNull(encryptedData);
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      Files.write(new String(decrypt).getBytes(), file);
+      Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

@@ -8,6 +8,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
@@ -18,6 +19,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -29,9 +31,12 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptionUtils;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -48,6 +53,7 @@ import software.wings.utils.Validator;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.nio.CharBuffer;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -95,6 +101,11 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public String save(ConfigFile configFile, BoundedInputStream inputStream) {
+    String changeLogDescription = null;
+    if (!StringUtils.isBlank(configFile.getUuid())) {
+      changeLogDescription = "File updated";
+    }
+
     validateEntity(configFile.getAppId(), configFile.getEntityId(), configFile.getEntityType());
     InputStream toWrite = inputStream;
     String envId = configFile.getEntityType().equals(SERVICE) || configFile.getEntityType().equals(ENVIRONMENT)
@@ -115,6 +126,21 @@ public class ConfigServiceImpl implements ConfigService {
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
     if (configFile.isEncrypted()) {
       updateParentForEncryptedData(configFile);
+      if (UserThreadLocal.get() != null) {
+        if (StringUtils.isBlank(changeLogDescription)) {
+          changeLogDescription = "File uploaded";
+        }
+        wingsPersistence.save(SecretChangeLog.builder()
+                                  .accountId(configFile.getAccountId())
+                                  .encryptedDataId(id)
+                                  .description(changeLogDescription)
+                                  .user(EmbeddedUser.builder()
+                                            .uuid(UserThreadLocal.get().getUuid())
+                                            .email(UserThreadLocal.get().getEmail())
+                                            .name(UserThreadLocal.get().getName())
+                                            .build())
+                                  .build());
+      }
     }
 
     fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
@@ -222,22 +248,18 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   private File getDecryptedFile(ConfigFile configFile, File file, String appId, String activityId) {
-    if (shouldUseKms(configFile.getAccountId())) {
-      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-      Preconditions.checkNotNull(encryptedData);
-      if (!StringUtils.isBlank(activityId)) {
-        Activity activity = activityService.get(activityId, appId);
-        Preconditions.checkNotNull(activity, "Could not find activity " + activityId + " for app " + appId);
-        wingsPersistence.save(SecretUsageLog.builder()
-                                  .encryptedDataId(configFile.getUuid())
-                                  .workflowId(activity.getWorkflowId())
-                                  .accountId(encryptedData.getAccountId())
-                                  .build());
-      }
-      return secretManager.decryptFile(file, configFile.getAccountId(), encryptedData);
-    } else {
-      return EncryptionUtils.decrypt(file, configFile.getAccountId());
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+    Preconditions.checkNotNull(encryptedData);
+    if (!StringUtils.isBlank(activityId)) {
+      Activity activity = activityService.get(activityId, appId);
+      Preconditions.checkNotNull(activity, "Could not find activity " + activityId + " for app " + appId);
+      wingsPersistence.save(SecretUsageLog.builder()
+                                .encryptedDataId(configFile.getUuid())
+                                .workflowId(activity.getWorkflowId())
+                                .accountId(encryptedData.getAccountId())
+                                .build());
     }
+    return secretManager.decryptFile(file, configFile.getAccountId(), encryptedData);
   }
 
   /* (non-Javadoc)
@@ -262,6 +284,21 @@ public class ConfigServiceImpl implements ConfigService {
       InputStream toWrite = uploadedInputStream;
       if (inputConfigFile.isEncrypted()) {
         toWrite = getEncryptedInputStream(savedConfigFile, uploadedInputStream, updateMap);
+        if (UserThreadLocal.get() != null) {
+          wingsPersistence.save(SecretChangeLog.builder()
+                                    .accountId(inputConfigFile.getAccountId())
+                                    .encryptedDataId(inputConfigFile.getUuid())
+                                    .description("File updated")
+                                    .user(EmbeddedUser.builder()
+                                              .uuid(UserThreadLocal.get().getUuid())
+                                              .email(UserThreadLocal.get().getEmail())
+                                              .name(UserThreadLocal.get().getName())
+                                              .build())
+                                    .build());
+        }
+      } else if (!StringUtils.isBlank(savedConfigFile.getEncryptedFileId())) {
+        wingsPersistence.delete(EncryptedData.class, savedConfigFile.getEncryptedFileId());
+        updateMap.put("encryptedFileId", "");
       }
       String fileId = fileService.saveFile(inputConfigFile, toWrite, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
@@ -301,23 +338,32 @@ public class ConfigServiceImpl implements ConfigService {
 
   private InputStream getEncryptedInputStream(
       ConfigFile configFile, BoundedInputStream inputStream, Map<String, Object> updateMap) {
-    if (shouldUseKms(configFile.getAccountId())) {
-      if (!StringUtils.isBlank(configFile.getUuid())) {
-        wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
-      }
-      String fileUuid = UUID.randomUUID().toString();
-      EncryptedData encryptedData = secretManager.encryptFile(inputStream, configFile.getAccountId(), fileUuid);
-      encryptedData.setUuid(fileUuid);
-      if (!StringUtils.isBlank(configFile.getUuid())) {
-        encryptedData.addParent(configFile.getUuid());
-        wingsPersistence.save(encryptedData);
-      }
-      configFile.setEncryptedFileId(encryptedData.getUuid());
-      updateMap.put("encryptedFileId", encryptedData.getUuid());
-      return new ByteArrayInputStream(new String(encryptedData.getEncryptedValue()).getBytes());
-    } else {
-      return EncryptionUtils.encrypt(inputStream, configFile.getAccountId());
+    if (!StringUtils.isBlank(configFile.getUuid())) {
+      wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
     }
+    String fileUuid = UUID.randomUUID().toString();
+    EncryptedData encryptedData = secretManager.encryptFile(inputStream, configFile.getAccountId(), fileUuid);
+    encryptedData.setUuid(fileUuid);
+    char[] encryptedFileData = encryptedData.getEncryptedValue();
+
+    // don't save encrypted data as the file is saved in gridFS
+    switch (encryptedData.getEncryptionType()) {
+      case VAULT:
+        encryptedData.setEncryptedValue(encryptedData.getEncryptionKey().toCharArray());
+        break;
+      default:
+        encryptedData.setEncryptedValue(null);
+        break;
+    }
+
+    if (!StringUtils.isBlank(configFile.getUuid())) {
+      encryptedData.addParent(configFile.getUuid());
+      wingsPersistence.save(encryptedData);
+    }
+
+    configFile.setEncryptedFileId(encryptedData.getUuid());
+    updateMap.put("encryptedFileId", encryptedData.getUuid());
+    return new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileData)).array());
   }
 
   /**
