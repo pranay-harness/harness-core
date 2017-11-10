@@ -5,6 +5,8 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
@@ -48,6 +50,114 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   public ArtifactoryArtifactStream() {
     super(ArtifactStreamType.ARTIFACTORY.name());
     super.setAutoApproveForProduction(true);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends ArtifactStream.Yaml {
+    private String repositoryName;
+    private String groupId;
+    private String imageName;
+    private List<String> artifactPaths;
+    private String artifactPattern;
+
+    public static final class Builder {
+      private String repositoryName;
+      private String sourceName;
+      private String groupId;
+      private String settingName;
+      private String imageName;
+      private boolean autoApproveForProduction = false;
+      private List<String> artifactPaths;
+      private String type;
+      private String artifactPattern;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Yaml.Builder aYaml() {
+        return new Yaml.Builder();
+      }
+
+      public Yaml.Builder withRepositoryName(String repositoryName) {
+        this.repositoryName = repositoryName;
+        return this;
+      }
+
+      public Yaml.Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Yaml.Builder withGroupId(String groupId) {
+        this.groupId = groupId;
+        return this;
+      }
+
+      public Yaml.Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Yaml.Builder withImageName(String imageName) {
+        this.imageName = imageName;
+        return this;
+      }
+
+      public Yaml.Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Yaml.Builder withArtifactPaths(List<String> artifactPaths) {
+        this.artifactPaths = artifactPaths;
+        return this;
+      }
+
+      public Yaml.Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Yaml.Builder withArtifactPattern(String artifactPattern) {
+        this.artifactPattern = artifactPattern;
+        return this;
+      }
+
+      public Yaml.Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Yaml.Builder but() {
+        return aYaml()
+            .withRepositoryName(repositoryName)
+            .withSourceName(sourceName)
+            .withGroupId(groupId)
+            .withSettingName(settingName)
+            .withImageName(imageName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withArtifactPaths(artifactPaths)
+            .withType(type)
+            .withArtifactPattern(artifactPattern)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRepositoryName(repositoryName);
+        yaml.setSourceName(sourceName);
+        yaml.setGroupId(groupId);
+        yaml.setSettingName(settingName);
+        yaml.setImageName(imageName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setArtifactPaths(artifactPaths);
+        yaml.setType(type);
+        yaml.setArtifactPattern(artifactPattern);
+        yaml.setMetadataOnly(metadataOnly);
+        return yaml;
+      }
+    }
   }
 
   @SchemaIgnore
@@ -190,6 +300,32 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withImageName(getImageName())
         .withRepositoryType(getRepositoryType())
         .build();
+  }
+
+  /**
+   * Clone and return builder.
+   * @return the builder
+   */
+  public Builder deepClone() {
+    return ArtifactoryArtifactStream.Builder.anArtifactoryArtifactStream()
+        .withJobname(getJobname())
+        .withArtifactPaths(getArtifactPaths())
+        .withSourceName(getSourceName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withStreamActions(getStreamActions())
+        .withMetadataOnly(getMetadataOnly())
+        .withArtifactPattern(getArtifactPattern())
+        .withMetadataOnly(getMetadataOnly())
+        .withImageName(getImageName())
+        .withGroupId(getGroupId());
   }
 
   /**

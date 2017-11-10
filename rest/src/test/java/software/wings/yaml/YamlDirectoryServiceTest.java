@@ -1,12 +1,24 @@
 package software.wings.yaml;
 
-import org.junit.Assert;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
+
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
+import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.rules.RealMongo;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ServiceCommand;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.yaml.directory.DirectoryNode;
 
 import java.util.UUID;
 import javax.inject.Inject;
@@ -17,13 +29,70 @@ import javax.inject.Inject;
 public class YamlDirectoryServiceTest extends WingsBaseTest {
   private String accountId;
 
-  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject @InjectMocks private YamlDirectoryService yamlDirectoryService;
+
+  // create mocks
+  private static final AppService appService = mock(AppService.class);
+  private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+  private static final EnvironmentService environmentService = mock(EnvironmentService.class);
+  private static final SettingsService settingsService = mock(SettingsService.class);
+
+  private final String YAML_EXTENSION = ".yaml";
+  private final String TEST_ACCOUNT_ID = "TEST-ACCOUNT-ID";
+  private final String TEST_APP_ID = "TEST-APP-ID";
+  private final String TEST_SERVICE_ID = "TEST-SERVICE-ID";
+  private final String TEST_SERVICE_COMMAND_ID = "TEST-SERVICE-COMMAND-ID";
+  private final String TEST_ENVIRONMENT_ID = "TEST-ENVIRONMENT-ID";
+  private final String TEST_AWS_ID = "TEST-AWS-ID";
+  private final String TEST_APP_NAME = "Test App";
+  private final String TEST_SERVICE_NAME = "Test Service";
+  private final String TEST_SERVICE_COMMAND_NAME = "Test Service Command";
+  private final String TEST_ENVIRONMENT_NAME = "Test Environment";
+  private final String TEST_AWS_NAME = "Test AWS";
+  private final Application testApp =
+      anApplication().withUuid(TEST_APP_ID).withAppId(TEST_APP_ID).withName(TEST_APP_NAME).build();
+  private final Service testService =
+      Service.Builder.aService().withAppId(TEST_APP_ID).withUuid(TEST_SERVICE_ID).withName(TEST_SERVICE_NAME).build();
+  private final ServiceCommand testServiceCommand = ServiceCommand.Builder.aServiceCommand()
+                                                        .withAppId(TEST_APP_ID)
+                                                        .withServiceId(TEST_SERVICE_ID)
+                                                        .withUuid(TEST_SERVICE_COMMAND_ID)
+                                                        .withName(TEST_SERVICE_COMMAND_NAME)
+                                                        .build();
+  private final Environment testEnvironment = Environment.Builder.anEnvironment()
+                                                  .withAppId(TEST_APP_ID)
+                                                  .withUuid(TEST_ENVIRONMENT_ID)
+                                                  .withName(TEST_ENVIRONMENT_NAME)
+                                                  .build();
+  private final SettingAttribute testAws = SettingAttribute.Builder.aSettingAttribute()
+                                               .withAppId(TEST_APP_ID)
+                                               .withUuid(TEST_AWS_ID)
+                                               .withName(TEST_AWS_NAME)
+                                               .build();
 
   @Before
   public void setup() {
     accountId = UUID.randomUUID().toString();
+
+    when(appService.getAppByName(TEST_ACCOUNT_ID, TEST_APP_NAME)).thenReturn(testApp);
+    when(serviceResourceService.getServiceByName(TEST_ACCOUNT_ID, TEST_SERVICE_NAME)).thenReturn(testService);
+    when(serviceResourceService.getCommandByName(TEST_APP_ID, TEST_SERVICE_ID, TEST_SERVICE_COMMAND_NAME))
+        .thenReturn(testServiceCommand);
+    when(environmentService.getEnvironmentByName(TEST_ACCOUNT_ID, TEST_ENVIRONMENT_NAME)).thenReturn(testEnvironment);
+    when(settingsService.getSettingAttributeByName(TEST_ACCOUNT_ID, TEST_AWS_NAME)).thenReturn(testAws);
   }
 
+  /**
+   * Tear down.
+   */
+  @After
+  public void tearDown() {
+    // we have to reset the mock after each test because of the
+    // @ClassRule, or use a @Rule as mentioned below.
+    reset(appService, serviceResourceService, environmentService, settingsService);
+  }
+
+  /*
   @Test
   @RealMongo
   public void getEmptyDirectory() throws Exception {
@@ -31,6 +100,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     Assert.assertNotNull(dn);
   }
+  */
 
   /* NOTE: This is copied from LogMLAnalysisServiceTest for reference using RealMongo
   @Test

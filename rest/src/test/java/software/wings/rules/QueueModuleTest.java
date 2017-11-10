@@ -17,8 +17,8 @@ import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
-import software.wings.yaml.gitSync.EntityUpdateListEventListener;
+import software.wings.yaml.gitSync.YamlChangeSet;
+import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
 public class QueueModuleTest extends AbstractModule {
   private AdvancedDatastore datastore;
@@ -40,8 +40,6 @@ public class QueueModuleTest extends AbstractModule {
     bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueueImpl<>(EmailData.class, datastore));
     bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueueImpl<>(CollectEvent.class, datastore));
     bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore));
-    bind(new TypeLiteral<Queue<EntityUpdateListEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(EntityUpdateListEvent.class, datastore));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
         .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
@@ -50,7 +48,6 @@ public class QueueModuleTest extends AbstractModule {
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<EntityUpdateListEvent>>() {}).to(EntityUpdateListEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
   }

@@ -15,6 +15,7 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -36,6 +37,8 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
@@ -55,10 +58,12 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -96,6 +101,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private AppService appService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -145,6 +151,20 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
+  public Environment getEnvironmentByName(String appId, String environmentName) {
+    Environment environment = wingsPersistence.createQuery(Environment.class)
+                                  .field("appId")
+                                  .equal(appId)
+                                  .field("name")
+                                  .equal(environmentName)
+                                  .get();
+    if (environment == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Environment - '" + environmentName + "' doesn't exist");
+    }
+    return environment;
+  }
+
+  @Override
   public boolean exist(@NotEmpty String appId, @NotEmpty String envId) {
     return wingsPersistence.createQuery(Environment.class)
                .field("appId")
@@ -188,24 +208,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
-
-    // see if we need to perform any Git Sync operations for the app
-    Application app = appService.get(environment.getAppId());
-    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
-
-    // see if we need to perform any Git Sync operations for the environment
-    eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(environment.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
+    queueEnvironmentYamlChangeSet(savedEnvironment, ChangeType.ADD);
 
     return savedEnvironment;
   }
@@ -215,32 +218,59 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public Environment update(Environment environment) {
+    Environment savedEnvironment =
+        wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
+
     String description = Optional.of(environment.getDescription()).orElse("");
     ImmutableMap<String, Object> paramMap = ImmutableMap.of(
         "name", environment.getName(), "environmentType", environment.getEnvironmentType(), "description", description);
 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+    Environment updatedEnvironment =
+        wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    // see if we need to perform any Git Sync operations for the app
-    Application app = appService.get(environment.getAppId());
-    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
+    if (!savedEnvironment.getName().equals(environment.getName())) {
+      queueMoveEnvironmentChange(savedEnvironment, updatedEnvironment);
+    } else {
+      queueEnvironmentYamlChangeSet(updatedEnvironment, ChangeType.MODIFY);
+    }
 
-    // see if we need to perform any Git Sync operations for the environment
-    eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
+    return updatedEnvironment;
+  }
 
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
+  private void queueMoveEnvironmentChange(Environment oldEnv, Environment newEnv) {
+    String accountId = appService.getAccountIdByAppId(newEnv.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-    Application app = appService.get(environment.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
+      String oldEnvnPath =
+          yamlDirectoryService.getRootPathByEnvironment(oldEnv) + "/" + oldEnv.getName() + YAML_EXTENSION;
 
-    return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
+      GitFileChange gitFileChange = entityUpdateService.getEnvironmentGitSyncFile(accountId, newEnv, ChangeType.MODIFY);
+
+      changeSet.add(GitFileChange.Builder.aGitFileChange()
+                        .withAccountId(gitFileChange.getAccountId())
+                        .withChangeType(ChangeType.RENAME)
+                        .withFilePath(gitFileChange.getFilePath())
+                        .withOldFilePath(oldEnvnPath)
+                        .build());
+
+      changeSet.add(gitFileChange);
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+  }
+
+  private void queueEnvironmentYamlChangeSet(Environment environment, ChangeType crudType) {
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(environment.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, crudType));
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
   }
 
   /**
@@ -338,14 +368,30 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
               .withNotificationTemplateVariables(
                   ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
               .build());
+
+      //-------------------
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(environment.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for app and service
+        changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, ChangeType.DELETE));
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
     }
   }
 
   @Override
-  public void deleteByApp(String appId) {
+  public void deleteByApp(Application application) {
     List<Environment> environments =
-        wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
-    environments.forEach(this ::delete);
+        wingsPersistence.createQuery(Environment.class).field("appId").equal(application.getUuid()).asList();
+    environments.forEach(environment -> {
+      environment.setEntityYamlPath(
+          yamlDirectoryService.getRootPathByEnvironment(environment, application.entityYamlPath));
+      delete(environment);
+    });
   }
 
   @Override
@@ -419,7 +465,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                   infrastructureMappingService.save(infrastructureMapping);
                 } catch (Exception e) {
                   logger.error("Failed to clone infrastructure mapping name {}, id {} of environment {}",
-                      infrastructureMapping.getDisplayName(), infrastructureMapping.getUuid(),
+                      infrastructureMapping.getName(), infrastructureMapping.getUuid(),
                       infrastructureMapping.getEnvId(), e);
                 }
               }
@@ -605,6 +651,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   /**
    * Validates whether service id and mapped service are of same type
+   *
    * @param serviceMapping
    */
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {

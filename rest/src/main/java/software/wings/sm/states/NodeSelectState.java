@@ -159,7 +159,7 @@ public abstract class NodeSelectState extends State {
           .append(" already been deployed. ");
 
       msg.append("\n\nThe service infrastructure [")
-          .append(infraMapping.getDisplayName())
+          .append(infraMapping.getName())
           .append("] has ")
           .append(totalAvailableInstances)
           .append(" instance")

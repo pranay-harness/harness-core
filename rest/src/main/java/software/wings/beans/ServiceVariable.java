@@ -19,6 +19,7 @@ import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
 import software.wings.utils.validation.Create;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.util.Collections;
 import java.util.List;
@@ -161,5 +162,30 @@ public class ServiceVariable extends Base implements Encryptable {
 
     serviceVariable.setAppId(getAppId());
     return serviceVariable;
+  }
+
+  public static final class Yaml extends BaseEntityYaml {
+    private String templateId = DEFAULT_TEMPLATE_ID;
+
+    @NotNull(groups = {Create.class}) private EntityType entityType;
+
+    @NotEmpty(groups = {Create.class}) private String entityId;
+
+    private String parentServiceVariableId;
+
+    @Transient private ServiceVariable overriddenServiceVariable;
+
+    private OverrideType overrideType;
+    private String expression;
+
+    @SchemaIgnore private String accountId;
+
+    private String name;
+
+    @Encrypted private char[] value;
+
+    private Type type;
+
+    @SchemaIgnore private String encryptedValue;
   }
 }

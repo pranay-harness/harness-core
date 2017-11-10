@@ -1,10 +1,15 @@
 package software.wings.beans;
 
+import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Util;
 
 import java.util.Optional;
 
@@ -28,6 +33,121 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     super(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name());
   }
 
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends InfrastructureMapping.Yaml {
+    private String region;
+    private String applicationName;
+    private String deploymentGroup;
+    private String deploymentConfig;
+
+    public static final class Builder {
+      private String region;
+      private String applicationName;
+      private String computeProviderType;
+      private String deploymentGroup;
+      private String serviceName;
+      private String deploymentConfig;
+      private String infraMappingType;
+      private String type;
+      private String deploymentType;
+      private String computeProviderName;
+      private String name;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRegion(String region) {
+        this.region = region;
+        return this;
+      }
+
+      public Builder withApplicationName(String applicationName) {
+        this.applicationName = applicationName;
+        return this;
+      }
+
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      public Builder withDeploymentGroup(String deploymentGroup) {
+        this.deploymentGroup = deploymentGroup;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      public Builder withDeploymentConfig(String deploymentConfig) {
+        this.deploymentConfig = deploymentConfig;
+        return this;
+      }
+
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRegion(region)
+            .withApplicationName(applicationName)
+            .withComputeProviderType(computeProviderType)
+            .withDeploymentGroup(deploymentGroup)
+            .withServiceName(serviceName)
+            .withDeploymentConfig(deploymentConfig)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withName(name);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRegion(region);
+        yaml.setApplicationName(applicationName);
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setDeploymentGroup(deploymentGroup);
+        yaml.setServiceName(serviceName);
+        yaml.setDeploymentConfig(deploymentConfig);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setName(name);
+        return yaml;
+      }
+    }
+  }
+
   @SchemaIgnore
   @Override
   @Attributes(title = "Connection Type")
@@ -37,10 +157,10 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
 
   @SchemaIgnore
   @Override
-  public String getDisplayName() {
-    return String.format("%s (AWS/CodeDeploy) %s",
+  public String getDefaultName() {
+    return Util.normalize(String.format("%s (AWS/CodeDeploy) %s",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getRegion());
+        this.getRegion()));
   }
 
   public String getRegion() {
@@ -75,6 +195,26 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     this.deploymentConfig = deploymentConfig;
   }
 
+  public CodeDeployInfrastructureMappingBuilder deepClone() {
+    return aCodeDeployInfrastructureMapping()
+        .withRegion(getRegion())
+        .withApplicationName(getApplicationName())
+        .withDeploymentGroup(getDeploymentGroup())
+        .withDeploymentConfig(getDeploymentConfig())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withComputeProviderSettingId(getComputeProviderSettingId())
+        .withEnvId(getEnvId())
+        .withServiceTemplateId(getServiceTemplateId())
+        .withServiceId(getServiceId())
+        .withComputeProviderType(getComputeProviderType())
+        .withDeploymentType(getDeploymentType())
+        .withComputeProviderName(getComputeProviderName())
+        .withName(getName());
+  }
+
   public static final class CodeDeployInfrastructureMappingBuilder {
     private String region;
     private String applicationName;
@@ -91,7 +231,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderType;
     private String deploymentType;
     private String computeProviderName;
-    private String displayName;
+    private String name;
 
     private CodeDeployInfrastructureMappingBuilder() {}
 
@@ -174,8 +314,8 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
-    public CodeDeployInfrastructureMappingBuilder withDisplayName(String displayName) {
-      this.displayName = displayName;
+    public CodeDeployInfrastructureMappingBuilder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -196,7 +336,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withDisplayName(displayName);
+          .withName(name);
     }
 
     public CodeDeployInfrastructureMapping build() {
@@ -216,7 +356,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       codeDeployInfrastructureMapping.setComputeProviderType(computeProviderType);
       codeDeployInfrastructureMapping.setDeploymentType(deploymentType);
       codeDeployInfrastructureMapping.setComputeProviderName(computeProviderName);
-      codeDeployInfrastructureMapping.setDisplayName(displayName);
+      codeDeployInfrastructureMapping.setName(name);
       return codeDeployInfrastructureMapping;
     }
   }

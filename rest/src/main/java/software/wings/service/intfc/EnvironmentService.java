@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -48,6 +49,8 @@ public interface EnvironmentService {
    */
   Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status);
 
+  Environment getEnvironmentByName(String appId, String environmentName);
+
   /**
    * Exist boolean.
    *
@@ -84,9 +87,9 @@ public interface EnvironmentService {
   /**
    * Delete by app id.
    *
-   * @param appId the app id
+   * @param application the app id
    */
-  void deleteByApp(@NotEmpty String appId);
+  void deleteByApp(@NotNull Application application);
 
   /**
    * Create default environments.

@@ -5,6 +5,7 @@
   "applicationName" : {"ui:disabled":true},
   "deploymentGroup": {"ui:disabled":true},
   "deploymentConfig": {"ui:disabled":true},
-  "ui:order": [  "deploymentType","computeProviderSettingId",
+  "ui:order": [  "name", "autoPopulate","serviceId","deploymentType","computeProviderSettingId",
     "region", "applicationName", "deploymentGroup", "deploymentConfig" ,"infraMappingType","computeProviderType"]
+
 }

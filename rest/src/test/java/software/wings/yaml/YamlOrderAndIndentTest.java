@@ -7,8 +7,9 @@ import com.esotericsoftware.yamlbeans.YamlWriter;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
-import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlGitService;
 
 import java.io.BufferedReader;
 import java.io.FileWriter;
@@ -19,7 +20,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 
 public class YamlOrderAndIndentTest {
-  private static final YamlGitSyncService yamlGitSyncService = mock(YamlGitSyncService.class);
+  private static final YamlGitService yamlGitSyncService = mock(YamlGitService.class);
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -41,24 +42,22 @@ public class YamlOrderAndIndentTest {
     oitYaml.setName("OrderIndentTest");
     oitYaml.setDescription("This is the OrderIndentTest");
 
-    AppYaml appYaml1 = new AppYaml();
+    Application.Yaml appYaml1 = new Application.Yaml();
     appYaml1.setName("testApp1");
     appYaml1.setDescription("This is testApp1");
-    appYaml1.setServices(Arrays.asList("testServiceA", "testServiceC", "testServiceB"));
 
-    AppYaml appYaml2 = new AppYaml();
+    Application.Yaml appYaml2 = new Application.Yaml();
     appYaml2.setName("testApp2");
     appYaml2.setDescription("This is testApp2");
-    appYaml2.setServices(Arrays.asList());
 
-    AppYaml appYaml3 = new AppYaml();
+    Application.Yaml appYaml3 = new Application.Yaml();
     appYaml3.setName("testApp3");
     appYaml3.setDescription("This is testApp3");
-    appYaml3.setServices(Arrays.asList("testService3", "testService1", "testService2"));
 
     oitYaml.setApplications(Arrays.asList(appYaml1, appYaml3, appYaml2));
 
-    RestResponse<YamlPayload> rr = YamlHelper.getYamlRestResponse(yamlGitSyncService, null, oitYaml, "testPayload");
+    RestResponse<YamlPayload> rr =
+        YamlHelper.getYamlRestResponse(yamlGitSyncService, null, null, oitYaml, "testPayload");
 
     logger.info("\n" + rr.getResource().getYaml());
 
@@ -72,7 +71,7 @@ public class YamlOrderAndIndentTest {
 
       // yamlConfig.setClassTag("", AppYaml.class);
 
-      yamlConfig.setPropertyElementType(OrderIndentTestYaml.class, "applications", AppYaml.class);
+      yamlConfig.setPropertyElementType(OrderIndentTestYaml.class, "applications", Application.Yaml.class);
       // yamlConfig.setPropertyElementType(AppYaml.class, "services", String.class);
 
       /*

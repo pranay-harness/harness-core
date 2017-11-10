@@ -4,15 +4,14 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.yaml.YamlSerialize;
 
 public class SmtpYaml extends SettingAttributeYaml {
-  @YamlSerialize private String host;
-  @YamlSerialize private int port;
-  @YamlSerialize private String fromAddress;
-  @YamlSerialize private boolean useSSL;
-  @YamlSerialize private String username;
-  @YamlSerialize private String password = ENCRYPTED_VALUE_STR;
+  private String host;
+  private int port;
+  private String fromAddress;
+  private boolean useSSL;
+  private String username;
+  private String password = ENCRYPTED_VALUE_STR;
 
   public SmtpYaml() {
     super();

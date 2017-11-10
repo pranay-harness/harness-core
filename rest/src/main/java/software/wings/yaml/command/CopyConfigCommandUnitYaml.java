@@ -1,9 +1,7 @@
 package software.wings.yaml.command;
 
-import software.wings.yaml.YamlSerialize;
-
 public class CopyConfigCommandUnitYaml extends CommandUnitYaml {
-  @YamlSerialize public String destinationParentPath;
+  public String destinationParentPath;
 
   public CopyConfigCommandUnitYaml() {
     super();

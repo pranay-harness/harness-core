@@ -1,10 +1,8 @@
 package software.wings.yaml.command;
 
-import software.wings.yaml.YamlSerialize;
-
 public class ScpCommandUnitYaml extends SshCommandUnitYaml {
-  @YamlSerialize public String fileCategory;
-  @YamlSerialize public String destinationDirectoryPath;
+  public String fileCategory;
+  public String destinationDirectoryPath;
 
   public ScpCommandUnitYaml() {
     super();

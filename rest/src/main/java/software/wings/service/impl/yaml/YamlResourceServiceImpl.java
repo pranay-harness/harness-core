@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,26 +9,26 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineStage;
-import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SumoConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -48,34 +49,35 @@ import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.yaml.YamlType;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlArtifactStreamService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.service.intfc.yaml.sync.YamlSyncService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.yaml.ArtifactStreamYaml;
-import software.wings.yaml.EnvironmentYaml;
-import software.wings.yaml.OrchestrationStreamActionYaml;
-import software.wings.yaml.PipelineStageElementYaml;
-import software.wings.yaml.PipelineStageYaml;
-import software.wings.yaml.PipelineYaml;
-import software.wings.yaml.StreamActionYaml;
-import software.wings.yaml.WorkflowYaml;
+import software.wings.utils.Validator;
+import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
+import software.wings.yaml.artifactstream.OrchestrationStreamActionYaml;
+import software.wings.yaml.artifactstream.StreamActionYaml;
 import software.wings.yaml.command.AwsLambdaCommandUnitYaml;
 import software.wings.yaml.command.CodeDeployCommandUnitYaml;
 import software.wings.yaml.command.CommandRefCommandUnitYaml;
@@ -103,16 +105,18 @@ import software.wings.yaml.settingAttribute.ElkYaml;
 import software.wings.yaml.settingAttribute.GcpYaml;
 import software.wings.yaml.settingAttribute.JenkinsYaml;
 import software.wings.yaml.settingAttribute.LogzYaml;
+import software.wings.yaml.settingAttribute.NewRelicYaml;
 import software.wings.yaml.settingAttribute.NexusYaml;
 import software.wings.yaml.settingAttribute.PhysicalDataCenterYaml;
 import software.wings.yaml.settingAttribute.SettingAttributeYaml;
 import software.wings.yaml.settingAttribute.SlackYaml;
 import software.wings.yaml.settingAttribute.SmtpYaml;
 import software.wings.yaml.settingAttribute.SplunkYaml;
+import software.wings.yaml.settingAttribute.SumoConfigYaml;
+import software.wings.yaml.workflow.WorkflowYaml;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import javax.inject.Inject;
 
 public class YamlResourceServiceImpl implements YamlResourceService {
@@ -122,10 +126,14 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private EnvironmentService environmentService;
   @Inject private PipelineService pipelineService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private YamlArtifactStreamService yamlArtifactStreamService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureMappingService infraMappingService;
   @Inject private WorkflowService workflowService;
   @Inject private SettingsService settingsService;
-  @Inject private YamlGitSyncService yamlGitSyncService;
+  @Inject private YamlGitService yamlGitSyncService;
+  @Inject private YamlHandlerFactory yamlHandlerFactory;
+  @Inject private YamlSyncService yamlSyncService;
   @Inject private SecretManager secretManager;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -140,6 +148,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the application
    */
   public RestResponse<YamlPayload> getServiceCommand(@NotEmpty String appId, @NotEmpty String serviceCommandId) {
+    Application app = appService.get(appId);
     ServiceCommandYaml serviceCommandYaml = new ServiceCommandYaml();
 
     List<Environment> environments = environmentService.getEnvByApp(appId);
@@ -258,8 +267,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return rr;
     }
 
-    return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, serviceCommand.getUuid(), serviceCommandYaml, serviceCommand.getName() + ".yaml");
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, serviceCommand.getUuid(), app.getAccountId(),
+        serviceCommandYaml, serviceCommand.getName() + ".yaml");
   }
 
   /**
@@ -434,58 +443,26 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getPipeline(String appId, String pipelineId) {
-    PipelineYaml pipelineYaml = new PipelineYaml();
-
-    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
-
-    pipelineYaml.setName(pipeline.getName());
-    pipelineYaml.setDescription(pipeline.getDescription());
-
-    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-
-    if (pipelineStages != null) {
-      for (PipelineStage ps : pipelineStages) {
-        PipelineStageYaml pipelineStageYaml = new PipelineStageYaml();
-
-        List<PipelineStageElement> stageElements = ps.getPipelineStageElements();
-
-        if (stageElements != null) {
-          for (PipelineStageElement se : stageElements) {
-            PipelineStageElementYaml pipelineStageElementYaml = new PipelineStageElementYaml();
-
-            pipelineStageElementYaml.setName(se.getName());
-            pipelineStageElementYaml.setType(se.getType());
-
-            Map<String, Object> theMap = se.getProperties();
-
-            if (theMap.containsKey(ENV_ID_PROPERTY)) {
-              String envId = (String) theMap.get(ENV_ID_PROPERTY);
-              pipelineStageElementYaml.setEnvName(environmentService.get(appId, envId, false).getName());
-            }
-
-            pipelineStageYaml.getPipelineStageElements().add(pipelineStageElementYaml);
-          }
-        }
-        pipelineYaml.getPipelineStages().add(pipelineStageYaml);
-      }
-    }
-
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, false);
+    Validator.notNullCheck("No pipeline with the given id:" + pipelineId, pipeline);
+    Pipeline.Yaml pipelineYaml =
+        (Pipeline.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE, null).toYaml(pipeline, appId);
     return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, pipeline.getUuid(), pipelineYaml, pipeline.getName() + ".yaml");
+        yamlGitSyncService, pipeline.getUuid(), accountId, pipelineYaml, pipeline.getName() + YAML_EXTENSION);
   }
 
   /**
    * Update a pipeline that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param appId     the app id
-   * @param pipelineId the pipeline id
+   *
+   * @param accountId
    * @param yamlPayload the yaml version of the service command
    * @return the rest response
    */
-  public RestResponse<Pipeline> updatePipeline(
-      String appId, String pipelineId, YamlPayload yamlPayload, boolean deleteEnabled) {
-    // TODO - needs implementation
-    return null;
+  public RestResponse<Pipeline> updatePipeline(String accountId, YamlPayload yamlPayload) {
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   /**
@@ -496,8 +473,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getTrigger(String appId, String artifactStreamId) {
-    ArtifactStreamYaml artifactStreamYaml = new ArtifactStreamYaml();
-
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
 
     if (artifactStream == null) {
@@ -509,8 +484,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return rr;
     }
 
-    artifactStreamYaml.setArtifactStreamType(artifactStream.getArtifactStreamType());
-    artifactStreamYaml.setSourceName(artifactStream.getSourceName());
+    ArtifactStream.Yaml artifactStreamYaml =
+        yamlArtifactStreamService.getArtifactStreamYamlObject(appId, artifactStreamId);
 
     String serviceId = artifactStream.getServiceId();
 
@@ -530,8 +505,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       }
     }
 
-    artifactStreamYaml.setServiceName(serviceName);
-
     List<ArtifactStreamAction> streamActions = artifactStream.getStreamActions();
 
     if (streamActions != null) {
@@ -543,7 +516,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             say = new OrchestrationStreamActionYaml();
             say.setWorkflowName(sa.getWorkflowName());
             say.setWorkflowType(sa.getWorkflowType().name());
-            ((OrchestrationStreamActionYaml) say).setEnvName(sa.getEnvName());
+            say.setEnvName(sa.getEnvName());
             break;
           case PIPELINE:
             say = new StreamActionYaml();
@@ -558,14 +531,16 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             say = new StreamActionYaml();
         }
 
-        artifactStreamYaml.getStreamActions().add(say);
+        // TODO Rishi mentioned streamactions / triggers would be pulled out of artifact streams. Skipping the handling
+        // right now
+        //        artifactStreamYaml.getStreamActions().add(say);
       }
     }
 
     String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";
 
-    return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, artifactStream.getUuid(), artifactStreamYaml, payLoadName + ".yaml");
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, artifactStream.getUuid(),
+        appService.getAccountIdByAppId(appId), artifactStreamYaml, payLoadName + ".yaml");
   }
 
   /**
@@ -590,60 +565,20 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId) {
-    WorkflowYaml workflowYaml = new WorkflowYaml();
-
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-
-    workflowYaml.setName(workflow.getName());
-    workflowYaml.setDescription(workflow.getDescription());
-    workflowYaml.setWorkflowType(workflow.getWorkflowType().name());
-
-    // TODO - this is the general format (as per Rishi) that we need to construct - WorkflowYaml will need to be
-    // extended
-    /*
-    Workflow
-      name
-      type
-      …
-      orchestrationWorkflow
-        type: CANARY
-        preDeploymentSteps
-          [
-            {
-              name:ChangeManagementStart
-              type: HTTP
-              properties{
-                url:
-                method: GET
-              }
-            }
-          ]
-
-        phases[
-          {
-            Disable Services:
-              steps:
-                [
-                  {
-                    name:ChangeManagementStart
-                    type: HTTP
-                    properties{
-                      url:
-                      method: GET
-                    }
-                  }
-                  ... more steps
-                ],
-              customFailureStrategies{
-              }
-              isParallel:true
-              waitInterval:34
-            },
-            ... more phases
-    */
+    WorkflowYaml workflowYaml = (WorkflowYaml) yamlHandlerFactory
+                                    .getYamlHandler(YamlType.WORKFLOW,
+                                        workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType().name())
+                                    .toYaml(workflow, appId);
 
     return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, workflow.getUuid(), workflowYaml, workflow.getName() + ".yaml");
+        yamlGitSyncService, workflow.getUuid(), accountId, workflowYaml, workflow.getName() + YAML_EXTENSION);
+  }
+
+  public RestResponse<Workflow> updateWorkflow(String accountId, YamlPayload yamlPayload) {
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   /**
@@ -677,64 +612,231 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(settingAttribute.getValue().getType());
 
-    SettingAttributeYaml settingAttributeYaml = null;
+    SettingAttributeYaml settingAttributeYaml;
 
     switch (settingVariableType) {
       // cloud providers
       case AWS:
-        settingAttributeYaml = new AwsYaml(settingAttribute);
+        AwsYaml awsYaml = new AwsYaml(settingAttribute);
+        AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+
+        try {
+          String secretKey = secretManager.getEncryptedYamlRef(awsConfig);
+          awsYaml.setSecretKey(secretKey);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid Secret key. Should be a valid url to a secret");
+          throw new WingsException(e);
+        }
+        settingAttributeYaml = awsYaml;
         break;
+
       case GCP:
-        settingAttributeYaml = new GcpYaml(settingAttribute);
+        GcpYaml gcpYaml = new GcpYaml(settingAttribute);
+        GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
+
+        try {
+          String fileContent = secretManager.getEncryptedYamlRef(gcpConfig);
+          gcpYaml.setServiceAccountKeyFileContent(fileContent);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid File Content. Should be a valid url to a secret");
+          throw new WingsException(e);
+        }
+        settingAttributeYaml = gcpYaml;
         break;
+
       case PHYSICAL_DATA_CENTER:
         settingAttributeYaml = new PhysicalDataCenterYaml(settingAttribute);
         break;
 
       // artifact servers
       case JENKINS:
-        settingAttributeYaml = new JenkinsYaml(settingAttribute);
+        JenkinsYaml jenkinsYaml = new JenkinsYaml(settingAttribute);
+
+        JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(jenkinsConfig);
+          jenkinsYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+          throw new WingsException(e);
+        }
+        settingAttributeYaml = jenkinsYaml;
         break;
+
       case BAMBOO:
-        settingAttributeYaml = new BambooYaml(settingAttribute);
+        BambooYaml bambooYaml = new BambooYaml(settingAttribute);
+        BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(bambooConfig);
+          bambooYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+          throw new WingsException(e);
+        }
+        settingAttributeYaml = bambooYaml;
         break;
+
       case DOCKER:
-        settingAttributeYaml = new DockerYaml(settingAttribute);
+
+        DockerYaml dockerYaml = new DockerYaml(settingAttribute);
+        DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(dockerConfig);
+          dockerYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+          throw new WingsException(e);
+        }
+        settingAttributeYaml = dockerYaml;
         break;
+
       case NEXUS:
-        settingAttributeYaml = new NexusYaml(settingAttribute);
+        NexusYaml nexusYaml = new NexusYaml(settingAttribute);
+        NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(nexusConfig);
+          nexusYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = nexusYaml;
         break;
       case ARTIFACTORY:
-        settingAttributeYaml = new ArtifactoryYaml(settingAttribute);
+        ArtifactoryYaml artifactoryYaml = new ArtifactoryYaml(settingAttribute);
+        ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(artifactoryConfig);
+          artifactoryYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = artifactoryYaml;
         break;
 
       // collaboration providers
       case SMTP:
-        settingAttributeYaml = new SmtpYaml(settingAttribute);
+        SmtpYaml smtpYaml = new SmtpYaml(settingAttribute);
+        SmtpConfig smtpConfig = (SmtpConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(smtpConfig);
+          smtpYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = smtpYaml;
         break;
+
       case SLACK:
         settingAttributeYaml = new SlackYaml(settingAttribute);
         break;
 
       // load balancers
       case ELB:
-        settingAttributeYaml = new ElbYaml(settingAttribute);
+        ElbYaml elbYaml = new ElbYaml(settingAttribute);
+        ElasticLoadBalancerConfig elbConfig = (ElasticLoadBalancerConfig) settingAttribute.getValue();
+
+        try {
+          String secretKey = secretManager.getEncryptedYamlRef(elbConfig);
+          elbYaml.setSecretKey(secretKey);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = elbYaml;
         break;
 
       // verification providers
       // JENKINS is also a (logical) part of this group
       case APP_DYNAMICS:
-        settingAttributeYaml = new AppDynamicsYaml(settingAttribute);
+        AppDynamicsYaml appDynamicsYaml = new AppDynamicsYaml(settingAttribute);
+        AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+          appDynamicsYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = appDynamicsYaml;
         break;
+
+      case NEW_RELIC:
+        NewRelicYaml newRelicYaml = new NewRelicYaml(settingAttribute);
+        NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
+
+        try {
+          String apiKey = secretManager.getEncryptedYamlRef(newRelicConfig);
+          newRelicYaml.setApiKey(apiKey);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid api key. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = newRelicYaml;
+        break;
+
+      case SUMO:
+        SumoConfigYaml sumoConfigYaml = new SumoConfigYaml(settingAttribute);
+        SumoConfig sumoConfig = (SumoConfig) settingAttribute.getValue();
+
+        try {
+          String accessId = secretManager.getEncryptedYamlRef(sumoConfig, "accessId");
+          sumoConfigYaml.setAccessId(accessId);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid access id. Should be a valid url to a secret");
+        }
+
+        try {
+          String accessKey = secretManager.getEncryptedYamlRef(sumoConfig, "accessKey");
+          sumoConfigYaml.setAccessKey(accessKey);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid access key. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = sumoConfigYaml;
+        break;
+
       case SPLUNK:
-        settingAttributeYaml = new SplunkYaml(settingAttribute);
+        SplunkYaml splunkYaml = new SplunkYaml(settingAttribute);
+        SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(splunkConfig);
+          splunkYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = splunkYaml;
         break;
+
       case ELK:
-        settingAttributeYaml = new ElkYaml(settingAttribute);
+        ElkYaml elkYaml = new ElkYaml(settingAttribute);
+        ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
+
+        try {
+          String password = secretManager.getEncryptedYamlRef(elkConfig);
+          elkYaml.setPassword(password);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid password. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = elkYaml;
         break;
+
       case LOGZ:
-        settingAttributeYaml = new LogzYaml(settingAttribute);
+        LogzYaml logzYaml = new LogzYaml(settingAttribute);
+        LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
+
+        try {
+          String token = secretManager.getEncryptedYamlRef(logzConfig);
+          logzYaml.setToken(token);
+        } catch (IllegalAccessException e) {
+          logger.warn("Invalid token. Should be a valid url to a secret");
+        }
+        settingAttributeYaml = logzYaml;
         break;
+
       default:
         // handle not found
         RestResponse rr = new RestResponse<>();
@@ -743,8 +845,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     }
 
     if (settingAttributeYaml != null) {
-      return YamlHelper.getYamlRestResponse(
-          yamlGitSyncService, settingAttribute.getUuid(), settingAttributeYaml, settingAttribute.getName() + ".yaml");
+      return YamlHelper.getYamlRestResponse(yamlGitSyncService, settingAttribute.getUuid(), accountId,
+          settingAttributeYaml, settingAttribute.getName() + YAML_EXTENSION);
     }
 
     return null;
@@ -793,7 +895,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     }
 
     //-------------------
-    SettingAttributeYaml beforeSettingAttributeYaml = null;
 
     SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(settingAttribute.getValue().getType());
 
@@ -829,12 +930,12 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (AwsConfig) settingAttribute.getValue();
             settingAttribute.setName(awsYaml.getName());
             config = AwsConfig.builder()
                          .accountId(accountId)
                          .accessKey(awsYaml.getAccessKey())
-                         .secretKey(((AwsConfig) beforeConfig).getSecretKey())
+                         .secretKey(null)
+                         .encryptedSecretKey(awsYaml.getSecretKey())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -854,10 +955,13 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             settingAttribute.setName(gcpYaml.getName());
-            config =
-                GcpConfig.builder().serviceAccountKeyFileContent(gcpYaml.getServiceAccountKeyFileContent()).build();
+            config = GcpConfig.builder()
+                         .serviceAccountKeyFileContent(null)
+                         .encryptedServiceAccountKeyFileContent(gcpYaml.getServiceAccountKeyFileContent())
+                         .build();
             settingAttribute.setValue(config);
             break;
+
           case PHYSICAL_DATA_CENTER:
             PhysicalDataCenterYaml beforePdcYaml = mapper.readValue(beforeYaml, PhysicalDataCenterYaml.class);
             if (beforePdcYaml == null) {
@@ -892,16 +996,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (JenkinsConfig) settingAttribute.getValue();
             settingAttribute.setName(jenkinsYaml.getName());
             config = JenkinsConfig.builder()
                          .accountId(accountId)
                          .jenkinsUrl(jenkinsYaml.getUrl())
-                         .password(((JenkinsConfig) beforeConfig).getPassword())
+                         .password(jenkinsYaml.getPassword().toCharArray())
+                         .encryptedPassword(jenkinsYaml.getPassword())
                          .username(jenkinsYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
+
           case BAMBOO:
             BambooYaml beforeBambooYaml = mapper.readValue(beforeYaml, BambooYaml.class);
             if (beforeBambooYaml == null) {
@@ -917,16 +1022,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (BambooConfig) settingAttribute.getValue();
             settingAttribute.setName(bambooYaml.getName());
             config = BambooConfig.builder()
                          .accountId(accountId)
                          .bambooUrl(bambooYaml.getUrl())
-                         .password(((BambooConfig) beforeConfig).getPassword())
+                         .password(null)
+                         .encryptedPassword(bambooYaml.getPassword())
                          .username(bambooYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
+
           case DOCKER:
             DockerYaml beforeDockerYaml = mapper.readValue(beforeYaml, DockerYaml.class);
             if (beforeDockerYaml == null) {
@@ -942,17 +1048,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
-            String dockerPasswordRef = secretManager.getEncryptedYamlRef(dockerConfig);
             settingAttribute.setName(dockerYaml.getName());
             config = DockerConfig.builder()
                          .accountId(accountId)
                          .dockerRegistryUrl(dockerYaml.getUrl())
-                         .password(dockerPasswordRef.toCharArray())
+                         .password(null)
+                         .encryptedPassword(dockerYaml.getPassword())
                          .username(dockerYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
+
           case NEXUS:
             NexusYaml beforeNexusYaml = mapper.readValue(beforeYaml, NexusYaml.class);
             if (beforeNexusYaml == null) {
@@ -968,16 +1074,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (NexusConfig) settingAttribute.getValue();
             settingAttribute.setName(nexusYaml.getName());
             config = NexusConfig.builder()
                          .accountId(accountId)
                          .nexusUrl(nexusYaml.getUrl())
-                         .password(((NexusConfig) beforeConfig).getPassword())
+                         .password(null)
+                         .encryptedPassword(nexusYaml.getPassword())
                          .username(nexusYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
+
           case ARTIFACTORY:
             ArtifactoryYaml beforeArtifactoryYaml = mapper.readValue(beforeYaml, ArtifactoryYaml.class);
             if (beforeArtifactoryYaml == null) {
@@ -993,12 +1100,12 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (ArtifactoryConfig) settingAttribute.getValue();
             settingAttribute.setName(artifactoryYaml.getName());
             config = ArtifactoryConfig.builder()
                          .accountId(accountId)
                          .artifactoryUrl(artifactoryYaml.getUrl())
-                         .password(((ArtifactoryConfig) beforeConfig).getPassword())
+                         .password(null)
+                         .encryptedPassword(artifactoryYaml.getPassword())
                          .username(artifactoryYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
@@ -1020,19 +1127,20 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (SmtpConfig) settingAttribute.getValue();
             settingAttribute.setName(smtpYaml.getName());
             config = SmtpConfig.builder()
                          .accountId(accountId)
                          .fromAddress(smtpYaml.getFromAddress())
                          .host(smtpYaml.getHost())
-                         .password(((SmtpConfig) beforeConfig).getPassword())
+                         .password(null)
+                         .encryptedPassword(smtpYaml.getPassword())
                          .port(smtpYaml.getPort())
                          .username(smtpYaml.getUsername())
                          .useSSL(smtpYaml.isUseSSL())
                          .build();
             settingAttribute.setValue(config);
             break;
+
           case SLACK:
             SlackYaml beforeSlackYaml = mapper.readValue(beforeYaml, SlackYaml.class);
             if (beforeSlackYaml == null) {
@@ -1048,13 +1156,15 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (SlackConfig) settingAttribute.getValue();
             settingAttribute.setName(slackYaml.getName());
             config =
                 SlackConfig.Builder.aSlackConfig().withOutgoingWebhookUrl(slackYaml.getOutgoingWebhookUrl()).build();
             settingAttribute.setValue(config);
             break;
 
+          case KUBERNETES:
+
+            break;
           // load balancers
           case ELB:
             ElbYaml beforeElbYaml = mapper.readValue(beforeYaml, ElbYaml.class);
@@ -1071,13 +1181,13 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (ElasticLoadBalancerConfig) settingAttribute.getValue();
             settingAttribute.setName(elbYaml.getName());
             config = ElasticLoadBalancerConfig.builder()
                          .accountId(accountId)
                          .accessKey(elbYaml.getAccessKey())
                          .loadBalancerName(elbYaml.getLoadBalancerName())
-                         .secretKey(((ElasticLoadBalancerConfig) beforeConfig).getSecretKey())
+                         .secretKey(null)
+                         .encryptedSecretKey(elbYaml.getSecretKey())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -1099,18 +1209,70 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-            String passwordRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
             settingAttribute.setName(appDynamicsYaml.getName());
             config = AppDynamicsConfig.builder()
                          .accountId(accountId)
                          .accountname(appDynamicsYaml.getAccountname())
                          .controllerUrl(appDynamicsYaml.getUrl())
-                         .password(passwordRef.toCharArray())
+                         .password(null)
+                         .encryptedPassword(appDynamicsYaml.getPassword())
                          .username(appDynamicsYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
+
+          case NEW_RELIC:
+            NewRelicYaml beforeNewRelicYaml = mapper.readValue(beforeYaml, NewRelicYaml.class);
+            if (beforeNewRelicYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeNewRelicYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            NewRelicYaml newRelicYaml = mapper.readValue(yaml, NewRelicYaml.class);
+            if (newRelicYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "newRelicYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            settingAttribute.setName(newRelicYaml.getName());
+            config = NewRelicConfig.builder()
+                         .accountId(accountId)
+                         .apiKey(null)
+                         .encryptedApiKey(newRelicYaml.getApiKey())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+
+          case SUMO:
+            SumoConfigYaml beforeSumoConfigYaml = mapper.readValue(beforeYaml, SumoConfigYaml.class);
+            if (beforeSumoConfigYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeSumoConfigYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            SumoConfigYaml sumoConfigYaml = mapper.readValue(yaml, SumoConfigYaml.class);
+            if (sumoConfigYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "sumoConfigYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            settingAttribute.setName(sumoConfigYaml.getName());
+
+            SumoConfig sumoConfig = new SumoConfig();
+            sumoConfig.setAccessId(null);
+            sumoConfig.setEncryptedAccessId(sumoConfigYaml.getAccessId());
+            sumoConfig.setAccessKey(null);
+            sumoConfig.setEncryptedAccessKey(sumoConfigYaml.getAccessKey());
+            sumoConfig.setAccountId(accountId);
+            sumoConfig.setSumoUrl(sumoConfigYaml.getSumoUrl());
+
+            settingAttribute.setValue(sumoConfig);
+            break;
+
           case SPLUNK:
             SplunkYaml beforeSplunkYaml = mapper.readValue(beforeYaml, SplunkYaml.class);
             if (beforeSplunkYaml == null) {
@@ -1126,17 +1288,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
-            String splunkPasswordRef = secretManager.getEncryptedYamlRef(splunkConfig);
             settingAttribute.setName(splunkYaml.getName());
             config = SplunkConfig.builder()
                          .accountId(accountId)
-                         .password(splunkPasswordRef.toCharArray())
+                         .password(null)
+                         .encryptedPassword(splunkYaml.getPassword())
                          .splunkUrl(splunkYaml.getUrl())
                          .username(splunkYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
+
           case ELK:
             ElkYaml beforeElkYaml = mapper.readValue(beforeYaml, ElkYaml.class);
             if (beforeElkYaml == null) {
@@ -1152,15 +1314,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (ElkConfig) settingAttribute.getValue();
             settingAttribute.setName(elkYaml.getName());
-            config = new ElkConfig();
-            ((ElkConfig) config).setAccountId(accountId);
-            ((ElkConfig) config).setElkUrl(elkYaml.getUrl());
-            ((ElkConfig) config).setPassword(((ElkConfig) beforeConfig).getPassword());
-            ((ElkConfig) config).setUsername(elkYaml.getUsername());
-            settingAttribute.setValue(config);
+
+            ElkConfig elkConfig = new ElkConfig();
+            elkConfig.setAccountId(accountId);
+            elkConfig.setElkUrl(elkYaml.getUrl());
+            elkConfig.setPassword(null);
+            elkConfig.setEncryptedPassword(elkYaml.getPassword());
+            elkConfig.setUsername(elkYaml.getUsername());
+            settingAttribute.setValue(elkConfig);
             break;
+
           case LOGZ:
             LogzYaml beforeLogzYaml = mapper.readValue(beforeYaml, LogzYaml.class);
             if (beforeLogzYaml == null) {
@@ -1176,14 +1340,15 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (LogzConfig) settingAttribute.getValue();
             settingAttribute.setName(logzYaml.getName());
-            config = new LogzConfig();
-            ((LogzConfig) config).setAccountId(accountId);
-            ((LogzConfig) config).setLogzUrl(logzYaml.getUrl());
-            ((LogzConfig) config).setToken(((LogzConfig) beforeConfig).getToken());
-            settingAttribute.setValue(config);
+            LogzConfig logzConfig = new LogzConfig();
+            logzConfig.setAccountId(accountId);
+            logzConfig.setLogzUrl(logzYaml.getUrl());
+            logzConfig.setToken(null);
+            logzConfig.setEncryptedToken(logzYaml.getToken());
+            settingAttribute.setValue(logzConfig);
             break;
+
           default:
             // handle not found
             YamlHelper.addUnknownSettingVariableTypeMessage(rr, settingVariableType);
@@ -1231,109 +1396,53 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getEnvironment(String appId, String envId) {
+    Application app = appService.get(appId);
     Environment environment = environmentService.get(appId, envId, true);
-    EnvironmentYaml environmentYaml = new EnvironmentYaml(environment);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.ENVIRONMENT, null).toYaml(environment, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, environment.getUuid(), app.getAccountId(), yaml, environment.getName() + YAML_EXTENSION);
+  }
+
+  public RestResponse<YamlPayload> getService(String appId, String serviceId) {
+    Application app = appService.get(appId);
+    Service service = serviceResourceService.get(appId, serviceId, true);
+    Validator.notNullCheck("Service is null for Id: " + serviceId, service);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.SERVICE, null).toYaml(service, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, service.getUuid(), app.getAccountId(), yaml, service.getName() + YAML_EXTENSION);
+  }
+
+  /**
+   * Gets the yaml version of an environment by envId
+   *
+   * @param accountId the account id
+   * @param appId   the app id
+   * @param infraMappingId   infra mapping id
+   * @return the rest response
+   */
+  @Override
+  public RestResponse<YamlPayload> getInfraMapping(String accountId, String appId, String infraMappingId) {
+    InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
+
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.INFRA_MAPPING, infraMapping.getInfraMappingType())
+                        .toYaml(infraMapping, appId);
 
     return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, environment.getUuid(), environmentYaml, environment.getName() + ".yaml");
+        yamlGitSyncService, infraMapping.getUuid(), accountId, yaml, infraMapping.getName() + YAML_EXTENSION);
   }
 
   /**
    * Update a environment that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param envId  the environment id
+   * @param accountId  the account id
    * @param yamlPayload the yaml version of environment
    * @return the rest response
    */
-  public RestResponse<Environment> updateEnvironment(
-      String appId, String envId, YamlPayload yamlPayload, boolean deleteEnabled) {
-    String yaml = yamlPayload.getYaml();
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+  public RestResponse<Environment> updateEnvironment(String accountId, YamlPayload yamlPayload) {
+    return yamlSyncService.update(yamlPayload, accountId);
+  }
 
-    RestResponse rr = new RestResponse<>();
-    rr.setResponseMessages(yamlPayload.getResponseMessages());
-
-    // get the before Yaml
-    RestResponse beforeResponse = getEnvironment(appId, envId);
-    YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
-    String beforeYaml = beforeYP.getYaml();
-
-    if (yaml.equals(beforeYaml)) {
-      // no change
-      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
-      return rr;
-    }
-
-    EnvironmentYaml beforeEnvironmentYaml = null;
-
-    if (beforeYaml != null && !beforeYaml.isEmpty()) {
-      try {
-        beforeEnvironmentYaml = mapper.readValue(beforeYaml, EnvironmentYaml.class);
-      } catch (WingsException e) {
-        throw e;
-      } catch (Exception e) {
-        // bad before Yaml
-        e.printStackTrace();
-        YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
-        return rr;
-      }
-    } else {
-      // missing before Yaml
-      YamlHelper.addMissingBeforeYamlMessage(rr);
-      return rr;
-    }
-
-    EnvironmentYaml environmentYaml = null;
-
-    if (yaml != null && !yaml.isEmpty()) {
-      try {
-        Environment environment = environmentService.get(appId, envId, false);
-
-        environmentYaml = mapper.readValue(yaml, EnvironmentYaml.class);
-
-        // save the changes
-        environment.setName(environmentYaml.getName());
-        environment.setDescription(environmentYaml.getDescription());
-        String environmentTypeStr = environmentYaml.getEnvironmentType().toUpperCase();
-
-        try {
-          EnvironmentType et = EnvironmentType.valueOf(environmentTypeStr);
-          environment.setEnvironmentType(et);
-        } catch (Exception e) {
-          e.printStackTrace();
-          YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-              "The EnvironmentType: '" + environmentTypeStr + "' is not found in the EnvironmentType Enum!");
-          return rr;
-        }
-
-        environment = environmentService.update(environment);
-
-        // return the new resource
-        if (environment != null) {
-          // save the before yaml version
-          String accountId = appService.get(appId).getAccountId();
-          YamlVersion beforeYamLVersion = aYamlVersion()
-                                              .withAccountId(accountId)
-                                              .withEntityId(environment.getUuid())
-                                              .withType(Type.ENVIRONMENT)
-                                              .withYaml(beforeYaml)
-                                              .build();
-          yamlHistoryService.save(beforeYamLVersion);
-
-          rr.setResource(environment);
-        }
-
-      } catch (WingsException e) {
-        throw e;
-      } catch (Exception e) {
-        e.printStackTrace();
-        YamlHelper.addUnrecognizedFieldsMessage(rr);
-      }
-    } else {
-      // missing Yaml
-      YamlHelper.addMissingYamlMessage(rr);
-    }
-
-    return rr;
+  public RestResponse<Service> updateService(String accountId, YamlPayload yamlPayload) {
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 }

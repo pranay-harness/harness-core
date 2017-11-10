@@ -1,13 +1,17 @@
 package software.wings.beans;
 
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Util;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,13 +49,109 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     super(InfrastructureMappingType.AWS_ECS.name());
   }
 
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
+    private String region = "us-east-1";
+
+    public static final class Builder {
+      private String region = "us-east-1";
+      private String cluster;
+      private String computeProviderType;
+      private String serviceName;
+      private String infraMappingType;
+      private String type;
+      private String deploymentType;
+      private String computeProviderName;
+      private String name;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRegion(String region) {
+        this.region = region;
+        return this;
+      }
+
+      public Builder withCluster(String cluster) {
+        this.cluster = cluster;
+        return this;
+      }
+
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRegion(region)
+            .withCluster(cluster)
+            .withComputeProviderType(computeProviderType)
+            .withServiceName(serviceName)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withName(name);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRegion(region);
+        yaml.setCluster(cluster);
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setServiceName(serviceName);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setName(name);
+        return yaml;
+      }
+    }
+  }
+
   @SchemaIgnore
   @Override
-  public String getDisplayName() {
-    return String.format("%s (%s/%s::%s) %s", this.getClusterName(), this.getComputeProviderType(),
+  public String getDefaultName() {
+    return Util.normalize(String.format("%s (%s_%s::%s) %s", this.getClusterName(), this.getComputeProviderType(),
         this.getDeploymentType(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getRegion());
+        this.getRegion()));
   }
 
   /**
@@ -216,245 +316,261 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     this.numberOfNodes = numberOfNodes;
   }
 
+  public Builder deepClone() {
+    return anEcsInfrastructureMapping()
+        .withClusterName(getClusterName())
+        .withRegion(getRegion())
+        .withVpc(getVpc())
+        .withSubnet(getSubnet())
+        .withSecurityGroup(getSecurityGroup())
+        .withType(getType())
+        .withRole(getRole())
+        .withDiskSize(getDiskSize())
+        .withAmi(getAmi())
+        .withNumberOfNodes(getNumberOfNodes())
+        .withUuid(getUuid())
+        .withComputeProviderSettingId(getComputeProviderSettingId())
+        .withAppId(getAppId())
+        .withEnvId(getEnvId())
+        .withCreatedBy(getCreatedBy())
+        .withServiceTemplateId(getServiceTemplateId())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withServiceId(getServiceId())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withComputeProviderType(getComputeProviderType())
+        .withInfraMappingType(getInfraMappingType())
+        .withEntityPath(entityYamlPath)
+        .withDeploymentType(getDeploymentType())
+        .withComputeProviderName(getComputeProviderName())
+        .withName(getName());
+  }
+
   /**
    * The type Builder.
    */
   public static final class Builder {
+    protected String appId;
     private String clusterName;
     private String region;
+    private String vpc;
+    private List<String> subnet;
+    private String securityGroup;
+    private String type;
+    private String role;
+    private int diskSize;
+    private String ami;
+    private int numberOfNodes;
+    private String uuid;
     private String computeProviderSettingId;
     private String envId;
-    private String serviceTemplateId;
-    private String serviceId;
-    private String computeProviderType;
-    private String deploymentType;
-    private String computeProviderName;
-    private String uuid;
-    private String appId;
     private EmbeddedUser createdBy;
+    private String serviceTemplateId;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
+    private String serviceId;
     private long lastUpdatedAt;
+    private String computeProviderType;
+    private String infraMappingType;
+    private String entityPath;
+    private String deploymentType;
+    private String computeProviderName;
+    private String name;
 
     private Builder() {}
 
-    /**
-     * An ecs infrastructure mapping builder.
-     *
-     * @return the builder
-     */
     public static Builder anEcsInfrastructureMapping() {
       return new Builder();
     }
 
-    /**
-     * With cluster name builder.
-     *
-     * @param clusterName the cluster name
-     * @return the builder
-     */
     public Builder withClusterName(String clusterName) {
       this.clusterName = clusterName;
       return this;
     }
 
-    /**
-     * With region builder.
-     */
     public Builder withRegion(String region) {
       this.region = region;
       return this;
     }
 
-    /**
-     * With compute provider setting id builder.
-     *
-     * @param computeProviderSettingId the compute provider setting id
-     * @return the builder
-     */
-    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
-      this.computeProviderSettingId = computeProviderSettingId;
+    public Builder withVpc(String vpc) {
+      this.vpc = vpc;
       return this;
     }
 
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
+    public Builder withSubnet(List<String> subnet) {
+      this.subnet = subnet;
       return this;
     }
 
-    /**
-     * With service template id builder.
-     *
-     * @param serviceTemplateId the service template id
-     * @return the builder
-     */
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
+    public Builder withSecurityGroup(String securityGroup) {
+      this.securityGroup = securityGroup;
       return this;
     }
 
-    /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
+    public Builder withType(String type) {
+      this.type = type;
       return this;
     }
 
-    /**
-     * With compute provider type builder.
-     *
-     * @param computeProviderType the compute provider type
-     * @return the builder
-     */
-    public Builder withComputeProviderType(String computeProviderType) {
-      this.computeProviderType = computeProviderType;
+    public Builder withRole(String role) {
+      this.role = role;
       return this;
     }
 
-    /**
-     * With deployment type builder.
-     *
-     * @param deploymentType the deployment type
-     * @return the builder
-     */
-    public Builder withDeploymentType(String deploymentType) {
-      this.deploymentType = deploymentType;
+    public Builder withDiskSize(int diskSize) {
+      this.diskSize = diskSize;
       return this;
     }
 
-    /**
-     * With compute provider name name builder.
-     *
-     * @param computeProviderName the display name
-     * @return the builder
-     */
-    public Builder withComputeProviderName(String computeProviderName) {
-      this.computeProviderName = computeProviderName;
+    public Builder withAmi(String ami) {
+      this.ami = ami;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withNumberOfNodes(int numberOfNodes) {
+      this.numberOfNodes = numberOfNodes;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
+      this.computeProviderSettingId = computeProviderSettingId;
+      return this;
+    }
+
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withComputeProviderType(String computeProviderType) {
+      this.computeProviderType = computeProviderType;
+      return this;
+    }
+
+    public Builder withInfraMappingType(String infraMappingType) {
+      this.infraMappingType = infraMappingType;
+      return this;
+    }
+
+    public Builder withEntityPath(String entityPath) {
+      this.entityPath = entityPath;
+      return this;
+    }
+
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    public Builder withComputeProviderName(String computeProviderName) {
+      this.computeProviderName = computeProviderName;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
     public Builder but() {
       return anEcsInfrastructureMapping()
           .withClusterName(clusterName)
           .withRegion(region)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderName(computeProviderName)
+          .withVpc(vpc)
+          .withSubnet(subnet)
+          .withSecurityGroup(securityGroup)
+          .withType(type)
+          .withRole(role)
+          .withDiskSize(diskSize)
+          .withAmi(ami)
+          .withNumberOfNodes(numberOfNodes)
           .withUuid(uuid)
+          .withComputeProviderSettingId(computeProviderSettingId)
           .withAppId(appId)
+          .withEnvId(envId)
           .withCreatedBy(createdBy)
+          .withServiceTemplateId(serviceTemplateId)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withServiceId(serviceId)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withComputeProviderType(computeProviderType)
+          .withInfraMappingType(infraMappingType)
+          .withEntityPath(entityPath)
+          .withDeploymentType(deploymentType)
+          .withComputeProviderName(computeProviderName)
+          .withName(name);
     }
 
-    /**
-     * Build ecs infrastructure mapping.
-     *
-     * @return the ecs infrastructure mapping
-     */
     public EcsInfrastructureMapping build() {
       EcsInfrastructureMapping ecsInfrastructureMapping = new EcsInfrastructureMapping();
       ecsInfrastructureMapping.setClusterName(clusterName);
       ecsInfrastructureMapping.setRegion(region);
-      ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
-      ecsInfrastructureMapping.setEnvId(envId);
-      ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
-      ecsInfrastructureMapping.setServiceId(serviceId);
-      ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
-      ecsInfrastructureMapping.setDeploymentType(deploymentType);
-      ecsInfrastructureMapping.setComputeProviderName(computeProviderName);
+      ecsInfrastructureMapping.setVpc(vpc);
+      ecsInfrastructureMapping.setSubnet(subnet);
+      ecsInfrastructureMapping.setSecurityGroup(securityGroup);
+      ecsInfrastructureMapping.setType(type);
+      ecsInfrastructureMapping.setRole(role);
+      ecsInfrastructureMapping.setDiskSize(diskSize);
+      ecsInfrastructureMapping.setAmi(ami);
+      ecsInfrastructureMapping.setNumberOfNodes(numberOfNodes);
       ecsInfrastructureMapping.setUuid(uuid);
+      ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       ecsInfrastructureMapping.setAppId(appId);
+      ecsInfrastructureMapping.setEnvId(envId);
       ecsInfrastructureMapping.setCreatedBy(createdBy);
+      ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       ecsInfrastructureMapping.setCreatedAt(createdAt);
       ecsInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
+      ecsInfrastructureMapping.setServiceId(serviceId);
       ecsInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
+      ecsInfrastructureMapping.setInfraMappingType(infraMappingType);
+      ecsInfrastructureMapping.setEntityYamlPath(entityPath);
+      ecsInfrastructureMapping.setDeploymentType(deploymentType);
+      ecsInfrastructureMapping.setComputeProviderName(computeProviderName);
+      ecsInfrastructureMapping.setName(name);
       return ecsInfrastructureMapping;
     }
   }

@@ -18,19 +18,16 @@ import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Setup;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.YamlVersion.Type;
-import software.wings.yaml.directory.FolderNode;
-import software.wings.yaml.directory.YamlNode;
 import software.wings.yaml.gitSync.GitSyncWebhook;
-import software.wings.yaml.gitSync.YamlGitSync;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -39,9 +36,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class YamlHelper {
-  public static final String ENCRYPTED_VALUE_STR = "<ENCRYPTED VALUE>";
-
-  //@Inject private static YamlGitSyncService yamlGitSyncService;
+  public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
 
   public static void addResponseMessage(
       RestResponse rr, ErrorCode errorCode, ResponseTypeEnum responseType, String message) {
@@ -90,12 +85,11 @@ public class YamlHelper {
   }
 
   public static YamlRepresenter getRepresenter() {
-    return getRepresenter(false, false);
+    return getRepresenter(true);
   }
 
-  public static YamlRepresenter getRepresenter(
-      boolean removeEmptyValues, boolean everythingExceptDoNotSerializeAndTransients) {
-    YamlRepresenter representer = new YamlRepresenter(removeEmptyValues, everythingExceptDoNotSerializeAndTransients);
+  public static YamlRepresenter getRepresenter(boolean removeEmptyValues) {
+    YamlRepresenter representer = new YamlRepresenter(removeEmptyValues);
 
     // use custom that PropertyUtils that doesn't sort alphabetically
     PropertyUtils pu = new UnsortedPropertyUtils();
@@ -118,7 +112,7 @@ public class YamlHelper {
   }
 
   public static RestResponse<YamlPayload> getYamlRestResponse(
-      YamlGitSyncService yamlGitSyncService, String entityId, GenericYaml theYaml, String payloadName) {
+      YamlGitService yamlGitSyncService, String entityId, String accountId, BaseYaml theYaml, String payloadName) {
     RestResponse rr = new RestResponse<>();
 
     Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
@@ -128,7 +122,7 @@ public class YamlHelper {
 
     // add the YamlGitSync instance (if found) to the payload
     if (yamlGitSyncService != null) {
-      YamlGitSync ygs = yamlGitSyncService.get(entityId);
+      YamlGitConfig ygs = yamlGitSyncService.get(accountId, entityId);
       if (ygs != null) {
         yp.setGitSync(ygs);
       }
@@ -143,6 +137,11 @@ public class YamlHelper {
     return rr;
   }
 
+  public static String toYamlString(BaseYaml theYaml) {
+    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
+    return yaml.dump(theYaml);
+  }
+
   public static String cleanupYaml(String yaml) {
     // instead of removing the first line - we should remove any line that starts with two exclamation points
     yaml = cleanUpDoubleExclamationLines(yaml);
@@ -153,36 +152,6 @@ public class YamlHelper {
     yaml = fixIndentSpaces(yaml);
 
     return yaml;
-  }
-
-  // added this while working on workflows
-  public static <T> RestResponse<YamlPayload> getYamlRestResponseGeneric(
-      T obj, String payloadName, boolean removeEmptyValues, boolean everythingExceptDoNotSerializeAndTransients) {
-    RestResponse rr = new RestResponse<>();
-
-    Yaml yaml = new Yaml(YamlHelper.getRepresenter(removeEmptyValues, everythingExceptDoNotSerializeAndTransients),
-        YamlHelper.getDumperOptions());
-    String dumpedYaml = yaml.dump(obj);
-
-    // instead of removing the first line - we should remove any line that starts with two exclamation points
-    dumpedYaml = cleanUpDoubleExclamationLines(dumpedYaml);
-
-    // remove empty arrays/lists:
-    dumpedYaml = dumpedYaml.replace("[]", "");
-
-    dumpedYaml = fixIndentSpaces(dumpedYaml);
-    // dumpedYaml = fixIndentSpaces2(dumpedYaml);
-
-    YamlPayload yp = new YamlPayload(dumpedYaml);
-    yp.setName(payloadName);
-
-    rr.setResponseMessages(yp.getResponseMessages());
-
-    if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
-      rr.setResource(yp);
-    }
-
-    return rr;
   }
 
   private static String cleanUpDoubleExclamationLines(String content) {
@@ -267,82 +236,6 @@ public class YamlHelper {
     return sb.toString();
   }
 
-  // TODO - newer version attempts to thr over-indenting of "sub folders" like AWS, GCP, etc. in Cloud Providers section
-  // of setup.yaml
-  private static String fixIndentSpaces2(String content) {
-    System.out.println("********* BEFORE: \n" + content);
-
-    StringBuilder sb = new StringBuilder();
-
-    BufferedReader bufReader = new BufferedReader(new StringReader(content));
-
-    String line = null;
-
-    try {
-      while ((line = bufReader.readLine()) != null) {
-        StringBuilder newLine = new StringBuilder();
-
-        String lineTrimmed = line.trim();
-
-        // if the line starts with a dash - prepend two spaces
-        if (lineTrimmed.charAt(0) == '-') {
-          newLine.append("  ");
-        } else {
-          System.out.println("    ********* lineTrimmed: |" + lineTrimmed + "|");
-
-          // check that the line doesn't end in a colon
-          if (lineTrimmed.length() > 0 && !lineTrimmed.substring(lineTrimmed.length() - 1).equals(":")) {
-            newLine.append("  ");
-          }
-        }
-
-        sb.append(newLine.append(line) + "\n");
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    System.out.println("********* AFTER: \n" + sb.toString());
-
-    return sb.toString();
-  }
-
-  public static FolderNode sampleConfigAsCodeDirectory() {
-    FolderNode config = new FolderNode("config", Setup.class);
-    config.addChild(new YamlNode("setup.yaml", SetupYaml.class));
-    FolderNode applications = new FolderNode("applications", Application.class);
-    config.addChild(applications);
-
-    FolderNode myapp1 = new FolderNode("Myapp1", Application.class);
-    applications.addChild(myapp1);
-    myapp1.addChild(new YamlNode("Myapp1.yaml", AppYaml.class));
-    FolderNode myapp1_services = new FolderNode("services", Service.class);
-    applications.addChild(myapp1_services);
-
-    FolderNode myapp1_Login = new FolderNode("Login", Service.class);
-    myapp1_services.addChild(myapp1_Login);
-    myapp1_Login.addChild(new YamlNode("Login.yaml", ServiceYaml.class));
-    FolderNode myapp1_Login_serviceCommands = new FolderNode("service-commands", ServiceCommand.class);
-    myapp1_Login.addChild(myapp1_Login_serviceCommands);
-    myapp1_Login_serviceCommands.addChild(new YamlNode("start.yaml", ServiceCommand.class));
-    myapp1_Login_serviceCommands.addChild(new YamlNode("install.yaml", ServiceCommand.class));
-    myapp1_Login_serviceCommands.addChild(new YamlNode("stop.yaml", ServiceCommand.class));
-
-    FolderNode myapp1_Order = new FolderNode("Order", Service.class);
-    myapp1_services.addChild(myapp1_Order);
-    myapp1_Order.addChild(new YamlNode("Order.yaml", ServiceYaml.class));
-    FolderNode myapp1_Order_serviceCommands = new FolderNode("service-commands", ServiceCommand.class);
-    myapp1_Order.addChild(myapp1_Order_serviceCommands);
-
-    FolderNode myapp2 = new FolderNode("Myapp2", Application.class);
-    applications.addChild(myapp2);
-    myapp2.addChild(new YamlNode("Myapp2.yaml", AppYaml.class));
-    FolderNode myapp2_services = new FolderNode("services", Service.class);
-    applications.addChild(myapp2_services);
-
-    return config;
-  }
-
   public static <E> List<E> findDifferenceBetweenLists(List<E> itemsA, List<E> itemsB) {
     // we need to make a copy of itemsA, because we don't want to modify itemsA!
     List<E> diffList = new ArrayList<>();
@@ -405,22 +298,6 @@ public class YamlHelper {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
                              .field("webhookToken")
                              .equal(webhookToken)
-                             .field("accountId")
-                             .equal(accountId)
-                             .get();
-
-    if (gsw != null) {
-      return gsw;
-    }
-
-    return null;
-  }
-
-  public static GitSyncWebhook checkForWebhookToken(
-      WingsPersistence wingsPersistence, String accountId, String entityId) {
-    GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
-                             .field("entityId")
-                             .equal(entityId)
                              .field("accountId")
                              .equal(accountId)
                              .get();

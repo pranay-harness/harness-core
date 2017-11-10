@@ -77,6 +77,7 @@ import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
+import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
@@ -96,6 +97,7 @@ import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
+import software.wings.service.intfc.yaml.GitClient;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
@@ -169,6 +171,7 @@ public class DelegateModule extends AbstractModule {
     bind(GcrService.class).to(GcrServiceImpl.class);
     bind(GcrBuildService.class).to(GcrBuildServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
+    bind(GitClient.class).to(GitClientImpl.class).asEagerSingleton();
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
 

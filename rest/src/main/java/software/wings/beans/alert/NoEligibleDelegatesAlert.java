@@ -67,7 +67,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
       }
       if (isNotBlank(infraMappingId)) {
         InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
-        title.append("with service infrastructure ").append(infrastructureMapping.getDisplayName());
+        title.append("with service infrastructure ").append(infrastructureMapping.getName());
       }
     }
     return title.toString();

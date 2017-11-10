@@ -1,16 +1,15 @@
 package software.wings.yaml.command;
 
-import software.wings.yaml.GenericYaml;
-import software.wings.yaml.YamlSerialize;
+import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServiceCommandYaml extends GenericYaml {
-  @YamlSerialize public String name;
-  @YamlSerialize public String commandUnitType;
-  @YamlSerialize public String commandType;
-  @YamlSerialize public List<CommandUnitYaml> commandUnits = new ArrayList<>();
+public class ServiceCommandYaml extends BaseYaml {
+  public String name;
+  public String commandUnitType;
+  public String commandType;
+  public List<CommandUnitYaml> commandUnits = new ArrayList<>();
 
   public String getName() {
     return name;

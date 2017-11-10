@@ -1,10 +1,8 @@
 package software.wings.yaml.command;
 
-import software.wings.yaml.YamlSerialize;
-
 public class TargetEnvironmentYaml {
-  @YamlSerialize public String name;
-  @YamlSerialize public String version;
+  public String name;
+  public String version;
 
   public String getName() {
     return name;

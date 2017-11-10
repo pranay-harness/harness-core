@@ -1,12 +1,11 @@
 package software.wings.yaml.settingAttribute;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.yaml.GenericYaml;
-import software.wings.yaml.YamlSerialize;
+import software.wings.yaml.BaseYaml;
 
-public class SettingAttributeYaml extends GenericYaml {
-  @YamlSerialize private String name;
-  @YamlSerialize private String type;
+public class SettingAttributeYaml extends BaseYaml {
+  private String name;
+  private String type;
 
   public SettingAttributeYaml() {}
 

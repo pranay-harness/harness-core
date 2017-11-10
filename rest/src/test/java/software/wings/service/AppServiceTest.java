@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -21,6 +22,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
 import com.google.common.collect.Lists;
@@ -99,6 +101,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
 
   @Inject @InjectMocks AppService appService;
+
   /**
    * Sets up.
    *
@@ -242,13 +245,15 @@ public class AppServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateApplication() {
+    when(wingsPersistence.get(Application.class, APP_ID))
+        .thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     appService.update(anApplication().withUuid(APP_ID).withName("App_Name").withDescription("Description").build());
     verify(query).field(ID_KEY);
     verify(end).equal(APP_ID);
     verify(updateOperations).set("name", "App_Name");
     verify(updateOperations).set("description", "Description");
     verify(wingsPersistence).update(query, updateOperations);
-    verify(wingsPersistence).get(Application.class, APP_ID);
+    verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
   }
 
   /**
@@ -257,17 +262,17 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteApplication() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
-    when(wingsPersistence.get(Application.class, APP_ID))
-        .thenReturn(anApplication().withUuid(APP_ID).withName("APP_NAME").build());
+    Application application = anApplication().withUuid(APP_ID).withName("APP_NAME").build();
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
     appService.delete(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, jobScheduler, artifactService, artifactStreamService, workflowService, pipelineService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
-    inOrder.verify(environmentService).deleteByApp(APP_ID);
+    inOrder.verify(environmentService).deleteByApp(application);
     inOrder.verify(workflowService).deleteWorkflowByApplication(APP_ID);
     inOrder.verify(workflowService).deleteStateMachinesByApplication(APP_ID);
     inOrder.verify(pipelineService).deletePipelineByApplication(APP_ID);
-    inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
+    inOrder.verify(serviceResourceService).deleteByApp(application);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(jobScheduler, Mockito.times(2)).deleteJob(eq(APP_ID), anyString());
   }

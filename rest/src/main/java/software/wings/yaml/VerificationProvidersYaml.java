@@ -3,12 +3,12 @@ package software.wings.yaml;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VerificationProvidersYaml extends GenericYaml {
-  @YamlSerialize public List<String> jenkins = new ArrayList<>();
-  @YamlSerialize public List<String> appDynamics = new ArrayList<>();
-  @YamlSerialize public List<String> splunk = new ArrayList<>();
-  @YamlSerialize public List<String> elk = new ArrayList<>();
-  @YamlSerialize public List<String> logz = new ArrayList<>();
+public class VerificationProvidersYaml extends BaseYaml {
+  public List<String> jenkins = new ArrayList<>();
+  public List<String> appDynamics = new ArrayList<>();
+  public List<String> splunk = new ArrayList<>();
+  public List<String> elk = new ArrayList<>();
+  public List<String> logz = new ArrayList<>();
 
   public List<String> getJenkins() {
     return jenkins;

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class SetupYamlResourceTest {
   private static final AppService appService = mock(AppService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);
   private static final YamlHistoryService yamlHistoryService = mock(YamlHistoryService.class);
-  private static final YamlGitSyncService yamlGitSyncService = mock(YamlGitSyncService.class);
+  private static final YamlGitService yamlGitSyncService = mock(YamlGitService.class);
   // private static final SetupYamlResource syr = mock(SetupYamlResource.class);
 
   // The constant resources.

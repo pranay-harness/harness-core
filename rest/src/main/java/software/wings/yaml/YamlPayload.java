@@ -5,7 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
-import software.wings.yaml.gitSync.YamlGitSync;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +17,11 @@ import java.util.List;
 public class YamlPayload {
   private String name = "";
   private String yaml = "";
+  private String path;
+
   @JsonIgnore private List<ResponseMessage> responseMessages = new ArrayList<>();
 
-  private YamlGitSync gitSync;
+  private YamlGitConfig gitSync;
 
   // required no arg constructor
   public YamlPayload() {}
@@ -38,6 +40,14 @@ public class YamlPayload {
 
   public String getYaml() {
     return yaml;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
   }
 
   public void setYamlPayload(String yamlString) {
@@ -78,11 +88,11 @@ public class YamlPayload {
     return false;
   }
 
-  public YamlGitSync getGitSync() {
+  public YamlGitConfig getGitSync() {
     return gitSync;
   }
 
-  public void setGitSync(YamlGitSync gitSync) {
+  public void setGitSync(YamlGitConfig gitSync) {
     this.gitSync = gitSync;
   }
 }

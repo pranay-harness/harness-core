@@ -1,8 +1,14 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import software.wings.yaml.BaseYaml;
+
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -16,6 +22,83 @@ public class TemplateExpression {
   private String description;
   private boolean mandatory;
   private Map<String, Object> metadata = Maps.newHashMap();
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseYaml {
+    private String fieldName;
+    private String expression;
+    private boolean expressionAllowed = true;
+    private String description;
+    private boolean mandatory;
+    private List<NameValuePair.Yaml> metadata = Lists.newArrayList();
+
+    public static final class Builder {
+      private String fieldName;
+      private String expression;
+      private boolean expressionAllowed = true;
+      private String description;
+      private boolean mandatory;
+      private List<NameValuePair.Yaml> metadata = Lists.newArrayList();
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withFieldName(String fieldName) {
+        this.fieldName = fieldName;
+        return this;
+      }
+
+      public Builder withExpression(String expression) {
+        this.expression = expression;
+        return this;
+      }
+
+      public Builder withExpressionAllowed(boolean expressionAllowed) {
+        this.expressionAllowed = expressionAllowed;
+        return this;
+      }
+
+      public Builder withDescription(String description) {
+        this.description = description;
+        return this;
+      }
+
+      public Builder withMandatory(boolean mandatory) {
+        this.mandatory = mandatory;
+        return this;
+      }
+
+      public Builder withMetadata(List<NameValuePair.Yaml> metadata) {
+        this.metadata = metadata;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withFieldName(fieldName)
+            .withExpression(expression)
+            .withExpressionAllowed(expressionAllowed)
+            .withDescription(description)
+            .withMandatory(mandatory)
+            .withMetadata(metadata);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setFieldName(fieldName);
+        yaml.setExpression(expression);
+        yaml.setExpressionAllowed(expressionAllowed);
+        yaml.setDescription(description);
+        yaml.setMandatory(mandatory);
+        yaml.setMetadata(metadata);
+        return yaml;
+      }
+    }
+  }
 
   public String getFieldName() {
     return fieldName;

@@ -2,10 +2,9 @@ package software.wings.yaml.settingAttribute;
 
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.yaml.YamlSerialize;
 
 public class AppDynamicsYaml extends VerificationProviderYaml {
-  @YamlSerialize private String accountname;
+  private String accountname;
 
   public AppDynamicsYaml() {
     super();

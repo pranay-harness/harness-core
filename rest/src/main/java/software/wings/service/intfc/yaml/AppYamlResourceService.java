@@ -11,7 +11,7 @@ public interface AppYamlResourceService {
    * @param appId  the app id
    * @return the rest response
    */
-  public RestResponse<YamlPayload> getApp(String appId);
+  RestResponse<YamlPayload> getApp(String appId);
 
   /**
    * Update an app that is sent as Yaml (in a JSON "wrapper")
@@ -20,5 +20,5 @@ public interface AppYamlResourceService {
    * @param yamlPayload the yaml version of app
    * @return the rest response
    */
-  public RestResponse<Application> updateApp(String appId, YamlPayload yamlPayload, boolean deleteEnabled);
+  RestResponse<Application> updateApp(String appId, YamlPayload yamlPayload, boolean deleteEnabled);
 }

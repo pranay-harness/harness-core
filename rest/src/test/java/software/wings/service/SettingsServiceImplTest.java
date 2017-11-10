@@ -227,11 +227,11 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(infrastructureMappingService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse()
                         .withResponse(asList(anAwsInfrastructureMapping()
+                                                 .withName("NAME")
                                                  .withComputeProviderType(AWS.name())
                                                  .withComputeProviderName("NAME")
                                                  .build()))
                         .build());
-
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.INVALID_REQUEST.name());

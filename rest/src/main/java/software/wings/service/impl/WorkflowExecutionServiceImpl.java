@@ -1452,7 +1452,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                               .withInframappingId(infraMapping.getUuid())
                                               .withInfraMappingType(infraMapping.getInfraMappingType())
                                               .withComputerProviderName(infraMapping.getComputeProviderName())
-                                              .withDisplayName(infraMapping.getDisplayName())
+                                              .withDisplayName(infraMapping.getName())
                                               .withDeploymentType(infraMapping.getDeploymentType())
                                               .withComputerProviderType(infraMapping.getComputeProviderType())
                                               .build());

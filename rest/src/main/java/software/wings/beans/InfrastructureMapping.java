@@ -12,15 +12,21 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.validation.Update;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -37,6 +43,8 @@ import javax.inject.Singleton;
  */
 @JsonTypeInfo(use = Id.NAME, property = "infraMappingType")
 @Entity(value = "infrastructureMapping")
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public abstract class InfrastructureMapping extends Base {
   @SchemaIgnore @NotEmpty private String computeProviderSettingId;
   @SchemaIgnore @NotEmpty private String envId;
@@ -48,7 +56,11 @@ public abstract class InfrastructureMapping extends Base {
   @NotEmpty private String infraMappingType;
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @SchemaIgnore private String computeProviderName;
-  @SchemaIgnore @Transient private String displayName;
+
+  @Attributes(title = "Name") private String name;
+
+  // auto populate name
+  @SchemaIgnore private boolean autoPopulate = true;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -61,6 +73,19 @@ public abstract class InfrastructureMapping extends Base {
    */
   public InfrastructureMapping(String infraMappingType) {
     this.infraMappingType = infraMappingType;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends BaseEntityYaml {
+    private String computeProviderType;
+    private String serviceName;
+
+    private String infraMappingType;
+
+    private String deploymentType;
+    private String computeProviderName;
+    private String name;
   }
 
   /**
@@ -157,6 +182,15 @@ public abstract class InfrastructureMapping extends Base {
   }
 
   @SchemaIgnore
+  public boolean isAutoPopulate() {
+    return autoPopulate;
+  }
+
+  public void setAutoPopulate(boolean autoPopulate) {
+    this.autoPopulate = autoPopulate;
+  }
+
+  @SchemaIgnore
   @Override
   public String getAppId() {
     return super.getAppId();
@@ -192,10 +226,14 @@ public abstract class InfrastructureMapping extends Base {
     return super.getUuid();
   }
 
-  @SchemaIgnore public abstract String getDisplayName();
+  public String getName() {
+    return name;
+  }
 
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
+  @SchemaIgnore public abstract String getDefaultName();
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   /**
@@ -223,6 +261,10 @@ public abstract class InfrastructureMapping extends Base {
    */
   public String getInfraMappingType() {
     return infraMappingType;
+  }
+
+  public void setInfraMappingType(String infraMappingType) {
+    this.infraMappingType = infraMappingType;
   }
 
   @JsonInclude(Include.NON_EMPTY) public abstract String getHostConnectionAttrs();
@@ -272,7 +314,7 @@ public abstract class InfrastructureMapping extends Base {
 
     @Override
     public Map<String, String> getData(String appId, String... params) {
-      String accountId = appService.get(appId).getAccountId();
+      String accountId = appService.getAccountIdByAppId(appId);
       List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
           accountId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
 

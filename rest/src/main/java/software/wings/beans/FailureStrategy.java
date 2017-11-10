@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import software.wings.yaml.BaseYaml;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -17,6 +21,83 @@ public class FailureStrategy {
   private List<Integer> retryIntervals;
   private RepairActionCode repairActionCodeAfterRetry;
   private List<String> specificSteps;
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseYaml {
+    private List<String> failureTypes = new ArrayList<>();
+    private String executionScope;
+    private String repairActionCode;
+    private int retryCount;
+    private List<Integer> retryIntervals;
+    private String repairActionCodeAfterRetry;
+
+    public static final class Builder {
+      private List<String> failureTypes = new ArrayList<>();
+      private String executionScope;
+      private String repairActionCode;
+      private int retryCount;
+      private List<Integer> retryIntervals;
+      private String repairActionCodeAfterRetry;
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withFailureTypes(List<String> failureTypes) {
+        this.failureTypes = failureTypes;
+        return this;
+      }
+
+      public Builder withExecutionScope(String executionScope) {
+        this.executionScope = executionScope;
+        return this;
+      }
+
+      public Builder withRepairActionCode(String repairActionCode) {
+        this.repairActionCode = repairActionCode;
+        return this;
+      }
+
+      public Builder withRetryCount(int retryCount) {
+        this.retryCount = retryCount;
+        return this;
+      }
+
+      public Builder withRetryIntervals(List<Integer> retryIntervals) {
+        this.retryIntervals = retryIntervals;
+        return this;
+      }
+
+      public Builder withRepairActionCodeAfterRetry(String repairActionCodeAfterRetry) {
+        this.repairActionCodeAfterRetry = repairActionCodeAfterRetry;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml()
+            .withFailureTypes(failureTypes)
+            .withExecutionScope(executionScope)
+            .withRepairActionCode(repairActionCode)
+            .withRetryCount(retryCount)
+            .withRetryIntervals(retryIntervals)
+            .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setFailureTypes(failureTypes);
+        yaml.setExecutionScope(executionScope);
+        yaml.setRepairActionCode(repairActionCode);
+        yaml.setRetryCount(retryCount);
+        yaml.setRetryIntervals(retryIntervals);
+        yaml.setRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
+        return yaml;
+      }
+    }
+  }
 
   public List<FailureType> getFailureTypes() {
     return failureTypes;

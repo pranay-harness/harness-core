@@ -5,6 +5,8 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -28,6 +30,96 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
     super(ArtifactStreamType.ARTIFACTORY.name());
     super.setAutoApproveForProduction(true);
     super.setAutoDownload(true);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends ArtifactStream.Yaml {
+    private String repositoryName;
+    private String dockerImageName;
+    private String imageName;
+
+    public static final class Builder {
+      private String repositoryName;
+      private String dockerImageName;
+      private String sourceName;
+      private String imageName;
+      private String settingName;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRepositoryName(String repositoryName) {
+        this.repositoryName = repositoryName;
+        return this;
+      }
+
+      public Builder withDockerImageName(String dockerImageName) {
+        this.dockerImageName = dockerImageName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withImageName(String imageName) {
+        this.imageName = imageName;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRepositoryName(repositoryName)
+            .withDockerImageName(dockerImageName)
+            .withSourceName(sourceName)
+            .withImageName(imageName)
+            .withSettingName(settingName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRepositoryName(repositoryName);
+        yaml.setDockerImageName(dockerImageName);
+        yaml.setSourceName(sourceName);
+        yaml.setImageName(imageName);
+        yaml.setSettingName(settingName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        return yaml;
+      }
+    }
   }
 
   @SchemaIgnore
@@ -124,6 +216,29 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
         .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .build();
+  }
+
+  /**
+   * Clone and return builder.
+   *
+   * @return the builder
+   */
+  public ArtifactoryDockerArtifactStream.Builder deepClone() {
+    return ArtifactoryDockerArtifactStream.Builder.anArtifactoryDockerArtifactStream()
+        .withJobname(getJobname())
+        .withSourceName(getSourceName())
+        .withImageName(getImageName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
+        .withStreamActions(getStreamActions())
+        .withMetadataOnly(isMetadataOnly());
   }
 
   /**

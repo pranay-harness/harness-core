@@ -23,6 +23,7 @@ import de.javakaffee.kryoserializers.guava.ReverseListSerializer;
 import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import org.apache.commons.codec.binary.Base64;
+import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,7 @@ public class KryoUtils {
           .Builder(() -> {
             Kryo kryo = new Kryo();
             // Log.TRACE();
+            kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
             kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
                 FieldSerializer.CachedFieldNameStrategy.EXTENDED);
             kryo.getFieldSerializerConfig().setCopyTransient(false);

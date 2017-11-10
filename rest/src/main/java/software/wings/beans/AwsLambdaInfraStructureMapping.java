@@ -1,10 +1,15 @@
 package software.wings.beans;
 
+import static software.wings.beans.AwsLambdaInfraStructureMapping.Builder.anAwsLambdaInfraStructureMapping;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,10 +46,134 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
 
   @SchemaIgnore
   @Override
-  public String getDisplayName() {
-    return String.format("%s (AWS/Lambda) %s",
+  public String getDefaultName() {
+    return Util.normalize(String.format("%s (AWS_Lambda) %s",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getRegion());
+        this.getRegion()));
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends InfrastructureMapping.Yaml {
+    private String region;
+    private String vpcId;
+    private List<String> subnetIds = new ArrayList<>();
+    private List<String> securityGroupIds = new ArrayList<>();
+    private String role;
+
+    public static final class Builder {
+      private String region;
+      private String computeProviderType;
+      private String vpcId;
+      private String serviceName;
+      private List<String> subnetIds = new ArrayList<>();
+      private String infraMappingType;
+      private String type;
+      private List<String> securityGroupIds = new ArrayList<>();
+      private String deploymentType;
+      private String computeProviderName;
+      private String role;
+      private String name;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRegion(String region) {
+        this.region = region;
+        return this;
+      }
+
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      public Builder withVpcId(String vpcId) {
+        this.vpcId = vpcId;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      public Builder withSubnetIds(List<String> subnetIds) {
+        this.subnetIds = subnetIds;
+        return this;
+      }
+
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withSecurityGroupIds(List<String> securityGroupIds) {
+        this.securityGroupIds = securityGroupIds;
+        return this;
+      }
+
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withRole(String role) {
+        this.role = role;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRegion(region)
+            .withComputeProviderType(computeProviderType)
+            .withVpcId(vpcId)
+            .withServiceName(serviceName)
+            .withSubnetIds(subnetIds)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withSecurityGroupIds(securityGroupIds)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withRole(role)
+            .withName(name);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRegion(region);
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setVpcId(vpcId);
+        yaml.setServiceName(serviceName);
+        yaml.setSubnetIds(subnetIds);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setSecurityGroupIds(securityGroupIds);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setRole(role);
+        yaml.setName(name);
+        return yaml;
+      }
+    }
   }
 
   /**
@@ -125,5 +254,216 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
 
   public void setRole(String role) {
     this.role = role;
+  }
+
+  public Builder deepClone() {
+    return anAwsLambdaInfraStructureMapping()
+        .withRegion(getRegion())
+        .withVpcId(getVpcId())
+        .withSubnetIds(getSubnetIds())
+        .withSecurityGroupIds(getSecurityGroupIds())
+        .withRole(getRole())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withComputeProviderSettingId(getComputeProviderSettingId())
+        .withCreatedBy(getCreatedBy())
+        .withEnvId(getEnvId())
+        .withCreatedAt(getCreatedAt())
+        .withServiceTemplateId(getServiceTemplateId())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withServiceId(getServiceId())
+        .withComputeProviderType(getComputeProviderType())
+        .withEntityPath(entityYamlPath)
+        .withInfraMappingType(getInfraMappingType())
+        .withDeploymentType(getDeploymentType())
+        .withComputeProviderName(getComputeProviderName())
+        .withName(getName());
+  }
+
+  public static final class Builder {
+    protected String appId;
+    private String region;
+    private String vpcId;
+    private List<String> subnetIds = new ArrayList<>();
+    private List<String> securityGroupIds = new ArrayList<>();
+    private String role;
+    private String uuid;
+    private String computeProviderSettingId;
+    private EmbeddedUser createdBy;
+    private String envId;
+    private long createdAt;
+    private String serviceTemplateId;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
+    private String serviceId;
+    private String computeProviderType;
+    private String entityPath;
+    private String infraMappingType;
+    private String deploymentType;
+    private String computeProviderName;
+    private String name;
+
+    private Builder() {}
+
+    public static Builder anAwsLambdaInfraStructureMapping() {
+      return new Builder();
+    }
+
+    public Builder withRegion(String region) {
+      this.region = region;
+      return this;
+    }
+
+    public Builder withVpcId(String vpcId) {
+      this.vpcId = vpcId;
+      return this;
+    }
+
+    public Builder withSubnetIds(List<String> subnetIds) {
+      this.subnetIds = subnetIds;
+      return this;
+    }
+
+    public Builder withSecurityGroupIds(List<String> securityGroupIds) {
+      this.securityGroupIds = securityGroupIds;
+      return this;
+    }
+
+    public Builder withRole(String role) {
+      this.role = role;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
+      this.computeProviderSettingId = computeProviderSettingId;
+      return this;
+    }
+
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public Builder withComputeProviderType(String computeProviderType) {
+      this.computeProviderType = computeProviderType;
+      return this;
+    }
+
+    public Builder withEntityPath(String entityPath) {
+      this.entityPath = entityPath;
+      return this;
+    }
+
+    public Builder withInfraMappingType(String infraMappingType) {
+      this.infraMappingType = infraMappingType;
+      return this;
+    }
+
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    public Builder withComputeProviderName(String computeProviderName) {
+      this.computeProviderName = computeProviderName;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder but() {
+      return anAwsLambdaInfraStructureMapping()
+          .withRegion(region)
+          .withVpcId(vpcId)
+          .withSubnetIds(subnetIds)
+          .withSecurityGroupIds(securityGroupIds)
+          .withRole(role)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withComputeProviderSettingId(computeProviderSettingId)
+          .withCreatedBy(createdBy)
+          .withEnvId(envId)
+          .withCreatedAt(createdAt)
+          .withServiceTemplateId(serviceTemplateId)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withServiceId(serviceId)
+          .withComputeProviderType(computeProviderType)
+          .withEntityPath(entityPath)
+          .withInfraMappingType(infraMappingType)
+          .withDeploymentType(deploymentType)
+          .withComputeProviderName(computeProviderName)
+          .withName(name);
+    }
+
+    public AwsLambdaInfraStructureMapping build() {
+      AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();
+      awsLambdaInfraStructureMapping.setRegion(region);
+      awsLambdaInfraStructureMapping.setVpcId(vpcId);
+      awsLambdaInfraStructureMapping.setSubnetIds(subnetIds);
+      awsLambdaInfraStructureMapping.setSecurityGroupIds(securityGroupIds);
+      awsLambdaInfraStructureMapping.setRole(role);
+      awsLambdaInfraStructureMapping.setUuid(uuid);
+      awsLambdaInfraStructureMapping.setAppId(appId);
+      awsLambdaInfraStructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      awsLambdaInfraStructureMapping.setCreatedBy(createdBy);
+      awsLambdaInfraStructureMapping.setEnvId(envId);
+      awsLambdaInfraStructureMapping.setCreatedAt(createdAt);
+      awsLambdaInfraStructureMapping.setServiceTemplateId(serviceTemplateId);
+      awsLambdaInfraStructureMapping.setLastUpdatedBy(lastUpdatedBy);
+      awsLambdaInfraStructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      awsLambdaInfraStructureMapping.setServiceId(serviceId);
+      awsLambdaInfraStructureMapping.setComputeProviderType(computeProviderType);
+      awsLambdaInfraStructureMapping.setEntityYamlPath(entityPath);
+      awsLambdaInfraStructureMapping.setDeploymentType(deploymentType);
+      awsLambdaInfraStructureMapping.setComputeProviderName(computeProviderName);
+      awsLambdaInfraStructureMapping.setName(name);
+      awsLambdaInfraStructureMapping.setInfraMappingType(infraMappingType);
+      return awsLambdaInfraStructureMapping;
+    }
   }
 }

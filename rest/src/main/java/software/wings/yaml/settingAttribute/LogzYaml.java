@@ -4,11 +4,10 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.LogzConfig;
-import software.wings.yaml.YamlSerialize;
 
 public class LogzYaml extends SettingAttributeYaml {
-  @YamlSerialize private String url;
-  @YamlSerialize private String token = ENCRYPTED_VALUE_STR;
+  private String url;
+  private String token = ENCRYPTED_VALUE_STR;
 
   public LogzYaml() {
     super();

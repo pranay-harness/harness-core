@@ -7,6 +7,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -18,8 +20,9 @@ import org.mongodb.morphia.annotations.Version;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.YamlSerialize;
+import software.wings.yaml.BaseEntityYaml;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,9 +36,9 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Service extends Base {
-  @YamlSerialize private String name;
-  @YamlSerialize private String description;
-  @YamlSerialize private ArtifactType artifactType;
+  private String name;
+  private String description;
+  private ArtifactType artifactType;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
 
@@ -317,6 +320,26 @@ public class Service extends Base {
     this.artifactStreams = artifactStreams;
   }
 
+  public Builder toBuilder() {
+    return aService()
+        .withName(getName())
+        .withDescription(getDescription())
+        .withArtifactType(getArtifactType())
+        .withCommands(Lists.newArrayList(getServiceCommands()))
+        .withVersion(getVersion())
+        .withAppContainer(getAppContainer())
+        .withConfigFiles(Lists.newArrayList(getConfigFiles()))
+        .withLastDeploymentActivity(getLastDeploymentActivity())
+        .withLastProdDeploymentActivity(getLastProdDeploymentActivity())
+        .withSetup(getSetup())
+        .withUuid(getUuid())
+        .withAppId(getAppId())
+        .withCreatedBy(getCreatedBy())
+        .withCreatedAt(getCreatedAt())
+        .withLastUpdatedBy(getLastUpdatedBy())
+        .withLastUpdatedAt(getLastUpdatedAt());
+  }
+
   /**
    * The type Builder.
    */
@@ -585,6 +608,73 @@ public class Service extends Base {
       service.setLastUpdatedBy(lastUpdatedBy);
       service.setLastUpdatedAt(lastUpdatedAt);
       return service;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseEntityYaml {
+    private String name;
+    private String description;
+    private String artifactType;
+    private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
+
+    public static final class Builder {
+      private String name;
+      private String description;
+      private String artifactType;
+      private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
+      private String type;
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withDescription(String description) {
+        this.description = description;
+        return this;
+      }
+
+      public Builder withArtifactType(String artifactType) {
+        this.artifactType = artifactType;
+        return this;
+      }
+
+      public Builder withConfigVariables(List<NameValuePair.Yaml> configVariables) {
+        this.configVariables = configVariables;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder but() {
+        return anYaml()
+            .withName(name)
+            .withDescription(description)
+            .withArtifactType(artifactType)
+            .withConfigVariables(configVariables)
+            .withType(type);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setName(name);
+        yaml.setDescription(description);
+        yaml.setArtifactType(artifactType);
+        yaml.setConfigVariables(configVariables);
+        yaml.setType(type);
+        return yaml;
+      }
     }
   }
 }

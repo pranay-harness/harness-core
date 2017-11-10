@@ -16,6 +16,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -98,8 +99,8 @@ import software.wings.service.impl.NotificationSetupServiceImpl;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
-import software.wings.service.impl.ServiceLocator;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.ServiceVariableServiceImpl;
@@ -132,12 +133,22 @@ import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
-import software.wings.service.impl.yaml.ServiceYamlResourceServiceImpl;
-import software.wings.service.impl.yaml.SetupYamlResourceServiceImpl;
+import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
+import software.wings.service.impl.yaml.YamlChangeSetServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
-import software.wings.service.impl.yaml.YamlGitSyncServiceImpl;
+import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
+import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryDockerArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.BambooArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.DockerArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.EcrArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.GcrArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.JenkinsArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.NexusArtifactStreamYamlHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
@@ -210,10 +221,10 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.ServiceYamlResourceService;
-import software.wings.service.intfc.yaml.SetupYamlResourceService;
+import software.wings.service.intfc.yaml.YamlArtifactStreamService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue;
@@ -284,7 +295,7 @@ public class WingsModule extends AbstractModule {
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
     bind(NotificationDispatcherService.class).to(NotificationDispatcherServiceImpl.class);
-    bind(ServiceLocator.class);
+    bind(ServiceClassLocator.class);
     bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
     bind(PluginService.class).to(PluginServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
@@ -327,14 +338,14 @@ public class WingsModule extends AbstractModule {
     bind(YamlHistoryService.class).to(YamlHistoryServiceImpl.class);
     bind(YamlDirectoryService.class).to(YamlDirectoryServiceImpl.class);
     bind(YamlResourceService.class).to(YamlResourceServiceImpl.class);
-    bind(ServiceYamlResourceService.class).to(ServiceYamlResourceServiceImpl.class);
     bind(AppYamlResourceService.class).to(AppYamlResourceServiceImpl.class);
-    bind(SetupYamlResourceService.class).to(SetupYamlResourceServiceImpl.class);
-    bind(YamlGitSyncService.class).to(YamlGitSyncServiceImpl.class);
+    bind(YamlGitService.class).to(YamlGitServiceImpl.class);
+    bind(YamlArtifactStreamService.class).to(YamlArtifactStreamServiceImpl.class);
     bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(KmsService.class).to(KmsServiceImpl.class);
     bind(AlertService.class).to(AlertServiceImpl.class);
+    bind(YamlChangeSetService.class).to(YamlChangeSetServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
@@ -349,6 +360,24 @@ public class WingsModule extends AbstractModule {
         .to(StaticInfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.DIRECT.name())
         .to(DirectInfrastructureProvider.class);
+
+    MapBinder<String, ArtifactStreamYamlHandler> artifactStreamHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.AMAZON_S3.name())
+        .to(AmazonS3ArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.ARTIFACTORY.name())
+        .to(ArtifactoryArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.ARTIFACTORYDOCKER.name())
+        .to(ArtifactoryDockerArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.BAMBOO.name())
+        .to(BambooArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.DOCKER.name())
+        .to(DockerArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.ECR.name()).to(EcrArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.GCR.name()).to(GcrArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.JENKINS.name())
+        .to(JenkinsArtifactStreamYamlHandler.class);
+    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.NEXUS.name()).to(NexusArtifactStreamYamlHandler.class);
 
     MapBinder<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMapBinder =
         MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends SettingValue>>() {},

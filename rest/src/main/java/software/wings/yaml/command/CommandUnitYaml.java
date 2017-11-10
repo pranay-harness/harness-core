@@ -1,10 +1,8 @@
 package software.wings.yaml.command;
 
-import software.wings.yaml.YamlSerialize;
-
 public class CommandUnitYaml {
-  @YamlSerialize public String name;
-  @YamlSerialize public String commandUnitType;
+  public String name;
+  public String commandUnitType;
 
   public String getName() {
     return name;

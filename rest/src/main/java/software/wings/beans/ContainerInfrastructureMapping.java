@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -17,6 +19,12 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
    */
   public ContainerInfrastructureMapping(String infraMappingType) {
     super(infraMappingType);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends InfrastructureMapping.Yaml {
+    private String cluster;
   }
 
   /**

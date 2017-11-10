@@ -309,6 +309,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateEnvironment() {
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
     Environment environment = anEnvironment()
                                   .withAppId(APP_ID)
                                   .withUuid(ENV_ID)
@@ -320,7 +322,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(wingsPersistence)
         .updateFields(Environment.class, ENV_ID,
             ImmutableMap.of("name", ENV_NAME, "environmentType", PROD, "description", ENV_DESCRIPTION));
-    verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
+    verify(wingsPersistence, times(2)).get(Environment.class, APP_ID, ENV_ID);
   }
 
   /**
@@ -363,7 +365,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
-    environmentService.deleteByApp(APP_ID);
+    environmentService.deleteByApp(Application.Builder.anApplication().withUuid(APP_ID).build());
     InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
     inOrder.verify(wingsPersistence).delete(any(Environment.class));
     inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);

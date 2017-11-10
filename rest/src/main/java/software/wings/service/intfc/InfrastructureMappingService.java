@@ -90,6 +90,8 @@ public interface InfrastructureMappingService {
   List<String> listComputeProviderHostDisplayNames(
       String appId, String envId, String serviceId, String computeProviderId);
 
+  InfrastructureMapping getInfraMappingByName(String appId, String envId, String name);
+
   /**
    * Gets infra mapping by compute provider and service id.
    *

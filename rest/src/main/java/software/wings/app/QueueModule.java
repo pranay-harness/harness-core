@@ -21,8 +21,6 @@ import software.wings.service.impl.instance.InstanceChangeEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
-import software.wings.yaml.gitSync.EntityUpdateListEventListener;
 
 /**
  * Created by peeyushaggarwal on 5/25/16.
@@ -51,8 +49,6 @@ public class QueueModule extends AbstractModule {
         .toInstance(new MongoQueueImpl<>(InstanceChangeEvent.class, datastore, 60));
     bind(new TypeLiteral<Queue<ContainerDeploymentEvent>>() {})
         .toInstance(new MongoQueueImpl<>(ContainerDeploymentEvent.class, datastore, 60));
-    bind(new TypeLiteral<Queue<EntityUpdateListEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(EntityUpdateListEvent.class, datastore, 60));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
         .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
@@ -65,7 +61,6 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<AbstractQueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<ContainerDeploymentEvent>>() {})
         .to(ContainerDeploymentEventListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<EntityUpdateListEvent>>() {}).to(EntityUpdateListEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
   }
 }

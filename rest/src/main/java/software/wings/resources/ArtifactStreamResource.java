@@ -188,6 +188,7 @@ public class ArtifactStreamResource {
   @ExceptionMetered
   public RestResponse<ArtifactStream> addAction(@QueryParam("appId") String appId,
       @PathParam("streamId") String streamId, ArtifactStreamAction artifactStreamAction) {
+    // convert ArtifactStreamAction -> new Model
     return new RestResponse<>(artifactStreamService.addStreamAction(appId, streamId, artifactStreamAction));
   }
 

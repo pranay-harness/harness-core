@@ -7,9 +7,9 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 
 /**

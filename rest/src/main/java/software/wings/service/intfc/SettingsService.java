@@ -57,6 +57,8 @@ public interface SettingsService {
    */
   SettingAttribute get(String varId);
 
+  public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName);
+
   /**
    * Update.
    *

@@ -13,6 +13,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.EntityType.valueOf;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
@@ -84,7 +85,6 @@ import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
-import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -116,6 +116,8 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -132,6 +134,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionStatus;
@@ -146,6 +150,7 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -203,6 +208,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PipelineService pipelineService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -381,6 +388,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflow;
   }
 
+  @Override
+  public Workflow readWorkflowByName(String appId, String workflowName) {
+    Workflow workflow = wingsPersistence.createQuery(Workflow.class)
+                            .field("appId")
+                            .equal(appId)
+                            .field("name")
+                            .equal(workflowName)
+                            .get();
+    if (workflow == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Workflow - '" + workflowName + "' doesn't exist");
+    }
+    loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
+    return workflow;
+  }
+
   private void loadOrchestrationWorkflow(Workflow workflow, Integer version) {
     StateMachine stateMachine = readStateMachine(
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
@@ -461,9 +483,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     // create initial version
     entityVersionService.newEntityVersion(
-        workflow.getAppId(), WORKFLOW, key, workflow.getName(), ChangeType.CREATED, workflow.getNotes());
+        workflow.getAppId(), WORKFLOW, key, workflow.getName(), EntityVersion.ChangeType.CREATED, workflow.getNotes());
 
-    return readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
+    Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
+
+    //-------------------
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for app and service
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.ADD));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
+
+    return newWorkflow;
   }
 
   /**
@@ -527,7 +565,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       if (!cloned) {
         EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), WORKFLOW,
-            workflow.getUuid(), workflow.getName(), ChangeType.UPDATED, workflow.getNotes());
+            workflow.getUuid(), workflow.getName(), EntityVersion.ChangeType.UPDATED, workflow.getNotes());
         workflow.setDefaultVersion(entityVersion.getVersion());
       }
 
@@ -544,22 +582,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .equal(workflow.getUuid()),
         ops);
 
-    //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
-
-    // see if we need to perform any Git Sync operations for the workflow
-    eule.addEntityUpdateEvent(entityUpdateService.workflowListUpdate(workflow, SourceType.ENTITY_UPDATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(workflow.getAppId());
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
-
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
+
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for app and service
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+    //-------------------
+
     return workflow;
   }
 
@@ -983,7 +1020,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             infrastructureMappingService.get(appId, phase.getInfraMappingId());
         Validator.notNullCheck("InfraMapping", infrastructureMapping);
         phase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-        phase.setInfraMappingName(infrastructureMapping.getDisplayName());
+        phase.setInfraMappingName(infrastructureMapping.getName());
         phase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
         resetNodeSelection(phase);
       }
@@ -1045,6 +1082,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     if (deleted) {
       executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, workflowId));
+
+      //-------------------
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+
+        // add GitSyncFiles for app and service
+        changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
+
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      }
+      //-------------------
     }
     return deleted;
   }
@@ -1263,8 +1314,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new WingsException(INVALID_REQUEST, "message",
-          "Service Infrastructure [" + infrastructureMapping.getDisplayName() + "] not mapped to Service ["
-              + service.getName() + "]");
+          "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service [" + service.getName()
+              + "]");
     }
   }
 
@@ -1309,7 +1360,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         infrastructureMappingService.get(workflow.getAppId(), workflowPhase.getInfraMappingId());
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-    workflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
+    workflowPhase.setInfraMappingName(infrastructureMapping.getName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
 
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
@@ -1382,11 +1433,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new WingsException(INVALID_REQUEST, "message",
-          "Service Infrastructure [" + infrastructureMapping.getDisplayName() + "] not mapped to Service ["
-              + service.getName() + "]");
+          "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service [" + service.getName()
+              + "]");
     }
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-    workflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
+    workflowPhase.setInfraMappingName(infrastructureMapping.getName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
 
     Workflow workflow = readWorkflow(appId, workflowId);
@@ -1421,7 +1472,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       rollbackWorkflowPhase.setServiceId(serviceId);
       rollbackWorkflowPhase.setInfraMappingId(infraMappingId);
       rollbackWorkflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-      rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
+      rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getName());
       rollbackWorkflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
 
       orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
@@ -1600,22 +1651,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     wingsPersistence.update(
         workflow, wingsPersistence.createUpdateOperations(Workflow.class).set("defaultVersion", defaultVersion));
 
+    workflow = readWorkflow(appId, workflowId, defaultVersion);
+
+    // check whether we need to push changes (through git sync)
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for app and service
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
     //-------------------
-    // we need this method if we are supporting individual file or sub-directory git sync
-    /*
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
-    // see if we need to perform any Git Sync operations for the workflow
-    eule.addEntityUpdateEvent(entityUpdateService.workflowListUpdate(workflow, SourceType.ENTITY_UPDATE));
-
-    entityUpdateService.queueEntityUpdateList(eule);
-    */
-
-    Application app = appService.get(appId);
-    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
-    //-------------------
-
-    return readWorkflow(appId, workflowId, defaultVersion);
+    return workflow;
   }
 
   @Override

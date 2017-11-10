@@ -15,7 +15,7 @@ import software.wings.beans.Service;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class AppYamlResourceTest {
   private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
   private static final EnvironmentService environmentService = mock(EnvironmentService.class);
   private static final YamlHistoryService yamlHistoryService = mock(YamlHistoryService.class);
-  private static final YamlGitSyncService yamlGitSyncService = mock(YamlGitSyncService.class);
+  private static final YamlGitService yamlGitSyncService = mock(YamlGitService.class);
 
   /**
    * The constant resources.
