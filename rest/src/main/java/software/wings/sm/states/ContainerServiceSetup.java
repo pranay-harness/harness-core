@@ -130,7 +130,7 @@ public abstract class ContainerServiceSetup extends State {
           clusterName, containerInfrastructureMapping, containerTask);
 
       ContainerServiceElement containerServiceElement =
-          buildContainerServiceElement(phaseElement, serviceId, context.getWorkflowId(), context.getAppId(),
+          buildContainerServiceElement(phaseElement, serviceId, context.getAppId(), context.getWorkflowExecutionId(),
               containerInfrastructureMapping, getContainerServiceNameFromExecutionData(executionData));
 
       return anExecutionResponse()
@@ -188,8 +188,8 @@ public abstract class ContainerServiceSetup extends State {
       imageDetails.name = dockerArtifactStream.getImageName();
       imageDetails.sourceName = dockerArtifactStream.getSourceName();
       DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
-      encryptionService.decrypt(
-          dockerConfig, secretManager.getEncryptionDetails(dockerConfig, context.getWorkflowId(), context.getAppId()));
+      encryptionService.decrypt(dockerConfig,
+          secretManager.getEncryptionDetails(dockerConfig, context.getAppId(), context.getWorkflowExecutionId()));
       imageDetails.registryUrl = dockerConfig.getDockerRegistryUrl();
       imageDetails.username = dockerConfig.getUsername();
       imageDetails.password = new String(dockerConfig.getPassword());
@@ -209,16 +209,16 @@ public abstract class ContainerServiceSetup extends State {
       // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
       if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
         AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-        encryptionService.decrypt(
-            awsConfig, secretManager.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId()));
+        encryptionService.decrypt(awsConfig,
+            secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()));
         imageDetails.password = awsHelperService.getAmazonEcrAuthToken(imageUrl.substring(0, imageUrl.indexOf('.')),
             ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       } else {
         // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
         // migration happens. The deployment code handles both the cases.
         EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
-        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(
-            ecrConfig, secretManager.getEncryptionDetails(ecrConfig, context.getWorkflowId(), context.getAppId()));
+        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(ecrConfig,
+            secretManager.getEncryptionDetails(ecrConfig, context.getAppId(), context.getWorkflowExecutionId()));
       }
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
@@ -232,7 +232,7 @@ public abstract class ContainerServiceSetup extends State {
       imageDetails.sourceName = artifactoryArtifactStream.getSourceName();
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
       encryptionService.decrypt(artifactoryConfig,
-          secretManager.getEncryptionDetails(artifactoryConfig, context.getWorkflowId(), context.getAppId()));
+          secretManager.getEncryptionDetails(artifactoryConfig, context.getAppId(), context.getWorkflowExecutionId()));
       imageDetails.registryUrl = artifactoryConfig.getArtifactoryUrl();
       imageDetails.username = artifactoryConfig.getUsername();
       imageDetails.password = new String(artifactoryConfig.getPassword());
@@ -249,7 +249,7 @@ public abstract class ContainerServiceSetup extends State {
     if (SettingVariableTypes.AWS.name().equals(value.getType())) {
       AwsConfig awsConfig = (AwsConfig) value;
       return ecrService.getEcrImageUrl(awsConfig,
-          secretManager.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId()),
+          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()),
           ecrArtifactStream.getRegion(), ecrArtifactStream);
     } else {
       EcrConfig ecrConfig = (EcrConfig) value;
@@ -280,6 +280,6 @@ public abstract class ContainerServiceSetup extends State {
   protected abstract boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping);
 
   protected abstract ContainerServiceElement buildContainerServiceElement(PhaseElement phaseElement, String serviceId,
-      String workflowId, String appId, ContainerInfrastructureMapping infrastructureMapping,
+      String appId, String workflowExecutionId, ContainerInfrastructureMapping infrastructureMapping,
       String containerServiceName);
 }

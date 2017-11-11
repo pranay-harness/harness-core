@@ -21,12 +21,14 @@ import software.wings.beans.Base;
 public class SecretUsageLog extends Base {
   @NotEmpty @Indexed private String encryptedDataId;
 
-  @NotEmpty @Indexed private String workflowId;
-
   @NotEmpty @Indexed private String accountId;
+
+  @NotEmpty private String workflowExecutionId;
+
+  @NotEmpty private String envId;
 
   private String entityName;
 
   // not stored
-  @Transient private String workflowName;
+  @Transient private transient String workflowExecutionName;
 }

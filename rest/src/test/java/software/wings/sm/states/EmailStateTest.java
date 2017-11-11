@@ -6,7 +6,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.common.collect.Lists;
@@ -43,13 +42,13 @@ public class EmailStateTest extends WingsBaseTest {
   private static final EmailStateExecutionData.Builder expected =
       anEmailStateExecutionData().withToAddress("to1,to2").withCcAddress("cc1,cc2").withSubject("subject").withBody(
           "body");
-  private final EmailData emailData = anEmailData()
-                                          .withAccountId(ACCOUNT_ID)
-                                          .withTo(Lists.newArrayList("to1", "to2"))
-                                          .withCc(Lists.newArrayList("cc1", "cc2"))
-                                          .withSubject("subject")
-                                          .withBody("body")
-                                          .withSystem(true)
+  private final EmailData emailData = EmailData.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .to(Lists.newArrayList("to1", "to2"))
+                                          .cc(Lists.newArrayList("cc1", "cc2"))
+                                          .subject("subject")
+                                          .body("body")
+                                          .system(true)
                                           .build();
   @Inject private Injector injector;
   @Mock private EmailNotificationService emailNotificationService;
@@ -130,13 +129,13 @@ public class EmailStateTest extends WingsBaseTest {
     verify(emailNotificationService)
         .send(
 
-            anEmailData()
-                .withTo(Lists.newArrayList("to1", "to2"))
-                .withAccountId(ACCOUNT_ID)
-                .withCc(Lists.newArrayList("cc1", "cc2"))
-                .withSubject("Deployed app123.application.com")
-                .withBody("Deployed to host app123.application.com")
-                .withSystem(true)
+            EmailData.builder()
+                .to(Lists.newArrayList("to1", "to2"))
+                .accountId(ACCOUNT_ID)
+                .cc(Lists.newArrayList("cc1", "cc2"))
+                .subject("Deployed app123.application.com")
+                .body("Deployed to host app123.application.com")
+                .system(true)
                 .build());
   }
 

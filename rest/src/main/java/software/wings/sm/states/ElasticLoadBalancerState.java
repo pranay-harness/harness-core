@@ -75,8 +75,8 @@ public class ElasticLoadBalancerState extends State {
       region = ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-      encryptionService.decrypt(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId()));
+      encryptionService.decrypt(awsConfig,
+          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()));
       return execute(
           context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
@@ -84,7 +84,7 @@ public class ElasticLoadBalancerState extends State {
           settingsService.get(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
       ElasticLoadBalancerConfig loadBalancerConfig = (ElasticLoadBalancerConfig) elbSetting.getValue();
       encryptionService.decrypt(loadBalancerConfig,
-          secretManager.getEncryptionDetails(loadBalancerConfig, context.getWorkflowId(), context.getAppId()));
+          secretManager.getEncryptionDetails(loadBalancerConfig, context.getAppId(), context.getWorkflowExecutionId()));
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
       return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),

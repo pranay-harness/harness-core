@@ -6,7 +6,6 @@ package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -16,6 +15,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.EmailStateExecutionData;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -70,13 +70,13 @@ public class EmailState extends State {
       emailStateExecutionData.setSubject(evaluatedSubject);
       emailStateExecutionData.setBody(evaluatedBody);
       logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
-      emailNotificationService.send(anEmailData()
-                                        .withTo(toAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(toAddress))
-                                        .withCc(ccAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(ccAddress))
-                                        .withSubject(evaluatedSubject)
-                                        .withBody(evaluatedBody)
-                                        .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                        .withSystem(true)
+      emailNotificationService.send(EmailData.builder()
+                                        .to(toAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(toAddress))
+                                        .cc(ccAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(ccAddress))
+                                        .subject(evaluatedSubject)
+                                        .body(evaluatedBody)
+                                        .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                        .system(true)
                                         .build());
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {

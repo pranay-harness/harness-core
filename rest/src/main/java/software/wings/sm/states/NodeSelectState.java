@@ -72,7 +72,9 @@ public abstract class NodeSelectState extends State {
           aServiceInstanceSelectionParams()
               .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
               .withSelectSpecificHosts(specificHosts);
-      int totalAvailableInstances = infrastructureMappingService.listHostDisplayNames(appId, infraMappingId).size();
+      int totalAvailableInstances =
+          infrastructureMappingService.listHostDisplayNames(appId, infraMappingId, context.getWorkflowExecutionId())
+              .size();
       int instancesToAdd;
       if (specificHosts) {
         if (infrastructureMapping instanceof AwsInfrastructureMapping
@@ -91,7 +93,7 @@ public abstract class NodeSelectState extends State {
       logger.info(
           "Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
       List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
-          appId, infraMappingId, context.getWorkflowId(), selectionParams.build());
+          appId, infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
 
       String errorMessage = buildServiceInstancesErrorMessage(
           serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances);

@@ -12,6 +12,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ExecutionContext;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -112,7 +113,7 @@ public interface InfrastructureMappingService {
    * @param workflowId
    * @return the list
    */
-  List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowId);
+  List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowExecutionId);
 
   /**
    * List types map.
@@ -129,11 +130,10 @@ public interface InfrastructureMappingService {
    *
    * @param appId                          the app id
    * @param infraMappingId                 the infra mapping id
-   * @param workflowId
    *@param selectionParams the service instance selection params  @return the list
    */
   List<ServiceInstance> selectServiceInstances(
-      String appId, String infraMappingId, String workflowId, ServiceInstanceSelectionParams selectionParams);
+      String appId, String infraMappingId, String workflowExecutionId, ServiceInstanceSelectionParams selectionParams);
 
   /**
    * List clusters list.
@@ -334,7 +334,7 @@ public interface InfrastructureMappingService {
    * @param infraMappingId the infra mapping id
    * @return the list
    */
-  List<String> listHostDisplayNames(String appId, String infraMappingId);
+  List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId);
 
   /**
    * List aws iam roles map.

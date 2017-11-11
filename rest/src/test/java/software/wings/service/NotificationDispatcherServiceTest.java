@@ -16,7 +16,6 @@ import static software.wings.beans.SlackConfig.Builder.aSlackConfig;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -50,6 +49,7 @@ import software.wings.beans.SlackConfig;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -60,6 +60,7 @@ import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -121,11 +122,12 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
 
     notificationDispatcherService.dispatchNotification(notification, asList(notificationRule));
     verify(emailNotificationService)
-        .sendAsync(anEmailData()
-                       .withTo(toAddresses)
-                       .withSubject(ENTITY_CREATE_NOTIFICATION.name())
-                       .withBody(ENTITY_CREATE_NOTIFICATION.name())
-                       .withSystem(true)
+        .sendAsync(EmailData.builder()
+                       .to(toAddresses)
+                       .cc(Collections.emptyList())
+                       .subject(ENTITY_CREATE_NOTIFICATION.name())
+                       .body(ENTITY_CREATE_NOTIFICATION.name())
+                       .system(true)
                        .build());
   }
 
@@ -232,11 +234,12 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     verify(wingsPersistence).upsert(any(Query.class), any(UpdateOperations.class));
     verify(wingsPersistence).delete(any(NotificationBatch.class));
     verify(emailNotificationService)
-        .sendAsync(anEmailData()
-                       .withTo(toAddresses)
-                       .withSubject(WORKFLOW_FAILED_NOTIFICATION.name())
-                       .withBody(WORKFLOW_FAILED_NOTIFICATION.name())
-                       .withSystem(true)
+        .sendAsync(EmailData.builder()
+                       .to(toAddresses)
+                       .cc(Collections.emptyList())
+                       .subject(WORKFLOW_FAILED_NOTIFICATION.name())
+                       .body(WORKFLOW_FAILED_NOTIFICATION.name())
+                       .system(true)
                        .build());
   }
 

@@ -152,7 +152,7 @@ public class AwsCodeDeployState extends State {
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-        (Encryptable) cloudProviderSetting.getValue(), context.getWorkflowId(), context.getAppId());
+        (Encryptable) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String region = infrastructureMapping.getRegion();
 
     Activity act = Activity.builder()

@@ -21,7 +21,6 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
 import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
@@ -361,7 +360,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   public void shouldSendEmail() throws EmailException, TemplateException, IOException {
     emailDataNotificationService.send(
-        anEmailData().withTo(asList("anubhaw@gmail.com")).withSubject("wings-test").withBody("hi").build());
+        EmailData.builder().to(asList("anubhaw@gmail.com")).subject("wings-test").body("hi").build());
   }
 
   /**
