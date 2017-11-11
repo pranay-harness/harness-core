@@ -35,6 +35,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AppService;
@@ -115,7 +116,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     path = path + "/" + fn.getName();
 
     for (DirectoryNode dn : fn.getChildren()) {
-      // logger.info(path + " :: " + dn.getName());
+      logger.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
 
       if (dn instanceof YamlNode) {
         String entityId = ((YamlNode) dn).getUuid();
@@ -124,9 +125,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         String settingVariableType = "";
 
         switch (dn.getShortClassName()) {
-            //          case "Account":
-            //            yaml = setupYamlResourceService.getSetup(accountId).getResource().getYaml();
-            //            break;
           case "Application":
             yaml = appYamlResourceService.getApp(entityId).getResource().getYaml();
             break;
@@ -154,24 +152,21 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getPipeline(appId, entityId).getResource().getYaml();
             break;
-          case "Trigger":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getTrigger(appId, entityId).getResource().getYaml();
-            break;
           case "SettingAttribute":
             yaml = yamlResourceService.getSettingAttribute(accountId, entityId).getResource().getYaml();
             settingVariableType = ((SettingAttributeYamlNode) dn).getSettingVariableType();
             break;
           default:
-            // nothing to do
+            logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
         }
 
-        gitFileChanges.add(GitFileChange.Builder.aGitFileChange()
-                               .withAccountId(accountId)
-                               .withFilePath(dn.getName() == null ? dn.getName() : path + "/" + dn.getName())
-                               .withFileContent(yaml)
-                               .withChangeType(ChangeType.ADD)
-                               .build());
+        GitFileChange gitFileChange = Builder.aGitFileChange()
+                                          .withAccountId(accountId)
+                                          .withFilePath(dn.getName() == null ? dn.getName() : path + "/" + dn.getName())
+                                          .withFileContent(yaml)
+                                          .withChangeType(ChangeType.ADD)
+                                          .build();
+        gitFileChanges.add(gitFileChange);
       }
 
       if (dn instanceof FolderNode) {
