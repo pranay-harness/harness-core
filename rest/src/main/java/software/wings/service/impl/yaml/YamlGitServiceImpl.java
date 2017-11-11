@@ -31,6 +31,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -52,6 +53,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private DelegateService delegateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private SecretManager secretManager;
+  @Inject private ExecutorService executorService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -72,7 +74,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public YamlGitConfig save(YamlGitConfig ygs) {
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
-    pushDirectory(ygs.getAccountId()); // Probably should be done in async mode
+    executorService.submit(() -> pushDirectory(ygs.getAccountId()));
     return yamlGitSync;
   }
 
@@ -85,7 +87,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public YamlGitConfig update(YamlGitConfig ygs) {
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
-    pushDirectory(ygs.getAccountId()); // Probably should be done in async mode
+    executorService.submit(() -> pushDirectory(ygs.getAccountId()));
     return yamlGitSync;
   }
 
