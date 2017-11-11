@@ -342,7 +342,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
     Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + object);
 
-    return encryptedData.getEncryptionType() + ":" + encryptedFieldRefId;
+    return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedFieldRefId;
   }
 
   @Override
@@ -350,7 +350,6 @@ public class SecretManagerImpl implements SecretManager {
     Preconditions.checkState(!StringUtils.isBlank(encryptedYamlRef));
     logger.info("Decrypting: {}", encryptedYamlRef);
     String[] tags = encryptedYamlRef.split(":");
-    EncryptionType encryptionType = EncryptionType.valueOf(tags[0]);
     String fieldRefId = tags[1];
     return wingsPersistence.get(EncryptedData.class, fieldRefId);
   }
