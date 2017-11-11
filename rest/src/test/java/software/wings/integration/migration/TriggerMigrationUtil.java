@@ -86,6 +86,8 @@ public class TriggerMigrationUtil extends WingsBaseTest {
           continue;
         }
         for (ArtifactStreamAction artifactStreamAction : streamActions) {
+          System.out.println("Stream action" + artifactStreamAction.getWorkflowName() + " defined for artifact stream  "
+              + artifactStream.getUuid());
           Service service = serviceResourceService.get(app.getUuid(), artifactStream.getServiceId(), false);
           Trigger trigger = triggerService.get(app.getUuid(), artifactStreamAction.getUuid());
           if (trigger == null) {
@@ -129,14 +131,6 @@ public class TriggerMigrationUtil extends WingsBaseTest {
         }
       }
     }
-  }
-
-  @Test
-  public void deleteTriggers() {
-    PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
-    List<Application> applications = wingsPersistence.query(Application.class, pageRequest).getResponse();
-    applications.forEach(app -> triggerService.deleteByApp(app.getUuid()));
   }
 
   private String wrapWorkflowWithinPipeline(String appId, ArtifactStreamAction artifactStreamAction) {

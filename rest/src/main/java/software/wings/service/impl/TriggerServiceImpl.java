@@ -303,7 +303,7 @@ public class TriggerServiceImpl implements TriggerService {
                           .findFirst()
                           .orElse(null);
     if (trigger == null) {
-      throw new WingsException("Invalid WebHook token");
+      throw new WingsException("Trigger does not exist or Invalid WebHook token");
     }
     return trigger;
   }

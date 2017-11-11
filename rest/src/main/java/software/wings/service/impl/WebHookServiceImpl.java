@@ -4,11 +4,13 @@ import static software.wings.utils.Misc.isNullOrEmpty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
@@ -24,6 +26,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private TriggerService triggerService;
+  @Inject private AppService appService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -31,13 +34,17 @@ public class WebHookServiceImpl implements WebHookService {
   public WebHookResponse execute(String token, WebHookRequest webHookRequest) {
     try {
       String appId = webHookRequest.getApplication();
+      Application app = appService.get(appId);
+      if (app == null) {
+        return WebHookResponse.builder().error("Application does not exist").build();
+      }
       String artifactStreamId = webHookRequest.getArtifactSource();
       WorkflowExecution workflowExecution;
       if (artifactStreamId != null) {
         // TODO: For backward compatible purpose
         ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
         if (artifactStream == null) {
-          return WebHookResponse.builder().error("Invalid request payload").build();
+          return WebHookResponse.builder().error("Invalid request payload. ArtifactStream does not exists").build();
         }
         Artifact artifact;
         if (isNullOrEmpty(webHookRequest.getBuildNumber()) && isNullOrEmpty(webHookRequest.getDockerImageTag())) {
