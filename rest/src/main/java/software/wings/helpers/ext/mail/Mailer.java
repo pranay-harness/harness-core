@@ -64,8 +64,10 @@ public class Mailer {
         email.addTo(to);
       }
 
-      for (String cc : emailData.getCc()) {
-        email.addCc(cc);
+      if (emailData.getCc() != null) {
+        for (String cc : emailData.getCc()) {
+          email.addCc(cc);
+        }
       }
 
       String subject = emailData.getSubject();

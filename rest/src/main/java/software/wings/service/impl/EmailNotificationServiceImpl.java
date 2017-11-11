@@ -44,8 +44,9 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     SmtpConfig config =
         emailData.isSystem() ? mainConfiguration.getSmtpConfig() : getSmtpConfig(emailData.getAccountId());
 
-    List<EncryptedDataDetail> encryptionDetails =
-        emailData.isSystem() ? Collections.emptyList() : secretManager.getEncryptionDetails(config, null, null);
+    List<EncryptedDataDetail> encryptionDetails = emailData.isSystem()
+        ? Collections.emptyList()
+        : secretManager.getEncryptionDetails(config, emailData.getAppId(), emailData.getWorkflowExecutionId());
     mailer.send(config, encryptionDetails, emailData);
   }
 

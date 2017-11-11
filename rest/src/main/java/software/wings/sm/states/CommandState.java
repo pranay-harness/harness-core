@@ -292,13 +292,13 @@ public class CommandState extends State {
         SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
         commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
         commandExecutionContextBuilder.withHostConnectionCredentials(secretManager.getEncryptionDetails(
-            (Encryptable) hostConnectionAttribute.getValue(), context.getWorkflowId(), context.getAppId()));
+            (Encryptable) hostConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
       }
       if (isNotEmpty(host.getBastionConnAttr())) {
         SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
         commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
         commandExecutionContextBuilder.withBastionConnectionCredentials(secretManager.getEncryptionDetails(
-            (Encryptable) bastionConnectionAttribute.getValue(), context.getWorkflowId(), context.getAppId()));
+            (Encryptable) bastionConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
       }
 
       if (command.isArtifactNeeded()) {

@@ -471,7 +471,7 @@ public abstract class ContainerServiceDeploy extends State {
                 .build()
           : containerServiceDeploy.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       encryptedDataDetails = containerServiceDeploy.secretManager.getEncryptionDetails(
-          (Encryptable) settingAttribute.getValue(), context.getWorkflowId(), context.getAppId());
+          (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
       region = infrastructureMapping instanceof EcsInfrastructureMapping
           ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
           : "";

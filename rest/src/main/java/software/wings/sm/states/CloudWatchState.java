@@ -118,7 +118,7 @@ public class CloudWatchState extends State {
     }
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails(awsConfig, context.getWorkflowId(), context.getAppId());
+        secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
     ContextElement contextElement = (ContextElement) context.evaluateExpression("${instance}");
     if (contextElement != null) {
       HostElement hostElement = ((InstanceElement) contextElement).getHost();

@@ -87,7 +87,7 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse<List<String>> listHosts(
       @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
-    return new RestResponse<>(infrastructureMappingService.listHostDisplayNames(appId, infraMappingId));
+    return new RestResponse<>(infrastructureMappingService.listHostDisplayNames(appId, infraMappingId, null));
   }
 
   @PUT
