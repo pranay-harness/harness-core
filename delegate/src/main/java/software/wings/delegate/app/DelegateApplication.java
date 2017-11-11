@@ -1,5 +1,6 @@
 package software.wings.delegate.app;
 
+import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -28,11 +29,10 @@ import java.util.logging.Level;
  * Created by peeyushaggarwal on 11/29/16.
  */
 public class DelegateApplication {
+  private static String processId;
   private final static Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
 
   static {
-    System.setProperty("process_id", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
-
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
 
@@ -45,6 +45,9 @@ public class DelegateApplication {
   }
 
   public static void main(String... args) throws Exception {
+    processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
+    System.setProperty("process_id", processId);
+
     String configFile = args[0];
     boolean upgrade = false;
     boolean restart = false;
