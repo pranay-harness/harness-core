@@ -253,7 +253,7 @@ public class SecretManagerImpl implements SecretManager {
           UuidAware parent =
               fetchParent(data.getType(), accountId, parentId, data.getKmsId(), data.getEncryptionType());
           if (parent == null) {
-            logger.error("No parent found for {}", data);
+            logger.warn("No parent found for {}", data);
             continue;
           }
           rv.put(parentId, parent);
