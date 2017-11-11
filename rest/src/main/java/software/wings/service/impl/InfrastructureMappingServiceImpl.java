@@ -60,7 +60,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -868,10 +867,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listHostDisplayNames(String appId, String infraMappingId) {
+  public List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-    return getInfrastructureMappingHostDisplayNames(infrastructureMapping);
+    return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, workflowExecutionId);
   }
 
   @Override
@@ -891,10 +890,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .get();
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
-    return getInfrastructureMappingHostDisplayNames(infrastructureMapping);
+    return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, null);
   }
 
-  private List<String> getInfrastructureMappingHostDisplayNames(InfrastructureMapping infrastructureMapping) {
+  private List<String> getInfrastructureMappingHostDisplayNames(
+      InfrastructureMapping infrastructureMapping, String appId, String workflowExecutionId) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       return ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
@@ -904,12 +904,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      List<Host> hosts =
-          infrastructureProvider
-              .listHosts(awsInfrastructureMapping, computeProviderSetting,
-                  secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
-                  new PageRequest<>())
-              .getResponse();
+      List<Host> hosts = infrastructureProvider
+                             .listHosts(awsInfrastructureMapping, computeProviderSetting,
+                                 secretManager.getEncryptionDetails(
+                                     (Encryptable) computeProviderSetting.getValue(), appId, workflowExecutionId),
+                                 new PageRequest<>())
+                             .getResponse();
       List<String> hostDisplayNames = new ArrayList<>();
       for (Host host : hosts) {
         String displayName = host.getPublicDns();

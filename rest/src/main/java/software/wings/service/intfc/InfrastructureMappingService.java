@@ -12,6 +12,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ExecutionContext;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -333,7 +334,7 @@ public interface InfrastructureMappingService {
    * @param infraMappingId the infra mapping id
    * @return the list
    */
-  List<String> listHostDisplayNames(String appId, String infraMappingId);
+  List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId);
 
   /**
    * List aws iam roles map.
