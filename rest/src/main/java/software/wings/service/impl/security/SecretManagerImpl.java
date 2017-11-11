@@ -212,6 +212,9 @@ public class SecretManagerImpl implements SecretManager {
         wingsPersistence.createQuery(SecretUsageLog.class).field("encryptedDataId").hasAnyOf(secretIds).fetch();
     while (usageLogQuery.hasNext()) {
       SecretUsageLog usageLog = usageLogQuery.next();
+      if (StringUtils.isBlank(usageLog.getWorkflowExecutionId())) {
+        continue;
+      }
       WorkflowExecution workflowExecution =
           wingsPersistence.get(WorkflowExecution.class, usageLog.getWorkflowExecutionId());
       usageLog.setWorkflowExecutionName(workflowExecution.getName());
