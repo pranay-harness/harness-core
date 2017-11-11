@@ -614,10 +614,10 @@ public class DelegateServiceImpl implements DelegateService {
         logger.error("Unable to send response to manager", e);
       } finally {
         currentlyExecutingTasks.remove(delegateTask.getUuid());
-        if (response != null && !response.isSuccessful()) {
+        if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
         }
-        if (response != null && response.isSuccessful()) {
+        if (response != null && response.body() != null && response.isSuccessful()) {
           response.body().close();
         }
       }
