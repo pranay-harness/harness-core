@@ -693,7 +693,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     String encryptedFieldValue = (String) encryptedField.get(object);
     if (encryptedFieldValue != null) {
       for (EncryptionType encryptionType : EncryptionType.values()) {
-        if (encryptedFieldValue.startsWith(encryptionType.name())) {
+        if (encryptedFieldValue.startsWith(encryptionType.getYamlName())) {
           return true;
         }
       }
