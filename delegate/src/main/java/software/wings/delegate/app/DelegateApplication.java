@@ -1,6 +1,5 @@
 package software.wings.delegate.app;
 
-import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -13,7 +12,6 @@ import org.apache.commons.codec.binary.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
@@ -33,7 +31,6 @@ public class DelegateApplication {
   private final static Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
 
   public static void main(String... args) throws Exception {
-    MDC.put("process_id", Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next());
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
 
