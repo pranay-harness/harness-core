@@ -1180,6 +1180,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             settingAttribute.setValue(config);
             break;
 
+          case KUBERNETES:
+
+            break;
           // load balancers
           case ELB:
             ElbYaml beforeElbYaml = mapper.readValue(beforeYaml, ElbYaml.class);

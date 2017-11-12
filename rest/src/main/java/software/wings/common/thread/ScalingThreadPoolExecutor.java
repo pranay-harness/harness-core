@@ -1,13 +1,7 @@
 package software.wings.common.thread;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +20,6 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
    * number of threads that are actively executing tasks
    */
   private final AtomicInteger activeCount = new AtomicInteger();
-  private static final Logger logger = LoggerFactory.getLogger(ThreadPoolExecutor.class);
 
   /**
    * Instantiates a new scaling thread pool executor.
@@ -68,22 +61,5 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
   @Override
   protected void afterExecute(Runnable r, Throwable t) {
     activeCount.decrementAndGet();
-    try {
-      if (t == null && r instanceof Future<?>) {
-        try {
-          Object result = ((Future<?>) r).get();
-        } catch (CancellationException ce) {
-          t = ce;
-        } catch (ExecutionException ee) {
-          t = ee.getCause();
-        } catch (InterruptedException ie) {
-          Thread.currentThread().interrupt();
-        }
-      }
-      if (t != null) {
-        logger.error("Unhandled Exception: ", t);
-      }
-    } catch (Exception ignored) {
-    }
   }
 }

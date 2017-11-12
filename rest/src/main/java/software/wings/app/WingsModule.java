@@ -77,6 +77,7 @@ import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DelegateScopeServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.DirectInfrastructureProvider;
 import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
@@ -126,8 +127,8 @@ import software.wings.service.impl.instance.sync.EcsContainerSyncImpl;
 import software.wings.service.impl.instance.sync.KubernetesContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
-import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
@@ -214,8 +215,8 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -357,6 +358,8 @@ public class WingsModule extends AbstractModule {
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.GCP.name()).to(GcpInfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(StaticInfrastructureProvider.class);
+    infrastructureProviderMapBinder.addBinding(SettingVariableTypes.DIRECT.name())
+        .to(DirectInfrastructureProvider.class);
 
     MapBinder<String, ArtifactStreamYamlHandler> artifactStreamHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactStreamYamlHandler.class);

@@ -15,7 +15,7 @@ import software.wings.settings.SettingValue;
 /**
  * Created by bzane on 2/28/17
  */
-@JsonTypeName("KUBERNETES_CONFIG")
+@JsonTypeName("KUBERNETES")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
@@ -33,11 +33,10 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @SchemaIgnore private String encryptedPassword;
 
   /**
-   * KubernetesConfig is not persisted in the database but we do use it for managing encrypted credentials so it is a
-   * SettingValue.
+   * Instantiates a new setting value.
    */
   public KubernetesConfig() {
-    super("KUBERNETES_CONFIG");
+    super(SettingVariableTypes.KUBERNETES.name());
   }
 
   public KubernetesConfig(String masterUrl, String username, char[] password, String caCert, String clientCert,
