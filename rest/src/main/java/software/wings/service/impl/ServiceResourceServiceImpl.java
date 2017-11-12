@@ -76,6 +76,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -132,6 +133,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private TriggerService triggerService;
 
   /**
    * {@inheritDoc}
@@ -334,6 +336,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     wingsPersistence.update(savedService, updateOperations);
     Service updatedService = get(service.getAppId(), service.getUuid(), false);
+
+    if (!savedService.getName().equals(service.getName())) {
+      executorService.submit(() -> triggerService.updateByApp(service.getAppId()));
+    }
 
     executorService.submit(() -> {
       if (!savedService.getName().equals(service.getName())) { // Service name changed

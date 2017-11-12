@@ -150,4 +150,10 @@ public interface TriggerService {
    * @return List<Trigger></Trigger>
    */
   List<Trigger> getTriggersHasArtifactStreamAction(String appId, String artifactStreamId);
+
+  /**
+   * Updates by App to resync the filed names with the updated values
+   * @param appId
+   */
+  void updateByApp(String appId);
 }
