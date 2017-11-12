@@ -13,6 +13,7 @@ import org.apache.commons.codec.binary.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
@@ -29,10 +30,10 @@ import java.util.logging.Level;
  * Created by peeyushaggarwal on 11/29/16.
  */
 public class DelegateApplication {
-  private static String processId;
   private final static Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
 
-  static {
+  public static void main(String... args) throws Exception {
+    MDC.put("process_id", Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next());
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
 
@@ -42,11 +43,6 @@ public class DelegateApplication {
 
     // Set logging level
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
-  }
-
-  public static void main(String... args) throws Exception {
-    processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
-    System.setProperty("process_id", processId);
 
     String configFile = args[0];
     boolean upgrade = false;
