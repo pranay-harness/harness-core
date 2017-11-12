@@ -52,6 +52,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
+import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -145,6 +146,9 @@ public class PipelineServiceImpl implements PipelineService {
    */
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
+    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    Validator.notNullCheck("Pipeline", savedPipeline);
+
     validatePipeline(pipeline);
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
     setUnset(ops, "description", pipeline.getDescription());
@@ -159,6 +163,10 @@ public class PipelineServiceImpl implements PipelineService {
         ops);
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
+
+    if (!savedPipeline.getName().equals(pipeline.getName())) {
+      executorService.submit(() -> triggerService.updateByApp(pipeline.getAppId()));
+    }
 
     executorService.submit(() -> {
       String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
