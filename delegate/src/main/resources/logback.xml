@@ -32,7 +32,7 @@
 
     <appender name="REST" class="software.wings.logging.RestLogAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%boldGreen(%process_id) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%boldGreen(%process_id) %boldCyan(${version}) %green([%thread]) %cyan(%logger) - %msg %n</pattern>
         </layout>
         <programName>delegate</programName>
         <key>${logdnakey:-9a3e6eac4dcdbdc41a93ca99100537df}</key>
