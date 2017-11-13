@@ -1,28 +1,24 @@
 package software.wings.watcher.service;
 
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static software.wings.utils.message.MessengerType.WATCHER;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
-import com.amazonaws.util.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import software.wings.utils.message.Message;
+import software.wings.utils.message.MessageService;
+import software.wings.watcher.app.WatcherApplication;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
@@ -35,39 +31,45 @@ public class UpgradeServiceImpl implements UpgradeService {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeServiceImpl.class);
 
   @Inject private WatcherService watcherService;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private MessageService messageService;
 
   @Override
-  public void doUpgrade(InputStream newVersionJarStream, String version, String newVersion)
+  public void upgradeWatcher(InputStream newVersionJarStream, String version, String newVersion)
       throws IOException, TimeoutException, InterruptedException {
     File watcherJarFile = new File("watcher.jar");
-    File watcherJarFileNew = new File("watcher-new.jar");
-    File watcherJarFileOld = new File("watcher-old.jar");
-    IOUtils.copy(newVersionJarStream, new FileOutputStream(watcherJarFileNew));
-    FileUtils.moveFile(watcherJarFile, watcherJarFileOld);
-    FileUtils.moveFile(watcherJarFileNew, watcherJarFile);
-    FileUtils.forceDelete(watcherJarFileOld);
+    FileUtils.copyInputStreamToFile(newVersionJarStream, watcherJarFile);
 
     StartedProcess process = null;
     try {
       logger.info("[Old] Upgrading the watcher");
-      PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)
-                    .command("./watch.sh", "upgrade")
+                    .command("./watch.sh", "upgrade", WatcherApplication.getProcessId())
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
                     .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
-                    .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
                     .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
-      if (process.getProcess().isAlive() && waitForStringOnStream(reader, "watchstarted", 15)) {
-        logger.info("[Old] Watcher upgraded. Stopping");
-        removeWatcherVersionFromCapsule(version, newVersion);
-        cleanupOldWatcherVersionFromBackup(version, newVersion);
-        watcherService.stop();
-      } else {
+
+      boolean success = false;
+
+      if (process.getProcess().isAlive()) {
+        Message message = watcherService.waitForIncomingMessage("new-watcher", TimeUnit.MINUTES.toMillis(2));
+        if (message != null) {
+          String newWatcherProcessId = message.getParams().get(0);
+          logger.info("[Old] Got process ID from new watcher: " + newWatcherProcessId);
+          message = messageService.retrieveMessage(WATCHER, newWatcherProcessId, TimeUnit.MINUTES.toMillis(2));
+          if (message != null && message.getMessage().equals("watcher-started")) {
+            messageService.sendMessage(WATCHER, newWatcherProcessId, "go-ahead");
+            logger.info("[Old] Watcher upgraded. Stopping");
+            removeWatcherVersionFromCapsule(version, newVersion);
+            cleanupOldWatcherVersionFromBackup(version, newVersion);
+            success = true;
+            watcherService.stop();
+          }
+        }
+      }
+      if (!success) {
         logger.error("[Old] Failed to upgrade watcher");
         process.getProcess().destroy();
         process.getProcess().waitFor();
@@ -109,22 +111,6 @@ public class UpgradeServiceImpl implements UpgradeService {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, newVersion, "watcher-");
     } catch (Exception ex) {
       logger.error(String.format("Failed to clean watcher version [%s] from Capsule", newVersion), ex);
-    }
-  }
-
-  private boolean waitForStringOnStream(BufferedReader reader, String searchString, int maxMinutes) {
-    try {
-      return timeLimiter.callWithTimeout(() -> {
-        String line;
-        while ((line = reader.readLine()) != null) {
-          if (StringUtils.contains(line, searchString)) {
-            return true;
-          }
-        }
-        return false;
-      }, maxMinutes, TimeUnit.MINUTES, true);
-    } catch (Exception e) {
-      return false;
     }
   }
 

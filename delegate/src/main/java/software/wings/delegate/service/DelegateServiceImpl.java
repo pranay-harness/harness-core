@@ -1,5 +1,7 @@
 package software.wings.delegate.service;
 
+import static java.util.Arrays.asList;
+import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.Delegate.Builder.aDelegate;
@@ -8,11 +10,15 @@ import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
@@ -39,6 +45,7 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
+import software.wings.delegate.app.DelegateApplication;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -48,8 +55,11 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.message.Message;
+import software.wings.utils.message.MessageService;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -57,9 +67,17 @@ import java.io.StringReader;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -88,12 +106,17 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
+  @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
+  @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject private ExecutorService executorService;
+  @Inject private TimeLimiter timeLimiter;
   @Inject private UpgradeService upgradeService;
+  @Inject private MessageService messageService;
   @Inject private Injector injector;
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
+  @Inject private Clock clock;
   private final ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
   private static long lastHeartbeatSentAt = System.currentTimeMillis();
@@ -102,18 +125,35 @@ public class DelegateServiceImpl implements DelegateService {
   private Socket socket;
   private RequestBuilder request;
   private boolean upgradePending;
+  private String upgradeVersion;
+  private boolean watched;
   private boolean acquireTasks;
+  private long stoppedAcquiringAt;
+  private boolean restartNeeded;
   private String delegateId;
   private String accountId;
 
+  private BlockingQueue<Message> delegateMessages = new ArrayBlockingQueue<>(100);
+
   @Override
-  public void run(boolean upgrade, boolean restart) {
+  public void run(boolean watched, boolean upgrade, boolean restart) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
       String hostName = InetAddress.getLocalHost().getHostName();
       accountId = delegateConfiguration.getAccountId();
+      this.watched = watched;
 
-      if (upgrade) {
+      if (watched) {
+        startInputCheck();
+        logger.info("[New] Delegate process started. Sending confirmation");
+        messageService.writeMessage("delegate-started");
+        logger.info("[New] Waiting for go ahead from watcher");
+        Message message = waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
+        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
+                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
+
+      } else if (upgrade) {
+        // TODO - Legacy path. Remove after watcher is standard
         logger.info("[New] Upgraded delegate process started. Sending confirmation");
         System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
 
@@ -121,7 +161,7 @@ public class DelegateServiceImpl implements DelegateService {
         int secs = 0;
         File goaheadFile = new File("goahead");
         while (!goaheadFile.exists() && secs++ < MAX_UPGRADE_WAIT_SECS) {
-          Thread.sleep(1000);
+          Thread.sleep(1000L);
           logger.info("[New] Waiting for go ahead... ({} seconds elapsed)", secs);
         }
 
@@ -139,7 +179,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       URI uri = new URI(delegateConfiguration.getManagerUrl());
 
-      long start = System.currentTimeMillis();
+      long start = clock.millis();
       Delegate.Builder builder = aDelegate()
                                      .withIp(ip)
                                      .withAccountId(accountId)
@@ -150,7 +190,7 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withExcludeScopes(new ArrayList<>());
 
       delegateId = registerDelegate(builder);
-      logger.info("[New] Delegate registered in {} ms", (System.currentTimeMillis() - start));
+      logger.info("[New] Delegate registered in {} ms", (clock.millis() - start));
 
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
@@ -174,13 +214,14 @@ public class DelegateServiceImpl implements DelegateService {
               })
               .transport(TRANSPORT.WEBSOCKET);
 
-      Options clientOptions =
-          client.newOptionsBuilder()
-              .runtime(asyncHttpClient, true)
-              .reconnect(true)
-              .reconnectAttempts(new File("run.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
-              .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
-              .build();
+      boolean scriptAvailable =
+          (watched && new File("delegate.sh").exists()) || (!watched && new File("run.sh").exists());
+      Options clientOptions = client.newOptionsBuilder()
+                                  .runtime(asyncHttpClient, true)
+                                  .reconnect(true)
+                                  .reconnectAttempts(scriptAvailable ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
+                                  .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
+                                  .build();
       socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
@@ -215,11 +256,17 @@ public class DelegateServiceImpl implements DelegateService {
       setAcquireTasks(true);
       socket.open(request.build());
 
+      if (watched) {
+        startLocalHeartbeat();
+      }
       startHeartbeat(builder, socket);
 
       startUpgradeCheck(getVersion());
 
-      if (upgrade) {
+      if (watched) {
+        logger.info("Delegate started");
+      } else if (upgrade) {
+        // TODO - Legacy path. Remove after watcher is standard
         logger.info("[New] Delegate upgraded");
       } else if (restart) {
         logger.info("[New] Delegate restarted");
@@ -229,6 +276,11 @@ public class DelegateServiceImpl implements DelegateService {
 
       synchronized (waiter) {
         waiter.wait();
+      }
+
+      if (upgradePending) {
+        removeDelegateVersionFromCapsule();
+        cleanupOldDelegateVersionFromBackup();
       }
 
     } catch (Exception e) {
@@ -243,11 +295,8 @@ public class DelegateServiceImpl implements DelegateService {
   private void handleReopened(Object o, Builder builder) {
     logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
     try {
-      socket.fire(builder.but()
-                      .withLastHeartBeat(System.currentTimeMillis())
-                      .withStatus(Status.ENABLED)
-                      .withConnected(true)
-                      .build());
+      socket.fire(
+          builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).withConnected(true).build());
     } catch (IOException e) {
       logger.error("Error connecting", e);
       e.printStackTrace();
@@ -269,8 +318,13 @@ public class DelegateServiceImpl implements DelegateService {
         logger.error("Unable to open socket", e);
       }
     } else if (e instanceof ConnectException) {
-      logger.warn("Failed to connect after {} attempts. Restarting delegate", MAX_CONNECT_ATTEMPTS);
-      restartDelegate();
+      logger.warn("Failed to connect after {} attempts.", MAX_CONNECT_ATTEMPTS);
+      if (!watched) {
+        logger.warn("Restarting delegate");
+        restartDelegate();
+      } else {
+        restartNeeded = true;
+      }
     } else {
       logger.error("Exception: " + e.getMessage(), e);
       try {
@@ -290,7 +344,7 @@ public class DelegateServiceImpl implements DelegateService {
       String receivedId = message.substring(3); // Remove the "[X]"
       if (delegateId.equals(receivedId)) {
         logger.info("Delegate {} received heartbeat response", receivedId);
-        lastHeartbeatReceivedAt = System.currentTimeMillis();
+        lastHeartbeatReceivedAt = clock.millis();
       } else {
         logger.info("Delegate {} received heartbeat response for another delegate, {}", delegateId, receivedId);
       }
@@ -344,8 +398,8 @@ public class DelegateServiceImpl implements DelegateService {
           attempts.set(0, attempts.get(0) + 1);
           String attemptString = attempts.get(0) > 1 ? " (Attempt " + attempts.get(0) + ")" : "";
           logger.info("Registering delegate." + attemptString);
-          delegateResponse = execute(managerClient.registerDelegate(accountId,
-              builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
+          delegateResponse = execute(managerClient.registerDelegate(
+              accountId, builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
           String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
           logger.error(msg, e);
@@ -380,9 +434,46 @@ public class DelegateServiceImpl implements DelegateService {
       logger.error("Exception while restarting", ex);
     } finally {
       // Reset timeout so that next attempt is made after 15 minutes
-      lastHeartbeatSentAt = System.currentTimeMillis();
-      lastHeartbeatReceivedAt = System.currentTimeMillis();
+      lastHeartbeatSentAt = clock.millis();
+      lastHeartbeatReceivedAt = clock.millis();
     }
+  }
+
+  private Message waitForIncomingMessage(String messageName, long timeout) {
+    try {
+      return timeLimiter.callWithTimeout(() -> {
+        Message message = null;
+        while (message == null || !message.getMessage().equals(messageName)) {
+          try {
+            message = delegateMessages.take();
+            logger.info("Message on delegate input queue: " + message);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+        }
+        return message;
+      }, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private void startInputCheck() {
+    inputExecutor.scheduleWithFixedDelay(() -> {
+      Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
+      if (message != null) {
+        if (message.getMessage().equals("stop-acquiring")) {
+          setAcquireTasks(false);
+        }
+        while (!delegateMessages.offer(message)) {
+          try {
+            Thread.sleep(100L);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+        }
+      }
+    }, 0, 1, TimeUnit.SECONDS);
   }
 
   private void startUpgradeCheck(String version) {
@@ -401,10 +492,16 @@ public class DelegateServiceImpl implements DelegateService {
         try {
           RestResponse<DelegateScripts> restResponse =
               execute(managerClient.checkForUpgrade(version, delegateId, accountId));
-          if (restResponse.getResource().isDoUpgrade()) {
+          DelegateScripts delegateScripts = restResponse.getResource();
+          if (delegateScripts.isDoUpgrade()) {
             setUpgradePending(true);
-            logger.info("[Old] Upgrading delegate. Stop acquiring async tasks");
-            upgradeService.doUpgrade(restResponse.getResource(), getVersion());
+            logger.info("[Old] Replace run scripts");
+            replaceRunScripts(delegateScripts);
+            logger.info("[Old] Run scripts downloaded. Upgrading delegate. Stop acquiring async tasks");
+            upgradeVersion = delegateScripts.getVersion();
+            if (!watched) {
+              upgradeService.doUpgrade(delegateScripts);
+            }
           } else {
             logger.info("Delegate up to date");
           }
@@ -426,7 +523,7 @@ public class DelegateServiceImpl implements DelegateService {
     heartbeatExecutor.scheduleAtFixedRate(()
                                               -> executorService.submit(() -> {
       try {
-        if (doRestartDelegate()) {
+        if (doRestartDelegate() && !watched) {
           restartDelegate();
         }
         sendHeartbeat(builder, socket);
@@ -437,10 +534,29 @@ public class DelegateServiceImpl implements DelegateService {
         0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
+  private void startLocalHeartbeat() {
+    localHeartbeatExecutor.scheduleAtFixedRate(()
+                                                   -> executorService.submit(() -> {
+      Map<String, Object> statusData = new HashMap<>();
+      statusData.put("heartbeat", clock.millis());
+      statusData.put("restartNeeded", doRestartDelegate());
+      statusData.put("upgradeNeeded", upgradePending);
+      statusData.put("shutdownPending", !isAcquireTasks());
+      if (!isAcquireTasks()) {
+        statusData.put("shutdownStarted", stoppedAcquiringAt);
+      }
+      messageService.putAllData("delegate-" + DelegateApplication.getProcessId(), statusData);
+    }),
+        0, 5, TimeUnit.SECONDS);
+  }
+
   private boolean doRestartDelegate() {
-    long now = System.currentTimeMillis();
-    return new File("run.sh").exists()
-        && ((now - lastHeartbeatSentAt) > MAX_HB_TIMEOUT || (now - lastHeartbeatReceivedAt) > MAX_HB_TIMEOUT);
+    long now = clock.millis();
+    boolean scriptAvailable =
+        (watched && new File("delegate.sh").exists()) || (!watched && new File("run.sh").exists());
+    return scriptAvailable
+        && (restartNeeded || now - lastHeartbeatSentAt > MAX_HB_TIMEOUT
+               || now - lastHeartbeatReceivedAt > MAX_HB_TIMEOUT);
   }
 
   private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
@@ -448,11 +564,11 @@ public class DelegateServiceImpl implements DelegateService {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       socket.fire(JsonUtils.asJson(
           builder.but()
-              .withLastHeartBeat(System.currentTimeMillis())
+              .withLastHeartBeat(clock.millis())
               .withConnected(true)
               .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
               .build()));
-      lastHeartbeatSentAt = System.currentTimeMillis();
+      lastHeartbeatSentAt = clock.millis();
     }
   }
 
@@ -625,10 +741,10 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
-    long startTime = System.currentTimeMillis();
+    long startTime = clock.millis();
     boolean stillRunning = true;
     long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
-    while (stillRunning && System.currentTimeMillis() - startTime < timeout) {
+    while (stillRunning && clock.millis() - startTime < timeout) {
       try {
         Thread.sleep(5000);
       } catch (InterruptedException e) {
@@ -643,6 +759,53 @@ public class DelegateServiceImpl implements DelegateService {
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
     }
+  }
+
+  private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
+    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh", "watch.sh", "stopwatch.sh", "delegate.sh")) {
+      Files.deleteIfExists(Paths.get(fileName));
+      File scriptFile = new File(fileName);
+      String script = delegateScripts.getScriptByName(fileName);
+
+      if (script != null && script.length() != 0) {
+        try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
+          writer.write(script, 0, script.length());
+          writer.flush();
+        }
+        logger.info("[Old] Done replacing file [{}]. Set User and Group permission", scriptFile);
+        Files.setPosixFilePermissions(scriptFile.toPath(),
+            Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+                PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+        logger.info("[Old] Done setting file permissions");
+      } else {
+        logger.error("[Old] Script for file [{}] was not replaced", scriptFile);
+      }
+    }
+  }
+
+  private void cleanupOldDelegateVersionFromBackup() {
+    try {
+      cleanup(new File(System.getProperty("user.dir")), getVersion(), upgradeVersion, "backup.");
+    } catch (Exception ex) {
+      logger.error(String.format("Failed to clean delegate version [%s] from Backup", upgradeVersion), ex);
+    }
+  }
+
+  private void removeDelegateVersionFromCapsule() {
+    try {
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
+    } catch (Exception ex) {
+      logger.error(String.format("Failed to clean delegate version [%s] from Capsule", upgradeVersion), ex);
+    }
+  }
+
+  private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
+      if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
+        logger.info("[Old] File Name to be deleted = " + file.getAbsolutePath());
+        FileUtils.deleteQuietly(file);
+      }
+    });
   }
 
   private boolean isUpgradePending() {
@@ -660,6 +823,9 @@ public class DelegateServiceImpl implements DelegateService {
 
   public void setAcquireTasks(boolean acquireTasks) {
     this.acquireTasks = acquireTasks;
+    if (!acquireTasks) {
+      stoppedAcquiringAt = clock.millis();
+    }
   }
 
   private String getVersion() {
