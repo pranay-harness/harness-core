@@ -120,7 +120,6 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public Trigger save(Trigger trigger) {
     validateInput(trigger);
-
     Trigger savedTrigger =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     Validator.notNullCheck("Trigger", savedTrigger);
@@ -291,6 +290,11 @@ public class TriggerServiceImpl implements TriggerService {
         .collect(toList());
   }
 
+  @Override
+  public void updateByApp(String appId) {
+    getTriggersByApp(appId).forEach(this ::update);
+  }
+
   private Trigger getTrigger(String appId, String webHookToken) {
     List<Trigger> triggers = getTriggersByApp(appId);
     Trigger trigger = triggers.stream()
@@ -436,7 +440,9 @@ public class TriggerServiceImpl implements TriggerService {
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
     if (artifactSelections == null || artifactSelections.size() == 0) {
       logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getPipelineId());
-      triggerExecution(lastDeployedArtifacts, trigger, null);
+      if (!CollectionUtils.isEmpty(lastDeployedArtifacts)) {
+        triggerExecution(lastDeployedArtifacts, trigger, null);
+      }
     } else {
       List<Artifact> artifacts = new ArrayList<>();
       addArtifactsFromSelections(appId, artifactSelections, artifacts);
