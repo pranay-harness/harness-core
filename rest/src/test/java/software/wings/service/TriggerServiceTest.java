@@ -672,7 +672,8 @@ public class TriggerServiceTest extends WingsBaseTest {
                         .build());
 
     triggerService.triggerScheduledExecutionAsync(APP_ID, TRIGGER_ID);
-    verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
+    verify(workflowExecutionService, times(0))
+        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
   }
 
   @Test
