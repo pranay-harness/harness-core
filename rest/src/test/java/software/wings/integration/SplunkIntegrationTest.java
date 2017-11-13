@@ -147,6 +147,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     stateMachine.setInitialStateName("some-state");
     stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
     stateMachine.setUuid(workflowExecution.getStateMachineId());
+    stateMachine.setAppId(applicationId);
     wingsPersistence.save(stateMachine);
     Set<String> hosts = new HashSet<>();
 
