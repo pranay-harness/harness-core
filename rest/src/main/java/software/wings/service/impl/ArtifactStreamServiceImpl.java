@@ -230,6 +230,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
     }
 
+    if (savedArtifactStream.getSourceName().equals(artifactStream.getSourceName())) {
+      executorService.submit(() -> triggerService.updateByApp(savedArtifactStream.getAppId()));
+    }
+
     ArtifactStream finalArtifactStream = artifactStream;
     executorService.submit(() -> {
       String accountId = appService.getAccountIdByAppId(finalArtifactStream.getAppId());
@@ -277,6 +281,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
       artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(streamAction.getWorkflowId(), artifactStreamId));
+      triggerService.deleteTriggersForArtifactStream(appId, artifactStreamId);
 
       executorService.submit(() -> {
         String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
@@ -290,7 +295,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         }
       });
     }
-    triggerService.deleteTriggersForArtifactStream(appId, artifactStreamId);
     return deleted;
   }
 

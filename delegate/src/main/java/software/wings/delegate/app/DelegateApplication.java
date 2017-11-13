@@ -30,9 +30,7 @@ import java.util.logging.Level;
 public class DelegateApplication {
   private final static Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
 
-  static {
-    System.setProperty("process_id", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
-
+  public static void main(String... args) throws Exception {
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
 
@@ -42,9 +40,7 @@ public class DelegateApplication {
 
     // Set logging level
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
-  }
 
-  public static void main(String... args) throws Exception {
     String configFile = args[0];
     boolean upgrade = false;
     boolean restart = false;
