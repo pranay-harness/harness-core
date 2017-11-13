@@ -14,7 +14,6 @@ public class ProcessIdConverter extends ClassicConverter {
   @Override
   public String convert(final ILoggingEvent event) {
     // for every logging event return processId from mx bean
-    // (or better alternative)
     return PROCESS_ID;
   }
 }
