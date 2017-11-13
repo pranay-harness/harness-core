@@ -74,7 +74,6 @@ public class WatcherServiceImpl implements WatcherService {
       amazonS3Client = (AmazonS3Client) AmazonS3ClientBuilder.standard().withRegion("us-east-1").build();
 
       startInputCheck();
-
       messageService.writeMessage("watcher-started");
 
       if (upgrade) {
