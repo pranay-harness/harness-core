@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static software.wings.utils.Misc.isNullOrEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -280,8 +282,11 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
   @Override
   public Y toYaml(Workflow workflow, String appId) {
     // Environment can be null in case of incomplete cloned workflows
-    Environment environment = environmentService.get(appId, workflow.getEnvId(), false);
-    String envName = environment != null ? environment.getName() : null;
+    String envName = null;
+    if (!isNullOrEmpty(workflow.getEnvId())) {
+      Environment environment = environmentService.get(appId, workflow.getEnvId(), false);
+      envName = environment != null ? environment.getName() : null;
+    }
 
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
