@@ -23,21 +23,20 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.thread.ThreadPool;
 import software.wings.core.ssh.executors.SshExecutorFactory;
-import software.wings.service.impl.security.EncryptionServiceImpl;
-import software.wings.delegate.service.MetricDataStoreServiceImpl;
 import software.wings.delegate.service.DelegateConfigServiceImpl;
 import software.wings.delegate.service.DelegateFileManagerImpl;
 import software.wings.delegate.service.DelegateLogServiceImpl;
 import software.wings.delegate.service.DelegateService;
 import software.wings.delegate.service.DelegateServiceImpl;
 import software.wings.delegate.service.LogAnalysisStoreServiceImpl;
+import software.wings.delegate.service.MetricDataStoreServiceImpl;
 import software.wings.delegate.service.UpgradeService;
 import software.wings.delegate.service.UpgradeServiceImpl;
-import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogAnalysisStoreService;
+import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.amazons3.AmazonS3ServiceImpl;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
@@ -74,6 +73,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
+import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
@@ -91,16 +91,20 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
+import software.wings.utils.message.MessageService;
+import software.wings.utils.message.MessageServiceImpl;
+import software.wings.utils.message.MessengerType;
 
+import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -174,6 +178,9 @@ public class DelegateModule extends AbstractModule {
     bind(GitClient.class).to(GitClientImpl.class).asEagerSingleton();
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
+    bind(MessageService.class)
+        .toInstance(
+            new MessageServiceImpl(Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

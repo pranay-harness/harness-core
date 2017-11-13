@@ -9,8 +9,7 @@ import java.util.concurrent.TimeoutException;
  * Created by peeyushaggarwal on 1/4/17.
  */
 public interface UpgradeService {
-  void doUpgrade(DelegateScripts delegateScripts, String version)
-      throws IOException, TimeoutException, InterruptedException;
+  void doUpgrade(DelegateScripts delegateScripts) throws IOException, TimeoutException, InterruptedException;
 
   void doRestart() throws IOException, TimeoutException, InterruptedException;
 }

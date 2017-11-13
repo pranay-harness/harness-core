@@ -44,8 +44,7 @@ public class UpgradeServiceImpl implements UpgradeService {
   @Inject private TimeLimiter timeLimiter;
 
   @Override
-  public void doUpgrade(DelegateScripts delegateScripts, String version)
-      throws IOException, TimeoutException, InterruptedException {
+  public void doUpgrade(DelegateScripts delegateScripts) throws IOException, TimeoutException, InterruptedException {
     logger.info("[Old] Replace run scripts");
     replaceRunScripts(delegateScripts);
     logger.info("[Old] Run scripts downloaded");
@@ -57,7 +56,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)
-                    .command("nohup", "./upgrade.sh", version)
+                    .command("nohup", "./upgrade.sh")
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
                     .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
                     .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
@@ -92,9 +91,6 @@ public class UpgradeServiceImpl implements UpgradeService {
 
             signalService.pause();
             logger.info("[Old] Shutting down");
-
-            removeDelegateVersionFromCapsule(delegateScripts, version);
-            cleanupOldDelegateVersionFromBackup(delegateScripts, version);
 
             signalService.stop();
           } else {
@@ -186,25 +182,6 @@ public class UpgradeServiceImpl implements UpgradeService {
     }
   }
 
-  private void cleanupOldDelegateVersionFromBackup(DelegateScripts delegateScripts, String version) {
-    try {
-      cleanup(new File(System.getProperty("user.dir")), version, delegateScripts.getVersion(), "backup.");
-    } catch (Exception ex) {
-      logger.error(
-          String.format("Failed to clean delegate version [%s] from Backup", delegateScripts.getVersion()), ex);
-    }
-  }
-
-  private void removeDelegateVersionFromCapsule(DelegateScripts delegateScripts, String version) {
-    try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegateScripts.getVersion(),
-          "delegate-");
-    } catch (Exception ex) {
-      logger.error(
-          String.format("Failed to clean delegate version [%s] from Capsule", delegateScripts.getVersion()), ex);
-    }
-  }
-
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
     for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh", "watch.sh", "stopwatch.sh", "delegate.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
@@ -241,14 +218,5 @@ public class UpgradeServiceImpl implements UpgradeService {
     } catch (Exception e) {
       return false;
     }
-  }
-
-  private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
-    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
-      if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
-        logger.info("[Old] File Name to be deleted = " + file.getAbsolutePath());
-        FileUtils.deleteQuietly(file);
-      }
-    });
   }
 }

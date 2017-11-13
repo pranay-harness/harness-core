@@ -1,5 +1,6 @@
 package software.wings.delegate.service;
 
+import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.Delegate.Builder.aDelegate;
@@ -13,6 +14,8 @@ import com.google.inject.Singleton;
 
 import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
@@ -102,18 +105,25 @@ public class DelegateServiceImpl implements DelegateService {
   private Socket socket;
   private RequestBuilder request;
   private boolean upgradePending;
+  private String upgradeVersion;
   private boolean acquireTasks;
   private String delegateId;
   private String accountId;
 
   @Override
-  public void run(boolean upgrade, boolean restart) {
+  public void run(boolean watched, boolean upgrade, boolean restart) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
       String hostName = InetAddress.getLocalHost().getHostName();
       accountId = delegateConfiguration.getAccountId();
 
-      if (upgrade) {
+      if (watched) {
+        // TODO - start status heartbeat thread to write data
+
+        // TODO - wait for messages
+
+      } else if (upgrade) {
+        // TODO - Legacy path. Remove after watcher is standard
         logger.info("[New] Upgraded delegate process started. Sending confirmation");
         System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
 
@@ -219,7 +229,10 @@ public class DelegateServiceImpl implements DelegateService {
 
       startUpgradeCheck(getVersion());
 
-      if (upgrade) {
+      if (watched) {
+        logger.info("Delegate started");
+      } else if (upgrade) {
+        // TODO - Legacy path. Remove after watcher is standard
         logger.info("[New] Delegate upgraded");
       } else if (restart) {
         logger.info("[New] Delegate restarted");
@@ -229,6 +242,11 @@ public class DelegateServiceImpl implements DelegateService {
 
       synchronized (waiter) {
         waiter.wait();
+      }
+
+      if (upgradePending) {
+        removeDelegateVersionFromCapsule();
+        cleanupOldDelegateVersionFromBackup();
       }
 
     } catch (Exception e) {
@@ -401,10 +419,12 @@ public class DelegateServiceImpl implements DelegateService {
         try {
           RestResponse<DelegateScripts> restResponse =
               execute(managerClient.checkForUpgrade(version, delegateId, accountId));
-          if (restResponse.getResource().isDoUpgrade()) {
+          DelegateScripts delegateScripts = restResponse.getResource();
+          if (delegateScripts.isDoUpgrade()) {
             setUpgradePending(true);
+            upgradeVersion = delegateScripts.getVersion();
             logger.info("[Old] Upgrading delegate. Stop acquiring async tasks");
-            upgradeService.doUpgrade(restResponse.getResource(), getVersion());
+            upgradeService.doUpgrade(delegateScripts);
           } else {
             logger.info("Delegate up to date");
           }
@@ -643,6 +663,31 @@ public class DelegateServiceImpl implements DelegateService {
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
     }
+  }
+
+  private void cleanupOldDelegateVersionFromBackup() {
+    try {
+      cleanup(new File(System.getProperty("user.dir")), getVersion(), upgradeVersion, "backup.");
+    } catch (Exception ex) {
+      logger.error(String.format("Failed to clean delegate version [%s] from Backup", upgradeVersion), ex);
+    }
+  }
+
+  private void removeDelegateVersionFromCapsule() {
+    try {
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
+    } catch (Exception ex) {
+      logger.error(String.format("Failed to clean delegate version [%s] from Capsule", upgradeVersion), ex);
+    }
+  }
+
+  private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
+      if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
+        logger.info("[Old] File Name to be deleted = " + file.getAbsolutePath());
+        FileUtils.deleteQuietly(file);
+      }
+    });
   }
 
   private boolean isUpgradePending() {
