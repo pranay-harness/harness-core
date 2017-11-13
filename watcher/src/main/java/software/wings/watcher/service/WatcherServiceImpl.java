@@ -77,8 +77,9 @@ public class WatcherServiceImpl implements WatcherService {
       messageService.writeMessage("watcher-started");
 
       if (upgrade) {
-        waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
-        logger.info("[New] got go-ahead. Proceeding");
+        Message message = waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
+        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
+                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
 
       startWatcherUpgradeCheck();
