@@ -2,6 +2,8 @@
 <configuration>
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
+    <conversionRule conversionWord="process_id" converterClass="software.wings.logging.ProcessIdConverter"/>
+
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>watcher.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -17,7 +19,7 @@
         <withJansi>true</withJansi>
 
         <encoder>
-            <pattern>%date{ISO8601} %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%date{ISO8601} %boldGreen(%process_id) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </encoder>
     </appender>
 
@@ -30,7 +32,7 @@
 
     <appender name="REST" class="software.wings.logging.RestLogAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%boldGreen(%process_id) %boldCyan(${version}) %green([%thread]) %cyan(%logger) - %msg %n</pattern>
         </layout>
         <programName>watcher</programName>
         <key>${logdnakey:-9a3e6eac4dcdbdc41a93ca99100537df}</key>

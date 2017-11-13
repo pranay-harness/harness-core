@@ -1,15 +1,11 @@
 package software.wings.delegate.service;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static software.wings.delegate.service.DelegateServiceImpl.MAX_UPGRADE_WAIT_SECS;
 
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +15,11 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.beans.DelegateScripts;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
@@ -44,12 +36,7 @@ public class UpgradeServiceImpl implements UpgradeService {
   @Inject private TimeLimiter timeLimiter;
 
   @Override
-  public void doUpgrade(DelegateScripts delegateScripts, String version)
-      throws IOException, TimeoutException, InterruptedException {
-    logger.info("[Old] Replace run scripts");
-    replaceRunScripts(delegateScripts);
-    logger.info("[Old] Run scripts downloaded");
-
+  public void doUpgrade(DelegateScripts delegateScripts) throws IOException, TimeoutException, InterruptedException {
     File goaheadFile = new File("goahead");
     StartedProcess process = null;
     try {
@@ -57,7 +44,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)
-                    .command("nohup", "./upgrade.sh", version)
+                    .command("nohup", "./upgrade.sh")
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
                     .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
                     .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
@@ -92,9 +79,6 @@ public class UpgradeServiceImpl implements UpgradeService {
 
             signalService.pause();
             logger.info("[Old] Shutting down");
-
-            removeDelegateVersionFromCapsule(delegateScripts, version);
-            cleanupOldDelegateVersionFromBackup(delegateScripts, version);
 
             signalService.stop();
           } else {
@@ -186,47 +170,6 @@ public class UpgradeServiceImpl implements UpgradeService {
     }
   }
 
-  private void cleanupOldDelegateVersionFromBackup(DelegateScripts delegateScripts, String version) {
-    try {
-      cleanup(new File(System.getProperty("user.dir")), version, delegateScripts.getVersion(), "backup.");
-    } catch (Exception ex) {
-      logger.error(
-          String.format("Failed to clean delegate version [%s] from Backup", delegateScripts.getVersion()), ex);
-    }
-  }
-
-  private void removeDelegateVersionFromCapsule(DelegateScripts delegateScripts, String version) {
-    try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegateScripts.getVersion(),
-          "delegate-");
-    } catch (Exception ex) {
-      logger.error(
-          String.format("Failed to clean delegate version [%s] from Capsule", delegateScripts.getVersion()), ex);
-    }
-  }
-
-  private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
-    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh", "watch.sh", "stopwatch.sh", "delegate.sh")) {
-      Files.deleteIfExists(Paths.get(fileName));
-      File scriptFile = new File(fileName);
-      String script = delegateScripts.getScriptByName(fileName);
-
-      if (script != null && script.length() != 0) {
-        try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
-          writer.write(script, 0, script.length());
-          writer.flush();
-        }
-        logger.info("[Old] Done replacing file [{}]. Set User and Group permission", scriptFile);
-        Files.setPosixFilePermissions(scriptFile.toPath(),
-            Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-                PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-        logger.info("[Old] Done setting file permissions");
-      } else {
-        logger.error("[Old] Script for file [{}] was not replaced", scriptFile);
-      }
-    }
-  }
-
   private boolean waitForStringOnStream(BufferedReader reader, String searchString, int maxMinutes) {
     try {
       return timeLimiter.callWithTimeout(() -> {
@@ -241,14 +184,5 @@ public class UpgradeServiceImpl implements UpgradeService {
     } catch (Exception e) {
       return false;
     }
-  }
-
-  private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
-    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
-      if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
-        logger.info("[Old] File Name to be deleted = " + file.getAbsolutePath());
-        FileUtils.deleteQuietly(file);
-      }
-    });
   }
 }
