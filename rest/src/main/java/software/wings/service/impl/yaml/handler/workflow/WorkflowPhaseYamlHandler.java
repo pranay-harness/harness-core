@@ -55,13 +55,20 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
 
     String envId = context.getEnvId();
-    InfrastructureMapping infraMapping =
-        infraMappingService.getInfraMappingByName(appId, envId, yaml.getInfraMappingName());
-    Validator.notNullCheck(
-        "Could not retrieve valid infra mapping with name: " + yaml.getInfraMappingName(), infraMapping);
+    String infraMappingId = null;
+    String infraMappingName = null;
+    String deploymentTypeString = null;
 
-    Service service = serviceResourceService.get(appId, infraMapping.getServiceId());
-    Validator.notNullCheck("Could not retrieve valid service with id: " + infraMapping.getServiceId(), service);
+    if (envId != null) {
+      InfrastructureMapping infraMapping =
+          infraMappingService.getInfraMappingByName(appId, envId, yaml.getInfraMappingName());
+      infraMappingId = infraMapping != null ? infraMapping.getUuid() : null;
+      infraMappingName = infraMapping != null ? infraMapping.getName() : null;
+      deploymentTypeString = infraMapping != null ? infraMapping.getDeploymentType() : null;
+    }
+
+    Service service = serviceResourceService.getServiceByName(appId, yaml.getServiceName());
+    String serviceId = service != null ? service.getUuid() : null;
 
     // phase step
     List<PhaseStep> phaseSteps = Lists.newArrayList();
@@ -110,15 +117,15 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     WorkflowPhase.WorkflowPhaseBuilder phase = WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase();
-    DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, infraMapping.getDeploymentType());
+    DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, deploymentTypeString);
     phase.withComputeProviderId(computeProviderId)
         .withDeploymentType(deploymentType)
-        .withInfraMappingId(infraMapping.getUuid())
-        .withInfraMappingName(yaml.getInfraMappingName())
+        .withInfraMappingId(infraMappingId)
+        .withInfraMappingName(infraMappingName)
         .withName(yaml.getName())
         .withPhaseNameForRollback(yaml.getPhaseNameForRollback())
         .withPhaseSteps(phaseSteps)
-        .withServiceId(service.getUuid())
+        .withServiceId(serviceId)
         .withTemplateExpressions(templateExpressions)
         .build();
     return phase.build();
@@ -157,9 +164,12 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                               .collect(Collectors.toList());
     }
 
+    Service service = serviceResourceService.get(appId, bean.getServiceId());
+    String serviceName = service != null ? service.getName() : null;
     return Yaml.Builder.anYaml()
         .withComputeProviderName(computeProviderName)
         .withInfraMappingName(bean.getInfraMappingName())
+        .withServiceName(serviceName)
         .withName(bean.getName())
         .withPhaseNameForRollback(bean.getPhaseNameForRollback())
         .withPhaseSteps(phaseStepYamlList)
