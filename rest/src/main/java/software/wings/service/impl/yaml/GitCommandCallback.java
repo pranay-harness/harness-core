@@ -10,6 +10,7 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitCommandResult;
 import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitDiffResult;
@@ -56,6 +57,14 @@ public class GitCommandCallback implements NotifyCallback {
     if (notifyResponseData instanceof GitCommandExecutionResponse) {
       GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
       GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
+
+      if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
+        logger.error(
+            "Git Command failed [{}] for changeSetId [{}]", gitCommandExecutionResponse.getErrorMessage(), changeSetId);
+        yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+        return;
+      }
+
       logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
           gitCommandExecutionResponse.getGitCommandStatus());
 
@@ -110,10 +119,13 @@ public class GitCommandCallback implements NotifyCallback {
         //          logger.error("Harness Error", ex);
         //        }
       } else {
-        logger.error("Unexpected commandType result: [{}]", gitCommandResult);
+        logger.error("Unexpected commandType result: [{}] for changeSetId [{}]",
+            gitCommandExecutionResponse.getErrorMessage(), changeSetId);
+        yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
       }
     } else {
       logger.error("Unexpected notify response data: [{}]", notifyResponseData);
+      yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
     }
   }
 

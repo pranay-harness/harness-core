@@ -42,30 +42,38 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];
     encryptionService.decrypt(gitConfig, encryptionDetails);
 
-    switch (gitCommandType) {
-      case COMMIT_AND_PUSH:
-        GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];
-        logger.info("COMMIT_AND_PUSH: [{}]", gitCommitRequest);
-        GitCommitAndPushResult gitCommitAndPushResult = gitClient.commitAndPush(gitConfig, gitCommitRequest);
-        return GitCommandExecutionResponse.builder()
-            .gitCommandRequest(gitCommitRequest)
-            .gitCommandResult(gitCommitAndPushResult)
-            .gitCommandStatus(GitCommandStatus.SUCCESS)
-            .build();
-      case DIFF:
-        GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
-        logger.info("DIFF: [{}]", gitDiffRequest);
-        GitDiffResult gitDiffResult = gitClient.diff(gitConfig, gitDiffRequest.getLastProcessedCommitId());
-        return GitCommandExecutionResponse.builder()
-            .gitCommandRequest(gitDiffRequest)
-            .gitCommandResult(gitDiffResult)
-            .gitCommandStatus(GitCommandStatus.SUCCESS)
-            .build();
-      default:
-        return GitCommandExecutionResponse.builder()
-            .gitCommandStatus(GitCommandStatus.FAILURE)
-            .errorMessage("Git Operation not supported")
-            .build();
+    try {
+      switch (gitCommandType) {
+        case COMMIT_AND_PUSH:
+          GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];
+          logger.info("COMMIT_AND_PUSH: [{}]", gitCommitRequest);
+          GitCommitAndPushResult gitCommitAndPushResult = gitClient.commitAndPush(gitConfig, gitCommitRequest);
+          return GitCommandExecutionResponse.builder()
+              .gitCommandRequest(gitCommitRequest)
+              .gitCommandResult(gitCommitAndPushResult)
+              .gitCommandStatus(GitCommandStatus.SUCCESS)
+              .build();
+        case DIFF:
+          GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
+          logger.info("DIFF: [{}]", gitDiffRequest);
+          GitDiffResult gitDiffResult = gitClient.diff(gitConfig, gitDiffRequest.getLastProcessedCommitId());
+          return GitCommandExecutionResponse.builder()
+              .gitCommandRequest(gitDiffRequest)
+              .gitCommandResult(gitDiffResult)
+              .gitCommandStatus(GitCommandStatus.SUCCESS)
+              .build();
+        default:
+          return GitCommandExecutionResponse.builder()
+              .gitCommandStatus(GitCommandStatus.FAILURE)
+              .errorMessage("Git Operation not supported")
+              .build();
+      }
+    } catch (Exception ex) {
+      logger.error("Exception in processing GitTask", ex);
+      return GitCommandExecutionResponse.builder()
+          .gitCommandStatus(GitCommandStatus.FAILURE)
+          .errorMessage(ex.getMessage())
+          .build();
     }
   }
 }
