@@ -396,7 +396,8 @@ public class WorkflowPhase implements UuidAware {
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String name;
-    @NotNull private String infraMappingName;
+    private String infraMappingName;
+    private String serviceName;
     private String computeProviderName;
     private boolean provisionNodes;
     private String phaseNameForRollback;
@@ -407,6 +408,7 @@ public class WorkflowPhase implements UuidAware {
     public static final class Builder {
       private String name;
       private String infraMappingName;
+      private String serviceName;
       private String computeProviderName;
       private boolean provisionNodes;
       private String type;
@@ -427,6 +429,11 @@ public class WorkflowPhase implements UuidAware {
 
       public Builder withInfraMappingName(String infraMappingName) {
         this.infraMappingName = infraMappingName;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
         return this;
       }
 
@@ -464,6 +471,7 @@ public class WorkflowPhase implements UuidAware {
         return anYaml()
             .withName(name)
             .withInfraMappingName(infraMappingName)
+            .withServiceName(serviceName)
             .withComputeProviderName(computeProviderName)
             .withProvisionNodes(provisionNodes)
             .withType(type)

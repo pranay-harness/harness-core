@@ -66,10 +66,10 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
     String appId = yamlSyncHelper.getAppId(change.getAccountId(), change.getFilePath());
     Validator.notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId);
 
+    // Environment can be null in cloned workflows
     Environment environment = environmentService.getEnvironmentByName(appId, yaml.getEnvName());
-    Validator.notNullCheck("Invalid environment with the given name:" + yaml.getEnvName(), environment);
 
-    String envId = environment.getUuid();
+    String envId = environment != null ? environment.getUuid() : null;
 
     try {
       BaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE);
@@ -279,8 +279,9 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
 
   @Override
   public Y toYaml(Workflow workflow, String appId) {
+    // Environment can be null in case of incomplete cloned workflows
     Environment environment = environmentService.get(appId, workflow.getEnvId(), false);
-    Validator.notNullCheck("No env found with Id:" + workflow.getEnvId(), environment);
+    String envName = environment != null ? environment.getName() : null;
 
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
@@ -358,7 +359,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
     B yamlBuilder = getYamlBuilder();
     return yamlBuilder.withDefaultVersion(workflow.getDefaultVersion())
         .withDescription(workflow.getDescription())
-        .withEnvName(environment.getName())
+        .withEnvName(envName)
         .withName(workflow.getName())
         .withTemplateExpressions(templateExprYamlList)
         .withTemplatized(workflow.isTemplatized())
