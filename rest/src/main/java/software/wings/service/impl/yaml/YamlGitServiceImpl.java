@@ -95,15 +95,19 @@ public class YamlGitServiceImpl implements YamlGitService {
   public void pushDirectory(String accountId) {
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (yamlGitConfig != null) {
-      FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
-      List<GitFileChange> gitFileChanges = new ArrayList<>();
-      gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "");
+      try {
+        FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
+        List<GitFileChange> gitFileChanges = new ArrayList<>();
+        gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "");
 
-      YamlChangeSet yamlChangeSet =
-          YamlChangeSet.builder().accountId(accountId).status(Status.QUEUED).gitFileChanges(gitFileChanges).build();
-      yamlChangeSet.setAppId(GLOBAL_APP_ID);
+        YamlChangeSet yamlChangeSet =
+            YamlChangeSet.builder().accountId(accountId).status(Status.QUEUED).gitFileChanges(gitFileChanges).build();
+        yamlChangeSet.setAppId(GLOBAL_APP_ID);
 
-      yamlChangeSetService.save(yamlChangeSet);
+        yamlChangeSetService.save(yamlChangeSet);
+      } catch (Exception ex) {
+        logger.error("Failed to push directory: ", ex);
+      }
     }
   }
 

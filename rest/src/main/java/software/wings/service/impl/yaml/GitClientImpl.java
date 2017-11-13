@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import groovy.lang.Singleton;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullResult;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -105,7 +106,7 @@ public class GitClientImpl implements GitClient {
 
   @Override
   synchronized public GitDiffResult diff(GitConfig gitConfig, String startCommitId) {
-    ensureRepoLocallyCloned(gitConfig);
+    ensureRepoLocallyClonedAndUpdated(gitConfig);
 
     GitDiffResult diffResult = GitDiffResult.builder()
                                    .branch(gitConfig.getBranch())
@@ -179,7 +180,7 @@ public class GitClientImpl implements GitClient {
 
   @Override
   synchronized public GitCommitResult commit(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
-    ensureRepoLocallyCloned(gitConfig);
+    ensureRepoLocallyClonedAndUpdated(gitConfig);
     // TODO:: pull latest remote branch??
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
@@ -312,7 +313,13 @@ public class GitClientImpl implements GitClient {
 
   @Override
   synchronized public PullResult pull(GitConfig gitConfig) {
+    ensureRepoLocallyClonedAndUpdated(gitConfig);
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      git.branchCreate()
+          .setForce(true)
+          .setName(gitConfig.getBranch())
+          .setStartPoint("origin/" + gitConfig.getBranch())
+          .call();
       git.checkout().setName(gitConfig.getBranch()).call();
       return git.pull()
           .setCredentialsProvider(
@@ -329,12 +336,20 @@ public class GitClientImpl implements GitClient {
    *
    * @param gitConfig the git config
    */
-  synchronized void ensureRepoLocallyCloned(GitConfig gitConfig) {
+  synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      logger.info("Repo exist. do hard sync with remote branch");
+      Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
+      logger.info("Hard reset done for branch " + gitConfig.getBranch());
+      // TODO:: log failed commits queued and being ignored.
       return;
-    } catch (IOException ignored) {
+    } catch (IOException ex) {
+      logger.error("Repo doesn't exist locally [repo: {}], {}", gitConfig.getRepoUrl(), ex);
+    } catch (GitAPIException ex) {
+      logger.info("Hard reset failed for branch " + gitConfig.getBranch());
     }
-    // Repo doesn't exists. do fresh clone
+
+    logger.info("Repo doesn't exist. Do a fresh clone");
     clone(gitConfig);
   }
 }
