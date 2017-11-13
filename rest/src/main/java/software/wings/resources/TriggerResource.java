@@ -93,6 +93,9 @@ public class TriggerResource {
   public RestResponse<Trigger> save(@QueryParam("appId") String appId, Trigger trigger) {
     Validator.notNullCheck("trigger", trigger);
     trigger.setAppId(appId);
+    if (trigger.getUuid() != null) {
+      return new RestResponse(triggerService.update(trigger));
+    }
     return new RestResponse<>(triggerService.save(trigger));
   }
 
