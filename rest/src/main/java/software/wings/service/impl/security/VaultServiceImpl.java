@@ -36,13 +36,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 import javax.inject.Inject;
 
 /**
  * Created by rsingh on 11/2/17.
  */
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
+  public static final String VAULT_VAILDATION_URL = "harness_vault_validation";
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject private KmsService kmsService;
 
@@ -195,7 +195,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public Collection<VaultConfig> listVaultConfigs(String accountId) {
+  public Collection<VaultConfig> listVaultConfigs(String accountId, boolean maskSecret) {
     List<VaultConfig> rv = new ArrayList<>();
     Iterator<VaultConfig> query =
         wingsPersistence.createQuery(VaultConfig.class).field("accountId").equal(accountId).order("-createdAt").fetch();
@@ -205,7 +205,15 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       Query<EncryptedData> encryptedDataQuery =
           wingsPersistence.createQuery(EncryptedData.class).field("kmsId").equal(vaultConfig.getUuid());
       vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
-      vaultConfig.setAuthToken(SECRET_MASK);
+      if (maskSecret) {
+        vaultConfig.setAuthToken(SECRET_MASK);
+      } else {
+        EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
+        Preconditions.checkNotNull(tokenData, "token data null for " + vaultConfig);
+        char[] decryptedToken =
+            kmsService.decrypt(tokenData, accountId, kmsService.getKmsConfig(accountId, tokenData.getKmsId()));
+        vaultConfig.setAuthToken(String.valueOf(decryptedToken));
+      }
       vaultConfig.setEncryptionType(EncryptionType.VAULT);
       rv.add(vaultConfig);
     }
@@ -275,8 +283,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
-  private void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
-    encrypt(UUID.randomUUID().toString(), UUID.randomUUID().toString(), accountId, SettingVariableTypes.VAULT,
-        vaultConfig, null);
+  void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
+    encrypt(VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
   }
 }
