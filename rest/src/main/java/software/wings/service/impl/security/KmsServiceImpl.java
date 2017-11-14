@@ -213,7 +213,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   @Override
-  public Collection<KmsConfig> listKmsConfigs(String accountId) {
+  public Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret) {
     List<KmsConfig> rv = new ArrayList<>();
     Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
                                     .field("accountId")
@@ -243,7 +243,13 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       Preconditions.checkNotNull(arnData, "encrypted arn can't be null for " + kmsConfig);
       kmsConfig.setKmsArn(new String(decrypt(arnData, null, null)));
 
-      kmsConfig.setSecretKey(SECRET_MASK);
+      if (maskSecret) {
+        kmsConfig.setSecretKey(SECRET_MASK);
+      } else {
+        EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
+        Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);
+        kmsConfig.setSecretKey(new String(decrypt(secretData, null, null)));
+      }
       kmsConfig.setEncryptionType(EncryptionType.KMS);
       rv.add(kmsConfig);
     }

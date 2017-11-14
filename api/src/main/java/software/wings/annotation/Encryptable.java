@@ -16,7 +16,7 @@ public interface Encryptable {
 
   void setAccountId(String accountId);
 
-  @JsonIgnore @SchemaIgnore SettingVariableTypes getSettingType();
+  @SchemaIgnore SettingVariableTypes getSettingType();
 
   @JsonIgnore
   @SchemaIgnore
