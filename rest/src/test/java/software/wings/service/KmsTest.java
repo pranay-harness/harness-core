@@ -494,7 +494,7 @@ public class KmsTest extends WingsBaseTest {
       assertEquals(kmsConfig.getUuid(), query.asList().get(0).getKmsId());
     }
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(1, kmsConfigs.size());
     assertEquals(numOfSettingAttributes, kmsConfigs.iterator().next().getNumOfEncryptedValue());
   }
@@ -1248,7 +1248,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig2.setAccessKey(getKmsConfig().getAccessKey());
     kmsConfig2.setKmsArn(getKmsConfig().getKmsArn());
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(2, kmsConfigs.size());
 
     int defaultConfig = 0;
@@ -1285,7 +1285,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig2.setAccessKey(getKmsConfig().getAccessKey());
     kmsConfig2.setKmsArn(getKmsConfig().getKmsArn());
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(2, kmsConfigs.size());
 
     defaultConfig = 0;
@@ -1324,7 +1324,7 @@ public class KmsTest extends WingsBaseTest {
     globalKmsConfig.setDefault(false);
     kmsService.saveGlobalKmsConfig(accountId, globalKmsConfig);
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(1, kmsConfigs.size());
     assertTrue(kmsConfigs.iterator().next().isDefault());
 
@@ -1336,7 +1336,7 @@ public class KmsTest extends WingsBaseTest {
       kmsService.saveKmsConfig(accountId, kmsConfig);
     }
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(numOfKms + 1, kmsConfigs.size());
 
     int kmsNum = numOfKms;
@@ -1357,7 +1357,7 @@ public class KmsTest extends WingsBaseTest {
 
     // delete the default and global should become default
     kmsService.deleteKmsConfig(accountId, kmsConfigs.iterator().next().getUuid());
-    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(numOfKms, kmsConfigs.size());
 
     int defaultSet = 0;
@@ -1388,7 +1388,7 @@ public class KmsTest extends WingsBaseTest {
       kmsService.saveKmsConfig(accountId, kmsConfig);
     }
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(numOfKms, kmsConfigs.size());
 
     int kmsNum = numOfKms;
@@ -1418,7 +1418,7 @@ public class KmsTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     kmsConfig = getKmsConfig();
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(2, kmsConfigs.size());
 
     int defaultConfig = 0;
@@ -1454,7 +1454,7 @@ public class KmsTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     kmsConfig = getKmsConfig();
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(1, kmsConfigs.size());
     KmsConfig actualConfig = kmsConfigs.iterator().next();
     assertEquals(kmsConfig.getName(), actualConfig.getName());
@@ -1471,7 +1471,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setName(name);
     kmsService.saveKmsConfig(accountId, kmsConfig);
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(2, kmsConfigs.size());
 
     int defaultPresent = 0;
@@ -1492,7 +1492,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setName(name);
     kmsService.saveKmsConfig(accountId, kmsConfig);
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(3, kmsConfigs.size());
 
     defaultPresent = 0;
