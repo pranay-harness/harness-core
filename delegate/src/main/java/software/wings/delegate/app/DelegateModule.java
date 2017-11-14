@@ -122,20 +122,9 @@ public class DelegateModule extends AbstractModule {
         .toInstance(new ScheduledThreadPoolExecutor(
             1, new ThreadFactoryBuilder().setNameFormat("Heartbeat-Thread").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("localHeartbeatExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder()
-                .setNameFormat("LocalHeartbeat-Thread")
-                .setPriority(Thread.MAX_PRIORITY)
-                .build()));
-    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("upgradeExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("UpgradeCheck-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("inputExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("InputCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(
