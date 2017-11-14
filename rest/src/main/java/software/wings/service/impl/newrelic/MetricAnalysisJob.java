@@ -3,9 +3,11 @@ package software.wings.service.impl.newrelic;
 import com.google.common.base.Preconditions;
 
 import org.apache.commons.lang.StringUtils;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,8 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 9/11/17.
  */
+@PersistJobDataAfterExecution
+@DisallowConcurrentExecution
 public class MetricAnalysisJob implements Job {
   private static final ConcurrentHashMap<String, UUID> stateExecutionLocks = new ConcurrentHashMap<>();
   private static final ExecutorService executorService = Executors.newFixedThreadPool(5);
