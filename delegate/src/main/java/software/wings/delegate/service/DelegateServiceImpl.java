@@ -145,12 +145,9 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (watched) {
         startInputCheck();
-        logger.info("[New] Delegate process started. Sending confirmation");
         messageService.writeMessage("delegate-started");
-        logger.info("[New] Waiting for go ahead from watcher");
-        Message message = waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
-        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
-                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
+        waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
+        logger.info("Got go-ahead. Proceeding");
 
       } else if (upgrade) {
         // TODO - Legacy path. Remove after watcher is standard
