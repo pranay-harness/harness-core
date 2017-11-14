@@ -41,7 +41,7 @@ public class AdministrativeJobUtil extends WingsBaseTest {
 
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(1).repeatForever())
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(3).repeatForever())
                           .build();
     jobScheduler.scheduleJob(job, trigger);
     System.out.println("Added Administrative cron");
