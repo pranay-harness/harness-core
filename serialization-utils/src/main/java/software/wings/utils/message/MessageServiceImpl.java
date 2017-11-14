@@ -102,7 +102,6 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public Message retrieveMessage(MessengerType sourceType, String sourceProcessId, long timeout) {
     boolean isInput = messengerType == sourceType && processId.equals(sourceProcessId);
-    logger.info(isInput ? "Reading message" : "Retrieving message from " + sourceType + " " + sourceProcessId);
     try {
       LineIterator reader = getMessageReader(sourceType, sourceProcessId);
       return timeLimiter.callWithTimeout(() -> {
@@ -274,6 +273,9 @@ public class MessageServiceImpl implements MessageService {
     if (readers.containsKey(file)) {
       reader = readers.get(file);
     } else {
+      if (!file.exists()) {
+        FileUtils.touch(file);
+      }
       reader = FileUtils.lineIterator(file);
       readers.put(file, reader);
     }

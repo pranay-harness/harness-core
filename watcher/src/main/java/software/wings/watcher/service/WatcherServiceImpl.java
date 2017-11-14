@@ -73,8 +73,8 @@ public class WatcherServiceImpl implements WatcherService {
       logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
       amazonS3Client = (AmazonS3Client) AmazonS3ClientBuilder.standard().withRegion("us-east-1").build();
 
-      startInputCheck();
       messageService.writeMessage("watcher-started");
+      startInputCheck();
 
       if (upgrade) {
         Message message = waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
