@@ -9,7 +9,7 @@ case "$OSTYPE" in
     ;;
   darwin*)
     JVM_URL=http://wingsdelegates.s3-website-us-east-1.amazonaws.com/jre/8u131/jre-8u131-macosx-x64.tar.gz
-    JRE_DIR=jre1.8.0_131.jre
+    JRE_DIR_OLD=jre1.8.0_131.jre
     JRE_BINARY=jre/Contents/Home/bin/java
     ;;
   linux*)
