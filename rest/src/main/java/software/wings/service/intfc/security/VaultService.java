@@ -23,7 +23,7 @@ public interface VaultService {
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
 
-  Collection<VaultConfig> listVaultConfigs(String accountId);
+  Collection<VaultConfig> listVaultConfigs(String accountId, boolean maskSecret);
 
   VaultConfig getVaultConfig(String accountId, String entityId);
 

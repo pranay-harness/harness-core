@@ -312,7 +312,7 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId);
+    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     assertEquals(1, vaultConfigs.size());
     VaultConfig next = vaultConfigs.iterator().next();
     assertTrue(next.isDefault());
@@ -322,7 +322,7 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(true);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    vaultConfigs = vaultService.listVaultConfigs(accountId);
+    vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     assertEquals(2, vaultConfigs.size());
 
     int numOfDefault = 0;
@@ -348,7 +348,7 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(true);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    vaultConfigs = vaultService.listVaultConfigs(accountId);
+    vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     assertEquals(3, vaultConfigs.size());
 
     for (VaultConfig config : vaultConfigs) {
@@ -369,7 +369,7 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId);
+    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     assertEquals(1, vaultConfigs.size());
     VaultConfig next = vaultConfigs.iterator().next();
     assertTrue(next.isDefault());
@@ -384,7 +384,7 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(false);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    vaultConfigs = vaultService.listVaultConfigs(accountId);
+    vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     assertEquals(3, vaultConfigs.size());
 
     VaultConfig defaultConfig = vaultService.getSecretConfig(accountId);
@@ -549,7 +549,7 @@ public class VaultTest extends WingsBaseTest {
       assertEquals(vaultConfig.getUuid(), query.asList().get(0).getKmsId());
     }
 
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId);
+    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     assertEquals(1, vaultConfigs.size());
     assertEquals(numOfSettingAttributes, vaultConfigs.iterator().next().getNumOfEncryptedValue());
   }
