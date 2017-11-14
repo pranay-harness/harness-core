@@ -14,6 +14,7 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "automation_scheduler") private String schedulerName = "automation_scheduler";
   @JsonProperty(defaultValue = "automation") private String instanceId = "automation";
   @JsonProperty(defaultValue = "quartz") private String tablePrefix = "quartz";
+  @JsonProperty(defaultValue = "true") private boolean isClustered = false;
 
   public String getJobstoreclass() {
     return jobstoreclass;
@@ -69,5 +70,13 @@ public class SchedulerConfig {
 
   public void setTablePrefix(String tablePrefix) {
     this.tablePrefix = tablePrefix;
+  }
+
+  public boolean isClustered() {
+    return isClustered;
+  }
+
+  public void setClustered(boolean clustered) {
+    isClustered = clustered;
   }
 }
