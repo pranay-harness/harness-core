@@ -84,6 +84,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -390,14 +391,13 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String registerDelegate(Builder builder) throws IOException {
     try {
-      List<Integer> attempts = new ArrayList<>();
-      attempts.add(0);
+      AtomicInteger attempts = new AtomicInteger(0);
       return await().with().timeout(Duration.FOREVER).pollInterval(Duration.FIVE_SECONDS).until(() -> {
         RestResponse<Delegate> delegateResponse;
         try {
-          attempts.set(0, attempts.get(0) + 1);
-          String attemptString = attempts.get(0) > 1 ? " (Attempt " + attempts.get(0) + ")" : "";
-          logger.info("Registering delegate." + attemptString);
+          attempts.incrementAndGet();
+          String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
+          logger.info("Registering delegate - " + attemptString);
           delegateResponse = execute(managerClient.registerDelegate(
               accountId, builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
@@ -822,10 +822,10 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   public void setAcquireTasks(boolean acquireTasks) {
-    this.acquireTasks = acquireTasks;
-    if (!acquireTasks) {
+    if (this.acquireTasks && !acquireTasks) {
       stoppedAcquiringAt = clock.millis();
     }
+    this.acquireTasks = acquireTasks;
   }
 
   private String getVersion() {
