@@ -189,6 +189,7 @@ public class DelegateModule extends AbstractModule {
     bind(GitClient.class).to(GitClientImpl.class).asEagerSingleton();
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
+    bind(Clock.class).toInstance(Clock.systemUTC());
     bind(MessageService.class)
         .toInstance(
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));

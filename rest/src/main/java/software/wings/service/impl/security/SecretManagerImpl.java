@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
+import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
@@ -11,6 +12,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -22,6 +24,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.KmsSetupAlert;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
@@ -31,6 +37,8 @@ import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.SimpleEncryption;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.KmsService;
@@ -48,6 +56,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.inject.Inject;
 
 /**
@@ -61,6 +70,8 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
+  @Inject private AccountService accountService;
+  @Inject private AlertService alertService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -82,8 +93,8 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public List<EncryptionConfig> listEncryptionConfig(String accountId) {
     List<EncryptionConfig> rv = new ArrayList<>();
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId);
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
 
     boolean defaultVaultSet = false;
     for (VaultConfig vaultConfig : vaultConfigs) {
@@ -369,6 +380,16 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
+  @Override
+  public void checkAndAlertForInvalidManagers() {
+    PageRequest<Account> pageRequest = Builder.aPageRequest().build();
+    List<Account> accounts = accountService.list(pageRequest);
+    for (Account account : accounts) {
+      vaildateKmsConfigs(account.getUuid());
+      validateVaultConfigs(account.getUuid());
+    }
+  }
+
   private EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
@@ -519,6 +540,44 @@ public class SecretManagerImpl implements SecretManager {
           return vaultConfig.getName();
         default:
           throw new IllegalArgumentException("Invalid type: " + type);
+      }
+    }
+  }
+
+  private void vaildateKmsConfigs(String accountId) {
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, false);
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      KmsSetupAlert kmsSetupAlert =
+          KmsSetupAlert.builder()
+              .kmsId(kmsConfig.getUuid())
+              .message(kmsConfig.getName() + "(Amazon KMS) is not able to encrypt/decrypt. Please check your setup")
+              .build();
+      try {
+        kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
+        alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+      } catch (Exception e) {
+        logger.error("Could not validate kms for account {} and kmsId {}", accountId, kmsConfig.getUuid(), e);
+        alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+      }
+    }
+  }
+
+  private void validateVaultConfigs(String accountId) {
+    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, false);
+    for (VaultConfig vaultConfig : vaultConfigs) {
+      KmsSetupAlert kmsSetupAlert =
+          KmsSetupAlert.builder()
+              .kmsId(vaultConfig.getUuid())
+              .message(vaultConfig.getName()
+                  + "(Hashicorp Vault) is not able to encrypt/decrypt. Please check your setup and ensure that token is not expired")
+              .build();
+      try {
+        vaultService.encrypt(
+            VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
+        alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+      } catch (Exception e) {
+        logger.error("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
+        alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
     }
   }
