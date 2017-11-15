@@ -52,6 +52,10 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EnvironmentService environmentService;
 
+  protected abstract B getYamlBuilder();
+
+  protected abstract OrchestrationWorkflow constructOrchestrationWorkflow(WorkflowInfo workflowInfo);
+
   @Override
   public Workflow createFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
@@ -264,7 +268,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
 
       workflow.withAppId(appId)
           .withDescription(yaml.getDescription())
-          .withDefaultVersion(yaml.getDefaultVersion())
           .withEnvId(envId)
           .withName(yaml.getName())
           .withOrchestrationWorkflow(orchestrationWorkflow)
@@ -276,8 +279,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
       throw new HarnessException(ex);
     }
   }
-
-  protected abstract OrchestrationWorkflow constructOrchestrationWorkflow(WorkflowInfo workflowInfo);
 
   @Override
   public Y toYaml(Workflow workflow, String appId) {
@@ -362,8 +363,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
             .collect(Collectors.toList());
 
     B yamlBuilder = getYamlBuilder();
-    return yamlBuilder.withDefaultVersion(workflow.getDefaultVersion())
-        .withDescription(workflow.getDescription())
+    return yamlBuilder.withDescription(workflow.getDescription())
         .withEnvName(envName)
         .withName(workflow.getName())
         .withTemplateExpressions(templateExprYamlList)
@@ -378,8 +378,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
         .withFailureStrategies(failureStrategyYamlList)
         .build();
   }
-
-  protected abstract B getYamlBuilder();
 
   @Override
   public Workflow updateFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)

@@ -2,6 +2,8 @@ package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.stencils.DefaultValue;
 
 import java.util.List;
@@ -41,5 +43,33 @@ public class PortCheckListeningCommandUnit extends ExecCommandUnit {
   @Override
   public List<TailFilePatternEntry> getTailPatterns() {
     return super.getTailPatterns();
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends ExecCommandUnit.Yaml {
+    public static final class Builder extends ExecCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setWorkingDirectory(workingDirectory);
+        yaml.setCommand(command);
+        yaml.setFilePatternEntryList(filePatternEntryList);
+        yaml.setName(name);
+        yaml.setCommandUnitType(commandUnitType);
+        yaml.setDeploymentType(deploymentType);
+        return yaml;
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new Yaml();
+      }
+    }
   }
 }

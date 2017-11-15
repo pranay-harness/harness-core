@@ -2,6 +2,8 @@ package software.wings.beans.command;
 
 import com.google.inject.Inject;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
@@ -28,5 +30,22 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
       int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     return awsClusterService.resizeCluster(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceName,
         previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends ContainerOrchestrationCommandUnit.Yaml {
+    public static final class Builder extends ContainerOrchestrationCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new Yaml();
+      }
+    }
   }
 }

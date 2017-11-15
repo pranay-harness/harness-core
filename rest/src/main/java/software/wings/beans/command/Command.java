@@ -359,6 +359,7 @@ public class Command extends Base implements CommandUnit {
    */
   public static final class Builder {
     private String referenceId;
+    private String originEntityId;
     private Graph graph;
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
@@ -385,6 +386,11 @@ public class Command extends Base implements CommandUnit {
      */
     public Builder withReferenceId(String referenceId) {
       this.referenceId = referenceId;
+      return this;
+    }
+
+    public Builder withOriginEntityId(String originEntityId) {
+      this.originEntityId = originEntityId;
       return this;
     }
 

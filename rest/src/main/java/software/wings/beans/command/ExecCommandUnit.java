@@ -16,6 +16,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -280,6 +282,63 @@ public class ExecCommandUnit extends SshCommandUnit {
       execCommandUnit.setCommandString(commandString);
       execCommandUnit.setTailPatterns(tailPatterns);
       return execCommandUnit;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends SshCommandUnit.Yaml {
+    // maps to commandPath
+    private String workingDirectory;
+    // maps to commandString
+    private String command;
+    // maps to tailPatterns
+    private List<TailFilePatternEntry.Yaml> filePatternEntryList;
+
+    public static class Builder extends SshCommandUnit.Yaml.Builder {
+      // maps to commandPath
+      protected String workingDirectory;
+      // maps to command
+      protected String command;
+      // maps to tailPatterns
+      protected List<TailFilePatternEntry.Yaml> filePatternEntryList;
+
+      protected Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withWorkingDirectory(String workingDirectory) {
+        this.workingDirectory = workingDirectory;
+        return this;
+      }
+
+      public Builder withCommand(String command) {
+        this.command = command;
+        return this;
+      }
+
+      public Builder withFilePatternEntryList(List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+        this.filePatternEntryList = filePatternEntryList;
+        return this;
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setWorkingDirectory(workingDirectory);
+        yaml.setCommand(command);
+        yaml.setFilePatternEntryList(filePatternEntryList);
+        yaml.setName(name);
+        yaml.setCommandUnitType(commandUnitType);
+        yaml.setDeploymentType(deploymentType);
+        return yaml;
+      }
+
+      @Override
+      protected ExecCommandUnit.Yaml getCommandUnitYaml() {
+        return new ExecCommandUnit.Yaml();
+      }
     }
   }
 }

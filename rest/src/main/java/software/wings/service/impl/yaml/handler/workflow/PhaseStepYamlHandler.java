@@ -83,7 +83,6 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
 
     return PhaseStepBuilder.aPhaseStep(phaseStepType, yaml.getName())
         .addAllSteps(stepList)
-        .withArtifactNeeded(yaml.isArtifactNeeded())
         .withFailureStrategies(failureStrategies)
         .withPhaseStepNameForRollback(yaml.getPhaseStepNameForRollback())
         .withRollback(yaml.isRollback())
@@ -112,7 +111,6 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                                        .collect(Collectors.toList());
 
     return Yaml.Builder.anYaml()
-        .withArtifactNeeded(bean.isArtifactNeeded())
         .withFailureStrategies(failureStrategyYamlList)
         .withName(bean.getName())
         .withPhaseStepNameForRollback(bean.getPhaseStepNameForRollback())

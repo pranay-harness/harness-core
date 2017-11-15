@@ -72,7 +72,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
 
   private ArtifactStream.Yaml getArtifactStreamYamlObject(ArtifactStream artifactStream) {
     return (ArtifactStream.Yaml) yamlHandlerFactory
-        .getYamlHandler(YamlType.ARTIFACT_SOURCE, artifactStream.getArtifactStreamType())
+        .getYamlHandler(YamlType.ARTIFACT_STREAM, artifactStream.getArtifactStreamType())
         .toYaml(artifactStream, artifactStream.getAppId());
   }
 

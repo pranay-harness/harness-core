@@ -2,13 +2,13 @@ package software.wings.beans.yaml;
 
 import static software.wings.beans.yaml.YamlConstants.ANY;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SERVERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
-import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONNECTORS_FOLDER;
-import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SERVERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
@@ -43,7 +43,8 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.command.Command;
+import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.ServiceCommand;
 
 /**
  * @author rktummala on 10/17/17
@@ -77,7 +78,7 @@ public enum YamlType {
       generatePath(
           PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY), Service.class),
-  ARTIFACT_SOURCE(EntityType.ARTIFACT_STREAM.name(),
+  ARTIFACT_STREAM(EntityType.ARTIFACT_STREAM.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
           ARTIFACT_SOURCES_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
@@ -88,7 +89,7 @@ public enum YamlType {
           YAML_EXPRESSION),
       generatePath(
           PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, COMMANDS_FOLDER, ANY),
-      Command.class),
+      ServiceCommand.class),
   CONFIG_FILE(EntityType.CONFIG.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
           CONFIG_FILES_FOLDER, YAML_EXPRESSION),
@@ -132,7 +133,8 @@ public enum YamlType {
   NOTIFICATION_RULE(ObjectType.NOTIFICATION_RULE, "", "", NotificationRule.class),
   PIPELINE_STAGE(ObjectType.PIPELINE_STAGE, "", "", PipelineStage.class),
   // TODO this should have a path, when this yaml is migrated to the new model, make sure this is taken care of
-  NOTIFICATION_GROUP(ObjectType.NOTIFICATION_GROUP, "", "", NotificationGroup.class);
+  NOTIFICATION_GROUP(ObjectType.NOTIFICATION_GROUP, "", "", NotificationGroup.class),
+  COMMAND_UNIT(ObjectType.COMMAND_UNIT, "", "", AbstractCommandUnit.class);
 
   private String entityType;
   private String pathExpression;

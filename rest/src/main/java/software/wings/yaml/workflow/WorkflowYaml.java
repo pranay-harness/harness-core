@@ -24,7 +24,6 @@ public class WorkflowYaml extends BaseEntityYaml {
   private String description;
   private List<TemplateExpression.Yaml> templateExpressions;
   private String envName;
-  private int defaultVersion;
   private boolean templatized;
 
   private List<StepYaml> preDeploymentSteps = new ArrayList<>();
@@ -41,7 +40,6 @@ public class WorkflowYaml extends BaseEntityYaml {
     private String description;
     private List<Yaml> templateExpressions;
     private String envName;
-    private int defaultVersion;
     private boolean templatized;
     private List<StepYaml> preDeploymentSteps = new ArrayList<>();
     private List<WorkflowPhase.Yaml> phases = new ArrayList<>();
@@ -75,11 +73,6 @@ public class WorkflowYaml extends BaseEntityYaml {
 
     public Builder withEnvName(String envName) {
       this.envName = envName;
-      return this;
-    }
-
-    public Builder withDefaultVersion(int defaultVersion) {
-      this.defaultVersion = defaultVersion;
       return this;
     }
 
@@ -130,7 +123,6 @@ public class WorkflowYaml extends BaseEntityYaml {
       workflowYaml.setDescription(description);
       workflowYaml.setTemplateExpressions(templateExpressions);
       workflowYaml.setEnvName(envName);
-      workflowYaml.setDefaultVersion(defaultVersion);
       workflowYaml.setTemplatized(templatized);
       workflowYaml.setPreDeploymentSteps(preDeploymentSteps);
       workflowYaml.setPhases(phases);

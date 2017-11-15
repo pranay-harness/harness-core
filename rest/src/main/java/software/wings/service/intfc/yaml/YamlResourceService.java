@@ -29,13 +29,11 @@ public interface YamlResourceService {
   /**
    * Update by app, service and service command ids and yaml payload
    *
-   * @param appId     the app id
-   * @param serviceCommandId the service command id
+   * @param accountId     the account id
    * @param yamlPayload the yaml version of the service command
    * @return the service command
    */
-  RestResponse<ServiceCommand> updateServiceCommand(
-      @NotEmpty String appId, @NotEmpty String serviceCommandId, YamlPayload yamlPayload, boolean deleteEnabled);
+  RestResponse<ServiceCommand> updateServiceCommand(@NotEmpty String accountId, YamlPayload yamlPayload);
 
   /**
    * Gets the yaml version of a pipeline by pipelineId
