@@ -73,14 +73,16 @@ public class GitCommandCallback implements NotifyCallback {
         YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
         if (yamlChangeSet != null) {
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
-          yamlGitSyncService.saveCommit(GitCommit.builder()
-                                            .accountId(accountId)
-                                            .yamlChangeSet(yamlChangeSet)
-                                            .yamlGitConfigId(yamlGitConfigId)
-                                            .status(GitCommit.Status.COMPLETED)
-                                            .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
-                                            .gitCommandResult(gitCommitAndPushResult)
-                                            .build());
+          if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
+            yamlGitSyncService.saveCommit(GitCommit.builder()
+                                              .accountId(accountId)
+                                              .yamlChangeSet(yamlChangeSet)
+                                              .yamlGitConfigId(yamlGitConfigId)
+                                              .status(GitCommit.Status.COMPLETED)
+                                              .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
+                                              .gitCommandResult(gitCommitAndPushResult)
+                                              .build());
+          }
         }
       } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
