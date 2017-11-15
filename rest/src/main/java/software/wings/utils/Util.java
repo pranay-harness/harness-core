@@ -70,4 +70,11 @@ public class Util {
   public static String normalize(String input) {
     return input.replace('/', '_');
   }
+
+  public static String getStringFromEnum(Enum enumObject) {
+    if (enumObject != null) {
+      return enumObject.name();
+    }
+    return null;
+  }
 }

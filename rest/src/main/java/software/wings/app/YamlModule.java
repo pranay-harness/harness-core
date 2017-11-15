@@ -1,24 +1,9 @@
 package software.wings.app;
 
-import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
-import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
-import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
-import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMappingType.DIRECT_KUBERNETES;
-import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
-import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
-import static software.wings.beans.OrchestrationWorkflowType.CANARY;
-import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
-import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
-import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
-import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORYDOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
-import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
-import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.beans.InfrastructureMappingType.*;
+import static software.wings.beans.OrchestrationWorkflowType.*;
+import static software.wings.beans.artifact.ArtifactStreamType.*;
+import static software.wings.beans.command.CommandUnitType.*;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
@@ -39,6 +24,21 @@ import software.wings.service.impl.yaml.handler.artifactstream.EcrArtifactStream
 import software.wings.service.impl.yaml.handler.artifactstream.GcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.JenkinsArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.NexusArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.command.AwsLambdaCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.CodeDeployCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.CopyConfigCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.DockerStartCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.DockerStopCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.ExecCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.KubernetesResizeCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.PortCheckClearedCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.PortCheckListeningCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.ProcessCheckRunningCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.ProcessCheckStoppedCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.ResizeCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.ScpCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.SetupEnvCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsLambdaInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.CodeDeployInfraMappingYamlHandler;
@@ -109,5 +109,28 @@ public class YamlModule extends AbstractModule {
     workflowYamlHelperMapBinder.addBinding(BASIC.name()).to(BasicWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(CANARY.name()).to(CanaryWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(MULTI_SERVICE.name()).to(MultiServiceWorkflowYamlHandler.class);
+
+    MapBinder<String, CommandUnitYamlHandler> commandUnitYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, CommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(EXEC.name()).to(ExecCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(SCP.name()).to(ScpCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(COPY_CONFIGS.name()).to(CopyConfigCommandUnitYamlHandler.class);
+    //    commandUnitYamlHandlerMapBinder.addBinding(COMMAND.name()).to(CommandYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(SETUP_ENV.name()).to(SetupEnvCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(DOCKER_START.name()).to(DockerStartCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(DOCKER_STOP.name()).to(DockerStopCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(PROCESS_CHECK_RUNNING.name())
+        .to(ProcessCheckRunningCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(PROCESS_CHECK_STOPPED.name())
+        .to(ProcessCheckStoppedCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(PORT_CHECK_CLEARED.name())
+        .to(PortCheckClearedCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(PORT_CHECK_LISTENING.name())
+        .to(PortCheckListeningCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(RESIZE.name()).to(ResizeCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(CODE_DEPLOY.name()).to(CodeDeployCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(AWS_LAMBDA.name()).to(AwsLambdaCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(RESIZE_KUBERNETES.name())
+        .to(KubernetesResizeCommandUnitYamlHandler.class);
   }
 }
