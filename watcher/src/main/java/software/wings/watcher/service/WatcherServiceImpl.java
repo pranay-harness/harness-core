@@ -9,7 +9,6 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
@@ -59,19 +58,17 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject private UpgradeService upgradeService;
   @Inject private WatcherConfiguration watcherConfiguration;
   @Inject private MessageService messageService;
+  @Inject private AmazonS3Client amazonS3Client;
 
-  private AmazonS3Client amazonS3Client;
+  private BlockingQueue<Message> watcherMessages = new ArrayBlockingQueue<>(100);
   private boolean upgradePending;
   private boolean working;
-
   private List<String> runningDelegates;
-  private BlockingQueue<Message> watcherMessages = new ArrayBlockingQueue<>(100);
 
   @Override
   public void run(boolean upgrade) {
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
-      amazonS3Client = (AmazonS3Client) AmazonS3ClientBuilder.standard().withRegion("us-east-1").build();
       runningDelegates = Optional.ofNullable((List) messageService.getData("watcher-data", "running-delegates"))
                              .orElse(new ArrayList<>());
       messageService.writeMessage("watcher-started");
@@ -102,6 +99,12 @@ public class WatcherServiceImpl implements WatcherService {
     synchronized (waiter) {
       waiter.notify();
     }
+  }
+
+  @Override
+  public void resume() {
+    working = true;
+    upgradePending = false;
   }
 
   @Override
@@ -178,6 +181,7 @@ public class WatcherServiceImpl implements WatcherService {
                 logger.info("Watcher up to date");
               }
             } catch (Exception e) {
+              working = false;
               upgradePending = false;
               logger.error("[Old] Exception while checking for upgrade", e);
             }

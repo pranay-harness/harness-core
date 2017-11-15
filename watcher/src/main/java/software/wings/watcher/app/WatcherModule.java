@@ -6,6 +6,8 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.utils.message.MessageService;
@@ -56,5 +58,7 @@ public class WatcherModule extends AbstractModule {
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(Clock.class).toInstance(Clock.systemUTC());
+    bind(AmazonS3Client.class)
+        .toInstance((AmazonS3Client) AmazonS3ClientBuilder.standard().withRegion("us-east-1").build());
   }
 }
