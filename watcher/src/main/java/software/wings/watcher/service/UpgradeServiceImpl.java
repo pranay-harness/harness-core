@@ -70,12 +70,14 @@ public class UpgradeServiceImpl implements UpgradeService {
         }
       }
       if (!success) {
+        watcherService.resume();
         logger.error("[Old] Failed to upgrade watcher");
         process.getProcess().destroy();
         process.getProcess().waitFor();
       }
     } catch (Exception e) {
       e.printStackTrace();
+      watcherService.resume();
       logger.error("[Old] Exception while upgrading", e);
       if (process != null) {
         try {
