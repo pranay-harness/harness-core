@@ -14,6 +14,7 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -172,5 +172,40 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
     }
     final CopyConfigCommandUnit other = (CopyConfigCommandUnit) obj;
     return Objects.equals(this.destinationParentPath, other.destinationParentPath);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends AbstractCommandUnit.Yaml {
+    private String destinationParentPath;
+
+    public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
+      private String destinationParentPath;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withDestinationParentPath(String destinationParentPath) {
+        this.destinationParentPath = destinationParentPath;
+        return this;
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setName(name);
+        yaml.setCommandUnitType(commandUnitType);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setDestinationParentPath(destinationParentPath);
+        return yaml;
+      }
+
+      @Override
+      protected CopyConfigCommandUnit.Yaml getCommandUnitYaml() {
+        return new CopyConfigCommandUnit.Yaml();
+      }
+    }
   }
 }

@@ -1,6 +1,8 @@
 package software.wings.beans.command;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
@@ -26,4 +28,12 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
   }
 
   protected abstract CommandExecutionStatus executeInternal(SshCommandExecutionContext context);
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends AbstractCommandUnit.Yaml {
+    public static abstract class Builder extends AbstractCommandUnit.Yaml.Builder {
+      protected Builder() {}
+    }
+  }
 }

@@ -11,6 +11,8 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AppContainer;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -297,6 +299,51 @@ public class ScpCommandUnit extends SshCommandUnit {
     @Override
     public Map<String, String> getData(String appId, String... params) {
       return Stream.of(ScpFileCategory.values()).collect(toMap(ScpFileCategory::name, ScpFileCategory::getName));
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends SshCommandUnit.Yaml {
+    // maps to fileCategory
+    private String source;
+    private String destinationDirectoryPath;
+
+    public static final class Builder extends SshCommandUnit.Yaml.Builder {
+      // maps to fileCategory
+      private String source;
+      private String destinationDirectoryPath;
+
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Builder withSource(String source) {
+        this.source = source;
+        return this;
+      }
+
+      public Builder withDestinationDirectoryPath(String destinationDirectoryPath) {
+        this.destinationDirectoryPath = destinationDirectoryPath;
+        return this;
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setSource(source);
+        yaml.setDestinationDirectoryPath(destinationDirectoryPath);
+        yaml.setName(name);
+        yaml.setCommandUnitType(commandUnitType);
+        yaml.setDeploymentType(deploymentType);
+        return yaml;
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new Yaml();
+      }
     }
   }
 }

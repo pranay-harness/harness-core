@@ -10,6 +10,8 @@ import com.amazonaws.services.codedeploy.model.AutoRollbackConfiguration;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
@@ -117,5 +119,22 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
     executionLogCallback.saveExecutionLog(
         String.format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);
     return commandExecutionStatus;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends AbstractCommandUnit.Yaml {
+    public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new CodeDeployCommandUnit.Yaml();
+      }
+    }
   }
 }

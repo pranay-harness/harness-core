@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.sync;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
-import static software.wings.beans.yaml.YamlType.ARTIFACT_SOURCE;
+import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
 import static software.wings.beans.yaml.YamlType.COLLABORATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.COMMAND;
@@ -37,7 +37,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
@@ -84,7 +83,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
   private List<YamlType> getEntityProcessingOrder() {
     return Lists.newArrayList(CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER,
-        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_SOURCE, COMMAND, CONFIG_FILE, ENVIRONMENT, INFRA_MAPPING,
+        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, CONFIG_FILE, ENVIRONMENT, INFRA_MAPPING,
         CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
@@ -205,7 +204,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
           }
           break;
 
-        case ARTIFACT_SOURCE:
+        case ARTIFACT_STREAM:
           appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
           serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId)
@@ -377,10 +376,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
   private void processGitSyncFilesPostedToWebhook(String accountId, ChangeContext changeContext, String yamlSubType) {
     String settingAttributeId = null;
-    String appId = null;
-    String serviceCommandId = null;
     ChangeType changeType = changeContext.getChange().getChangeType();
-    String yamlFilePath = changeContext.getChange().getFilePath();
     String yaml = changeContext.getChange().getFileContent();
     YamlType yamlType = changeContext.getYamlType();
 
@@ -390,35 +386,6 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
     try {
       if (yamlType != null) {
         switch (yamlType) {
-            //          case "SetupYaml":
-            //            switch (changeType) {
-            //              case ADD:
-            //                throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "you cannot add (or
-            //                delete) Setup - only update.");
-            //              case MODIFY:
-            //                setupYamlResourceService.updateSetup(accountId, new YamlPayload(yaml), deleteEnabled);
-            //                break;
-            //              default:
-            //                throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not
-            //                recognized: " + changeType + ".");
-            //            }
-            //            break;
-
-          case COMMAND:
-            switch (changeType) {
-              case ADD:
-                ServiceCommand serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, new ServiceCommand());
-                appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
-                serviceCommandId = serviceCommand.getUuid();
-              case MODIFY:
-                yamlResourceService.updateServiceCommand(appId, serviceCommandId, new YamlPayload(yaml), deleteEnabled);
-                break;
-              default:
-                throw new WingsException(
-                    ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-            }
-            break;
-
           // cloud providers
           case CLOUD_PROVIDER:
             if (SettingVariableTypes.AWS.name().equals(yamlSubType)) {
