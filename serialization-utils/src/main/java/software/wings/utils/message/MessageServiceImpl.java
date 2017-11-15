@@ -106,6 +106,9 @@ public class MessageServiceImpl implements MessageService {
     try {
       File file = getMessageFile(sourceType, sourceProcessId);
       long lastReadTimestamp = Optional.ofNullable(timestamps.get(file)).orElse(0L);
+      if (!file.exists()) {
+        FileUtils.touch(file);
+      }
       LineIterator reader = FileUtils.lineIterator(file);
       return timeLimiter.callWithTimeout(() -> {
         while (reader.hasNext()) {
