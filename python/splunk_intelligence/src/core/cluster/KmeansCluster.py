@@ -1,8 +1,10 @@
-import numpy as np
 import logging
+
+import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
-from JaccardDistance import pairwise_jaccard_similarity
+
+from core.distance.JaccardDistance import pairwise_jaccard_similarity
 
 """
 Wrapper class for Kmeans clustering

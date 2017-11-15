@@ -1,5 +1,7 @@
-from core.SimpleDistanceClassifier import SimpleDistanceClassifier
 import numpy as np
+
+from core.classifier.SimpleDistanceClassifier import SimpleDistanceClassifier
+
 
 def test_fit():
     spc = SimpleDistanceClassifier()

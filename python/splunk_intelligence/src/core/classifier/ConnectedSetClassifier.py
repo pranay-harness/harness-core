@@ -4,7 +4,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
-from FrequencyAnomalyDetector import FrequencyAnomalyDetector
+from core.anomaly.FrequencyAnomalyDetector import FrequencyAnomalyDetector
 
 
 class ConnectedSetClassifier(object):
