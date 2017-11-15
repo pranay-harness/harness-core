@@ -7,6 +7,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.simpleframework.xml.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsDeque;
 
@@ -67,6 +68,8 @@ public class StateExecutionInstance extends Base {
 
   @Transient private String workflowId;
 
+  private OrchestrationWorkflowType orchestrationWorkflowType;
+
   public StateExecutionData getStateExecutionData() {
     return stateExecutionMap.get(stateName);
   }
@@ -87,6 +90,7 @@ public class StateExecutionInstance extends Base {
     private StateMachineExecutionCallback callback;
     private String executionName;
     private WorkflowType executionType;
+    private OrchestrationWorkflowType orchestrationWorkflowType;
     private String executionUuid;
     private String parentInstanceId;
     private String prevInstanceId;
@@ -275,6 +279,17 @@ public class StateExecutionInstance extends Base {
     }
 
     /**
+     * With execution type builder.
+     *
+     * @param orchestrationWorkflowType the execution type
+     * @return the builder
+     */
+    public Builder withOrchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
+      this.orchestrationWorkflowType = orchestrationWorkflowType;
+      return this;
+    }
+
+    /**
      * With execution uuid builder.
      *
      * @param executionUuid the execution uuid
@@ -457,6 +472,7 @@ public class StateExecutionInstance extends Base {
           .withCallback(callback)
           .withExecutionName(executionName)
           .withExecutionType(executionType)
+          .withOrchestrationWorkflowType(orchestrationWorkflowType)
           .withExecutionUuid(executionUuid)
           .withParentInstanceId(parentInstanceId)
           .withPrevInstanceId(prevInstanceId)
@@ -493,6 +509,7 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setCallback(callback);
       stateExecutionInstance.setExecutionName(executionName);
       stateExecutionInstance.setExecutionType(executionType);
+      stateExecutionInstance.setOrchestrationWorkflowType(orchestrationWorkflowType);
       stateExecutionInstance.setExecutionUuid(executionUuid);
       stateExecutionInstance.setParentInstanceId(parentInstanceId);
       stateExecutionInstance.setPrevInstanceId(prevInstanceId);

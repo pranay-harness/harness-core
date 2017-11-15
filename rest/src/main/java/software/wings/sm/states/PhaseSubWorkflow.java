@@ -90,6 +90,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           }
           infrastructureMapping =
               templateExpressionProcessor.resolveInfraMapping(context, app, finalServiceId, templateExpression);
+          Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
         }
       }
     }
@@ -98,30 +99,36 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         throw new WingsException("Service templatized so service infrastructure should be templatized");
       }
     } else {
-      service = serviceResourceService.get(app.getAppId(), serviceId, false);
+      if (serviceId != null) {
+        service = serviceResourceService.get(app.getAppId(), serviceId, false);
+        Validator.notNullCheck("Service", service);
+      }
     }
-    Validator.notNullCheck("Service", service);
     if (infraMappingIdExpression == null) {
-      infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+      if (infraMappingId != null) {
+        infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+        Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
+      }
     }
-    Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
 
     ExecutionResponse response = getSpawningExecutionResponse(context, service, infrastructureMapping);
 
-    PhaseExecutionData phaseExecutionData =
-        aPhaseExecutionData()
-            .withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
-            .withComputeProviderName(infrastructureMapping.getComputeProviderName())
-            .withComputeProviderType(
-                SettingValue.SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType())
-                    .getDisplayName())
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withInfraMappingName(infrastructureMapping.getName())
-            .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).getDisplayName())
-            .withServiceId(service.getUuid())
-            .withServiceName(service.getName())
-            .build();
-    if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
+    PhaseExecutionData.PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
+    if (infrastructureMapping != null) {
+      phaseExecutionDataBuilder.withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
+          .withComputeProviderName(infrastructureMapping.getComputeProviderName())
+          .withComputeProviderType(
+              SettingValue.SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType())
+                  .getDisplayName())
+          .withInfraMappingId(infrastructureMapping.getUuid())
+          .withInfraMappingName(infrastructureMapping.getName())
+          .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).getDisplayName());
+    }
+    if (service != null) {
+      phaseExecutionDataBuilder.withServiceId(service.getUuid()).withServiceName(service.getName());
+    }
+    PhaseExecutionData phaseExecutionData = phaseExecutionDataBuilder.build();
+    if (infrastructureMapping != null && infrastructureMapping instanceof ContainerInfrastructureMapping) {
       phaseExecutionData.setClusterName(((ContainerInfrastructureMapping) infrastructureMapping).getClusterName());
 
       StateExecutionData stateExecutionData = context.getStateExecutionData();
@@ -161,17 +168,19 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   private StateExecutionInstance getSpawningInstance(
       StateExecutionInstance stateExecutionInstance, Service service, InfrastructureMapping infrastructureMapping) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
-    ServiceElement serviceElement = new ServiceElement();
-    MapperUtils.mapObject(service, serviceElement);
-    PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(getId())
-                                    .withServiceElement(serviceElement)
-                                    .withDeploymentType(infrastructureMapping.getDeploymentType())
-                                    .withInfraMappingId(infrastructureMapping.getUuid())
-                                    .withPhaseNameForRollback(phaseNameForRollback)
-                                    .build();
-    spawningInstance.getContextElements().push(phaseElement);
-    spawningInstance.setContextElement(phaseElement);
+    if (service != null) {
+      ServiceElement serviceElement = new ServiceElement();
+      MapperUtils.mapObject(service, serviceElement);
+      PhaseElement phaseElement = aPhaseElement()
+                                      .withUuid(getId())
+                                      .withServiceElement(serviceElement)
+                                      .withDeploymentType(infrastructureMapping.getDeploymentType())
+                                      .withInfraMappingId(infrastructureMapping.getUuid())
+                                      .withPhaseNameForRollback(phaseNameForRollback)
+                                      .build();
+      spawningInstance.getContextElements().push(phaseElement);
+      spawningInstance.setContextElement(phaseElement);
+    }
 
     return spawningInstance;
   }

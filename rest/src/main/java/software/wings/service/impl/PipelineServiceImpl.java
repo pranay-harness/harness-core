@@ -24,7 +24,9 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.EntityType;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
@@ -71,6 +73,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class PipelineServiceImpl implements PipelineService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
@@ -81,8 +84,6 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private TriggerService triggerService;
   @Inject private EntityUpdateService entityUpdateService;
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * {@inheritDoc}
@@ -252,12 +253,38 @@ public class PipelineServiceImpl implements PipelineService {
     return createPipeline(clonedPipleline);
   }
 
+  @Override
+  public List<EntityType> getRequiredEntities(String appId, String pipelineId) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Validator.notNullCheck("pipeline", pipeline);
+    List<EntityType> entityTypes = new ArrayList<>();
+    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
+          Workflow workflow = workflowService.readWorkflow(
+              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+          if (orchestrationWorkflow != null) {
+            if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BUILD)) {
+              return new ArrayList<>();
+            }
+          }
+          if (orchestrationWorkflow.getRequiredEntityTypes() != null) {
+            entityTypes.addAll(orchestrationWorkflow.getRequiredEntityTypes());
+          }
+        }
+      }
+    }
+    return entityTypes;
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
   public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Validator.notNullCheck("pipeline", pipeline);
     if (withServices) {
       populateAssociatedWorkflowServices(pipeline);
     }
@@ -340,6 +367,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
     return getServices(workflow, serviceIds.stream().distinct().collect(toList()));
   }
+
   private void validatePipelineEnvState(
       Workflow workflow, PipelineStageElement pipelineStageElement, List<String> invalidWorkflows) {
     Map<String, String> pseWorkflowVariables = pipelineStageElement.getWorkflowVariables();
@@ -372,6 +400,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
     return new ArrayList<>();
   }
+
   @Override
   public Pipeline createPipeline(Pipeline pipeline) {
     validatePipeline(pipeline);
@@ -403,11 +432,20 @@ public class PipelineServiceImpl implements PipelineService {
       }
 
       for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
-        if (ENV_STATE.name().equals(stageElement.getType())
-            && (isNullOrEmpty((String) stageElement.getProperties().get("envId"))
-                   || isNullOrEmpty((String) stageElement.getProperties().get("workflowId")))) {
-          throw new WingsException(
-              INVALID_ARGUMENT, "args", "Workflow or Environment can not be null for Environment state");
+        if (!ENV_STATE.name().equals(stageElement.getType())) {
+          continue;
+        }
+        if (isNullOrEmpty((String) stageElement.getProperties().get("workflowId"))) {
+          throw new WingsException(INVALID_ARGUMENT, "args", "Workflow can not be null for Environment state");
+        }
+        Workflow workflow =
+            workflowService.readWorkflow(pipeline.getAppId(), (String) stageElement.getProperties().get("workflowId"));
+        if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+          throw new WingsException(INVALID_ARGUMENT, "args", "Workflow can not be null for Environment state");
+        }
+        if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != OrchestrationWorkflowType.BUILD
+            && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
+          throw new WingsException(INVALID_ARGUMENT, "args", "Environment can not be null for non-build state");
         }
       }
     }

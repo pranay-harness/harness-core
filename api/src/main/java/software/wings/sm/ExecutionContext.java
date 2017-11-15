@@ -5,6 +5,7 @@
 package software.wings.sm;
 
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowType;
 import software.wings.settings.SettingValue;
 
@@ -117,6 +118,13 @@ public interface ExecutionContext {
   WorkflowType getWorkflowType();
 
   /**
+   * Gets workflow type.
+   *
+   * @return the orchestration workflow type
+   */
+  OrchestrationWorkflowType getOrchestrationWorkflowType();
+
+  /**
    * Gets state execution instance id.
    *
    * @return the state execution instance id
@@ -139,7 +147,26 @@ public interface ExecutionContext {
    */
   Map<String, String> getServiceVariables();
 
+  /**
+   *
+   * @return
+   */
   Map<String, String> getSafeDisplayServiceVariables();
 
+  /**
+   *
+   * @param name
+   * @param type
+   * @return
+   */
   SettingValue getSettingValue(String name, String type);
+
+  /***
+   * Get SettingValueByAppId
+   * @param accountId
+   * @param settingId
+   * @param type
+   * @return
+   */
+  SettingValue getGlobalSettingValue(String accountId, String settingId, String type);
 }

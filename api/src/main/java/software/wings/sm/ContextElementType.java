@@ -66,5 +66,7 @@ public enum ContextElementType {
    */
   CLUSTER,
 
-  AWS_LAMBDA_FUNCTION;
+  AWS_LAMBDA_FUNCTION,
+
+  ARTIFACT;
 }

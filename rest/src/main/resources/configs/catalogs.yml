@@ -99,6 +99,8 @@ CONTAINER_FAMILY:
 WORKFLOW_ORCHESTRATION_TYPE:
     - name: Basic
       value: BASIC
+    - name: Build
+      value: BUILD
     - name: Multi-Service
       value: MULTI_SERVICE
     - name: Canary

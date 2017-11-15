@@ -10,12 +10,12 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Activity;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 
 import java.util.List;
 
@@ -27,8 +27,8 @@ public class AwsLambdaRollback extends AwsLambdaState {
   }
 
   @Override
-  protected Artifact getArtifact(
-      String appId, String serviceId, String workflowExecutionId, WorkflowStandardParams workflowStandardParams) {
+  protected Artifact getArtifact(String appId, String serviceId, String workflowExecutionId,
+      DeploymentExecutionContext deploymentExecutionContext) {
     PageResponse<Activity> pageResponse =
         activityService.list(aPageRequest()
                                  .withLimit("1")
