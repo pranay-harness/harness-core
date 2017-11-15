@@ -49,7 +49,6 @@ public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final Object waiter = new Object();
 
-  @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject private ExecutorService executorService;
@@ -61,7 +60,6 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject private AmazonS3Client amazonS3Client;
 
   private BlockingQueue<Message> watcherMessages = new ArrayBlockingQueue<>(100);
-  private boolean upgradePending;
   private boolean working;
   private List<String> runningDelegates;
 
@@ -80,7 +78,6 @@ public class WatcherServiceImpl implements WatcherService {
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
 
-      startWatcherUpgradeCheck();
       startWatching();
 
       logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
@@ -141,107 +138,100 @@ public class WatcherServiceImpl implements WatcherService {
     }, 0, 1, TimeUnit.SECONDS);
   }
 
-  private void startWatcherUpgradeCheck() {
+  private void startWatching() {
+    watchExecutor.scheduleWithFixedDelay(() -> {
+      if (!working) {
+        checkForUpgrade();
+      }
+      if (!working) {
+        watchDelegate();
+      }
+    }, 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void checkForUpgrade() {
     if (!watcherConfiguration.isDoUpgrade()) {
       logger.info("Auto upgrade is disabled in watcher configuration");
       logger.info("Watcher stays on version: [{}]", getVersion());
       return;
     }
-
-    logger.info(
-        "Starting watcher upgrade check at interval {} seconds", watcherConfiguration.getUpgradeCheckIntervalSeconds());
-    upgradeExecutor.scheduleWithFixedDelay(
-        ()
-            -> {
-          if (working) {
-            return;
-          }
-          logger.info("Checking for upgrade");
-          try {
-            String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-            String bucketName =
-                watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-            String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
-            S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
-            String watcherMetadata = reader.readLine();
-            reader.close();
-            String latestVersion = substringBefore(watcherMetadata, " ").trim();
-            String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-            String version = getVersion();
-            boolean upgrade = !StringUtils.equals(version, latestVersion);
-            if (upgrade) {
-              logger.info("[Old] Upgrading watcher");
-              working = true;
-              S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
-              upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
-            } else {
-              logger.info("Watcher up to date");
-            }
-          } catch (Exception e) {
-            working = false;
-            logger.error("[Old] Exception while checking for upgrade", e);
-          }
-        },
-        watcherConfiguration.getUpgradeCheckIntervalSeconds(), watcherConfiguration.getUpgradeCheckIntervalSeconds(),
-        TimeUnit.SECONDS);
+    logger.info("Checking for upgrade");
+    try {
+      String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
+      String bucketName =
+          watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
+      String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
+      S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
+      BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
+      String watcherMetadata = reader.readLine();
+      reader.close();
+      String latestVersion = substringBefore(watcherMetadata, " ").trim();
+      String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
+      String version = getVersion();
+      boolean upgrade = !StringUtils.equals(version, latestVersion);
+      if (upgrade) {
+        logger.info("[Old] Upgrading watcher");
+        working = true;
+        S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
+        upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
+      } else {
+        logger.info("Watcher up to date");
+      }
+    } catch (Exception e) {
+      working = false;
+      logger.error("[Old] Exception while checking for upgrade", e);
+    }
   }
 
-  private void startWatching() {
-    watchExecutor.scheduleWithFixedDelay(() -> {
-      if (working) {
-        return;
-      }
-      try {
-        messageService.listDataNames(DELEGATE)
-            .stream()
-            .map(s -> s.substring(DELEGATE.length()))
-            .filter(s -> !runningDelegates.contains(s))
-            .forEach(process -> messageService.closeData(process));
+  private void watchDelegate() {
+    try {
+      messageService.listDataNames(DELEGATE)
+          .stream()
+          .map(s -> s.substring(DELEGATE.length()))
+          .filter(s -> !runningDelegates.contains(s))
+          .forEach(process -> messageService.closeData(process));
 
-        if (isEmpty(runningDelegates)) {
-          working = true;
-          startDelegate();
-        } else {
-          List<String> obsolete = new ArrayList<>();
-          for (String delegateProcess : runningDelegates) {
-            Map<String, Object> delegateData = messageService.getAllData(DELEGATE + delegateProcess);
-            if (delegateData != null && !delegateData.isEmpty()) {
-              long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
-              boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
-              boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
-              boolean shutdownPending =
-                  Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
-              long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
+      if (isEmpty(runningDelegates)) {
+        working = true;
+        startDelegate();
+      } else {
+        List<String> obsolete = new ArrayList<>();
+        for (String delegateProcess : runningDelegates) {
+          Map<String, Object> delegateData = messageService.getAllData(DELEGATE + delegateProcess);
+          if (delegateData != null && !delegateData.isEmpty()) {
+            long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
+            boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
+            boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
+            boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
+            long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
 
-              if (shutdownPending) {
-                working = true;
-                if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
-                  shutdownDelegate(delegateProcess);
-                }
-              } else if (clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
-                working = true;
-                messageService.putData(DELEGATE + delegateProcess, "shutdownPending", true);
-                messageService.putData(DELEGATE + delegateProcess, "shutdownStarted", clock.millis());
-                restartDelegate(delegateProcess);
-              } else if (restartNeeded) {
-                working = true;
-                restartDelegate(delegateProcess);
-              } else if (upgradeNeeded) {
-                working = true;
-                upgradeDelegate(delegateProcess);
+            if (shutdownPending) {
+              working = true;
+              if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
+                shutdownDelegate(delegateProcess);
               }
-            } else {
-              obsolete.add(delegateProcess);
+            } else if (clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
+              working = true;
+              messageService.putData(DELEGATE + delegateProcess, "shutdownPending", true);
+              messageService.putData(DELEGATE + delegateProcess, "shutdownStarted", clock.millis());
+              restartDelegate(delegateProcess);
+            } else if (restartNeeded) {
+              working = true;
+              restartDelegate(delegateProcess);
+            } else if (upgradeNeeded) {
+              working = true;
+              upgradeDelegate(delegateProcess);
             }
+          } else {
+            obsolete.add(delegateProcess);
           }
-          runningDelegates.removeAll(obsolete);
-          messageService.putData("watcher-data", "running-delegates", runningDelegates);
         }
-      } catch (Exception e) {
-        logger.error("Error processing delegate stream: {}", e.getMessage(), e);
+        runningDelegates.removeAll(obsolete);
+        messageService.putData("watcher-data", "running-delegates", runningDelegates);
       }
-    }, 0, 5, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      logger.error("Error processing delegate stream: {}", e.getMessage(), e);
+    }
   }
 
   private void startDelegate() {
