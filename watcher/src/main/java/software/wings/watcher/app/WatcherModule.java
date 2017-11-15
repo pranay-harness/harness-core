@@ -36,10 +36,6 @@ public class WatcherModule extends AbstractModule {
   protected void configure() {
     bind(WatcherService.class).to(WatcherServiceImpl.class);
     bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("upgradeExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("UpgradeCheck-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("inputExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("InputCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
