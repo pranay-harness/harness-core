@@ -7,6 +7,7 @@ import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.ObjectId;
@@ -178,6 +179,9 @@ public class GitClientImpl implements GitClient {
                     .setUpstreamMode(SetupUpstreamMode.TRACK)
                     .setStartPoint("origin/" + gitConfig.getBranch())
                     .call();
+      return GitCheckoutResult.builder().build();
+    } catch (RefAlreadyExistsException refExIgnored) {
+      logger.info("Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
