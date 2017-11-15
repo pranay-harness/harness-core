@@ -10,9 +10,9 @@ import scipy.sparse as sps
 from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
-from core.JaccardDistance import pairwise_jaccard_similarity
-from core.TFIDFVectorizer import TFIDFVectorizer
-from core.Tokenizer import Tokenizer
+from core.distance.JaccardDistance import pairwise_jaccard_similarity
+from core.feature.TFIDFVectorizer import TFIDFVectorizer
+from core.feature.Tokenizer import Tokenizer
 from sources.SplunkFileSource import SplunkFileSource
 from sources.SplunkHarnessLoader import SplunkHarnessLoader
 
