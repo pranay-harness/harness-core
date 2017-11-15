@@ -228,7 +228,14 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public List<String> listDataNames(@Nullable String prefix) {
-    return FileUtils.listFiles(new File(ROOT + DATA), new PrefixFileFilter(prefix == null ? "" : prefix), null)
+    File dataDirectory = new File(ROOT + DATA);
+    try {
+      FileUtils.forceMkdir(dataDirectory);
+    } catch (IOException e) {
+      logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
+      return null;
+    }
+    return FileUtils.listFiles(dataDirectory, new PrefixFileFilter(prefix == null ? "" : prefix), null)
         .stream()
         .map(File::getName)
         .collect(Collectors.toList());
@@ -275,22 +282,6 @@ public class MessageServiceImpl implements MessageService {
       logger.error("Error closing data: {}", name, e);
     }
   }
-
-  //  private LineIterator getMessageReader(MessengerType type, String id) throws IOException {
-  //    File file = getMessageFile(type, id);
-  //    LineIterator reader;
-  //    if (timestamps.containsKey(file)) {
-  //      long timestamp
-  //      reader = readers.get(file);
-  //    } else {
-  //      if (!file.exists()) {
-  //        FileUtils.touch(file);
-  //      }
-  //      reader = FileUtils.lineIterator(file);
-  //      readers.put(file, reader);
-  //    }
-  //    return reader;
-  //  }
 
   private File getMessageFile(MessengerType type, String id) throws IOException {
     File file = new File(ROOT + IO + type.name().toLowerCase() + "/" + id);
