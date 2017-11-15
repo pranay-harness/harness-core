@@ -59,7 +59,8 @@ public class DelegateApplication {
       // Watched path
       String watcherProcess = args[2];
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        Guice.createInjector(new DelegateModule()).getInstance(MessageService.class).closeChannel(DELEGATE, processId);
+        MessageService messageService = Guice.createInjector(new DelegateModule()).getInstance(MessageService.class);
+        messageService.closeChannel(DELEGATE, processId);
         logger.info("Log manager shutdown hook executing.");
         LogManager.shutdown();
       }));
