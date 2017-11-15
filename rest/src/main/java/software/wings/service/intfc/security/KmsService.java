@@ -25,7 +25,7 @@ public interface KmsService {
 
   boolean deleteKmsConfig(String accountId, String kmsConfigId);
 
-  Collection<KmsConfig> listKmsConfigs(String accountId);
+  Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret);
 
   boolean transitionKms(String accountId, String fromKmsId, String toKmsId);
 

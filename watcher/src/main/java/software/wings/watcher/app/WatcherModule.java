@@ -39,5 +39,6 @@ public class WatcherModule extends AbstractModule {
         .toInstance(
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(Clock.class).toInstance(Clock.systemUTC());
   }
 }

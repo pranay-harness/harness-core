@@ -233,6 +233,7 @@ import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import java.time.Clock;
 import javax.inject.Singleton;
 
 /**
@@ -351,6 +352,7 @@ public class WingsModule extends AbstractModule {
     bind(SecretManager.class).to(SecretManagerImpl.class);
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
+    bind(Clock.class).toInstance(Clock.systemUTC());
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

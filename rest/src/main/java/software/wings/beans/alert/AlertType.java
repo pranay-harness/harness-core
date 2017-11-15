@@ -13,7 +13,8 @@ public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalAlert.class),
   ManualInterventionNeeded(ManualIntervention, Warning, ManualInterventionNeededAlert.class),
   NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class),
-  NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class);
+  NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),
+  InvalidKMS(Setup, Error, KmsSetupAlert.class);
 
   private AlertCategory category;
   private AlertSeverity severity;

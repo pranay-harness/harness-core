@@ -365,4 +365,8 @@ CONNECTOR_TYPES:
       value: SMTP
     - name: SLACK
       value: SLACK
+    - name: GIT
+      value: GIT
+    - name: ELB
+      value: ELB
 
