@@ -30,6 +30,7 @@ public class ExecutionArgs {
   private boolean triggeredFromPipeline;
   private String pipelineId;
   private Map<String, String> workflowVariables;
+  private String notes;
   private EmbeddedUser triggeredBy;
 
   /**
@@ -260,6 +261,14 @@ public class ExecutionArgs {
 
   public void setWorkflowVariables(Map<String, String> workflowVariables) {
     this.workflowVariables = workflowVariables;
+  }
+
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
   }
 
   /**

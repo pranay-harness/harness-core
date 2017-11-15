@@ -10,5 +10,7 @@ public interface WatcherService {
 
   void stop();
 
+  void resume();
+
   Message waitForIncomingMessage(String messageName, long timeout);
 }
