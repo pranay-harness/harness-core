@@ -21,14 +21,14 @@ import java.util.List;
 @Builder
 public class EmailData extends Queuable {
   private String accountId;
-  private List<String> to = Lists.newArrayList();
-  private List<String> cc = Lists.newArrayList();
+  @Builder.Default private List<String> to = Lists.newArrayList();
+  @Builder.Default private List<String> cc = Lists.newArrayList();
   private String subject;
   private String body;
   private String templateName;
   private Object templateModel;
-  private boolean hasHtml = true;
-  private boolean system = false;
+  @Builder.Default private boolean hasHtml = true;
+  @Builder.Default private boolean system = false;
   private String appId;
   private String workflowExecutionId;
 }
