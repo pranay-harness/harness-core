@@ -311,6 +311,7 @@ public class WatcherServiceImpl implements WatcherService {
       try {
         new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
         messageService.closeData(DELEGATE + delegateProcess);
+        messageService.closeChannel(MessengerType.DELEGATE, delegateProcess);
         runningDelegates.remove(delegateProcess);
         messageService.putData("watcher-data", "running-delegates", runningDelegates);
       } catch (Exception e) {

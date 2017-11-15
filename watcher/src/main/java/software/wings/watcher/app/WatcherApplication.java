@@ -58,7 +58,8 @@ public class WatcherApplication {
     }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      Guice.createInjector(new WatcherModule()).getInstance(MessageService.class).closeChannel(WATCHER, processId);
+      MessageService messageService = Guice.createInjector(new WatcherModule()).getInstance(MessageService.class);
+      messageService.closeChannel(WATCHER, processId);
       logger.info("My watch has ended");
       LogManager.shutdown();
     }));
