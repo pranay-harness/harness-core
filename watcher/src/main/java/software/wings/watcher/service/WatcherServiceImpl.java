@@ -6,7 +6,6 @@ import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
@@ -38,10 +37,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by brett on 10/26/17
@@ -55,6 +54,9 @@ public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final Object waiter = new Object();
 
+  @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
+  @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
+  @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
@@ -124,7 +126,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void startInputCheck() {
-    newScheduledExecutor("InputCheck-Thread", Thread.NORM_PRIORITY).scheduleWithFixedDelay(() -> {
+    inputExecutor.scheduleWithFixedDelay(() -> {
       Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
       if (message != null) {
         while (!watcherMessages.offer(message)) {
@@ -147,47 +149,46 @@ public class WatcherServiceImpl implements WatcherService {
 
     logger.info(
         "Starting watcher upgrade check at interval {} seconds", watcherConfiguration.getUpgradeCheckIntervalSeconds());
-    newScheduledExecutor("UpgradeCheck-Thread", Thread.NORM_PRIORITY)
-        .scheduleWithFixedDelay(
-            ()
-                -> {
-              if (upgradePending) {
-                logger.info("[Old] Upgrade is pending...");
+    upgradeExecutor.scheduleWithFixedDelay(
+        ()
+            -> {
+          if (upgradePending) {
+            logger.info("[Old] Upgrade is pending...");
+          } else {
+            logger.info("Checking for upgrade");
+            try {
+              String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
+              String bucketName = watcherMetadataUrl.substring(
+                  watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
+              String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
+              S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
+              BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
+              String watcherMetadata = reader.readLine();
+              reader.close();
+              String latestVersion = substringBefore(watcherMetadata, " ").trim();
+              String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
+              String version = getVersion();
+              boolean upgrade = !StringUtils.equals(version, latestVersion);
+              if (upgrade) {
+                logger.info("[Old] Upgrading watcher");
+                upgradePending = true;
+                S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
+                upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
               } else {
-                logger.info("Checking for upgrade");
-                try {
-                  String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-                  String bucketName = watcherMetadataUrl.substring(
-                      watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-                  String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
-                  S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
-                  BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
-                  String watcherMetadata = reader.readLine();
-                  reader.close();
-                  String latestVersion = substringBefore(watcherMetadata, " ").trim();
-                  String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-                  String version = getVersion();
-                  boolean upgrade = !StringUtils.equals(version, latestVersion);
-                  if (upgrade) {
-                    logger.info("[Old] Upgrading watcher");
-                    upgradePending = true;
-                    S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
-                    upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
-                  } else {
-                    logger.info("Watcher up to date");
-                  }
-                } catch (Exception e) {
-                  upgradePending = false;
-                  logger.error("[Old] Exception while checking for upgrade", e);
-                }
+                logger.info("Watcher up to date");
               }
-            },
-            watcherConfiguration.getUpgradeCheckIntervalSeconds(),
-            watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
+            } catch (Exception e) {
+              upgradePending = false;
+              logger.error("[Old] Exception while checking for upgrade", e);
+            }
+          }
+        },
+        watcherConfiguration.getUpgradeCheckIntervalSeconds(), watcherConfiguration.getUpgradeCheckIntervalSeconds(),
+        TimeUnit.SECONDS);
   }
 
   private void startWatching() {
-    newScheduledExecutor("Watch-Thread", Thread.MAX_PRIORITY).scheduleWithFixedDelay(() -> {
+    watchExecutor.scheduleWithFixedDelay(() -> {
       try {
         PipedInputStream pipedInputStream = new PipedInputStream();
         new ProcessExecutor()
@@ -317,11 +318,6 @@ public class WatcherServiceImpl implements WatcherService {
         logger.error("Error killing delegate {}", delegateProcess, e);
       }
     });
-  }
-
-  private ScheduledExecutorService newScheduledExecutor(String nameformat, int priority) {
-    return new ScheduledThreadPoolExecutor(
-        1, new ThreadFactoryBuilder().setNameFormat(nameformat).setPriority(priority).build());
   }
 
   private String getVersion() {
