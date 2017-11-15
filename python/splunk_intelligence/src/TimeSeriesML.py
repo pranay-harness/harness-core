@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from core.SAXHMMDistance import SAXHMMDistanceFinder
-from core.TimeSeriesUtils import MetricType, get_deviation_type, smooth, simple_average, get_deviation_min_threshold
+from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
+from core.util.TimeSeriesUtils import MetricType, get_deviation_type, simple_average, get_deviation_min_threshold
 from sources.NewRelicSource import NewRelicSource
 from sources.SplunkHarnessLoader import SplunkHarnessLoader
 

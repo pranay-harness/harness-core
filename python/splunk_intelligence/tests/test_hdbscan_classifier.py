@@ -1,5 +1,6 @@
-from core.HDBScanClassifier import HDBScanClassifier
 import numpy as np
+
+from core.classifier.HDBScanClassifier import HDBScanClassifier
 
 
 def test_anomaly():
