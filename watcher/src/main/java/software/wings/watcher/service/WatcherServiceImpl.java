@@ -103,8 +103,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   @Override
   public void resume() {
-    working = true;
-    upgradePending = false;
+    working = false;
   }
 
   @Override
@@ -154,37 +153,34 @@ public class WatcherServiceImpl implements WatcherService {
     upgradeExecutor.scheduleWithFixedDelay(
         ()
             -> {
-          if (upgradePending) {
-            logger.info("[Old] Upgrade is pending...");
-          } else {
-            logger.info("Checking for upgrade");
-            try {
-              String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-              String bucketName = watcherMetadataUrl.substring(
-                  watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-              String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
-              S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
-              BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
-              String watcherMetadata = reader.readLine();
-              reader.close();
-              String latestVersion = substringBefore(watcherMetadata, " ").trim();
-              String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-              String version = getVersion();
-              boolean upgrade = !StringUtils.equals(version, latestVersion);
-              if (upgrade) {
-                logger.info("[Old] Upgrading watcher");
-                working = true;
-                upgradePending = true;
-                S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
-                upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
-              } else {
-                logger.info("Watcher up to date");
-              }
-            } catch (Exception e) {
-              working = false;
-              upgradePending = false;
-              logger.error("[Old] Exception while checking for upgrade", e);
+          if (working) {
+            return;
+          }
+          logger.info("Checking for upgrade");
+          try {
+            String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
+            String bucketName =
+                watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
+            String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
+            S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
+            String watcherMetadata = reader.readLine();
+            reader.close();
+            String latestVersion = substringBefore(watcherMetadata, " ").trim();
+            String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
+            String version = getVersion();
+            boolean upgrade = !StringUtils.equals(version, latestVersion);
+            if (upgrade) {
+              logger.info("[Old] Upgrading watcher");
+              working = true;
+              S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
+              upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
+            } else {
+              logger.info("Watcher up to date");
             }
+          } catch (Exception e) {
+            working = false;
+            logger.error("[Old] Exception while checking for upgrade", e);
           }
         },
         watcherConfiguration.getUpgradeCheckIntervalSeconds(), watcherConfiguration.getUpgradeCheckIntervalSeconds(),

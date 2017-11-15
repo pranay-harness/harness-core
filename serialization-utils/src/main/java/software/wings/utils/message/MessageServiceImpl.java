@@ -86,7 +86,6 @@ public class MessageServiceImpl implements MessageService {
         if (acquireLock(file)) {
           FileUtils.touch(file);
           FileUtils.writeLines(file, singletonList(Joiner.on(PRIMARY_DELIMITER).join(messageContent)), true);
-          logger.info("Message {}", isOutput ? "written" : "sent");
         } else {
           logger.error("Failed to acquire lock {}", file.getPath());
         }
@@ -162,7 +161,6 @@ public class MessageServiceImpl implements MessageService {
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
-      logger.info("Channel closed for {} {}", type, id);
     } catch (IOException e) {
       logger.error("Error closing channel for {} {}", type, id, e);
     }
@@ -189,7 +187,6 @@ public class MessageServiceImpl implements MessageService {
           }
           FileUtils.touch(file);
           FileUtils.write(file, JsonUtils.asPrettyJson(data), UTF_8);
-          logger.info("Data written");
         } else {
           logger.error("Failed to acquire lock {}", file.getPath());
         }
@@ -255,7 +252,6 @@ public class MessageServiceImpl implements MessageService {
           }
           FileUtils.touch(file);
           FileUtils.write(file, JsonUtils.asPrettyJson(data), UTF_8);
-          logger.info("Data written");
         } else {
           logger.error("Failed to acquire lock {}", file.getPath());
         }
@@ -277,7 +273,6 @@ public class MessageServiceImpl implements MessageService {
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
-      logger.info("Data closed: {}", name);
     } catch (IOException e) {
       logger.error("Error closing data: {}", name, e);
     }
