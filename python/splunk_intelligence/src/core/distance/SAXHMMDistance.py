@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from core.LevenShtein import LevenShteinDistance
-from core.SuffixTree import SuffixTree
-from core.TimeSeriesUtils import smooth, MetricToDeviationType, normalize_metric
+from core.data_structures.SuffixTree import SuffixTree
+from core.distance.LevenShtein import LevenShteinDistance
+from core.util.TimeSeriesUtils import smooth, MetricToDeviationType, normalize_metric
 
 
 class SAXHMMDistance(object):

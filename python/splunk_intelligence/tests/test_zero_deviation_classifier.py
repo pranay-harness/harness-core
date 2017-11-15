@@ -1,5 +1,6 @@
 import numpy as np
-from core.ZeroDeviationClassifier import ZeroDeviationClassifier
+
+from core.classifier.ZeroDeviationClassifier import ZeroDeviationClassifier
 
 
 def test_fit():

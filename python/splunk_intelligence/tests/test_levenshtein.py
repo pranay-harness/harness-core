@@ -1,7 +1,7 @@
-from core.LevenShtein import Hirschberg
-from core.LevenShtein import LevenShteinDistance
-from core.SAXHMMDistance import SAXHMMDistance
-from core.TimeSeriesUtils import MetricToDeviationType
+from core.distance.LevenShtein import Hirschberg
+from core.distance.LevenShtein import LevenShteinDistance
+from core.distance.SAXHMMDistance import SAXHMMDistance
+from core.util.TimeSeriesUtils import MetricToDeviationType
 
 
 def get_dist(x, y, a, b):
