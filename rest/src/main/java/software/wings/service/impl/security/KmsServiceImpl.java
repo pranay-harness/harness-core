@@ -57,7 +57,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).encrypt(value, kmsConfig);
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .encrypt(accountId, value, kmsConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }

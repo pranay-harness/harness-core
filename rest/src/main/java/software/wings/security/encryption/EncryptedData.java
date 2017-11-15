@@ -7,7 +7,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -26,16 +30,21 @@ import java.util.Set;
 @Builder
 @Entity(value = "encryptedRecords", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Indexes({
+  @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+})
 public class EncryptedData extends Base {
+  @NotEmpty @Indexed private String name;
+
   @NotEmpty private String encryptionKey;
   @NotEmpty private char[] encryptedValue;
   @NotEmpty private SettingVariableTypes type;
 
-  @NotEmpty @Indexed private Set<String> parentIds = new HashSet<>();
+  @NotEmpty @Indexed @Builder.Default private Set<String> parentIds = new HashSet<>();
 
   @NotEmpty @Indexed private String accountId;
 
-  private boolean enabled = true;
+  @Builder.Default private boolean enabled = true;
 
   @NotEmpty private String kmsId;
 
