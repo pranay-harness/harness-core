@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -47,7 +48,7 @@ public class MessageServiceImpl implements MessageService {
   private final String processId;
 
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
-  private Map<File, LineIterator> readers = new HashMap<>();
+  private Map<File, Long> timestamps = new HashMap<>();
 
   public MessageServiceImpl(Clock clock, MessengerType messengerType, String processId) {
     this.clock = clock;
@@ -102,39 +103,48 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public Message retrieveMessage(MessengerType sourceType, String sourceProcessId, long timeout) {
     boolean isInput = messengerType == sourceType && processId.equals(sourceProcessId);
-    logger.info(isInput ? "Reading message" : "Retrieving message from " + sourceType + " " + sourceProcessId);
     try {
-      LineIterator reader = getMessageReader(sourceType, sourceProcessId);
+      File file = getMessageFile(sourceType, sourceProcessId);
+      long lastReadTimestamp = Optional.ofNullable(timestamps.get(file)).orElse(0L);
+      if (!file.exists()) {
+        FileUtils.touch(file);
+      }
+      LineIterator reader = FileUtils.lineIterator(file);
       return timeLimiter.callWithTimeout(() -> {
         while (reader.hasNext()) {
           String line = reader.nextLine();
           if (StringUtils.startsWith(line, (isInput ? IN : OUT) + PRIMARY_DELIMITER)) {
             List<String> components = Splitter.on(PRIMARY_DELIMITER).splitToList(line);
             long timestamp = Long.parseLong(components.get(1));
-            MessengerType fromType = MessengerType.valueOf(components.get(2));
-            String fromProcess = components.get(3);
-            String messageName = components.get(4);
-            List<String> msgParams = new ArrayList<>();
-            if (components.size() == 6) {
-              String params = components.get(5);
-              if (!params.contains(SECONDARY_DELIMITER)) {
-                msgParams.add(params);
-              } else {
-                msgParams.addAll(Splitter.on(SECONDARY_DELIMITER).splitToList(params));
+            if (timestamp > lastReadTimestamp) {
+              MessengerType fromType = MessengerType.valueOf(components.get(2));
+              String fromProcess = components.get(3);
+              String messageName = components.get(4);
+              List<String> msgParams = new ArrayList<>();
+              if (components.size() == 6) {
+                String params = components.get(5);
+                if (!params.contains(SECONDARY_DELIMITER)) {
+                  msgParams.add(params);
+                } else {
+                  msgParams.addAll(Splitter.on(SECONDARY_DELIMITER).splitToList(params));
+                }
               }
+              Message message = Message.builder()
+                                    .message(messageName)
+                                    .params(msgParams)
+                                    .timestamp(timestamp)
+                                    .fromType(fromType)
+                                    .fromProcess(fromProcess)
+                                    .build();
+              logger.info("{}: {}",
+                  isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
+              timestamps.put(file, timestamp);
+              reader.close();
+              return message;
             }
-            Message message = Message.builder()
-                                  .message(messageName)
-                                  .params(msgParams)
-                                  .timestamp(timestamp)
-                                  .fromType(fromType)
-                                  .fromProcess(fromProcess)
-                                  .build();
-            logger.info("{}: {}",
-                isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
-            return message;
           }
         }
+        reader.close();
         return null;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
@@ -148,9 +158,7 @@ public class MessageServiceImpl implements MessageService {
     logger.info("Closing channel for {} {}", type, id);
     try {
       File file = getMessageFile(type, id);
-      LineIterator reader = getMessageReader(type, id);
-      reader.close();
-      readers.remove(file);
+      timestamps.remove(file);
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
@@ -220,7 +228,14 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public List<String> listDataNames(@Nullable String prefix) {
-    return FileUtils.listFiles(new File(ROOT + DATA), new PrefixFileFilter(prefix == null ? "" : prefix), null)
+    File dataDirectory = new File(ROOT + DATA);
+    try {
+      FileUtils.forceMkdir(dataDirectory);
+    } catch (IOException e) {
+      logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
+      return null;
+    }
+    return FileUtils.listFiles(dataDirectory, new PrefixFileFilter(prefix == null ? "" : prefix), null)
         .stream()
         .map(File::getName)
         .collect(Collectors.toList());
@@ -266,18 +281,6 @@ public class MessageServiceImpl implements MessageService {
     } catch (IOException e) {
       logger.error("Error closing data: {}", name, e);
     }
-  }
-
-  private LineIterator getMessageReader(MessengerType type, String id) throws IOException {
-    File file = getMessageFile(type, id);
-    LineIterator reader;
-    if (readers.containsKey(file)) {
-      reader = readers.get(file);
-    } else {
-      reader = FileUtils.lineIterator(file);
-      readers.put(file, reader);
-    }
-    return reader;
   }
 
   private File getMessageFile(MessengerType type, String id) throws IOException {
