@@ -70,6 +70,16 @@ public class CommandServiceImpl implements CommandService {
   }
 
   @Override
+  public ServiceCommand getServiceCommandByName(String appId, String serviceId, String serviceCommandName) {
+    return wingsPersistence.get(ServiceCommand.class,
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("appId", EQ, appId).build())
+            .addFilter(aSearchFilter().withField("serviceId", EQ, serviceId).build())
+            .addFilter(aSearchFilter().withField("name", EQ, serviceCommandName).build())
+            .build());
+  }
+
+  @Override
   public Command save(Command command, boolean isDefaultCommand) {
     Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
 

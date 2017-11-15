@@ -493,7 +493,6 @@ public class PhaseStep {
     private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
     private boolean rollback;
     private String phaseStepNameForRollback;
-    private boolean artifactNeeded;
     private Integer waitInterval;
 
     public static final class Builder {
@@ -505,7 +504,6 @@ public class PhaseStep {
       private boolean rollback;
       private String type;
       private String phaseStepNameForRollback;
-      private boolean artifactNeeded;
       private Integer waitInterval;
 
       private Builder() {}
@@ -554,11 +552,6 @@ public class PhaseStep {
         return this;
       }
 
-      public Builder withArtifactNeeded(boolean artifactNeeded) {
-        this.artifactNeeded = artifactNeeded;
-        return this;
-      }
-
       public Builder withWaitInterval(Integer waitInterval) {
         this.waitInterval = waitInterval;
         return this;
@@ -574,7 +567,6 @@ public class PhaseStep {
             .withRollback(rollback)
             .withType(type)
             .withPhaseStepNameForRollback(phaseStepNameForRollback)
-            .withArtifactNeeded(artifactNeeded)
             .withWaitInterval(waitInterval);
       }
 
@@ -588,7 +580,6 @@ public class PhaseStep {
         yaml.setRollback(rollback);
         yaml.setType(type);
         yaml.setPhaseStepNameForRollback(phaseStepNameForRollback);
-        yaml.setArtifactNeeded(artifactNeeded);
         yaml.setWaitInterval(waitInterval);
         return yaml;
       }

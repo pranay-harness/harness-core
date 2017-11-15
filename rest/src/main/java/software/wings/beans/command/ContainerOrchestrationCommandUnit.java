@@ -6,6 +6,8 @@ import static software.wings.beans.command.ResizeCommandUnitExecutionData.Resize
 
 import com.google.inject.Inject;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.ErrorCode;
@@ -71,4 +73,12 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
       int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends AbstractCommandUnit.Yaml {
+    public static abstract class Builder extends AbstractCommandUnit.Yaml.Builder {
+      protected Builder() {}
+    }
+  }
 }

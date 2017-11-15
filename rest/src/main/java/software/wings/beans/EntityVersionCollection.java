@@ -1,10 +1,13 @@
 package software.wings.beans;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.yaml.BaseYaml;
 
 /**
  * Created by peeyushaggarwal on 11/2/16.
@@ -135,4 +138,8 @@ public class EntityVersionCollection extends EntityVersion {
       return entityVersionCollection;
     }
   }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends BaseYaml {}
 }

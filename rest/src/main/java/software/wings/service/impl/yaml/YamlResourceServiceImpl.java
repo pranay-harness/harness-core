@@ -36,19 +36,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.CommandUnitType;
-import software.wings.beans.command.CopyConfigCommandUnit;
-import software.wings.beans.command.DockerStartCommandUnit;
-import software.wings.beans.command.DockerStopCommandUnit;
-import software.wings.beans.command.ExecCommandUnit;
-import software.wings.beans.command.PortCheckClearedCommandUnit;
-import software.wings.beans.command.PortCheckListeningCommandUnit;
-import software.wings.beans.command.ProcessCheckRunningCommandUnit;
-import software.wings.beans.command.ProcessCheckStoppedCommandUnit;
-import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -82,23 +70,7 @@ import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.artifactstream.OrchestrationStreamActionYaml;
 import software.wings.yaml.artifactstream.StreamActionYaml;
-import software.wings.yaml.command.AwsLambdaCommandUnitYaml;
-import software.wings.yaml.command.CodeDeployCommandUnitYaml;
-import software.wings.yaml.command.CommandRefCommandUnitYaml;
-import software.wings.yaml.command.CommandUnitYaml;
-import software.wings.yaml.command.CopyConfigCommandUnitYaml;
-import software.wings.yaml.command.DockerStartCommandUnitYaml;
-import software.wings.yaml.command.DockerStopCommandUnitYaml;
-import software.wings.yaml.command.ExecCommandUnitYaml;
-import software.wings.yaml.command.KubernetesResizeCommandUnitYaml;
-import software.wings.yaml.command.PortCheckClearedCommandUnitYaml;
-import software.wings.yaml.command.PortCheckListenCommandUnitYaml;
-import software.wings.yaml.command.ProcessCheckRunningCommandUnitYaml;
-import software.wings.yaml.command.ProcessCheckStoppedCommandUnitYaml;
-import software.wings.yaml.command.ResizeCommandUnitYaml;
-import software.wings.yaml.command.ScpCommandUnitYaml;
-import software.wings.yaml.command.ServiceCommandYaml;
-import software.wings.yaml.command.SetupEnvCommandUnitYaml;
+import software.wings.yaml.command.CommandYaml;
 import software.wings.yaml.settingAttribute.AppDynamicsYaml;
 import software.wings.yaml.settingAttribute.ArtifactoryYaml;
 import software.wings.yaml.settingAttribute.AwsYaml;
@@ -120,7 +92,6 @@ import software.wings.yaml.settingAttribute.SplunkYaml;
 import software.wings.yaml.settingAttribute.SumoConfigYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
-import java.io.IOException;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -143,8 +114,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private static final String ENV_ID_PROPERTY = "envId";
-
   /**
    * Find by app, service and service command ids.
    *
@@ -153,116 +122,22 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the application
    */
   public RestResponse<YamlPayload> getServiceCommand(@NotEmpty String appId, @NotEmpty String serviceCommandId) {
-    Application app = appService.get(appId);
-    ServiceCommandYaml serviceCommandYaml = new ServiceCommandYaml();
-
-    List<Environment> environments = environmentService.getEnvByApp(appId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
 
     ServiceCommand serviceCommand = commandService.getServiceCommand(appId, serviceCommandId);
+    Validator.notNullCheck("No service command with the given id:" + serviceCommandId, serviceCommand);
+
+    Command command = commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion());
+    Validator.notNullCheck("No command with the given service command id:" + serviceCommandId, command);
+
+    serviceCommand.setCommand(command);
 
     if (serviceCommand != null) {
-      serviceCommandYaml.setName(serviceCommand.getName());
-
-      List<Command> commands = commandService.getCommandList(appId, serviceCommandId);
-
-      if (commands != null && commands.size() > 0) {
-        serviceCommandYaml.setCommandUnitType(commands.get(0).getCommandUnitType().getName());
-        serviceCommandYaml.setCommandType(commands.get(0).getCommandType().toString());
-
-        for (Command command : commands) {
-          if (command.getVersion() != null && serviceCommand.getDefaultVersion() != null) {
-            if (command.getVersion().intValue() == serviceCommand.getDefaultVersion().intValue()) {
-              List<CommandUnit> commandUnits = command.getCommandUnits();
-
-              if (commandUnits != null) {
-                for (CommandUnit cu : commandUnits) {
-                  CommandUnitYaml ycu;
-
-                  CommandUnitType cut = cu.getCommandUnitType();
-
-                  switch (cut) {
-                    case EXEC:
-                      ycu = new ExecCommandUnitYaml();
-                      ((ExecCommandUnitYaml) ycu).setCommandPath(((ExecCommandUnit) cu).getCommandPath());
-                      ((ExecCommandUnitYaml) ycu).setCommandString(((ExecCommandUnit) cu).getCommandString());
-                      break;
-                    case SCP:
-                      ycu = new ScpCommandUnitYaml();
-                      ((ScpCommandUnitYaml) ycu).setFileCategory(((ScpCommandUnit) cu).getFileCategory().getName());
-                      ((ScpCommandUnitYaml) ycu)
-                          .setDestinationDirectoryPath(((ScpCommandUnit) cu).getDestinationDirectoryPath());
-                      break;
-                    case COPY_CONFIGS:
-                      ycu = new CopyConfigCommandUnitYaml();
-                      ((CopyConfigCommandUnitYaml) ycu)
-                          .setDestinationParentPath(((CopyConfigCommandUnit) cu).getDestinationParentPath());
-                      break;
-                    case COMMAND:
-                      ycu = new CommandRefCommandUnitYaml();
-                      ((CommandRefCommandUnitYaml) ycu).setReferenceId(((Command) cu).getReferenceId());
-                      ((CommandRefCommandUnitYaml) ycu).setCommandType(((Command) cu).getCommandType().name());
-                      break;
-                    case SETUP_ENV:
-                      ycu = new SetupEnvCommandUnitYaml();
-                      ((SetupEnvCommandUnitYaml) ycu).setCommandString(((SetupEnvCommandUnit) cu).getCommandString());
-                      break;
-                    case DOCKER_START:
-                      ycu = new DockerStartCommandUnitYaml();
-                      ((DockerStartCommandUnitYaml) ycu)
-                          .setCommandString(((DockerStartCommandUnit) cu).getCommandString());
-                      break;
-                    case DOCKER_STOP:
-                      ycu = new DockerStopCommandUnitYaml();
-                      ((DockerStopCommandUnitYaml) ycu)
-                          .setCommandString(((DockerStopCommandUnit) cu).getCommandString());
-                      break;
-                    case PROCESS_CHECK_RUNNING:
-                      ycu = new ProcessCheckRunningCommandUnitYaml();
-                      ((ProcessCheckRunningCommandUnitYaml) ycu)
-                          .setCommandString(((ProcessCheckRunningCommandUnit) cu).getCommandString());
-                      break;
-                    case PROCESS_CHECK_STOPPED:
-                      ycu = new ProcessCheckStoppedCommandUnitYaml();
-                      ((ProcessCheckStoppedCommandUnitYaml) ycu)
-                          .setCommandString(((ProcessCheckStoppedCommandUnit) cu).getCommandString());
-                      break;
-                    case PORT_CHECK_CLEARED:
-                      ycu = new PortCheckClearedCommandUnitYaml();
-                      ((PortCheckClearedCommandUnitYaml) ycu)
-                          .setCommandString(((PortCheckClearedCommandUnit) cu).getCommandString());
-                      break;
-                    case PORT_CHECK_LISTENING:
-                      ycu = new PortCheckListenCommandUnitYaml();
-                      ((PortCheckListenCommandUnitYaml) ycu)
-                          .setCommandString(((PortCheckListeningCommandUnit) cu).getCommandString());
-                      break;
-                    case RESIZE:
-                      ycu = new ResizeCommandUnitYaml();
-                      break;
-                    case CODE_DEPLOY:
-                      ycu = new CodeDeployCommandUnitYaml();
-                      break;
-                    case AWS_LAMBDA:
-                      ycu = new AwsLambdaCommandUnitYaml();
-                      break;
-                    case RESIZE_KUBERNETES:
-                      ycu = new KubernetesResizeCommandUnitYaml();
-                      break;
-                    default:
-                      // handle unfound
-                      ycu = new CommandUnitYaml();
-                  }
-
-                  ycu.setName(cu.getName());
-                  ycu.setCommandUnitType(cut.getName());
-
-                  serviceCommandYaml.getCommandUnits().add(ycu);
-                }
-              }
-            }
-          }
-        }
-      }
+      CommandYaml commandYaml =
+          (CommandYaml) yamlHandlerFactory.getYamlHandler(YamlType.COMMAND, null).toYaml(serviceCommand, appId);
+      return YamlHelper.getYamlRestResponse(yamlGitSyncService, serviceCommand.getUuid(), accountId, commandYaml,
+          serviceCommand.getName() + YAML_EXTENSION);
     } else {
       // handle missing serviceCommand
       RestResponse rr = new RestResponse<>();
@@ -271,173 +146,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               + "' was not found!");
       return rr;
     }
-
-    return YamlHelper.getYamlRestResponse(yamlGitSyncService, serviceCommand.getUuid(), app.getAccountId(),
-        serviceCommandYaml, serviceCommand.getName() + ".yaml");
   }
 
   /**
    * Update by app, service and service command ids and yaml payload
    *
-   * @param appId     the app id
-   * @param serviceCommandId the service command id
+   * @param accountId     the account id
    * @param yamlPayload the yaml version of the service command
    * @return the application
    */
-  public RestResponse<ServiceCommand> updateServiceCommand(
-      @NotEmpty String appId, @NotEmpty String serviceCommandId, YamlPayload yamlPayload, boolean deleteEnabled) {
-    RestResponse rr = new RestResponse<>();
-    rr.setResponseMessages(yamlPayload.getResponseMessages());
-
-    ServiceCommand serviceCommand = commandService.getServiceCommand(appId, serviceCommandId);
-
-    // TODO - LEFT OFF HERE
-    // Command command = commandService.getCommand()
-
-    if (serviceCommand == null) {
-      YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "ServiceCommand not found!");
-      return rr;
-    }
-
-    String yaml = yamlPayload.getYaml();
-
-    if (yaml == null || yaml.isEmpty()) {
-      YamlHelper.addMissingYamlMessage(rr);
-    }
-
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-    // get the before Yaml
-    RestResponse beforeResponse = getServiceCommand(appId, serviceCommandId);
-    YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
-    String beforeYaml = beforeYP.getYaml();
-
-    if (yaml.equals(beforeYaml)) {
-      // no change
-      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
-      return rr;
-    }
-
-    ServiceCommandYaml serviceCommandYaml = null;
-
-    try {
-      serviceCommandYaml = mapper.readValue(yaml, ServiceCommandYaml.class);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    if (serviceCommandYaml == null) {
-      // handle missing or unmappable serviceCommandYaml
-      return rr;
-    }
-
-    /* REF
-    name: Install
-    commandUnitType: Command
-    commandType: INSTALL
-    */
-
-    /*
-    serviceCommand.setName(serviceCommandYaml.getName());
-    serviceCommand.set(serviceCommandYaml.getName());
-    serviceCommand.setName(serviceCommandYaml.getName());
-    */
-
-    List<CommandUnitYaml> commandUnitYamls = serviceCommandYaml.getCommandUnits();
-
-    for (CommandUnitYaml cuy : commandUnitYamls) {
-      CommandUnitType cut = CommandUnitType.valueOf(cuy.getCommandUnitType());
-    }
-
-    //-------------------
-    ServiceCommandYaml beforeServiceCommandYaml = null;
-
-    /*
-    List<Command> commands = commandService.getCommandList(appId, serviceCommandId);
-
-    if (commands != null && commands.size() > 0) {
-      for (Command command : commands) {
-
-        if (command.getVersion() != null && serviceCommand.getDefaultVersion() != null) {
-          if (command.getVersion().intValue() == serviceCommand.getDefaultVersion().intValue()) {
-            List<CommandUnit> commandUnits = command.getCommandUnits();
-
-            if (commandUnits != null) {
-              for (CommandUnit cu : commandUnits) {
-                CommandUnitYaml ycu;
-
-                CommandUnitType cut = cu.getCommandUnitType();
-
-                switch (cut) {
-                  case EXEC:
-                    ycu = new ExecCommandUnitYaml();
-                    ((ExecCommandUnitYaml) ycu).setCommandPath(((ExecCommandUnit) cu).getCommandPath());
-                    ((ExecCommandUnitYaml) ycu).setCommandString(((ExecCommandUnit) cu).getCommandString());
-                    break;
-                  case SCP:
-                    ycu = new ScpCommandUnitYaml();
-                    ((ScpCommandUnitYaml) ycu).setFileCategory(((ScpCommandUnit) cu).getFileCategory().getName());
-                    ((ScpCommandUnitYaml) ycu).setDestinationDirectoryPath(((ScpCommandUnit)
-    cu).getDestinationDirectoryPath()); break; case COPY_CONFIGS: ycu = new CopyConfigCommandUnitYaml();
-                    ((CopyConfigCommandUnitYaml) ycu).setDestinationParentPath(((CopyConfigCommandUnit)
-    cu).getDestinationParentPath()); break; case COMMAND: ycu = new CommandRefCommandUnitYaml();
-                    ((CommandRefCommandUnitYaml) ycu).setReferenceId(((Command) cu).getReferenceId());
-                    ((CommandRefCommandUnitYaml) ycu).setCommandType(((Command) cu).getCommandType().name());
-                    break;
-                  case SETUP_ENV:
-                    ycu = new SetupEnvCommandUnitYaml();
-                    ((SetupEnvCommandUnitYaml) ycu).setCommandString(((SetupEnvCommandUnit) cu).getCommandString());
-                    break;
-                  case DOCKER_START:
-                    ycu = new DockerStartCommandUnitYaml();
-                    ((DockerStartCommandUnitYaml) ycu).setCommandString(((DockerStartCommandUnit)
-    cu).getCommandString()); break; case DOCKER_STOP: ycu = new DockerStopCommandUnitYaml();
-                    ((DockerStopCommandUnitYaml) ycu).setCommandString(((DockerStopCommandUnit) cu).getCommandString());
-                    break;
-                  case PROCESS_CHECK_RUNNING:
-                    ycu = new ProcessCheckRunningCommandUnitYaml();
-                    ((ProcessCheckRunningCommandUnitYaml) ycu).setCommandString(((ProcessCheckRunningCommandUnit)
-    cu).getCommandString()); break; case PROCESS_CHECK_STOPPED: ycu = new ProcessCheckStoppedCommandUnitYaml();
-                    ((ProcessCheckStoppedCommandUnitYaml) ycu).setCommandString(((ProcessCheckStoppedCommandUnit)
-    cu).getCommandString()); break; case PORT_CHECK_CLEARED: ycu = new PortCheckClearedCommandUnitYaml();
-                    ((PortCheckClearedCommandUnitYaml) ycu).setCommandString(((PortCheckClearedCommandUnit)
-    cu).getCommandString()); break; case PORT_CHECK_LISTENING: ycu = new PortCheckListenCommandUnitYaml();
-                    ((PortCheckListenCommandUnitYaml) ycu).setCommandString(((PortCheckListeningCommandUnit)
-    cu).getCommandString()); break; case RESIZE: ycu = new ResizeCommandUnitYaml(); break; case CODE_DEPLOY: ycu = new
-    CodeDeployCommandUnitYaml(); break; case AWS_LAMBDA: ycu = new AwsLambdaCommandUnitYaml(); break; case
-    RESIZE_KUBERNETES: ycu = new KubernetesResizeCommandUnitYaml(); break; default:
-                    // handle unfound
-                    ycu = new CommandUnitYaml();
-                }
-
-              }
-            }
-          }
-        }
-
-      }
-    }
-    */
-
-    /*
-    SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(serviceCommand.getValue().getType());
-
-    logger.info("*********** settingVariableType: " + settingVariableType);
-
-    if (settingVariableType == null) {
-      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "Unrecognized
-    settingVariableType: '" + settingVariableType + "'."); return rr;
-    }
-
-    if (beforeYaml != null && !beforeYaml.isEmpty()) {
-      SettingValue beforeConfig;
-      SettingValue config;
-
-    }
-    */
-
-    return rr;
+  public RestResponse<ServiceCommand> updateServiceCommand(String accountId, YamlPayload yamlPayload) {
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   /**

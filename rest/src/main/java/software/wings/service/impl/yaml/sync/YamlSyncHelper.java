@@ -79,7 +79,7 @@ public class YamlSyncHelper {
     String serviceId = getServiceId(appId, yamlFilePath);
     Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
     String artifactStreamName =
-        extractEntityNameFromYamlPath(YamlType.ARTIFACT_SOURCE.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+        extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
     return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
   }

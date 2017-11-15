@@ -193,20 +193,17 @@ public class YamlResource {
   /**
    * Update a service command that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param appId            the app id
-   * @param serviceCommandId the service command id
+   * @param accountId            the account id
    * @param yamlPayload      the yaml version of the service command
-   * @param deleteEnabled    the delete enabled
    * @return the rest response
    */
   @PUT
   @Path("/service-commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ServiceCommand> updateServiceCommand(@QueryParam("appId") String appId,
-      @PathParam("serviceCommandId") String serviceCommandId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlResourceService.updateServiceCommand(appId, serviceCommandId, yamlPayload, deleteEnabled);
+  public RestResponse<ServiceCommand> updateServiceCommand(
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
+    return yamlResourceService.updateServiceCommand(accountId, yamlPayload);
   }
 
   /**

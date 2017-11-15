@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.CommandYamlHandler;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
@@ -29,10 +31,12 @@ public class YamlHandlerFactory {
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
   @Inject private Map<String, WorkflowYamlHandler> workflowYamlHelperMap;
+  @Inject private Map<String, CommandUnitYamlHandler> commandUnitYamlHandlerMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private EnvironmentYamlHandler environmentYamlHandler;
   @Inject private ServiceYamlHandler serviceYamlHandler;
+  @Inject private CommandYamlHandler commandYamlHandler;
   @Inject private NameValuePairYamlHandler nameValuePairYamlHandler;
   @Inject private PhaseStepYamlHandler phaseStepYamlHandler;
   @Inject private StepYamlHandler stepYamlHandler;
@@ -66,10 +70,12 @@ public class YamlHandlerFactory {
         return applicationYamlHandler;
       case SERVICE:
         return serviceYamlHandler;
-      case ARTIFACT_SOURCE:
+      case ARTIFACT_STREAM:
         return artifactStreamHelperMap.get(subType);
       case COMMAND:
-        break;
+        return commandYamlHandler;
+      case COMMAND_UNIT:
+        return commandUnitYamlHandlerMap.get(subType);
       case CONFIG_FILE:
         break;
       case ENVIRONMENT:

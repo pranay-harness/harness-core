@@ -203,6 +203,6 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   @Override
   public WorkflowPhase update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
+    throw new HarnessException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 }

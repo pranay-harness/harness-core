@@ -1,9 +1,7 @@
 package software.wings.yaml.workflow;
 
+import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.NameValuePair;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.util.ArrayList;
-import java.util.List;
+import software.wings.beans.command.SshCommandUnit;
+import software.wings.stencils.EnumData;
