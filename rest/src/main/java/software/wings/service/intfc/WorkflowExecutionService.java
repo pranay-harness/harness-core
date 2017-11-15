@@ -220,5 +220,7 @@ public interface WorkflowExecutionService {
 
   boolean workflowExecutionsRunning(WorkflowType workflowType, String appId, String workflowId);
 
+  boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs);
+
   boolean approveOrRejectExecution(String appId, String workflowExecutionId, ApprovalDetails approvalDetails);
 }
