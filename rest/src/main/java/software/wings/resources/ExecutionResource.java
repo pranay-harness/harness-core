@@ -185,6 +185,24 @@ public class ExecutionResource {
    *
    * @param appId         the app id
    * @param workflowExecutionId    the workflowExecutionId
+   * @param executionArgs the Execution Args
+   * @return the rest response
+   */
+  @PUT
+  @Path("{workflowExecutionId}/notes")
+  @Produces("application/json")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> approveOrRejectExecution(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(workflowExecutionService.updateNotes(appId, workflowExecutionId, executionArgs));
+  }
+
+  /**
+   * Trigger execution rest response.
+   *
+   * @param appId         the app id
+   * @param workflowExecutionId    the workflowExecutionId
    * @param approvalDetails the Approval User details
    * @return the rest response
    */
