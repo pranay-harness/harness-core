@@ -233,6 +233,7 @@ import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import java.time.Clock;
 import javax.inject.Singleton;
 
 /**
@@ -351,6 +352,7 @@ public class WingsModule extends AbstractModule {
     bind(SecretManager.class).to(SecretManagerImpl.class);
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
+    bind(Clock.class).toInstance(Clock.systemUTC());
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -396,12 +398,12 @@ public class WingsModule extends AbstractModule {
 
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
 
-    bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class);
+    bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class).asEagerSingleton();
 
     bind(QuartzScheduler.class)
         .annotatedWith(Names.named("VerificationJobScheduler"))
         .toProvider(VerificationJobScheduler.JobSchedulerProvider.class)
-        .in(Singleton.class);
+        .asEagerSingleton();
 
     bind(ContainerSync.class)
         .annotatedWith(Names.named("KubernetesInstanceSync"))

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import groovy.lang.Singleton;
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
@@ -16,6 +17,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
@@ -170,7 +172,12 @@ public class GitClientImpl implements GitClient {
   @Override
   synchronized public GitCheckoutResult checkout(GitConfig gitConfig) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
-      Ref ref = git.checkout().setName(gitConfig.getBranch()).call();
+      Ref ref = git.checkout()
+                    .setCreateBranch(true)
+                    .setName(gitConfig.getBranch())
+                    .setUpstreamMode(SetupUpstreamMode.TRACK)
+                    .setStartPoint("origin/" + gitConfig.getBranch())
+                    .call();
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
@@ -209,9 +216,9 @@ public class GitClientImpl implements GitClient {
               throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in ADD/MODIFY git operation");
             }
             break;
-            //          case COPY:
-            //            throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Unhandled git operation: "
-            //            + gitFileChange.getChangeType());
+          //          case COPY:
+          //            throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Unhandled git operation: " +
+          //            gitFileChange.getChangeType());
           case RENAME:
             try {
               logger.info("Old path:[{}], new path: [{}]", gitFileChange.getOldFilePath(), gitFileChange.getFilePath());
@@ -339,6 +346,11 @@ public class GitClientImpl implements GitClient {
   synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       logger.info("Repo exist. do hard sync with remote branch");
+      FetchResult fetchResult = git.fetch()
+                                    .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+                                        gitConfig.getUsername(), gitConfig.getPassword()))
+                                    .call(); // fetch all remote references
+      checkout(gitConfig);
       Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
       logger.info("Hard reset done for branch " + gitConfig.getBranch());
       // TODO:: log failed commits queued and being ignored.
@@ -346,7 +358,8 @@ public class GitClientImpl implements GitClient {
     } catch (IOException ex) {
       logger.error("Repo doesn't exist locally [repo: {}], {}", gitConfig.getRepoUrl(), ex);
     } catch (GitAPIException ex) {
-      logger.info("Hard reset failed for branch " + gitConfig.getBranch());
+      logger.info("Hard reset failed for branch [{}]", gitConfig.getBranch());
+      logger.error("Exception: ", ex);
     }
 
     logger.info("Repo doesn't exist. Do a fresh clone");
