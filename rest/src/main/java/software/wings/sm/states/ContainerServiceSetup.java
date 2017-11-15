@@ -45,7 +45,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -99,6 +98,9 @@ public abstract class ContainerServiceSetup extends State {
       String envName = workflowStandardParams.getEnv().getName();
 
       String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
+
+      logger.info("Setting up container service for account {}, app {}, service {}", app.getAccountId(), app.getUuid(),
+          serviceName);
       ContainerTask containerTask =
           serviceResourceService.getContainerTaskByDeploymentType(app.getAppId(), serviceId, getDeploymentType());
 
@@ -129,6 +131,8 @@ public abstract class ContainerServiceSetup extends State {
       StateExecutionData executionData = createService(context, serviceName, imageDetails, app.getName(), envName,
           clusterName, containerInfrastructureMapping, containerTask);
 
+      logger.info("Container service created for account {}, app {}, service {}", app.getAccountId(), app.getUuid(),
+          serviceName);
       ContainerServiceElement containerServiceElement =
           buildContainerServiceElement(phaseElement, serviceId, context.getAppId(), context.getWorkflowExecutionId(),
               containerInfrastructureMapping, getContainerServiceNameFromExecutionData(executionData));
