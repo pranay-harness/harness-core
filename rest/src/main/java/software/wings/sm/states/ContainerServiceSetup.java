@@ -33,6 +33,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
@@ -125,7 +126,7 @@ public abstract class ContainerServiceSetup extends State {
       String serviceId = phaseElement.getServiceElement().getUuid();
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-      Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
+      Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
       ImageDetails imageDetails = fetchArtifactDetails(artifact, context);
 
       Application app = workflowStandardParams.getApp();

@@ -33,6 +33,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -68,7 +69,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -301,7 +301,7 @@ public class CommandState extends State {
             (Encryptable) bastionConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
       }
 
-      Artifact artifact = findArtifact(context, workflowStandardParams, service.getUuid());
+      Artifact artifact = findArtifact(context, service.getUuid());
       if (artifact != null) {
         commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
@@ -383,8 +383,7 @@ public class CommandState extends State {
     return flattenCommandUnitList;
   }
 
-  private Artifact findArtifact(
-      ExecutionContext context, WorkflowStandardParams workflowStandardParams, String serviceId) {
+  private Artifact findArtifact(ExecutionContext context, String serviceId) {
     ContextElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
     if (instanceElement != null) {
       ServiceInstanceArtifactParam serviceArtifactElement =
@@ -397,7 +396,7 @@ public class CommandState extends State {
       }
     }
 
-    return workflowStandardParams.getArtifactForService(serviceId);
+    return ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
   }
 
   private void handleCommandException(ExecutionContext context, String activityId, String appId) {

@@ -2,8 +2,13 @@ package software.wings.sm.states;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.api.BambooExecutionData.Builder.aBambooExecutionData;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.EnvironmentType.*;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.beans.SettingAttribute.Category.*;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateType.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -23,6 +28,7 @@ import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -74,7 +80,7 @@ public class BambooState extends State {
   @Inject private SecretManager secretManager;
 
   public BambooState(String name) {
-    super(name, StateType.BAMBOO.name());
+    super(name, BAMBOO.name());
   }
 
   public String getBambooConfigId() {
@@ -111,7 +117,7 @@ public class BambooState extends State {
   }
 
   @Override
-  @Attributes(title = "Wait interval before execution(in seconds)")
+  @Attributes(title = "Wait interval before execution (s)")
   public Integer getWaitInterval() {
     return super.getWaitInterval();
   }
@@ -136,7 +142,9 @@ public class BambooState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
 
     String bambooConfigExpression = null;
     String planNameExpression = null;
@@ -156,13 +164,13 @@ public class BambooState extends State {
     }
     BambooConfig bambooConfig = null;
     if (bambooConfigExpression != null) {
-      SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttribute(
-          context, accountId, bambooConfigExpression, SettingAttribute.Category.CONNECTOR);
+      SettingAttribute settingAttribute =
+          templateExpressionProcessor.resolveSettingAttribute(context, accountId, bambooConfigExpression, CONNECTOR);
       if (settingAttribute.getValue() instanceof BambooConfig) {
         bambooConfig = (BambooConfig) settingAttribute.getValue();
       }
     } else {
-      bambooConfig = (BambooConfig) context.getSettingValue(bambooConfigId, StateType.BAMBOO.name());
+      bambooConfig = (BambooConfig) context.getGlobalSettingValue(accountId, bambooConfigId, BAMBOO.name());
     }
     Validator.notNullCheck("BambooConfig", bambooConfig);
 
@@ -191,16 +199,6 @@ public class BambooState extends State {
         evaluatedParameters.add(evaluatedParameterEntry);
       });
     }
-    /* evaluatedParameters.forEach((key, value) -> {
-       String evaluatedValue;
-       try {
-         evaluatedValue = context.renderExpression(value);
-       } catch (Exception e) {
-         evaluatedValue = value;
-       }
-       evaluatedParameters.put(key, evaluatedValue);
-     });*/
-
     List<FilePathAssertionEntry> evaluatedFilePathsForAssertion = new ArrayList<>();
     if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> {
@@ -302,9 +300,6 @@ public class BambooState extends State {
     Activity.ActivityBuilder activityBuilder =
         Activity.builder()
             .applicationName(app.getName())
-            .environmentId(env.getUuid())
-            .environmentName(env.getName())
-            .environmentType(env.getEnvironmentType())
             .commandName(getName())
             .type(Activity.Type.Verification)
             .workflowType(executionContext.getWorkflowType())
@@ -318,6 +313,14 @@ public class BambooState extends State {
             .serviceVariables(Maps.newHashMap())
             .status(ExecutionStatus.RUNNING);
 
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
+    } else {
+      activityBuilder.environmentId(env.getUuid())
+          .environmentName(env.getName())
+          .environmentType(env.getEnvironmentType());
+    }
     if (instanceElement != null) {
       activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
           .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())

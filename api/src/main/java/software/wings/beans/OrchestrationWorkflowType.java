@@ -5,6 +5,7 @@ package software.wings.beans;
  */
 public enum OrchestrationWorkflowType {
 
+  BUILD,
   BASIC,
   CANARY,
   MULTI_SERVICE,

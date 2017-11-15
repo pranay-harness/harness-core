@@ -3,7 +3,10 @@ package software.wings.sm.states;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.MoreObjects;
@@ -36,7 +39,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -259,7 +261,9 @@ public class HttpState extends State {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
 
     String finalUrl = getFinalUrl(context);
     String bodyExpression = null;
@@ -435,9 +439,6 @@ public class HttpState extends State {
     Activity.ActivityBuilder activityBuilder =
         Activity.builder()
             .applicationName(app.getName())
-            .environmentId(env.getUuid())
-            .environmentName(env.getName())
-            .environmentType(env.getEnvironmentType())
             .commandName(getName())
             .type(Type.Verification)
             .workflowType(executionContext.getWorkflowType())
@@ -451,6 +452,14 @@ public class HttpState extends State {
             .serviceVariables(Maps.newHashMap())
             .status(ExecutionStatus.RUNNING);
 
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
+    } else {
+      activityBuilder.environmentId(env.getUuid())
+          .environmentName(env.getName())
+          .environmentType(env.getEnvironmentType());
+    }
     if (instanceElement != null && instanceElement.getServiceTemplateElement() != null) {
       activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
           .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())

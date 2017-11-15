@@ -57,6 +57,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
@@ -69,6 +70,7 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
@@ -778,11 +780,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
-    workflowExecution.setEnvId(envId);
-    workflowExecution.setEnvIds(asList(envId));
+    if (envId != null) {
+      workflowExecution.setEnvId(envId);
+      workflowExecution.setEnvIds(Collections.singletonList(envId));
+    }
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowType(ORCHESTRATION);
+    workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
@@ -790,8 +795,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()
-            == OrchestrationWorkflowType.MULTI_SERVICE) {
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.MULTI_SERVICE
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
       stdParams = new CanaryWorkflowStandardParams();
 
       if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
@@ -965,6 +970,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setExecutionName(workflowExecution.getName());
     stateExecutionInstance.setExecutionUuid(workflowExecution.getUuid());
     stateExecutionInstance.setExecutionType(workflowExecution.getWorkflowType());
+    stateExecutionInstance.setOrchestrationWorkflowType(workflowExecution.getOrchestrationType());
     stateExecutionInstance.setWorkflowId(workflowExecution.getWorkflowId());
 
     if (workflowExecutionUpdate == null) {
@@ -1465,10 +1471,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
           ElementExecutionSummary elementSummary =
               anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
-          /* List<InfrastructureMapping> infraMappings =
-             infrastructureMappingService.list(aPageRequest().addFilter("appId", EQ,
-             workflow.getAppId()).addFilter("envId", EQ, workflowExecution.getEnvId()).addFilter("serviceId", EQ,
-             service.getUuid()).build()).getResponse();*/
           List<InfraMappingSummary> infraMappingSummaries = new ArrayList<>();
           if (infrastructureMappings != null) {
             for (InfrastructureMapping infraMapping : infrastructureMappings) {
@@ -1957,5 +1959,47 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Map<Object, Boolean> seen = new ConcurrentHashMap<>();
     return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+  }
+
+  public List<Artifact> getArtifactsCollected(String appId, String executionUuid) {
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .addFilter("appId", EQ, appId)
+            .addFilter("executionUuid", EQ, executionUuid)
+            .addFilter("stateType", EQ, StateType.ARTIFACT_COLLECTION.name())
+            .build();
+
+    PageResponse<StateExecutionInstance> pageResponse =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+    if (pageResponse == null || pageResponse.isEmpty()) {
+      return null;
+    }
+    List<Artifact> artifacts = new ArrayList<>();
+    pageResponse.forEach(stateExecutionInstance -> {
+      ArtifactCollectionExecutionData artifactCollectionExecutionData =
+          (ArtifactCollectionExecutionData) stateExecutionInstance.getStateExecutionData();
+      artifacts.add(artifactService.get(appId, artifactCollectionExecutionData.getArtifactId()));
+    });
+    return artifacts;
+  }
+
+  @Override
+  public void refreshBuildExecutionSummary(
+      String appId, String workflowExecutionId, BuildExecutionSummary buildExecutionSummary) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      return;
+    }
+
+    List<BuildExecutionSummary> buildExecutionSummaries = workflowExecution.getBuildExecutionSummaries();
+    if (buildExecutionSummaries == null || buildExecutionSummaries.size() == 0) {
+      buildExecutionSummaries = new ArrayList<>();
+    }
+    buildExecutionSummaries.add(buildExecutionSummary);
+    buildExecutionSummaries = buildExecutionSummaries.stream()
+                                  .filter(distinctByKey(bs -> bs.getArtifactStreamId()))
+                                  .collect(Collectors.toList());
+    wingsPersistence.updateField(
+        WorkflowExecution.class, workflowExecutionId, "buildExecutionSummaries", buildExecutionSummaries);
   }
 }
