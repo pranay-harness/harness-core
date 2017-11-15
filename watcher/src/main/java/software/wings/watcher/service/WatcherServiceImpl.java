@@ -1,20 +1,16 @@
 package software.wings.watcher.service;
 
 import static com.google.common.collect.Iterables.isEmpty;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import org.apache.commons.codec.binary.StringUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -27,21 +23,19 @@ import software.wings.watcher.app.WatcherConfiguration;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.time.Clock;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by brett on 10/26/17
@@ -55,26 +49,28 @@ public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final Object waiter = new Object();
 
+  @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
+  @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
   @Inject private UpgradeService upgradeService;
   @Inject private WatcherConfiguration watcherConfiguration;
   @Inject private MessageService messageService;
-
-  private AmazonS3Client amazonS3Client;
-  private boolean upgradePending;
+  @Inject private AmazonS3Client amazonS3Client;
 
   private BlockingQueue<Message> watcherMessages = new ArrayBlockingQueue<>(100);
+  private boolean working;
+  private List<String> runningDelegates;
 
   @Override
   public void run(boolean upgrade) {
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
-      amazonS3Client = (AmazonS3Client) AmazonS3ClientBuilder.standard().withRegion("us-east-1").build();
-
-      startInputCheck();
+      runningDelegates = Optional.ofNullable((List) messageService.getData("watcher-data", "running-delegates"))
+                             .orElse(new ArrayList<>());
       messageService.writeMessage("watcher-started");
+      startInputCheck();
 
       if (upgrade) {
         Message message = waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
@@ -82,7 +78,6 @@ public class WatcherServiceImpl implements WatcherService {
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
 
-      startWatcherUpgradeCheck();
       startWatching();
 
       logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
@@ -101,6 +96,11 @@ public class WatcherServiceImpl implements WatcherService {
     synchronized (waiter) {
       waiter.notify();
     }
+  }
+
+  @Override
+  public void resume() {
+    working = false;
   }
 
   @Override
@@ -124,7 +124,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void startInputCheck() {
-    newScheduledExecutor("InputCheck-Thread", Thread.NORM_PRIORITY).scheduleWithFixedDelay(() -> {
+    inputExecutor.scheduleWithFixedDelay(() -> {
       Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
       if (message != null) {
         while (!watcherMessages.offer(message)) {
@@ -138,106 +138,100 @@ public class WatcherServiceImpl implements WatcherService {
     }, 0, 1, TimeUnit.SECONDS);
   }
 
-  private void startWatcherUpgradeCheck() {
+  private void startWatching() {
+    watchExecutor.scheduleWithFixedDelay(() -> {
+      if (!working) {
+        checkForUpgrade();
+      }
+      if (!working) {
+        watchDelegate();
+      }
+    }, 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void checkForUpgrade() {
     if (!watcherConfiguration.isDoUpgrade()) {
       logger.info("Auto upgrade is disabled in watcher configuration");
       logger.info("Watcher stays on version: [{}]", getVersion());
       return;
     }
-
-    logger.info(
-        "Starting watcher upgrade check at interval {} seconds", watcherConfiguration.getUpgradeCheckIntervalSeconds());
-    newScheduledExecutor("UpgradeCheck-Thread", Thread.NORM_PRIORITY)
-        .scheduleWithFixedDelay(
-            ()
-                -> {
-              if (upgradePending) {
-                logger.info("[Old] Upgrade is pending...");
-              } else {
-                logger.info("Checking for upgrade");
-                try {
-                  String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-                  String bucketName = watcherMetadataUrl.substring(
-                      watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-                  String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
-                  S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
-                  BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
-                  String watcherMetadata = reader.readLine();
-                  reader.close();
-                  String latestVersion = substringBefore(watcherMetadata, " ").trim();
-                  String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-                  String version = getVersion();
-                  boolean upgrade = !StringUtils.equals(version, latestVersion);
-                  if (upgrade) {
-                    logger.info("[Old] Upgrading watcher");
-                    upgradePending = true;
-                    S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
-                    upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
-                  } else {
-                    logger.info("Watcher up to date");
-                  }
-                } catch (Exception e) {
-                  upgradePending = false;
-                  logger.error("[Old] Exception while checking for upgrade", e);
-                }
-              }
-            },
-            watcherConfiguration.getUpgradeCheckIntervalSeconds(),
-            watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
+    logger.info("Checking for upgrade");
+    try {
+      String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
+      String bucketName =
+          watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
+      String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
+      S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
+      BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
+      String watcherMetadata = reader.readLine();
+      reader.close();
+      String latestVersion = substringBefore(watcherMetadata, " ").trim();
+      String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
+      String version = getVersion();
+      boolean upgrade = !StringUtils.equals(version, latestVersion);
+      if (upgrade) {
+        logger.info("[Old] Upgrading watcher");
+        working = true;
+        S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
+        upgradeService.upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
+      } else {
+        logger.info("Watcher up to date");
+      }
+    } catch (Exception e) {
+      working = false;
+      logger.error("[Old] Exception while checking for upgrade", e);
+    }
   }
 
-  private void startWatching() {
-    newScheduledExecutor("Watch-Thread", Thread.MAX_PRIORITY).scheduleWithFixedDelay(() -> {
-      try {
-        PipedInputStream pipedInputStream = new PipedInputStream();
-        new ProcessExecutor()
-            .timeout(5, TimeUnit.SECONDS)
-            .command("pgrep", "-f", "\"\\-Ddelegatesourcedir")
-            .redirectOutput(new PipedOutputStream(pipedInputStream))
-            .readOutput(true)
-            .start();
+  private void watchDelegate() {
+    try {
+      messageService.listDataNames(DELEGATE)
+          .stream()
+          .map(s -> s.substring(DELEGATE.length()))
+          .filter(s -> !runningDelegates.contains(s))
+          .forEach(process -> messageService.closeData(process));
 
-        Set<String> runningDelegateProcesses = new HashSet<>(IOUtils.readLines(pipedInputStream, UTF_8));
+      if (isEmpty(runningDelegates)) {
+        working = true;
+        startDelegate();
+      } else {
+        List<String> obsolete = new ArrayList<>();
+        for (String delegateProcess : runningDelegates) {
+          Map<String, Object> delegateData = messageService.getAllData(DELEGATE + delegateProcess);
+          if (delegateData != null && !delegateData.isEmpty()) {
+            long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
+            boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
+            boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
+            boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
+            long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
 
-        messageService.listDataNames(DELEGATE)
-            .stream()
-            .map(s -> s.substring(DELEGATE.length()))
-            .filter(s -> !runningDelegateProcesses.contains(s))
-            .forEach(process -> messageService.closeData(process));
-
-        if (isEmpty(runningDelegateProcesses)) {
-          startDelegate();
-        } else {
-          for (String delegateProcess : runningDelegateProcesses) {
-            Map<String, Object> delegateData = messageService.getAllData(DELEGATE + delegateProcess);
-            if (delegateData != null && !delegateData.isEmpty()) {
-              long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
-              boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
-              boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
-              boolean shutdownPending =
-                  Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
-              long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
-
-              if (shutdownPending) {
-                if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
-                  shutdownDelegate(delegateProcess);
-                }
-              } else if (clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
-                messageService.putData(DELEGATE + delegateProcess, "shutdownPending", true);
-                messageService.putData(DELEGATE + delegateProcess, "shutdownStarted", clock.millis());
-                restartDelegate(delegateProcess);
-              } else if (restartNeeded) {
-                restartDelegate(delegateProcess);
-              } else if (upgradeNeeded) {
-                upgradeDelegate(delegateProcess);
+            if (shutdownPending) {
+              working = true;
+              if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
+                shutdownDelegate(delegateProcess);
               }
+            } else if (clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
+              working = true;
+              messageService.putData(DELEGATE + delegateProcess, "shutdownPending", true);
+              messageService.putData(DELEGATE + delegateProcess, "shutdownStarted", clock.millis());
+              restartDelegate(delegateProcess);
+            } else if (restartNeeded) {
+              working = true;
+              restartDelegate(delegateProcess);
+            } else if (upgradeNeeded) {
+              working = true;
+              upgradeDelegate(delegateProcess);
             }
+          } else {
+            obsolete.add(delegateProcess);
           }
         }
-      } catch (Exception e) {
-        logger.error("Error processing delegate stream: {}", e.getMessage(), e);
+        runningDelegates.removeAll(obsolete);
+        messageService.putData("watcher-data", "running-delegates", runningDelegates);
       }
-    }, 0, 5, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      logger.error("Error processing delegate stream: {}", e.getMessage(), e);
+    }
   }
 
   private void startDelegate() {
@@ -277,6 +271,8 @@ public class WatcherServiceImpl implements WatcherService {
                 messageService.sendMessage(MessengerType.DELEGATE, oldDelegateProcess, "stop-acquiring");
               }
               messageService.sendMessage(MessengerType.DELEGATE, newDelegateProcess, "go-ahead");
+              runningDelegates.add(newDelegateProcess);
+              messageService.putData("watcher-data", "running-delegates", runningDelegates);
             }
           }
         } else {
@@ -304,6 +300,8 @@ public class WatcherServiceImpl implements WatcherService {
             logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
           }
         }
+      } finally {
+        working = false;
       }
     });
   }
@@ -313,15 +311,14 @@ public class WatcherServiceImpl implements WatcherService {
       try {
         new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
         messageService.closeData(DELEGATE + delegateProcess);
+        runningDelegates.remove(delegateProcess);
+        messageService.putData("watcher-data", "running-delegates", runningDelegates);
       } catch (Exception e) {
         logger.error("Error killing delegate {}", delegateProcess, e);
+      } finally {
+        working = false;
       }
     });
-  }
-
-  private ScheduledExecutorService newScheduledExecutor(String nameformat, int priority) {
-    return new ScheduledThreadPoolExecutor(
-        1, new ThreadFactoryBuilder().setNameFormat(nameformat).setPriority(priority).build());
   }
 
   private String getVersion() {

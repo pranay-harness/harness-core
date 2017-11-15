@@ -270,6 +270,31 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs) {
+    notNullCheck("executionArgs", executionArgs);
+    notNullCheck("notes", executionArgs.getNotes());
+
+    WorkflowExecution workflowExecution = getExecutionDetails(appId, workflowExecutionId);
+    notNullCheck("workflowExecution", workflowExecution);
+
+    try {
+      Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                           .field("appId")
+                                           .equal(workflowExecution.getAppId())
+                                           .field(ID_KEY)
+                                           .equal(workflowExecution.getUuid());
+      UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                          .set("executionArgs.notes", executionArgs.getNotes());
+      UpdateResults updateResults = wingsPersistence.update(query, updateOps);
+      return (
+          updateResults != null && updateResults.getWriteResult() != null && updateResults.getWriteResult().getN() > 0);
+
+    } catch (Exception ex) {
+      return false;
+    }
+  }
+
+  @Override
   public boolean approveOrRejectExecution(String appId, String workflowExecutionId, ApprovalDetails approvalDetails) {
     notNullCheck("ApprovalDetails", approvalDetails);
     String approvalId = approvalDetails.getApprovalId();

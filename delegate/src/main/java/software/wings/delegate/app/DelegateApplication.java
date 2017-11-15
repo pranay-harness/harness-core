@@ -59,7 +59,8 @@ public class DelegateApplication {
       // Watched path
       String watcherProcess = args[2];
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        Guice.createInjector(new DelegateModule()).getInstance(MessageService.class).closeChannel(DELEGATE, processId);
+        MessageService messageService = Guice.createInjector(new DelegateModule()).getInstance(MessageService.class);
+        messageService.closeChannel(DELEGATE, processId);
         logger.info("Log manager shutdown hook executing.");
         LogManager.shutdown();
       }));
@@ -138,7 +139,9 @@ public class DelegateApplication {
 
     // This should run in case of upgrade flow otherwise never called
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("localHeartbeatExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("inputExecutor"))).shutdownNow();
     injector.getInstance(ExecutorService.class).shutdown();
     injector.getInstance(ExecutorService.class).awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
     injector.getInstance(AsyncHttpClient.class).close();

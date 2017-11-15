@@ -398,12 +398,12 @@ public class WingsModule extends AbstractModule {
 
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
 
-    bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class);
+    bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class).asEagerSingleton();
 
     bind(QuartzScheduler.class)
         .annotatedWith(Names.named("VerificationJobScheduler"))
         .toProvider(VerificationJobScheduler.JobSchedulerProvider.class)
-        .in(Singleton.class);
+        .asEagerSingleton();
 
     bind(ContainerSync.class)
         .annotatedWith(Names.named("KubernetesInstanceSync"))
