@@ -178,7 +178,11 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Delegate process started");
       }
 
-      URI uri = new URI(delegateConfiguration.getManagerUrl());
+      setUpgradePending(false);
+      setAcquireTasks(true);
+      if (watched) {
+        startLocalHeartbeat();
+      }
 
       long start = clock.millis();
       Delegate.Builder builder = aDelegate()
@@ -199,6 +203,7 @@ public class DelegateServiceImpl implements DelegateService {
       Client client = ClientFactory.getDefault().newClient();
       ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
 
+      URI uri = new URI(delegateConfiguration.getManagerUrl());
       // Stream the request body
       request =
           client.newRequestBuilder()
@@ -253,13 +258,8 @@ public class DelegateServiceImpl implements DelegateService {
             }
           });
 
-      setUpgradePending(false);
-      setAcquireTasks(true);
       socket.open(request.build());
 
-      if (watched) {
-        startLocalHeartbeat();
-      }
       startHeartbeat(builder, socket);
 
       startUpgradeCheck(getVersion());
