@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import retrofit2.http.Body;
 import software.wings.beans.RestResponse;
 import software.wings.beans.UuidAware;
 import software.wings.security.EncryptionType;
@@ -13,6 +14,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -88,9 +90,8 @@ public class SecretManagementResource {
   @Path("/add-secret")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> addSecret(@QueryParam("accountId") final String accountId,
-      @QueryParam("name") String secretName, @QueryParam("value") String secretValue) {
-    return new RestResponse<>(secretManager.saveSecret(accountId, secretName, secretValue));
+  public RestResponse<String> addSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
+    return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue()));
   }
 
   @POST
@@ -98,9 +99,8 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
-      @QueryParam("uuid") final String uuId, @QueryParam("name") String secretName,
-      @QueryParam("value") String secretValue) {
-    return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretName, secretValue));
+      @QueryParam("uuid") final String uuId, @Body SecretText secretText) {
+    return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretText.getName(), secretText.getValue()));
   }
 
   @GET
