@@ -44,6 +44,7 @@ import javax.ws.rs.QueryParam;
 @Api("executions")
 @Path("/executions")
 @AuthRule(ResourceType.APPLICATION)
+@Produces("application/json")
 public class ExecutionResource {
   private AppService appService;
   private WorkflowExecutionService workflowExecutionService;
@@ -71,7 +72,6 @@ public class ExecutionResource {
    * @return the rest response
    */
   @GET
-  @Produces("application/json")
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("accountId") String accountId,
@@ -129,7 +129,6 @@ public class ExecutionResource {
    */
   @GET
   @Path("{workflowExecutionId}")
-  @Produces("application/json")
   @Timed
   @ExceptionMetered
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
@@ -148,7 +147,6 @@ public class ExecutionResource {
    * @return the rest response
    */
   @POST
-  @Produces("application/json")
   @Timed
   @ExceptionMetered
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
@@ -169,7 +167,6 @@ public class ExecutionResource {
    */
   @PUT
   @Path("{workflowExecutionId}")
-  @Produces("application/json")
   @Timed
   @ExceptionMetered
   public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
@@ -190,7 +187,6 @@ public class ExecutionResource {
    */
   @PUT
   @Path("{workflowExecutionId}/notes")
-  @Produces("application/json")
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> approveOrRejectExecution(@QueryParam("appId") String appId,
@@ -226,7 +222,6 @@ public class ExecutionResource {
    */
   @POST
   @Path("required-args")
-  @Produces("application/json")
   @Timed
   @ExceptionMetered
   public RestResponse<RequiredExecutionArgs> requiredArgs(
@@ -245,7 +240,6 @@ public class ExecutionResource {
    */
   @GET
   @Path("{workflowExecutionId}/node/{stateExecutionInstanceId}")
-  @Produces("application/json")
   @Timed
   @ExceptionMetered
   public RestResponse<Node> getExecutionNodeDetails(@QueryParam("appId") String appId,
