@@ -301,20 +301,6 @@ public class DelegateServiceTest extends WingsBaseTest {
               new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherDelegate.sh"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/run.sh");
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
-          .extracting(o -> ((AsiExtraField) o).getMode())
-          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
-
-      buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateRun.sh"))));
-
-      file = zipArchiveInputStream.getNextZipEntry();
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/stop.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
