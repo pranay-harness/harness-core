@@ -121,6 +121,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
   @Inject private Clock clock;
+  private final ConcurrentHashMap<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
   private static long lastHeartbeatSentAt = System.currentTimeMillis();
@@ -620,6 +621,12 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (delegateTaskEvent.getDelegateTaskId() != null
+        && currentlyValidatingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
+      logger.info("Task [DelegateTaskEvent: {}] already validating. Don't validate again", delegateTaskEvent);
+      return;
+    }
+
+    if (delegateTaskEvent.getDelegateTaskId() != null
         && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
       logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
       return;
@@ -635,6 +642,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask == null) {
         logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}",
             delegateTaskEvent.getDelegateTaskId(), delegateTaskEvent.getAccountId());
+        logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keys());
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
         return;
       }
@@ -644,7 +652,7 @@ public class DelegateServiceImpl implements DelegateService {
         DelegateValidateTask delegateValidateTask = delegateTask.getTaskType().getDelegateValidateTask(
             delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
-        currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
+        currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
         currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
@@ -662,7 +670,7 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
     return delegateConnectionResults -> {
       String taskId = delegateTask.getUuid();
-      currentlyExecutingTasks.remove(taskId);
+      currentlyValidatingTasks.remove(taskId);
       if (delegateConnectionResults != null) {
         boolean validated = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
         if (validated) {
