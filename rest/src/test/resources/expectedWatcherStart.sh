@@ -55,7 +55,7 @@ then
   rm -rf jre tmp
   ln -s $JRE_DIR jre
 else
-  rm -rf $JRE_DIR_OLD
+  rm -rf $JRE_DIR_OLD run.sh upgrade.sh
 fi
 
 
