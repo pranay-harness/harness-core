@@ -7,6 +7,7 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
 
+import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
@@ -406,7 +407,12 @@ public class SecretManagerImpl implements SecretManager {
   public String saveSecret(String accountId, String name, String value) {
     EncryptedData encryptedData = encrypt(
         getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT, value.toCharArray(), null, name);
-    String encryptedDataId = wingsPersistence.save(encryptedData);
+    String encryptedDataId;
+    try {
+      encryptedDataId = wingsPersistence.save(encryptedData);
+    } catch (DuplicateKeyException e) {
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", "Variable " + name + " already exists");
+    }
 
     if (UserThreadLocal.get() != null) {
       wingsPersistence.save(SecretChangeLog.builder()
@@ -437,7 +443,11 @@ public class SecretManagerImpl implements SecretManager {
     savedData.setEncryptionKey(encryptedData.getEncryptionKey());
     savedData.setEncryptedValue(encryptedData.getEncryptedValue());
     savedData.setName(name);
-    wingsPersistence.save(savedData);
+    try {
+      wingsPersistence.save(savedData);
+    } catch (DuplicateKeyException e) {
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", "Variable " + name + " already exists");
+    }
 
     if (UserThreadLocal.get() != null) {
       wingsPersistence.save(SecretChangeLog.builder()
