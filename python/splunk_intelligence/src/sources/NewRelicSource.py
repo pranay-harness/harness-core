@@ -3,7 +3,7 @@ import json
 import requests
 import sys
 
-from SplunkHarnessLoader import SplunkHarnessLoader
+from sources.HarnessLoader import HarnessLoader
 from datetime import datetime, timedelta
 import logging
 import time
@@ -22,14 +22,14 @@ class NewRelicSource(object):
         url = self.url + '/v2/applications/' + str(self.appId) + '/instances.json'
         headers = {"Accept": "application/json", "Content-Type": "application/json",
                    "X-Api-Key": '5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11'}
-        data, ret_code = SplunkHarnessLoader.get_request(url, headers)
+        data, ret_code = HarnessLoader.get_request(url, headers)
         return data['application_instances']
 
     def get_metric_info(self):
         url = self.url + '/v2/applications/' + str(self.appId) + '/metrics.json?name = WebTransaction/'
         headers = {"Accept": "application/json", "Content-Type": "application/json",
                    "X-Api-Key": '5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11'}
-        data, ret_code = SplunkHarnessLoader.get_request(url, headers)
+        data, ret_code = HarnessLoader.get_request(url, headers)
         return data['metrics']
 
     def get_metric_data(self, control_hosts, test_hosts, from_time, to_time):
@@ -76,7 +76,7 @@ class NewRelicSource(object):
                         url = self.url + '/v2/applications/' + str(self.appId) + '/instances/' + str(node['id']) \
                               + '/metrics/data.json?' + metric_string + \
                               "&from=" + str(from_time) + "&to=" + str(to_time)
-                        data, ret_code = SplunkHarnessLoader.get_request(url, headers)
+                        data, ret_code = HarnessLoader.get_request(url, headers)
                         for metric in data['metric_data']['metrics']:
                             for index, timeslice in enumerate(metric['timeslices']):
                                 if 'average_response_time' in timeslice['values']:

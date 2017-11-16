@@ -6,7 +6,7 @@ Read splunk dumps from file
 """
 
 
-class SplunkFileSource(object):
+class FileLoader(object):
     # load data from json
     @staticmethod
     def load_data(data_source_name):
