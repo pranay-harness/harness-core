@@ -3,6 +3,7 @@
 if [ -z "$1" ]
 then
   echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
+  exit 0
 fi
 
 REMOTE_DELEGATE_URL=${delegateJarUrl}
