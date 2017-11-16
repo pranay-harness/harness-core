@@ -1,1 +1,1 @@
-Install the Harness Delegate by executing run.sh in this directory.
+Install the Harness Delegate by executing ${startScript} in this directory.

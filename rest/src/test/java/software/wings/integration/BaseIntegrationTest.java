@@ -387,7 +387,10 @@ protected KmsConfig getKmsConfig() {
 }
 
 protected void enableKmsFeatureFlag() {
-  FeatureFlag kmsFeatureFlag = FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build();
-  wingsPersistence.save(kmsFeatureFlag);
+  wingsPersistence.save(FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build());
+}
+
+protected void enableWatcherFeatureFlag() {
+  wingsPersistence.save(FeatureFlag.builder().name(FeatureName.WATCHER.name()).enabled(true).obsolete(false).build());
 }
 }

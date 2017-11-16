@@ -8,13 +8,13 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.common.Constants.DELEGATE_VALIDATION_CACHE;
@@ -43,7 +43,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.alert.AlertType;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -55,6 +54,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -81,6 +81,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -216,16 +217,16 @@ public class DelegateServiceImpl implements DelegateService {
           cfg.getTemplate("delegate.sh.ftl").process(scriptParams, stringWriter);
           delegateScripts.setDelegateScript(stringWriter.toString());
         }
-      }
+      } else {
+        try (StringWriter stringWriter = new StringWriter()) {
+          cfg.getTemplate("upgrade.sh.ftl").process(scriptParams, stringWriter);
+          delegateScripts.setUpgradeScript(stringWriter.toString());
+        }
 
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("upgrade.sh.ftl").process(scriptParams, stringWriter);
-        delegateScripts.setUpgradeScript(stringWriter.toString());
-      }
-
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("run.sh.ftl").process(scriptParams, stringWriter);
-        delegateScripts.setRunScript(stringWriter.toString());
+        try (StringWriter stringWriter = new StringWriter()) {
+          cfg.getTemplate("run.sh.ftl").process(scriptParams, stringWriter);
+          delegateScripts.setRunScript(stringWriter.toString());
+        }
       }
 
       try (StringWriter stringWriter = new StringWriter()) {
@@ -327,10 +328,11 @@ public class DelegateServiceImpl implements DelegateService {
     out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
     out.closeArchiveEntry();
 
-    ImmutableMap<Object, Object> scriptParams =
-        getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+    Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
-    if (featureFlagService.isEnabled(FeatureName.WATCHER, accountId)) {
+    boolean watcherEnabled = featureFlagService.isEnabled(FeatureName.WATCHER, accountId);
+
+    if (watcherEnabled) {
       File start = File.createTempFile("start", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start))) {
         cfg.getTemplate("start.sh.ftl").process(scriptParams, fileWriter);
@@ -362,23 +364,23 @@ public class DelegateServiceImpl implements DelegateService {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
+    } else {
+      File run = File.createTempFile("run", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
+        cfg.getTemplate("run.sh.ftl").process(scriptParams, fileWriter);
+      }
+      run = new File(run.getAbsolutePath());
+      ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, Constants.DELEGATE_DIR + "/run.sh");
+      runZipArchiveEntry.setUnixMode(0755 << 16L);
+      AsiExtraField permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      runZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(runZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(run)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
     }
-
-    File run = File.createTempFile("run", ".sh");
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
-      cfg.getTemplate("run.sh.ftl").process(scriptParams, fileWriter);
-    }
-    run = new File(run.getAbsolutePath());
-    ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, Constants.DELEGATE_DIR + "/run.sh");
-    runZipArchiveEntry.setUnixMode(0755 << 16L);
-    AsiExtraField permissions = new AsiExtraField();
-    permissions.setMode(0755);
-    runZipArchiveEntry.addExtraField(permissions);
-    out.putArchiveEntry(runZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(run)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
 
     File stop = File.createTempFile("stop", ".sh");
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
@@ -387,7 +389,7 @@ public class DelegateServiceImpl implements DelegateService {
     stop = new File(stop.getAbsolutePath());
     ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");
     stopZipArchiveEntry.setUnixMode(0755 << 16L);
-    permissions = new AsiExtraField();
+    AsiExtraField permissions = new AsiExtraField();
     permissions.setMode(0755);
     stopZipArchiveEntry.addExtraField(permissions);
     out.putArchiveEntry(stopZipArchiveEntry);
@@ -398,7 +400,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     File readme = File.createTempFile("README", ".txt");
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
-      cfg.getTemplate("readme.txt.ftl").process(null, fileWriter);
+      cfg.getTemplate("readme.txt.ftl")
+          .process(ImmutableMap.of("startScript", watcherEnabled ? "start.sh" : "run.sh"), fileWriter);
     }
     readme = new File(readme.getAbsolutePath());
     ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, Constants.DELEGATE_DIR + "/README.txt");
