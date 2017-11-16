@@ -59,7 +59,7 @@ public class CodeDeployInfraMappingYamlHandler
             appId, envId, serviceId, computeProviderId);
     CodeDeployInfrastructureMappingBuilder builder = previous.deepClone();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (CodeDeployInfrastructureMapping) infraMappingService.update(builder.build());
   }
 
   private void setWithYamlValues(CodeDeployInfrastructureMappingBuilder builder,
@@ -114,19 +114,12 @@ public class CodeDeployInfraMappingYamlHandler
     CodeDeployInfrastructureMappingBuilder builder =
         CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (CodeDeployInfrastructureMapping) infraMappingService.save(builder.build());
   }
 
   @Override
   public CodeDeployInfrastructureMapping get(String accountId, String yamlFilePath) {
     return (CodeDeployInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
-  }
-
-  @Override
-  public CodeDeployInfrastructureMapping update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    CodeDeployInfrastructureMapping infrastructureMapping = updateFromYaml(changeContext, changeSetContext);
-    return (CodeDeployInfrastructureMapping) infraMappingService.update(infrastructureMapping);
   }
 
   @Override

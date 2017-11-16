@@ -37,7 +37,7 @@ public class DockerArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (DockerArtifactStream) artifactStreamService.update(builder.build());
   }
 
   @Override
@@ -59,7 +59,7 @@ public class DockerArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Builder builder = Builder.aDockerArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (DockerArtifactStream) artifactStreamService.create(builder.build());
   }
 
   private void setWithYamlValues(

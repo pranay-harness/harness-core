@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import software.wings.beans.ObjectType;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.Builder;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -33,7 +34,8 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Override
   public Pipeline createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return setWithYamlValues(changeContext, changeSetContext, Pipeline.Builder.aPipeline(), true);
+    Pipeline pipeline = setWithYamlValues(changeContext, changeSetContext, Builder.aPipeline(), true);
+    return pipelineService.createPipeline(pipeline);
   }
 
   private Pipeline setWithYamlValues(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext,
@@ -97,9 +99,10 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Override
   public Pipeline updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    Pipeline pipeline =
+    Pipeline previous =
         yamlSyncHelper.getPipeline(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    return setWithYamlValues(changeContext, changeSetContext, pipeline.toBuilder(), false);
+    Pipeline pipeline = setWithYamlValues(changeContext, changeSetContext, previous.toBuilder(), false);
+    return pipelineService.updatePipeline(pipeline);
   }
 
   @Override
@@ -115,12 +118,5 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Override
   public Pipeline get(String accountId, String yamlFilePath) {
     return yamlSyncHelper.getPipeline(accountId, yamlFilePath);
-  }
-
-  @Override
-  public Pipeline update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    Pipeline pipeline = updateFromYaml(changeContext, changeSetContext);
-    return pipelineService.updatePipeline(pipeline);
   }
 }

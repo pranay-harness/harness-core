@@ -55,7 +55,7 @@ public class GcpKubernetesInfraMappingYamlHandler
             appId, envId, serviceId, computeProviderId);
     GcpKubernetesInfrastructureMapping.Builder builder = previous.deepClone();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (GcpKubernetesInfrastructureMapping) infraMappingService.update(builder.build());
   }
 
   private void setWithYamlValues(GcpKubernetesInfrastructureMapping.Builder builder,
@@ -106,19 +106,12 @@ public class GcpKubernetesInfraMappingYamlHandler
     GcpKubernetesInfrastructureMapping.Builder builder =
         GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (GcpKubernetesInfrastructureMapping) infraMappingService.save(builder.build());
   }
 
   @Override
   public GcpKubernetesInfrastructureMapping get(String accountId, String yamlFilePath) {
     return (GcpKubernetesInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
-  }
-
-  @Override
-  public GcpKubernetesInfrastructureMapping update(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    GcpKubernetesInfrastructureMapping infrastructureMapping = updateFromYaml(changeContext, changeSetContext);
-    return (GcpKubernetesInfrastructureMapping) infraMappingService.update(infrastructureMapping);
   }
 
   @Override

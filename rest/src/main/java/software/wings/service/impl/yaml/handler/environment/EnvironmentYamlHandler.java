@@ -45,7 +45,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.toBuilder();
     setWithYamlValues(builder, changeContext.getYaml());
-    return builder.build();
+    return environmentService.update(builder.build());
   }
 
   private void setWithYamlValues(Builder builder, Environment.Yaml envYaml) {
@@ -81,12 +81,5 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Override
   public Environment get(String accountId, String yamlFilePath) {
     return yamlSyncHelper.getEnvironment(accountId, yamlFilePath);
-  }
-
-  @Override
-  public Environment update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    Environment environment = updateFromYaml(changeContext, changeSetContext);
-    return environmentService.update(environment);
   }
 }

@@ -69,9 +69,4 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   public C get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
-
-  @Override
-  public C update(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return updateFromYaml(changeContext, changeSetContext);
-  }
 }
