@@ -40,17 +40,31 @@ public class UpgradeServiceImpl implements UpgradeService {
     File goaheadFile = new File("goahead");
     StartedProcess process = null;
     try {
-      logger.info("[Old] Starting new delegate process");
       PipedInputStream pipedInputStream = new PipedInputStream();
-      process = new ProcessExecutor()
-                    .timeout(5, TimeUnit.MINUTES)
-                    .command("nohup", "./upgrade.sh")
-                    .redirectError(Slf4jStream.of("UpgradeScript").asError())
-                    .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
-                    .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
-                    .readOutput(true)
-                    .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-                    .start();
+      File watcherScript = new File("start.sh");
+      if (watcherScript.exists()) {
+        logger.info("[Old] Transitioning to watcher");
+        process = new ProcessExecutor()
+                      .timeout(5, TimeUnit.MINUTES)
+                      .command("nohup", "./start.sh", "transition")
+                      .redirectError(Slf4jStream.of("UpgradeToWatcherScript").asError())
+                      .redirectOutput(Slf4jStream.of("UpgradeToWatcherScript").asInfo())
+                      .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
+                      .readOutput(true)
+                      .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                      .start();
+      } else {
+        logger.info("[Old] Starting new delegate process");
+        process = new ProcessExecutor()
+                      .timeout(5, TimeUnit.MINUTES)
+                      .command("nohup", "./upgrade.sh")
+                      .redirectError(Slf4jStream.of("UpgradeScript").asError())
+                      .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
+                      .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
+                      .readOutput(true)
+                      .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                      .start();
+      }
       logger.info("[Old] Upgrade script executed: {}. Waiting for process to start", process.getProcess().isAlive());
 
       BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
