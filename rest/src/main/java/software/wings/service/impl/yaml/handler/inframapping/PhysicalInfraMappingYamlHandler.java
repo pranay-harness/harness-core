@@ -8,6 +8,7 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class PhysicalInfraMappingYamlHandler
         .withDeploymentType(infraMapping.getDeploymentType())
         .withComputeProviderName(infraMapping.getComputeProviderName())
         .withName(infraMapping.getName())
+        .withComputeProviderType(infraMapping.getComputeProviderType())
         .withConnection(infraMapping.getHostConnectionAttrs())
         .withHostNames(infraMapping.getHostNames())
         .withLoadBalancer(infraMapping.getLoadBalancerName())
@@ -64,18 +66,24 @@ public class PhysicalInfraMappingYamlHandler
       PhysicalInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
       String serviceId) {
     // common stuff for all infra mapping
-    builder.withComputeProviderSettingId(computeProviderId)
+    builder.withName(infraMappingYaml.getName())
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withComputeProviderSettingId(computeProviderId)
         .withComputeProviderName(infraMappingYaml.getComputeProviderName())
         .withComputeProviderType(infraMappingYaml.getComputeProviderType())
         .withEnvId(envId)
         .withServiceId(serviceId)
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
         .withDeploymentType(infraMappingYaml.getDeploymentType())
         .withName(infraMappingYaml.getName())
         .withAppId(appId);
 
+    if (!Misc.isNullOrEmpty(infraMappingYaml.getLoadBalancer())) {
+      builder.withLoadBalancerId(getSettingId(appId, infraMappingYaml.getLoadBalancer()));
+    }
     builder.withHostConnectionAttrs(infraMappingYaml.getConnection())
         .withHostNames(infraMappingYaml.getHostNames())
-        .withLoadBalancerId(getSettingId(appId, infraMappingYaml.getLoadBalancer()))
+        .withAutoPopulate(false)
         .build();
   }
 
@@ -86,7 +94,7 @@ public class PhysicalInfraMappingYamlHandler
         || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
         || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
         || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getConnection())
-        || isEmpty(infraMappingYaml.getHostNames()) || isEmpty(infraMappingYaml.getLoadBalancer()));
+        || isEmpty(infraMappingYaml.getHostNames()));
   }
 
   @Override
