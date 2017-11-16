@@ -841,7 +841,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void setUpgradePending(boolean upgradePending) {
-    logger.info("Setting delegate {} upgrade pending: {}", delegateId, upgradePending);
+    logger.info("Setting delegate upgrade pending: {}", upgradePending);
     this.upgradePending = upgradePending;
   }
 
