@@ -76,8 +76,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -102,8 +100,11 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
+  private static final String GO_AHEAD = "go-ahead";
+  private static final String STOP_ACQUIRING = "stop-acquiring";
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
+  private final Object goAheadWaiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -135,8 +136,6 @@ public class DelegateServiceImpl implements DelegateService {
   private String delegateId;
   private String accountId;
 
-  private BlockingQueue<Message> delegateMessages = new ArrayBlockingQueue<>(100);
-
   @Override
   public void run(boolean watched, boolean upgrade, boolean restart) {
     try {
@@ -150,9 +149,9 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("[New] Delegate process started. Sending confirmation");
         messageService.writeMessage("delegate-started");
         logger.info("[New] Waiting for go ahead from watcher");
-        Message message = waitForIncomingMessage("go-ahead", TimeUnit.MINUTES.toMillis(5));
-        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
-                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
+        boolean gotGoAhead = waitForGoAhead(TimeUnit.MINUTES.toMillis(5));
+        logger.info(
+            gotGoAhead ? "[New] Got go-ahead. Proceeding" : "[New] Timed out waiting for go-ahead. Proceeding anyway");
 
       } else if (upgrade) {
         // TODO - Legacy path. Remove after watcher is standard
@@ -398,7 +397,7 @@ public class DelegateServiceImpl implements DelegateService {
         try {
           attempts.incrementAndGet();
           String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
-          logger.info("Registering delegate - " + attemptString);
+          logger.info("Registering delegate" + attemptString);
           delegateResponse = execute(managerClient.registerDelegate(
               accountId, builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
@@ -409,7 +408,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
         if (delegateResponse == null || delegateResponse.getResource() == null) {
           logger.error(
-              "Error occurred while registering elegate with manager for account {}. Please see the manager log for more information",
+              "Error occurred while registering delegate with manager for account {}. Please see the manager log for more information",
               accountId);
           Thread.sleep(55000);
           return null;
@@ -440,22 +439,16 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private Message waitForIncomingMessage(String messageName, long timeout) {
+  private boolean waitForGoAhead(long timeout) {
     try {
       return timeLimiter.callWithTimeout(() -> {
-        Message message = null;
-        while (message == null || !message.getMessage().equals(messageName)) {
-          try {
-            message = delegateMessages.take();
-            logger.info("Message on delegate input queue: " + message);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
+        synchronized (goAheadWaiter) {
+          goAheadWaiter.wait();
         }
-        return message;
+        return true;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
-      return null;
+      return false;
     }
   }
 
@@ -463,15 +456,15 @@ public class DelegateServiceImpl implements DelegateService {
     inputExecutor.scheduleWithFixedDelay(() -> {
       Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
       if (message != null) {
-        if (message.getMessage().equals("stop-acquiring")) {
-          handleStopAcquiringMessage();
-        }
-        while (!delegateMessages.offer(message)) {
-          try {
-            Thread.sleep(100L);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
+        switch (message.getMessage()) {
+          case STOP_ACQUIRING:
+            handleStopAcquiringMessage();
+            break;
+          case GO_AHEAD:
+            synchronized (goAheadWaiter) {
+              goAheadWaiter.notify();
+            }
+            break;
         }
       }
     }, 0, 1, TimeUnit.SECONDS);
