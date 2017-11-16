@@ -4,7 +4,7 @@ import numpy as np
 
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder, SAXHMMDistance
 from core.util.TimeSeriesUtils import get_deviation_type, get_deviation_min_threshold
-from sources.SplunkFileSource import SplunkFileSource
+from sources.FileLoader import FileLoader
 
 
 def lists_equal(a, b):
@@ -37,7 +37,7 @@ def create_nan(data):
                     data_list[i] = np.nan
 
 def run_analysis(filename, make_nan=False):
-    txns = SplunkFileSource.load_data(filename)
+    txns = FileLoader.load_data(filename)
     for txn_name, txn_data in txns.items():
         for metric_name, metric_data in txn_data['metrics'].items():
             if 'verify-email' in txn_data['txn_name']:

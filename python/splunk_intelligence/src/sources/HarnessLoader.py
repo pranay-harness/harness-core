@@ -8,7 +8,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-class SplunkHarnessLoader(object):
+class HarnessLoader(object):
     @staticmethod
     def get_request(url, headers, max_retries=1):
         sleep_time = 1
