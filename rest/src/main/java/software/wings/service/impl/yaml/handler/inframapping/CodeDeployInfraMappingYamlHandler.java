@@ -65,7 +65,8 @@ public class CodeDeployInfraMappingYamlHandler
   private void setWithYamlValues(CodeDeployInfrastructureMappingBuilder builder,
       CodeDeployInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
       String serviceId) {
-    builder.withComputeProviderSettingId(computeProviderId)
+    builder.withAutoPopulate(false)
+        .withComputeProviderSettingId(computeProviderId)
         .withComputeProviderName(infraMappingYaml.getComputeProviderName())
         .withComputeProviderType(infraMappingYaml.getComputeProviderType())
         .withEnvId(envId)

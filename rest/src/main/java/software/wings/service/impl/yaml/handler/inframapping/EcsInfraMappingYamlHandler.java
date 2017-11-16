@@ -62,7 +62,8 @@ public class EcsInfraMappingYamlHandler
       EcsInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
       String serviceId) {
     // common stuff for all infra mapping
-    builder.withComputeProviderSettingId(computeProviderId)
+    builder.withAutoPopulate(false)
+        .withComputeProviderSettingId(computeProviderId)
         .withComputeProviderName(infraMappingYaml.getComputeProviderName())
         .withComputeProviderType(infraMappingYaml.getComputeProviderType())
         .withEnvId(envId)

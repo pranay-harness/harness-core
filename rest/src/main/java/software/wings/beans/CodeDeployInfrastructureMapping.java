@@ -216,10 +216,13 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   }
 
   public static final class CodeDeployInfrastructureMappingBuilder {
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+    protected String appId;
     private String region;
     private String applicationName;
     private String deploymentGroup;
     private String deploymentConfig;
+    private String uuid;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -229,9 +232,12 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     private String serviceTemplateId;
     private String serviceId;
     private String computeProviderType;
+    private String infraMappingType;
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    // auto populate name
+    private boolean autoPopulate = true;
 
     private CodeDeployInfrastructureMappingBuilder() {}
 
@@ -259,6 +265,16 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public CodeDeployInfrastructureMappingBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public CodeDeployInfrastructureMappingBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public CodeDeployInfrastructureMappingBuilder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -276,6 +292,11 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
 
     public CodeDeployInfrastructureMappingBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public CodeDeployInfrastructureMappingBuilder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
       return this;
     }
 
@@ -304,6 +325,11 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public CodeDeployInfrastructureMappingBuilder withInfraMappingType(String infraMappingType) {
+      this.infraMappingType = infraMappingType;
+      return this;
+    }
+
     public CodeDeployInfrastructureMappingBuilder withDeploymentType(String deploymentType) {
       this.deploymentType = deploymentType;
       return this;
@@ -319,24 +345,34 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public CodeDeployInfrastructureMappingBuilder withAutoPopulate(boolean autoPopulate) {
+      this.autoPopulate = autoPopulate;
+      return this;
+    }
+
     public CodeDeployInfrastructureMappingBuilder but() {
       return aCodeDeployInfrastructureMapping()
           .withRegion(region)
           .withApplicationName(applicationName)
           .withDeploymentGroup(deploymentGroup)
           .withDeploymentConfig(deploymentConfig)
+          .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withEntityYamlPath(entityYamlPath)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
           .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
+          .withInfraMappingType(infraMappingType)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withName(name);
+          .withName(name)
+          .withAutoPopulate(autoPopulate);
     }
 
     public CodeDeployInfrastructureMapping build() {
@@ -345,18 +381,23 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       codeDeployInfrastructureMapping.setApplicationName(applicationName);
       codeDeployInfrastructureMapping.setDeploymentGroup(deploymentGroup);
       codeDeployInfrastructureMapping.setDeploymentConfig(deploymentConfig);
+      codeDeployInfrastructureMapping.setUuid(uuid);
+      codeDeployInfrastructureMapping.setAppId(appId);
       codeDeployInfrastructureMapping.setCreatedBy(createdBy);
       codeDeployInfrastructureMapping.setCreatedAt(createdAt);
       codeDeployInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
       codeDeployInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      codeDeployInfrastructureMapping.setEntityYamlPath(entityYamlPath);
       codeDeployInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       codeDeployInfrastructureMapping.setEnvId(envId);
       codeDeployInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       codeDeployInfrastructureMapping.setServiceId(serviceId);
       codeDeployInfrastructureMapping.setComputeProviderType(computeProviderType);
+      codeDeployInfrastructureMapping.setInfraMappingType(infraMappingType);
       codeDeployInfrastructureMapping.setDeploymentType(deploymentType);
       codeDeployInfrastructureMapping.setComputeProviderName(computeProviderName);
       codeDeployInfrastructureMapping.setName(name);
+      codeDeployInfrastructureMapping.setAutoPopulate(autoPopulate);
       return codeDeployInfrastructureMapping;
     }
   }

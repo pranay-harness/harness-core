@@ -117,7 +117,8 @@ public class AwsInfraMappingYamlHandler
       awsInstanceFilter.setTags(getTags(infraMappingYaml.getTags()));
     }
 
-    builder.withComputeProviderSettingId(computeProviderId)
+    builder.withAutoPopulate(false)
+        .withComputeProviderSettingId(computeProviderId)
         .withComputeProviderName(infraMappingYaml.getComputeProviderName())
         .withComputeProviderType(infraMappingYaml.getComputeProviderType())
         .withEnvId(envId)
