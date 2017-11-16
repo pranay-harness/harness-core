@@ -101,7 +101,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
     saveOrUpdateServiceVariables(
         previousYaml, changeContext.getYaml(), previous.getServiceVariables(), previous.getAppId(), previous.getUuid());
 
-    return builder.build();
+    return serviceResourceService.update(builder.build());
   }
 
   private void setWithYamlValues(Builder builder, Service.Yaml serviceYaml) throws HarnessException {
@@ -144,13 +144,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   public Service get(String accountId, String yamlFilePath) {
     String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
     return yamlSyncHelper.getService(appId, yamlFilePath);
-  }
-
-  @Override
-  public Service update(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    Service application = updateFromYaml(changeContext, changeSetContext);
-    return serviceResourceService.update(application);
   }
 
   private void saveOrUpdateServiceVariables(Service.Yaml previousYaml, Service.Yaml updatedYaml,

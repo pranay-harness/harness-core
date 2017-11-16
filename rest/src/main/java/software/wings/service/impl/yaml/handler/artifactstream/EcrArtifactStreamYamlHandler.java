@@ -36,7 +36,7 @@ public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<EcrA
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (EcrArtifactStream) artifactStreamService.update(builder.build());
   }
 
   @Override
@@ -57,7 +57,7 @@ public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<EcrA
     String serviceId = null;
     Builder builder = Builder.anEcrArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (EcrArtifactStream) artifactStreamService.create(builder.build());
   }
 
   private void setWithYamlValues(

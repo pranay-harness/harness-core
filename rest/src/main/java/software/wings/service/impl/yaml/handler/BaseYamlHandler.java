@@ -27,9 +27,6 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
 
   public abstract B get(String accountId, String yamlFilePath);
 
-  public abstract B update(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException;
-
   protected ChangeContext.Builder cloneFileChangeContext(ChangeContext<Y> context, BaseYaml yaml) {
     Change change = context.getChange();
     Change.Builder clonedChange = change.clone();

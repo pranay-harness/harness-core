@@ -55,7 +55,7 @@ public class EcsInfraMappingYamlHandler
             appId, envId, serviceId, computeProviderId);
     EcsInfrastructureMapping.Builder builder = previous.deepClone();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (EcsInfrastructureMapping) infraMappingService.update(builder.build());
   }
 
   private void setWithYamlValues(EcsInfrastructureMapping.Builder builder,
@@ -106,19 +106,12 @@ public class EcsInfraMappingYamlHandler
 
     EcsInfrastructureMapping.Builder builder = EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (EcsInfrastructureMapping) infraMappingService.save(builder.build());
   }
 
   @Override
   public EcsInfrastructureMapping get(String accountId, String yamlFilePath) {
     return (EcsInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
-  }
-
-  @Override
-  public EcsInfrastructureMapping update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    EcsInfrastructureMapping infrastructureMapping = updateFromYaml(changeContext, changeSetContext);
-    return (EcsInfrastructureMapping) infraMappingService.update(infrastructureMapping);
   }
 
   @Override

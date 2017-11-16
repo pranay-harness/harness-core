@@ -61,7 +61,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
       throws HarnessException {
     WorkflowBuilder workflowBuilder = WorkflowBuilder.aWorkflow();
     setWithYamlValues(changeContext, changeSetContext, workflowBuilder, true);
-    return workflowBuilder.build();
+    return workflowService.createWorkflow(workflowBuilder.build());
   }
 
   private void setWithYamlValues(ChangeContext<Y> changeContext, List<ChangeContext> changeContextList,
@@ -386,7 +386,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
         yamlSyncHelper.getWorkflow(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     WorkflowBuilder workflowBuilder = previous.toBuilder();
     setWithYamlValues(changeContext, changeSetContext, workflowBuilder, false);
-    return workflowBuilder.build();
+    return workflowService.updateWorkflow(workflowBuilder.build());
   }
 
   @Override
@@ -402,12 +402,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
   @Override
   public Workflow get(String accountId, String yamlFilePath) {
     return yamlSyncHelper.getWorkflow(accountId, yamlFilePath);
-  }
-
-  @Override
-  public Workflow update(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    Workflow workflow = updateFromYaml(changeContext, changeSetContext);
-    return workflowService.updateWorkflow(workflow);
   }
 
   @Data

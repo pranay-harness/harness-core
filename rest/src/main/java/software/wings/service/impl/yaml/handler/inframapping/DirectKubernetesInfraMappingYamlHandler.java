@@ -59,7 +59,7 @@ public class DirectKubernetesInfraMappingYamlHandler
             appId, envId, serviceId, computeProviderId);
     DirectKubernetesInfrastructureMapping.Builder builder = previous.deepClone();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (DirectKubernetesInfrastructureMapping) infraMappingService.update(builder.build());
   }
 
   private void setWithYamlValues(DirectKubernetesInfrastructureMapping.Builder builder,
@@ -117,19 +117,12 @@ public class DirectKubernetesInfraMappingYamlHandler
     DirectKubernetesInfrastructureMapping.Builder builder =
         DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (DirectKubernetesInfrastructureMapping) infraMappingService.save(builder.build());
   }
 
   @Override
   public DirectKubernetesInfrastructureMapping get(String accountId, String yamlFilePath) {
     return (DirectKubernetesInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
-  }
-
-  @Override
-  public DirectKubernetesInfrastructureMapping update(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    DirectKubernetesInfrastructureMapping infrastructureMapping = updateFromYaml(changeContext, changeSetContext);
-    return (DirectKubernetesInfrastructureMapping) infraMappingService.update(infrastructureMapping);
   }
 
   @Override

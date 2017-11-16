@@ -59,7 +59,7 @@ public class AwsLambdaInfraMappingYamlHandler
             appId, envId, serviceId, computeProviderId);
     AwsLambdaInfraStructureMapping.Builder builder = previous.deepClone();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (AwsLambdaInfraStructureMapping) infraMappingService.update(builder.build());
   }
 
   private void setWithYamlValues(AwsLambdaInfraStructureMapping.Builder builder,
@@ -118,19 +118,12 @@ public class AwsLambdaInfraMappingYamlHandler
     AwsLambdaInfraStructureMapping.Builder builder =
         AwsLambdaInfraStructureMapping.Builder.anAwsLambdaInfraStructureMapping();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (AwsLambdaInfraStructureMapping) infraMappingService.save(builder.build());
   }
 
   @Override
   public AwsLambdaInfraStructureMapping get(String accountId, String yamlFilePath) {
     return (AwsLambdaInfraStructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
-  }
-
-  @Override
-  public AwsLambdaInfraStructureMapping update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    AwsLambdaInfraStructureMapping infrastructureMapping = updateFromYaml(changeContext, changeSetContext);
-    return (AwsLambdaInfraStructureMapping) infraMappingService.update(infrastructureMapping);
   }
 
   @Override
