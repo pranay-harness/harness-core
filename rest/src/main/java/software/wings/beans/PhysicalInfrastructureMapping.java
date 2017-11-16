@@ -39,6 +39,9 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     super(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name());
   }
 
+  /**
+   * The type Yaml.
+   */
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends InfrastructureMapping.Yaml {
@@ -48,6 +51,9 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     private List<String> hostNames;
     private String loadBalancer;
 
+    /**
+     * The type Builder.
+     */
     public static final class Builder {
       private String computeProviderType;
       // maps to hostConnectionAttrs
@@ -64,60 +70,130 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
 
       private Builder() {}
 
+      /**
+       * A yaml builder.
+       *
+       * @return the builder
+       */
       public static Builder aYaml() {
         return new Builder();
       }
 
+      /**
+       * With compute provider type builder.
+       *
+       * @param computeProviderType the compute provider type
+       * @return the builder
+       */
       public Builder withComputeProviderType(String computeProviderType) {
         this.computeProviderType = computeProviderType;
         return this;
       }
 
+      /**
+       * With connection builder.
+       *
+       * @param connection the connection
+       * @return the builder
+       */
       public Builder withConnection(String connection) {
         this.connection = connection;
         return this;
       }
 
+      /**
+       * With service name builder.
+       *
+       * @param serviceName the service name
+       * @return the builder
+       */
       public Builder withServiceName(String serviceName) {
         this.serviceName = serviceName;
         return this;
       }
 
+      /**
+       * With host names builder.
+       *
+       * @param hostNames the host names
+       * @return the builder
+       */
       public Builder withHostNames(List<String> hostNames) {
         this.hostNames = hostNames;
         return this;
       }
 
+      /**
+       * With infra mapping type builder.
+       *
+       * @param infraMappingType the infra mapping type
+       * @return the builder
+       */
       public Builder withInfraMappingType(String infraMappingType) {
         this.infraMappingType = infraMappingType;
         return this;
       }
 
+      /**
+       * With type builder.
+       *
+       * @param type the type
+       * @return the builder
+       */
       public Builder withType(String type) {
         this.type = type;
         return this;
       }
 
+      /**
+       * With load balancer builder.
+       *
+       * @param loadBalancer the load balancer
+       * @return the builder
+       */
       public Builder withLoadBalancer(String loadBalancer) {
         this.loadBalancer = loadBalancer;
         return this;
       }
 
+      /**
+       * With deployment type builder.
+       *
+       * @param deploymentType the deployment type
+       * @return the builder
+       */
       public Builder withDeploymentType(String deploymentType) {
         this.deploymentType = deploymentType;
         return this;
       }
 
+      /**
+       * With compute provider name builder.
+       *
+       * @param computeProviderName the compute provider name
+       * @return the builder
+       */
       public Builder withComputeProviderName(String computeProviderName) {
         this.computeProviderName = computeProviderName;
         return this;
       }
 
+      /**
+       * With name builder.
+       *
+       * @param name the name
+       * @return the builder
+       */
       public Builder withName(String name) {
         this.name = name;
         return this;
       }
 
+      /**
+       * But builder.
+       *
+       * @return the builder
+       */
       public Builder but() {
         return aYaml()
             .withComputeProviderType(computeProviderType)
@@ -132,6 +208,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
             .withName(name);
       }
 
+      /**
+       * Build yaml.
+       *
+       * @return the yaml
+       */
       public Yaml build() {
         Yaml yaml = new Yaml();
         yaml.setComputeProviderType(computeProviderType);
@@ -226,14 +307,29 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     this.loadBalancerId = loadBalancerId;
   }
 
+  /**
+   * Gets load balancer name.
+   *
+   * @return the load balancer name
+   */
   public String getLoadBalancerName() {
     return loadBalancerName;
   }
 
+  /**
+   * Sets load balancer name.
+   *
+   * @param loadBalancerName the load balancer name
+   */
   public void setLoadBalancerName(String loadBalancerName) {
     this.loadBalancerName = loadBalancerName;
   }
 
+  /**
+   * Deep clone builder.
+   *
+   * @return the builder
+   */
   public Builder deepClone() {
     return aPhysicalInfrastructureMapping()
         .withHostConnectionAttrs(getHostConnectionAttrs())
@@ -259,11 +355,19 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    * The type Builder.
    */
   public static final class Builder {
+    /**
+     * The Entity yaml path.
+     */
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+    /**
+     * The App id.
+     */
+    protected String appId;
     private String hostConnectionAttrs;
     private List<String> hostNames;
     private String loadBalancerId;
+    private String loadBalancerName;
     private String uuid;
-    private String appId;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -273,9 +377,12 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     private String serviceTemplateId;
     private String serviceId;
     private String computeProviderType;
+    private String infraMappingType;
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    // auto populate name
+    private boolean autoPopulate = true;
 
     private Builder() {}
 
@@ -318,6 +425,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withLoadBalancerId(String loadBalancerId) {
       this.loadBalancerId = loadBalancerId;
+      return this;
+    }
+
+    /**
+     * With load balancer name builder.
+     *
+     * @param loadBalancerName the load balancer name
+     * @return the builder
+     */
+    public Builder withLoadBalancerName(String loadBalancerName) {
+      this.loadBalancerName = loadBalancerName;
       return this;
     }
 
@@ -388,6 +506,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With entity yaml path builder.
+     *
+     * @param entityYamlPath the entity yaml path
+     * @return the builder
+     */
+    public Builder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
+      return this;
+    }
+
+    /**
      * With compute provider setting id builder.
      *
      * @param computeProviderSettingId the compute provider setting id
@@ -443,6 +572,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With infra mapping type builder.
+     *
+     * @param infraMappingType the infra mapping type
+     * @return the builder
+     */
+    public Builder withInfraMappingType(String infraMappingType) {
+      this.infraMappingType = infraMappingType;
+      return this;
+    }
+
+    /**
      * With deployment type builder.
      *
      * @param deploymentType the deployment type
@@ -476,6 +616,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With auto populate builder.
+     *
+     * @param autoPopulate the auto populate
+     * @return the builder
+     */
+    public Builder withAutoPopulate(boolean autoPopulate) {
+      this.autoPopulate = autoPopulate;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -485,20 +636,24 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
           .withHostConnectionAttrs(hostConnectionAttrs)
           .withHostNames(hostNames)
           .withLoadBalancerId(loadBalancerId)
+          .withLoadBalancerName(loadBalancerName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withEntityYamlPath(entityYamlPath)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
           .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
+          .withInfraMappingType(infraMappingType)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withName(name);
+          .withName(name)
+          .withAutoPopulate(autoPopulate);
     }
 
     /**
@@ -511,20 +666,24 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
       physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       physicalInfrastructureMapping.setHostNames(hostNames);
       physicalInfrastructureMapping.setLoadBalancerId(loadBalancerId);
+      physicalInfrastructureMapping.setLoadBalancerName(loadBalancerName);
       physicalInfrastructureMapping.setUuid(uuid);
       physicalInfrastructureMapping.setAppId(appId);
       physicalInfrastructureMapping.setCreatedBy(createdBy);
       physicalInfrastructureMapping.setCreatedAt(createdAt);
       physicalInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
       physicalInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      physicalInfrastructureMapping.setEntityYamlPath(entityYamlPath);
       physicalInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       physicalInfrastructureMapping.setEnvId(envId);
       physicalInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       physicalInfrastructureMapping.setServiceId(serviceId);
       physicalInfrastructureMapping.setComputeProviderType(computeProviderType);
+      physicalInfrastructureMapping.setInfraMappingType(infraMappingType);
       physicalInfrastructureMapping.setDeploymentType(deploymentType);
       physicalInfrastructureMapping.setComputeProviderName(computeProviderName);
       physicalInfrastructureMapping.setName(name);
+      physicalInfrastructureMapping.setAutoPopulate(autoPopulate);
       return physicalInfrastructureMapping;
     }
   }
