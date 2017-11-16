@@ -4,7 +4,7 @@ import numpy as np
 import sys
 
 from TimeSeriesML import TSAnomlyDetector
-from sources.SplunkFileSource import SplunkFileSource
+from sources.FileLoader import FileLoader
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--analysis_minute", type=int, required=True)
@@ -15,13 +15,13 @@ options = parser.parse_args(['--analysis_minute', '0', '--tolerance', '1', '--sm
 
 
 def test_load_input():
-    control = SplunkFileSource.load_data('tests/resources/ts/NRSampleInput.json')
+    control = FileLoader.load_data('tests/resources/ts/NRSampleInput.json')
     anomaly_detector = TSAnomlyDetector(options, control, control)
     anomaly_detector.analyze()
 
 def test_run_1():
-    control = SplunkFileSource.load_data('tests/resources/ts/NRSampleControl1.json')
-    test = SplunkFileSource.load_data('tests/resources/ts/NRSampleTest1.json')
+    control = FileLoader.load_data('tests/resources/ts/NRSampleControl1.json')
+    test = FileLoader.load_data('tests/resources/ts/NRSampleTest1.json')
     anomaly_detector = TSAnomlyDetector(options, control, test)
     anomaly_detector.analyze()
 

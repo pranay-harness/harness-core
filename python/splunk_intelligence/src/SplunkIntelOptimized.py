@@ -12,7 +12,7 @@ from core.cluster.KmeansCluster import KmeansCluster
 from core.distance.JaccardDistance import jaccard_difference, jaccard_text_similarity
 from core.feature.TFIDFVectorizer import TFIDFVectorizer
 from core.feature.Tokenizer import Tokenizer
-from sources.SplunkDatasetNew import SplunkDatasetNew
+from sources.LogCorpus import LogCorpus
 
 format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=format)
@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 class SplunkIntelOptimized(object):
-    def __init__(self, splunk_dataset_new, _options):
-        self.splunkDatasetNew = splunk_dataset_new
+    def __init__(self, corpus, _options):
+        self.corpus = corpus
         self._options = _options
 
     def create_feature_vector(self, texts, min_df=1, max_df=1.0):
@@ -47,20 +47,20 @@ class SplunkIntelOptimized(object):
     def set_xy(self):
         logging.info("Create combined dist")
         min_df = 1
-        max_df = 0.99 if len(self.splunkDatasetNew.get_events_for_xy()) > 1 else 1.0
+        max_df = 0.99 if len(self.corpus.get_events_for_xy()) > 1 else 1.0
         combined_vectorizer, combined_tfidf_matrix = self.create_feature_vector(
-            self.splunkDatasetNew.get_events_for_xy(), min_df, max_df)
+            self.corpus.get_events_for_xy(), min_df, max_df)
 
         logging.info("Finish create combined dist")
 
         dist_matrix = combined_vectorizer.get_cosine_dist_matrix(combined_tfidf_matrix)
-        self.splunkDatasetNew.set_xy(dist_matrix)
+        self.corpus.set_xy(dist_matrix)
 
     def create_anom_clusters(self):
 
         logging.info("Create anomalous clusters")
 
-        unknown_anomalies_text = self.splunkDatasetNew.get_unknown_anomalies_text()
+        unknown_anomalies_text = self.corpus.get_unknown_anomalies_text()
 
         if len(unknown_anomalies_text) > 0:
             min_df = 1
@@ -72,10 +72,10 @@ class SplunkIntelOptimized(object):
             anom_kmeans = KmeansCluster(tfidf_feature_matrix_anom, self._options.sim_threshold)
             anom_kmeans.cluster_cosine_threshold()
 
-            self.splunkDatasetNew.create_anom_clusters(anom_kmeans.get_clusters())
+            self.corpus.create_anom_clusters(anom_kmeans.get_clusters())
 
-            control_clusters = self.splunkDatasetNew.get_control_clusters()
-            anom_clusters = self.splunkDatasetNew.get_anom_clusters()
+            control_clusters = self.corpus.get_control_clusters()
+            anom_clusters = self.corpus.get_anom_clusters()
             for key, anomalies in anom_clusters.items():
                 for host, anomaly in anomalies.items():
                     score = jaccard_text_similarity([control_clusters[anomaly['cluster_label']].values()[0]['text']],
@@ -92,11 +92,11 @@ class SplunkIntelOptimized(object):
     def cluster_input(self):
         # TODO Can min_df be set higher or max_df set lower
         min_df = 1
-        max_df = 0.99 if len(self.splunkDatasetNew.get_control_events_text_as_np()) > 1 else 1.0
+        max_df = 0.99 if len(self.corpus.get_control_events_text_as_np()) > 1 else 1.0
         logger.info("setting min_df = " + str(min_df) + " and max_df = " + str(max_df))
         logging.info("Start vectorization....")
         vectorizer, tfidf_feature_matrix = self.create_feature_vector(
-            self.splunkDatasetNew.get_control_events_text_as_np(), min_df, max_df)
+            self.corpus.get_control_events_text_as_np(), min_df, max_df)
 
         kmeans = KmeansCluster(tfidf_feature_matrix, self._options.sim_threshold)
         kmeans.cluster_cosine_threshold()
@@ -109,8 +109,8 @@ class SplunkIntelOptimized(object):
 
         logger.info("Detect Count Anomalies....")
 
-        control_clusters = self.splunkDatasetNew.get_control_clusters()
-        test_clusters = self.splunkDatasetNew.get_test_clusters()
+        control_clusters = self.corpus.get_control_clusters()
+        test_clusters = self.corpus.get_test_clusters()
 
         classifier = FrequencyAnomalyDetector()
 
@@ -140,10 +140,10 @@ class SplunkIntelOptimized(object):
                     data['unexpected_freq'] = True
                     data['freq_score'] = round(1 - score, 2)
                     if data['freq_score'] > max_score:
-                        if idx not in self.splunkDatasetNew.cluster_scores['test']:
-                            self.splunkDatasetNew.cluster_scores['test'][idx] = {}
-                        self.splunkDatasetNew.cluster_scores['test'][idx]['unexpected_freq'] = True
-                        self.splunkDatasetNew.cluster_scores['test'][idx]['freq_score'] = data['freq_score']
+                        if idx not in self.corpus.cluster_scores['test']:
+                            self.corpus.cluster_scores['test'][idx] = {}
+                        self.corpus.cluster_scores['test'][idx]['unexpected_freq'] = True
+                        self.corpus.cluster_scores['test'][idx]['freq_score'] = data['freq_score']
                         max_score = data['freq_score']
 
         logger.info("Finish detect count Anomalies....")
@@ -152,17 +152,17 @@ class SplunkIntelOptimized(object):
         control_scores = []
         test_scores = []
 
-        for anom_cluster in self.splunkDatasetNew.cluster_scores['unknown'].values():
+        for anom_cluster in self.corpus.cluster_scores['unknown'].values():
             control_scores.append(anom_cluster['control_score'])
             test_scores.append(1 - anom_cluster['test_score'])
 
-        for test_cluster in self.splunkDatasetNew.cluster_scores['test'].values():
+        for test_cluster in self.corpus.cluster_scores['test'].values():
             if test_cluster['unexpected_freq']:
                 control_scores.append(1.0)
                 test_scores.append(1 - test_cluster['freq_score'])
 
         if len(control_scores) > 0:
-            self.splunkDatasetNew.score = round(
+            self.corpus.score = round(
                 euclidean_distances([control_scores], [test_scores]).flatten()[0], 2)
 
 
@@ -171,8 +171,8 @@ class SplunkIntelOptimized(object):
     def detect_unknown_events(self, vectorizer, kmeans):
         logging.info("Detect unknown events")
         predictions = []
-        if bool(self.splunkDatasetNew.test_events):
-            tfidf_matrix_test = vectorizer.transform(np.array(self.splunkDatasetNew.get_test_events_text_as_np()))
+        if bool(self.corpus.test_events):
+            tfidf_matrix_test = vectorizer.transform(np.array(self.corpus.get_test_events_text_as_np()))
             new_anom_detector = KmeansAnomalyDetector()
             predictions = np.array(
                 new_anom_detector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test,
@@ -186,17 +186,17 @@ class SplunkIntelOptimized(object):
 
         logger.info("Running analysis")
 
-        if not bool(self.splunkDatasetNew.control_events):
+        if not bool(self.corpus.control_events):
             logger.warn("No control events. Nothing to do")
-            return self.splunkDatasetNew
+            return self.corpus
 
         vectorizer, kmeans = self.cluster_input()
 
         predictions = self.detect_unknown_events(vectorizer, kmeans)
 
-        self.splunkDatasetNew.create_clusters(kmeans.get_clusters(), kmeans.get_centriods(),
-                                              vectorizer.get_feature_names(),
-                                              predictions)
+        self.corpus.create_clusters(kmeans.get_clusters(), kmeans.get_centriods(),
+                                    vectorizer.get_feature_names(),
+                                    predictions)
 
         self.create_anom_clusters()
 
@@ -207,8 +207,8 @@ class SplunkIntelOptimized(object):
         self.set_xy()
 
         logger.info("done. time taken " + str(time.time() - start_time) + " seconds")
-        print(self.splunkDatasetNew.score)
-        return self.splunkDatasetNew
+        print(self.corpus.score)
+        return self.corpus
 
     @staticmethod
     def parse(cli_args):
@@ -245,23 +245,23 @@ def run_debug_live_traffic(options):
     prev_out_file = None
     while control_start <= 13 or test_start < 13:
 
-        splunk_dataset = SplunkDatasetNew()
+        corpus = LogCorpus()
 
         print(control_start, control_start)
         print(test_start, test_start)
-        splunk_dataset.load_prod_file(
+        corpus.load_prod_file(
             '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut1.json',
             [control_start, control_start],
             [test_start, test_start], ['ip-172-31-28-126'], ['ip-172-31-19-157'], prev_out_file)
 
         print(options)
 
-        if splunk_dataset.new_data:
-            splunk_intel = SplunkIntelOptimized(splunk_dataset, options)
-            splunk_dataset = splunk_intel.run()
+        if corpus.new_data:
+            splunk_intel = SplunkIntelOptimized(corpus, options)
+            corpus = splunk_intel.run()
 
             file_object = open("result.json", "w")
-            file_object.write(splunk_dataset.get_output_as_json(options))
+            file_object.write(corpus.get_output_as_json(options))
             file_object.close()
             prev_out_file = './result.json'
 
@@ -276,22 +276,22 @@ def run_debug_prev_run(options):
     prev_out_file = None
     while control_start <= 2 or test_start < 2:
 
-        splunk_dataset = SplunkDatasetNew()
+        corpus = LogCorpus()
 
         print(control_start, control_start)
         print(test_start, test_start)
-        splunk_dataset.load_prod_file_prev_run(
+        corpus.load_prod_file_prev_run(
             '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prev_run/control_unknown_cluster_fail.json',
             [control_start, control_start],
             '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prev_run/test_unknown_cluster_fail.json',
             [test_start, test_start], prev_out_file)
 
-        if splunk_dataset.new_data:
-            splunk_intel = SplunkIntelOptimized(splunk_dataset, options)
-            splunk_dataset = splunk_intel.run()
+        if corpus.new_data:
+            splunk_intel = SplunkIntelOptimized(corpus, options)
+            corpus = splunk_intel.run()
 
             file_object = open("result.json", "w")
-            file_object.write(splunk_dataset.get_output_as_json(options))
+            file_object.write(corpus.get_output_as_json(options))
             file_object.close()
             prev_out_file = './result.json'
 
@@ -309,15 +309,15 @@ def main(args):
         run_debug_live_traffic(options)
         return
 
-    splunk_dataset = SplunkDatasetNew()
+    corpus = LogCorpus()
 
-    splunk_dataset.load_from_harness(options)
+    corpus.load_from_harness(options)
 
-    splunk_intel = SplunkIntelOptimized(splunk_dataset, options)
-    splunk_dataset = splunk_intel.run()
+    splunk_intel = SplunkIntelOptimized(corpus, options)
+    corpus = splunk_intel.run()
 
-    logger.info(splunk_dataset.save_to_harness(options.log_analysis_save_url, options.auth_token,
-                                               splunk_dataset.get_output_as_json(options)))
+    logger.info(corpus.save_to_harness(options.log_analysis_save_url, options.auth_token,
+                                               corpus.get_output_as_json(options)))
 
 
 if __name__ == "__main__":

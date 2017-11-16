@@ -5,13 +5,13 @@ import sys
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-from SplunkFileSource import SplunkFileSource
-from SplunkHarnessLoader import SplunkHarnessLoader
+from FileLoader import FileLoader
+from HarnessLoader import HarnessLoader
 
 logger = logging.getLogger(__name__)
 
 
-class SplunkDatasetNew(object):
+class LogCorpus(object):
     def __init__(self):
         self.control_events = {}
         self.test_events = {}
@@ -83,12 +83,12 @@ class SplunkDatasetNew(object):
                      message_frequencies=event.get('message_frequencies')))
 
     def save_to_harness(self, url, auth_token, payload):
-        SplunkHarnessLoader.post_to_wings_server(url, auth_token, payload)
+        HarnessLoader.post_to_wings_server(url, auth_token, payload)
 
     # Called with the production workflow
     def load_from_harness(self, options):
 
-        control_events = SplunkHarnessLoader.load_from_wings_server(options.control_input_url,
+        control_events = HarnessLoader.load_from_wings_server(options.control_input_url,
                                                                     options.auth_token,
                                                                     options.application_id,
                                                                     options.workflow_id,
@@ -100,7 +100,7 @@ class SplunkDatasetNew(object):
 
         test_events = None
         if options.test_nodes and options.test_input_url:
-            test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
+            test_events = HarnessLoader.load_from_wings_server(options.test_input_url,
                                                                      options.auth_token,
                                                                      options.application_id,
                                                                      options.workflow_id,
@@ -125,7 +125,7 @@ class SplunkDatasetNew(object):
             for event in test_events:
                 self.add_event(event, 'test')
 
-        prev_state = SplunkHarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
+        prev_state = HarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
                                                                        options.auth_token,
                                                                        options.application_id,
                                                                        options.state_execution_id,
@@ -145,7 +145,7 @@ class SplunkDatasetNew(object):
 
     # Used in SplunkAnomalyLegacy: legacy files that are not grouped by host
     def load_legacy_file(self, file_name, control_window, test_window, prev_out_file=None):
-        raw_events = SplunkFileSource.load_data(file_name)
+        raw_events = HarnessLoader.load_data(file_name)
         minute = 0
         count = 0
         self.new_data = True
@@ -164,7 +164,7 @@ class SplunkDatasetNew(object):
             return
 
         if prev_out_file is not None:
-            prev_out = SplunkFileSource.load_data(prev_out_file)
+            prev_out = FileLoader.load_data(prev_out_file)
             for key, events in prev_out.get('control_events').items():
                 for event in events:
                     self.add_event(event, 'control_prev')
@@ -176,7 +176,7 @@ class SplunkDatasetNew(object):
     # Used in SplunkAnomaly : To debug prod runs
     def load_prod_file(self, file_name, control_window, test_window,
                        control_nodes, test_nodes, prev_out_file=None):
-        raw_events = SplunkFileSource.load_data(file_name)
+        raw_events = FileLoader.load_data(file_name)
         print(control_window, test_window, control_nodes, test_nodes)
         self.new_data = True
         for idx, event in enumerate(raw_events):
@@ -194,7 +194,7 @@ class SplunkDatasetNew(object):
             return
 
         if prev_out_file is not None:
-            prev_out = SplunkFileSource.load_data(prev_out_file)
+            prev_out = FileLoader.load_data(prev_out_file)
             for key, events in prev_out.get('control_events').items():
                 for event in events:
                     self.add_event(event, 'control_prev')
@@ -207,7 +207,7 @@ class SplunkDatasetNew(object):
 
     def load_prod_file_prev_run(self, control_file, control_window, test_file, test_window, prev_out_file):
         print(control_file, control_window, test_file, test_window)
-        raw_events = SplunkFileSource.load_data(control_file)
+        raw_events = FileLoader.load_data(control_file)
         self.new_data = True
         for idx, event in enumerate(raw_events):
 
@@ -215,7 +215,7 @@ class SplunkDatasetNew(object):
             if control_window[0] <= minute <= control_window[1]:
                 self.add_event(event, 'control_prod')
 
-        raw_events = SplunkFileSource.load_data(test_file)
+        raw_events = FileLoader.load_data(test_file)
         for idx, event in enumerate(raw_events):
             minute = event.get('logCollectionMinute')
             if test_window[0] <= minute <= test_window[1]:
@@ -226,7 +226,7 @@ class SplunkDatasetNew(object):
             return
 
         if prev_out_file is not None:
-            prev_out = SplunkFileSource.load_data(prev_out_file)
+            prev_out = FileLoader.load_data(prev_out_file)
             for key, events in prev_out.get('control_events').items():
                 for event in events:
                     self.add_event(event, 'control_prev')
