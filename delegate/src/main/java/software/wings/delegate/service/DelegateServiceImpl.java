@@ -644,6 +644,7 @@ public class DelegateServiceImpl implements DelegateService {
         DelegateValidateTask delegateValidateTask = delegateTask.getTaskType().getDelegateValidateTask(
             delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
+        currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
         currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
