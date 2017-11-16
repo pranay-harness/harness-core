@@ -235,10 +235,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
 
             // HeartBeat
-            records.put(HARNESS_HEARTEAT_METRIC_NAME, 0l,
+            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
                 NewRelicMetricDataRecord.builder()
                     .stateType(getStateType())
-                    .name(HARNESS_HEARTEAT_METRIC_NAME)
+                    .name(HARNESS_HEARTBEAT_METRIC_NAME)
                     .applicationId(dataCollectionInfo.getApplicationId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
