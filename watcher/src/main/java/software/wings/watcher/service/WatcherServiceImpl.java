@@ -1,6 +1,8 @@
 package software.wings.watcher.service;
 
 import static com.google.common.collect.Iterables.isEmpty;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.synchronizedList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
@@ -51,7 +53,7 @@ import javax.inject.Named;
  */
 @Singleton
 public class WatcherServiceImpl implements WatcherService {
-  private static final long MAX_DELEGATE_HEARTBEAT_INTERVAL = TimeUnit.SECONDS.toMillis(15);
+  private static final long MAX_DELEGATE_HEARTBEAT_INTERVAL = TimeUnit.SECONDS.toMillis(30);
   private static final long MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD = TimeUnit.HOURS.toMillis(2);
   private static final String DELEGATE_DASH = "delegate-";
   private static final String NEW_DELEGATE = "new-delegate";
@@ -75,7 +77,7 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject private AmazonS3Client amazonS3Client;
 
   private boolean working;
-  private List<String> runningDelegates;
+  private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
 
   private BlockingQueue<Message> watcherMessages = new LinkedBlockingQueue<>();
 
@@ -83,8 +85,8 @@ public class WatcherServiceImpl implements WatcherService {
   public void run(boolean upgrade, boolean transition) {
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
-      runningDelegates = Optional.ofNullable((List) messageService.getData("watcher-data", "running-delegates"))
-                             .orElse(new ArrayList<>());
+      runningDelegates.addAll(
+          Optional.ofNullable((List) messageService.getData("watcher-data", "running-delegates")).orElse(emptyList()));
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
@@ -197,34 +199,31 @@ private void watchDelegate() {
       startDelegate();
     } else {
       List<String> obsolete = new ArrayList<>();
-      for (String delegateProcess : runningDelegates) {
-        Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
-        if (delegateData != null && !delegateData.isEmpty()) {
-          long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
-          boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
-          boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
-          boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
-          long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
+      synchronized (runningDelegates) {
+        for (String delegateProcess : runningDelegates) {
+          Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
+          if (delegateData != null && !delegateData.isEmpty()) {
+            long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
+            boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
+            boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
+            boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
+            long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
 
-          if (shutdownPending) {
-            working = true;
-            if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
-              shutdownDelegate(delegateProcess);
+            if (shutdownPending) {
+              working = true;
+              if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
+                shutdownDelegate(delegateProcess);
+              }
+            } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
+              working = true;
+              restartDelegate(delegateProcess);
+            } else if (upgradeNeeded) {
+              working = true;
+              upgradeDelegate(delegateProcess);
             }
-          } else if (clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
-            working = true;
-            messageService.putData(DELEGATE_DASH + delegateProcess, "shutdownPending", true);
-            messageService.putData(DELEGATE_DASH + delegateProcess, "shutdownStarted", clock.millis());
-            restartDelegate(delegateProcess);
-          } else if (restartNeeded) {
-            working = true;
-            restartDelegate(delegateProcess);
-          } else if (upgradeNeeded) {
-            working = true;
-            upgradeDelegate(delegateProcess);
+          } else {
+            obsolete.add(delegateProcess);
           }
-        } else {
-          obsolete.add(delegateProcess);
         }
       }
       runningDelegates.removeAll(obsolete);
@@ -239,8 +238,16 @@ private void startDelegate() {
   startDelegateProcess(null, "DelegateStartScript", getProcessId());
 }
 
-private void restartDelegate(String oldDelegateProcess) {
-  startDelegateProcess(oldDelegateProcess, "DelegateRestartScript", getProcessId());
+private void restartDelegate(String delegateProcess) {
+  // Kill without setting 'working' to true. That will happen after startDelegateProcess completes.
+  executorService.submit(() -> {
+    try {
+      killDelegate(delegateProcess);
+    } catch (IOException e) {
+      logger.error("Unable to kill old delegate {}", delegateProcess, e);
+    }
+  });
+  startDelegateProcess(null, "DelegateRestartScript", getProcessId());
 }
 
 private void upgradeDelegate(String oldDelegateProcess) {
@@ -309,17 +316,21 @@ private void startDelegateProcess(@Nullable String oldDelegateProcess, String sc
 private void shutdownDelegate(String delegateProcess) {
   executorService.submit(() -> {
     try {
-      new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
-      messageService.closeData(DELEGATE_DASH + delegateProcess);
-      messageService.closeChannel(DELEGATE, delegateProcess);
-      runningDelegates.remove(delegateProcess);
-      messageService.putData("watcher-data", "running-delegates", runningDelegates);
+      killDelegate(delegateProcess);
     } catch (Exception e) {
       logger.error("Error killing delegate {}", delegateProcess, e);
     } finally {
       working = false;
     }
   });
+}
+
+private void killDelegate(String delegateProcess) throws IOException {
+  new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
+  messageService.closeData(DELEGATE_DASH + delegateProcess);
+  messageService.closeChannel(DELEGATE, delegateProcess);
+  runningDelegates.remove(delegateProcess);
+  messageService.putData("watcher-data", "running-delegates", runningDelegates);
 }
 
 private void checkForUpgrade() {
