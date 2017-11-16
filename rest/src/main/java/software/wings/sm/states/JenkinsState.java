@@ -268,7 +268,7 @@ public class JenkinsState extends State {
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {jenkinsConfig,
                 secretManager.getEncryptionDetails(jenkinsConfig, context.getAppId(), context.getWorkflowExecutionId()),
-                finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
+                finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion, activityId, this.getName()})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
             .build();

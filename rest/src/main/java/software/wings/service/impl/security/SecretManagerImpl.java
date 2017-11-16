@@ -501,6 +501,8 @@ public class SecretManagerImpl implements SecretManager {
       EncryptedData encryptedData = query.next();
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
+      encryptedData.setEncryptedBy(getSecretManagerName(SettingVariableTypes.SECRET_TEXT, encryptedData.getUuid(),
+          encryptedData.getKmsId(), encryptedData.getEncryptionType()));
       rv.add(encryptedData);
     }
 
@@ -640,25 +642,24 @@ public class SecretManagerImpl implements SecretManager {
 
   private String getSecretManagerName(
       SettingVariableTypes type, String parentId, String kmsId, EncryptionType encryptionType) {
-    if (StringUtils.isBlank(kmsId)) {
-      return HARNESS_DEFAULT_SECRET_MANAGER;
-    } else {
-      switch (encryptionType) {
-        case KMS:
-          KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsId);
-          Preconditions.checkNotNull(kmsConfig,
-              "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
-                  + encryptionType);
-          return kmsConfig.getName();
-        case VAULT:
-          VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, kmsId);
-          Preconditions.checkNotNull(vaultConfig,
-              "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
-                  + encryptionType);
-          return vaultConfig.getName();
-        default:
-          throw new IllegalArgumentException("Invalid type: " + type);
-      }
+    switch (encryptionType) {
+      case LOCAL:
+        Preconditions.checkState(StringUtils.isBlank(kmsId),
+            "kms id should be null for local type, "
+                + "kmsId: " + kmsId + " for " + type + " id: " + parentId);
+        return HARNESS_DEFAULT_SECRET_MANAGER;
+      case KMS:
+        KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsId);
+        Preconditions.checkNotNull(kmsConfig,
+            "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
+        return kmsConfig.getName();
+      case VAULT:
+        VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, kmsId);
+        Preconditions.checkNotNull(vaultConfig,
+            "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
+        return vaultConfig.getName();
+      default:
+        throw new IllegalArgumentException("Invalid type: " + encryptionType);
     }
   }
 

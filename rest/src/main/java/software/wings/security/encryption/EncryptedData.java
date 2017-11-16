@@ -1,6 +1,7 @@
 package software.wings.security.encryption;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -49,6 +51,8 @@ public class EncryptedData extends Base {
   @NotEmpty private String kmsId;
 
   @NotEmpty private EncryptionType encryptionType;
+
+  @SchemaIgnore @Transient private transient String encryptedBy;
 
   public void addParent(String parentId) {
     if (parentIds == null) {
