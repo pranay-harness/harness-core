@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
+import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 
 import org.apache.commons.io.FileUtils;
@@ -42,6 +43,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
@@ -86,6 +88,7 @@ public class SecretTextTest extends WingsBaseTest {
   private String workflowName;
   private String kmsId;
   private String envId;
+  private String encryptedBy;
 
   @Parameters
   public static Collection<Object[]> data() {
@@ -116,18 +119,21 @@ public class SecretTextTest extends WingsBaseTest {
     switch (encryptionType) {
       case LOCAL:
         kmsId = null;
+        encryptedBy = HARNESS_DEFAULT_SECRET_MANAGER;
         break;
 
       case KMS:
         KmsConfig kmsConfig = getKmsConfig();
         kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
         enableKmsFeatureFlag();
+        encryptedBy = kmsConfig.getName();
         break;
 
       case VAULT:
         VaultConfig vaultConfig = getVaultConfig();
         kmsId = vaultService.saveVaultConfig(accountId, vaultConfig);
         enableKmsFeatureFlag();
+        encryptedBy = vaultConfig.getName();
         break;
 
       default:
@@ -511,6 +517,7 @@ public class SecretTextTest extends WingsBaseTest {
         assertEquals(kmsId, secret.getKmsId());
         assertEquals(encryptionType, secret.getEncryptionType());
         assertEquals(SECRET_TEXT, secret.getType());
+        assertEquals(encryptedBy, secret.getEncryptedBy());
       }
     }
   }
