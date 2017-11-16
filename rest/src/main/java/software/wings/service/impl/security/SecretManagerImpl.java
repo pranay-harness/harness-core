@@ -268,8 +268,12 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public Collection<UuidAware> listEncryptedValues(String accountId) {
     Map<String, UuidAware> rv = new HashMap<>();
-    Iterator<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("accountId").equal(accountId).fetch();
+    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                        .field("accountId")
+                                        .equal(accountId)
+                                        .field("type")
+                                        .notEqual(SettingVariableTypes.SECRET_TEXT)
+                                        .fetch();
     while (query.hasNext()) {
       EncryptedData data = query.next();
       if (data.getType() != SettingVariableTypes.KMS) {
