@@ -36,7 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -61,7 +63,6 @@ public class WatcherServiceImpl implements WatcherService {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final Object waiter = new Object();
-  private final List<Message> messageWaiter = new ArrayList<>(1);
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
@@ -75,6 +76,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private boolean working;
   private List<String> runningDelegates;
+
+  private BlockingQueue<Message> watcherMessages = new LinkedBlockingQueue<>();
 
   @Override
   public void run(boolean upgrade, boolean transition) {
@@ -133,10 +136,15 @@ public class WatcherServiceImpl implements WatcherService {
   private Message waitForIncomingMessage(String messageName, long timeout) {
     try {
       return timeLimiter.callWithTimeout(() -> {
-        synchronized (messageWaiter) {
-          messageWaiter.wait();
+        Message message = null;
+        while (message == null || !messageName.equals(message.getMessage())) {
+          try {
+            message = watcherMessages.take();
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
         }
-        return messageWaiter.get(0);
+        return message;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       return null;
@@ -147,15 +155,10 @@ public class WatcherServiceImpl implements WatcherService {
     inputExecutor.scheduleWithFixedDelay(() -> {
       Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
       if (message != null) {
-        switch (message.getMessage()) {
-          case GO_AHEAD:
-          case NEW_DELEGATE:
-          case NEW_WATCHER:
-            synchronized (messageWaiter) {
-              messageWaiter.set(0, message);
-              messageWaiter.notify();
-            }
-            break;
+        try {
+          watcherMessages.put(message);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
         }
       }
     }, 0, 1, TimeUnit.SECONDS);
