@@ -13,8 +13,8 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from core.distance.JaccardDistance import pairwise_jaccard_similarity
 from core.feature.TFIDFVectorizer import TFIDFVectorizer
 from core.feature.Tokenizer import Tokenizer
-from sources.SplunkFileSource import SplunkFileSource
-from sources.SplunkHarnessLoader import SplunkHarnessLoader
+from sources.FileLoader import FileLoader
+from sources.HarnessLoader import HarnessLoader
 
 format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=format)
@@ -198,12 +198,12 @@ def parse(cli_args):
 
 
 def post_to_wings_server(options, results):
-    SplunkHarnessLoader.post_to_wings_server(options.output_url, options.auth_token,
+    HarnessLoader.post_to_wings_server(options.output_url, options.auth_token,
                                              json.dumps(results))
 
 
 def load_from_wings_server(options):
-    raw_events = SplunkHarnessLoader.load_from_harness_raw(options.input_url,
+    raw_events = HarnessLoader.load_from_harness_raw(options.input_url,
                                                            options.auth_token,
                                                            options.application_id,
                                                            options.workflow_id,
@@ -281,7 +281,7 @@ def load_from_file(input_file, level):
     This is not used in the prod workflow
     """
     if level == 1:
-        all_events = SplunkFileSource.load_data(input_file)
+        all_events = FileLoader.load_data(input_file)
         raw_events = []
         count = 0
         for idx, event in enumerate(all_events):
@@ -290,7 +290,7 @@ def load_from_file(input_file, level):
                 raw_events.append(event)
         return parse_data(raw_events, level)
     elif level == 2:
-        raw_events = SplunkFileSource.load_data(input_file)
+        raw_events = FileLoader.load_data(input_file)
         count = 0
         for idx, event in enumerate(raw_events):
             if event.get('logCollectionMinute') == 1:
