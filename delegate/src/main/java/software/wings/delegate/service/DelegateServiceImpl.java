@@ -111,6 +111,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject private ExecutorService executorService;
+  @Inject private SignalService signalService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private UpgradeService upgradeService;
   @Inject private MessageService messageService;
@@ -463,7 +464,7 @@ public class DelegateServiceImpl implements DelegateService {
       Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
       if (message != null) {
         if (message.getMessage().equals("stop-acquiring")) {
-          setAcquireTasks(false);
+          handleStopAcquiringMessage();
         }
         while (!delegateMessages.offer(message)) {
           try {
@@ -474,6 +475,33 @@ public class DelegateServiceImpl implements DelegateService {
         }
       }
     }, 0, 1, TimeUnit.SECONDS);
+  }
+
+  private void handleStopAcquiringMessage() {
+    if (watched && this.acquireTasks) {
+      stoppedAcquiringAt = clock.millis();
+      setAcquireTasks(false);
+      executorService.submit(() -> {
+        int secs = 0;
+        while (getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+          logger.info("[Old] Completing {} tasks... ({} seconds elapsed)", getRunningTaskCount(), secs);
+        }
+        if (secs < MAX_UPGRADE_WAIT_SECS) {
+          logger.info("[Old] Delegate finished with tasks. Pausing");
+        } else {
+          logger.info("[Old] Timed out waiting to complete tasks. Pausing");
+        }
+        signalService.pause();
+        logger.info("[Old] Shutting down");
+
+        signalService.stop();
+      });
+    }
   }
 
   private void startUpgradeCheck(String version) {
@@ -523,7 +551,7 @@ public class DelegateServiceImpl implements DelegateService {
     heartbeatExecutor.scheduleAtFixedRate(()
                                               -> executorService.submit(() -> {
       try {
-        if (doRestartDelegate() && !watched) {
+        if (!watched && doRestartDelegate()) {
           restartDelegate();
         }
         sendHeartbeat(builder, socket);
@@ -822,9 +850,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   public void setAcquireTasks(boolean acquireTasks) {
-    if (this.acquireTasks && !acquireTasks) {
-      stoppedAcquiringAt = clock.millis();
-    }
     this.acquireTasks = acquireTasks;
   }
 
