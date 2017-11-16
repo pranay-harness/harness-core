@@ -49,10 +49,4 @@ public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml
   public NameValuePair get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
-
-  @Override
-  public NameValuePair update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
 }

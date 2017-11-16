@@ -4,15 +4,11 @@ import com.google.inject.Inject;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Validator;
-
-import java.util.List;
 
 /**
  * @author rktummala on 10/09/17
@@ -43,11 +39,5 @@ public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStream.Yaml, B
   @Override
   public B get(String accountId, String yamlFilePath) {
     return getArtifactStream(accountId, yamlFilePath);
-  }
-
-  @Override
-  public B update(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    B artifactStream = updateFromYaml(changeContext, changeSetContext);
-    return (B) artifactStreamService.update(artifactStream);
   }
 }

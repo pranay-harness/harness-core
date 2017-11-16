@@ -43,7 +43,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
         yamlSyncHelper.getApp(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.toBuilder();
     setWithYamlValues(builder, changeContext.getYaml());
-    return builder.build();
+    return appService.update(builder.build());
   }
 
   private void setWithYamlValues(Builder builder, Application.Yaml appYaml) {
@@ -76,12 +76,5 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   @Override
   public Application get(String accountId, String yamlFilePath) {
     return yamlSyncHelper.getApp(accountId, yamlFilePath);
-  }
-
-  @Override
-  public Application update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    Application application = updateFromYaml(changeContext, changeSetContext);
-    return appService.update(application);
   }
 }

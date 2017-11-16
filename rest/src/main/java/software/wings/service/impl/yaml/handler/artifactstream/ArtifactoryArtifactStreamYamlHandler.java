@@ -43,7 +43,7 @@ public class ArtifactoryArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (ArtifactoryArtifactStream) artifactStreamService.update(builder.build());
   }
 
   private void setWithYamlValues(
@@ -80,7 +80,7 @@ public class ArtifactoryArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Builder builder = Builder.anArtifactoryArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (ArtifactoryArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override

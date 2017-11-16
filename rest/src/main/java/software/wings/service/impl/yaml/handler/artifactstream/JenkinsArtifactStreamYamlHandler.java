@@ -40,7 +40,7 @@ public class JenkinsArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (JenkinsArtifactStream) artifactStreamService.update(builder.build());
   }
 
   @Override
@@ -63,7 +63,7 @@ public class JenkinsArtifactStreamYamlHandler
 
     Builder builder = Builder.aJenkinsArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (JenkinsArtifactStream) artifactStreamService.create(builder.build());
   }
 
   private void setWithYamlValues(

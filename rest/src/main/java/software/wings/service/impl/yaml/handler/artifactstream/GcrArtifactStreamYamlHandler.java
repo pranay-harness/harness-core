@@ -37,7 +37,7 @@ public class GcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<GcrA
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (GcrArtifactStream) artifactStreamService.update(builder.build());
   }
 
   private void setWithYamlValues(
@@ -70,7 +70,7 @@ public class GcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<GcrA
 
     Builder builder = Builder.aGcrArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (GcrArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override

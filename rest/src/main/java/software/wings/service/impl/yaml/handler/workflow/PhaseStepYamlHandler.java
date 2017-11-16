@@ -143,10 +143,4 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   public PhaseStep get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
-
-  @Override
-  public PhaseStep update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
 }

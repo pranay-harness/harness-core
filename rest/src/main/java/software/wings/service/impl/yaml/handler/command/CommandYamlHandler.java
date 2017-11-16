@@ -196,10 +196,4 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     Validator.notNullCheck("commandName is null for given yamlFilePath: " + yamlFilePath, commandName);
     return serviceResourceService.getCommandByName(appId, serviceId, commandName);
   }
-
-  @Override
-  public ServiceCommand update(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return updateFromYaml(changeContext, changeSetContext);
-  }
 }

@@ -57,7 +57,7 @@ public class PhysicalInfraMappingYamlHandler
             appId, envId, serviceId, computeProviderId);
     PhysicalInfrastructureMapping.Builder builder = previous.deepClone();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (PhysicalInfrastructureMapping) infraMappingService.update(builder.build());
   }
 
   private void setWithYamlValues(PhysicalInfrastructureMapping.Builder builder,
@@ -112,19 +112,12 @@ public class PhysicalInfraMappingYamlHandler
     PhysicalInfrastructureMapping.Builder builder =
         PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    return (PhysicalInfrastructureMapping) infraMappingService.save(builder.build());
   }
 
   @Override
   public PhysicalInfrastructureMapping get(String accountId, String yamlFilePath) {
     return (PhysicalInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
-  }
-
-  @Override
-  public PhysicalInfrastructureMapping update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    PhysicalInfrastructureMapping infrastructureMapping = updateFromYaml(changeContext, changeSetContext);
-    return (PhysicalInfrastructureMapping) infraMappingService.update(infrastructureMapping);
   }
 
   @Override
