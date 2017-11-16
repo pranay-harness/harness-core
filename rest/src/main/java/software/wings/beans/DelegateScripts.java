@@ -96,11 +96,9 @@ public class DelegateScripts {
         return getUpgradeScript();
       case "run.sh":
         return getRunScript();
-      case "stop.sh":
-        return getStopScript();
-      case "watch.sh":
+      case "start.sh":
         return getWatchScript();
-      case "stopwatch.sh":
+      case "stop.sh":
         return getStopWatchScript();
       case "delegate.sh":
         return getDelegateScript();

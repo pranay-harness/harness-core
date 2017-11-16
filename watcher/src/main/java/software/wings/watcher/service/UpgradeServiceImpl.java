@@ -44,7 +44,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       logger.info("[Old] Upgrading the watcher");
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)
-                    .command("./watch.sh", "upgrade", WatcherApplication.getProcessId())
+                    .command("./start.sh", "upgrade", WatcherApplication.getProcessId())
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
                     .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
                     .readOutput(true)
