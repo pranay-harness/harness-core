@@ -67,10 +67,4 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
   public Variable get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
-
-  @Override
-  public Variable update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
 }

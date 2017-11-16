@@ -40,7 +40,7 @@ public class AmazonS3ArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (AmazonS3ArtifactStream) artifactStreamService.update(builder.build());
   }
 
   private void setWithYamlValues(
@@ -73,7 +73,7 @@ public class AmazonS3ArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
     Builder builder = Builder.anAmazonS3ArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (AmazonS3ArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override

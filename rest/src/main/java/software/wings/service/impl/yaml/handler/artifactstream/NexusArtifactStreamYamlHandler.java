@@ -41,7 +41,7 @@ public class NexusArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (NexusArtifactStream) artifactStreamService.update(builder.build());
   }
 
   private void setWithYamlValues(
@@ -76,7 +76,7 @@ public class NexusArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Builder builder = Builder.aNexusArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (NexusArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override

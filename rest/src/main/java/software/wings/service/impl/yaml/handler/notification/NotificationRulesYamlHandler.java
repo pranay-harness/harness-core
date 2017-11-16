@@ -112,10 +112,4 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
   public NotificationRule get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
-
-  @Override
-  public NotificationRule update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
 }

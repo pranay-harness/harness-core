@@ -199,10 +199,4 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   public WorkflowPhase get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
-
-  @Override
-  public WorkflowPhase update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    throw new HarnessException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
 }

@@ -359,7 +359,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
         yamlSyncHandler.createFromYaml(changeContext, changeContextList);
         break;
       case MODIFY:
-        yamlSyncHandler.update(changeContext, changeContextList);
+        yamlSyncHandler.updateFromYaml(changeContext, changeContextList);
         break;
       case DELETE:
         // TODO
