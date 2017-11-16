@@ -209,12 +209,8 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (featureFlagService.isEnabled(FeatureName.WATCHER, accountId)) {
         try (StringWriter stringWriter = new StringWriter()) {
-          cfg.getTemplate("watch.sh.ftl").process(scriptParams, stringWriter);
+          cfg.getTemplate("start.sh.ftl").process(scriptParams, stringWriter);
           delegateScripts.setWatchScript(stringWriter.toString());
-        }
-        try (StringWriter stringWriter = new StringWriter()) {
-          cfg.getTemplate("stopwatch.sh.ftl").process(null, stringWriter);
-          delegateScripts.setStopWatchScript(stringWriter.toString());
         }
         try (StringWriter stringWriter = new StringWriter()) {
           cfg.getTemplate("delegate.sh.ftl").process(scriptParams, stringWriter);
@@ -234,7 +230,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       try (StringWriter stringWriter = new StringWriter()) {
         cfg.getTemplate("stop.sh.ftl").process(null, stringWriter);
-        delegateScripts.setStopScript(stringWriter.toString());
+        delegateScripts.setStopWatchScript(stringWriter.toString());
       }
     }
     return delegateScripts;
@@ -335,35 +331,18 @@ public class DelegateServiceImpl implements DelegateService {
         getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
     if (featureFlagService.isEnabled(FeatureName.WATCHER, accountId)) {
-      File watch = File.createTempFile("watch", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(watch))) {
-        cfg.getTemplate("watch.sh.ftl").process(scriptParams, fileWriter);
+      File start = File.createTempFile("start", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start))) {
+        cfg.getTemplate("start.sh.ftl").process(scriptParams, fileWriter);
       }
-      watch = new File(watch.getAbsolutePath());
-      ZipArchiveEntry watchZipArchiveEntry = new ZipArchiveEntry(watch, Constants.DELEGATE_DIR + "/watch.sh");
-      watchZipArchiveEntry.setUnixMode(0755 << 16L);
+      start = new File(start.getAbsolutePath());
+      ZipArchiveEntry startZipArchiveEntry = new ZipArchiveEntry(start, Constants.DELEGATE_DIR + "/start.sh");
+      startZipArchiveEntry.setUnixMode(0755 << 16L);
       AsiExtraField permissions = new AsiExtraField();
       permissions.setMode(0755);
-      watchZipArchiveEntry.addExtraField(permissions);
-      out.putArchiveEntry(watchZipArchiveEntry);
-      try (FileInputStream fis = new FileInputStream(watch)) {
-        IOUtils.copy(fis, out);
-      }
-      out.closeArchiveEntry();
-
-      File stopwatch = File.createTempFile("stopwatch", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stopwatch))) {
-        cfg.getTemplate("stopwatch.sh.ftl").process(null, fileWriter);
-      }
-      stopwatch = new File(stopwatch.getAbsolutePath());
-      ZipArchiveEntry stopwatchZipArchiveEntry =
-          new ZipArchiveEntry(stopwatch, Constants.DELEGATE_DIR + "/stopwatch.sh");
-      stopwatchZipArchiveEntry.setUnixMode(0755 << 16L);
-      permissions = new AsiExtraField();
-      permissions.setMode(0755);
-      stopwatchZipArchiveEntry.addExtraField(permissions);
-      out.putArchiveEntry(stopwatchZipArchiveEntry);
-      try (FileInputStream fis = new FileInputStream(stopwatch)) {
+      startZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(startZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(start)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
