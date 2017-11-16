@@ -163,14 +163,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> String save(T object) {
-    try {
-      encryptIfNecessary(object);
-      Key<T> key = primaryDatastore.save(object);
-      updateParentIfNecessary(object, (String) key.getId());
-      return (String) key.getId();
-    } catch (Exception e) {
-      throw new WingsException("Error saving " + object, e);
-    }
+    encryptIfNecessary(object);
+    Key<T> key = primaryDatastore.save(object);
+    updateParentIfNecessary(object, (String) key.getId());
+    return (String) key.getId();
   }
 
   /**
@@ -313,15 +309,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       Object value = entry.getValue();
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
           && Encryptable.class.isInstance(value)) {
-        try {
-          Encryptable e = (Encryptable) value;
-          Object o = datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
-          encrypt(e, (Encryptable) ((SettingAttribute) o).getValue());
-          updateParentIfNecessary(o, entityId);
-          value = e;
-        } catch (IllegalAccessException ex) {
-          throw new WingsException("Failed to encrypt secret", ex);
-        }
+        Encryptable e = (Encryptable) value;
+        Object o = datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
+        encrypt(e, (Encryptable) ((SettingAttribute) o).getValue());
+        updateParentIfNecessary(o, entityId);
+        value = e;
       } else if (encryptable) {
         Field f = declaredAndInheritedFields.stream()
                       .filter(field -> field.getName().equals(entry.getKey()))
@@ -403,11 +395,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         || Encryptable.class.isAssignableFrom(query.getEntityClass())) {
       List<T> objects = query.asList();
       for (T object : objects) {
-        try {
-          deleteEncryptionReferenceIfNecessary(object);
-        } catch (IllegalAccessException e) {
-          throw new WingsException("Could not delete entity", e);
-        }
+        deleteEncryptionReferenceIfNecessary(object);
       }
     }
     WriteResult result = primaryDatastore.delete(query);
@@ -420,11 +408,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> boolean delete(T object) {
     if (SettingAttribute.class.isInstance(object) || Encryptable.class.isInstance(object)) {
-      try {
-        deleteEncryptionReferenceIfNecessary(object);
-      } catch (IllegalAccessException e) {
-        throw new WingsException("Could not delete entity", e);
-      }
+      deleteEncryptionReferenceIfNecessary(object);
     }
     WriteResult result = primaryDatastore.delete(object);
     return !(result == null || result.getN() == 0);
@@ -719,13 +703,18 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return false;
   }
 
-  private void updateParent(Encryptable object, String parentId) throws IllegalAccessException {
+  private void updateParent(Encryptable object, String parentId) {
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
       f.setAccessible(true);
       Field encryptedField = getEncryptedRefField(f, object);
       encryptedField.setAccessible(true);
-      String encryptedId = (String) encryptedField.get(object);
+      String encryptedId;
+      try {
+        encryptedId = (String) encryptedField.get(object);
+      } catch (IllegalAccessException e) {
+        throw new WingsException("Error updating parent for encrypted record", e);
+      }
 
       if (StringUtils.isBlank(encryptedId)) {
         continue;
@@ -743,20 +732,28 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
   }
 
-  private void deleteEncryptionReference(Encryptable object, Set<String> fieldNames, String parentId)
-      throws IllegalAccessException {
+  private void deleteEncryptionReference(Encryptable object, Set<String> fieldNames, String parentId) {
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
       if ((fieldNames == null || fieldNames.contains(f.getName()))) {
         f.setAccessible(true);
         // if the field was never encrypted using kms
-        if (f.get(object) != null) {
-          continue;
+        try {
+          if (f.get(object) != null) {
+            continue;
+          }
+        } catch (IllegalAccessException e) {
+          throw new WingsException("Could not deleter referenced record", e);
         }
 
         Field encryptedField = getEncryptedRefField(f, object);
         encryptedField.setAccessible(true);
-        String encryptedId = (String) encryptedField.get(object);
+        String encryptedId;
+        try {
+          encryptedId = (String) encryptedField.get(object);
+        } catch (IllegalAccessException e) {
+          throw new WingsException("Could not deleter referenced record", e);
+        }
 
         if (StringUtils.isBlank(encryptedId)) {
           continue;
@@ -794,7 +791,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
   }
 
-  private void updateParentIfNecessary(Object o, String parentId) throws IllegalAccessException {
+  private void updateParentIfNecessary(Object o, String parentId) {
     if (SettingAttribute.class.isInstance(o)) {
       o = ((SettingAttribute) o).getValue();
     }
@@ -804,7 +801,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
   }
 
-  private <T extends Base> void deleteEncryptionReferenceIfNecessary(T o) throws IllegalAccessException {
+  private <T extends Base> void deleteEncryptionReferenceIfNecessary(T o) {
     if (StringUtils.isBlank(o.getUuid())) {
       return;
     }
