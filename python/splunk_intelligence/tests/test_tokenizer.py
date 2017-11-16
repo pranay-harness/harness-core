@@ -1,4 +1,4 @@
-from core.Tokenizer import Tokenizer
+from core.feature.Tokenizer import Tokenizer
 
 
 def test_default_tokenizer():

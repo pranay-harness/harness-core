@@ -65,7 +65,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .decrypt(data, vaultConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", e.getMessage(), e);
     }
   }
 
@@ -238,10 +238,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     String encryptionKey = encryptedData.getEncryptionKey();
 
-    String keyString = encryptionKey.substring(encryptionKey.indexOf(BASE_VAULT_URL) + BASE_VAULT_URL.length());
-    String[] split = keyString.split("/");
-    SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(split[1]);
-    String keyName = split[2];
+    String[] split = encryptionKey.split("/");
+    SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(split[0]);
+    String keyName = split[1];
     EncryptedData encrypted = encrypt(keyName, String.valueOf(decrypted), accountId, settingVariableType, toConfig,
         EncryptedData.builder().encryptionKey(encryptionKey).build());
     encryptedData.setKmsId(toVaultId);

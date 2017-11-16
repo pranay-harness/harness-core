@@ -1,9 +1,11 @@
 import sys
 
-from core.SAXHMMDistance import SAXHMMDistanceFinder, SAXHMMDistance
-from core.TimeSeriesUtils import get_deviation_type, get_deviation_min_threshold
-from sources.SplunkFileSource import SplunkFileSource
 import numpy as np
+
+from core.distance.SAXHMMDistance import SAXHMMDistanceFinder, SAXHMMDistance
+from core.util.TimeSeriesUtils import get_deviation_type, get_deviation_min_threshold
+from sources.SplunkFileSource import SplunkFileSource
+
 
 def lists_equal(a, b):
     for ai, bi in zip(a, b):

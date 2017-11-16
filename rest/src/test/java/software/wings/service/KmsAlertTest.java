@@ -60,10 +60,10 @@ public class KmsAlertTest extends WingsBaseTest {
     initMocks(this);
     when(mockDelegateServiceOK.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
         .thenReturn(null);
-    when(mockDelegateServiceOK.encrypt(anyObject(), anyObject())).thenReturn(null);
+    when(mockDelegateServiceOK.encrypt(anyString(), anyObject(), anyObject())).thenReturn(null);
     when(mockDelegateServiceEx.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
         .thenThrow(new IOException());
-    when(mockDelegateServiceEx.encrypt(anyObject(), anyObject())).thenThrow(new IOException());
+    when(mockDelegateServiceEx.encrypt(anyString(), anyObject(), anyObject())).thenThrow(new IOException());
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);

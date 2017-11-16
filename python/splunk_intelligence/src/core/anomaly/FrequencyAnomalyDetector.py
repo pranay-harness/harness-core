@@ -1,8 +1,9 @@
-import numpy as np
 import logging
 
-from ZeroDeviationClassifier import ZeroDeviationClassifier
-from ThreeSigmaClassifier import ThreeSigmaClassifier
+import numpy as np
+
+from core.classifier.ThreeSigmaClassifier import ThreeSigmaClassifier
+from core.classifier.ZeroDeviationClassifier import ZeroDeviationClassifier
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +30,7 @@ public interface SecretManager {
   List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
 
   EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, Field decryptedField, EncryptedData encryptedData);
+      char[] secret, EncryptedData encryptedData, String secretName);
 
   List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId);
 
@@ -48,4 +47,12 @@ public interface SecretManager {
   boolean transitionSecrets(String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType);
 
   void checkAndAlertForInvalidManagers();
+
+  String saveSecret(String accountId, String name, String value);
+
+  boolean updateSecret(String accountId, String uuId, String name, String value);
+
+  boolean deleteSecret(String accountId, String uuId);
+
+  List<EncryptedData> listSecrets(String accountId);
 }

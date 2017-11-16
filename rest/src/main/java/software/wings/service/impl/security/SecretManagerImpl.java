@@ -15,7 +15,9 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceTemplate;
@@ -31,6 +33,7 @@ import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.EncryptionUtils;
@@ -53,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -118,32 +122,40 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, Field decryptedField, EncryptedData encryptedData) {
+      char[] secret, EncryptedData encryptedData, String secretName) {
+    EncryptedData rv;
     switch (encryptionType) {
       case LOCAL:
         char[] encryptedChars = secret == null ? null : new SimpleEncryption(accountId).encryptChars(secret);
-        return EncryptedData.builder()
-            .encryptionKey(accountId)
-            .encryptedValue(encryptedChars)
-            .encryptionType(EncryptionType.LOCAL)
-            .accountId(accountId)
-            .type(settingType)
-            .enabled(true)
-            .build();
+        rv = EncryptedData.builder()
+                 .encryptionKey(accountId)
+                 .encryptedValue(encryptedChars)
+                 .encryptionType(EncryptionType.LOCAL)
+                 .accountId(accountId)
+                 .type(settingType)
+                 .enabled(true)
+                 .parentIds(new HashSet<>())
+                 .build();
+        break;
 
       case KMS:
         final KmsConfig kmsConfig = kmsService.getSecretConfig(accountId);
-        return kmsService.encrypt(secret, accountId, kmsConfig);
+        rv = kmsService.encrypt(secret, accountId, kmsConfig);
+        rv.setType(settingType);
+        break;
 
       case VAULT:
         final VaultConfig vaultConfig = vaultService.getSecretConfig(accountId);
         String toEncrypt = secret == null ? null : String.valueOf(secret);
-        return vaultService.encrypt(
-            decryptedField.getName(), toEncrypt, accountId, settingType, vaultConfig, encryptedData);
+        rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
+        rv.setType(settingType);
+        break;
 
       default:
         throw new IllegalStateException("Invalid type:  " + encryptionType);
     }
+    rv.setName(secretName);
+    return rv;
   }
 
   @Override
@@ -390,6 +402,97 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
+  @Override
+  public String saveSecret(String accountId, String name, String value) {
+    EncryptedData encryptedData = encrypt(
+        getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT, value.toCharArray(), null, name);
+    String encryptedDataId = wingsPersistence.save(encryptedData);
+
+    if (UserThreadLocal.get() != null) {
+      wingsPersistence.save(SecretChangeLog.builder()
+                                .accountId(accountId)
+                                .encryptedDataId(encryptedDataId)
+                                .description("Created")
+                                .user(EmbeddedUser.builder()
+                                          .uuid(UserThreadLocal.get().getUuid())
+                                          .email(UserThreadLocal.get().getEmail())
+                                          .name(UserThreadLocal.get().getName())
+                                          .build())
+                                .build());
+    }
+
+    return encryptedDataId;
+  }
+
+  @Override
+  public boolean updateSecret(String accountId, String uuId, String name, String value) {
+    EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuId);
+    if (savedData == null) {
+      return false;
+    }
+
+    String description = savedData.getName().equals(name) ? "Changed value" : "Changed name & value";
+    EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
+        value.toCharArray(), savedData, name);
+    savedData.setEncryptionKey(encryptedData.getEncryptionKey());
+    savedData.setEncryptedValue(encryptedData.getEncryptedValue());
+    savedData.setName(name);
+    wingsPersistence.save(savedData);
+
+    if (UserThreadLocal.get() != null) {
+      wingsPersistence.save(SecretChangeLog.builder()
+                                .accountId(accountId)
+                                .encryptedDataId(uuId)
+                                .description(description)
+                                .user(EmbeddedUser.builder()
+                                          .uuid(UserThreadLocal.get().getUuid())
+                                          .email(UserThreadLocal.get().getEmail())
+                                          .name(UserThreadLocal.get().getName())
+                                          .build())
+                                .build());
+    }
+    return true;
+  }
+
+  @Override
+  public boolean deleteSecret(String accountId, String uuId) {
+    List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
+                                                 .field("accountId")
+                                                 .equal(accountId)
+                                                 .field("encryptedValue")
+                                                 .equal(uuId)
+                                                 .asList();
+    if (!serviceVariables.isEmpty()) {
+      String errorMessage = "Being used by ";
+      for (ServiceVariable serviceVariable : serviceVariables) {
+        errorMessage += serviceVariable.getName() + ", ";
+      }
+
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", errorMessage);
+    }
+
+    return wingsPersistence.delete(EncryptedData.class, uuId);
+  }
+
+  @Override
+  public List<EncryptedData> listSecrets(String accountId) {
+    List<EncryptedData> rv = new ArrayList<>();
+    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                        .field("accountId")
+                                        .equal(accountId)
+                                        .field("type")
+                                        .equal(SettingVariableTypes.SECRET_TEXT)
+                                        .fetch(new FindOptions());
+    while (query.hasNext()) {
+      EncryptedData encryptedData = query.next();
+      encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
+      encryptedData.setEncryptionKey(SECRET_MASK);
+      rv.add(encryptedData);
+    }
+
+    return rv;
+  }
+
   private EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
@@ -424,6 +527,7 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case CONFIG_FILE:
+      case SECRET_TEXT:
         secretIds.add(entityId);
         break;
 
