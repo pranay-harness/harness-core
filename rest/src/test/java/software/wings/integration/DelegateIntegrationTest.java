@@ -17,6 +17,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Delegate;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 
 import java.io.File;
 import java.io.IOException;
@@ -264,5 +266,9 @@ private void waitForDelegateToRegisterWithTimeout() {
     logger.info("isDelegateConnected = {}", connected);
     return connected;
   }, CoreMatchers.is(true));
+}
+
+private void enableWatcherFeatureFlag() {
+  wingsPersistence.save(FeatureFlag.builder().name(FeatureName.WATCHER.name()).enabled(true).obsolete(false).build());
 }
 }
