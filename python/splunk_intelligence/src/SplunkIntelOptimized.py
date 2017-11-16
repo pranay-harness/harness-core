@@ -1,19 +1,18 @@
 import argparse
 import logging
 import sys
-
-import numpy as np
 import time
 
-from core.FrequencyAnomalyDetector import FrequencyAnomalyDetector
-from core.KmeansAnomalyDetector import KmeansAnomalyDetector
-from core.KmeansCluster import KmeansCluster
-from core.TFIDFVectorizer import TFIDFVectorizer
-from core.Tokenizer import Tokenizer
-from sources.SplunkDatasetNew import SplunkDatasetNew
-from core.JaccardDistance import jaccard_difference, jaccard_text_similarity
+import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
 
+from core.anomaly.FrequencyAnomalyDetector import FrequencyAnomalyDetector
+from core.anomaly.KmeansAnomalyDetector import KmeansAnomalyDetector
+from core.cluster.KmeansCluster import KmeansCluster
+from core.distance.JaccardDistance import jaccard_difference, jaccard_text_similarity
+from core.feature.TFIDFVectorizer import TFIDFVectorizer
+from core.feature.Tokenizer import Tokenizer
+from sources.SplunkDatasetNew import SplunkDatasetNew
 
 format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=format)

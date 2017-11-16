@@ -1,4 +1,4 @@
-from core.SuffixTree import SuffixTree
+from core.data_structures.SuffixTree import SuffixTree
 
 
 def test_suffix_1():

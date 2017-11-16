@@ -42,14 +42,12 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by rsingh on 10/17/17.
@@ -102,6 +100,24 @@ public class SecretMigrationUtil extends WingsBaseTest {
       System.out.println("going to save " + encryptedData);
       updated++;
       //      wingsPersistence.save(encryptedData);
+    }
+
+    System.out.println("Complete. Updated " + updated + " records.");
+  }
+
+  @Test
+  public void migrateRecordsWithNoName() throws Exception {
+    List<EncryptedData> encryptedDataRecords = wingsPersistence.createQuery(EncryptedData.class).asList();
+
+    System.out.println("will go through " + encryptedDataRecords.size() + " records");
+
+    int updated = 0;
+    for (EncryptedData encryptedData : encryptedDataRecords) {
+      if (StringUtils.isBlank(encryptedData.getName())) {
+        encryptedData.setName(UUID.randomUUID().toString());
+        //        wingsPersistence.save(encryptedData);
+        updated++;
+      }
     }
 
     System.out.println("Complete. Updated " + updated + " records.");
