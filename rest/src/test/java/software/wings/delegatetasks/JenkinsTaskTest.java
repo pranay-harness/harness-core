@@ -43,6 +43,8 @@ public class JenkinsTaskTest {
   private String userName = "user1";
   private char[] password = "pass1".toCharArray();
   private String jobName = "job1";
+  private String activityId = "activityId";
+  private String stateName = "jenkins_state";
   private Map<String, String> parameters = new HashMap<>();
   private Map<String, String> assertions = new HashMap<>();
 
@@ -62,7 +64,7 @@ public class JenkinsTaskTest {
   @Test
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions);
+    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
@@ -71,7 +73,7 @@ public class JenkinsTaskTest {
   @Test
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
-    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions);
+    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
@@ -80,7 +82,7 @@ public class JenkinsTaskTest {
   @Test
   public void shouldAssertArtifacts() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions);
+    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
