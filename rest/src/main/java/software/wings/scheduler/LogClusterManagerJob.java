@@ -20,15 +20,10 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.inject.Inject;
 
 /**
@@ -38,7 +33,6 @@ import javax.inject.Inject;
 @DisallowConcurrentExecution
 public class LogClusterManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogAnalysisManagerJob.class);
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
   @org.simpleframework.xml.Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -51,13 +45,7 @@ public class LogClusterManagerJob implements Job {
       long timestamp = jobExecutionContext.getMergedJobDataMap().getLong("timestamp");
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      if (!LogClusterTask.stateExecutionLocks.contains(context.getStateExecutionId())) {
-        UUID id = UUID.randomUUID();
-        if (LogClusterTask.stateExecutionLocks.putIfAbsent(context.getStateExecutionId(), id) == null) {
-          executorService.submit(
-              new LogClusterTask(analysisService, waitNotifyEngine, jobExecutionContext, context, id));
-        }
-      }
+      new LogClusterTask(analysisService, waitNotifyEngine, jobExecutionContext, context).run();
     } catch (Exception ex) {
       logger.warn("Log cluster cron failed with error", ex);
       try {
@@ -71,14 +59,10 @@ public class LogClusterManagerJob implements Job {
   @AllArgsConstructor
   public static class LogClusterTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(LogClusterTask.class);
-    // TODO create apis around this
-    public static final ConcurrentHashMap<String, UUID> stateExecutionLocks = new ConcurrentHashMap<>();
-
     private AnalysisService analysisService;
     private WaitNotifyEngine waitNotifyEngine;
     private JobExecutionContext jobExecutionContext;
     private AnalysisContext context;
-    private UUID uuid;
 
     private void cluster() {
       boolean completeCron = false;
@@ -158,12 +142,6 @@ public class LogClusterManagerJob implements Job {
     @Override
     public void run() {
       try {
-        UUID uuid = stateExecutionLocks.get(context.getStateExecutionId());
-        if (!uuid.equals(this.uuid)) {
-          logger.error(" Verification UUIDs dont match " + JsonUtils.asJson(context));
-          return;
-        }
-
         switch (context.getStateType()) {
           case SUMO:
           case ELK:
@@ -196,7 +174,7 @@ public class LogClusterManagerJob implements Job {
           logger.error("Verification cluster manager cleanup failed", e);
         }
       } finally {
-        stateExecutionLocks.remove(context.getStateExecutionId());
+        // Nothing to do
       }
     }
   }

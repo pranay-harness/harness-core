@@ -39,10 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 
@@ -52,9 +48,6 @@ import javax.inject.Inject;
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class MetricAnalysisJob implements Job {
-  private static final ConcurrentHashMap<String, UUID> stateExecutionLocks = new ConcurrentHashMap<>();
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(5);
-
   @Inject private MetricDataAnalysisService analysisService;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -74,13 +67,8 @@ public class MetricAnalysisJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      if (!stateExecutionLocks.contains(context.getStateExecutionId())) {
-        UUID id = UUID.randomUUID();
-        if (stateExecutionLocks.putIfAbsent(context.getStateExecutionId(), id) == null) {
-          // TODO unbounded task queue
-          executorService.submit(new MetricAnalysisGenerator(context, jobExecutionContext, delegateTaskId, id));
-        }
-      }
+      new MetricAnalysisGenerator(context, jobExecutionContext, delegateTaskId).run();
+
     } catch (Exception ex) {
       logger.warn("Log analysis cron failed with error", ex);
       try {
@@ -100,18 +88,16 @@ public class MetricAnalysisJob implements Job {
     private final AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
     private final String delegateTaskId;
-    private final UUID uuid;
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
 
     public MetricAnalysisGenerator(
-        AnalysisContext context, JobExecutionContext jobExecutionContext, String delegateTaskId, UUID uuid) {
+        AnalysisContext context, JobExecutionContext jobExecutionContext, String delegateTaskId) {
       this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
       Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
       this.delegateTaskId = delegateTaskId;
-      this.uuid = uuid;
       this.testNodes = context.getTestNodes();
       this.controlNodes = context.getControlNodes();
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
@@ -277,11 +263,6 @@ public class MetricAnalysisJob implements Job {
       logger.info("Starting analysis for " + context.getStateExecutionId());
 
       boolean completeCron = false;
-      UUID uuid = stateExecutionLocks.get(context.getStateExecutionId());
-      if (!uuid.equals(this.uuid)) {
-        logger.error(" UUIDs dont match " + JsonUtils.asJson(context));
-        return;
-      }
 
       try {
         /**
@@ -331,7 +312,6 @@ public class MetricAnalysisJob implements Job {
         logger.warn("analysis failed", ex);
       } finally {
         try {
-          stateExecutionLocks.remove(context.getStateExecutionId());
           // send notification to state manager and delete cron.
           if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {

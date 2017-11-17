@@ -379,10 +379,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    UUID lockValue = UUID.randomUUID();
-    LogAnalysisTask.lock(stateExecutionId, lockValue);
-    new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine, delegateService, analysisContext,
-        jobExecutionContext, delegateTaskId, lockValue)
+    new LogAnalysisTask(
+        analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext, delegateTaskId)
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -496,10 +494,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    UUID lockValue = UUID.randomUUID();
-    LogAnalysisTask.lock(stateExecutionId, lockValue);
-    new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine, delegateService, analysisContext,
-        jobExecutionContext, delegateTaskId, lockValue)
+    new LogAnalysisTask(
+        analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext, delegateTaskId)
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
@@ -612,10 +608,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    UUID lockValue = UUID.randomUUID();
-    LogAnalysisTask.lock(stateExecutionId, lockValue);
-    new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine, delegateService, analysisContext,
-        jobExecutionContext, delegateTaskId, lockValue)
+    new LogAnalysisTask(
+        analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext, delegateTaskId)
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
