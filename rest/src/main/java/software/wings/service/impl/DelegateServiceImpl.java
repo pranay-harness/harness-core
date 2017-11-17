@@ -211,7 +211,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (featureFlagService.isEnabled(FeatureName.WATCHER, accountId)) {
         try (StringWriter stringWriter = new StringWriter()) {
           cfg.getTemplate("start.sh.ftl").process(scriptParams, stringWriter);
-          delegateScripts.setWatchScript(stringWriter.toString());
+          delegateScripts.setStartScript(stringWriter.toString());
         }
         try (StringWriter stringWriter = new StringWriter()) {
           cfg.getTemplate("delegate.sh.ftl").process(scriptParams, stringWriter);
@@ -231,7 +231,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       try (StringWriter stringWriter = new StringWriter()) {
         cfg.getTemplate("stop.sh.ftl").process(null, stringWriter);
-        delegateScripts.setStopWatchScript(stringWriter.toString());
+        delegateScripts.setStopScript(stringWriter.toString());
       }
     }
     return delegateScripts;
