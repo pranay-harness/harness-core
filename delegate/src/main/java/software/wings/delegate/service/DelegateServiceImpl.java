@@ -9,6 +9,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
+import static software.wings.utils.message.MessengerType.DELEGATE;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -283,6 +284,9 @@ public class DelegateServiceImpl implements DelegateService {
       synchronized (waiter) {
         waiter.wait();
       }
+
+      messageService.closeData(DELEGATE_DASH + getProcessId());
+      messageService.closeChannel(DELEGATE, getProcessId());
 
       if (upgradePending) {
         removeDelegateVersionFromCapsule();
@@ -613,39 +617,38 @@ public class DelegateServiceImpl implements DelegateService {
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
+    String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
     if (!isAcquireTasks()) {
-      logger.info("[Old] Upgraded process is running. Won't acquire task {} while completing other tasks",
-          delegateTaskEvent.getDelegateTaskId());
+      logger.info(
+          "[Old] Upgraded process is running. Won't acquire task {} while completing other tasks", delegateTaskId);
       return;
     }
 
     if (isUpgradePending() && !delegateTaskEvent.isSync()) {
-      logger.info("[Old] Upgrade pending, won't acquire async task {}", delegateTaskEvent.getDelegateTaskId());
+      logger.info("[Old] Upgrade pending, won't acquire async task {}", delegateTaskId);
       return;
     }
 
-    if (delegateTaskEvent.getDelegateTaskId() != null
-        && currentlyValidatingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
-      logger.info("Task [DelegateTaskEvent: {}] already validating. Don't validate again", delegateTaskEvent);
-      return;
-    }
+    if (delegateTaskId != null) {
+      if (currentlyValidatingTasks.containsKey(delegateTaskId)) {
+        logger.info("Task [DelegateTaskEvent: {}] already validating. Don't validate again", delegateTaskEvent);
+        return;
+      }
 
-    if (delegateTaskEvent.getDelegateTaskId() != null
-        && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
-      logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
-      return;
+      if (currentlyExecutingTasks.containsKey(delegateTaskId)) {
+        logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
+        return;
+      }
     }
 
     try {
-      logger.info(
-          "Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(), accountId);
+      logger.info("Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
 
-      DelegateTask delegateTask =
-          execute(managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+      DelegateTask delegateTask = execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
 
       if (delegateTask == null) {
-        logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}",
-            delegateTaskEvent.getDelegateTaskId(), delegateTaskEvent.getAccountId());
+        logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}", delegateTaskId,
+            delegateTaskEvent.getAccountId());
         logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keys());
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
         return;
@@ -661,8 +664,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         // Whitelisted. Proceed immediately.
-        logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId,
-            delegateTaskEvent.getDelegateTaskId(), accountId);
+        logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId, delegateTaskId, accountId);
         executeTask(delegateTaskEvent, delegateTask);
       }
     } catch (IOException e) {

@@ -68,7 +68,6 @@ import software.wings.utils.CryptoUtil;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -642,14 +641,14 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private String getCronDescription(String cronExpression) {
+  public String getCronDescription(String cronExpression) {
     try {
       String description =
           getDescription(DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
-    } catch (ParseException e) {
+    } catch (Exception e) {
       logger.error("Error parsing cron expression: " + cronExpression, e);
-      return cronExpression;
+      throw new WingsException(INVALID_ARGUMENT, "args", "Invalid cron expression");
     }
   }
 

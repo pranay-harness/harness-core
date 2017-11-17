@@ -61,6 +61,7 @@ public class DelegateApplication {
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
         MessageService messageService = Guice.createInjector(new DelegateModule()).getInstance(MessageService.class);
         messageService.closeChannel(DELEGATE, processId);
+        messageService.closeData("delegate-" + processId);
         logger.info("Log manager shutdown hook executing.");
         LogManager.shutdown();
       }));
