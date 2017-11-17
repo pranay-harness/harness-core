@@ -194,20 +194,17 @@ private void startWatching() {
 
 private void watchDelegate() {
   try {
-    // Cleanup obsolete files
+    // Cleanup obsolete
     messageService.listDataNames(DELEGATE_DASH)
         .stream()
         .map(dataName -> dataName.substring(DELEGATE_DASH.length()))
         .filter(process -> !runningDelegates.contains(process))
-        .forEach(process -> {
-          messageService.closeData(DELEGATE_DASH + process);
-          messageService.closeChannel(DELEGATE, process);
-        });
+        .forEach(process -> shutdownDelegate(process, false));
 
     messageService.listChannels(DELEGATE)
         .stream()
         .filter(process -> !runningDelegates.contains(process))
-        .forEach(process -> messageService.closeChannel(DELEGATE, process));
+        .forEach(process -> shutdownDelegate(process, false));
 
     messageService.listChannels(WATCHER)
         .stream()
@@ -234,7 +231,7 @@ private void watchDelegate() {
             if (shutdownPending) {
               if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
                 working = true;
-                shutdownDelegate(delegateProcess);
+                shutdownDelegate(delegateProcess, true);
               }
             } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
               working = true;
@@ -261,14 +258,8 @@ private void startDelegate() {
 }
 
 private void restartDelegate(String delegateProcess) {
-  // Kill without setting 'working' to true. That will happen after startDelegateProcess completes.
-  executorService.submit(() -> {
-    try {
-      killDelegate(delegateProcess);
-    } catch (IOException e) {
-      logger.error("Unable to kill old delegate {}", delegateProcess, e);
-    }
-  });
+  // Kill without resetting 'working'. It will reset after startDelegateProcess completes.
+  shutdownDelegate(delegateProcess, false);
   startDelegateProcess(null, "DelegateRestartScript", getProcessId());
 }
 
@@ -335,24 +326,22 @@ private void startDelegateProcess(@Nullable String oldDelegateProcess, String sc
   });
 }
 
-private void shutdownDelegate(String delegateProcess) {
+private void shutdownDelegate(String delegateProcess, boolean resetWorking) {
   executorService.submit(() -> {
     try {
-      killDelegate(delegateProcess);
+      new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
+      messageService.closeData(DELEGATE_DASH + delegateProcess);
+      messageService.closeChannel(DELEGATE, delegateProcess);
+      runningDelegates.remove(delegateProcess);
+      messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
     } catch (Exception e) {
       logger.error("Error killing delegate {}", delegateProcess, e);
     } finally {
-      working = false;
+      if (resetWorking) {
+        working = false;
+      }
     }
   });
-}
-
-private void killDelegate(String delegateProcess) throws IOException {
-  new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
-  messageService.closeData(DELEGATE_DASH + delegateProcess);
-  messageService.closeChannel(DELEGATE, delegateProcess);
-  runningDelegates.remove(delegateProcess);
-  messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
 }
 
 private void checkForUpgrade() {
