@@ -9,6 +9,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
+import static software.wings.utils.message.MessengerType.DELEGATE;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -283,6 +284,9 @@ public class DelegateServiceImpl implements DelegateService {
       synchronized (waiter) {
         waiter.wait();
       }
+
+      messageService.closeData(DELEGATE_DASH + getProcessId());
+      messageService.closeChannel(DELEGATE, getProcessId());
 
       if (upgradePending) {
         removeDelegateVersionFromCapsule();
