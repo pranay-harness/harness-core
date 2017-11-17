@@ -16,6 +16,9 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
@@ -35,19 +38,10 @@ import java.util.stream.Collectors;
 @JsonTypeName("KUBERNETES")
 public class KubernetesContainerTask extends ContainerTask {
   @Attributes(title = "LABELS") List<Label> labels;
-  private List<ContainerDefinition> containerDefinitions;
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
 
   public KubernetesContainerTask() {
     super(DeploymentType.KUBERNETES.name());
-  }
-
-  public List<ContainerDefinition> getContainerDefinitions() {
-    return containerDefinitions;
-  }
-
-  public void setContainerDefinitions(List<ContainerDefinition> containerDefinitions) {
-    this.containerDefinitions = containerDefinitions;
   }
 
   public List<Label> getLabels() {
@@ -69,218 +63,6 @@ public class KubernetesContainerTask extends ContainerTask {
   @SchemaIgnore
   public String getServiceId() {
     return super.getServiceId();
-  }
-
-  public static class ContainerDefinition {
-    @SchemaIgnore private String name;
-    @Attributes(title = "Commands") private List<String> commands;
-    @Attributes(title = "CPU", required = true) private Integer cpu;
-    @Attributes(title = "MEMORY", required = true) private Integer memory;
-
-    @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
-    @Attributes(title = "ENVIRONMENT VARIABLES") List<EnvironmentVariable> environmentVariables;
-    @Attributes(title = "LOG CONFIGURATION") @SchemaIgnore private LogConfiguration logConfiguration;
-    @Attributes(title = "STORAGE/VOLUME") private List<StorageConfiguration> storageConfigurations;
-
-    @SchemaIgnore
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    public List<String> getCommands() {
-      return commands;
-    }
-
-    public void setCommands(List<String> commands) {
-      this.commands = commands;
-    }
-
-    public LogConfiguration getLogConfiguration() {
-      return logConfiguration;
-    }
-
-    public void setLogConfiguration(LogConfiguration logConfiguration) {
-      this.logConfiguration = logConfiguration;
-    }
-
-    public List<StorageConfiguration> getStorageConfigurations() {
-      return storageConfigurations;
-    }
-
-    public void setStorageConfigurations(List<StorageConfiguration> storageConfigurations) {
-      this.storageConfigurations = storageConfigurations;
-    }
-
-    public Integer getCpu() {
-      return cpu;
-    }
-
-    public void setCpu(Integer cpu) {
-      this.cpu = cpu;
-    }
-
-    public Integer getMemory() {
-      return memory;
-    }
-
-    public void setMemory(Integer memory) {
-      this.memory = memory;
-    }
-
-    public List<PortMapping> getPortMappings() {
-      return portMappings;
-    }
-
-    public void setPortMappings(List<PortMapping> portMappings) {
-      this.portMappings = portMappings;
-    }
-
-    public List<EnvironmentVariable> getEnvironmentVariables() {
-      return environmentVariables;
-    }
-
-    public void setEnvironmentVariables(List<EnvironmentVariable> environmentVariables) {
-      this.environmentVariables = environmentVariables;
-    }
-  }
-
-  public static class EnvironmentVariable {
-    @Attributes(title = "Environment variable name") private String name;
-    @Attributes(title = "Environment variable value") private String value;
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    public String getValue() {
-      return value;
-    }
-
-    public void setValue(String value) {
-      this.value = value;
-    }
-  }
-
-  public static class Label {
-    @Attributes(title = "Label name") private String name;
-    @Attributes(title = "Label value") private String value;
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    public String getValue() {
-      return value;
-    }
-
-    public void setValue(String value) {
-      this.value = value;
-    }
-  }
-
-  public static class PortMapping {
-    @Attributes(title = "Container port") private Integer containerPort;
-    @Attributes(title = "Host port") private Integer hostPort;
-
-    public Integer getContainerPort() {
-      return containerPort;
-    }
-
-    public void setContainerPort(Integer containerPort) {
-      this.containerPort = containerPort;
-    }
-
-    public Integer getHostPort() {
-      return hostPort;
-    }
-
-    public void setHostPort(Integer hostPort) {
-      this.hostPort = hostPort;
-    }
-  }
-
-  public static class LogConfiguration {
-    @Attributes(title = "Log Driver") private String logDriver;
-    @Attributes(title = "Options") private List<LogOption> options;
-
-    public String getLogDriver() {
-      return logDriver;
-    }
-
-    public void setLogDriver(String logDriver) {
-      this.logDriver = logDriver;
-    }
-
-    public List<LogOption> getOptions() {
-      return options;
-    }
-
-    public void setOptions(List<LogOption> options) {
-      this.options = options;
-    }
-
-    public static class LogOption {
-      private String key;
-      private String value;
-
-      public String getKey() {
-        return key;
-      }
-
-      public void setKey(String key) {
-        this.key = key;
-      }
-
-      public String getValue() {
-        return value;
-      }
-
-      public void setValue(String value) {
-        this.value = value;
-      }
-    }
-  }
-
-  public static class StorageConfiguration {
-    @Attributes(title = "Host Source Path") private String hostSourcePath;
-    @Attributes(title = "Container Path") private String containerPath;
-    @Attributes(title = "Options") private boolean readonly = false;
-
-    public String getHostSourcePath() {
-      return hostSourcePath;
-    }
-
-    public void setHostSourcePath(String hostSourcePath) {
-      this.hostSourcePath = hostSourcePath;
-    }
-
-    public String getContainerPath() {
-      return containerPath;
-    }
-
-    public void setContainerPath(String containerPath) {
-      this.containerPath = containerPath;
-    }
-
-    public boolean isReadonly() {
-      return readonly;
-    }
-
-    public void setReadonly(boolean readonly) {
-      this.readonly = readonly;
-    }
   }
 
   @Override
@@ -409,7 +191,7 @@ public class KubernetesContainerTask extends ContainerTask {
   /**
    * Creates container definition
    */
-  private Container createContainerDefinition(KubernetesContainerTask.ContainerDefinition wingsContainerDefinition) {
+  private Container createContainerDefinition(ContainerDefinition wingsContainerDefinition) {
     ContainerBuilder containerBuilder =
         new ContainerBuilder().withName(DUMMY_CONTAINER_NAME).withImage(DUMMY_DOCKER_IMAGE_NAME);
 
@@ -443,13 +225,8 @@ public class KubernetesContainerTask extends ContainerTask {
       });
     }
 
-    if (wingsContainerDefinition.getEnvironmentVariables() != null) {
-      wingsContainerDefinition.getEnvironmentVariables().forEach(
-          envVar -> containerBuilder.addNewEnv().withName(envVar.getName()).withValue(envVar.getValue()).endEnv());
-    }
-
     if (wingsContainerDefinition.getLogConfiguration() != null) {
-      KubernetesContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
+      LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
       // TODO:: Check about kubernetes logs.  See https://kubernetes.io/docs/concepts/clusters/logging/
     }
 
@@ -463,5 +240,12 @@ public class KubernetesContainerTask extends ContainerTask {
     }
 
     return containerBuilder.build();
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @Builder
+  public static class Yaml extends ContainerTask.Yaml {
+    public Yaml() {}
   }
 }

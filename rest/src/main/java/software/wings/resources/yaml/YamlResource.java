@@ -440,6 +440,44 @@ public class YamlResource {
     return yamlSyncService.update(yamlPayload, accountId);
   }
 
+  @GET
+  @Path("/container-tasks/{containerTaskId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getContainerTask(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @PathParam("containerTaskId") String containerTaskId) {
+    return yamlResourceService.getContainerTask(accountId, appId, containerTaskId);
+  }
+
+  @PUT
+  @Path("/container-tasks/{containerTaskId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Base> updateContainerTask(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlSyncService.update(yamlPayload, accountId);
+  }
+
+  @GET
+  @Path("/lambda-specs/{lambdaSpecId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getLamdbaSpec(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @PathParam("lambdaSpecId") String lambdaSpecId) {
+    return yamlResourceService.getLambdaSpec(accountId, appId, lambdaSpecId);
+  }
+
+  @PUT
+  @Path("/lambda-specs/{lambdaSpecId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Base> updateLambdaSpec(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlSyncService.update(yamlPayload, accountId);
+  }
+
   /**
    * Update yaml file
    *

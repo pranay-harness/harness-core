@@ -287,6 +287,10 @@ public interface ServiceResourceService {
    */
   List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName);
 
+  ContainerTask getContainerTaskById(String appId, String containerTaskId);
+
+  LambdaSpecification getLambdaSpecificationById(String appId, String lambdaSpecificationId);
+
   /**
    * Create lambda specification lambda specification.
    *

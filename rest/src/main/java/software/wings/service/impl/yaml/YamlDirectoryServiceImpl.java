@@ -7,6 +7,7 @@ import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
@@ -22,10 +23,12 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -33,9 +36,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerTask;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AppService;
@@ -53,6 +58,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.directory.AppLevelYamlNode;
@@ -363,6 +369,48 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
 
         // ------------------- END SERVICE COMMANDS SECTION -----------------------
+
+        // ------------------- DEPLOYMENT SPECIFICATION SECTION -----------------------
+
+        DirectoryPath deploymentSpecsPath = servicePath.clone().add(DEPLOYMENT_SPECIFICATION_FOLDER);
+        if (service.getArtifactType() == ArtifactType.DOCKER) {
+          FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
+              ContainerTask.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+          serviceFolder.addChild(deploymentSpecsFolder);
+
+          ContainerTask kubernetesContainerTask = serviceResourceService.getContainerTaskByDeploymentType(
+              service.getAppId(), service.getUuid(), DeploymentType.KUBERNETES.name());
+          if (kubernetesContainerTask != null) {
+            String kubernetesSpecFileName = YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME + YAML_EXTENSION;
+            deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, kubernetesContainerTask.getUuid(),
+                kubernetesContainerTask.getAppId(), service.getUuid(), kubernetesSpecFileName, ContainerTask.class,
+                deploymentSpecsPath.clone().add(kubernetesSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+          }
+
+          ContainerTask ecsContainerTask = serviceResourceService.getContainerTaskByDeploymentType(
+              service.getAppId(), service.getUuid(), DeploymentType.ECS.name());
+          if (ecsContainerTask != null) {
+            String ecsSpecFileName = YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME + YAML_EXTENSION;
+            deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, ecsContainerTask.getUuid(),
+                ecsContainerTask.getAppId(), service.getUuid(), ecsSpecFileName, ContainerTask.class,
+                deploymentSpecsPath.clone().add(ecsSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+          }
+        } else if (service.getArtifactType() == ArtifactType.AWS_LAMBDA) {
+          FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
+              LambdaSpecification.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+          serviceFolder.addChild(deploymentSpecsFolder);
+
+          LambdaSpecification lambdaSpecification =
+              serviceResourceService.getLambdaSpecification(service.getAppId(), service.getUuid());
+          if (lambdaSpecification != null) {
+            String lambdaSpecFileName = YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION;
+            deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, lambdaSpecification.getUuid(),
+                lambdaSpecification.getAppId(), service.getUuid(), lambdaSpecFileName, LambdaSpecification.class,
+                deploymentSpecsPath.clone().add(lambdaSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+          }
+        }
+
+        // ------------------- END DEPLOYMENT SPECIFICATION SECTION -----------------------
 
         // ------------------- ARTIFACT STREAMS SECTION -----------------------
         DirectoryPath artifactStreamsPath = servicePath.clone().add(ARTIFACT_SOURCES_FOLDER);

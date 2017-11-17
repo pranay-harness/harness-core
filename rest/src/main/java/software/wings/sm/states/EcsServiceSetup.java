@@ -11,7 +11,6 @@ import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.ContainerDefinition;
@@ -37,7 +36,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.beans.container.EcsContainerTask.PortMapping;
+import software.wings.beans.container.PortMapping;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateExecutionData;
@@ -46,6 +45,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -94,10 +94,9 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     EcsContainerTask ecsContainerTask = (EcsContainerTask) containerTask;
     if (ecsContainerTask == null) {
       ecsContainerTask = new EcsContainerTask();
-      EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
-      containerDefinition.setMemory(256);
-      containerDefinition.setPortMappings(emptyList());
-      ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+      software.wings.beans.container.ContainerDefinition containerDefinition =
+          software.wings.beans.container.ContainerDefinition.builder().memory(256).portMappings(emptyList()).build();
+      ecsContainerTask.setContainerDefinitions(Arrays.asList(containerDefinition));
     }
 
     TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName, taskFamily,

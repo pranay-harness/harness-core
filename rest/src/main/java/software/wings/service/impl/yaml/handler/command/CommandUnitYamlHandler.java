@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.command.AbstractCommandUnit;
-import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.yaml.ChangeContext;
@@ -58,11 +57,6 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     Y yaml = changeContext.getYaml();
     return !(yaml == null || yaml.getCommandUnitType() == null || yaml.getName() == null
         || yaml.getDeploymentType() == null);
-  }
-
-  @Override
-  public Class getYamlClass() {
-    return AwsLambdaCommandUnit.Yaml.class;
   }
 
   @Override
