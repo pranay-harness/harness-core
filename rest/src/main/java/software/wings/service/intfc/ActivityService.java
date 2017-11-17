@@ -4,6 +4,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.ExecutionStatus;
@@ -58,7 +59,7 @@ public interface ActivityService {
    * @param activityId the activity id
    * @return the command units
    */
-  List<CommandUnit> getCommandUnits(String appId, String activityId);
+  List<CommandUnitDetails> getCommandUnits(String appId, String activityId);
 
   /**
    * Gets last activity for service.
