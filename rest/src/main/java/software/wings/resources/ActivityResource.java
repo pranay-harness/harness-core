@@ -14,6 +14,7 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -126,7 +127,7 @@ public class ActivityResource {
   @GET
   @Path("{activityId}/units")
   @Timed
-  public RestResponse<List<CommandUnit>> getActivityCommandUnits(
+  public RestResponse<List<CommandUnitDetails>> getActivityCommandUnits(
       @QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     return new RestResponse<>(activityService.getCommandUnits(appId, activityId));
   }
