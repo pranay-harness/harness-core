@@ -310,7 +310,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .equal(artifactSourceName)
         .order("-createdAt")
         .field("status")
-        .hasAnyOf(Arrays.asList(RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
+        .hasAnyOf(Arrays.asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
         .get();
   }
 
