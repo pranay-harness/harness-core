@@ -1,6 +1,7 @@
 import numpy as np
-from Tokenizer import Tokenizer
-from TFIDFVectorizer import TFIDFVectorizer
+
+from core.feature.Tokenizer import Tokenizer
+
 """
 Computes the jaccard simmilarity between 2 boolean vectors
 

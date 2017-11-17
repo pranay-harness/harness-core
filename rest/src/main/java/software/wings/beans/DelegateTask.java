@@ -36,6 +36,7 @@ public class DelegateTask extends Base {
   private boolean async = true;
   private String envId;
   private String infrastructureMappingId;
+  //  private List<String> blacklistedDelegateIds = new ArrayList<>();
 
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
@@ -261,6 +262,14 @@ public class DelegateTask extends Base {
   public void setAsync(boolean async) {
     this.async = async;
   }
+
+  //  public List<String> getBlacklistedDelegateIds() {
+  //    return blacklistedDelegateIds;
+  //  }
+  //
+  //  public void setBlacklistedDelegateIds(List<String> blacklistedDelegateIds) {
+  //    this.blacklistedDelegateIds = blacklistedDelegateIds;
+  //  }
 
   @Override
   public boolean equals(Object o) {

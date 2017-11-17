@@ -40,27 +40,14 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-if [ ! -d $JRE_DIR ]
+if [ -z "$1" ]
 then
-  echo "Downloading JRE packages..."
-  JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  curl -#kLO $JVM_URL
-  echo "Extracting JRE packages..."
-  mkdir -p tmp
-  mv $JVM_TAR_FILENAME tmp
-  cd tmp
-  tar xzf $JVM_TAR_FILENAME
-  mv $JRE_DIR_OLD ../$JRE_DIR
-  cd ..
-  rm -rf jre tmp
-  ln -s $JRE_DIR jre
+  echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
+  exit 0
 fi
-
 
 REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
 REMOTE_DELEGATE_VERSION=9.9.9
-
-CURRENT_VERSION=0.0.0
 
 if [ ! -e delegate.jar ]
 then

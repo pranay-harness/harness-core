@@ -81,6 +81,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   protected StateExecutionData createService(ExecutionContext context, String serviceName, ImageDetails imageDetails,
       String appName, String envName, String clusterName, ContainerInfrastructureMapping infrastructureMapping,
       ContainerTask containerTask) {
+    logger.info("Create ECS service in cluster {}", clusterName);
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
     String region = ecsInfrastructureMapping.getRegion();

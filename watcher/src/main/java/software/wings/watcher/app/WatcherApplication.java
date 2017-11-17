@@ -51,10 +51,13 @@ public class WatcherApplication {
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
     String configFile = args[0];
     boolean upgrade = false;
+    boolean transition = false;
     String previousWatcherProcess = null;
     if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
       upgrade = true;
       previousWatcherProcess = args[2];
+    } else if (args.length > 1 && StringUtils.equals(args[1], "transition")) {
+      transition = true;
     }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -68,11 +71,11 @@ public class WatcherApplication {
     WatcherApplication watcherApplication = new WatcherApplication();
     watcherApplication.run(
         new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), WatcherConfiguration.class), upgrade,
-        previousWatcherProcess);
+        transition, previousWatcherProcess);
   }
 
-  private void run(WatcherConfiguration configuration, boolean upgrade, String previousWatcherProcess)
-      throws Exception {
+  private void run(WatcherConfiguration configuration, boolean upgrade, boolean transition,
+      String previousWatcherProcess) throws Exception {
     Injector injector = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
@@ -85,11 +88,12 @@ public class WatcherApplication {
     }
 
     WatcherService watcherService = injector.getInstance(WatcherService.class);
-    watcherService.run(upgrade);
+    watcherService.run(upgrade, transition);
 
     // This should run in case of upgrade flow otherwise never called
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("inputExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("watchExecutor"))).shutdownNow();
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
     injector.getInstance(ExecutorService.class).shutdown();
     injector.getInstance(ExecutorService.class).awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
     logger.info("Flushing logs");

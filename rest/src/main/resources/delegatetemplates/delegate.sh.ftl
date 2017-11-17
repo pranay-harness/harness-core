@@ -1,26 +1,13 @@
 <#include "common.sh.ftl">
 
-if [ ! -d $JRE_DIR ]
+if [ -z "$1" ]
 then
-  echo "Downloading JRE packages..."
-  JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  curl -#kLO $JVM_URL
-  echo "Extracting JRE packages..."
-  mkdir -p tmp
-  mv $JVM_TAR_FILENAME tmp
-  cd tmp
-  tar xzf $JVM_TAR_FILENAME
-  mv $JRE_DIR_OLD ../$JRE_DIR
-  cd ..
-  rm -rf jre tmp
-  ln -s $JRE_DIR jre
+  echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
+  exit 0
 fi
-
 
 REMOTE_DELEGATE_URL=${delegateJarUrl}
 REMOTE_DELEGATE_VERSION=${upgradeVersion}
-
-CURRENT_VERSION=${currentVersion}
 
 if [ ! -e delegate.jar ]
 then

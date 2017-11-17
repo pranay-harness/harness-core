@@ -1,5 +1,6 @@
 import numpy as np
-from core.ThreeSigmaClassifier import ThreeSigmaClassifier
+
+from core.classifier.ThreeSigmaClassifier import ThreeSigmaClassifier
 
 
 def test_fit():

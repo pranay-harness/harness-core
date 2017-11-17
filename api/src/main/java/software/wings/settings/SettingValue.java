@@ -237,6 +237,8 @@ public abstract class SettingValue implements ExtensionPoint {
      */
     KMS,
 
+    SECRET_TEXT,
+
     YAML_GIT_SYNC,
 
     VAULT;

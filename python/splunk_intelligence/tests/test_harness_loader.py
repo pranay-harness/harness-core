@@ -3,7 +3,7 @@ import threading
 import sys
 
 import time
-from sources.SplunkHarnessLoader import SplunkHarnessLoader
+from sources.HarnessLoader import HarnessLoader
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 
 
@@ -20,6 +20,7 @@ class PostHandler(BaseHTTPRequestHandler):
         self.wfile.write('{}')
         return
 
+
 def test_timeout():
     server = HTTPServer(('', 18080), PostHandler)
     thread = threading.Thread(target=server.serve_forever)
@@ -27,10 +28,10 @@ def test_timeout():
     try:
         thread.start()
         print('test post timeout')
-        SplunkHarnessLoader.send_request('http://localhost:18080', dict(message='Dummy'), headers=None)
+        HarnessLoader.send_request('http://localhost:18080', dict(message='Dummy'), headers=None)
         print('test get timeout')
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        SplunkHarnessLoader.get_request('http://localhost:18080', headers=headers)
+        HarnessLoader.get_request('http://localhost:18080', headers=headers)
         print('finish')
     except:
         server.shutdown()

@@ -49,9 +49,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.License;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
@@ -374,20 +371,5 @@ public String getDelegateToken() throws UnknownHostException {
   }
 
   return jwt.serialize();
-}
-
-protected KmsConfig getKmsConfig() {
-  final KmsConfig kmsConfig = new KmsConfig();
-  kmsConfig.setName("myKms");
-  kmsConfig.setDefault(true);
-  kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
-  kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
-  kmsConfig.setSecretKey("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");
-  return kmsConfig;
-}
-
-protected void enableKmsFeatureFlag() {
-  FeatureFlag kmsFeatureFlag = FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build();
-  wingsPersistence.save(kmsFeatureFlag);
 }
 }

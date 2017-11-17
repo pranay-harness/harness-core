@@ -18,6 +18,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   private String delegateId;
   private String accountId;
+  private String appId;
   private String taskId;
   private Object[] parameters;
   private Consumer<NotifyResponseData> consumer;
@@ -29,6 +30,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     this.taskId = delegateTask.getUuid();
     this.parameters = delegateTask.getParameters();
     this.accountId = delegateTask.getAccountId();
+    this.appId = delegateTask.getAppId();
     this.consumer = consumer;
     this.preExecute = preExecute;
   }
@@ -64,6 +66,10 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   public String getAccountId() {
     return accountId;
+  }
+
+  public String getAppId() {
+    return appId;
   }
 
   public Object[] getParameters() {
