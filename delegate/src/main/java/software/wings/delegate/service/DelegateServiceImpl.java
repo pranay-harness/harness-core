@@ -6,6 +6,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
+import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
@@ -45,7 +46,6 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
-import software.wings.delegate.app.DelegateApplication;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -463,10 +463,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startInputCheck() {
     inputExecutor.scheduleWithFixedDelay(() -> {
-      Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
+      Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(4));
       if (message != null) {
         if (STOP_ACQUIRING.equals(message.getMessage())) {
-          handleStopAcquiringMessage();
+          handleStopAcquiringMessage(message.getFromProcess());
         }
         try {
           delegateMessages.put(message);
@@ -477,10 +477,13 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, 1, TimeUnit.SECONDS);
   }
 
-  private void handleStopAcquiringMessage() {
+  private void handleStopAcquiringMessage(String sender) {
+    logger.info("Got stop-acquiring message from watcher {}", sender);
     if (watched && this.acquireTasks) {
+      acquireTasks = false;
       stoppedAcquiringAt = clock.millis();
-      setAcquireTasks(false);
+      messageService.putData("delegate-" + getProcessId(), "shutdownPending", true);
+      messageService.putData("delegate-" + getProcessId(), "shutdownStarted", stoppedAcquiringAt);
       executorService.submit(() -> {
         int secs = 0;
         while (getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
@@ -573,9 +576,9 @@ public class DelegateServiceImpl implements DelegateService {
       if (!isAcquireTasks()) {
         statusData.put("shutdownStarted", stoppedAcquiringAt);
       }
-      messageService.putAllData("delegate-" + DelegateApplication.getProcessId(), statusData);
+      messageService.putAllData("delegate-" + getProcessId(), statusData);
     }),
-        0, 5, TimeUnit.SECONDS);
+        0, 10, TimeUnit.SECONDS);
   }
 
   private boolean doRestartDelegate() {
