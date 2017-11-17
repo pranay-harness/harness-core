@@ -657,6 +657,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
+    // TODO - acquire lock on task, double check it's not already assigned
     // Clear pending validations. No longer need to track since we're assigning
     cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove(taskId);
 
