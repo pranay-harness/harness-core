@@ -14,7 +14,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.exception.WingsException;
@@ -46,10 +45,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Inject private FeatureFlagService featureFlagService;
 
-  private boolean shouldUseKms(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.KMS, accountId) && getSecretConfig(accountId) != null;
-  }
-
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
     if (kmsConfig == null) {
@@ -57,7 +52,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).encrypt(value, kmsConfig);
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .encrypt(accountId, value, kmsConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }
@@ -141,18 +137,21 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
     accessKeyData.setAccountId(accountId);
     accessKeyData.setType(SettingVariableTypes.KMS);
+    accessKeyData.setName(kmsConfig.getName() + "_accessKey");
     String accessKeyId = wingsPersistence.save(accessKeyData);
     kmsConfig.setAccessKey(accessKeyId);
 
     EncryptedData secretKeyData = encrypt(kmsConfig.getSecretKey().toCharArray(), accountId, null);
     secretKeyData.setAccountId(accountId);
     secretKeyData.setType(SettingVariableTypes.KMS);
+    secretKeyData.setName(kmsConfig.getName() + "_secretKey");
     String secretKeyId = wingsPersistence.save(secretKeyData);
     kmsConfig.setSecretKey(secretKeyId);
 
     EncryptedData arnKeyData = encrypt(kmsConfig.getKmsArn().toCharArray(), accountId, null);
     arnKeyData.setAccountId(accountId);
     arnKeyData.setType(SettingVariableTypes.KMS);
+    arnKeyData.setName(kmsConfig.getName() + "_arn");
     String arnKeyId = wingsPersistence.save(arnKeyData);
     kmsConfig.setKmsArn(arnKeyId);
 

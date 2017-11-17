@@ -259,7 +259,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(zipArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateStop.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherStop.sh"))));
     }
   }
 
@@ -273,7 +273,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(Constants.DELEGATE_DIR + "/");
 
       ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/watch.sh");
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/start.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
@@ -284,21 +284,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(zipArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherRun.sh"))));
-
-      file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/stopwatch.sh");
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
-          .extracting(o -> ((AsiExtraField) o).getMode())
-          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
-
-      buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherStop.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherStart.sh"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/delegate.sh");
@@ -315,20 +301,6 @@ public class DelegateServiceTest extends WingsBaseTest {
               new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherDelegate.sh"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/run.sh");
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
-          .extracting(o -> ((AsiExtraField) o).getMode())
-          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
-
-      buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateRun.sh"))));
-
-      file = zipArchiveInputStream.getNextZipEntry();
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/stop.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
@@ -340,7 +312,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(zipArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateStop.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherStop.sh"))));
     }
   }
 
@@ -353,8 +325,8 @@ public class DelegateServiceTest extends WingsBaseTest {
         delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "0.0.0", "https://localhost:9090");
     assertThat(delegateScripts.isDoUpgrade()).isTrue();
     assertThat(delegateScripts.getUpgradeScript())
-        .isEqualTo(CharStreams.toString(
-            new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateUpgradeScript.sh"))));
+        .isEqualTo(
+            CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateUpgrade.sh"))));
   }
 
   @Test

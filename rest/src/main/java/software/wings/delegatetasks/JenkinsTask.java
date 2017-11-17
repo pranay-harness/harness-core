@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.MapUtils.isNotEmpty;
+import static software.wings.beans.Log.Builder.aLog;
 
 import com.google.common.base.Joiner;
 
@@ -13,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -27,6 +31,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -39,6 +44,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService logService;
 
   public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
       Supplier<Boolean> preExecute) {
@@ -48,12 +54,13 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   @Override
   public JenkinsExecutionResponse run(Object[] parameters) {
     return run((JenkinsConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-        (Map<String, String>) parameters[3], (Map<String, String>) parameters[4]);
+        (Map<String, String>) parameters[3], (Map<String, String>) parameters[4], (String) parameters[5],
+        (String) parameters[6]);
   }
 
   public JenkinsExecutionResponse run(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String finalJobName, Map<String, String> evaluatedParameters,
-      Map<String, String> evaluatedFilePathsForAssertion) {
+      String finalJobName, Map<String, String> evaluatedParameters, Map<String, String> evaluatedFilePathsForAssertion,
+      String activityId, String stateName) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage;
@@ -65,7 +72,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       QueueReference queueItem = jenkins.trigger(finalJobName, evaluatedParameters);
 
       Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
-      BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild);
+      BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild, activityId, stateName);
 
       jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
 
@@ -122,13 +129,16 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     return jenkinsExecutionResponse;
   }
 
-  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild) throws IOException {
+  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String stateName)
+      throws IOException {
     BuildWithDetails jenkinsBuildWithDetails = null;
+    AtomicInteger consoleLogsSent = new AtomicInteger();
     do {
       logger.info("Waiting for Job  {} to finish execution", jenkinsBuild.getUrl());
       Misc.sleepWithRuntimeException(5000);
       try {
         jenkinsBuildWithDetails = jenkinsBuild.details();
+        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, stateName);
       } catch (IOException ex) {
         logger.warn("Jenkins server unreachable {}", ex.getMessage());
       }
@@ -136,6 +146,28 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     logger.info("Job {} execution completed. Status:", jenkinsBuildWithDetails.getNumber(),
         jenkinsBuildWithDetails.getResult());
     return jenkinsBuildWithDetails;
+  }
+
+  private void saveConsoleLogs(BuildWithDetails jenkinsBuildWithDetails, AtomicInteger consoleLogsAlreadySent,
+      String activityId, String stateName) throws IOException {
+    String consoleOutputText = jenkinsBuildWithDetails.getConsoleOutputText();
+    String[] consoleLines = consoleOutputText.split("\r\n");
+
+    if (consoleLines != null) {
+      for (int i = consoleLogsAlreadySent.get(); i < consoleLines.length; i++) {
+        String logLine = consoleLines[i];
+        Log log = aLog()
+                      .withActivityId(activityId)
+                      .withCommandUnitName(stateName)
+                      .withAppId(getAppId())
+                      .withLogLevel(LogLevel.INFO)
+                      .withLogLine(logLine)
+                      .withExecutionResult(CommandExecutionStatus.RUNNING)
+                      .build();
+        logService.save(getAccountId(), log);
+        consoleLogsAlreadySent.incrementAndGet();
+      }
+    }
   }
 
   private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) throws IOException {

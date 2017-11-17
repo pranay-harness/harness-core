@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from core.SAXHMMDistance import SAXHMMDistanceFinder
-from core.TimeSeriesUtils import MetricType, get_deviation_type, smooth, simple_average, get_deviation_min_threshold
+from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
+from core.util.TimeSeriesUtils import MetricType, get_deviation_type, simple_average, get_deviation_min_threshold
 from sources.NewRelicSource import NewRelicSource
-from sources.SplunkHarnessLoader import SplunkHarnessLoader
+from sources.HarnessLoader import HarnessLoader
 
 format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=format)
@@ -221,7 +221,7 @@ class TSAnomlyDetector(object):
 
 
 def load_from_harness_server(url, nodes, options):
-    raw_events = SplunkHarnessLoader.load_from_harness_raw_new(url,
+    raw_events = HarnessLoader.load_from_harness_raw_new(url,
                                                                options.auth_token,
                                                                dict(applicationId=options.application_id,
                                                                     workflowId=options.workflow_id,
@@ -234,7 +234,7 @@ def load_from_harness_server(url, nodes, options):
 
 
 def post_to_wings_server(options, results):
-    SplunkHarnessLoader.post_to_wings_server(options.analysis_save_url, options.auth_token,
+    HarnessLoader.post_to_wings_server(options.analysis_save_url, options.auth_token,
                                              json.dumps(results))
 
 

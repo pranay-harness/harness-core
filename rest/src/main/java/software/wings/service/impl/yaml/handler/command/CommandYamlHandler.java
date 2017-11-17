@@ -126,7 +126,6 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String commandUnitType = Util.getStringFromEnum(command.getCommandUnitType());
 
     // command units
-
     List<AbstractCommandUnit.Yaml> commandUnitYamlList =
         command.getCommandUnits()
             .stream()

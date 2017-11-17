@@ -32,7 +32,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.JUnitCore;
 import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
@@ -159,9 +158,15 @@ public class DataGenUtil extends BaseIntegrationTest {
     }
     verifyAccountAndApplicationSetup(apps);
     featureFlagService.initializeFeatureFlags();
-    //    kmsService.saveKmsConfig(accountId,
-    //    KmsConfig.builder().isDefault(true).accountId(accountId).name("Account_kms").accessKey("AKIAIVRKRUMJ3LAVBMSQ")
-    //        .secretKey("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").kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d").build());
+    kmsService.saveKmsConfig(accountId,
+        KmsConfig.builder()
+            .isDefault(true)
+            .accountId(accountId)
+            .name("Account_kms")
+            .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
+            .secretKey("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")
+            .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
+            .build());
   }
 
   private void verifyAccountAndApplicationSetup(List<Application> apps) {

@@ -131,7 +131,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                               .get())
                               .orElse(result)
                               .getUuid()));
-    wingsPersistence.save(resultsToSave);
+    wingsPersistence.saveIgnoringDuplicateKeys(resultsToSave);
   }
 
   @Override

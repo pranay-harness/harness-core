@@ -15,7 +15,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.api.MetricDataAnalysisResponse;
-import software.wings.beans.FeatureName;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -357,7 +356,7 @@ public class MetricAnalysisJob implements Job {
     private Map<String, List<NewRelicMetricDataRecord>> splitMetricsByName(List<NewRelicMetricDataRecord> records) {
       final Map<String, List<NewRelicMetricDataRecord>> rv = new HashMap<>();
       for (NewRelicMetricDataRecord record : records) {
-        if (record.getName().equals(NewRelicDataCollectionTask.HARNESS_HEARTEAT_METRIC_NAME)) {
+        if (record.getName().equals(NewRelicDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME)) {
           continue;
         }
         if (!rv.containsKey(record.getName())) {

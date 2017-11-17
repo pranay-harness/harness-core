@@ -2,6 +2,7 @@ package software.wings.helpers.ext.vault;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
@@ -16,11 +17,13 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 public interface VaultRestClient {
   String BASE_VAULT_URL = "v1/secret/harness/";
 
-  @POST(BASE_VAULT_URL + "{accountId}/{variableType}/{keyName}/{uuid}")
+  @POST(BASE_VAULT_URL + "{variableType}/{keyName}")
   Call<Void> writeSecret(@Header("X-Vault-Token") String header, @Path("keyName") String keyName,
-      @Path("accountId") String accountId, @Path("variableType") SettingVariableTypes settingType,
-      @Path("uuid") String uuid, @Body VaultSecretValue value);
+      @Path("variableType") SettingVariableTypes settingType, @Body VaultSecretValue value);
 
-  @GET(BASE_VAULT_URL + "{keyName}")
-  Call<VaultReadResponse> readSecret(@Header("X-Vault-Token") String header, @Path("keyName") String keyName);
+  @DELETE(BASE_VAULT_URL + "{variableType}/{path}")
+  Call<Void> deleteSecret(@Header("X-Vault-Token") String header, @Path("path") String path);
+
+  @GET(BASE_VAULT_URL + "{path}")
+  Call<VaultReadResponse> readSecret(@Header("X-Vault-Token") String header, @Path("path") String keyName);
 }

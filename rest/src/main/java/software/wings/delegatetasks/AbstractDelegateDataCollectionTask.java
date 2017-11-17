@@ -9,7 +9,6 @@ import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,7 +24,7 @@ import javax.inject.Named;
  * Created by rsingh on 9/11/17.
  */
 public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegateRunnableTask {
-  public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
+  public static final String HARNESS_HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
 
   protected static final int RETRIES = 3;
   protected final AtomicBoolean completed = new AtomicBoolean(false);

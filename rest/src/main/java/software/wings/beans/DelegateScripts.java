@@ -14,8 +14,7 @@ public class DelegateScripts {
   @Transient private String upgradeScript;
   @Transient private String runScript;
   @Transient private String stopScript;
-  @Transient private String watchScript;
-  @Transient private String stopWatchScript;
+  @Transient private String startScript;
   @Transient private String delegateScript;
 
   public String getDelegateId() {
@@ -66,20 +65,12 @@ public class DelegateScripts {
     this.stopScript = stopScript;
   }
 
-  public String getWatchScript() {
-    return watchScript;
+  public String getStartScript() {
+    return startScript;
   }
 
-  public void setWatchScript(String watchScript) {
-    this.watchScript = watchScript;
-  }
-
-  public String getStopWatchScript() {
-    return stopWatchScript;
-  }
-
-  public void setStopWatchScript(String stopWatchScript) {
-    this.stopWatchScript = stopWatchScript;
+  public void setStartScript(String startScript) {
+    this.startScript = startScript;
   }
 
   public String getDelegateScript() {
@@ -96,12 +87,10 @@ public class DelegateScripts {
         return getUpgradeScript();
       case "run.sh":
         return getRunScript();
+      case "start.sh":
+        return getStartScript();
       case "stop.sh":
         return getStopScript();
-      case "watch.sh":
-        return getWatchScript();
-      case "stopwatch.sh":
-        return getStopWatchScript();
       case "delegate.sh":
         return getDelegateScript();
       default:

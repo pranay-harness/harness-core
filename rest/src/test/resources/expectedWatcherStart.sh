@@ -54,6 +54,8 @@ then
   cd ..
   rm -rf jre tmp
   ln -s $JRE_DIR jre
+else
+  rm -rf $JRE_DIR_OLD run.sh upgrade.sh stopwatch.sh restart.sh
 fi
 
 
@@ -66,12 +68,30 @@ then
   curl -#k $REMOTE_WATCHER_URL -o watcher.jar
 fi
 
+REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
+REMOTE_DELEGATE_VERSION=9.9.9
+
+if [ ! -e delegate.jar ]
+then
+  echo "Downloading Delegate..."
+  curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
+else
+  DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]
+  then
+    echo "Downloading Delegate..."
+    mkdir -p backup.$DELEGATE_CURRENT_VERSION
+    cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
+    curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
+  fi
+fi
+
 if [ ! -e config-watcher.yml ]
 then
   echo "accountId: ACCOUNT_ID" > config-watcher.yml
   echo "doUpgrade: true" >> config-watcher.yml
   echo "upgradeCheckLocation: http://localhost:8888/watcherci.txt" >> config-watcher.yml
-  echo "upgradeCheckIntervalSeconds: 300" >> config-watcher.yml
+  echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 
 export HOSTNAME
@@ -85,24 +105,31 @@ then
   cp watcher.jar watcherBackup.$CURRENT_VERSION
   $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml upgrade $2
 else
-  if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
+  if [[ $1 == "transition" ]]
   then
-    echo "Watcher already running"
+    echo "Transition"
+    CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+    $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml transition
   else
-    nohup $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
-    sleep 1
-    if [ -s nohup-watcher.out ]
+    if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
     then
-      echo "Failed to start Watcher."
-      echo "$(cat nohup-watcher.out)"
+      echo "Watcher already running"
     else
-      sleep 3
-      if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
+      nohup $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
+      sleep 1
+      if [ -s nohup-watcher.out ]
       then
-        echo "Watcher started"
-      else
         echo "Failed to start Watcher."
-        echo "$(tail -n 30 watcher.log)"
+        echo "$(cat nohup-watcher.out)"
+      else
+        sleep 3
+        if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
+        then
+          echo "Watcher started"
+        else
+          echo "Failed to start Watcher."
+          echo "$(tail -n 30 watcher.log)"
+        fi
       fi
     fi
   fi

@@ -5,13 +5,16 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import retrofit2.http.Body;
 import software.wings.beans.RestResponse;
 import software.wings.beans.UuidAware;
 import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -19,7 +22,9 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -79,5 +84,39 @@ public class SecretManagementResource {
       @QueryParam("fromKmsId") String fromKmsId, @QueryParam("toKmsId") String toKmsId,
       @QueryParam("encryptionType") EncryptionType encryptionType) {
     return new RestResponse<>(secretManager.transitionSecrets(accountId, fromKmsId, toKmsId, encryptionType));
+  }
+
+  @POST
+  @Path("/add-secret")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> addSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
+    return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue()));
+  }
+
+  @POST
+  @Path("/update-secret")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
+      @QueryParam("uuid") final String uuId, @Body SecretText secretText) {
+    return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretText.getName(), secretText.getValue()));
+  }
+
+  @GET
+  @Path("/list-secrets")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<EncryptedData>> listSecrets(@QueryParam("accountId") final String accountId) {
+    return new RestResponse<>(secretManager.listSecrets(accountId));
+  }
+
+  @DELETE
+  @Path("/delete-secret")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateSecret(
+      @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
+    return new RestResponse<>(secretManager.deleteSecret(accountId, uuId));
   }
 }

@@ -111,6 +111,7 @@ import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.SystemCatalogSeviceImpl;
 import software.wings.service.impl.TriggerServiceImpl;
+import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WebHookServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
@@ -127,8 +128,8 @@ import software.wings.service.impl.instance.sync.EcsContainerSyncImpl;
 import software.wings.service.impl.instance.sync.KubernetesContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
@@ -203,6 +204,7 @@ import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -215,8 +217,8 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -234,7 +236,6 @@ import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
 import java.time.Clock;
-import javax.inject.Singleton;
 
 /**
  * Guice Module for initializing all beans.
@@ -267,6 +268,7 @@ public class WingsModule extends AbstractModule {
     bind(FileService.class).to(FileServiceImpl.class);
     bind(ArtifactStreamService.class).to(ArtifactStreamServiceImpl.class);
     bind(UserService.class).to(UserServiceImpl.class);
+    bind(UserGroupService.class).to(UserGroupServiceImpl.class);
     bind(RoleService.class).to(RoleServiceImpl.class);
     bind(ServiceResourceService.class).to(ServiceResourceServiceImpl.class);
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);

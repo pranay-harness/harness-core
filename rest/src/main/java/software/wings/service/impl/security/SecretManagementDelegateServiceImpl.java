@@ -31,7 +31,7 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.UUID;
+import java.util.HashSet;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -46,7 +46,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 
   @Override
-  public EncryptedData encrypt(char[] value, KmsConfig kmsConfig) throws IOException {
+  public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws IOException {
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         final AWSKMS kmsClient = AWSKMSClientBuilder.standard()
@@ -71,6 +71,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             .encryptionType(EncryptionType.KMS)
             .kmsId(kmsConfig.getUuid())
             .enabled(true)
+            .parentIds(new HashSet<>())
+            .accountId(accountId)
             .build();
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
@@ -129,21 +131,28 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
-    String uuid = getSecretUuid(savedEncryptedData);
-    String keyUrl = accountId + "/" + settingType + "/" + name + "/" + uuid;
+    String keyUrl = settingType + "/" + name;
     if (value == null) {
+      keyUrl = savedEncryptedData == null ? keyUrl : savedEncryptedData.getEncryptionKey();
       char[] encryptedValue = savedEncryptedData == null ? null : keyUrl.toCharArray();
       return EncryptedData.builder()
           .encryptionKey(keyUrl)
           .encryptedValue(encryptedValue)
           .encryptionType(EncryptionType.VAULT)
           .enabled(true)
+          .accountId(accountId)
+          .parentIds(new HashSet<>())
           .kmsId(vaultConfig.getUuid())
           .build();
     }
+    if (savedEncryptedData != null && !StringUtils.isBlank(value)) {
+      getVaultRestClient(vaultConfig)
+          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey())
+          .execute();
+    }
     Call<Void> request = getVaultRestClient(vaultConfig)
-                             .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, accountId, settingType,
-                                 uuid, VaultSecretValue.builder().value(value).build());
+                             .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType,
+                                 VaultSecretValue.builder().value(value).build());
 
     Response<Void> response = request.execute();
     if (response.isSuccessful()) {
@@ -152,6 +161,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           .encryptedValue(keyUrl.toCharArray())
           .encryptionType(EncryptionType.VAULT)
           .enabled(true)
+          .accountId(accountId)
+          .parentIds(new HashSet<>())
           .kmsId(vaultConfig.getUuid())
           .build();
     } else {
@@ -176,14 +187,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       logger.error("Request not successful. Reason: {}", response);
       throw new IOException(response.errorBody().string());
     }
-  }
-
-  private String getSecretUuid(EncryptedData encryptedData) {
-    if (encryptedData == null || StringUtils.isBlank(encryptedData.getEncryptionKey())) {
-      return UUID.randomUUID().toString();
-    }
-
-    return encryptedData.getEncryptionKey().substring(encryptedData.getEncryptionKey().lastIndexOf("/") + 1);
   }
 
   private char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,

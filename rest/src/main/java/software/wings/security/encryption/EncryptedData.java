@@ -1,13 +1,19 @@
 package software.wings.security.encryption;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -26,20 +32,27 @@ import java.util.Set;
 @Builder
 @Entity(value = "encryptedRecords", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Indexes({
+  @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+})
 public class EncryptedData extends Base {
+  @NotEmpty @Indexed private String name;
+
   @NotEmpty private String encryptionKey;
   @NotEmpty private char[] encryptedValue;
   @NotEmpty private SettingVariableTypes type;
 
-  @NotEmpty @Indexed private Set<String> parentIds = new HashSet<>();
+  @NotEmpty @Indexed @Builder.Default private Set<String> parentIds = new HashSet<>();
 
   @NotEmpty @Indexed private String accountId;
 
-  private boolean enabled = true;
+  @Builder.Default private boolean enabled = true;
 
   @NotEmpty private String kmsId;
 
   @NotEmpty private EncryptionType encryptionType;
+
+  @SchemaIgnore @Transient private transient String encryptedBy;
 
   public void addParent(String parentId) {
     if (parentIds == null) {
