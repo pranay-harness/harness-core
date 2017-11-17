@@ -2,6 +2,7 @@ package software.wings.utils.message;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
+import static org.apache.commons.io.filefilter.FileFileFilter.FILE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -11,6 +12,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.io.filefilter.AndFileFilter;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -153,6 +155,18 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
+  public List<String> listChannels(MessengerType type) {
+    File channelDirectory = new File(ROOT + IO + type.name().toLowerCase() + "/");
+    try {
+      FileUtils.forceMkdir(channelDirectory);
+    } catch (IOException e) {
+      logger.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
+      return null;
+    }
+    return FileUtils.listFiles(channelDirectory, FILE, null).stream().map(File::getName).collect(Collectors.toList());
+  }
+
+  @Override
   public void closeChannel(MessengerType type, String id) {
     logger.info("Closing channel for {} {}", type, id);
     try {
@@ -232,7 +246,8 @@ public class MessageServiceImpl implements MessageService {
       logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
       return null;
     }
-    return FileUtils.listFiles(dataDirectory, new PrefixFileFilter(prefix == null ? "" : prefix), null)
+    return FileUtils
+        .listFiles(dataDirectory, new AndFileFilter(FILE, new PrefixFileFilter(prefix == null ? "" : prefix)), null)
         .stream()
         .map(File::getName)
         .collect(Collectors.toList());
