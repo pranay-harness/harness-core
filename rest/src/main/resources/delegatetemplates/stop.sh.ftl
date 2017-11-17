@@ -15,6 +15,7 @@ then
       i=$((i+1))
     else
       echo "Watcher stopped"
+      break
     fi
   done
   echo "Unable to stop watcher in 30 seconds."
