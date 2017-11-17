@@ -556,81 +556,75 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(DelegateTask.class, taskId, TimeUnit.SECONDS.toMillis(2));
-      if (!lockAcquired) {
-        return null;
-      }
-      logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
-      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-      if (delegateTask != null && !assignDelegateService.canAssign(delegateId, delegateTask)) {
-        logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
-        ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
-        delegateTask = null;
-      }
-      if (delegateTask != null
-          && Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(emptyList()).contains(delegateId)) {
-        logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
-        delegateTask = null;
-      }
-      if (delegateTask != null) {
-        if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-          return assignTask(delegateId, delegateTask);
-        } else {
-          logger.info(
-              "Delegate {} to validate task {} {}", delegateId, taskId, delegateTask.isAsync() ? "(async)" : "(sync)");
-          // Store delegateId as validation response pending
-          addToValidationCache(delegateId, taskId);
-        }
-      }
-      return delegateTask;
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(DelegateTask.class, taskId);
+    logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    if (delegateTask != null && !assignDelegateService.canAssign(delegateId, delegateTask)) {
+      logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
+      ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
+      delegateTask = null;
+    }
+    if (delegateTask != null
+        && Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(emptyList()).contains(delegateId)) {
+      logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
+      delegateTask = null;
+    }
+    if (delegateTask != null) {
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+        return assignTask(delegateId, delegateTask);
+      } else {
+        logger.info(
+            "Delegate {} to validate task {} {}", delegateId, taskId, delegateTask.isAsync() ? "(async)" : "(sync)");
+        // Store delegateId as validation response pending
+        addToValidationCache(delegateId, taskId);
       }
     }
+    return delegateTask;
   }
 
   @Override
   public DelegateTask reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(DelegateTask.class, taskId, TimeUnit.SECONDS.toMillis(2));
-      if (!lockAcquired) {
-        return null;
-      }
-      // Remove delegateId from pending validation responses
-      removeFromValidationCache(delegateId, taskId);
+    // Remove delegateId from pending validation responses
+    removeFromValidationCache(delegateId, taskId);
 
-      assignDelegateService.saveConnectionResults(results);
+    assignDelegateService.saveConnectionResults(results);
 
-      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-      if (delegateTask != null) {
-        if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
-          return assignTask(delegateId, delegateTask);
-        } else {
-          blacklistDelegateForTask(delegateId, delegateTask);
-        }
-      }
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(DelegateTask.class, taskId);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    if (delegateTask != null) {
+      if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
+        return assignTask(delegateId, delegateTask);
+      } else {
+        blacklistDelegateForTask(delegateId, delegateTask);
       }
     }
     return null;
   }
 
   private void blacklistDelegateForTask(String delegateId, DelegateTask delegateTask) {
-    List<String> blacklistedDelegates =
-        Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new ArrayList<>());
-    blacklistedDelegates.add(delegateId);
-    delegateTask.setBlacklistedDelegateIds(blacklistedDelegates);
-    if (delegateTask.isAsync()) {
-      wingsPersistence.save(delegateTask);
-    } else {
-      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
+    boolean lockAcquired = false;
+    try {
+      lockAcquired =
+          persistentLocker.acquireLock(DelegateTask.class, delegateTask.getUuid(), TimeUnit.SECONDS.toMillis(1));
+      if (!lockAcquired) {
+        return;
+      }
+      delegateTask = getUnassignedDelegateTask(delegateTask.getAccountId(), delegateTask.getUuid());
+      if (delegateTask != null) {
+        List<String> blacklistedDelegates =
+            Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new ArrayList<>());
+        blacklistedDelegates.add(delegateId);
+        delegateTask.setBlacklistedDelegateIds(blacklistedDelegates);
+        if (delegateTask.isAsync()) {
+          wingsPersistence.save(delegateTask);
+        } else {
+          Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+              .put(delegateTask.getUuid(), delegateTask);
+        }
+      }
+    } finally {
+      if (lockAcquired) {
+        persistentLocker.releaseLock(DelegateTask.class, delegateTask.getUuid());
+      }
     }
   }
 
@@ -661,22 +655,11 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(DelegateTask.class, taskId, TimeUnit.SECONDS.toMillis(2));
-      if (!lockAcquired) {
-        return null;
-      }
-      // Tell delegate whether to proceed anyway because all eligible delegates failed.
-      if (!cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).containsKey(taskId)) {
-        DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-        if (delegateTask != null) {
-          return assignTask(delegateId, delegateTask);
-        }
-      }
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(DelegateTask.class, taskId);
+    // Tell delegate whether to proceed anyway because all eligible delegates failed.
+    if (!cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).containsKey(taskId)) {
+      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+      if (delegateTask != null) {
+        return assignTask(delegateId, delegateTask);
       }
     }
     return null;
@@ -714,18 +697,33 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateTask assignTask(String delegateId, DelegateTask delegateTask) {
-    // Clear pending validations. No longer need to track since we're assigning
-    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove(delegateTask.getUuid());
+    boolean lockAcquired = false;
+    String taskId = delegateTask.getUuid();
+    try {
+      lockAcquired = persistentLocker.acquireLock(DelegateTask.class, taskId, TimeUnit.SECONDS.toMillis(2));
+      if (!lockAcquired) {
+        return null;
+      }
+      delegateTask = getUnassignedDelegateTask(delegateTask.getAccountId(), taskId);
+      if (delegateTask != null) {
+        // Clear pending validations. No longer need to track since we're assigning
+        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove(taskId);
 
-    logger.info("Assigning task {} to delegate {} {}", delegateTask.getUuid(), delegateId,
-        delegateTask.isAsync() ? "(async)" : "(sync)");
-    delegateTask.setDelegateId(delegateId);
-    if (delegateTask.isAsync()) {
-      delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, delegateTask);
-    } else {
-      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
+        logger.info(
+            "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
+        delegateTask.setDelegateId(delegateId);
+        if (delegateTask.isAsync()) {
+          delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, delegateTask);
+        } else {
+          Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, delegateTask);
+        }
+      }
+      return delegateTask;
+    } finally {
+      if (lockAcquired) {
+        persistentLocker.releaseLock(DelegateTask.class, taskId);
+      }
     }
-    return delegateTask;
   }
 
   @Override
