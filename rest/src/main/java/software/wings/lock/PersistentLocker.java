@@ -54,7 +54,7 @@ public class PersistentLocker implements Locker {
       long start = System.currentTimeMillis();
       while (!acquired && System.currentTimeMillis() - start < timeout) {
         try {
-          Thread.sleep(200L);
+          Thread.sleep(100L);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
