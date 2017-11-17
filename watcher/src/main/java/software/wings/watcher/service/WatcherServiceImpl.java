@@ -155,7 +155,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void startInputCheck() {
     inputExecutor.scheduleWithFixedDelay(() -> {
-      Message message = messageService.readMessage(TimeUnit.MINUTES.toMillis(1));
+      Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(4));
       if (message != null) {
         try {
           watcherMessages.put(message);
