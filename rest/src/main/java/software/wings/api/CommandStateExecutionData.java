@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -64,7 +65,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (isNotEmpty(appId) && isNotEmpty(activityId) && activityService != null) {
       if (countsByStatuses == null) {
         try {
-          List<CommandUnit> commandUnits = activityService.getCommandUnits(appId, activityId);
+          List<CommandUnitDetails> commandUnits = activityService.getCommandUnits(appId, activityId);
           countsByStatuses = new CountsByStatuses();
           commandUnits.forEach(commandUnit -> {
             switch (commandUnit.getCommandExecutionStatus()) {
