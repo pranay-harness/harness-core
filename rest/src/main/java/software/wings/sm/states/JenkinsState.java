@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -278,8 +277,11 @@ public class JenkinsState extends State {
     }
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    JenkinsExecutionData jenkinsExecutionData =
-        aJenkinsExecutionData().withJobName(finalJobName).withJobParameters(evaluatedParameters).build();
+    JenkinsExecutionData jenkinsExecutionData = JenkinsExecutionData.builder()
+                                                    .jobName(finalJobName)
+                                                    .jobParameters(evaluatedParameters)
+                                                    .activityId(activityId)
+                                                    .build();
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(jenkinsExecutionData)
