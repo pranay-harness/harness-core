@@ -118,6 +118,8 @@ public class AwsInfraMappingYamlHandler
     }
 
     builder.withAutoPopulate(false)
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
         .withComputeProviderSettingId(computeProviderId)
         .withComputeProviderName(infraMappingYaml.getComputeProviderName())
         .withComputeProviderType(infraMappingYaml.getComputeProviderType())

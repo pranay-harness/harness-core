@@ -63,6 +63,8 @@ public class GcpKubernetesInfraMappingYamlHandler
       String serviceId) {
     // common stuff for all infra mapping
     builder.withAutoPopulate(false)
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
         .withComputeProviderSettingId(computeProviderId)
         .withComputeProviderName(infraMappingYaml.getComputeProviderName())
         .withComputeProviderType(infraMappingYaml.getComputeProviderType())
