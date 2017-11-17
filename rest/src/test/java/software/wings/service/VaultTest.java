@@ -791,6 +791,10 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
                                                 .envId(UUID.randomUUID().toString())
@@ -802,7 +806,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(secretId.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
@@ -812,49 +816,31 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
+    secretName = UUID.randomUUID().toString();
+    secretValue = UUID.randomUUID().toString();
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
-    keyValuePairs.put("value", "newValue".toCharArray());
+    keyValuePairs.put("value", secretId.toCharArray());
     wingsPersistence.updateFields(ServiceVariable.class, savedAttributeId, keyValuePairs);
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals(numOfEncRecords + 2, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
-    Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
-    assertEquals(2, uuidAwares.size());
-    ServiceVariable listedVariable = null;
-    for (UuidAware aware : uuidAwares) {
-      if (aware.getUuid().equals(vaultConfig.getUuid())) {
-        continue;
-      }
-      listedVariable = (ServiceVariable) aware;
-    }
-    assertEquals(SECRET_MASK, new String(listedVariable.getValue()));
-    assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
-    assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
-    assertEquals(EncryptionType.VAULT, listedVariable.getEncryptionType());
-    assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
-    assertEquals("newName", listedVariable.getName());
-
     // decrypt and verify
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
-    assertEquals("newValue", String.valueOf(savedVariable.getValue()));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
 
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
-    assertEquals(2, changeLogs.size());
+    assertEquals(1, changeLogs.size());
     SecretChangeLog secretChangeLog = changeLogs.get(0);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed value", secretChangeLog.getDescription());
-
-    secretChangeLog = changeLogs.get(1);
     assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
     assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
     assertEquals(user.getName(), secretChangeLog.getUser().getName());
@@ -865,6 +851,10 @@ public class VaultTest extends WingsBaseTest {
   public void vaultEncryptionSaveServiceVariableTemplate() throws IOException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
+
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
     String serviceId = wingsPersistence.save(Service.Builder.aService().withName(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -881,31 +871,16 @@ public class VaultTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(secretId.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(serviceVariable, savedAttribute);
+    assertNull(savedAttribute.getValue());
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
-
-    Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
-    assertEquals(2, uuidAwares.size());
-    ServiceVariable listedVariable = null;
-    for (UuidAware aware : uuidAwares) {
-      if (aware.getUuid().equals(vaultConfig.getUuid())) {
-        continue;
-      }
-      listedVariable = (ServiceVariable) aware;
-    }
-    assertEquals(KmsServiceImpl.SECRET_MASK, new String(listedVariable.getValue()));
-    assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
-    assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
-    assertEquals(EncryptionType.VAULT, listedVariable.getEncryptionType());
-    assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
-    assertEquals(serviceId, listedVariable.getServiceId());
   }
 
   @Test
@@ -1338,142 +1313,6 @@ public class VaultTest extends WingsBaseTest {
       }
       i++;
     }
-  }
-  @Test
-  public void encryptedBy() throws Exception {
-    if (isKmsEnabled) {
-      return;
-    }
-
-    String varName1 = "va1";
-    ServiceVariable serviceVariable = ServiceVariable.builder()
-                                          .templateId(UUID.randomUUID().toString())
-                                          .envId(UUID.randomUUID().toString())
-                                          .entityType(EntityType.APPLICATION)
-                                          .entityId(UUID.randomUUID().toString())
-                                          .parentServiceVariableId(UUID.randomUUID().toString())
-                                          .overrideType(OverrideType.ALL)
-                                          .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                          .expression(UUID.randomUUID().toString())
-                                          .accountId(accountId)
-                                          .name(varName1)
-                                          .value(UUID.randomUUID().toString().toCharArray())
-                                          .type(Type.ENCRYPTED_TEXT)
-                                          .build();
-
-    wingsPersistence.save(serviceVariable);
-    List<UuidAware> uuidAwares = new ArrayList<>(secretManager.listEncryptedValues(accountId));
-    assertEquals(1, uuidAwares.size());
-    ServiceVariable savedVariable = (ServiceVariable) uuidAwares.get(0);
-    assertEquals(EncryptionType.LOCAL, savedVariable.getEncryptionType());
-    assertEquals(HARNESS_DEFAULT_SECRET_MANAGER, savedVariable.getEncryptedBy());
-
-    // add vault and save
-    VaultConfig vaultConfig = getVaultConfig();
-    vaultService.saveVaultConfig(accountId, vaultConfig);
-
-    String varName2 = "var2";
-    serviceVariable = ServiceVariable.builder()
-                          .templateId(UUID.randomUUID().toString())
-                          .envId(UUID.randomUUID().toString())
-                          .entityType(EntityType.APPLICATION)
-                          .entityId(UUID.randomUUID().toString())
-                          .parentServiceVariableId(UUID.randomUUID().toString())
-                          .overrideType(OverrideType.ALL)
-                          .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                          .expression(UUID.randomUUID().toString())
-                          .accountId(accountId)
-                          .name(varName2)
-                          .value(UUID.randomUUID().toString().toCharArray())
-                          .type(Type.ENCRYPTED_TEXT)
-                          .build();
-
-    wingsPersistence.save(serviceVariable);
-    uuidAwares = new ArrayList<>(secretManager.listEncryptedValues(accountId));
-    assertEquals(3, uuidAwares.size());
-    int numOfSerVar = 0;
-    int numOfVaultConfig = 0;
-    for (UuidAware savedVal : uuidAwares) {
-      if (savedVal.getUuid().equals(vaultConfig.getUuid())) {
-        VaultConfig savedConfig = (VaultConfig) savedVal;
-        assertEquals(EncryptionType.LOCAL, savedConfig.getEncryptionType());
-        assertEquals(HARNESS_DEFAULT_SECRET_MANAGER, savedConfig.getEncryptedBy());
-        numOfVaultConfig++;
-      } else {
-        savedVariable = (ServiceVariable) savedVal;
-        if (savedVariable.getName().equals(varName1)) {
-          assertEquals(EncryptionType.LOCAL, savedVariable.getEncryptionType());
-          assertEquals(HARNESS_DEFAULT_SECRET_MANAGER, savedVariable.getEncryptedBy());
-          numOfSerVar++;
-        }
-
-        if (savedVariable.getName().equals(varName2)) {
-          assertEquals(EncryptionType.VAULT, savedVariable.getEncryptionType());
-          assertEquals(vaultConfig.getName(), savedVariable.getEncryptedBy());
-          numOfSerVar++;
-        }
-      }
-    }
-
-    assertEquals(2, numOfSerVar);
-    assertEquals(1, numOfVaultConfig);
-
-    numOfSerVar = 0;
-    numOfVaultConfig = 0;
-    // add kms and save
-    KmsConfig kmsConfig = getKmsConfig();
-    kmsService.saveKmsConfig(accountId, kmsConfig);
-
-    String varName3 = "var3";
-    serviceVariable = ServiceVariable.builder()
-                          .templateId(UUID.randomUUID().toString())
-                          .envId(UUID.randomUUID().toString())
-                          .entityType(EntityType.APPLICATION)
-                          .entityId(UUID.randomUUID().toString())
-                          .parentServiceVariableId(UUID.randomUUID().toString())
-                          .overrideType(OverrideType.ALL)
-                          .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                          .expression(UUID.randomUUID().toString())
-                          .accountId(accountId)
-                          .name(varName3)
-                          .value(UUID.randomUUID().toString().toCharArray())
-                          .type(Type.ENCRYPTED_TEXT)
-                          .build();
-
-    wingsPersistence.save(serviceVariable);
-    uuidAwares = new ArrayList<>(secretManager.listEncryptedValues(accountId));
-    assertEquals(4, uuidAwares.size());
-
-    for (UuidAware uuidAware : uuidAwares) {
-      if (uuidAware.getUuid().equals(vaultConfig.getUuid())) {
-        VaultConfig savedConfig = (VaultConfig) uuidAware;
-        assertEquals(EncryptionType.LOCAL, savedConfig.getEncryptionType());
-        assertEquals(HARNESS_DEFAULT_SECRET_MANAGER, savedConfig.getEncryptedBy());
-        numOfVaultConfig++;
-      } else {
-        savedVariable = (ServiceVariable) uuidAware;
-        if (savedVariable.getName().equals(varName1)) {
-          assertEquals(EncryptionType.LOCAL, savedVariable.getEncryptionType());
-          assertEquals(HARNESS_DEFAULT_SECRET_MANAGER, savedVariable.getEncryptedBy());
-          numOfSerVar++;
-        }
-
-        if (savedVariable.getName().equals(varName2)) {
-          assertEquals(EncryptionType.VAULT, savedVariable.getEncryptionType());
-          assertEquals(vaultConfig.getName(), savedVariable.getEncryptedBy());
-          numOfSerVar++;
-        }
-
-        if (savedVariable.getName().equals(varName3)) {
-          assertEquals(EncryptionType.KMS, savedVariable.getEncryptionType());
-          assertEquals(kmsConfig.getName(), savedVariable.getEncryptedBy());
-          numOfSerVar++;
-        }
-      }
-    }
-
-    assertEquals(3, numOfSerVar);
-    assertEquals(1, numOfVaultConfig);
   }
 
   private VaultConfig getVaultConfig() throws IOException {

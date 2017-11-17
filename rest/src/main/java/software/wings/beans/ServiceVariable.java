@@ -73,8 +73,6 @@ public class ServiceVariable extends Base implements Encryptable {
 
   @SchemaIgnore private String encryptedValue;
 
-  @SchemaIgnore @Transient private transient boolean updateReference;
-
   @SchemaIgnore @Transient private boolean decrypted;
 
   @SchemaIgnore @Transient private String serviceId;

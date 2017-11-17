@@ -7,6 +7,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
@@ -23,6 +24,9 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.EntityType;
+import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
@@ -94,7 +98,37 @@ public class SecretMigrationUtil extends WingsBaseTest {
       //      wingsPersistence.save(infrastructureMapping);
       updated++;
     }
+  }
 
+  @Test
+  public void migrateServiceVariablesForSecretText() throws Exception {
+    List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class).asList();
+    int updated = 0;
+    for (ServiceVariable serviceVariable : serviceVariables) {
+      if (serviceVariable.getType() != Type.ENCRYPTED_TEXT) {
+        continue;
+      }
+
+      System.out.println("Processing " + serviceVariable.getUuid());
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, serviceVariable.getEncryptedValue());
+      Preconditions.checkNotNull(encryptedData, "Did not find reference for " + serviceVariable.getUuid());
+
+      if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
+        ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
+        Preconditions.checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
+        serviceVariable.setEntityId(serviceTemplate.getServiceId());
+      }
+
+      Service service = wingsPersistence.get(Service.class, serviceVariable.getEntityId());
+      Preconditions.checkNotNull(service, "Could not find service for " + serviceVariable);
+      String secretTextName = serviceVariable.getName();
+      encryptedData.setName(secretTextName);
+      encryptedData.setType(SettingVariableTypes.SECRET_TEXT);
+      System.out.println("setting name of " + encryptedData.getUuid() + "  to " + secretTextName);
+
+      //      wingsPersistence.save(encryptedData);
+      updated++;
+    }
     System.out.println("Complete. Updated " + updated + " records.");
   }
 
