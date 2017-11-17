@@ -210,8 +210,8 @@ private void watchDelegate() {
             long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
 
             if (shutdownPending) {
-              working = true;
               if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
+                working = true;
                 shutdownDelegate(delegateProcess);
               }
             } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {

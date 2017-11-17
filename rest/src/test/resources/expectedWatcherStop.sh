@@ -43,6 +43,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
 then
   i=0
+  stopped=0
   while [ "$i" -le 30 ]
   do
     if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
@@ -55,11 +56,15 @@ then
       i=$((i+1))
     else
       echo "Watcher stopped"
+      stopped=1
       break
     fi
   done
-  echo "Unable to stop watcher in 30 seconds."
-  exit 1
+  if [ "$stopped" -eq 0 ]
+  then
+    echo "Unable to stop watcher in 30 seconds."
+    exit 1
+  fi
 else
   echo "Watcher not running"
 fi
