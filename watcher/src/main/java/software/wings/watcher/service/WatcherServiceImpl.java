@@ -190,11 +190,15 @@ private void startWatching() {
 
 private void watchDelegate() {
   try {
+    // Cleanup obsolete files
     messageService.listDataNames(DELEGATE_DASH)
         .stream()
         .map(dataName -> dataName.substring(DELEGATE_DASH.length()))
         .filter(process -> !runningDelegates.contains(process))
-        .forEach(process -> messageService.closeData(process));
+        .forEach(process -> {
+          messageService.closeData(DELEGATE_DASH + process);
+          messageService.closeChannel(DELEGATE, process);
+        });
 
     if (isEmpty(runningDelegates)) {
       working = true;
