@@ -255,7 +255,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void removeData(String name, String key) {
-    logger.info("Removing data to {}: {}", name, key);
+    logger.info("Removing data from {}: {}", name, key);
     try {
       File file = getDataFile(name);
       try {
