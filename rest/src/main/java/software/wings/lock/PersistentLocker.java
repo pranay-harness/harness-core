@@ -24,15 +24,7 @@ public class PersistentLocker implements Locker {
    */
   @Override
   public boolean acquireLock(Class entityClass, String entityId) {
-    return acquireLock(entityClass.getName(), entityId, 0);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.lock.Locker#acquireLock(java.lang.Class, java.lang.String, long)
-   */
-  @Override
-  public boolean acquireLock(Class entityClass, String entityId, long timeout) {
-    return acquireLock(entityClass.getName(), entityId, timeout);
+    return acquireLock(entityClass.getName(), entityId);
   }
 
   /* (non-Javadoc)
@@ -40,27 +32,9 @@ public class PersistentLocker implements Locker {
    */
   @Override
   public boolean acquireLock(String entityType, String entityId) {
-    return acquireLock(entityType, entityId, 0);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.lock.Locker#acquireLock(java.lang.String, java.lang.String, long)
-   */
-  @Override
-  public boolean acquireLock(String entityType, String entityId, long timeout) {
     DistributedLock lock = distributedLockSvc.create(entityType + "-" + entityId);
     try {
-      boolean acquired = lock.tryLock();
-      long start = System.currentTimeMillis();
-      while (!acquired && System.currentTimeMillis() - start < timeout) {
-        try {
-          Thread.sleep(100L);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-        acquired = lock.tryLock();
-      }
-      return acquired;
+      return lock.tryLock();
     } catch (Exception ex) {
       logger.debug("acquireLock failed - entityType: " + entityType + ", entityId: " + entityId, ex);
       return false;
