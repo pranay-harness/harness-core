@@ -63,7 +63,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.lock.PersistentLocker;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -112,7 +111,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private HazelcastInstance hazelcastInstance;
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private CacheHelper cacheHelper;
-  @Inject private PersistentLocker persistentLocker;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
   @Inject private FeatureFlagService featureFlagService;
@@ -562,7 +560,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
     if (delegateTask != null) {
       if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-        return assignTask(delegateId, delegateTask);
+        return assignTask(delegateId, taskId, delegateTask);
       } else {
         logger.info(
             "Delegate {} to validate task {} {}", delegateId, taskId, delegateTask.isAsync() ? "(async)" : "(sync)");
@@ -584,7 +582,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
       if (delegateTask != null) {
-        return assignTask(delegateId, delegateTask);
+        return assignTask(delegateId, taskId, delegateTask);
       }
     }
     return null;
@@ -621,7 +619,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (!cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).containsKey(taskId)) {
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
       if (delegateTask != null) {
-        return assignTask(delegateId, delegateTask);
+        return assignTask(delegateId, taskId, delegateTask);
       }
     }
     return null;
@@ -658,34 +656,20 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateTask;
   }
 
-  private DelegateTask assignTask(String delegateId, DelegateTask delegateTask) {
-    boolean lockAcquired = false;
-    String taskId = delegateTask.getUuid();
-    try {
-      lockAcquired = persistentLocker.acquireLock(DelegateTask.class, taskId, TimeUnit.SECONDS.toMillis(2));
-      if (!lockAcquired) {
-        return null;
-      }
-      delegateTask = getUnassignedDelegateTask(delegateTask.getAccountId(), taskId);
-      if (delegateTask != null) {
-        // Clear pending validations. No longer need to track since we're assigning
-        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove(taskId);
+  private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
+    // TODO - acquire lock on task, double check it's not already assigned
+    // Clear pending validations. No longer need to track since we're assigning
+    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove(taskId);
 
-        logger.info(
-            "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
-        delegateTask.setDelegateId(delegateId);
-        if (delegateTask.isAsync()) {
-          delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, delegateTask);
-        } else {
-          Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, delegateTask);
-        }
-      }
-      return delegateTask;
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(DelegateTask.class, taskId);
-      }
+    logger.info(
+        "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
+    delegateTask.setDelegateId(delegateId);
+    if (delegateTask.isAsync()) {
+      delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, delegateTask);
+    } else {
+      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, delegateTask);
     }
+    return delegateTask;
   }
 
   @Override
