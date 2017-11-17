@@ -6,7 +6,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.TaskType.JENKINS;
@@ -28,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.CurrentThreadExecutor;
+import software.wings.api.JenkinsExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
@@ -97,7 +97,7 @@ public class JenkinsStateTest {
 
   @Test
   public void shouldHandleAsyncResponse() throws Exception {
-    when(executionContext.getStateExecutionData()).thenReturn(aJenkinsExecutionData().build());
+    when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
     jenkinsState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID,
             aJenkinsExecutionResponse()
