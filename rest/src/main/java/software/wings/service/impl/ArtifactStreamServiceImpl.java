@@ -16,6 +16,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -715,7 +716,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       return ImmutableMap.of(DOCKER.name(), DOCKER.name(), ECR.name(), ECR.name(), GCR.name(), GCR.name(),
-          ARTIFACTORY.name(), ARTIFACTORY.name());
+          ARTIFACTORY.name(), ARTIFACTORY.name(), NEXUS.name(), NEXUS.name());
     } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
       return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());
     } else {

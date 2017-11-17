@@ -7,10 +7,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
+import software.wings.service.impl.NexusVersionProvider;
 import software.wings.settings.SettingValue;
+import software.wings.stencils.EnumData;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -20,6 +22,11 @@ import software.wings.settings.SettingValue;
 @Builder
 public class NexusConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
+  @Attributes(title = "Version", required = true)
+  @EnumData(enumDataProvider = NexusVersionProvider.class)
+  @NotEmpty
+  @Builder.Default
+  private String version;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
