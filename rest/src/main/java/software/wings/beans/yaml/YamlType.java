@@ -9,6 +9,7 @@ import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FO
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONNECTORS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
@@ -28,6 +29,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.LambdaSpecification.DefaultSpecification;
+import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -45,6 +48,10 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerDefinition;
+import software.wings.beans.container.LogConfiguration;
+import software.wings.beans.container.PortMapping;
+import software.wings.beans.container.StorageConfiguration;
 
 /**
  * @author rktummala on 10/17/17
@@ -84,6 +91,12 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
           ARTIFACT_SOURCES_FOLDER, ANY),
       ArtifactStream.class),
+  DEPLOYMENT_SPECIFICATION(YamlConstants.DEPLOYMENT_SPECIFICATION,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          DEPLOYMENT_SPECIFICATION_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          DEPLOYMENT_SPECIFICATION_FOLDER, ANY),
+      DefaultSpecification.class),
   COMMAND(EntityType.COMMAND.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, COMMANDS_FOLDER,
           YAML_EXPRESSION),
@@ -134,7 +147,13 @@ public enum YamlType {
   PIPELINE_STAGE(ObjectType.PIPELINE_STAGE, "", "", PipelineStage.class),
   // TODO this should have a path, when this yaml is migrated to the new model, make sure this is taken care of
   NOTIFICATION_GROUP(ObjectType.NOTIFICATION_GROUP, "", "", NotificationGroup.class),
-  COMMAND_UNIT(ObjectType.COMMAND_UNIT, "", "", AbstractCommandUnit.class);
+  COMMAND_UNIT(ObjectType.COMMAND_UNIT, "", "", AbstractCommandUnit.class),
+  CONTAINER_DEFINITION(ObjectType.CONTAINER_DEFINITION, "", "", ContainerDefinition.class),
+  LOG_CONFIGURATION(ObjectType.LOG_CONFIGURATION, "", "", LogConfiguration.class),
+  PORT_MAPPING(ObjectType.PORT_MAPPING, "", "", PortMapping.class),
+  STORAGE_CONFIGURATION(ObjectType.STORAGE_CONFIGURATION, "", "", StorageConfiguration.class),
+  DEFAULT_SPECIFICATION(ObjectType.DEFAULT_SPECIFICATION, "", "", DefaultSpecification.class),
+  FUNCTION_SPECIFICATION(ObjectType.FUNCTION_SPECIFICATION, "", "", FunctionSpecification.class);
 
   private String entityType;
   private String pathExpression;

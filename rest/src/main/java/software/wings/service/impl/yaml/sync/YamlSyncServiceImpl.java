@@ -9,6 +9,7 @@ import static software.wings.beans.yaml.YamlType.COLLABORATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.COMMAND;
 import static software.wings.beans.yaml.YamlType.CONFIG_FILE;
 import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
@@ -83,8 +84,8 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
   private List<YamlType> getEntityProcessingOrder() {
     return Lists.newArrayList(CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER,
-        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, CONFIG_FILE, ENVIRONMENT, INFRA_MAPPING,
-        CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
+        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE,
+        ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
   @Override

@@ -7,6 +7,13 @@ import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CommandYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.ContainerDefinitionYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.LogConfigurationYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.PortMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.StorageConfigurationYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.lambda.DefaultSpecificationYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.lambda.FunctionSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
@@ -32,6 +39,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
   @Inject private Map<String, WorkflowYamlHandler> workflowYamlHelperMap;
   @Inject private Map<String, CommandUnitYamlHandler> commandUnitYamlHandlerMap;
+  @Inject private Map<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHandlerMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private EnvironmentYamlHandler environmentYamlHandler;
@@ -48,6 +56,12 @@ public class YamlHandlerFactory {
   @Inject private FailureStrategyYamlHandler failureStrategyYamlHandler;
   @Inject private PipelineYamlHandler pipelineYamlHandler;
   @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
+  @Inject private ContainerDefinitionYamlHandler containerDefinitionYamlHandler;
+  @Inject private PortMappingYamlHandler portMappingYamlHandler;
+  @Inject private StorageConfigurationYamlHandler storageConfigurationYamlHandler;
+  @Inject private LogConfigurationYamlHandler logConfigurationYamlHandler;
+  @Inject private DefaultSpecificationYamlHandler defaultSpecificationYamlHandler;
+  @Inject private FunctionSpecificationYamlHandler functionSpecificationYamlHandler;
 
   // TODO change the return type to generics so that we don't have to explicitly downcast
   public BaseYamlHandler getYamlHandler(YamlType yamlType, String subType) {
@@ -108,6 +122,20 @@ public class YamlHandlerFactory {
         return notificationGroupYamlHandler;
       case FAILURE_STRATEGY:
         return failureStrategyYamlHandler;
+      case CONTAINER_DEFINITION:
+        return containerDefinitionYamlHandler;
+      case DEPLOYMENT_SPECIFICATION:
+        return deploymentSpecYamlHandlerMap.get(subType);
+      case PORT_MAPPING:
+        return portMappingYamlHandler;
+      case STORAGE_CONFIGURATION:
+        return storageConfigurationYamlHandler;
+      case LOG_CONFIGURATION:
+        return logConfigurationYamlHandler;
+      case DEFAULT_SPECIFICATION:
+        return defaultSpecificationYamlHandler;
+      case FUNCTION_SPECIFICATION:
+        return functionSpecificationYamlHandler;
       default:
         break;
     }

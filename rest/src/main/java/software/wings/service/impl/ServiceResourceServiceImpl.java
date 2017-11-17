@@ -884,6 +884,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public ContainerTask getContainerTaskById(String appId, String containerTaskId) {
+    return wingsPersistence.get(ContainerTask.class, appId, containerTaskId);
+  }
+
+  @Override
+  public LambdaSpecification getLambdaSpecificationById(String appId, String lambdaSpecificationId) {
+    return wingsPersistence.get(LambdaSpecification.class, appId, lambdaSpecificationId);
+  }
+
+  @Override
   public Map<String, String> getData(String appId, String... params) {
     Service service = get(appId, params[0]);
     if (isEmpty(service.getServiceCommands())) {

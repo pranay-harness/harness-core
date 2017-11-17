@@ -50,6 +50,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -324,10 +325,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
     if (kubernetesContainerTask == null) {
       kubernetesContainerTask = new KubernetesContainerTask();
-      KubernetesContainerTask.ContainerDefinition containerDefinition =
-          new KubernetesContainerTask.ContainerDefinition();
-      containerDefinition.setMemory(256);
-      containerDefinition.setCpu(1);
+      ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
       kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 

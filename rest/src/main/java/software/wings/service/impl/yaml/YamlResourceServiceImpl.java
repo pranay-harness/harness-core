@@ -8,6 +8,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -23,6 +24,7 @@ import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
@@ -40,6 +42,8 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -1198,6 +1202,38 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, infraMapping.getUuid(), accountId, yaml, infraMapping.getName() + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getContainerTask(String accountId, String appId, String containerTaskId) {
+    ContainerTask containerTask = serviceResourceService.getContainerTaskById(appId, containerTaskId);
+    String yamlFileName;
+    String yamlSubType;
+    if (DeploymentType.ECS.name().equals(containerTask.getDeploymentType())) {
+      yamlSubType = DeploymentType.ECS.name();
+      yamlFileName = YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
+    } else if (DeploymentType.KUBERNETES.name().equals(containerTask.getDeploymentType())) {
+      yamlSubType = DeploymentType.KUBERNETES.name();
+      yamlFileName = YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
+    } else {
+      throw new WingsException("Unsupported deployment type: " + containerTask.getDeploymentType());
+    }
+
+    BaseYaml yaml =
+        yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, yamlSubType).toYaml(containerTask, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, containerTask.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getLambdaSpec(String accountId, String appId, String lambdaSpecId) {
+    LambdaSpecification lambdaSpecification = serviceResourceService.getLambdaSpecificationById(appId, lambdaSpecId);
+
+    BaseYaml yaml =
+        yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, DeploymentType.AWS_LAMBDA.name())
+            .toYaml(lambdaSpecification, appId);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, lambdaSpecification.getUuid(), accountId, yaml,
+        YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
   }
 
   /**

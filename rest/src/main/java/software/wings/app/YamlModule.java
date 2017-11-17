@@ -38,6 +38,7 @@ import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
+import software.wings.api.DeploymentType;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
@@ -70,6 +71,10 @@ import software.wings.service.impl.yaml.handler.command.ProcessCheckStoppedComma
 import software.wings.service.impl.yaml.handler.command.ResizeCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.ScpCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.SetupEnvCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.EcsContainerTaskYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.KubernetesContainerTaskYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.lambda.LambdaSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsLambdaInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.CodeDeployInfraMappingYamlHandler;
@@ -134,6 +139,14 @@ public class YamlModule extends AbstractModule {
     infraMappingYamlHelperMapBinder.addBinding(GCP_KUBERNETES.name()).to(GcpKubernetesInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_SSH.name())
         .to(PhysicalInfraMappingYamlHandler.class);
+
+    MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.ECS.name()).to(EcsContainerTaskYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.KUBERNETES.name())
+        .to(KubernetesContainerTaskYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AWS_LAMBDA.name())
+        .to(LambdaSpecificationYamlHandler.class);
 
     MapBinder<String, WorkflowYamlHandler> workflowYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, WorkflowYamlHandler.class);

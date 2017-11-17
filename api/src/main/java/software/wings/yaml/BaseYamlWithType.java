@@ -14,4 +14,10 @@ public abstract class BaseYamlWithType extends BaseYaml {
    * The type reflects the sub type.
    */
   private String type;
+
+  protected BaseYamlWithType() {}
+
+  protected BaseYamlWithType(String type) {
+    this.type = type;
+  }
 }

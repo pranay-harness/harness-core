@@ -128,6 +128,8 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getInfraMapping(String accountId, String appId, String infraMappingId);
 
+  RestResponse<YamlPayload> getContainerTask(String accountId, String appId, String containerTaskId);
+
   /**
    * Update a environment that is sent as Yaml (in a JSON "wrapper")
    *
@@ -145,4 +147,6 @@ public interface YamlResourceService {
    * @return the rest response
    */
   RestResponse<Service> updateService(String accountId, YamlPayload yamlPayload);
+
+  RestResponse<YamlPayload> getLambdaSpec(String accountId, String appId, String lambdaSpecId);
 }

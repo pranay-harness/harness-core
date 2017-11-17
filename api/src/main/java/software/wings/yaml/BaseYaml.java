@@ -7,4 +7,6 @@ import lombok.Data;
  * @author rktummala on 10/17/17
  */
 @Data
-public abstract class BaseYaml {}
+public abstract class BaseYaml {
+  protected BaseYaml() {}
+}
