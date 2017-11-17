@@ -115,7 +115,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
     for (EncryptedData encryptedData : encryptedDataRecords) {
       if (StringUtils.isBlank(encryptedData.getName())) {
         encryptedData.setName(UUID.randomUUID().toString());
-        //        wingsPersistence.save(encryptedData);
+        wingsPersistence.save(encryptedData);
         updated++;
       }
     }

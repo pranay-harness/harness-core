@@ -22,14 +22,16 @@ import software.wings.stencils.EnumData;
 @Builder
 public class NexusConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
+
   @Attributes(title = "Version", required = true)
   @EnumData(enumDataProvider = NexusVersionProvider.class)
-  @NotEmpty
   @Builder.Default
-  private String version;
+  private String version = "2.X";
+
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
+
   @Encrypted
   @NotEmpty
   private char[] password;
@@ -44,12 +46,14 @@ public class NexusConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.NEXUS.name());
   }
 
-  public NexusConfig(String nexusUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  public NexusConfig(
+      String nexusUrl, String version, String username, char[] password, String accountId, String encryptedPassword) {
     this();
     this.nexusUrl = nexusUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.version = version;
   }
 }
