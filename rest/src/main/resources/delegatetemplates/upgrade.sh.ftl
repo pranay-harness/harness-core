@@ -20,7 +20,7 @@ then
   fi
 else
   echo "Downloading Delegate..."
-  curl -#k $REMOTE_DELEGATE_URL -o delegate.jar restart.sh
+  curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 fi
 
 if [ ! -d $JRE_DIR ]
@@ -38,7 +38,7 @@ then
   rm -rf jre tmp
   ln -s $JRE_DIR jre
 else
-  rm -rf $JRE_DIR_OLD stopwatch.sh
+  rm -rf $JRE_DIR_OLD stopwatch.sh restart.sh
 fi
 
 export HOSTNAME
