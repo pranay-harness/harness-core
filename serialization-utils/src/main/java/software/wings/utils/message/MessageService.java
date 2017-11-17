@@ -16,6 +16,8 @@ public interface MessageService {
 
   Message retrieveMessage(MessengerType senderType, String senderProcessId, long timeout);
 
+  List<String> listChannels(MessengerType type);
+
   void closeChannel(MessengerType type, String id);
 
   void putData(String name, String key, Object value);
