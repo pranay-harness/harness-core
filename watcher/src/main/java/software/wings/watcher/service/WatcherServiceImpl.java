@@ -124,6 +124,8 @@ public class WatcherServiceImpl implements WatcherService {
         waiter.wait();
       }
 
+      messageService.closeChannel(WATCHER, getProcessId());
+
     } catch (Exception e) {
       logger.error("Exception while running watcher", e);
     }
