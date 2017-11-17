@@ -104,6 +104,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final String GO_AHEAD = "go-ahead";
   private static final String STOP_ACQUIRING = "stop-acquiring";
+  private static final String DELEGATE_DASH = "delegate-";
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -482,8 +483,8 @@ public class DelegateServiceImpl implements DelegateService {
     if (watched && this.acquireTasks) {
       acquireTasks = false;
       stoppedAcquiringAt = clock.millis();
-      messageService.putData("delegate-" + getProcessId(), "shutdownPending", true);
-      messageService.putData("delegate-" + getProcessId(), "shutdownStarted", stoppedAcquiringAt);
+      messageService.putData(DELEGATE_DASH + getProcessId(), "shutdownPending", true);
+      messageService.putData(DELEGATE_DASH + getProcessId(), "shutdownStarted", stoppedAcquiringAt);
       executorService.submit(() -> {
         int secs = 0;
         while (getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
@@ -576,7 +577,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (!isAcquireTasks()) {
         statusData.put("shutdownStarted", stoppedAcquiringAt);
       }
-      messageService.putAllData("delegate-" + getProcessId(), statusData);
+      messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
     }),
         0, 10, TimeUnit.SECONDS);
   }
