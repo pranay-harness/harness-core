@@ -6,22 +6,15 @@ import static software.wings.security.PermissionAttribute.ResourceType.APPLICATI
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import net.redhogs.cronparser.CronExpressionDescriptor;
-import net.redhogs.cronparser.DescriptionTypeEnum;
-import net.redhogs.cronparser.I18nMessages;
-import net.redhogs.cronparser.Options;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TriggerService;
 import software.wings.utils.Validator;
 
-import java.text.ParseException;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
@@ -153,11 +146,6 @@ public class TriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> translateCron(Map<String, String> inputMap) {
-    try {
-      return new RestResponse<>(CronExpressionDescriptor.getDescription(
-          DescriptionTypeEnum.FULL, inputMap.get("expression"), new Options(), I18nMessages.DEFAULT_LOCALE));
-    } catch (ParseException e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Incorrect cron expression");
-    }
+    return new RestResponse<>(triggerService.getCronDescription(inputMap.get("expression")));
   }
 }

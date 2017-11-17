@@ -156,4 +156,11 @@ public interface TriggerService {
    * @param appId
    */
   void updateByApp(String appId);
+
+  /**
+   * Gets the cron expression
+   * @param expression
+   * @return
+   */
+  String getCronDescription(String expression);
 }
