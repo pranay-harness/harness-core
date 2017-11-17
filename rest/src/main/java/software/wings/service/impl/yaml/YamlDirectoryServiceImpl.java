@@ -136,6 +136,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getEnvironment(appId, entityId).getResource().getYaml();
             break;
+          case "InfrastructureMapping":
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getInfraMapping(accountId, appId, entityId).getResource().getYaml();
+            break;
           case "ServiceCommand":
             appId = ((ServiceLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getServiceCommand(appId, entityId).getResource().getYaml();
@@ -681,15 +685,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public String getRootPathByEnvironment(Environment environment, String appPath) {
-    return appPath + PATH_DELIMITER + ENVIRONMENTS_FOLDER;
+    return appPath + PATH_DELIMITER + ENVIRONMENTS_FOLDER + PATH_DELIMITER + environment.getName();
   }
 
   @Override
   public String getRootPathByInfraMapping(InfrastructureMapping infraMapping) {
     Environment environment = environmentService.get(infraMapping.getAppId(), infraMapping.getEnvId(), false);
     Validator.notNullCheck("Environment is null", environment);
-    String rootPathByEnvironment = getRootPathByEnvironment(environment);
-    return rootPathByEnvironment + PATH_DELIMITER + environment.getName() + PATH_DELIMITER + INFRA_MAPPING_FOLDER;
+    return getRootPathByEnvironment(environment) + PATH_DELIMITER + INFRA_MAPPING_FOLDER;
   }
 
   @Override

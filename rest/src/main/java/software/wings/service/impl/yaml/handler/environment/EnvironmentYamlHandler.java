@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Environment.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -49,7 +50,10 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   private void setWithYamlValues(Builder builder, Environment.Yaml envYaml) {
-    builder.withName(envYaml.getName()).withDescription(envYaml.getDescription()).build();
+    builder.withName(envYaml.getName())
+        .withDescription(envYaml.getDescription())
+        .withEnvironmentType(EnvironmentType.valueOf(envYaml.getEnvironmentType()))
+        .build();
   }
 
   @Override

@@ -66,8 +66,10 @@ public class PhysicalInfraMappingYamlHandler
       PhysicalInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
       String serviceId) {
     // common stuff for all infra mapping
-    builder.withName(infraMappingYaml.getName())
+    builder.withAutoPopulate(false)
         .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withName(infraMappingYaml.getName())
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
         .withComputeProviderSettingId(computeProviderId)
         .withComputeProviderName(infraMappingYaml.getComputeProviderName())
         .withComputeProviderType(infraMappingYaml.getComputeProviderType())
@@ -83,7 +85,6 @@ public class PhysicalInfraMappingYamlHandler
     }
     builder.withHostConnectionAttrs(infraMappingYaml.getConnection())
         .withHostNames(infraMappingYaml.getHostNames())
-        .withAutoPopulate(false)
         .build();
   }
 
