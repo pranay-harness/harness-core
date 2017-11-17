@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
 import software.wings.beans.RestResponse;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.UuidAware;
 import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -118,5 +119,14 @@ public class SecretManagementResource {
   public RestResponse<Boolean> updateSecret(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     return new RestResponse<>(secretManager.deleteSecret(accountId, uuId));
+  }
+
+  @GET
+  @Path("/list-secret-usage")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<ServiceVariable>> listSecretUsage(
+      @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String secretId) {
+    return new RestResponse<>(secretManager.getSecretTextUsage(accountId, secretId));
   }
 }

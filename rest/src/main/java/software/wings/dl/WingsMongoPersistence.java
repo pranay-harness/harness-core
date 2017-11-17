@@ -7,6 +7,8 @@ import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedF
 import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBCollection;
@@ -352,15 +354,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       Field f, Encryptable object, Map<String, Object> keyValuePairs, String entityId) throws IllegalAccessException {
     List<Field> encryptedFields = object.getEncryptedFields();
     if (object.getClass().equals(ServiceVariable.class)) {
-      if (keyValuePairs.containsKey("type")) {
-        if (keyValuePairs.get("type").equals(Type.ENCRYPTED_TEXT)) {
-          ((ServiceVariable) object).setType(Type.ENCRYPTED_TEXT);
-          return true;
-        } else {
-          deleteEncryptionReference(object, Collections.singleton(f.getName()), entityId);
-          return false;
-        }
+      deleteEncryptionReference(object, Collections.singleton(f.getName()), entityId);
+      if (keyValuePairs.get("type") == Type.ENCRYPTED_TEXT) {
+        return true;
       }
+      return false;
     }
     return encryptedFields.contains(f);
   }
@@ -642,7 +640,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
 
     if (isReferencedSecretText(object, encryptedField)) {
-      return (String) encryptedField.get(object);
+      encryptedField.set(object, String.valueOf(secret));
+      return String.valueOf(secret);
     }
 
     final String accountId = object.getAccountId();
@@ -683,8 +682,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   private boolean isReferencedSecretText(Encryptable object, Field encryptedField) throws IllegalAccessException {
-    if (ServiceVariable.class.isInstance(object) && encryptedField.get(object) != null
-        && ((ServiceVariable) object).isUpdateReference()) {
+    if (ServiceVariable.class.isInstance(object)) {
+      ServiceVariable serviceVariable = (ServiceVariable) object;
+      if (!StringUtils.isBlank(serviceVariable.getUuid())) {
+        Field decryptedField = getDecryptedField(encryptedField, object);
+        deleteEncryptionReference(object, Sets.newHashSet(decryptedField.getName()), serviceVariable.getUuid());
+      }
       return true;
     }
     return false;
@@ -736,16 +739,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
       if ((fieldNames == null || fieldNames.contains(f.getName()))) {
-        f.setAccessible(true);
-        // if the field was never encrypted using kms
-        try {
-          if (f.get(object) != null) {
-            continue;
-          }
-        } catch (IllegalAccessException e) {
-          throw new WingsException("Could not deleter referenced record", e);
-        }
-
         Field encryptedField = getEncryptedRefField(f, object);
         encryptedField.setAccessible(true);
         String encryptedId;
@@ -763,8 +756,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         if (encryptedData == null) {
           continue;
         }
-        encryptedData.getParentIds().remove(parentId);
-        if (encryptedData.getParentIds().isEmpty() && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
+        encryptedData.removeParentId(parentId);
+        if (encryptedData.getParentIds() != null && encryptedData.getParentIds().isEmpty()
+            && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
           delete(encryptedData);
         } else {
           save(encryptedData);

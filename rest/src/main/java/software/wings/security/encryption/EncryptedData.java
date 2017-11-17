@@ -62,10 +62,19 @@ public class EncryptedData extends Base {
     parentIds.add(parentId);
   }
 
+  public void removeParentId(String parentId) {
+    if (parentIds == null) {
+      return;
+    }
+
+    parentIds.remove(parentId);
+  }
+
   @Override
   public String toString() {
     return "EncryptedData{"
-        + "type=" + type + ", parentId='" + parentIds + '\'' + ", accountId='" + accountId + '\''
-        + ", enabled=" + enabled + ", kmsId='" + kmsId + '\'' + ", appId='" + appId + '\'' + "} " + super.toString();
+        + "name='" + name + '\'' + ", type=" + type + ", parentIds=" + parentIds + ", accountId='" + accountId + '\''
+        + ", enabled=" + enabled + ", kmsId='" + kmsId + '\'' + ", encryptionType=" + encryptionType + ", encryptedBy='"
+        + encryptedBy + '\'' + "} " + super.toString();
   }
 }

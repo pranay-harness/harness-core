@@ -508,6 +508,22 @@ public class SecretManagerImpl implements SecretManager {
     return rv;
   }
 
+  @Override
+  public List<ServiceVariable> getSecretTextUsage(String accountId, String secretTextId) {
+    EncryptedData secretText = wingsPersistence.get(EncryptedData.class, secretTextId);
+    Preconditions.checkNotNull(secretText, "could not find secret with id " + secretTextId);
+    List<ServiceVariable> rv = new ArrayList<>();
+    if (secretText.getParentIds() == null) {
+      return rv;
+    }
+    for (String parentId : secretText.getParentIds()) {
+      rv.add((ServiceVariable) fetchParent(SettingVariableTypes.SERVICE_VARIABLE, accountId, parentId,
+          secretText.getKmsId(), secretText.getEncryptionType()));
+    }
+
+    return rv;
+  }
+
   private EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
