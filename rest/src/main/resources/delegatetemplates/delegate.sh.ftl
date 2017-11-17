@@ -9,8 +9,6 @@ fi
 REMOTE_DELEGATE_URL=${delegateJarUrl}
 REMOTE_DELEGATE_VERSION=${upgradeVersion}
 
-CURRENT_VERSION=${currentVersion}
-
 if [ ! -e delegate.jar ]
 then
   echo "Downloading Delegate..."

@@ -49,8 +49,6 @@ fi
 REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
 REMOTE_DELEGATE_VERSION=9.9.9
 
-CURRENT_VERSION=0.0.0
-
 if [ ! -e delegate.jar ]
 then
   echo "Downloading Delegate..."
