@@ -238,7 +238,7 @@ public class MetricAnalysisJob implements Job {
 
         switch (result.getExitValue()) {
           case 0:
-            logger.info("Log analysis done for " + context.getStateExecutionId() + " for minute " + analysisMinute);
+            logger.info("Metric analysis done for " + context.getStateExecutionId() + " for minute " + analysisMinute);
             attempt += PYTHON_JOB_RETRIES;
             break;
           case 2:
@@ -306,7 +306,12 @@ public class MetricAnalysisJob implements Job {
         }
         analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
             context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
-        logger.info("Finish analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
+
+        int nextAnalysisMinute = analysisService.getCollectionMinuteToProcess(context.getStateType(),
+            context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
+
+        logger.info("Finish analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute
+            + ". Next minute is " + nextAnalysisMinute);
       } catch (Exception ex) {
         completeCron = true;
         logger.warn("analysis failed", ex);
