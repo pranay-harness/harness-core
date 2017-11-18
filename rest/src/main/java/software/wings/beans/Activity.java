@@ -11,6 +11,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Version;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
@@ -51,6 +53,9 @@ public class Activity extends Base {
   @NotEmpty private String stateExecutionInstanceId;
   @NotEmpty private String stateExecutionInstanceName;
   @Version private Long version; // Morphia managed for optimistic locking. don't remove
+
+  @Builder.Default private CommandUnitType commandUnitType = CommandUnitType.COMMAND;
+  private boolean logPurged;
 
   private String artifactStreamId;
   private String artifactStreamName;

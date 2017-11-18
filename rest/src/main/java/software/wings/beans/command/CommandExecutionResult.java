@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import com.google.common.base.MoreObjects;
 
+import software.wings.sm.ExecutionStatus;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Objects;
@@ -187,6 +188,21 @@ public class CommandExecutionResult implements NotifyResponseData {
     /**
      * Queued execution status.
      */
-    QUEUED
+    QUEUED;
+
+    public static CommandExecutionStatus translateExecutionStatus(ExecutionStatus executionStatus) {
+      switch (executionStatus) {
+        case SUCCESS:
+          return SUCCESS;
+        case FAILED:
+          return FAILURE;
+        case RUNNING:
+          return RUNNING;
+        case QUEUED:
+          return QUEUED;
+        default:
+          throw new IllegalArgumentException("invalid status: " + executionStatus);
+      }
+    }
   }
 }

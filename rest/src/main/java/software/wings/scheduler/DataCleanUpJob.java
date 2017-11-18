@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.LogService;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -21,11 +23,13 @@ public class DataCleanUpJob implements Job {
   private static final long ARTIFACT_RETENTION_SIZE = 25L;
   private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
   private static final long ALERT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
+  public static final long LOGS_RETENTION_TIME = TimeUnit.DAYS.toMillis(30);
 
   @Inject private ArtifactService artifactService;
   @Inject private AuditService auditService;
   @Inject private AlertService alertService;
   @Inject private ExecutorService executorService;
+  @Inject private LogService logService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -38,6 +42,7 @@ public class DataCleanUpJob implements Job {
     deleteArtifacts();
     deleteAuditRecords();
     deleteAlerts();
+    logService.purgeActivityLogs();
     logger.info("Running Data Cleanup Job complete");
   }
   private void deleteArtifacts() {

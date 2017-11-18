@@ -14,6 +14,7 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -109,11 +110,7 @@ public class ActivityResource {
   public RestResponse<PageResponse<Log>> listLogs(@QueryParam("appId") String appId,
       @PathParam("activityId") String activityId, @QueryParam("unitName") String unitName,
       @BeanParam PageRequest<Log> request) {
-    request.addFilter("appId", appId, EQ);
-    request.addFilter("activityId", activityId, EQ);
-    request.addFilter("commandUnitName", unitName, EQ);
-    request.addOrder(aSortOrder().withField("createdAt", OrderType.ASC).build());
-    return new RestResponse<>(logService.list(request));
+    return new RestResponse<>(logService.list(appId, activityId, unitName, request));
   }
 
   /**
@@ -126,7 +123,7 @@ public class ActivityResource {
   @GET
   @Path("{activityId}/units")
   @Timed
-  public RestResponse<List<CommandUnit>> getActivityCommandUnits(
+  public RestResponse<List<CommandUnitDetails>> getActivityCommandUnits(
       @QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     return new RestResponse<>(activityService.getCommandUnits(appId, activityId));
   }
