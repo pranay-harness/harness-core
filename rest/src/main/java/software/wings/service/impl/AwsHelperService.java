@@ -313,6 +313,7 @@ public class AwsHelperService {
         .withRegion(region)
         .withCredentials(
             new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, String.valueOf(secretKey))))
+        .withForceGlobalBucketAccessEnabled(true)
         .build();
   }
 
