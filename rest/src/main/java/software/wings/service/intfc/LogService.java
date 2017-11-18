@@ -19,10 +19,13 @@ public interface LogService {
   /**
    * List.
    *
-   * @param pageRequest the page request
-   * @return the page response
+   *
+   * @param appId
+   * @param activityId
+   *@param unitName
+   * @param pageRequest the page request  @return the page response
    */
-  PageResponse<Log> list(PageRequest<Log> pageRequest);
+  PageResponse<Log> list(String appId, String activityId, String unitName, PageRequest<Log> pageRequest);
 
   /**
    * Save.
