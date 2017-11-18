@@ -101,26 +101,23 @@ public class ActivityServiceImpl implements ActivityService {
   public List<CommandUnitDetails> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
     List<CommandUnitDetails> rv = new ArrayList<>();
-    switch (activity.getCommandUnitType()) {
-      case COMMAND:
-        List<CommandUnit> commandUnits = activity.getCommandUnits();
-        for (CommandUnit commandUnit : commandUnits) {
-          rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
-                     .name(commandUnit.getName())
-                     .commandUnitType(activity.getCommandUnitType())
-                     .build());
-        }
-        break;
-      case STATE:
+    if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
+      List<CommandUnit> commandUnits = activity.getCommandUnits();
+      for (CommandUnit commandUnit : commandUnits) {
         rv.add(CommandUnitDetails.builder()
-                   .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
-                   .name(activity.getCommandName())
-                   .commandUnitType(CommandUnitType.STATE)
+                   .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
+                   .name(commandUnit.getName())
+                   .commandUnitType(activity.getCommandUnitType())
                    .build());
-        break;
-      default:
-        throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
+      }
+    } else if (activity.getCommandUnitType() == CommandUnitType.STATE) {
+      rv.add(CommandUnitDetails.builder()
+                 .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                 .name(activity.getCommandName())
+                 .commandUnitType(CommandUnitType.STATE)
+                 .build());
+    } else {
+      throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
     }
 
     return rv;
