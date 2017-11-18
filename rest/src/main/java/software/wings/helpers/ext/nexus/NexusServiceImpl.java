@@ -2,6 +2,7 @@ package software.wings.helpers.ext.nexus;
 
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static software.wings.beans.ErrorCode.*;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -17,12 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.rest.model.ContentListResource;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
-import org.sonatype.nexus.rest.model.RepositoryListResource;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
@@ -35,7 +33,6 @@ import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,32 +45,38 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.xml.stream.XMLStreamException;
 
 /**
  * Created by srinivas on 3/28/17.
  */
 @Singleton
-public class NexusServiceImpl implements NexusService {
+public class NexusServiceImpl extends AbstractNexusService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private EncryptionService encryptionService;
 
+  @Inject private NexusThreeServiceImpl nexusThreeService;
+
+  @Override
   public Map<String, String> getRepositories(
       final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
         try {
           logger.info("Retrieving repositories");
-          final Map<String, String> repos = new HashMap<>();
-          final Call<RepositoryListResourceResponse> request =
-              getRestClient(nexusConfig, encryptionDetails)
-                  .getAllRepositories(
-                      Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
-          final Response<RepositoryListResourceResponse> response = request.execute();
-          if (isSuccessful(response)) {
-            final RepositoryListResourceResponse repositoryResponse = response.body();
-            final List<RepositoryListResource> repositories = repositoryResponse.getData();
-            repositories.forEach(repo -> repos.put(repo.getId(), repo.getName()));
+          Map<String, String> repos = new HashMap<>();
+          if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equals("2.x")) {
+            NexusRestClient restClient = getRestClient(nexusConfig, encryptionDetails);
+            final Call<RepositoryListResourceResponse> request = restClient.getAllRepositories(
+                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+            final Response<RepositoryListResourceResponse> response = request.execute();
+            if (isSuccessful(response)) {
+              final RepositoryListResourceResponse repositoryResponse = response.body();
+              repos = response.body().getData().stream().collect(Collectors.toMap(o -> o.getId(), o -> o.getName()));
+            }
+          } else {
+            repos = nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
           }
           logger.info("Retrieving repositories success");
           return repos;
@@ -82,19 +85,19 @@ public class NexusServiceImpl implements NexusService {
         } catch (Exception e) {
           logger.error(
               "Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
-          if (e.getCause() instanceof XMLStreamException) {
-            throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Nexus may not be running");
+          if (e.getCause() != null || e.getCause() instanceof XMLStreamException) {
+            throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Nexus may not be running");
           }
-          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", e.getMessage());
+          throw new WingsException(
+              INVALID_ARTIFACT_SERVER, "message", e.getMessage() == null ? "Unknown error" : e.getMessage());
         }
       }, notNullValue());
 
     } catch (ConditionTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs", e);
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Nexus server took too long to respond");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Nexus server took too long to respond");
     }
   }
-
   @Override
   public List<String> getArtifactPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
@@ -109,7 +112,7 @@ public class NexusServiceImpl implements NexusService {
               + " for repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(DEFAULT_ERROR_CODE, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
   }
@@ -131,7 +134,7 @@ public class NexusServiceImpl implements NexusService {
               + " for Repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(DEFAULT_ERROR_CODE, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
   }
@@ -184,7 +187,7 @@ public class NexusServiceImpl implements NexusService {
                 return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
               } catch (IOException ex) {
                 logger.error("Error occurred while getting the input stream", ex);
-                throw new WingsException(ErrorCode.INVALID_REQUEST, "message", ex.getMessage());
+                throw new WingsException(INVALID_REQUEST, "message", ex.getMessage());
               }
             }
           }
@@ -232,7 +235,7 @@ public class NexusServiceImpl implements NexusService {
               + " for repository " + repoId + " under path " + path,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving groupId paths success");
@@ -244,36 +247,40 @@ public class NexusServiceImpl implements NexusService {
     logger.info("Retrieving groupId paths");
     List<String> groupIds = new ArrayList<>();
     try {
-      final Call<IndexBrowserTreeViewResponse> request =
-          getRestClient(nexusConfig, encryptionDetails)
-              .getIndexContent(
-                  Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
-      final Response<IndexBrowserTreeViewResponse> response = request.execute();
-      // Check if response successful or not
-      if (isSuccessful(response)) {
-        final IndexBrowserTreeViewResponse treeViewResponse = response.body();
-        final Data data = treeViewResponse.getData();
-        final List<IndexBrowserTreeNode> treeNodes = data.getChildren();
-        if (treeNodes == null) {
-          return groupIds;
-        }
-        treeNodes.forEach(treeNode -> {
-          if (treeNode.getType().equals("G")) {
-            String groupId = treeNode.getPath();
-            groupId = groupId.replace("/", ".");
-            groupIds.add(groupId.substring(1, groupId.length() - 1));
-            getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
+      if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equals("2.x")) {
+        final Call<IndexBrowserTreeViewResponse> request =
+            getRestClient(nexusConfig, encryptionDetails)
+                .getIndexContent(
+                    Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
+        final Response<IndexBrowserTreeViewResponse> response = request.execute();
+        // Check if response successful or not
+        if (isSuccessful(response)) {
+          final IndexBrowserTreeViewResponse treeViewResponse = response.body();
+          final Data data = treeViewResponse.getData();
+          final List<IndexBrowserTreeNode> treeNodes = data.getChildren();
+          if (treeNodes == null) {
+            return groupIds;
           }
-        }
+          treeNodes.forEach(treeNode -> {
+            if (treeNode.getType().equals("G")) {
+              String groupId = treeNode.getPath();
+              groupId = groupId.replace("/", ".");
+              groupIds.add(groupId.substring(1, groupId.length() - 1));
+              getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
+            }
+          }
 
-        );
+          );
+        }
+      } else {
+        return nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId);
       }
     } catch (final IOException e) {
       logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
               + " for Repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.ARTIFACT_SERVER_ERROR, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(ARTIFACT_SERVER_ERROR, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving groupId paths success");
@@ -308,7 +315,7 @@ public class NexusServiceImpl implements NexusService {
               + " for Repository " + repoId + " under path " + path,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(DEFAULT_ERROR_CODE, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving Artifact Names success");
@@ -360,7 +367,7 @@ public class NexusServiceImpl implements NexusService {
               nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving versions success");
@@ -428,33 +435,13 @@ public class NexusServiceImpl implements NexusService {
       } else {
         logger.error("Error while getting the latest version from Nexus url and queryParams {}. Reason:{}", resolveUrl,
             queryParams, response.message());
-        ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
+        ErrorCode errorCode = INVALID_REQUEST;
         throw new WingsException(errorCode, "message", response.message());
       }
     } catch (IOException e) {
       logger.error("Error occurred while retrieving pom model from url " + resolveUrl, e);
     }
     return project;
-  }
-
-  private NexusRestClient getRestClient(final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(nexusConfig, encryptionDetails);
-    final String baseUrl = getBaseUrl(nexusConfig);
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(baseUrl)
-                                  .addConverterFactory(SimpleXmlConverterFactory.createNonStrict())
-                                  .client(HttpUtil.getUnsafeOkHttpClient())
-                                  .build();
-    NexusRestClient nexusRestClient = retrofit.create(NexusRestClient.class);
-    return nexusRestClient;
-  }
-
-  private String getBaseUrl(NexusConfig nexusConfig) {
-    String baseUrl = nexusConfig.getNexusUrl();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl = baseUrl + "/";
-    }
-    return baseUrl;
   }
 
   /**
@@ -466,24 +453,6 @@ public class NexusServiceImpl implements NexusService {
     responseMessage.setErrorType(ResponseTypeEnum.ERROR);
     responseMessage.setMessage(errorMsg);
     return responseMessage;
-  }
-
-  private boolean isSuccessful(Response<?> response) throws IOException {
-    if (!response.isSuccessful()) {
-      logger.error("Request not successful. Reason: {}", response);
-      // TODO : Proper Error handling --> Get the code and map to Wings Error code
-      int code = response.code();
-      ErrorCode errorCode = ErrorCode.DEFAULT_ERROR_CODE;
-
-      switch (code) {
-        case 404:
-          return false;
-        case 401:
-          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Nexus credentials");
-      }
-      throw new WingsException(errorCode, "message", response.message());
-    }
-    return true;
   }
 
   static class MyAuthenticator extends Authenticator {

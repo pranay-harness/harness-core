@@ -141,8 +141,7 @@ public class ArtifactCollectionJob implements Job {
         }
       });
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-      logger.info("Collecting artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
-          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+      log(artifactStream, artifactStreamId);
       BuildDetails latestVersion =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       logger.info("Latest version in Nexus server {}", latestVersion);
@@ -338,6 +337,11 @@ public class ArtifactCollectionJob implements Job {
       }
     }
     return newArtifacts;
+  }
+
+  private void log(ArtifactStream artifactStream, String artifactStreamId) {
+    logger.info("Collecting artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
   }
 
   /**

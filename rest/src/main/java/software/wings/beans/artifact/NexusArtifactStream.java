@@ -4,13 +4,10 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.NexusArtifactStream.Builder.aNexusArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.stencils.UIOrder;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,25 +18,10 @@ import java.util.List;
  */
 @JsonTypeName("NEXUS")
 public class NexusArtifactStream extends ArtifactStream {
-  public String getJobname() {
-    return jobname;
-  }
-
-  public void setJobname(String jobname) {
-    this.jobname = jobname;
-  }
-
-  @UIOrder(4) @NotEmpty @Attributes(title = "Repository", required = true) private String jobname;
-
-  @UIOrder(5) @NotEmpty @Attributes(title = "Group", required = true) private String groupId;
-
-  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact", required = true) private List<String> artifactPaths;
-
-  @UIOrder(7)
-  @Attributes(title = "Meta-data Only (Artifact download not required)")
-  public boolean getMetadataOnly() {
-    return super.isMetadataOnly();
-  }
+  private String jobname;
+  private String groupId;
+  private String imageName;
+  private List<String> artifactPaths;
 
   /**
    * Instantiates a new Nexus artifact stream.
@@ -49,116 +31,30 @@ public class NexusArtifactStream extends ArtifactStream {
     super.setAutoApproveForProduction(true);
   }
 
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
-    private String repositoryName;
-    private String groupId;
-    private List<String> artifactPaths;
-
-    public static final class Builder {
-      private String repositoryName;
-      private String sourceName;
-      private String groupId;
-      private String settingName;
-      private List<String> artifactPaths;
-      private boolean autoApproveForProduction = false;
-      private String type;
-      private boolean metadataOnly = false;
-
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withRepositoryName(String repositoryName) {
-        this.repositoryName = repositoryName;
-        return this;
-      }
-
-      public Builder withSourceName(String sourceName) {
-        this.sourceName = sourceName;
-        return this;
-      }
-
-      public Builder withGroupId(String groupId) {
-        this.groupId = groupId;
-        return this;
-      }
-
-      public Builder withSettingName(String settingName) {
-        this.settingName = settingName;
-        return this;
-      }
-
-      public Builder withArtifactPaths(List<String> artifactPaths) {
-        this.artifactPaths = artifactPaths;
-        return this;
-      }
-
-      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-        this.autoApproveForProduction = autoApproveForProduction;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withMetadataOnly(boolean metadataOnly) {
-        this.metadataOnly = metadataOnly;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml()
-            .withRepositoryName(repositoryName)
-            .withSourceName(sourceName)
-            .withGroupId(groupId)
-            .withSettingName(settingName)
-            .withArtifactPaths(artifactPaths)
-            .withAutoApproveForProduction(autoApproveForProduction)
-            .withType(type)
-            .withMetadataOnly(metadataOnly);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setRepositoryName(repositoryName);
-        yaml.setSourceName(sourceName);
-        yaml.setGroupId(groupId);
-        yaml.setSettingName(settingName);
-        yaml.setArtifactPaths(artifactPaths);
-        yaml.setAutoApproveForProduction(autoApproveForProduction);
-        yaml.setType(type);
-        yaml.setMetadataOnly(metadataOnly);
-        return yaml;
-      }
-    }
+  public String getJobname() {
+    return jobname;
   }
 
-  @Override
-  @SchemaIgnore
+  public void setJobname(String jobname) {
+    this.jobname = jobname;
+  }
+
+  public String getImageName() {
+    return imageName;
+  }
+
   public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
   }
 
-  @Attributes(title = "Source Type")
-  @Override
   public String getArtifactStreamType() {
     return super.getArtifactStreamType();
   }
 
-  @Attributes(title = "Source Server")
-  @Override
   public String getSettingId() {
     return super.getSettingId();
   }
 
-  @UIOrder(8)
-  @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
@@ -193,6 +89,16 @@ public class NexusArtifactStream extends ArtifactStream {
    */
   public void setGroupId(String groupId) {
     this.groupId = groupId;
+    this.imageName = groupId;
+  }
+
+  /**
+   * Sets image name.
+   *
+   * @param imageName the image name
+   */
+  public void setImageName(String imageName) {
+    this.imageName = imageName;
   }
 
   @Override
@@ -243,12 +149,17 @@ public class NexusArtifactStream extends ArtifactStream {
         .withMetadataOnly(isMetadataOnly());
   }
 
+  public boolean getMetadataOnly() {
+    return super.isMetadataOnly();
+  }
+
   /**
    * The type Builder.
    */
   public static final class Builder {
     private String jobname;
     private String groupId;
+    private String imageName;
     private List<String> artifactPaths;
     private String sourceName;
     private String settingId;
@@ -436,6 +347,14 @@ public class NexusArtifactStream extends ArtifactStream {
     }
 
     /**
+     * With MetadataOnly builder.
+     */
+    public Builder withImageName(String imageName) {
+      this.imageName = imageName;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -456,7 +375,8 @@ public class NexusArtifactStream extends ArtifactStream {
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoApproveForProduction(autoApproveForProduction)
           .withStreamActions(streamActions)
-          .withMetadataOnly(metadataOnly);
+          .withMetadataOnly(metadataOnly)
+          .withImageName(imageName);
     }
 
     /**
@@ -479,7 +399,106 @@ public class NexusArtifactStream extends ArtifactStream {
       nexusArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       nexusArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       nexusArtifactStream.setMetadataOnly(metadataOnly);
+      nexusArtifactStream.setImageName(imageName);
       return nexusArtifactStream;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends ArtifactStream.Yaml {
+    private String repositoryName;
+    private String groupId;
+    private List<String> artifactPaths;
+    private String imageName;
+
+    public static final class Builder {
+      private String repositoryName;
+      private String sourceName;
+      private String groupId;
+      private String imageName;
+      private String settingName;
+      private List<String> artifactPaths;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRepositoryName(String repositoryName) {
+        this.repositoryName = repositoryName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withGroupId(String groupId) {
+        this.groupId = groupId;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withArtifactPaths(List<String> artifactPaths) {
+        this.artifactPaths = artifactPaths;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder withImageName(String imageName) {
+        this.imageName = imageName;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRepositoryName(repositoryName)
+            .withSourceName(sourceName)
+            .withGroupId(groupId)
+            .withSettingName(settingName)
+            .withArtifactPaths(artifactPaths)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRepositoryName(repositoryName);
+        yaml.setSourceName(sourceName);
+        yaml.setGroupId(groupId);
+        yaml.setSettingName(settingName);
+        yaml.setArtifactPaths(artifactPaths);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        yaml.setImageName(imageName);
+        return yaml;
+      }
     }
   }
 }
