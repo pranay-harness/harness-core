@@ -83,17 +83,29 @@ public class LogMLAnalysisGenerator implements Runnable {
           continue;
         }
 
-        final boolean isBaselineCreated = analysisService.isBaselineCreated(context.getComparisonStrategy(),
-            context.getStateType(), applicationId, workflowId, context.getWorkflowExecutionId(), serviceId, query);
+        final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+            context.getStateType(), applicationId, serviceId, query, workflowId);
+        final boolean isBaselineCreated =
+            context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+            || !lastWorkflowExecutionId.equals("-1");
+
         String testInputUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-            + "&clusterLevel=" + ClusterLevel.L2.name() + "&compareCurrent=true";
-        String controlInputUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
-            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-            + "&clusterLevel=" + ClusterLevel.L2.name() + "&compareCurrent=";
-        controlInputUrl = context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-            ? controlInputUrl + true
-            : controlInputUrl + false;
+            + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+            + "&compareCurrent=true";
+
+        String controlInputUrl;
+
+        if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+          controlInputUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
+              + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
+              + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+              + "&compareCurrent=true";
+        } else {
+          controlInputUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
+              + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId + "&clusterLevel="
+              + ClusterLevel.L2.name() + "&workflowExecutionId=" + lastWorkflowExecutionId + "&compareCurrent=false";
+        }
 
         final String logAnalysisSaveUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
