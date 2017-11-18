@@ -157,15 +157,15 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
     if (consoleLines != null) {
       if (consoleLines.length > NUM_OF_LOGS_TO_KEEP) {
-        Log log =
-            aLog()
-                .withActivityId(activityId)
-                .withCommandUnitName(stateName)
-                .withAppId(getAppId())
-                .withLogLevel(LogLevel.INFO)
-                .withLogLine("--------- truncating " + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines ---------")
-                .withExecutionResult(CommandExecutionStatus.RUNNING)
-                .build();
+        Log log = aLog()
+                      .withActivityId(activityId)
+                      .withCommandUnitName(stateName)
+                      .withAppId(getAppId())
+                      .withLogLevel(LogLevel.INFO)
+                      .withLogLine("-------------------------- truncating "
+                          + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines --------------------------")
+                      .withExecutionResult(CommandExecutionStatus.RUNNING)
+                      .build();
         logService.save(getAccountId(), log);
       }
       for (int i = NUM_OF_LOGS_TO_KEEP > consoleLines.length ? 0 : consoleLines.length - NUM_OF_LOGS_TO_KEEP;
