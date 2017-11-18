@@ -23,7 +23,7 @@ public class DataCleanUpJob implements Job {
   private static final long ARTIFACT_RETENTION_SIZE = 25L;
   private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
   private static final long ALERT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
-  public static final long LOGS_RETENTION_TIME = TimeUnit.DAYS.toMillis(1);
+  public static final long LOGS_RETENTION_TIME = TimeUnit.DAYS.toMillis(30);
 
   @Inject private ArtifactService artifactService;
   @Inject private AuditService auditService;
