@@ -41,6 +41,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -575,7 +576,7 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTask reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
     // Remove delegateId from pending validation responses
-    removeFromValidationCache(delegateId, taskId);
+    markCompleteInValidationCache(delegateId, taskId);
 
     assignDelegateService.saveConnectionResults(results);
 
@@ -588,41 +589,52 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
-  private void addToValidationCache(String delegateId, String taskId) {
-    Cache<String, Set> delegateValidationCache =
-        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
-    Set<String> validatingDelegates = delegateValidationCache.get(taskId);
-    if (validatingDelegates == null) {
-      validatingDelegates = new HashSet<>();
-    }
-    validatingDelegates.add(delegateId);
-    delegateValidationCache.put(taskId, validatingDelegates);
-  }
-
-  private void removeFromValidationCache(String delegateId, String taskId) {
-    Cache<String, Set> delegateValidationCache =
-        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
-    Set<String> validatingDelegates = delegateValidationCache.get(taskId);
-    if (validatingDelegates != null) {
-      validatingDelegates.remove(delegateId);
-      if (validatingDelegates.isEmpty()) {
-        delegateValidationCache.remove(taskId);
-      } else {
-        delegateValidationCache.put(taskId, validatingDelegates);
-      }
-    }
-  }
-
   @Override
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
     // Tell delegate whether to proceed anyway because all eligible delegates failed.
-    if (!cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).containsKey(taskId)) {
+    if (isValidationComplete(taskId)) {
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
       if (delegateTask != null) {
         return assignTask(delegateId, taskId, delegateTask);
       }
     }
     return null;
+  }
+
+  private void addToValidationCache(String delegateId, String taskId) {
+    Cache<String, Set> delegateValidationCache =
+        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
+    Set<String> validatingDelegates = delegateValidationCache.get("validating-" + taskId);
+    if (validatingDelegates == null) {
+      validatingDelegates = new HashSet<>();
+    }
+    validatingDelegates.add(delegateId);
+    delegateValidationCache.put("validating-" + taskId, validatingDelegates);
+  }
+
+  private void markCompleteInValidationCache(String delegateId, String taskId) {
+    Cache<String, Set> delegateValidationCache =
+        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
+    Set<String> completeDelegates = delegateValidationCache.get("complete-" + taskId);
+    if (completeDelegates == null) {
+      completeDelegates = new HashSet<>();
+    }
+    completeDelegates.add(delegateId);
+    delegateValidationCache.put("complete-" + taskId, completeDelegates);
+  }
+
+  private boolean isValidationComplete(String taskId) {
+    Cache<String, Set> delegateValidationCache =
+        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
+    Set<String> validatingDelegates = delegateValidationCache.get("validating-" + taskId);
+    Set<String> completeDelegates = delegateValidationCache.get("complete-" + taskId);
+    return validatingDelegates != null && completeDelegates != null
+        && completeDelegates.containsAll(validatingDelegates);
+  }
+
+  private void clearFromValidationCache(String taskId) {
+    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove("validating-" + taskId);
+    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove("complete-" + taskId);
   }
 
   private DelegateTask getUnassignedDelegateTask(String accountId, String taskId) {
@@ -657,15 +669,29 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
-    // TODO - acquire lock on task, double check it's not already assigned
     // Clear pending validations. No longer need to track since we're assigning
-    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove(taskId);
+    clearFromValidationCache(taskId);
 
     logger.info(
         "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
     delegateTask.setDelegateId(delegateId);
     if (delegateTask.isAsync()) {
-      delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, delegateTask);
+      UpdateOperations<DelegateTask> updateOperations =
+          wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
+      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                            .field("accountId")
+                                            .equal(delegateTask.getAccountId())
+                                            .field("status")
+                                            .equal(DelegateTask.Status.QUEUED)
+                                            .field("delegateId")
+                                            .doesNotExist()
+                                            .field(ID_KEY)
+                                            .equal(taskId);
+      UpdateResults updateResults = wingsPersistence.update(updateQuery, updateOperations);
+      if (updateResults.getUpdatedCount() == 0) {
+        // Couldn't assign, probably because it was already assigned to another delegate.
+        delegateTask = null;
+      }
     } else {
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, delegateTask);
     }
