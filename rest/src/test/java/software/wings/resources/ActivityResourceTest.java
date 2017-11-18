@@ -32,6 +32,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -178,17 +180,18 @@ public class ActivityResourceTest {
   @Test
   public void shouldListCommandUnits() {
     when(ACTIVITY_SERVICE.getCommandUnits(APP_ID, ACTIVITY_ID))
-        .thenReturn(
-            asList(anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build()));
+        .thenReturn(asList(
+            CommandUnitDetails.builder().name(COMMAND_UNIT_NAME).commandUnitType(CommandUnitType.COMMAND).build()));
 
-    RestResponse<List<ExecCommandUnit>> restResponse =
+    RestResponse<List<CommandUnitDetails>> restResponse =
         RESOURCES.client()
             .target(String.format("/activities/%s/units?appId=%s", ACTIVITY_ID, APP_ID))
             .request()
-            .get(new GenericType<RestResponse<List<ExecCommandUnit>>>() {});
+            .get(new GenericType<RestResponse<List<CommandUnitDetails>>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(List.class);
     assertThat(restResponse.getResource().size()).isEqualTo(1);
-    assertThat(restResponse.getResource().get(0)).isInstanceOf(AbstractCommandUnit.class);
+    assertThat(restResponse.getResource().get(0)).isInstanceOf(CommandUnitDetails.class);
+    assertThat(restResponse.getResource().get(0).getCommandUnitType()).isEqualTo(CommandUnitType.COMMAND);
     verify(ACTIVITY_SERVICE).getCommandUnits(APP_ID, ACTIVITY_ID);
   }
 
