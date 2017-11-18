@@ -14,6 +14,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.DataCleanUpJob;
+import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
@@ -36,7 +37,7 @@ public class LogPurgeTest extends WingsBaseTest {
     Whitebox.setInternalState(logService, "activityService", activityService);
 
     final int numOfActivities = 5;
-    final int numOfLogLines = 100;
+    final int numOfLogLines = LogServiceImpl.NUM_OF_LOGS_TO_KEEP + 100;
 
     List<String> activityIds = new ArrayList<>();
     for (int activityNum = 0; activityNum < numOfActivities; activityNum++) {

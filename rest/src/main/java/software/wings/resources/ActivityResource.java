@@ -110,11 +110,7 @@ public class ActivityResource {
   public RestResponse<PageResponse<Log>> listLogs(@QueryParam("appId") String appId,
       @PathParam("activityId") String activityId, @QueryParam("unitName") String unitName,
       @BeanParam PageRequest<Log> request) {
-    request.addFilter("appId", appId, EQ);
-    request.addFilter("activityId", activityId, EQ);
-    request.addFilter("commandUnitName", unitName, EQ);
-    request.addOrder(aSortOrder().withField("createdAt", OrderType.ASC).build());
-    return new RestResponse<>(logService.list(request));
+    return new RestResponse<>(logService.list(appId, activityId, unitName, request));
   }
 
   /**
