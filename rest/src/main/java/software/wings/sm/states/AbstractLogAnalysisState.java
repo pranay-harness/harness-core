@@ -35,9 +35,11 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -51,7 +53,7 @@ import javax.inject.Named;
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
   protected static final String LOG_ML_SHELL_FILE_NAME = "run_splunkml.sh";
-
+  protected static final int HOST_BATCH_SIZE = 1;
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
   protected String query;
@@ -306,5 +308,22 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   public void setAnalysisTolerance(String tolerance) {
     this.tolerance = tolerance;
+  }
+
+  protected List<Set<String>> batchHosts(Set<String> hosts) {
+    List<Set<String>> batchedHosts = new ArrayList<>();
+    Set<String> batch = new HashSet<>();
+    for (String host : hosts) {
+      if (batch.size() == HOST_BATCH_SIZE) {
+        batchedHosts.add(batch);
+        batch = new HashSet<>();
+      }
+      batch.add(host);
+    }
+    if (batch.size() > 0) {
+      batchedHosts.add(batch);
+    }
+
+    return batchedHosts;
   }
 }

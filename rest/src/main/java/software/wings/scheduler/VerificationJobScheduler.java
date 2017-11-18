@@ -26,6 +26,7 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
       configuration.getSchedulerConfig().setSchedulerName("verification_scheduler");
       configuration.getSchedulerConfig().setInstanceId("verification");
       configuration.getSchedulerConfig().setTablePrefix("quartz_verification");
+      configuration.getSchedulerConfig().setThreadCount("15");
       return new JobScheduler(injector, configuration);
     }
   }
