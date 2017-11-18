@@ -15,6 +15,7 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -165,6 +166,16 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         .withTargetToAllEnv(serviceCommand.isTargetToAllEnv())
         .withType(commandType)
         .build();
+  }
+
+  @Override
+  public ServiceCommand upsertFromYaml(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

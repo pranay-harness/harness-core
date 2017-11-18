@@ -6,6 +6,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream.Builder;
 import software.wings.beans.artifact.BambooArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -26,6 +27,16 @@ public class BambooArtifactStreamYamlHandler
         .withPlanName(artifactStream.getJobname())
         .withSourceName(artifactStream.getSourceName())
         .build();
+  }
+
+  @Override
+  public BambooArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   public BambooArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)

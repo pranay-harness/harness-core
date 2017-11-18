@@ -9,6 +9,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ObjectType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -112,6 +113,16 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
         .withType(bean.getType())
         .withTemplateExpressions(templateExprYamlList)
         .build();
+  }
+
+  @Override
+  public Node upsertFromYaml(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

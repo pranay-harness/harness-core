@@ -1,12 +1,12 @@
 package software.wings.service.impl.yaml.handler.app;
 
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.utils.Util.isEmpty;
 
 import com.google.inject.Inject;
 
 import software.wings.beans.Application;
-import software.wings.beans.Application.Builder;
 import software.wings.beans.Application.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -33,39 +33,42 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   }
 
   @Override
-  public Application updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public Application upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
+    ensureValidChange(changeContext, changeSetContext);
 
+    Application current = anApplication()
+                              .withAccountId(changeContext.getChange().getAccountId())
+                              .withName(changeContext.getYaml().getName())
+                              .withDescription(changeContext.getYaml().getDescription())
+                              .build();
     Application previous =
         yamlSyncHelper.getApp(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Builder builder = previous.toBuilder();
-    setWithYamlValues(builder, changeContext.getYaml());
-    return appService.update(builder.build());
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return appService.update(current);
+    } else {
+      return appService.save(current);
+    }
   }
 
-  private void setWithYamlValues(Builder builder, Application.Yaml appYaml) {
-    builder.withName(appYaml.getName()).withDescription(appYaml.getDescription()).build();
+  @Override
+  public Application updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  @Override
+  public Application createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Application.Yaml applicationYaml = changeContext.getYaml();
     return !(isEmpty(applicationYaml.getName()));
-  }
-
-  @Override
-  public Application createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    Builder builder = Builder.anApplication().withAccountId(changeContext.getChange().getAccountId());
-    setWithYamlValues(builder, changeContext.getYaml());
-    return appService.save(builder.build());
   }
 
   @Override

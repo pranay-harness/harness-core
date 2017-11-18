@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -27,6 +28,16 @@ public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml
   @Override
   public NameValuePair.Yaml toYaml(NameValuePair bean, String appId) {
     return NameValuePair.Yaml.Builder.aYaml().withName(bean.getName()).withValue(bean.getValue()).build();
+  }
+
+  @Override
+  public NameValuePair upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

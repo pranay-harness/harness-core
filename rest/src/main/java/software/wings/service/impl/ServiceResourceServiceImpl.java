@@ -10,7 +10,6 @@ import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -182,9 +181,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service save(Service service) {
+    return save(service, false);
+  }
+
+  @Override
+  public Service save(Service service, boolean fromYaml) {
     Service savedService =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
-    savedService = addDefaultCommands(savedService);
+    if (!fromYaml) {
+      savedService = addDefaultCommands(savedService);
+    }
     serviceTemplateService.createDefaultTemplatesByService(savedService);
     notificationService.sendNotificationAsync(
         anInformationNotification()
@@ -411,11 +417,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service getServiceByName(String appId, String serviceName) {
     Service service =
         wingsPersistence.createQuery(Service.class).field("appId").equal(appId).field("name").equal(serviceName).get();
-    if (service == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Service - '" + serviceName + "' doesn't exist");
+    if (service != null) {
+      setServiceDetails(service, appId);
     }
-
-    setServiceDetails(service, appId);
     return service;
   }
 

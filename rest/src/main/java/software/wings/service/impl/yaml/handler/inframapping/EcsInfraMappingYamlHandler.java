@@ -31,11 +31,9 @@ public class EcsInfraMappingYamlHandler
   }
 
   @Override
-  public EcsInfrastructureMapping updateFromYaml(
+  public EcsInfrastructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
+    ensureValidChange(changeContext, changeSetContext);
 
     EcsInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
@@ -47,15 +45,28 @@ public class EcsInfraMappingYamlHandler
     String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
     Validator.notNullCheck(
         "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
+    String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
+    EcsInfrastructureMapping.Builder builder = EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping();
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    EcsInfrastructureMapping current = builder.build();
     EcsInfrastructureMapping previous =
         (EcsInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
             appId, envId, serviceId, computeProviderId);
-    EcsInfrastructureMapping.Builder builder = previous.deepClone();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (EcsInfrastructureMapping) infraMappingService.update(builder.build());
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return (EcsInfrastructureMapping) infraMappingService.update(current);
+    } else {
+      return (EcsInfrastructureMapping) infraMappingService.save(current);
+    }
+  }
+
+  @Override
+  public EcsInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   private void setWithYamlValues(EcsInfrastructureMapping.Builder builder,
@@ -89,26 +100,7 @@ public class EcsInfraMappingYamlHandler
   @Override
   public EcsInfrastructureMapping createFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    EcsInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
-
-    EcsInfrastructureMapping.Builder builder = EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (EcsInfrastructureMapping) infraMappingService.save(builder.build());
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override
