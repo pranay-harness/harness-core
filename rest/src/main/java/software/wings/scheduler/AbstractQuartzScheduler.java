@@ -82,7 +82,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
     props.setProperty("org.quartz.plugin.triggHistory.class", "org.quartz.plugins.history.LoggingTriggerHistoryPlugin");
     props.setProperty("org.quartz.plugin.jobHistory.class", "org.quartz.plugins.history.LoggingJobHistoryPlugin");
     props.setProperty("org.quartz.scheduler.instanceName", schedulerConfig.getSchedulerName());
-    props.setProperty("org.quartz.scheduler.instanceId", "AUTO");
+    props.setProperty("org.quartz.scheduler.instanceId", schedulerConfig.getInstanceId());
     props.setProperty("org.quartz.jobStore.collectionPrefix", schedulerConfig.getTablePrefix());
 
     return props;
