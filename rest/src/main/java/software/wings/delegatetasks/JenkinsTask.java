@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.MapUtils.isNotEmpty;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
 import com.google.common.base.Joiner;
 
@@ -22,6 +23,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
@@ -154,14 +156,26 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     String[] consoleLines = consoleOutputText.split("\r\n");
 
     if (consoleLines != null) {
-      for (int i = consoleLogsAlreadySent.get(); i < consoleLines.length; i++) {
-        String logLine = consoleLines[i];
+      if (consoleLines.length > NUM_OF_LOGS_TO_KEEP) {
+        Log log =
+            aLog()
+                .withActivityId(activityId)
+                .withCommandUnitName(stateName)
+                .withAppId(getAppId())
+                .withLogLevel(LogLevel.INFO)
+                .withLogLine("--------- truncating " + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines ---------")
+                .withExecutionResult(CommandExecutionStatus.RUNNING)
+                .build();
+        logService.save(getAccountId(), log);
+      }
+      for (int i = NUM_OF_LOGS_TO_KEEP > consoleLines.length ? 0 : consoleLines.length - NUM_OF_LOGS_TO_KEEP;
+           i < consoleLines.length; i++) {
         Log log = aLog()
                       .withActivityId(activityId)
                       .withCommandUnitName(stateName)
                       .withAppId(getAppId())
                       .withLogLevel(LogLevel.INFO)
-                      .withLogLine(logLine)
+                      .withLogLine(consoleLines[i])
                       .withExecutionResult(CommandExecutionStatus.RUNNING)
                       .build();
         logService.save(getAccountId(), log);

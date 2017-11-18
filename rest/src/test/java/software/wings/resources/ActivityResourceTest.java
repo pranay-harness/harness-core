@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -11,7 +12,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
@@ -31,10 +31,8 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.beans.command.ExecCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
@@ -114,7 +112,7 @@ public class ActivityResourceTest {
     PageResponse<Log> logPageResponse = new PageResponse<>();
     logPageResponse.setResponse(Lists.newArrayList(ACTUAL_LOG));
     logPageResponse.setTotal(1);
-    when(LOG_SERVICE.list(any(PageRequest.class))).thenReturn(logPageResponse);
+    when(LOG_SERVICE.list(anyString(), anyString(), anyString(), any(PageRequest.class))).thenReturn(logPageResponse);
   }
 
   /**
@@ -150,28 +148,6 @@ public class ActivityResourceTest {
     assertThat(restResponse.getResource()).isInstanceOf(Activity.class);
 
     verify(ACTIVITY_SERVICE).get(ACTIVITY_ID, APP_ID);
-  }
-
-  /**
-   * Should list logs.
-   */
-  @Test
-  public void shouldListLogs() {
-    RestResponse<PageResponse<Log>> restResponse =
-        RESOURCES.client()
-            .target(String.format("/activities/%s/logs?appId=%s&unitName=%s", ACTIVITY_ID, APP_ID, COMMAND_UNIT_NAME))
-            .request()
-            .get(new GenericType<RestResponse<PageResponse<Log>>>() {});
-
-    assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
-
-    ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
-    verify(LOG_SERVICE).list(argument.capture());
-
-    List<SearchFilter> filters = argument.getValue().getFilters();
-    assertThatFilterMatches(filters.get(0), "appId", APP_ID, EQ);
-    assertThatFilterMatches(filters.get(1), "activityId", ACTIVITY_ID, EQ);
-    assertThatFilterMatches(filters.get(2), "commandUnitName", COMMAND_UNIT_NAME, EQ);
   }
 
   /**

@@ -35,6 +35,7 @@ import software.wings.service.intfc.LogService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -57,6 +58,9 @@ public class LogServiceTest extends WingsBaseTest {
 
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
+  private String appId = UUID.randomUUID().toString();
+  private String activityId = UUID.randomUUID().toString();
+  private String unitName = UUID.randomUUID().toString();
   /**
    * Should list logs.
    */
@@ -69,7 +73,7 @@ public class LogServiceTest extends WingsBaseTest {
                                                  .withField("commandUnitName", EQ, COMMAND_UNIT_NAME)
                                                  .build())
                                   .build();
-    logService.list(pageRequest);
+    logService.list(appId, activityId, unitName, pageRequest);
     verify(wingsPersistence).query(eq(Log.class), eq(pageRequest));
   }
 
