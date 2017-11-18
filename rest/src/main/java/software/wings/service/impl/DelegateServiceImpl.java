@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -80,9 +81,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -559,6 +562,11 @@ public class DelegateServiceImpl implements DelegateService {
       ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
       delegateTask = null;
     }
+    if (delegateTask != null
+        && Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(emptyList()).contains(delegateId)) {
+      logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
+      delegateTask = null;
+    }
     if (delegateTask != null) {
       if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
         return assignTask(delegateId, taskId, delegateTask);
@@ -580,13 +588,38 @@ public class DelegateServiceImpl implements DelegateService {
 
     assignDelegateService.saveConnectionResults(results);
 
-    if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
-      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-      if (delegateTask != null) {
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    if (delegateTask != null) {
+      if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
+      } else {
+        blacklistDelegateForTask(delegateId, delegateTask);
       }
     }
     return null;
+  }
+
+  private void blacklistDelegateForTask(String delegateId, DelegateTask delegateTask) {
+    List<String> blacklistedDelegates =
+        Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new ArrayList<>());
+    blacklistedDelegates.add(delegateId);
+    delegateTask.setBlacklistedDelegateIds(blacklistedDelegates);
+    if (delegateTask.isAsync()) {
+      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                            .set("blacklistedDelegateIds", blacklistedDelegates);
+      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                            .field("accountId")
+                                            .equal(delegateTask.getAccountId())
+                                            .field("status")
+                                            .equal(DelegateTask.Status.QUEUED)
+                                            .field("delegateId")
+                                            .doesNotExist()
+                                            .field(ID_KEY)
+                                            .equal(delegateTask.getUuid());
+      wingsPersistence.update(updateQuery, updateOperations);
+    } else {
+      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
+    }
   }
 
   @Override
