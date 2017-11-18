@@ -649,8 +649,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask == null) {
         logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}", delegateTaskId,
             delegateTaskEvent.getAccountId());
-        logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keys());
-        logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
+        logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
+        logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
         return;
       }
 
