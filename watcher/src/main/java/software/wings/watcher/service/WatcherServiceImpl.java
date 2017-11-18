@@ -62,6 +62,9 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String NEW_WATCHER = "new-watcher";
   private static final String WATCHER_STARTED = "watcher-started";
   private static final String GO_AHEAD = "go-ahead";
+  private static final String WATCHER_DATA = "watcher-data";
+  private static final String RUNNING_DELEGATES = "running-delegates";
+  private static final String NEXT_WATCHER = "next-watcher";
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final Object waiter = new Object();
@@ -86,7 +89,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
       runningDelegates.addAll(
-          Optional.ofNullable((List) messageService.getData("watcher-data", "running-delegates")).orElse(emptyList()));
+          Optional.ofNullable((List) messageService.getData(WATCHER_DATA, RUNNING_DELEGATES)).orElse(emptyList()));
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
@@ -115,6 +118,7 @@ public class WatcherServiceImpl implements WatcherService {
         System.out.println("proceeding"); // Don't remove this. It is used as message in upgrade flow.
       }
 
+      messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
       startUpgradeCheck();
       startWatching();
 
@@ -190,11 +194,24 @@ private void startWatching() {
 
 private void watchDelegate() {
   try {
+    // Cleanup obsolete
     messageService.listDataNames(DELEGATE_DASH)
         .stream()
         .map(dataName -> dataName.substring(DELEGATE_DASH.length()))
         .filter(process -> !runningDelegates.contains(process))
-        .forEach(process -> messageService.closeData(process));
+        .forEach(process -> shutdownDelegate(process, false));
+
+    messageService.listChannels(DELEGATE)
+        .stream()
+        .filter(process -> !runningDelegates.contains(process))
+        .forEach(process -> shutdownDelegate(process, false));
+
+    messageService.listChannels(WATCHER)
+        .stream()
+        .filter(process
+            -> !StringUtils.equals(process, getProcessId())
+                && !StringUtils.equals(process, (String) messageService.getData(WATCHER_DATA, NEXT_WATCHER)))
+        .forEach(process -> messageService.closeChannel(WATCHER, process));
 
     if (isEmpty(runningDelegates)) {
       working = true;
@@ -214,7 +231,7 @@ private void watchDelegate() {
             if (shutdownPending) {
               if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
                 working = true;
-                shutdownDelegate(delegateProcess);
+                shutdownDelegate(delegateProcess, true);
               }
             } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
               working = true;
@@ -229,7 +246,7 @@ private void watchDelegate() {
         }
       }
       runningDelegates.removeAll(obsolete);
-      messageService.putData("watcher-data", "running-delegates", runningDelegates);
+      messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
     }
   } catch (Exception e) {
     logger.error("Error processing delegate stream: {}", e.getMessage(), e);
@@ -241,14 +258,8 @@ private void startDelegate() {
 }
 
 private void restartDelegate(String delegateProcess) {
-  // Kill without setting 'working' to true. That will happen after startDelegateProcess completes.
-  executorService.submit(() -> {
-    try {
-      killDelegate(delegateProcess);
-    } catch (IOException e) {
-      logger.error("Unable to kill old delegate {}", delegateProcess, e);
-    }
-  });
+  // Kill without resetting 'working'. It will reset after startDelegateProcess completes.
+  shutdownDelegate(delegateProcess, false);
   startDelegateProcess(null, "DelegateRestartScript", getProcessId());
 }
 
@@ -281,7 +292,7 @@ private void startDelegateProcess(@Nullable String oldDelegateProcess, String sc
             }
             messageService.sendMessage(DELEGATE, newDelegateProcess, GO_AHEAD);
             runningDelegates.add(newDelegateProcess);
-            messageService.putData("watcher-data", "running-delegates", runningDelegates);
+            messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           }
         }
       } else {
@@ -315,24 +326,22 @@ private void startDelegateProcess(@Nullable String oldDelegateProcess, String sc
   });
 }
 
-private void shutdownDelegate(String delegateProcess) {
+private void shutdownDelegate(String delegateProcess, boolean resetWorking) {
   executorService.submit(() -> {
     try {
-      killDelegate(delegateProcess);
+      new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
+      messageService.closeData(DELEGATE_DASH + delegateProcess);
+      messageService.closeChannel(DELEGATE, delegateProcess);
+      runningDelegates.remove(delegateProcess);
+      messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
     } catch (Exception e) {
       logger.error("Error killing delegate {}", delegateProcess, e);
     } finally {
-      working = false;
+      if (resetWorking) {
+        working = false;
+      }
     }
   });
-}
-
-private void killDelegate(String delegateProcess) throws IOException {
-  new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
-  messageService.closeData(DELEGATE_DASH + delegateProcess);
-  messageService.closeChannel(DELEGATE, delegateProcess);
-  runningDelegates.remove(delegateProcess);
-  messageService.putData("watcher-data", "running-delegates", runningDelegates);
 }
 
 private void checkForUpgrade() {
@@ -392,6 +401,7 @@ private void upgradeWatcher(InputStream newVersionJarStream, String version, Str
       Message message = waitForIncomingMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(2));
       if (message != null) {
         String newWatcherProcessId = message.getParams().get(0);
+        messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcessId);
         logger.info("[Old] Got process ID from new watcher: " + newWatcherProcessId);
         message = messageService.retrieveMessage(WATCHER, newWatcherProcessId, TimeUnit.MINUTES.toMillis(2));
         if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
