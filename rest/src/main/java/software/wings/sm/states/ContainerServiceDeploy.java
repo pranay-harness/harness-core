@@ -61,7 +61,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -92,7 +91,6 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient protected transient ActivityService activityService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
-
   @Inject @Transient protected transient SecretManager secretManager;
 
   ContainerServiceDeploy(String name, String type) {
