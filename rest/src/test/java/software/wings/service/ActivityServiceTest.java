@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CleanupSshCommandUnit.CLEANUP_UNIT;
+import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
@@ -233,7 +234,7 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(commandUnits)
         .hasSize(3)
         .extracting(CommandUnitDetails::getCommandUnitType, CommandUnitDetails::getName)
-        .contains(tuple(EXEC, INITIALIZE_UNIT), tuple(EXEC, COMMAND_UNIT_NAME), tuple(EXEC, CLEANUP_UNIT));
+        .contains(tuple(COMMAND, INITIALIZE_UNIT), tuple(COMMAND, COMMAND_UNIT_NAME), tuple(COMMAND, CLEANUP_UNIT));
   }
 
   /**
