@@ -42,6 +42,15 @@ public interface ServiceResourceService {
   @ValidationGroups(Create.class) Service save(@Valid Service service);
 
   /**
+   * Save service.
+   *
+   * @param service the service
+   * @param fromYaml the from git
+   * @return the service
+   */
+  @ValidationGroups(Create.class) Service save(@Valid Service service, boolean fromYaml);
+
+  /**
    * Clone service.
    *
    * @param appId             the app id
@@ -68,6 +77,13 @@ public interface ServiceResourceService {
    */
   Service get(@NotEmpty String appId, @NotEmpty String serviceId);
 
+  /**
+   * Gets service by name.
+   *
+   * @param appId       the app id
+   * @param serviceName the service name
+   * @return the service by name
+   */
   Service getServiceByName(String appId, String serviceName);
 
   /**
@@ -100,10 +116,10 @@ public interface ServiceResourceService {
   /**
    * Adds the command.
    *
-   * @param appId          the app id
-   * @param serviceId      the service id
-   * @param serviceCommand the command graph
-   * @param isDefaultCommand
+   * @param appId            the app id
+   * @param serviceId        the service id
+   * @param serviceCommand   the command graph
+   * @param isDefaultCommand the is default command
    * @return the service
    */
   Service addCommand(
@@ -324,6 +340,7 @@ public interface ServiceResourceService {
 
   /**
    * Verifies whether services needs artifact or not
+   *
    * @param service the service
    * @return the artifact needed or not
    */

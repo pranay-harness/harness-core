@@ -61,6 +61,40 @@ public class AwsInfraMappingYamlHandler
         .build();
   }
 
+  @Override
+  public AwsInfrastructureMapping upsertFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    ensureValidChange(changeContext, changeSetContext);
+
+    AwsInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
+
+    String appId =
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
+    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
+    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
+    Validator.notNullCheck(
+        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
+    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
+    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
+
+    AwsInfrastructureMapping.Builder builder = AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping();
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    AwsInfrastructureMapping current = builder.build();
+
+    AwsInfrastructureMapping previous =
+        (AwsInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
+            appId, envId, serviceId, computeProviderId);
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return (AwsInfrastructureMapping) infraMappingService.update(current);
+    } else {
+      return (AwsInfrastructureMapping) infraMappingService.save(current);
+    }
+  }
+
   private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {
     return tagList.stream()
         .map(tag -> NameValuePair.Yaml.Builder.aYaml().withName(tag.getKey()).withValue(tag.getValue()).build())
@@ -81,29 +115,7 @@ public class AwsInfraMappingYamlHandler
   @Override
   public AwsInfrastructureMapping updateFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    AwsInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
-
-    AwsInfrastructureMapping previous =
-        (AwsInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
-    AwsInfrastructureMapping.Builder builder = previous.deepClone();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (AwsInfrastructureMapping) infraMappingService.update(builder.build());
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   private void setWithYamlValues(AwsInfrastructureMapping.Builder builder,
@@ -157,26 +169,7 @@ public class AwsInfraMappingYamlHandler
   @Override
   public AwsInfrastructureMapping createFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    AwsInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
-
-    AwsInfrastructureMapping.Builder builder = AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (AwsInfrastructureMapping) infraMappingService.save(builder.build());
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override

@@ -6,6 +6,7 @@ import static software.wings.utils.Util.isEmpty;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.Builder;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -27,6 +28,16 @@ public class AmazonS3ArtifactStreamYamlHandler
         .withMetadataOnly(artifactStream.isMetadataOnly())
         .withSourceName(artifactStream.getSourceName())
         .build();
+  }
+
+  @Override
+  public AmazonS3ArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

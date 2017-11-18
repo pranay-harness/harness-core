@@ -299,16 +299,12 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public Application getAppByName(String accountId, String appName) {
-    Application application = wingsPersistence.createQuery(Application.class)
-                                  .field("accountId")
-                                  .equal(accountId)
-                                  .field("name")
-                                  .equal(appName)
-                                  .get();
-    if (application == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Application - '" + appName + "' doesn't exist");
-    }
-    return application;
+    return wingsPersistence.createQuery(Application.class)
+        .field("accountId")
+        .equal(accountId)
+        .field("name")
+        .equal(appName)
+        .get();
   }
 
   /* (non-Javadoc)
