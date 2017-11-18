@@ -603,7 +603,6 @@ public class DelegateServiceImpl implements DelegateService {
     List<String> blacklistedDelegates =
         Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new ArrayList<>());
     blacklistedDelegates.add(delegateId);
-    delegateTask.setBlacklistedDelegateIds(blacklistedDelegates);
     if (delegateTask.isAsync()) {
       UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                             .set("blacklistedDelegateIds", blacklistedDelegates);
@@ -618,6 +617,7 @@ public class DelegateServiceImpl implements DelegateService {
                                             .equal(delegateTask.getUuid());
       wingsPersistence.update(updateQuery, updateOperations);
     } else {
+      delegateTask.setBlacklistedDelegateIds(blacklistedDelegates);
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
     }
   }
@@ -702,7 +702,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
-    // Clear pending validations. No longer need to track since we're assigning
+    // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(taskId);
 
     logger.info(
