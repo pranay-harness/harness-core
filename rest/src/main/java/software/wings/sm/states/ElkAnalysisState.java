@@ -8,11 +8,13 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
@@ -38,6 +40,8 @@ import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -151,24 +155,38 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final ElkDataCollectionInfo dataCollectionInfo =
-        new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-            getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
-            timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
-            secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
-    String waitId = UUIDGenerator.getUuid();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
-                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
-                                    .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
-    return delegateService.queueTask(delegateTask);
+
+    List<Set<String>> batchedHosts = batchHosts(hosts);
+    String[] waitIds = new String[batchedHosts.size()];
+    List<DelegateTask> delegateTasks = new ArrayList<>();
+    int i = 0;
+    for (Set<String> hostBatch : batchedHosts) {
+      final ElkDataCollectionInfo dataCollectionInfo =
+          new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
+              context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
+              getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
+              timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
+              secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
+
+      String waitId = UUIDGenerator.getUuid();
+      delegateTasks.add(aDelegateTask()
+                            .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
+                            .withAccountId(appService.get(context.getAppId()).getAccountId())
+                            .withAppId(context.getAppId())
+                            .withWaitId(waitId)
+                            .withParameters(new Object[] {dataCollectionInfo})
+                            .withEnvId(envId)
+                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                            .build());
+      waitIds[i++] = waitId;
+    }
+
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitIds);
+    List<String> delegateTaskIds = new ArrayList<>();
+    for (DelegateTask task : delegateTasks) {
+      delegateTaskIds.add(delegateService.queueTask(task));
+    }
+    return StringUtils.join(delegateTaskIds, ",");
   }
 
   @Override

@@ -15,7 +15,6 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
@@ -33,10 +32,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.inject.Inject;
 
 /**
@@ -46,9 +41,6 @@ import javax.inject.Inject;
 @DisallowConcurrentExecution
 public class LogAnalysisManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogAnalysisManagerJob.class);
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(5);
-
-  @Transient @Inject private WingsPersistence wingsPersistence;
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -65,15 +57,9 @@ public class LogAnalysisManagerJob implements Job {
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
-      if (LogAnalysisTask.canLock(context.getStateExecutionId())) {
-        UUID id = UUID.randomUUID();
-        if (LogAnalysisTask.lock(context.getStateExecutionId(), id)) {
-          logger.info("Submitting log analysis job to queue " + context.getStateExecutionId());
-          // TODO unbounded task queue
-          executorService.submit(new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine,
-              delegateService, context, jobExecutionContext, delegateTaskId, id));
-        }
-      }
+      new LogAnalysisTask(
+          analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext, delegateTaskId)
+          .run();
       logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
       logger.warn("Log analysis cron failed with error", ex);
@@ -88,10 +74,6 @@ public class LogAnalysisManagerJob implements Job {
   @AllArgsConstructor
   public static class LogAnalysisTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(LogAnalysisTask.class);
-    // TODO create apis around this
-    private static final ConcurrentHashMap<String, UUID> stateExecutionLocks = new ConcurrentHashMap<>();
-
-    private WingsPersistence wingsPersistence;
     private AnalysisService analysisService;
     private WaitNotifyEngine waitNotifyEngine;
     private DelegateService delegateService;
@@ -99,15 +81,6 @@ public class LogAnalysisManagerJob implements Job {
     private AnalysisContext context;
     private JobExecutionContext jobExecutionContext;
     private String delegateTaskId;
-    private UUID uuid;
-
-    public static boolean canLock(String stateExecutionId) {
-      return !stateExecutionLocks.containsKey(stateExecutionId);
-    }
-
-    public static boolean lock(String stateExecutionId, UUID lockValue) {
-      return stateExecutionLocks.putIfAbsent(stateExecutionId, lockValue) == null;
-    }
 
     protected void preProcess(int logAnalysisMinute, String query) {
       if (context.getTestNodes() == null) {
@@ -151,11 +124,6 @@ public class LogAnalysisManagerJob implements Job {
       boolean error = false;
       try {
         logger.info("running log ml analysis for " + context.getStateExecutionId());
-        UUID uuid = stateExecutionLocks.get(context.getStateExecutionId());
-        if (!uuid.equals(this.uuid)) {
-          logger.error(" UUIDs dont match " + JsonUtils.asJson(context));
-          return;
-        }
         /*
          * Work flow is invalid
          * exit immediately
@@ -213,11 +181,16 @@ public class LogAnalysisManagerJob implements Job {
         logger.warn("analysis failed", ex);
       } finally {
         try {
-          stateExecutionLocks.remove(context.getStateExecutionId());
           // send notification to state manager and delete cron.
           if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
-              delegateService.abortTask(context.getAccountId(), delegateTaskId);
+              for (String id : delegateTaskId.split(",")) {
+                try {
+                  delegateService.abortTask(context.getAccountId(), delegateTaskId);
+                } catch (Exception e) {
+                  logger.error("Delegate abort failed for log analysis manager for delegate task id " + id, e);
+                }
+              }
               sendStateNotification(context, error);
             } catch (Exception e) {
               logger.error("Send notification failed for log analysis manager", e);
