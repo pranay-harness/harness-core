@@ -53,7 +53,8 @@ public class Activity extends Base {
   @NotEmpty private String stateExecutionInstanceId;
   @NotEmpty private String stateExecutionInstanceName;
   @Version private Long version; // Morphia managed for optimistic locking. don't remove
-  private CommandUnitType commandUnitType = CommandUnitType.COMMAND;
+
+  @Builder.Default private CommandUnitType commandUnitType = CommandUnitType.COMMAND;
   private boolean logPurged;
 
   private String artifactStreamId;
