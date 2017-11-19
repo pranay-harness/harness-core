@@ -212,11 +212,13 @@ private void watchDelegate() {
           }
         });
 
-    //      messageService.listChannels(DELEGATE).stream().filter(process ->
-    //      !runningDelegates.contains(process)).forEach(process -> {
-    //        logger.info("Message channel found for untracked delegate process {}. Shutting it down", process);
-    //        shutdownDelegate(process);
-    //      });
+    messageService.listChannels(DELEGATE)
+        .stream()
+        .filter(process -> !runningDelegates.contains(process))
+        .forEach(process -> {
+          logger.info("Message channel found for untracked delegate process {}. Shutting it down", process);
+          shutdownDelegate(process);
+        });
 
     messageService.listChannels(WATCHER)
         .stream()
