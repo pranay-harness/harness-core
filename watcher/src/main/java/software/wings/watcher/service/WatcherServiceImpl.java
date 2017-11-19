@@ -57,6 +57,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private static final long MAX_DELEGATE_HEARTBEAT_INTERVAL = TimeUnit.SECONDS.toMillis(30);
+  private static final long MAX_DELEGATE_STARTUP_GRACE_PERIOD = TimeUnit.MINUTES.toMillis(5);
   private static final long MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD = TimeUnit.HOURS.toMillis(2);
 
   private static final String DELEGATE_DASH = "delegate-";
@@ -202,41 +203,61 @@ private void watchDelegate() {
         .stream()
         .map(dataName -> dataName.substring(DELEGATE_DASH.length()))
         .filter(process -> !runningDelegates.contains(process))
-        .forEach(process -> shutdownDelegate(process, false));
+        .forEach(process -> {
+          if (!Optional.ofNullable(messageService.getData(DELEGATE_DASH + process, "newDelegate", Boolean.class))
+                   .orElse(false)) {
+            logger.info("Data found for untracked delegate process {}. Shutting it down", process);
+            shutdownDelegate(process);
+          }
+        });
 
-    messageService.listChannels(DELEGATE)
-        .stream()
-        .filter(process -> !runningDelegates.contains(process))
-        .forEach(process -> shutdownDelegate(process, false));
+    //      messageService.listChannels(DELEGATE).stream().filter(process ->
+    //      !runningDelegates.contains(process)).forEach(process -> {
+    //        logger.info("Message channel found for untracked delegate process {}. Shutting it down", process);
+    //        shutdownDelegate(process);
+    //      });
 
     messageService.listChannels(WATCHER)
         .stream()
         .filter(process
             -> !StringUtils.equals(process, getProcessId())
                 && !StringUtils.equals(process, messageService.getData(WATCHER_DATA, NEXT_WATCHER, String.class)))
-        .forEach(process -> messageService.closeChannel(WATCHER, process));
+        .forEach(process -> {
+          logger.info(
+              "Message channel found for another watcher process {} that isn't the next watcher. Closing channel",
+              process);
+          messageService.closeChannel(WATCHER, process);
+        });
 
     if (isEmpty(runningDelegates)) {
-      working.set(true);
-      startDelegateProcess(emptyList(), "DelegateStartScript", getProcessId());
+      if (working.compareAndSet(false, true)) {
+        startDelegateProcess(emptyList(), "DelegateStartScript", getProcessId());
+      }
     } else {
       List<String> obsolete = new ArrayList<>();
       List<String> restartNeededList = new ArrayList<>();
       List<String> upgradeNeededList = new ArrayList<>();
+      List<String> shutdownNeededList = new ArrayList<>();
       synchronized (runningDelegates) {
         for (String delegateProcess : runningDelegates) {
           Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
           if (delegateData != null && !delegateData.isEmpty()) {
             long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
+            boolean newDelegate = Optional.ofNullable((Boolean) delegateData.get("newDelegate")).orElse(false);
             boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
             boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
             boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
             long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
 
-            if (shutdownPending) {
+            if (newDelegate) {
+              logger.info("New delegate process {} is starting", delegateProcess);
+              if (clock.millis() - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
+                shutdownNeededList.add(delegateProcess);
+              }
+            } else if (shutdownPending) {
+              logger.info("Shutdown is pending for {}", delegateProcess);
               if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
-                working.set(true);
-                shutdownDelegate(delegateProcess, true);
+                shutdownNeededList.add(delegateProcess);
               }
             } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
               restartNeededList.add(delegateProcess);
@@ -249,17 +270,24 @@ private void watchDelegate() {
         }
       }
 
-      if (isNotEmpty(restartNeededList)) {
-        working.set(true);
-        restartNeededList.forEach(delegateProcess -> shutdownDelegate(delegateProcess, false));
+      if (isNotEmpty(shutdownNeededList)) {
+        logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
+        shutdownNeededList.forEach(this ::shutdownDelegate);
+      }
+      if (isNotEmpty(restartNeededList) && working.compareAndSet(false, true)) {
+        logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
+        restartNeededList.forEach(this ::shutdownDelegate);
         startDelegateProcess(emptyList(), "DelegateRestartScript", getProcessId());
-      } else if (isNotEmpty(upgradeNeededList)) {
-        working.set(true);
+      } else if (isNotEmpty(upgradeNeededList) && working.compareAndSet(false, true)) {
+        logger.info("Delegate processes {} ready for upgrade", upgradeNeededList);
         upgradeNeededList.forEach(delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING));
         startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
       }
 
-      runningDelegates.removeAll(obsolete);
+      if (isNotEmpty(obsolete)) {
+        logger.info("Obsolete processes {} no longer tracked", obsolete);
+        runningDelegates.removeAll(obsolete);
+      }
       messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
     }
   } catch (Exception e) {
@@ -285,13 +313,16 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
         if (message != null) {
           String newDelegateProcess = message.getParams().get(0);
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
+          messageService.putData(DELEGATE_DASH + newDelegateProcess, "newDelegate", true);
+          messageService.putData(DELEGATE_DASH + newDelegateProcess, "heartbeat", clock.millis());
+          runningDelegates.add(newDelegateProcess);
+          messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
             oldDelegateProcesses.forEach(
                 oldDelegateProcess -> messageService.sendMessage(DELEGATE, oldDelegateProcess, STOP_ACQUIRING));
             messageService.sendMessage(DELEGATE, newDelegateProcess, GO_AHEAD);
-            runningDelegates.add(newDelegateProcess);
-            messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+            messageService.removeData(DELEGATE_DASH + newDelegateProcess, "newDelegate");
           }
         }
       } else {
@@ -325,7 +356,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
   });
 }
 
-private void shutdownDelegate(String delegateProcess, boolean resetWorking) {
+private void shutdownDelegate(String delegateProcess) {
   executorService.submit(() -> {
     try {
       new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
@@ -335,10 +366,6 @@ private void shutdownDelegate(String delegateProcess, boolean resetWorking) {
       messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
     } catch (Exception e) {
       logger.error("Error killing delegate {}", delegateProcess, e);
-    } finally {
-      if (resetWorking) {
-        working.set(false);
-      }
     }
   });
 }
