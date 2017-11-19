@@ -589,6 +589,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                    -> executorService.submit(() -> {
       Map<String, Object> statusData = new HashMap<>();
       statusData.put("heartbeat", clock.millis());
+      statusData.put("newDelegate", false);
       statusData.put("restartNeeded", doRestartDelegate());
       statusData.put("upgradeNeeded", upgradeNeeded.get());
       statusData.put("upgradePending", upgradePending.get());
