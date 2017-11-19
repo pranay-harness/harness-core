@@ -85,6 +85,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -104,6 +105,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final String GO_AHEAD = "go-ahead";
+  private static final String UPGRADING = "upgrading";
   private static final String STOP_ACQUIRING = "stop-acquiring";
   private static final String DELEGATE_DASH = "delegate-";
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
@@ -129,14 +131,16 @@ public class DelegateServiceImpl implements DelegateService {
   private static long lastHeartbeatSentAt = System.currentTimeMillis();
   private static long lastHeartbeatReceivedAt = System.currentTimeMillis();
 
+  private final AtomicBoolean upgradePending = new AtomicBoolean(false);
+  private final AtomicBoolean upgradeNeeded = new AtomicBoolean(false);
+  private final AtomicBoolean restartNeeded = new AtomicBoolean(false);
+  private final AtomicBoolean acquireTasks = new AtomicBoolean(true);
+
   private Socket socket;
   private RequestBuilder request;
-  private boolean upgradePending;
   private String upgradeVersion;
   private boolean watched;
-  private boolean acquireTasks;
   private long stoppedAcquiringAt;
-  private boolean restartNeeded;
   private String delegateId;
   private String accountId;
 
@@ -184,8 +188,6 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Delegate process started");
       }
 
-      setUpgradePending(false);
-      setAcquireTasks(true);
       if (watched) {
         startLocalHeartbeat();
       }
@@ -288,7 +290,7 @@ public class DelegateServiceImpl implements DelegateService {
       messageService.closeData(DELEGATE_DASH + getProcessId());
       messageService.closeChannel(DELEGATE, getProcessId());
 
-      if (upgradePending) {
+      if (upgradePending.get()) {
         removeDelegateVersionFromCapsule();
         cleanupOldDelegateVersionFromBackup();
       }
@@ -329,11 +331,11 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } else if (e instanceof ConnectException) {
       logger.warn("Failed to connect after {} attempts.", MAX_CONNECT_ATTEMPTS);
-      if (!watched) {
+      if (watched) {
+        restartNeeded.set(true);
+      } else {
         logger.warn("Restarting delegate");
         restartDelegate();
-      } else {
-        restartNeeded = true;
       }
     } else {
       logger.error("Exception: " + e.getMessage(), e);
@@ -383,8 +385,10 @@ public class DelegateServiceImpl implements DelegateService {
   public void resume() {
     try {
       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
-      setUpgradePending(false);
-      setAcquireTasks(true);
+      upgradePending.set(false);
+      upgradeNeeded.set(false);
+      restartNeeded.set(false);
+      acquireTasks.set(true);
     } catch (IOException e) {
       logger.error("Failed to resume.", e);
       stop();
@@ -470,7 +474,9 @@ public class DelegateServiceImpl implements DelegateService {
     inputExecutor.scheduleWithFixedDelay(() -> {
       Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(4));
       if (message != null) {
-        if (STOP_ACQUIRING.equals(message.getMessage())) {
+        if (UPGRADING.equals(message.getMessage())) {
+          upgradeNeeded.set(false);
+        } else if (STOP_ACQUIRING.equals(message.getMessage())) {
           handleStopAcquiringMessage(message.getFromProcess());
         }
         try {
@@ -484,8 +490,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void handleStopAcquiringMessage(String sender) {
     logger.info("Got stop-acquiring message from watcher {}", sender);
-    if (watched && this.acquireTasks) {
-      acquireTasks = false;
+    if (watched && acquireTasks.get()) {
+      acquireTasks.set(false);
       stoppedAcquiringAt = clock.millis();
       messageService.putData(DELEGATE_DASH + getProcessId(), "shutdownPending", true);
       messageService.putData(DELEGATE_DASH + getProcessId(), "shutdownStarted", stoppedAcquiringAt);
@@ -521,7 +527,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Starting upgrade check at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     upgradeExecutor.scheduleWithFixedDelay(() -> {
-      if (isUpgradePending()) {
+      if (upgradePending.get()) {
         logger.info("[Old] Upgrade is pending...");
       } else {
         logger.info("Checking for upgrade");
@@ -530,20 +536,23 @@ public class DelegateServiceImpl implements DelegateService {
               execute(managerClient.checkForUpgrade(version, delegateId, accountId));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
-            setUpgradePending(true);
+            upgradePending.set(true);
             logger.info("[Old] Replace run scripts");
             replaceRunScripts(delegateScripts);
             logger.info("[Old] Run scripts downloaded. Upgrading delegate. Stop acquiring async tasks");
             upgradeVersion = delegateScripts.getVersion();
-            if (!watched) {
+            if (watched) {
+              upgradeNeeded.set(true);
+            } else {
               upgradeService.doUpgrade(delegateScripts);
             }
           } else {
             logger.info("Delegate up to date");
           }
         } catch (Exception e) {
-          setUpgradePending(false);
-          setAcquireTasks(true);
+          upgradePending.set(false);
+          upgradeNeeded.set(false);
+          acquireTasks.set(true);
           logger.error("[Old] Exception while checking for upgrade", e);
         }
       }
@@ -576,14 +585,14 @@ public class DelegateServiceImpl implements DelegateService {
       Map<String, Object> statusData = new HashMap<>();
       statusData.put("heartbeat", clock.millis());
       statusData.put("restartNeeded", doRestartDelegate());
-      statusData.put("upgradeNeeded", upgradePending);
-      statusData.put("shutdownPending", !isAcquireTasks());
-      if (!isAcquireTasks()) {
+      statusData.put("upgradeNeeded", upgradeNeeded.get());
+      statusData.put("shutdownPending", !acquireTasks.get());
+      if (!acquireTasks.get()) {
         statusData.put("shutdownStarted", stoppedAcquiringAt);
       }
       messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
     }),
-        0, 10, TimeUnit.SECONDS);
+        0, 5, TimeUnit.SECONDS);
   }
 
   private boolean doRestartDelegate() {
@@ -591,7 +600,7 @@ public class DelegateServiceImpl implements DelegateService {
     boolean scriptAvailable =
         (watched && new File("delegate.sh").exists()) || (!watched && new File("run.sh").exists());
     return scriptAvailable
-        && (restartNeeded || now - lastHeartbeatSentAt > MAX_HB_TIMEOUT
+        && (restartNeeded.get() || now - lastHeartbeatSentAt > MAX_HB_TIMEOUT
                || now - lastHeartbeatReceivedAt > MAX_HB_TIMEOUT);
   }
 
@@ -618,13 +627,13 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
-    if (!isAcquireTasks()) {
+    if (!acquireTasks.get()) {
       logger.info(
           "[Old] Upgraded process is running. Won't acquire task {} while completing other tasks", delegateTaskId);
       return;
     }
 
-    if (isUpgradePending() && !delegateTaskEvent.isSync()) {
+    if (upgradePending.get() && !delegateTaskEvent.isSync()) {
       logger.info("[Old] Upgrade pending, won't acquire async task {}", delegateTaskId);
       return;
     }
@@ -649,8 +658,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask == null) {
         logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}", delegateTaskId,
             delegateTaskEvent.getAccountId());
-        logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keys());
-        logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
+        logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
+        logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
         return;
       }
 
@@ -851,21 +860,8 @@ public class DelegateServiceImpl implements DelegateService {
     });
   }
 
-  private boolean isUpgradePending() {
-    return upgradePending;
-  }
-
-  private void setUpgradePending(boolean upgradePending) {
-    logger.info("Setting delegate upgrade pending: {}", upgradePending);
-    this.upgradePending = upgradePending;
-  }
-
-  private boolean isAcquireTasks() {
-    return acquireTasks;
-  }
-
   public void setAcquireTasks(boolean acquireTasks) {
-    this.acquireTasks = acquireTasks;
+    this.acquireTasks.set(acquireTasks);
   }
 
   private String getVersion() {

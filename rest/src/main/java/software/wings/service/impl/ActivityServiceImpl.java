@@ -6,6 +6,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.QUEUED;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
 import com.google.inject.Inject;
 
@@ -28,6 +29,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.states.JenkinsState;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -101,26 +103,23 @@ public class ActivityServiceImpl implements ActivityService {
   public List<CommandUnitDetails> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
     List<CommandUnitDetails> rv = new ArrayList<>();
-    switch (activity.getCommandUnitType()) {
-      case COMMAND:
-        List<CommandUnit> commandUnits = activity.getCommandUnits();
-        for (CommandUnit commandUnit : commandUnits) {
-          rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
-                     .name(commandUnit.getName())
-                     .commandUnitType(activity.getCommandUnitType())
-                     .build());
-        }
-        break;
-      case STATE:
+    if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
+      List<CommandUnit> commandUnits = activity.getCommandUnits();
+      for (CommandUnit commandUnit : commandUnits) {
         rv.add(CommandUnitDetails.builder()
-                   .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
-                   .name(activity.getCommandName())
-                   .commandUnitType(CommandUnitType.STATE)
+                   .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
+                   .name(commandUnit.getName())
+                   .commandUnitType(activity.getCommandUnitType())
                    .build());
-        break;
-      default:
-        throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
+      }
+    } else if (activity.getCommandUnitType() == CommandUnitType.JENKINS) {
+      rv.add(CommandUnitDetails.builder()
+                 .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                 .name(COMMAND_UNIT_NAME)
+                 .commandUnitType(CommandUnitType.JENKINS)
+                 .build());
+    } else {
+      throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
     }
 
     return rv;

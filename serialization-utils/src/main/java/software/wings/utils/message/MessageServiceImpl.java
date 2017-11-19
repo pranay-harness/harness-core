@@ -50,7 +50,7 @@ public class MessageServiceImpl implements MessageService {
   private final String processId;
 
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
-  private Map<File, Long> timestamps = new HashMap<>();
+  private Map<File, Long> messageTimestamps = new HashMap<>();
 
   public MessageServiceImpl(Clock clock, MessengerType messengerType, String processId) {
     this.clock = clock;
@@ -106,7 +106,7 @@ public class MessageServiceImpl implements MessageService {
     boolean isInput = messengerType == sourceType && processId.equals(sourceProcessId);
     try {
       File file = getMessageFile(sourceType, sourceProcessId);
-      long lastReadTimestamp = Optional.ofNullable(timestamps.get(file)).orElse(0L);
+      long lastReadTimestamp = Optional.ofNullable(messageTimestamps.get(file)).orElse(0L);
       if (!file.exists()) {
         FileUtils.touch(file);
       }
@@ -139,7 +139,7 @@ public class MessageServiceImpl implements MessageService {
                                     .build();
               logger.info("{}: {}",
                   isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
-              timestamps.put(file, timestamp);
+              messageTimestamps.put(file, timestamp);
               reader.close();
               return message;
             }
@@ -171,7 +171,7 @@ public class MessageServiceImpl implements MessageService {
     logger.info("Closing channel for {} {}", type, id);
     try {
       File file = getMessageFile(type, id);
-      timestamps.remove(file);
+      messageTimestamps.remove(file);
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
@@ -215,15 +215,20 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
-  public Object getData(String name, String key) {
+  @SuppressWarnings({"unchecked"})
+  public <T> T getData(String name, String key, Class<T> valueClass) {
     Map<String, Object> allData = getAllData(name);
     if (allData == null) {
       logger.error("Error reading data from {}. Couldn't get {}", name, key);
       return null;
     }
     Object value = allData.get(key);
+    if (!valueClass.isAssignableFrom(value.getClass())) {
+      logger.error("Value is not an instance of {}: {}", valueClass.getName(), value);
+      return null;
+    }
     logger.info("Value read from {}: {} = {}", name, key, value);
-    return value;
+    return (T) value;
   }
 
   @Override
@@ -305,7 +310,8 @@ public class MessageServiceImpl implements MessageService {
     return file;
   }
 
-  private Map getDataMap(File file) throws IOException {
+  @SuppressWarnings({"unchecked"})
+  private Map<String, Object> getDataMap(File file) throws IOException {
     if (file.exists()) {
       return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
     }
