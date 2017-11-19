@@ -256,8 +256,7 @@ public abstract class State {
    * @return Response from handling this state.
    */
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
-    return executionResponse;
+    return new ExecutionResponse();
   }
 
   /**

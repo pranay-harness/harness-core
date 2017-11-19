@@ -62,7 +62,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
   public JenkinsExecutionResponse run(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String finalJobName, Map<String, String> evaluatedParameters, Map<String, String> evaluatedFilePathsForAssertion,
-      String activityId, String stateName) {
+      String activityId, String unitName) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage;
@@ -74,7 +74,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       QueueReference queueItem = jenkins.trigger(finalJobName, evaluatedParameters);
 
       Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
-      BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild, activityId, stateName);
+      BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild, activityId, unitName);
 
       jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
 
@@ -131,7 +131,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     return jenkinsExecutionResponse;
   }
 
-  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String stateName)
+  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String unitName)
       throws IOException {
     BuildWithDetails jenkinsBuildWithDetails = null;
     AtomicInteger consoleLogsSent = new AtomicInteger();
@@ -140,7 +140,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       Misc.sleepWithRuntimeException(5000);
       try {
         jenkinsBuildWithDetails = jenkinsBuild.details();
-        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, stateName);
+        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName);
       } catch (IOException ex) {
         logger.warn("Jenkins server unreachable {}", ex.getMessage());
       }
@@ -157,15 +157,15 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
     if (consoleLines != null) {
       if (consoleLines.length > NUM_OF_LOGS_TO_KEEP) {
-        Log log =
-            aLog()
-                .withActivityId(activityId)
-                .withCommandUnitName(stateName)
-                .withAppId(getAppId())
-                .withLogLevel(LogLevel.INFO)
-                .withLogLine("--------- truncating " + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines ---------")
-                .withExecutionResult(CommandExecutionStatus.RUNNING)
-                .build();
+        Log log = aLog()
+                      .withActivityId(activityId)
+                      .withCommandUnitName(stateName)
+                      .withAppId(getAppId())
+                      .withLogLevel(LogLevel.INFO)
+                      .withLogLine("-------------------------- truncating "
+                          + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines --------------------------")
+                      .withExecutionResult(CommandExecutionStatus.RUNNING)
+                      .build();
         logService.save(getAccountId(), log);
       }
       for (int i = NUM_OF_LOGS_TO_KEEP > consoleLines.length ? 0 : consoleLines.length - NUM_OF_LOGS_TO_KEEP;

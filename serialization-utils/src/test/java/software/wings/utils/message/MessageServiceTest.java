@@ -153,6 +153,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @SuppressWarnings({"unchecked"})
   public void shouldWriteData() throws IOException {
     messageService.putData(data1, "foo", "bar");
     messageService.putData(data1, "baz", "qux");
@@ -173,6 +174,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @SuppressWarnings({"unchecked"})
   public void shouldReadData() throws IOException {
     HashMap<String, Object> map1 = new HashMap<>();
     map1.put("foo", "bar");
@@ -184,13 +186,15 @@ public class MessageServiceTest {
     map2.put("xyz", asList("423", "567"));
     FileUtils.write(dataFile2, JsonUtils.asPrettyJson(map2), UTF_8);
 
-    assertThat(messageService.getData(data1, "foo")).isEqualTo("bar");
-    assertThat(messageService.getData(data1, "baz")).isEqualTo("qux");
-    assertThat(messageService.getData(data2, "abc")).isEqualTo("123");
-    assertThat(messageService.getData(data2, "xyz")).isEqualTo(ImmutableList.of("423", "567"));
+    assertThat(messageService.getData(data1, "foo", String.class)).isEqualTo("bar");
+    assertThat(messageService.getData(data1, "baz", String.class)).isEqualTo("qux");
+    assertThat(messageService.getData(data2, "abc", String.class)).isEqualTo("123");
+    assertThat(messageService.getData(data2, "xyz", String.class)).isNull();
+    assertThat(messageService.getData(data2, "xyz", List.class)).isEqualTo(ImmutableList.of("423", "567"));
   }
 
   @Test
+  @SuppressWarnings({"unchecked"})
   public void shouldRemoveData() throws IOException {
     HashMap<String, Object> map1 = new HashMap<>();
     map1.put("foo", "bar");
