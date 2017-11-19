@@ -1,5 +1,7 @@
 package software.wings.common;
 
+import java.util.regex.Pattern;
+
 /**
  * Common constants across application.
  *
@@ -237,6 +239,8 @@ public interface Constants {
    * The constant PHASE_NAME_PREFIX.
    */
   String PHASE_NAME_PREFIX = "Phase ";
+
+  Pattern phaseNamePattern = Pattern.compile("Phase [0-9]+");
 
   /**
    * The constant WRAP_UP.
