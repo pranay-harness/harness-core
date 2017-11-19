@@ -592,7 +592,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
       messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
     }),
-        0, 10, TimeUnit.SECONDS);
+        0, 5, TimeUnit.SECONDS);
   }
 
   private boolean doRestartDelegate() {

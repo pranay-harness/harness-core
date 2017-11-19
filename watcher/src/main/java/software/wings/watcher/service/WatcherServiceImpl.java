@@ -46,7 +46,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -63,6 +62,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String DELEGATE_DASH = "delegate-";
   private static final String NEW_DELEGATE = "new-delegate";
   private static final String DELEGATE_STARTED = "delegate-started";
+  private static final String UPGRADING = "upgrading";
   private static final String STOP_ACQUIRING = "stop-acquiring";
   private static final String NEW_WATCHER = "new-watcher";
   private static final String WATCHER_STARTED = "watcher-started";
@@ -218,7 +218,7 @@ private void watchDelegate() {
 
     if (isEmpty(runningDelegates)) {
       working.set(true);
-      startDelegateProcess(null, "DelegateStartScript", getProcessId());
+      startDelegateProcess(emptyList(), "DelegateStartScript", getProcessId());
     } else {
       List<String> obsolete = new ArrayList<>();
       List<String> restartNeededList = new ArrayList<>();
@@ -252,13 +252,11 @@ private void watchDelegate() {
       if (isNotEmpty(restartNeededList)) {
         working.set(true);
         restartNeededList.forEach(delegateProcess -> shutdownDelegate(delegateProcess, false));
-        startDelegateProcess(null, "DelegateRestartScript", getProcessId());
+        startDelegateProcess(emptyList(), "DelegateRestartScript", getProcessId());
       } else if (isNotEmpty(upgradeNeededList)) {
         working.set(true);
-        String oldDelegateProcess = upgradeNeededList.remove(upgradeNeededList.size() - 1);
-        upgradeNeededList.forEach(delegateProcess -> shutdownDelegate(delegateProcess, false));
-        messageService.sendMessage(DELEGATE, oldDelegateProcess, "upgrading");
-        startDelegateProcess(oldDelegateProcess, "DelegateUpgradeScript", getProcessId());
+        upgradeNeededList.forEach(delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING));
+        startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
       }
 
       runningDelegates.removeAll(obsolete);
@@ -269,7 +267,7 @@ private void watchDelegate() {
   }
 }
 
-private void startDelegateProcess(@Nullable String oldDelegateProcess, String scriptName, String watcherProcess) {
+private void startDelegateProcess(List<String> oldDelegateProcesses, String scriptName, String watcherProcess) {
   executorService.submit(() -> {
     StartedProcess newDelegate = null;
     try {
@@ -289,9 +287,8 @@ private void startDelegateProcess(@Nullable String oldDelegateProcess, String sc
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
-            if (oldDelegateProcess != null) {
-              messageService.sendMessage(DELEGATE, oldDelegateProcess, STOP_ACQUIRING);
-            }
+            oldDelegateProcesses.forEach(
+                oldDelegateProcess -> messageService.sendMessage(DELEGATE, oldDelegateProcess, STOP_ACQUIRING));
             messageService.sendMessage(DELEGATE, newDelegateProcess, GO_AHEAD);
             runningDelegates.add(newDelegateProcess);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
