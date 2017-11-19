@@ -62,6 +62,8 @@ import java.util.concurrent.ExecutorService;
  * Created by peeyushaggarwal on 10/21/16.
  */
 public class JenkinsState extends State {
+  public static final String COMMAND_UNIT_NAME = "Console Output";
+
   @Transient private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
 
   @Inject private DelegateService delegateService;
@@ -268,7 +270,7 @@ public class JenkinsState extends State {
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {jenkinsConfig,
                 secretManager.getEncryptionDetails(jenkinsConfig, context.getAppId(), context.getWorkflowExecutionId()),
-                finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion, activityId, this.getName()})
+                finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion, activityId, COMMAND_UNIT_NAME})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
             .build();
@@ -360,7 +362,7 @@ public class JenkinsState extends State {
             .commandUnits(Collections.emptyList())
             .serviceVariables(Maps.newHashMap())
             .status(ExecutionStatus.RUNNING)
-            .commandUnitType(CommandUnitType.STATE);
+            .commandUnitType(CommandUnitType.JENKINS);
 
     if (instanceElement != null) {
       activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())

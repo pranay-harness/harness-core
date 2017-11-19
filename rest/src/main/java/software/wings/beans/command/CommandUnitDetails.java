@@ -14,5 +14,5 @@ public class CommandUnitDetails {
   private CommandExecutionStatus commandExecutionStatus;
   private CommandUnitType commandUnitType;
 
-  public enum CommandUnitType { COMMAND, STATE }
+  public enum CommandUnitType { COMMAND, JENKINS }
 }
