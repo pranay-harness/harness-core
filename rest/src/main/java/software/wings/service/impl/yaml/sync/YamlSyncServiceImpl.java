@@ -276,8 +276,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
     List<ChangeContext> changeContextList = Lists.newArrayList();
 
     try {
-      changeList.stream().forEachOrdered(change -> {
-
+      changeList.forEach(change -> {
         try {
           validateYaml(change.getFileContent());
           YamlType yamlType = findYamlType(change.getFilePath());
@@ -302,7 +301,6 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
                 ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
             ChangeContext changeContext = changeContextBuilder.build();
             changeContextList.add(changeContext);
-
             processGitSyncFilesPostedToWebhook(change.getAccountId(), changeContext, yamlSubType);
           }
 
@@ -336,7 +334,9 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
     try {
       changeContextList.stream().forEachOrdered(changeContext -> {
         try {
+          logger.info("Processing change [{}]", changeContext.getChange());
           processChange(changeContext, changeContextList);
+          logger.info("Processing done for change [{}]", changeContext.getChange());
         } catch (HarnessException ex) {
           Throwables.propagate(ex);
         }
@@ -357,10 +357,8 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
     switch (change.getChangeType()) {
       case ADD:
-        yamlSyncHandler.createFromYaml(changeContext, changeContextList);
-        break;
       case MODIFY:
-        yamlSyncHandler.updateFromYaml(changeContext, changeContextList);
+        yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
         break;
       case DELETE:
         // TODO

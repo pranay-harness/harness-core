@@ -35,11 +35,9 @@ public class DirectKubernetesInfraMappingYamlHandler
   }
 
   @Override
-  public DirectKubernetesInfrastructureMapping updateFromYaml(
+  public DirectKubernetesInfrastructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
+    ensureValidChange(changeContext, changeSetContext);
 
     DirectKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
@@ -51,15 +49,30 @@ public class DirectKubernetesInfraMappingYamlHandler
     String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
     Validator.notNullCheck(
         "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
+    String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
+
+    DirectKubernetesInfrastructureMapping.Builder builder =
+        DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping();
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    DirectKubernetesInfrastructureMapping current = builder.build();
 
     DirectKubernetesInfrastructureMapping previous =
         (DirectKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
             appId, envId, serviceId, computeProviderId);
-    DirectKubernetesInfrastructureMapping.Builder builder = previous.deepClone();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (DirectKubernetesInfrastructureMapping) infraMappingService.update(builder.build());
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return (DirectKubernetesInfrastructureMapping) infraMappingService.update(current);
+    } else {
+      return (DirectKubernetesInfrastructureMapping) infraMappingService.save(current);
+    }
+  }
+
+  @Override
+  public DirectKubernetesInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   private void setWithYamlValues(DirectKubernetesInfrastructureMapping.Builder builder,
@@ -99,27 +112,7 @@ public class DirectKubernetesInfraMappingYamlHandler
   @Override
   public DirectKubernetesInfrastructureMapping createFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    DirectKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
-
-    DirectKubernetesInfrastructureMapping.Builder builder =
-        DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (DirectKubernetesInfrastructureMapping) infraMappingService.save(builder.build());
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override

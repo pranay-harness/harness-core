@@ -51,6 +51,7 @@ public class LogMLClusterGenerator implements Runnable {
     try {
       final String inputLogsUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
           + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + context.getAccountId()
+          + "&workflowExecutionId=" + context.getWorkflowExecutionId()
           + "&compareCurrent=true&clusterLevel=" + fromLevel.name();
       String clusteredLogSaveUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
           + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + context.getAccountId()

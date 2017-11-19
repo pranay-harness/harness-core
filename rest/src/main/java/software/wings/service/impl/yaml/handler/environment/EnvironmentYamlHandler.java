@@ -36,45 +36,35 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   @Override
-  public Environment updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public Environment upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
+    ensureValidChange(changeContext, changeSetContext);
+    String appId =
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
+
+    Environment current =
+        Builder.anEnvironment()
+            .withAppId(appId)
+            .withName(changeContext.getYaml().getName())
+            .withDescription(changeContext.getYaml().getDescription())
+            .withEnvironmentType(EnvironmentType.valueOf(changeContext.getYaml().getEnvironmentType()))
+            .build();
+
+    Environment previous = yamlSyncHelper.getEnvironment(appId, changeContext.getChange().getFilePath());
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return environmentService.update(current);
+    } else {
+      return environmentService.save(current);
     }
-
-    Environment previous = yamlSyncHelper.getEnvironment(
-        changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Builder builder = previous.toBuilder();
-    setWithYamlValues(builder, changeContext.getYaml());
-    return environmentService.update(builder.build());
-  }
-
-  private void setWithYamlValues(Builder builder, Environment.Yaml envYaml) {
-    builder.withName(envYaml.getName())
-        .withDescription(envYaml.getDescription())
-        .withEnvironmentType(EnvironmentType.valueOf(envYaml.getEnvironmentType()))
-        .build();
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Environment.Yaml envYaml = changeContext.getYaml();
     return !(isEmpty(envYaml.getName()));
-  }
-
-  @Override
-  public Environment createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
-    Builder builder = Builder.anEnvironment().withAppId(appId);
-    setWithYamlValues(builder, changeContext.getYaml());
-    return environmentService.save(builder.build());
   }
 
   @Override
@@ -85,5 +75,17 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Override
   public Environment get(String accountId, String yamlFilePath) {
     return yamlSyncHelper.getEnvironment(accountId, yamlFilePath);
+  }
+
+  @Override
+  public Environment createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  @Override
+  public Environment updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 }

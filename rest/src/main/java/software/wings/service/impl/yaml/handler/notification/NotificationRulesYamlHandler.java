@@ -9,6 +9,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.Yaml;
 import software.wings.beans.ObjectType;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -90,6 +91,16 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
         .withExecutionScope(bean.getExecutionScope().name())
         .withNotificationGroups(notificationGroupYamlList)
         .build();
+  }
+
+  @Override
+  public NotificationRule upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

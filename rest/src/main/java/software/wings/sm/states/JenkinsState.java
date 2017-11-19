@@ -29,6 +29,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
@@ -358,7 +359,8 @@ public class JenkinsState extends State {
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(Collections.emptyList())
             .serviceVariables(Maps.newHashMap())
-            .status(ExecutionStatus.RUNNING);
+            .status(ExecutionStatus.RUNNING)
+            .commandUnitType(CommandUnitType.STATE);
 
     if (instanceElement != null) {
       activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())

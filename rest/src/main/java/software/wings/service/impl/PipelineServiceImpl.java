@@ -266,11 +266,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Pipeline getPipelineByName(String accountId, String pipelineName) {
-    Pipeline pipeline = wingsPersistence.createQuery(Pipeline.class).field("name").equal(pipelineName).get();
-    if (pipeline == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Pipeline - '" + pipelineName + "' doesn't exist");
-    }
-    return pipeline;
+    return wingsPersistence.createQuery(Pipeline.class).field("name").equal(pipelineName).get();
   }
 
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {

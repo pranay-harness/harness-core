@@ -396,10 +396,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                             .field("name")
                             .equal(workflowName)
                             .get();
-    if (workflow == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Workflow - '" + workflowName + "' doesn't exist");
+    if (workflow != null) {
+      loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
     }
-    loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
     return workflow;
   }
 

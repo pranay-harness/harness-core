@@ -6,6 +6,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream.Builder;
 import software.wings.beans.artifact.EcrArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -24,6 +25,16 @@ public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<EcrA
         .withRegion(artifactStream.getRegion())
         .withSourceName(artifactStream.getSourceName())
         .build();
+  }
+
+  @Override
+  public EcrArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   public EcrArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)

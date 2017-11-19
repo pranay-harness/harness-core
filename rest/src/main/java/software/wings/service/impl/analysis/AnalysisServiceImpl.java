@@ -173,56 +173,52 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public List<LogDataRecord> getLogData(
-      LogRequest logRequest, boolean compareCurrent, ClusterLevel clusterLevel, StateType stateType) {
-    Query<LogDataRecord> splunkLogDataRecordQuery = null;
-    List<LogDataRecord> records = null;
+  public List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
+      ClusterLevel clusterLevel, StateType stateType) {
+    List<LogDataRecord> records;
     if (compareCurrent) {
-      splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .field("stateType")
-                                     .equal(stateType)
-                                     .field("stateExecutionId")
-                                     .equal(logRequest.getStateExecutionId())
-                                     .field("applicationId")
-                                     .equal(logRequest.getApplicationId())
-                                     .field("query")
-                                     .equal(logRequest.getQuery())
-                                     .field("serviceId")
-                                     .equal(logRequest.getServiceId())
-                                     .field("clusterLevel")
-                                     .equal(clusterLevel)
-                                     .field("logCollectionMinute")
-                                     .equal(logRequest.getLogCollectionMinute())
-                                     .field("host")
-                                     .hasAnyOf(logRequest.getNodes());
-    } else {
-      final String lastSuccessfulWorkflowExecutionId = getLastSuccessfulWorkflowExecutionIdWithLogs(stateType,
-          logRequest.getApplicationId(), logRequest.getServiceId(), logRequest.getQuery(), logRequest.getWorkflowId());
-      Preconditions.checkNotNull(lastSuccessfulWorkflowExecutionId,
-          "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
+      records = wingsPersistence.createQuery(LogDataRecord.class)
+                    .field("stateType")
+                    .equal(stateType)
+                    .field("stateExecutionId")
+                    .equal(logRequest.getStateExecutionId())
+                    .field("workflowExecutionId")
+                    .equal(workflowExecutionId)
+                    .field("applicationId")
+                    .equal(logRequest.getApplicationId())
+                    .field("query")
+                    .equal(logRequest.getQuery())
+                    .field("serviceId")
+                    .equal(logRequest.getServiceId())
+                    .field("clusterLevel")
+                    .equal(clusterLevel)
+                    .field("logCollectionMinute")
+                    .equal(logRequest.getLogCollectionMinute())
+                    .field("host")
+                    .hasAnyOf(logRequest.getNodes())
+                    .asList();
 
-      splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .field("stateType")
-                                     .equal(stateType)
-                                     .field("serviceId")
-                                     .equal(logRequest.getServiceId())
-                                     .field("workflowId")
-                                     .equal(logRequest.getWorkflowId())
-                                     .field("workflowExecutionId")
-                                     .equal(lastSuccessfulWorkflowExecutionId)
-                                     .field("applicationId")
-                                     .equal(logRequest.getApplicationId())
-                                     .field("query")
-                                     .equal(logRequest.getQuery())
-                                     .field("host")
-                                     .hasAnyOf(logRequest.getNodes())
-                                     .field("clusterLevel")
-                                     .equal(clusterLevel)
-                                     .field("logCollectionMinute")
-                                     .equal(logRequest.getLogCollectionMinute());
+    } else {
+      records = wingsPersistence.createQuery(LogDataRecord.class)
+                    .field("stateType")
+                    .equal(stateType)
+                    .field("workflowExecutionId")
+                    .equal(workflowExecutionId)
+                    .field("applicationId")
+                    .equal(logRequest.getApplicationId())
+                    .field("query")
+                    .equal(logRequest.getQuery())
+                    .field("serviceId")
+                    .equal(logRequest.getServiceId())
+                    .field("clusterLevel")
+                    .equal(clusterLevel)
+                    .field("logCollectionMinute")
+                    .equal(logRequest.getLogCollectionMinute())
+                    .field("host")
+                    .hasAnyOf(logRequest.getNodes())
+                    .asList();
     }
 
-    records = splunkLogDataRecordQuery.asList();
     logger.debug("returning " + records.size() + " records for request: " + logRequest);
     return records;
   }
@@ -250,29 +246,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       return true;
     }
-    final List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(applicationId, workflowId);
-    if (successfulExecutions.isEmpty()) {
-      return false;
-    }
-
-    Query<LogDataRecord> lastSuccessfulRecords = wingsPersistence.createQuery(LogDataRecord.class)
-                                                     .field("stateType")
-                                                     .equal(stateType)
-                                                     .field("workflowId")
-                                                     .equal(workflowId)
-                                                     .field("workflowExecutionId")
-                                                     .hasAnyOf(successfulExecutions)
-                                                     .field("serviceId")
-                                                     .equal(serviceId)
-                                                     .field("query")
-                                                     .equal(query)
-                                                     .limit(1);
-
-    return lastSuccessfulRecords.asList().size() > 0;
+    return getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, applicationId, serviceId, query, workflowId) != null;
   }
 
-  private String getLastSuccessfulWorkflowExecutionIdWithLogs(
+  @Override
+  public String getLastSuccessfulWorkflowExecutionIdWithLogs(
       StateType stateType, String appId, String serviceId, String query, String workflowId) {
+    // TODO should we limit the number of executions to search in ??
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
     for (String successfulExecution : successfulExecutions) {
       Query<LogDataRecord> lastSuccessfulRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
@@ -286,6 +266,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                            .equal(serviceId)
                                                            .field("query")
                                                            .equal(query)
+                                                           .field("clusterLevel")
+                                                           .equal(ClusterLevel.L2)
                                                            .limit(1);
 
       List<LogDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();

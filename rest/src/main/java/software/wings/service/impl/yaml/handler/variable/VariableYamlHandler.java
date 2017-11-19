@@ -4,6 +4,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.Yaml;
 import software.wings.beans.VariableType;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -45,6 +46,16 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
         .withType(bean.getType().name())
         .withValue(bean.getValue())
         .build();
+  }
+
+  @Override
+  public Variable upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

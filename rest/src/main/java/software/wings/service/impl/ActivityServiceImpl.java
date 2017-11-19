@@ -15,7 +15,10 @@ import software.wings.beans.Activity;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Log;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -26,6 +29,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
@@ -94,9 +98,29 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<CommandUnit> getCommandUnits(String appId, String activityId) {
+  public List<CommandUnitDetails> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
-    return activity.getCommandUnits();
+    List<CommandUnitDetails> rv = new ArrayList<>();
+    if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
+      List<CommandUnit> commandUnits = activity.getCommandUnits();
+      for (CommandUnit commandUnit : commandUnits) {
+        rv.add(CommandUnitDetails.builder()
+                   .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
+                   .name(commandUnit.getName())
+                   .commandUnitType(activity.getCommandUnitType())
+                   .build());
+      }
+    } else if (activity.getCommandUnitType() == CommandUnitType.STATE) {
+      rv.add(CommandUnitDetails.builder()
+                 .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                 .name(activity.getCommandName())
+                 .commandUnitType(CommandUnitType.STATE)
+                 .build());
+    } else {
+      throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
+    }
+
+    return rv;
   }
 
   @Override

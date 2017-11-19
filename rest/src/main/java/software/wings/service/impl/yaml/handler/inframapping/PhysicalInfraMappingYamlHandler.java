@@ -35,11 +35,9 @@ public class PhysicalInfraMappingYamlHandler
   }
 
   @Override
-  public PhysicalInfrastructureMapping updateFromYaml(
+  public PhysicalInfrastructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
+    ensureValidChange(changeContext, changeSetContext);
 
     PhysicalInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
@@ -54,12 +52,33 @@ public class PhysicalInfraMappingYamlHandler
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
+    PhysicalInfrastructureMapping.Builder builder =
+        PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping();
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    PhysicalInfrastructureMapping current = builder.build();
+
     PhysicalInfrastructureMapping previous =
         (PhysicalInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
             appId, envId, serviceId, computeProviderId);
-    PhysicalInfrastructureMapping.Builder builder = previous.deepClone();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (PhysicalInfrastructureMapping) infraMappingService.update(builder.build());
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return (PhysicalInfrastructureMapping) infraMappingService.update(current);
+    } else {
+      return (PhysicalInfrastructureMapping) infraMappingService.save(current);
+    }
+  }
+
+  @Override
+  public PhysicalInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  @Override
+  public PhysicalInfrastructureMapping createFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   private void setWithYamlValues(PhysicalInfrastructureMapping.Builder builder,
@@ -96,32 +115,6 @@ public class PhysicalInfraMappingYamlHandler
         || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
         || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getConnection())
         || isEmpty(infraMappingYaml.getHostNames()));
-  }
-
-  @Override
-  public PhysicalInfrastructureMapping createFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    PhysicalInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
-
-    PhysicalInfrastructureMapping.Builder builder =
-        PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (PhysicalInfrastructureMapping) infraMappingService.save(builder.build());
   }
 
   @Override

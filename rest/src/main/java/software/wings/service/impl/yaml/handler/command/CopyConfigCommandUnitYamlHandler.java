@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.command;
 import software.wings.beans.command.CopyConfigCommandUnit.Yaml.Builder;
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -40,6 +41,16 @@ public class CopyConfigCommandUnitYamlHandler
     Yaml yaml = super.toYaml(bean, appId);
     yaml.setDestinationParentPath(bean.getDestinationParentPath());
     return yaml;
+  }
+
+  @Override
+  public CopyConfigCommandUnit upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

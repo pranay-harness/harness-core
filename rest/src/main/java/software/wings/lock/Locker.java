@@ -13,17 +13,7 @@ public interface Locker {
    * @param entityId    the entity id
    * @return true, if successful
    */
-  boolean acquireLock(Class entityClass, String entityId);
-
-  /**
-   * Acquire lock.
-   *
-   * @param entityClass the entity class
-   * @param entityId    the entity id
-   * @param timeout     timeout to acquire, in milliseconds
-   * @return true, if successful
-   */
-  boolean acquireLock(Class entityClass, String entityId, long timeout);
+  public boolean acquireLock(Class entityClass, String entityId);
 
   /**
    * Acquire lock.
@@ -32,17 +22,7 @@ public interface Locker {
    * @param entityId   the entity id
    * @return true, if successful
    */
-  boolean acquireLock(String entityType, String entityId);
-
-  /**
-   * Acquire lock.
-   *
-   * @param entityType the entity type
-   * @param entityId   the entity id
-   * @param timeout    timeout to acquire, in milliseconds
-   * @return true, if successful
-   */
-  boolean acquireLock(String entityType, String entityId, long timeout);
+  public boolean acquireLock(String entityType, String entityId);
 
   /**
    * Release lock.
@@ -51,7 +31,7 @@ public interface Locker {
    * @param entityId    the entity id
    * @return true, if successful
    */
-  boolean releaseLock(Class entityClass, String entityId);
+  public boolean releaseLock(Class entityClass, String entityId);
 
   /**
    * Release lock.
@@ -60,5 +40,5 @@ public interface Locker {
    * @param entityId   the entity id
    * @return true, if successful
    */
-  boolean releaseLock(String entityType, String entityId);
+  public boolean releaseLock(String entityType, String entityId);
 }

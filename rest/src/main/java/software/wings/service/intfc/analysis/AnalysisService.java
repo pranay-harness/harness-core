@@ -28,8 +28,8 @@ public interface AnalysisService {
       ClusterLevel clusterLevel, String delegateTaskId, @Valid List<LogElement> logData) throws IOException;
 
   @ValidationGroups(Create.class)
-  List<LogDataRecord> getLogData(
-      @Valid LogRequest logRequest, boolean compareCurrent, ClusterLevel clusterLevel, StateType splunkv2);
+  List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
+      ClusterLevel clusterLevel, StateType stateType);
 
   boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
@@ -70,4 +70,7 @@ public interface AnalysisService {
 
   boolean hasDataRecords(String query, String appdId, String stateExecutionId, StateType type, Set<String> nodes,
       ClusterLevel level, int logCollectionMinute);
+
+  String getLastSuccessfulWorkflowExecutionIdWithLogs(
+      StateType stateType, String appId, String serviceId, String query, String workflowId);
 }
