@@ -339,7 +339,6 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
             oldDelegateProcesses.forEach(
                 oldDelegateProcess -> messageService.sendMessage(DELEGATE, oldDelegateProcess, STOP_ACQUIRING));
             messageService.sendMessage(DELEGATE, newDelegateProcess, GO_AHEAD);
-            messageService.removeData(DELEGATE_DASH + newDelegateProcess, "newDelegate");
           }
         }
       } else {

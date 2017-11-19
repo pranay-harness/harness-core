@@ -109,6 +109,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String STOP_ACQUIRING = "stop-acquiring";
   private static final String RESUME = "resume";
   private static final String DELEGATE_DASH = "delegate-";
+  public static final String DELEGATE_STARTED = "delegate-started";
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -156,9 +157,9 @@ public class DelegateServiceImpl implements DelegateService {
       this.watched = watched;
 
       if (watched) {
-        startInputCheck();
         logger.info("[New] Delegate process started. Sending confirmation");
-        messageService.writeMessage("delegate-started");
+        messageService.writeMessage(DELEGATE_STARTED);
+        startInputCheck();
         logger.info("[New] Waiting for go ahead from watcher");
         Message message = waitForIncomingMessage(GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
@@ -190,6 +191,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       if (watched) {
+        messageService.removeData(DELEGATE_DASH + getProcessId(), "newDelegate");
         startLocalHeartbeat();
       }
 
@@ -473,7 +475,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startInputCheck() {
     inputExecutor.scheduleWithFixedDelay(() -> {
-      Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(4));
+      Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(2));
       if (message != null) {
         if (UPGRADING.equals(message.getMessage())) {
           upgradeNeeded.set(false);
