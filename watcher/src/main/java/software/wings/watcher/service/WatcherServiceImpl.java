@@ -199,6 +199,7 @@ private void startWatching() {
 
 private void watchDelegate() {
   try {
+    logger.info("Watching delegate processes: {}", runningDelegates);
     // Cleanup obsolete
     messageService.listDataNames(DELEGATE_DASH)
         .stream()
