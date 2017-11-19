@@ -112,4 +112,26 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
 
     return (C) serviceResourceService.getContainerTaskByDeploymentType(appId, serviceId, deploymentType);
   }
+
+  @Override
+  public C updateFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    String accountId = changeContext.getChange().getAccountId();
+    C previous = get(accountId, changeContext.getChange().getFilePath());
+    C containerTask = setWithYamlValues(previous, changeContext, changeSetContext);
+    return (C) serviceResourceService.updateContainerTask(containerTask, false);
+  }
+
+  @Override
+  public C upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    String accountId = changeContext.getChange().getAccountId();
+    C previous = get(accountId, changeContext.getChange().getFilePath());
+    C containerTask = setWithYamlValues(previous, changeContext, changeSetContext);
+    if (previous != null) {
+      return (C) serviceResourceService.updateContainerTask(containerTask, false);
+    } else {
+      return (C) serviceResourceService.createContainerTask(containerTask, false);
+    }
+  }
 }

@@ -26,6 +26,12 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
   }
 
   @Override
+  public FunctionSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
+  @Override
   public FunctionSpecification updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return setWithYamlValues(changeContext);

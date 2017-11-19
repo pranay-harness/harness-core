@@ -61,17 +61,23 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
   }
 
   @Override
+  public LambdaSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    LambdaSpecification previous =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    LambdaSpecification lambdaSpecification = setWithYamlValues(changeContext, previous, changeSetContext);
+    if (previous != null) {
+      return serviceResourceService.updateLambdaSpecification(lambdaSpecification);
+    } else {
+      return serviceResourceService.createLambdaSpecification(lambdaSpecification);
+    }
+  }
+
+  @Override
   public LambdaSpecification updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Could not lookup app for the yaml file: " + changeContext.getChange().getFilePath(), appId);
-
-    String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck(
-        "Could not lookup service for the yaml file: " + changeContext.getChange().getFilePath(), serviceId);
-
-    LambdaSpecification previous = serviceResourceService.getLambdaSpecification(appId, serviceId);
+    LambdaSpecification previous =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     LambdaSpecification lambdaSpecification = setWithYamlValues(changeContext, previous, changeSetContext);
     return serviceResourceService.updateLambdaSpecification(lambdaSpecification);
   }

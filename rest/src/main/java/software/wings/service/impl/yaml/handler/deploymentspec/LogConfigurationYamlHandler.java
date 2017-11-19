@@ -27,6 +27,12 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
         .build();
   }
 
+  @Override
+  public LogConfiguration upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
   private List<NameValuePair.Yaml> getLogOptionsYaml(List<LogOption> logOptionList) {
     if (Util.isEmpty(logOptionList)) {
       return Collections.emptyList();

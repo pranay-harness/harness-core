@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -21,6 +22,12 @@ public class DefaultSpecificationYamlHandler extends BaseYamlHandler<Yaml, Lambd
         .runtime(defaultSpecification.getRuntime())
         .timeout(defaultSpecification.getTimeout())
         .build();
+  }
+
+  @Override
+  public DefaultSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
   }
 
   @Override

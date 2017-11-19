@@ -24,6 +24,12 @@ public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   }
 
   @Override
+  public PortMapping upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
+  @Override
   public PortMapping updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return setWithYamlValues(changeContext);

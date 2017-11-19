@@ -42,8 +42,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
                               .withName(changeContext.getYaml().getName())
                               .withDescription(changeContext.getYaml().getDescription())
                               .build();
-    Application previous =
-        yamlSyncHelper.getApp(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Application previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
 
     if (previous != null) {
       current.setUuid(previous.getUuid());

@@ -26,13 +26,4 @@ public class KubernetesContainerTaskYamlHandler extends ContainerTaskYamlHandler
   public KubernetesContainerTask get(String accountId, String yamlFilePath) {
     return getContainerTask(accountId, yamlFilePath, DeploymentType.KUBERNETES.name());
   }
-
-  @Override
-  public KubernetesContainerTask updateFromYaml(ChangeContext<KubernetesContainerTask.Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
-    String accountId = changeContext.getChange().getAccountId();
-    KubernetesContainerTask previous = get(accountId, changeContext.getChange().getFilePath());
-    KubernetesContainerTask containerTask = setWithYamlValues(previous, changeContext, changeSetContext);
-    return (KubernetesContainerTask) serviceResourceService.updateContainerTask(containerTask, false);
-  }
 }

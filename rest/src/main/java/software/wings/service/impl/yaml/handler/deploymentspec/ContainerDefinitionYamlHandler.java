@@ -78,6 +78,12 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   }
 
   @Override
+  public ContainerDefinition upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext, false, changeSetContext);
+  }
+
+  @Override
   public ContainerDefinition updateFromYaml(ChangeContext<ContainerDefinition.Yaml> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException {
     return setWithYamlValues(changeContext, false, changeSetContext);
