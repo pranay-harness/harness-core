@@ -14,7 +14,9 @@ import software.wings.beans.DelegateTask.Converter;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -36,7 +38,7 @@ public class DelegateTask extends Base {
   private boolean async = true;
   private String envId;
   private String infrastructureMappingId;
-  //  private List<String> blacklistedDelegateIds = new ArrayList<>();
+  private List<String> blacklistedDelegateIds = new ArrayList<>();
 
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
@@ -263,13 +265,13 @@ public class DelegateTask extends Base {
     this.async = async;
   }
 
-  //  public List<String> getBlacklistedDelegateIds() {
-  //    return blacklistedDelegateIds;
-  //  }
-  //
-  //  public void setBlacklistedDelegateIds(List<String> blacklistedDelegateIds) {
-  //    this.blacklistedDelegateIds = blacklistedDelegateIds;
-  //  }
+  public List<String> getBlacklistedDelegateIds() {
+    return blacklistedDelegateIds;
+  }
+
+  public void setBlacklistedDelegateIds(List<String> blacklistedDelegateIds) {
+    this.blacklistedDelegateIds = blacklistedDelegateIds;
+  }
 
   @Override
   public boolean equals(Object o) {

@@ -62,9 +62,11 @@ public class SumoResource implements LogAnalysisResource {
   @ExternalServiceAuth
   @Override
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("compareCurrent") boolean compareCurrent, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
+      @QueryParam("workflowExecutionId") String workflowExecutionId,
+      @QueryParam("clusterLevel") ClusterLevel clusterLevel, @QueryParam("compareCurrent") boolean compareCurrent,
       LogRequest logRequest) throws IOException {
-    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, clusterLevel, StateType.SUMO));
+    return new RestResponse<>(
+        analysisService.getLogData(logRequest, compareCurrent, workflowExecutionId, clusterLevel, StateType.SUMO));
   }
 
   @POST

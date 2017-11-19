@@ -5,6 +5,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureStrategy.Yaml;
 import software.wings.beans.RepairActionCode;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -52,6 +53,16 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
         .withRetryCount(bean.getRetryCount())
         .withRetryIntervals(bean.getRetryIntervals())
         .build();
+  }
+
+  @Override
+  public FailureStrategy upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

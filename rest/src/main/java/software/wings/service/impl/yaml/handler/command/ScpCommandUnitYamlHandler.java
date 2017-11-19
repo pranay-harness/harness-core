@@ -4,6 +4,7 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.ScpCommandUnit.Yaml;
 import software.wings.beans.command.ScpCommandUnit.Yaml.Builder;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Util;
@@ -43,6 +44,16 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     String fileCategory = Util.getStringFromEnum(bean.getFileCategory());
     yaml.setSource(fileCategory);
     return yaml;
+  }
+
+  @Override
+  public ScpCommandUnit upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

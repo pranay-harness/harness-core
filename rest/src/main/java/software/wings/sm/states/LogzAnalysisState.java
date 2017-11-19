@@ -31,6 +31,8 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -56,24 +58,36 @@ public class LogzAnalysisState extends ElkAnalysisState {
     final LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final LogzDataCollectionInfo dataCollectionInfo =
-        new LogzDataCollectionInfo(logzConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-            getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
-            logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
-            secretManager.getEncryptionDetails(logzConfig, context.getAppId(), context.getWorkflowExecutionId()));
-    String waitId = UUIDGenerator.getUuid();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
-                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
-                                    .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
-    return delegateService.queueTask(delegateTask);
+
+    List<Set<String>> batchedHosts = batchHosts(hosts);
+    String[] waitIds = new String[batchedHosts.size()];
+    List<DelegateTask> delegateTasks = new ArrayList<>();
+    int i = 0;
+    for (Set<String> hostBatch : batchedHosts) {
+      final LogzDataCollectionInfo dataCollectionInfo =
+          new LogzDataCollectionInfo(logzConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
+              context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
+              getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
+              logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
+              secretManager.getEncryptionDetails(logzConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      String waitId = UUIDGenerator.getUuid();
+      delegateTasks.add(aDelegateTask()
+                            .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
+                            .withAccountId(appService.get(context.getAppId()).getAccountId())
+                            .withAppId(context.getAppId())
+                            .withWaitId(waitId)
+                            .withParameters(new Object[] {dataCollectionInfo})
+                            .withEnvId(envId)
+                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                            .build());
+      waitIds[i++] = waitId;
+    }
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitIds);
+    List<String> delegateTaskIds = new ArrayList<>();
+    for (DelegateTask task : delegateTasks) {
+      delegateTaskIds.add(delegateService.queueTask(task));
+    }
+    return StringUtils.join(delegateTaskIds, ",");
   }
 
   @Override

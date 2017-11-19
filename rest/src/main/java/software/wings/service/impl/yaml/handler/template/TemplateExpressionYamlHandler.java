@@ -8,6 +8,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ObjectType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -74,6 +75,16 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
         .withMandatory(bean.isMandatory())
         .withMetadata(nameValuePairYamlList)
         .build();
+  }
+
+  @Override
+  public TemplateExpression upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

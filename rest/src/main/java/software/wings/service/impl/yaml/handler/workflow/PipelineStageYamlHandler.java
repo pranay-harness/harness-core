@@ -11,6 +11,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -104,6 +105,16 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         .withType(stageElement.getType())
         .withWorkflowName(workflowName)
         .build();
+  }
+
+  @Override
+  public PipelineStage upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

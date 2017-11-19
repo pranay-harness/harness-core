@@ -31,11 +31,9 @@ public class GcpKubernetesInfraMappingYamlHandler
   }
 
   @Override
-  public GcpKubernetesInfrastructureMapping updateFromYaml(
+  public GcpKubernetesInfrastructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
+    ensureValidChange(changeContext, changeSetContext);
 
     GcpKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
@@ -47,15 +45,29 @@ public class GcpKubernetesInfraMappingYamlHandler
     String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
     Validator.notNullCheck(
         "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
+    String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
+    GcpKubernetesInfrastructureMapping.Builder builder =
+        GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping();
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    GcpKubernetesInfrastructureMapping current = builder.build();
     GcpKubernetesInfrastructureMapping previous =
         (GcpKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
             appId, envId, serviceId, computeProviderId);
-    GcpKubernetesInfrastructureMapping.Builder builder = previous.deepClone();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (GcpKubernetesInfrastructureMapping) infraMappingService.update(builder.build());
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return (GcpKubernetesInfrastructureMapping) infraMappingService.update(current);
+    } else {
+      return (GcpKubernetesInfrastructureMapping) infraMappingService.save(current);
+    }
+  }
+
+  @Override
+  public GcpKubernetesInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   private void setWithYamlValues(GcpKubernetesInfrastructureMapping.Builder builder,
@@ -89,27 +101,7 @@ public class GcpKubernetesInfraMappingYamlHandler
   @Override
   public GcpKubernetesInfrastructureMapping createFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    GcpKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
-
-    GcpKubernetesInfrastructureMapping.Builder builder =
-        GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return (GcpKubernetesInfrastructureMapping) infraMappingService.save(builder.build());
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override

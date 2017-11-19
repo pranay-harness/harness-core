@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.sync.YamlSyncHelper;
@@ -88,5 +89,15 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
         .withDeploymentType(bean.getDeploymentType())
         .withName(bean.getReferenceId())
         .build();
+  }
+
+  @Override
+  public Command upsertFromYaml(ChangeContext<CommandRefYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 }

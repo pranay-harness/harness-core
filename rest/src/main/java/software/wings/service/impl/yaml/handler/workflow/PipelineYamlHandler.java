@@ -10,6 +10,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.Builder;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -94,6 +95,16 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
         .withDescription(bean.getDescription())
         .withPipelineStages(pipelineStageYamlList)
         .build();
+  }
+
+  @Override
+  public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

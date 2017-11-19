@@ -4,6 +4,7 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
@@ -471,7 +472,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute);
 
-    wingsPersistence.update(
+    UpdateResults updateResults = wingsPersistence.update(
         query, wingsPersistence.createUpdateOperations(NewRelicMetricDataRecord.class).set("level", ClusterLevel.HF));
+    logger.info("bumpCollectionMinuteToProcess updated results size {}, for stateExecutionId {} ",
+        updateResults.getUpdatedCount(), stateExecutionId);
   }
 }

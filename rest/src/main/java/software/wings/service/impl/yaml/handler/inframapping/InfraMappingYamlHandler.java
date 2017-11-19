@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.Key;
-import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -11,7 +10,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.sync.YamlSyncHelper;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -29,22 +27,9 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   @Inject SettingsService settingsService;
   @Inject EnvironmentService environmentService;
   @Inject ServiceResourceService serviceResourceService;
-  @Inject AppService appService;
   @Inject YamlSyncHelper yamlSyncHelper;
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ServiceTemplateService serviceTemplateService;
-
-  protected String getAppId(String accountId, String appName) {
-    Application app = appService.getAppByName(accountId, appName);
-    Validator.notNullCheck("Invalid Application:" + appName, app);
-    return app.getUuid();
-  }
-
-  protected String getAppName(String appId) {
-    Application application = appService.get(appId);
-    Validator.notNullCheck("Application can't be found for Id:" + appId, application);
-    return application.getName();
-  }
 
   protected String getSettingId(String appId, String settingName) {
     SettingAttribute settingAttribute = settingsService.getByName(appId, settingName);
@@ -64,23 +49,17 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     return environment.getUuid();
   }
 
-  protected String getEnvironmentName(String appId, String envId) {
-    Environment environment = environmentService.get(appId, envId, false);
-    Validator.notNullCheck("Environment can't be found for Id:" + envId, environment);
-    return environment.getName();
+  protected String getServiceTemplateId(String appId, String serviceId) {
+    List<Key<ServiceTemplate>> templateRefKeysByService =
+        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, null);
+    Validator.notNullCheck("Service template can't be found for Service " + serviceId, templateRefKeysByService.get(0));
+    return templateRefKeysByService.get(0).getId().toString();
   }
 
   protected String getServiceId(String appId, String serviceName) {
     Service service = serviceResourceService.getServiceByName(appId, serviceName);
     Validator.notNullCheck("Invalid Service:" + serviceName, service);
     return service.getUuid();
-  }
-
-  protected String getServiceTemplateId(String appId, String serviceId) {
-    List<Key<ServiceTemplate>> templateRefKeysByService =
-        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, null);
-    Validator.notNullCheck("Service template can't be found for Service " + serviceId, templateRefKeysByService.get(0));
-    return templateRefKeysByService.get(0).getId().toString();
   }
 
   protected String getServiceName(String appId, String serviceId) {

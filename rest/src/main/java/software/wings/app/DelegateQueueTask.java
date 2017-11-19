@@ -1,8 +1,7 @@
 package software.wings.app;
 
-import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -13,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Status;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
@@ -86,31 +83,33 @@ public class DelegateQueueTask implements Runnable {
         logger.warn("Delegate task schema backwards incompatibilty ", kryo);
       }
 
-      logger.info("Found {} long running tasks, to be killed", longRunningTimedOutTasks.size());
-      longRunningTimedOutTasks.forEach(delegateTask -> {
+      if (longRunningTimedOutTasks.size() > 0) {
+        logger.info("Found {} long running tasks, to be killed", longRunningTimedOutTasks.size());
+        longRunningTimedOutTasks.forEach(delegateTask -> {
 
-        Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                              .field("status")
-                                              .equal(Status.STARTED)
-                                              .field(Mapper.ID_KEY)
-                                              .equal(delegateTask.getUuid());
-        UpdateOperations<DelegateTask> updateOperations =
-            wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", Status.ERROR);
+          Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                                .field("status")
+                                                .equal(Status.STARTED)
+                                                .field(Mapper.ID_KEY)
+                                                .equal(delegateTask.getUuid());
+          UpdateOperations<DelegateTask> updateOperations =
+              wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", Status.ERROR);
 
-        DelegateTask updatedDelegateTask = wingsPersistence.getDatastore().findAndModify(updateQuery, updateOperations);
+          DelegateTask updatedDelegateTask =
+              wingsPersistence.getDatastore().findAndModify(updateQuery, updateOperations);
 
-        if (updatedDelegateTask != null) {
-          logger.info("Long running delegate task [{}] is terminated", updatedDelegateTask.getUuid());
-          waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
-              anErrorNotifyResponseData()
-                  .withErrorMessage("Delegate timeout. Delegate ID: " + updatedDelegateTask.getDelegateId())
-                  .build());
-        } else {
-          logger.error("Delegate task [{}] could not be updated", delegateTask.getUuid());
-          // more error handling here.
-        }
-      });
-
+          if (updatedDelegateTask != null) {
+            logger.info("Long running delegate task [{}] is terminated", updatedDelegateTask.getUuid());
+            waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
+                anErrorNotifyResponseData()
+                    .withErrorMessage("Delegate timeout. Delegate ID: " + updatedDelegateTask.getDelegateId())
+                    .build());
+          } else {
+            logger.error("Delegate task [{}] could not be updated", delegateTask.getUuid());
+            // more error handling here.
+          }
+        });
+      }
       // Re-broadcast queued sync tasks not picked up by any Delegate
       Cache<String, DelegateTask> delegateSyncCache =
           cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
@@ -119,8 +118,7 @@ public class DelegateQueueTask implements Runnable {
           try {
             DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
             if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
-              logger.info("Broadcast queued sync task [{}, {}, {}]", syncDelegateTask.getUuid(),
-                  syncDelegateTask.getDelegateId(), syncDelegateTask.getStatus());
+              logger.info("Re-broadcast queued sync task [{}]", syncDelegateTask.getUuid());
               broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
                   .broadcast(syncDelegateTask);
             }
@@ -135,17 +133,19 @@ public class DelegateQueueTask implements Runnable {
         delegateSyncCache.clear();
       }
 
-      PageResponse<DelegateTask> delegateTasks = wingsPersistence.query(
-          DelegateTask.class, aPageRequest().addFilter("status", Operator.EQ, Status.QUEUED).build());
+      List<DelegateTask> unassignedTasks = wingsPersistence.createQuery(DelegateTask.class)
+                                               .field("status")
+                                               .equal(DelegateTask.Status.QUEUED)
+                                               .field("delegateId")
+                                               .doesNotExist()
+                                               .asList();
 
-      if (isEmpty(delegateTasks)) {
-        log().debug("There are no delegateTasks to process");
-        return;
+      if (isNotEmpty(unassignedTasks)) {
+        unassignedTasks.forEach(delegateTask -> {
+          logger.info("Re-broadcast queued async task [{}]", delegateTask.getUuid());
+          broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+        });
       }
-
-      delegateTasks.getResponse().forEach(delegateTask1
-          -> broadcasterFactory.lookup("/stream/delegate/" + delegateTask1.getAccountId(), true)
-                 .broadcast(delegateTask1));
 
     } catch (Exception exception) {
       log().error("Error seen in the Notifier call", exception);

@@ -170,13 +170,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
-    SettingAttribute settingAttribute =
-        wingsPersistence.createQuery(SettingAttribute.class).field("name").equal(settingAttributeName).get();
-    if (settingAttribute == null) {
-      throw new WingsException(
-          INVALID_ARGUMENT, "args", "SettingAttribute - '" + settingAttributeName + "' doesn't exist");
-    }
-    return settingAttribute;
+    return wingsPersistence.createQuery(SettingAttribute.class).field("name").equal(settingAttributeName).get();
   }
 
   /* (non-Javadoc)

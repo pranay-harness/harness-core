@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CleanupSshCommandUnit.CLEANUP_UNIT;
+import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
@@ -43,6 +44,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.dl.PageRequest;
@@ -228,11 +230,11 @@ public class ActivityServiceTest extends WingsBaseTest {
     activity.setAppId(APP_ID);
 
     String activityId = wingsPersistence.save(activity);
-    List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
+    List<CommandUnitDetails> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
     assertThat(commandUnits)
         .hasSize(3)
-        .extracting(CommandUnit::getCommandUnitType, CommandUnit::getName)
-        .contains(tuple(EXEC, INITIALIZE_UNIT), tuple(EXEC, COMMAND_UNIT_NAME), tuple(EXEC, CLEANUP_UNIT));
+        .extracting(CommandUnitDetails::getCommandUnitType, CommandUnitDetails::getName)
+        .contains(tuple(COMMAND, INITIALIZE_UNIT), tuple(COMMAND, COMMAND_UNIT_NAME), tuple(COMMAND, CLEANUP_UNIT));
   }
 
   /**
