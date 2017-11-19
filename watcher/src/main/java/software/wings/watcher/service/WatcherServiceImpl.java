@@ -289,10 +289,8 @@ private void watchDelegate() {
         }
       }
       if (isNotEmpty(restartNeededList)) {
-        if (working.compareAndSet(false, true)) {
-          logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
-          restartNeededList.forEach(this ::shutdownDelegate);
-        }
+        logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
+        restartNeededList.forEach(this ::shutdownDelegate);
       }
       if (isNotEmpty(upgradeNeededList)) {
         if (working.compareAndSet(false, true)) {
