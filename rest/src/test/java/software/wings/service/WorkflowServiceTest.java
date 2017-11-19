@@ -326,7 +326,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -384,7 +383,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -464,7 +462,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -1160,7 +1157,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aMultiServiceOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -1225,11 +1221,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createMultiServiceWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1283,11 +1279,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createMultiServiceWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1345,7 +1341,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -1411,11 +1406,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1470,11 +1465,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1644,11 +1639,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1682,7 +1677,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
   }
   @Test(expected = WingsException.class)
@@ -1701,11 +1696,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1735,11 +1730,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1758,7 +1753,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase clonedWorkflowPhase = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(clonedWorkflowPhase).isNotNull();
     assertThat(clonedWorkflowPhase.getUuid()).isNotEqualTo(workflowPhase2.getUuid());
-    assertThat(clonedWorkflowPhase.getName()).isEqualTo("Phase 3");
+    assertThat(clonedWorkflowPhase.getName()).isEqualTo("phase 2-clone");
     assertThat(clonedWorkflowPhase)
         .isEqualToComparingOnlyGivenFields(workflowPhase2, "infraMappingId", "serviceId", "computeProviderId");
     assertThat(clonedWorkflowPhase.getPhaseSteps()).isNotNull().size().isEqualTo(workflowPhase2.getPhaseSteps().size());
@@ -1819,11 +1814,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createMultiServiceWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1862,16 +1857,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("phase1")
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("phase2")
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .build())
+                    .addWorkflowPhase(
+                        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build())
+                    .addWorkflowPhase(
+                        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build())
                     .build())
             .build();
 
@@ -1920,11 +1909,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2034,11 +2023,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2140,7 +2129,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -2254,7 +2242,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aMultiServiceOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -2326,7 +2313,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -2390,11 +2376,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2580,7 +2566,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
@@ -2828,11 +2813,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2890,11 +2875,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
