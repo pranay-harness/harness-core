@@ -441,7 +441,7 @@ public abstract class ContainerServiceDeploy extends State {
     final ContainerServiceElement containerElement;
     final ContainerRollbackRequestElement rollbackElement;
     final SettingAttribute settingAttribute;
-    List<EncryptedDataDetail> encryptedDataDetails;
+    final List<EncryptedDataDetail> encryptedDataDetails;
     final String appId;
     final String serviceId;
     final String region;
