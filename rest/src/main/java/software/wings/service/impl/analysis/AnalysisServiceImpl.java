@@ -246,7 +246,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       return true;
     }
-    return getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, applicationId, serviceId, query, workflowId) != null;
+    return !getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, applicationId, serviceId, query, workflowId)
+                .equals("-1");
   }
 
   @Override
@@ -275,8 +276,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         return successfulExecution;
       }
     }
-    logger.error("Could not get a successful workflow to find control nodes");
-    return null;
+    logger.warn("Could not get a successful workflow to find control nodes");
+    return "-1";
   }
 
   private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
