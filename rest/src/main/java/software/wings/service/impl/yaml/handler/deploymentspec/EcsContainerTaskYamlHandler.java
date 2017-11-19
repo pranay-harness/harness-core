@@ -26,13 +26,4 @@ public class EcsContainerTaskYamlHandler extends ContainerTaskYamlHandler<EcsCon
   public EcsContainerTask get(String accountId, String yamlFilePath) {
     return getContainerTask(accountId, yamlFilePath, DeploymentType.ECS.name());
   }
-
-  @Override
-  public EcsContainerTask updateFromYaml(ChangeContext<EcsContainerTask.Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
-    String accountId = changeContext.getChange().getAccountId();
-    EcsContainerTask previous = get(accountId, changeContext.getChange().getFilePath());
-    EcsContainerTask containerTask = setWithYamlValues(previous, changeContext, changeSetContext);
-    return (EcsContainerTask) serviceResourceService.updateContainerTask(containerTask, false);
-  }
 }

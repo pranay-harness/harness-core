@@ -24,6 +24,12 @@ public class StorageConfigurationYamlHandler extends BaseYamlHandler<Yaml, Stora
   }
 
   @Override
+  public StorageConfiguration upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
+  @Override
   public StorageConfiguration updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return setWithYamlValues(changeContext);
