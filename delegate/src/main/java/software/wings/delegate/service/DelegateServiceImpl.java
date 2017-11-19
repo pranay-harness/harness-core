@@ -107,6 +107,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String GO_AHEAD = "go-ahead";
   private static final String UPGRADING = "upgrading";
   private static final String STOP_ACQUIRING = "stop-acquiring";
+  private static final String RESUME = "resume";
   private static final String DELEGATE_DASH = "delegate-";
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
@@ -478,6 +479,8 @@ public class DelegateServiceImpl implements DelegateService {
           upgradeNeeded.set(false);
         } else if (STOP_ACQUIRING.equals(message.getMessage())) {
           handleStopAcquiringMessage(message.getFromProcess());
+        } else if (RESUME.equals(message.getMessage())) {
+          resume();
         }
         try {
           delegateMessages.put(message);
@@ -586,6 +589,7 @@ public class DelegateServiceImpl implements DelegateService {
       statusData.put("heartbeat", clock.millis());
       statusData.put("restartNeeded", doRestartDelegate());
       statusData.put("upgradeNeeded", upgradeNeeded.get());
+      statusData.put("upgradePending", upgradePending.get());
       statusData.put("shutdownPending", !acquireTasks.get());
       if (!acquireTasks.get()) {
         statusData.put("shutdownStarted", stoppedAcquiringAt);

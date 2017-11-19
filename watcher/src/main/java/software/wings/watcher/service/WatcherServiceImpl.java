@@ -57,7 +57,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private static final long MAX_DELEGATE_HEARTBEAT_INTERVAL = TimeUnit.SECONDS.toMillis(30);
-  private static final long MAX_DELEGATE_STARTUP_GRACE_PERIOD = TimeUnit.MINUTES.toMillis(5);
+  private static final long MAX_DELEGATE_STARTUP_GRACE_PERIOD = TimeUnit.MINUTES.toMillis(2);
   private static final long MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD = TimeUnit.HOURS.toMillis(2);
 
   private static final String DELEGATE_DASH = "delegate-";
@@ -68,6 +68,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String NEW_WATCHER = "new-watcher";
   private static final String WATCHER_STARTED = "watcher-started";
   private static final String GO_AHEAD = "go-ahead";
+  private static final String RESUME = "resume";
   private static final String WATCHER_DATA = "watcher-data";
   private static final String RUNNING_DELEGATES = "running-delegates";
   private static final String NEXT_WATCHER = "next-watcher";
@@ -238,6 +239,8 @@ private void watchDelegate() {
       List<String> restartNeededList = new ArrayList<>();
       List<String> upgradeNeededList = new ArrayList<>();
       List<String> shutdownNeededList = new ArrayList<>();
+      String upgradePendingDelegate = null;
+      boolean newDelegateTimedOut = false;
       synchronized (runningDelegates) {
         for (String delegateProcess : runningDelegates) {
           Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
@@ -246,12 +249,14 @@ private void watchDelegate() {
             boolean newDelegate = Optional.ofNullable((Boolean) delegateData.get("newDelegate")).orElse(false);
             boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
             boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
+            boolean upgradePending = Optional.ofNullable((Boolean) delegateData.get("upgradePending")).orElse(false);
             boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
             long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
 
             if (newDelegate) {
               logger.info("New delegate process {} is starting", delegateProcess);
               if (clock.millis() - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
+                newDelegateTimedOut = true;
                 shutdownNeededList.add(delegateProcess);
               }
             } else if (shutdownPending) {
@@ -264,6 +269,9 @@ private void watchDelegate() {
             } else if (upgradeNeeded) {
               upgradeNeededList.add(delegateProcess);
             }
+            if (upgradePending) {
+              upgradePendingDelegate = delegateProcess;
+            }
           } else {
             obsolete.add(delegateProcess);
           }
@@ -273,15 +281,24 @@ private void watchDelegate() {
       if (isNotEmpty(shutdownNeededList)) {
         logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
         shutdownNeededList.forEach(this ::shutdownDelegate);
+        if (newDelegateTimedOut && upgradePendingDelegate != null) {
+          logger.info("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
+          messageService.sendMessage(DELEGATE, upgradePendingDelegate, RESUME);
+        }
       }
-      if (isNotEmpty(restartNeededList) && working.compareAndSet(false, true)) {
-        logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
-        restartNeededList.forEach(this ::shutdownDelegate);
-        startDelegateProcess(emptyList(), "DelegateRestartScript", getProcessId());
-      } else if (isNotEmpty(upgradeNeededList) && working.compareAndSet(false, true)) {
-        logger.info("Delegate processes {} ready for upgrade", upgradeNeededList);
-        upgradeNeededList.forEach(delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING));
-        startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
+      if (isNotEmpty(restartNeededList)) {
+        if (working.compareAndSet(false, true)) {
+          logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
+          restartNeededList.forEach(this ::shutdownDelegate);
+          startDelegateProcess(emptyList(), "DelegateRestartScript", getProcessId());
+        }
+      } else if (isNotEmpty(upgradeNeededList)) {
+        if (working.compareAndSet(false, true)) {
+          logger.info("Delegate processes {} ready for upgrade", upgradeNeededList);
+          upgradeNeededList.forEach(
+              delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING));
+          startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
+        }
       }
 
       if (isNotEmpty(obsolete)) {
@@ -427,8 +444,8 @@ private void upgradeWatcher(InputStream newVersionJarStream, String version, Str
       Message message = waitForIncomingMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(2));
       if (message != null) {
         String newWatcherProcessId = message.getParams().get(0);
-        messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcessId);
         logger.info("[Old] Got process ID from new watcher: " + newWatcherProcessId);
+        messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcessId);
         message = messageService.retrieveMessage(WATCHER, newWatcherProcessId, TimeUnit.MINUTES.toMillis(2));
         if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
           messageService.sendMessage(WATCHER, newWatcherProcessId, GO_AHEAD);
