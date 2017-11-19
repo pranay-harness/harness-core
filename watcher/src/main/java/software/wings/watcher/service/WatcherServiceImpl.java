@@ -57,6 +57,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private static final long MAX_DELEGATE_HEARTBEAT_INTERVAL = TimeUnit.SECONDS.toMillis(30);
+  private static final long MAX_DELEGATE_STARTUP_GRACE_PERIOD = TimeUnit.MINUTES.toMillis(5);
   private static final long MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD = TimeUnit.HOURS.toMillis(2);
 
   private static final String DELEGATE_DASH = "delegate-";
@@ -242,12 +243,18 @@ private void watchDelegate() {
           Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
           if (delegateData != null && !delegateData.isEmpty()) {
             long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
+            boolean newDelegate = Optional.ofNullable((Boolean) delegateData.get("newDelegate")).orElse(false);
             boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
             boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
             boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
             long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
 
-            if (shutdownPending) {
+            if (newDelegate) {
+              logger.info("New delegate process {} is starting", delegateProcess);
+              if (clock.millis() - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
+                shutdownNeededList.add(delegateProcess);
+              }
+            } else if (shutdownPending) {
               logger.info("Shutdown is pending for {}", delegateProcess);
               if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
                 shutdownNeededList.add(delegateProcess);
@@ -264,21 +271,21 @@ private void watchDelegate() {
       }
 
       if (isNotEmpty(shutdownNeededList)) {
-        logger.warn("Delegate processes [{}] exceeded the shutdown grace period. Forcing shutdown", shutdownNeededList);
+        logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
         shutdownNeededList.forEach(this ::shutdownDelegate);
       }
       if (isNotEmpty(restartNeededList) && working.compareAndSet(false, true)) {
-        logger.warn("Delegate processes [{}] need restart. Shutting down", restartNeededList);
+        logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
         restartNeededList.forEach(this ::shutdownDelegate);
         startDelegateProcess(emptyList(), "DelegateRestartScript", getProcessId());
       } else if (isNotEmpty(upgradeNeededList) && working.compareAndSet(false, true)) {
-        logger.info("Delegate processes [{}] ready for upgrade", upgradeNeededList);
+        logger.info("Delegate processes {} ready for upgrade", upgradeNeededList);
         upgradeNeededList.forEach(delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING));
         startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
       }
 
       if (isNotEmpty(obsolete)) {
-        logger.info("Obsolete processes [{}] no longer tracked", obsolete);
+        logger.info("Obsolete processes {} no longer tracked", obsolete);
         runningDelegates.removeAll(obsolete);
       }
       messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
@@ -307,6 +314,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
           String newDelegateProcess = message.getParams().get(0);
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
           messageService.putData(DELEGATE_DASH + newDelegateProcess, "newDelegate", true);
+          messageService.putData(DELEGATE_DASH + newDelegateProcess, "heartbeat", clock.millis());
           runningDelegates.add(newDelegateProcess);
           messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
