@@ -203,8 +203,11 @@ private void watchDelegate() {
         .map(dataName -> dataName.substring(DELEGATE_DASH.length()))
         .filter(process -> !runningDelegates.contains(process))
         .forEach(process -> {
-          logger.info("Data found for untracked delegate process {}. Shutting it down", process);
-          shutdownDelegate(process);
+          if (!Optional.ofNullable(messageService.getData(DELEGATE_DASH + process, "newDelegate", Boolean.class))
+                   .orElse(false)) {
+            logger.info("Data found for untracked delegate process {}. Shutting it down", process);
+            shutdownDelegate(process);
+          }
         });
 
     //      messageService.listChannels(DELEGATE).stream().filter(process ->
@@ -303,6 +306,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
         if (message != null) {
           String newDelegateProcess = message.getParams().get(0);
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
+          messageService.putData(DELEGATE_DASH + newDelegateProcess, "newDelegate", true);
           runningDelegates.add(newDelegateProcess);
           messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
@@ -310,6 +314,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
             oldDelegateProcesses.forEach(
                 oldDelegateProcess -> messageService.sendMessage(DELEGATE, oldDelegateProcess, STOP_ACQUIRING));
             messageService.sendMessage(DELEGATE, newDelegateProcess, GO_AHEAD);
+            messageService.removeData(DELEGATE_DASH + newDelegateProcess, "newDelegate");
           }
         }
       } else {
