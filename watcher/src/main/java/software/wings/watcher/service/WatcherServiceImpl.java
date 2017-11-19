@@ -290,9 +290,9 @@ private void watchDelegate() {
         if (working.compareAndSet(false, true)) {
           logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
           restartNeededList.forEach(this ::shutdownDelegate);
-          startDelegateProcess(emptyList(), "DelegateRestartScript", getProcessId());
         }
-      } else if (isNotEmpty(upgradeNeededList)) {
+      }
+      if (isNotEmpty(upgradeNeededList)) {
         if (working.compareAndSet(false, true)) {
           logger.info("Delegate processes {} ready for upgrade", upgradeNeededList);
           upgradeNeededList.forEach(
@@ -303,9 +303,11 @@ private void watchDelegate() {
 
       if (isNotEmpty(obsolete)) {
         logger.info("Obsolete processes {} no longer tracked", obsolete);
-        runningDelegates.removeAll(obsolete);
+        synchronized (runningDelegates) {
+          runningDelegates.removeAll(obsolete);
+          messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+        }
       }
-      messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
     }
   } catch (Exception e) {
     logger.error("Error processing delegate stream: {}", e.getMessage(), e);
@@ -332,8 +334,10 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
           messageService.putData(DELEGATE_DASH + newDelegateProcess, "newDelegate", true);
           messageService.putData(DELEGATE_DASH + newDelegateProcess, "heartbeat", clock.millis());
-          runningDelegates.add(newDelegateProcess);
-          messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+          synchronized (runningDelegates) {
+            runningDelegates.add(newDelegateProcess);
+            messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+          }
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
             oldDelegateProcesses.forEach(
@@ -378,8 +382,10 @@ private void shutdownDelegate(String delegateProcess) {
       new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
       messageService.closeData(DELEGATE_DASH + delegateProcess);
       messageService.closeChannel(DELEGATE, delegateProcess);
-      runningDelegates.remove(delegateProcess);
-      messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+      synchronized (runningDelegates) {
+        runningDelegates.remove(delegateProcess);
+        messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+      }
     } catch (Exception e) {
       logger.error("Error killing delegate {}", delegateProcess, e);
     }
