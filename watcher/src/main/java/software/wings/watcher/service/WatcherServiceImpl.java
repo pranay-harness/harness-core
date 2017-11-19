@@ -1,6 +1,7 @@
 package software.wings.watcher.service;
 
 import static com.google.common.collect.Iterables.isEmpty;
+import static com.hazelcast.util.CollectionUtil.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
@@ -217,9 +218,11 @@ private void watchDelegate() {
 
     if (isEmpty(runningDelegates)) {
       working.set(true);
-      startDelegate();
+      startDelegateProcess(null, "DelegateStartScript", getProcessId());
     } else {
       List<String> obsolete = new ArrayList<>();
+      List<String> restartNeededList = new ArrayList<>();
+      List<String> upgradeNeededList = new ArrayList<>();
       synchronized (runningDelegates) {
         for (String delegateProcess : runningDelegates) {
           Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
@@ -236,37 +239,34 @@ private void watchDelegate() {
                 shutdownDelegate(delegateProcess, true);
               }
             } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
-              working.set(true);
-              restartDelegate(delegateProcess);
+              restartNeededList.add(delegateProcess);
             } else if (upgradeNeeded) {
-              working.set(true);
-              upgradeDelegate(delegateProcess);
+              upgradeNeededList.add(delegateProcess);
             }
           } else {
             obsolete.add(delegateProcess);
           }
         }
       }
+
+      if (isNotEmpty(restartNeededList)) {
+        working.set(true);
+        restartNeededList.forEach(delegateProcess -> shutdownDelegate(delegateProcess, false));
+        startDelegateProcess(null, "DelegateRestartScript", getProcessId());
+      } else if (isNotEmpty(upgradeNeededList)) {
+        working.set(true);
+        String oldDelegateProcess = upgradeNeededList.remove(upgradeNeededList.size() - 1);
+        upgradeNeededList.forEach(delegateProcess -> shutdownDelegate(delegateProcess, false));
+        messageService.sendMessage(DELEGATE, oldDelegateProcess, "upgrading");
+        startDelegateProcess(oldDelegateProcess, "DelegateUpgradeScript", getProcessId());
+      }
+
       runningDelegates.removeAll(obsolete);
       messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
     }
   } catch (Exception e) {
     logger.error("Error processing delegate stream: {}", e.getMessage(), e);
   }
-}
-
-private void startDelegate() {
-  startDelegateProcess(null, "DelegateStartScript", getProcessId());
-}
-
-private void restartDelegate(String delegateProcess) {
-  // Kill without resetting 'working'. It will reset after startDelegateProcess completes.
-  shutdownDelegate(delegateProcess, false);
-  startDelegateProcess(null, "DelegateRestartScript", getProcessId());
-}
-
-private void upgradeDelegate(String oldDelegateProcess) {
-  startDelegateProcess(oldDelegateProcess, "DelegateUpgradeScript", getProcessId());
 }
 
 private void startDelegateProcess(@Nullable String oldDelegateProcess, String scriptName, String watcherProcess) {
