@@ -585,7 +585,7 @@ public class DelegateServiceImpl implements DelegateService {
       Map<String, Object> statusData = new HashMap<>();
       statusData.put("heartbeat", clock.millis());
       statusData.put("restartNeeded", doRestartDelegate());
-      statusData.put("upgradeNeeded", upgradeNeeded);
+      statusData.put("upgradeNeeded", upgradeNeeded.get());
       statusData.put("shutdownPending", !acquireTasks.get());
       if (!acquireTasks.get()) {
         statusData.put("shutdownStarted", stoppedAcquiringAt);
