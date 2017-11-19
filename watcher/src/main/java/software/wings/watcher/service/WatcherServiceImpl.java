@@ -44,6 +44,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -53,8 +54,11 @@ import javax.inject.Named;
  */
 @Singleton
 public class WatcherServiceImpl implements WatcherService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   private static final long MAX_DELEGATE_HEARTBEAT_INTERVAL = TimeUnit.SECONDS.toMillis(30);
   private static final long MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD = TimeUnit.HOURS.toMillis(2);
+
   private static final String DELEGATE_DASH = "delegate-";
   private static final String NEW_DELEGATE = "new-delegate";
   private static final String DELEGATE_STARTED = "delegate-started";
@@ -66,9 +70,6 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String RUNNING_DELEGATES = "running-delegates";
   private static final String NEXT_WATCHER = "next-watcher";
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-  private final Object waiter = new Object();
-
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
@@ -79,17 +80,18 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject private MessageService messageService;
   @Inject private AmazonS3Client amazonS3Client;
 
-  private boolean working;
+  private final Object waiter = new Object();
+  private final AtomicBoolean working = new AtomicBoolean(false);
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
-
-  private BlockingQueue<Message> watcherMessages = new LinkedBlockingQueue<>();
+  private final BlockingQueue<Message> watcherMessages = new LinkedBlockingQueue<>();
 
   @Override
+  @SuppressWarnings({"unchecked"})
   public void run(boolean upgrade, boolean transition) {
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
       runningDelegates.addAll(
-          Optional.ofNullable((List) messageService.getData(WATCHER_DATA, RUNNING_DELEGATES)).orElse(emptyList()));
+          Optional.ofNullable(messageService.getData(WATCHER_DATA, RUNNING_DELEGATES, List.class)).orElse(emptyList()));
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
@@ -175,7 +177,7 @@ public class WatcherServiceImpl implements WatcherService {
   private void startUpgradeCheck() {
     upgradeExecutor.scheduleWithFixedDelay(() -> {
       synchronized (this) {
-        if (!working) {
+        if (!working.get()) {
           checkForUpgrade();
   }
 }
@@ -185,7 +187,7 @@ public class WatcherServiceImpl implements WatcherService {
 private void startWatching() {
     watchExecutor.scheduleWithFixedDelay(() -> {
       synchronized (this) {
-        if (!working) {
+        if (!working.get()) {
           watchDelegate();
 }
 }
@@ -210,11 +212,11 @@ private void watchDelegate() {
         .stream()
         .filter(process
             -> !StringUtils.equals(process, getProcessId())
-                && !StringUtils.equals(process, (String) messageService.getData(WATCHER_DATA, NEXT_WATCHER)))
+                && !StringUtils.equals(process, messageService.getData(WATCHER_DATA, NEXT_WATCHER, String.class)))
         .forEach(process -> messageService.closeChannel(WATCHER, process));
 
     if (isEmpty(runningDelegates)) {
-      working = true;
+      working.set(true);
       startDelegate();
     } else {
       List<String> obsolete = new ArrayList<>();
@@ -230,14 +232,14 @@ private void watchDelegate() {
 
             if (shutdownPending) {
               if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
-                working = true;
+                working.set(true);
                 shutdownDelegate(delegateProcess, true);
               }
             } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
-              working = true;
+              working.set(true);
               restartDelegate(delegateProcess);
             } else if (upgradeNeeded) {
-              working = true;
+              working.set(true);
               upgradeDelegate(delegateProcess);
             }
           } else {
@@ -321,7 +323,7 @@ private void startDelegateProcess(@Nullable String oldDelegateProcess, String sc
         }
       }
     } finally {
-      working = false;
+      working.set(false);
     }
   });
 }
@@ -338,7 +340,7 @@ private void shutdownDelegate(String delegateProcess, boolean resetWorking) {
       logger.error("Error killing delegate {}", delegateProcess, e);
     } finally {
       if (resetWorking) {
-        working = false;
+        working.set(false);
       }
     }
   });
@@ -366,14 +368,14 @@ private void checkForUpgrade() {
     boolean upgrade = !StringUtils.equals(version, latestVersion);
     if (upgrade) {
       logger.info("[Old] Upgrading watcher");
-      working = true;
+      working.set(true);
       S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
       upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
     } else {
       logger.info("Watcher up to date");
     }
   } catch (Exception e) {
-    working = false;
+    working.set(false);
     logger.error("[Old] Exception while checking for upgrade", e);
   }
 }
@@ -415,14 +417,12 @@ private void upgradeWatcher(InputStream newVersionJarStream, String version, Str
       }
     }
     if (!success) {
-      working = false;
       logger.error("[Old] Failed to upgrade watcher");
       process.getProcess().destroy();
       process.getProcess().waitFor();
     }
   } catch (Exception e) {
     e.printStackTrace();
-    working = false;
     logger.error("[Old] Exception while upgrading", e);
     if (process != null) {
       try {
@@ -442,6 +442,8 @@ private void upgradeWatcher(InputStream newVersionJarStream, String version, Str
         logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
       }
     }
+  } finally {
+    working.set(false);
   }
 }
 
