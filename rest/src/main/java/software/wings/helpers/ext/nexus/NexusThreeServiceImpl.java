@@ -1,24 +1,32 @@
 package software.wings.helpers.ext.nexus;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
+import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
+import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import okhttp3.Credentials;
-import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Response;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.DockerImageResponse;
+import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
 import software.wings.helpers.ext.nexus.model.RepositoryRequest;
 import software.wings.helpers.ext.nexus.model.RepositoryResponse;
 import software.wings.helpers.ext.nexus.model.RequestData;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,32 +35,19 @@ import java.util.stream.Collectors;
  * Created by sgurubelli on 11/16/17.
  */
 @Singleton
-public class NexusThreeServiceImpl extends AbstractNexusService {
-  public static void main(String... args) {
-    NexusConfig nexusConfig = NexusConfig.builder()
-                                  .nexusUrl("http://ec2-52-91-76-213.compute-1.amazonaws.com:8081")
-                                  .username("admin")
-                                  .password("admin123".toCharArray())
-                                  .build();
+public class NexusThreeServiceImpl {
+  private final static Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
 
-    NexusThreeServiceImpl nexus3Service = new NexusThreeServiceImpl();
-    nexus3Service.getDockerImages(nexusConfig, null, "docker-group");
+  @Inject EncryptionService encryptionService;
 
-    //    ObjectMapper mapperObj = new ObjectMapper();
-    //
-    //
-    //    try {
-    //      // get Employee object as a json string
-    //      String jsonStr = mapperObj.writeValueAsString(repositoryRequest);
-    //      System.out.println(jsonStr);
-    //    } catch (IOException e) {
-    //      // TODO Auto-generated catch block
-    //      e.printStackTrace();
-    //    }
+  public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
+      throws IOException {
+    return getDockerRepositories(nexusConfig, encryptionDetails);
   }
 
   private Map<String, String> getDockerRepositories(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
+    logger.info("Retrieving docker repositories");
     RepositoryRequest repositoryRequest =
         RepositoryRequest.builder()
             .action("coreui_Repository")
@@ -71,94 +66,70 @@ public class NexusThreeServiceImpl extends AbstractNexusService {
             .getRepositories(
                 Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repositoryRequest)
             .execute();
+
     if (isSuccessful(response)) {
       if (response.body().getResult().isSuccess()) {
+        logger.info("Retrieving docker repositories success");
         return response.body().getResult().getData().stream().collect(
             Collectors.toMap(o -> o.getId(), o -> o.getName()));
       } else {
         logger.warn("Failed to fetch the repositories as request is not success");
       }
     }
-    return new HashMap<>();
-  }
-
-  @Override
-  public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      return getDockerRepositories(nexusConfig, encryptionDetails);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+    logger.info("No docker repositories found. Returning empty datas");
+    return emptyMap();
   }
 
   public List<String> getDockerImages(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repository) {
-    List<String> images = new ArrayList<>();
-    try {
-      NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-      Response<DockerImageResponse> response =
-          nexusThreeRestClient
-              .getDockerImages(
-                  Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repository)
-              .execute();
-      if (isSuccessful(response)) {
-        images = response.body().getRepositories().stream().collect(Collectors.toList());
-      } else {
-        logger.warn("Failed to fetch the repositories as request is not success");
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repository) throws IOException {
+    logger.info("Retrieving docker images for repository {} from url {}", repository, nexusConfig.getNexusUrl());
+    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
+    Response<DockerImageResponse> response =
+        nexusThreeRestClient
+            .getDockerImages(
+                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repository)
+            .execute();
+    if (isSuccessful(response)) {
+      if (response.body() != null && response.body().getRepositories() != null) {
+        logger.info(
+            "Retrieving docker images for repository {} from url {} success", repository, nexusConfig.getNexusUrl());
+        return response.body().getRepositories().stream().collect(Collectors.toList());
       }
-    } catch (Exception ex) {
-      ex.printStackTrace();
+    } else {
+      logger.warn("Failed to fetch the docker images as request is not success");
     }
-    return images;
+    logger.info("No images found for repository {}", repository);
+    return new ArrayList<>();
   }
 
-  @Override
-  public List<String> getArtifactPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
-    return null;
+  public List<BuildDetails> getDockerTags(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoKey, String imageName) throws IOException {
+    logger.info("Retrieving docker tags for repository {} imageName {} ", repoKey, imageName);
+    List<BuildDetails> buildDetails = new ArrayList<>();
+    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
+    Response<DockerImageTagResponse> response =
+        nexusThreeRestClient
+            .getDockerTags(
+                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoKey, imageName)
+            .execute();
+    if (isSuccessful(response)) {
+      if (response.body() != null && response.body().getTags() != null) {
+        return response.body()
+            .getTags()
+            .stream()
+            .map(tag -> aBuildDetails().withNumber(tag).build())
+            .collect(Collectors.toList());
+      }
+    } else {
+      logger.warn("Failed to fetch the repositories as request is not success");
+    }
+    logger.info("No tags found for image name {}", imageName);
+    return buildDetails;
   }
 
-  @Override
-  public List<String> getArtifactPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String name) {
-    return null;
-  }
-
-  @Override
-  public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactNames) {
-    return null;
-  }
-
-  @Override
-  public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName,
-      String version) {
-    return null;
-  }
-
-  @Override
-  public List<String> getGroupIdPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
-    return null;
-  }
-
-  @Override
-  public List<String> getArtifactNames(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String path) {
-    return null;
-  }
-
-  @Override
-  public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName) {
-    return null;
-  }
-
-  @Override
-  public BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName) {
-    return null;
+  private NexusThreeRestClient getNexusThreeClient(
+      final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(nexusConfig, encryptionDetails);
+    return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusThreeRestClient.class);
   }
 }

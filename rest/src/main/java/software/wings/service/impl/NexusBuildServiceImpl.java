@@ -42,15 +42,20 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType) {
-    return getPlans(config, encryptionDetails);
+    return nexusService.getRepositories(config, encryptionDetails, artifactType);
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
-    return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+    if (artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
+      return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+          artifactStreamAttributes.getImageName(), 50);
+    } else {
+      return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+          artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+    }
   }
 
   @Override

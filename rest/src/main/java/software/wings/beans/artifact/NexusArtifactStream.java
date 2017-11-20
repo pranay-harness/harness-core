@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang.StringUtils;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.ArrayList;
@@ -44,7 +45,10 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
+    if (StringUtils.isBlank(getImageName())) {
+      return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
+    }
+    return String.format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
   public String getArtifactStreamType() {
@@ -108,6 +112,7 @@ public class NexusArtifactStream extends ArtifactStream {
         .withArtifactStreamType(getArtifactStreamType())
         .withJobName(jobname)
         .withGroupId(groupId)
+        .withImageName(imageName)
         .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .build();
   }
