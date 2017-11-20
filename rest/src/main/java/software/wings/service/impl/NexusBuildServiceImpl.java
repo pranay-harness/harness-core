@@ -89,15 +89,19 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(NexusConfig config) {
-    if (!validUrl(config.getNexusUrl())) {
+  public boolean validateArtifactServer(NexusConfig nexusConfig) {
+    if (!validUrl(nexusConfig.getNexusUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Nexus URL must be a valid URL");
     }
-    if (!connectableHttpUrl(config.getNexusUrl())) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Could not reach Nexus Server at : " + config.getNexusUrl());
+    if (!connectableHttpUrl(nexusConfig.getNexusUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Could not reach Nexus Server at : " + nexusConfig.getNexusUrl());
     }
-    return nexusService.getRepositories(config, Collections.emptyList()) != null;
+    if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
+      return nexusService.getRepositories(nexusConfig, Collections.emptyList()) != null;
+    } else {
+      return nexusService.getRepositories(nexusConfig, Collections.emptyList(), ArtifactType.DOCKER) != null;
+    }
   }
 
   @Override
