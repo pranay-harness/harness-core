@@ -83,6 +83,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
             final LogDataRecord logDataRecord = new LogDataRecord();
             logDataRecord.setStateType(StateType.SPLUNKV2);
             logDataRecord.setWorkflowId(workflowId);
+            logDataRecord.setWorkflowExecutionId(workflowExecution.getUuid());
             logDataRecord.setStateExecutionId(stateExecutionId);
             logDataRecord.setQuery(query);
             logDataRecord.setApplicationId(applicationId);
@@ -112,7 +113,8 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
 
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
       WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL
-          + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=true");
+          + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
+          + "&compareCurrent=true&workflowExecutionId=" + workflowExecution.getUuid());
       final LogRequest logRequest =
           new LogRequest(query, applicationId, "se2", workflowId, serviceId, hosts, collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
@@ -196,7 +198,8 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
 
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
       WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL
-          + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=false");
+          + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
+          + "&compareCurrent=false&workflowExecutionId=" + workflowExecution.getUuid());
       final LogRequest logRequest = new LogRequest(
           query, applicationId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
