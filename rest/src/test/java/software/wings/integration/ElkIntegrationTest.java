@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
@@ -164,8 +165,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
             Collections.singleton(host), logCollectionMinute);
 
         WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-            + "&clusterLevel=" + ClusterLevel.L1.name() + "&compareCurrent=true");
+            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId + "&clusterLevel="
+            + ClusterLevel.L1.name() + "&compareCurrent=true&workflowExecutionId=" + workflowExecutionId);
         RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
             Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
         Assert.assertEquals(
@@ -503,9 +504,10 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         "No baseline data for the given queries. This will be baseline for the next run.");
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
-    assertNull(logAnalysisRecord.getControl_clusters());
+    assertFalse(logAnalysisRecord.isBaseLineCreated());
+    assertEquals(logAnalysisRecord.getControl_clusters().size(), 1);
     assertNull(logAnalysisRecord.getTest_clusters());
-    assertEquals(logAnalysisRecord.getTest_events().size(), 1);
+    assertNull(logAnalysisRecord.getTest_events());
   }
 
   @Test
