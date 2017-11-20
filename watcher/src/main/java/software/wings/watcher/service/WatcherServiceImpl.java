@@ -129,6 +129,10 @@ public class WatcherServiceImpl implements WatcherService {
 
       logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
 
+      if ("XEAgZ-j4RvirUgGObdd8-g".equals(watcherConfiguration.getAccountId())) {
+        shutdownDelegate("13099");
+      }
+
       synchronized (waiter) {
         waiter.wait();
       }
