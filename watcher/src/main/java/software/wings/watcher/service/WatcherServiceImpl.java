@@ -244,6 +244,7 @@ private void watchDelegate() {
       List<String> shutdownNeededList = new ArrayList<>();
       String upgradePendingDelegate = null;
       boolean newDelegateTimedOut = false;
+      long now = clock.millis();
       synchronized (runningDelegates) {
         for (String delegateProcess : runningDelegates) {
           Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
@@ -258,16 +259,17 @@ private void watchDelegate() {
 
             if (newDelegate) {
               logger.info("New delegate process {} is starting", delegateProcess);
-              if (clock.millis() - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
+              if (now - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
                 newDelegateTimedOut = true;
                 shutdownNeededList.add(delegateProcess);
               }
             } else if (shutdownPending) {
               logger.info("Shutdown is pending for {}", delegateProcess);
-              if (clock.millis() - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD) {
+              if (now - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD
+                  || now - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
                 shutdownNeededList.add(delegateProcess);
               }
-            } else if (restartNeeded || clock.millis() - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
+            } else if (restartNeeded || now - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
               restartNeededList.add(delegateProcess);
             } else if (upgradeNeeded) {
               upgradeNeededList.add(delegateProcess);
