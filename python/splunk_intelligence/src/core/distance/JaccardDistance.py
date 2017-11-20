@@ -10,11 +10,14 @@ J(A,B) =      | A int B |
         |A| + |B| - | A int B |
 """
 
+
 def pairwise_jaccard_similarity(X):
     """
 
-    :param X: m X n sparse matrix
-    :return: jaccard similarity score for all rows of X
+    pariwise Jaccard similarity among rows of x
+
+    :param x: m X n sparse matrix
+    :return: pairwise jaccard similarity score for all m rows
     """
 
     X = X.astype(bool).astype(float)
@@ -22,27 +25,33 @@ def pairwise_jaccard_similarity(X):
     intrsct = X.dot(X.T)
     row_sums = intrsct.diagonal()
     unions = row_sums[:, None] + row_sums - intrsct
-    # dist = 1.0 - intrsct / unions
     return intrsct / unions
 
 
-def jaccard_similarity(X, Y):
+def jaccard_similarity(x, y):
     """
 
-    :param X: m X n sparse matrix
-    :param Y: 1 x n sparse matrix
-    :return: jaccard similarity score between X and Y
+    Jaccard similarity between rows of x and rows of Y
+
+    :param x: m X n sparse matrix
+    :param y: 1 x n sparse matrix
+    :return: jaccard similarity score for all rows of X with Y
     """
 
-    X = X.astype(bool).astype(float)
-    Y = Y.astype(bool).astype(float)
+    x = x.astype(bool).astype(float)
+    y = y.astype(bool).astype(float)
 
-    intrsct = X.dot(Y.T)
-    unions = np.sum(X, axis=1) + np.sum(Y, axis=1) - intrsct
+    intrsct = x.dot(y.T)
+    unions = np.sum(x, axis=1) + np.sum(y, axis=1) - intrsct
     return intrsct / unions
 
-#TODO pass tokenizer as argument
+
+# TODO pass tokenizer as argument
 def jaccard_text_similarity(control_texts, test_text):
+    """
+    Return Jaccard similarity for texts in control_text vs the
+    text in test_text
+    """
     test_tokens = Tokenizer.default_tokenizer(test_text)
     sim = []
     for text in control_texts:
@@ -52,8 +61,13 @@ def jaccard_text_similarity(control_texts, test_text):
         sim.append(float(len(intersection)) / len(union))
     return np.array(sim)
 
-#TODO pass tokenizer as argument
+
+# TODO pass tokenizer as argument
 def jaccard_difference(control_text, test_text):
+    """
+    Return tokens in control_text that is absent from test_text and
+    vice versa.
+    """
     test_tokens = Tokenizer.default_tokenizer(test_text)
     control_tokens = Tokenizer.default_tokenizer(control_text)
     return list((set(control_tokens) - set(test_tokens)).union(set(test_tokens) - set(control_tokens)))
@@ -61,6 +75,8 @@ def jaccard_difference(control_text, test_text):
 
 
 
+
+# TODO move the comments below to a test.
 
 # x = [[1.,1,1,1], [1,1,1,0]]
 #
