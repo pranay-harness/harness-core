@@ -4,6 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.ArtifactType;
 
 import java.io.InputStream;
 import java.util.List;
@@ -18,7 +19,15 @@ public interface NexusService {
    *
    * @return map RepoId and Name
    */
-  Map<String, String> getRepositories(final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails);
+  Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails);
+
+  /**
+   * Get Repositories
+   *
+   * @return map RepoId and Name
+   */
+  Map<String, String> getRepositories(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType);
 
   /**
    * Get Artifact paths under repository
@@ -101,4 +110,16 @@ public interface NexusService {
    */
   BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String groupId, String artifactName);
+
+  /**
+   *
+   * @param nexusConfig
+   * @param encryptionDetails
+   * @param repoKey
+   * @param imageName
+   * @param maxNumberOfBuilds
+   * @return
+   */
+  List<BuildDetails> getBuilds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoKey,
+      String imageName, int maxNumberOfBuilds);
 }
