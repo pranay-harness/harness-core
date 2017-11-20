@@ -223,7 +223,7 @@ public class MessageServiceImpl implements MessageService {
       return null;
     }
     Object value = allData.get(key);
-    if (!valueClass.isAssignableFrom(value.getClass())) {
+    if (value != null && !valueClass.isAssignableFrom(value.getClass())) {
       logger.error("Value is not an instance of {}: {}", valueClass.getName(), value);
       return null;
     }
