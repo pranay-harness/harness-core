@@ -2,6 +2,7 @@ package software.wings.service.intfc.security;
 
 import software.wings.annotation.Encryptable;
 import software.wings.beans.UuidAware;
+import software.wings.dl.PageResponse;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -24,7 +25,7 @@ public interface SecretManager {
 
   EncryptionType getEncryptionType(String accountId);
 
-  List<SecretUsageLog> getUsageLogs(final String entityId, SettingValue.SettingVariableTypes variableType)
+  PageResponse<SecretUsageLog> getUsageLogs(final String entityId, SettingValue.SettingVariableTypes variableType)
       throws IllegalAccessException;
 
   List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
