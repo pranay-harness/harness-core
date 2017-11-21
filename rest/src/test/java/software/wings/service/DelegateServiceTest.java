@@ -47,7 +47,6 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -58,7 +57,6 @@ import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -92,7 +90,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private CacheHelper cacheHelper;
   @Mock private javax.cache.Cache<String, DelegateTask> cache;
   @Mock private javax.cache.Cache<String, Set> validationCache;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private AssignDelegateService assignDelegateService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
@@ -226,46 +223,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDownloadDelegate() throws Exception {
-    when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
-    try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
-      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(Constants.DELEGATE_DIR + "/");
-
-      ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/run.sh");
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
-          .extracting(o -> ((AsiExtraField) o).getMode())
-          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
-
-      byte[] buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateRun.sh"))));
-
-      file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/stop.sh");
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
-          .extracting(o -> ((AsiExtraField) o).getMode())
-          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
-
-      buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedWatcherStop.sh"))));
-    }
-  }
-
-  @Test
   public void shouldDownloadWatcher() throws Exception {
-    when(featureFlagService.isEnabled(FeatureName.WATCHER, ACCOUNT_ID)).thenReturn(true);
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
