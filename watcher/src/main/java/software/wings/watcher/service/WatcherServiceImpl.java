@@ -211,6 +211,7 @@ private void watchDelegate() {
           logger.info(
               "Message channel found for another watcher process {} that isn't the next watcher. Closing channel",
               process);
+          messageService.retrieveMessage(WATCHER, process, 500L);
           messageService.closeChannel(WATCHER, process);
         });
 
