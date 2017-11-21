@@ -17,8 +17,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Delegate;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,47 +69,8 @@ catch (Exception e) {
 }
 
 @Test
-public void shouldDownloadDelegateZip() throws IOException, JSONException, TimeoutException, InterruptedException {
-  String responseString =
-      httpRequestExecutor
-          .execute(Request.Get("https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId)
-                       .addHeader("Authorization", "Bearer " + userToken)
-                       .addHeader("accept", "application/json"))
-          .returnContent()
-          .asString();
-  JSONObject jsonResponseObject = new JSONObject(responseString);
-
-  String zipDownloadUrl = jsonResponseObject.getJSONObject("resource").getString("downloadUrl");
-  assertThat(zipDownloadUrl).isNotEmpty();
-
-  assertThat(new ProcessExecutor()
-                 .command("rm", "-rf", "harness-delegate", "delegate.zip")
-                 .readOutput(true)
-                 .execute()
-                 .getExitValue())
-      .isEqualTo(0);
-
-  httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.zip"));
-  assertThat(new ProcessExecutor().command("unzip", "delegate.zip").readOutput(true).execute().getExitValue())
-      .isEqualTo(0);
-
-  List<String> scripts = new ProcessExecutor()
-                             .command("ls", "harness-delegate")
-                             .readOutput(true)
-                             .execute()
-                             .getOutput()
-                             .getLines()
-                             .stream()
-                             .map(String::trim)
-                             .collect(Collectors.toList());
-  assertThat(scripts).hasSize(3).containsExactly("README.txt", "run.sh", "stop.sh");
-}
-
-@Test
-@Ignore
 public void shouldDownloadDelegateZipWithWatcher()
     throws IOException, JSONException, TimeoutException, InterruptedException {
-  enableWatcherFeatureFlag();
   String responseString =
       httpRequestExecutor
           .execute(Request.Get("https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId)
@@ -267,9 +226,5 @@ private void waitForDelegateToRegisterWithTimeout() {
     logger.info("isDelegateConnected = {}", connected);
     return connected;
   }, CoreMatchers.is(true));
-}
-
-private void enableWatcherFeatureFlag() {
-  wingsPersistence.save(FeatureFlag.builder().name(FeatureName.WATCHER.name()).enabled(true).obsolete(false).build());
 }
 }
