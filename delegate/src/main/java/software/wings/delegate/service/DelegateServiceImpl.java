@@ -203,14 +203,13 @@ public class DelegateServiceImpl implements DelegateService {
               })
               .transport(TRANSPORT.WEBSOCKET);
 
-      boolean scriptAvailable =
-          (watched && new File("delegate.sh").exists()) || (!watched && new File("run.sh").exists());
-      Options clientOptions = client.newOptionsBuilder()
-                                  .runtime(asyncHttpClient, true)
-                                  .reconnect(true)
-                                  .reconnectAttempts(scriptAvailable ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
-                                  .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
-                                  .build();
+      Options clientOptions =
+          client.newOptionsBuilder()
+              .runtime(asyncHttpClient, true)
+              .reconnect(true)
+              .reconnectAttempts(new File("delegate.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
+              .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
+              .build();
       socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
