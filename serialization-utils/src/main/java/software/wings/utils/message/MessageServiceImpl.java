@@ -224,7 +224,6 @@ public class MessageServiceImpl implements MessageService {
     }
     Object value = allData.get(key);
     if (value == null) {
-      logger.info("{} does not contain {}", name, key);
       return null;
     }
     if (!valueClass.isAssignableFrom(value.getClass())) {
@@ -237,7 +236,6 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public Map<String, Object> getAllData(String name) {
-    logger.info("Reading data from {}", name);
     try {
       return getDataMap(getDataFile(name));
     } catch (Exception e) {
