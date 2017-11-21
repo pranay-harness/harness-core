@@ -55,13 +55,8 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
   @Override
   public List<DelegateConnectionResult> validate() {
     String criteria = getCriteria().get(0);
-    boolean validated;
-    try {
-      validated = connectableHttpUrl(criteria);
-    } catch (Exception e) {
-      validated = false;
-    }
-    return singletonList(DelegateConnectionResult.builder().criteria(criteria).validated(validated).build());
+    return singletonList(
+        DelegateConnectionResult.builder().criteria(criteria).validated(connectableHttpUrl(criteria)).build());
   }
 
   public Object[] getParameters() {
