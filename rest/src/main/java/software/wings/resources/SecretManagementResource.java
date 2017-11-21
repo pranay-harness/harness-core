@@ -5,7 +5,9 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.UuidAware;
@@ -19,7 +21,9 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.BoundedInputStream;
 
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -40,6 +44,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class SecretManagementResource {
   @Inject private SecretManager secretManager;
+  @Inject private MainConfiguration configuration;
 
   @GET
   @Path("/usage")
@@ -104,29 +109,60 @@ public class SecretManagementResource {
     return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretText.getName(), secretText.getValue()));
   }
 
-  @GET
-  @Path("/list-secrets")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<EncryptedData>> listSecrets(@QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(secretManager.listSecrets(accountId));
-  }
-
   @DELETE
   @Path("/delete-secret")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> updateSecret(
+  public RestResponse<Boolean> deleteSecret(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     return new RestResponse<>(secretManager.deleteSecret(accountId, uuId));
+  }
+
+  @POST
+  @Path("/add-file")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> saveFile(@QueryParam("accountId") final String accountId,
+      @QueryParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream) {
+    return new RestResponse<>(secretManager.saveFile(accountId, name,
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+  }
+
+  @POST
+  @Path("/update-file")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
+      @QueryParam("name") final String name, @QueryParam("uuid") final String fileId,
+      @FormDataParam("file") InputStream uploadedInputStream) {
+    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId,
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+  }
+
+  @DELETE
+  @Path("/delete-file")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteFile(
+      @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
+    return new RestResponse<>(secretManager.deleteFile(accountId, uuId));
+  }
+
+  @GET
+  @Path("/list-secrets")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<EncryptedData>> listSecrets(
+      @QueryParam("accountId") final String accountId, @QueryParam("type") final SettingVariableTypes type) {
+    return new RestResponse<>(secretManager.listSecrets(accountId, type));
   }
 
   @GET
   @Path("/list-secret-usage")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<ServiceVariable>> listSecretUsage(
+  public RestResponse<List<UuidAware>> listSecretUsage(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String secretId) {
-    return new RestResponse<>(secretManager.getSecretTextUsage(accountId, secretId));
+    return new RestResponse<>(secretManager.getSecretUsage(accountId, secretId));
   }
 }

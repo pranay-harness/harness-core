@@ -31,7 +31,10 @@ public interface VaultService {
 
   void changeVault(String accountId, String entityId, String fromVaultId, String toVaultId);
 
-  EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid);
+  EncryptedData encryptFile(
+      String accountId, String name, BoundedInputStream inputStream, EncryptedData savedEncryptedData);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
+
+  void deleteSecret(String accountId, String path, VaultConfig vaultConfig);
 }

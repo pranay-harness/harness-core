@@ -33,10 +33,8 @@ import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
-import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -101,13 +99,7 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public String save(ConfigFile configFile, BoundedInputStream inputStream) {
-    String changeLogDescription = null;
-    if (!StringUtils.isBlank(configFile.getUuid())) {
-      changeLogDescription = "File updated";
-    }
-
     validateEntity(configFile.getAppId(), configFile.getEntityId(), configFile.getEntityType());
-    InputStream toWrite = inputStream;
     String envId = configFile.getEntityType().equals(SERVICE) || configFile.getEntityType().equals(ENVIRONMENT)
         ? GLOBAL_ENV_ID
         : serviceTemplateService.get(configFile.getAppId(), configFile.getTemplateId()).getEnvId();
@@ -115,35 +107,27 @@ public class ConfigServiceImpl implements ConfigService {
     configFile.setEnvId(envId);
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     configFile.setDefaultVersion(1);
+    String fileId;
     if (configFile.isEncrypted()) {
-      toWrite = getEncryptedInputStream(configFile, inputStream, new HashMap<>());
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+      Preconditions.checkNotNull(encryptedData, "No encrypted record found " + configFile);
+      fileId = String.valueOf(encryptedData.getEncryptedValue());
+    } else {
+      fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
+      configFile.setSize(inputStream.getTotalBytesRead()); // set this only after saving file to gridfs
     }
 
-    String fileId = fileService.saveFile(configFile, toWrite, CONFIGS);
-    configFile.setSize(inputStream.getTotalBytesRead()); // set this only after saving file to gridfs
     String id = wingsPersistence.save(configFile);
     entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
-    if (configFile.isEncrypted()) {
-      updateParentForEncryptedData(configFile);
-      if (UserThreadLocal.get() != null) {
-        if (StringUtils.isBlank(changeLogDescription)) {
-          changeLogDescription = "File uploaded";
-        }
-        wingsPersistence.save(SecretChangeLog.builder()
-                                  .accountId(configFile.getAccountId())
-                                  .encryptedDataId(id)
-                                  .description(changeLogDescription)
-                                  .user(EmbeddedUser.builder()
-                                            .uuid(UserThreadLocal.get().getUuid())
-                                            .email(UserThreadLocal.get().getEmail())
-                                            .name(UserThreadLocal.get().getName())
-                                            .build())
-                                  .build());
-      }
+
+    if (secretManager.getEncryptionType(configFile.getAccountId()) != EncryptionType.VAULT) {
+      fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
     }
 
-    fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
+    if (configFile.isEncrypted()) {
+      updateParentForEncryptedData(configFile);
+    }
     return id;
   }
 
@@ -215,9 +199,10 @@ public class ConfigServiceImpl implements ConfigService {
   public File download(String appId, String configId) {
     ConfigFile configFile = get(appId, configId);
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
-    fileService.download(configFile.getFileUuid(), file, CONFIGS);
     if (configFile.isEncrypted()) {
       file = getDecryptedFile(configFile, file, appId, null);
+    } else {
+      fileService.download(configFile.getFileUuid(), file, CONFIGS);
     }
     return file;
   }
@@ -229,9 +214,10 @@ public class ConfigServiceImpl implements ConfigService {
     String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
 
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
-    fileService.download(fileId, file, CONFIGS);
     if (configFile.isEncrypted()) {
       file = getDecryptedFile(configFile, file, appId, null);
+    } else {
+      fileService.download(fileId, file, CONFIGS);
     }
     return file;
   }
@@ -240,9 +226,10 @@ public class ConfigServiceImpl implements ConfigService {
   public File downloadForActivity(String appId, String configId, String activityId) {
     ConfigFile configFile = get(appId, configId);
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
-    fileService.download(configFile.getFileUuid(), file, CONFIGS);
     if (configFile.isEncrypted()) {
       file = getDecryptedFile(configFile, file, appId, activityId);
+    } else {
+      fileService.download(configFile.getFileUuid(), file, CONFIGS);
     }
     return file;
   }
@@ -262,7 +249,7 @@ public class ConfigServiceImpl implements ConfigService {
       secretUsageLog.setAppId(configFile.getAppId());
       wingsPersistence.save(secretUsageLog);
     }
-    return secretManager.decryptFile(file, configFile.getAccountId(), encryptedData);
+    return secretManager.getFile(encryptedData.getAccountId(), configFile.getEncryptedFileId(), file);
   }
 
   /* (non-Javadoc)
@@ -279,44 +266,38 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     Map<String, Object> updateMap = new HashMap<>();
-    String oldFileId = savedConfigFile.getFileUuid();
 
     inputConfigFile.setEntityType(savedConfigFile.getEntityType());
+    String fileId = null;
+    if (inputConfigFile.isEncrypted()) {
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, inputConfigFile.getEncryptedFileId());
+      Preconditions.checkNotNull(encryptedData, "No encrypted record found " + inputConfigFile);
+      fileId = String.valueOf(encryptedData.getEncryptedValue());
+      updateMap.put("encryptedFileId", inputConfigFile.getEncryptedFileId());
+      updateParentForEncryptedData(inputConfigFile);
+    } else if (uploadedInputStream != null) {
+      fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
+      updateMap.put("encryptedFileId", "");
 
-    if (uploadedInputStream != null) {
-      InputStream toWrite = uploadedInputStream;
-      if (inputConfigFile.isEncrypted()) {
-        toWrite = getEncryptedInputStream(savedConfigFile, uploadedInputStream, updateMap);
-        if (UserThreadLocal.get() != null) {
-          wingsPersistence.save(SecretChangeLog.builder()
-                                    .accountId(inputConfigFile.getAccountId())
-                                    .encryptedDataId(inputConfigFile.getUuid())
-                                    .description("File updated")
-                                    .user(EmbeddedUser.builder()
-                                              .uuid(UserThreadLocal.get().getUuid())
-                                              .email(UserThreadLocal.get().getEmail())
-                                              .name(UserThreadLocal.get().getName())
-                                              .build())
-                                    .build());
-        }
-      } else if (!StringUtils.isBlank(savedConfigFile.getEncryptedFileId())) {
-        wingsPersistence.delete(EncryptedData.class, savedConfigFile.getEncryptedFileId());
-        updateMap.put("encryptedFileId", "");
-      }
-      String fileId = fileService.saveFile(inputConfigFile, toWrite, CONFIGS);
-      EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
-          inputConfigFile.getUuid(), savedConfigFile.getEntityId(), inputConfigFile.getFileName(), ChangeType.UPDATED,
-          inputConfigFile.getNotes());
-      fileService.updateParentEntityIdAndVersion(
-          inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
-      if (inputConfigFile.isSetAsDefault()) {
-        inputConfigFile.setDefaultVersion(entityVersion.getVersion());
-      }
       updateMap.put("fileUuid", inputConfigFile.getFileUuid());
       updateMap.put("checksum", inputConfigFile.getChecksum());
       updateMap.put("size", uploadedInputStream.getTotalBytesRead());
       updateMap.put("fileName", inputConfigFile.getFileName());
-      updateMap.put("encrypted", inputConfigFile.isEncrypted());
+    }
+    updateMap.put("encrypted", inputConfigFile.isEncrypted());
+
+    if (!StringUtils.isBlank(fileId)) {
+      EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
+          inputConfigFile.getUuid(), savedConfigFile.getEntityId(), inputConfigFile.getFileName(), ChangeType.UPDATED,
+          inputConfigFile.getNotes());
+      if (inputConfigFile.isSetAsDefault()) {
+        inputConfigFile.setDefaultVersion(entityVersion.getVersion());
+      }
+
+      if (secretManager.getEncryptionType(inputConfigFile.getAccountId()) != EncryptionType.VAULT) {
+        fileService.updateParentEntityIdAndVersion(
+            inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
+      }
     }
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
@@ -337,36 +318,6 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
-  }
-
-  private InputStream getEncryptedInputStream(
-      ConfigFile configFile, BoundedInputStream inputStream, Map<String, Object> updateMap) {
-    if (!StringUtils.isBlank(configFile.getUuid())) {
-      wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
-    }
-    String fileUuid = UUID.randomUUID().toString();
-    EncryptedData encryptedData = secretManager.encryptFile(inputStream, configFile.getAccountId(), fileUuid);
-    encryptedData.setUuid(fileUuid);
-    char[] encryptedFileData = encryptedData.getEncryptedValue();
-
-    // don't save encrypted data as the file is saved in gridFS
-    switch (encryptedData.getEncryptionType()) {
-      case VAULT:
-        encryptedData.setEncryptedValue(encryptedData.getEncryptionKey().toCharArray());
-        break;
-      default:
-        encryptedData.setEncryptedValue(null);
-        break;
-    }
-
-    if (!StringUtils.isBlank(configFile.getUuid())) {
-      encryptedData.addParent(configFile.getUuid());
-      wingsPersistence.save(encryptedData);
-    }
-
-    configFile.setEncryptedFileId(encryptedData.getUuid());
-    updateMap.put("encryptedFileId", encryptedData.getUuid());
-    return new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileData)).array());
   }
 
   /**
@@ -404,9 +355,19 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void delete(String appId, String configId) {
-    boolean deleted = wingsPersistence.delete(
-        wingsPersistence.createQuery(ConfigFile.class).field("appId").equal(appId).field(ID_KEY).equal(configId));
+    Query<ConfigFile> query =
+        wingsPersistence.createQuery(ConfigFile.class).field("appId").equal(appId).field(ID_KEY).equal(configId);
+    ConfigFile configFile = query.get();
+    Preconditions.checkNotNull(configFile, "No file found for app " + appId + " with id " + configId);
+    boolean deleted = wingsPersistence.delete(query);
     if (deleted) {
+      if (configFile.isEncrypted()) {
+        EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+        Preconditions.checkNotNull("Encrypted record null for " + configFile);
+        encryptedData.removeParentId(configFile.getUuid());
+        wingsPersistence.save(encryptedData);
+      }
+
       List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
                                          .field("appId")
                                          .equal(appId)
@@ -414,7 +375,7 @@ public class ConfigServiceImpl implements ConfigService {
                                          .equal(configId)
                                          .asList();
       if (configFiles.size() != 0) {
-        configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
+        configFiles.forEach(file -> delete(appId, file.getUuid()));
       }
       executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
     }
