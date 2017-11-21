@@ -1,9 +1,9 @@
 package software.wings.beans;
 
 import static java.util.Arrays.stream;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
@@ -11,6 +11,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ECR;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ELB;
+import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCR;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
@@ -22,15 +23,14 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL
 import static software.wings.settings.SettingValue.SettingVariableTypes.SLACK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
-import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.STRING;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -41,9 +41,9 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.yaml.BaseYaml;
 
 import java.util.List;
-import java.util.Objects;
 import javax.validation.Valid;
 
 /**
@@ -200,6 +200,19 @@ public class SettingAttribute extends Base {
       settingAttribute.setLastUpdatedBy(lastUpdatedBy);
       settingAttribute.setLastUpdatedAt(lastUpdatedAt);
       return settingAttribute;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @lombok.Builder
+  public static class Yaml extends BaseYaml {
+    private String name;
+    private SettingValue.Yaml value;
+
+    public Yaml(String name, SettingValue.Yaml value) {
+      this.name = name;
+      this.value = value;
     }
   }
 }

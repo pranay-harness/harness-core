@@ -5,12 +5,14 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
  * Created by sriram_parthasarathy on 9/11/17.
@@ -43,5 +45,20 @@ public class SumoConfig extends SettingValue implements Encryptable {
    **/
   public SumoConfig() {
     super(SettingVariableTypes.SUMO.name());
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends VerificationProviderYaml {
+    private String sumoUrl;
+    private String accessId;
+    private String accessKey;
+
+    public Yaml(String type, String name, String sumoUrl, String accessId, String accessKey) {
+      super(type, name);
+      this.sumoUrl = sumoUrl;
+      this.accessId = accessId;
+      this.accessKey = accessKey;
+    }
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;
@@ -19,6 +20,7 @@ public class AwsLambdaCommandUnit extends AbstractCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("AWS_LAMBDA")
   public static class Yaml extends AbstractCommandUnit.Yaml {
     public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
       private Builder() {}
