@@ -16,6 +16,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -170,7 +171,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (artifactStream.isMetadataOnly()) {
       return APPROVED;
     }
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
+        || NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
       if (artifactType.equals(ArtifactType.DOCKER)) {
         return APPROVED;
       }

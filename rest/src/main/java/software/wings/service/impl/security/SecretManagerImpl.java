@@ -21,6 +21,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -31,6 +32,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
@@ -54,6 +56,7 @@ import software.wings.utils.BoundedInputStream;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -227,25 +230,21 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<SecretUsageLog> getUsageLogs(String entityId, SettingVariableTypes variableType)
+  public PageResponse<SecretUsageLog> getUsageLogs(String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException {
-    final List<SecretUsageLog> secretUsageLogs = new ArrayList<>();
     final List<String> secretIds = getSecretIds(entityId, variableType);
 
-    Iterator<SecretUsageLog> usageLogQuery =
-        wingsPersistence.createQuery(SecretUsageLog.class).field("encryptedDataId").hasAnyOf(secretIds).fetch();
-    while (usageLogQuery.hasNext()) {
-      SecretUsageLog usageLog = usageLogQuery.next();
-      if (StringUtils.isBlank(usageLog.getWorkflowExecutionId())) {
-        continue;
+    final PageRequest<SecretUsageLog> request =
+        PageRequest.Builder.aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
+    PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, request);
+    response.getResponse().forEach(secretUsageLog -> {
+      if (!StringUtils.isBlank(secretUsageLog.getWorkflowExecutionId())) {
+        WorkflowExecution workflowExecution =
+            wingsPersistence.get(WorkflowExecution.class, secretUsageLog.getWorkflowExecutionId());
+        secretUsageLog.setWorkflowExecutionName(workflowExecution.getName());
       }
-      WorkflowExecution workflowExecution =
-          wingsPersistence.get(WorkflowExecution.class, usageLog.getWorkflowExecutionId());
-      usageLog.setWorkflowExecutionName(workflowExecution.getName());
-
-      secretUsageLogs.add(usageLog);
-    }
-    return secretUsageLogs;
+    });
+    return response;
   }
 
   @Override

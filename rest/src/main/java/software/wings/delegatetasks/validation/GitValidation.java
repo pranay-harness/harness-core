@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import static freemarker.template.utility.Collections12.singletonList;
+import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
 import software.wings.beans.GitConfig;
