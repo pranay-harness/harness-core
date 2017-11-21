@@ -6,7 +6,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
@@ -20,7 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ConfigFile.Builder;
+import software.wings.beans.ConfigFile.ConfigFileBuilder;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
@@ -61,7 +60,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   private Application app;
   private Service service;
 
-  private Builder configFileBuilder;
+  private ConfigFileBuilder configFileBuilder;
 
   @Before
   public void setUp() throws Exception {
@@ -74,21 +73,23 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     app = appService.save(anApplication().withAccountId(accountId).withName("AppA").build());
     service =
         serviceResourceService.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
-    configFileBuilder = aConfigFile()
-                            .withAppId(service.getAppId())
-                            .withAccountId(app.getAccountId())
-                            .withName(FILE_NAME)
-                            .withFileName(FILE_NAME)
-                            .withEntityId(service.getUuid())
-                            .withEntityType(EntityType.SERVICE)
-                            .withTemplateId(DEFAULT_TEMPLATE_ID)
-                            .withEnvId(GLOBAL_ENV_ID)
-                            .withRelativeFilePath("tmp");
   }
 
   @Test
   public void shouldSaveServiceConfigFile() throws IOException {
-    ConfigFile appConfigFile = configFileBuilder.but().build();
+    configFileBuilder = ConfigFile.builder()
+                            .accountId(app.getAccountId())
+                            .entityId(service.getUuid())
+                            .entityType(EntityType.SERVICE)
+                            .templateId(DEFAULT_TEMPLATE_ID)
+                            .envId(GLOBAL_ENV_ID)
+                            .relativeFilePath("tmp");
+
+    ConfigFile appConfigFile = configFileBuilder.build();
+
+    appConfigFile.setAppId(service.getAppId());
+    appConfigFile.setName(FILE_NAME);
+    appConfigFile.setFileName(FILE_NAME);
 
     FileInputStream fileInputStream = new FileInputStream(createRandomFile(FILE_NAME));
     String configId = configService.save(appConfigFile, new BoundedInputStream(fileInputStream));
@@ -99,12 +100,39 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void shouldUpdateServiceConfigFile() throws IOException {
+    configFileBuilder = ConfigFile.builder()
+                            .accountId(app.getAccountId())
+                            .entityId(service.getUuid())
+                            .entityType(EntityType.SERVICE)
+                            .templateId(DEFAULT_TEMPLATE_ID)
+                            .envId(GLOBAL_ENV_ID)
+                            .relativeFilePath("tmp");
+
+    ConfigFile appConfigFile = configFileBuilder.build();
+
+    appConfigFile.setAppId(service.getAppId());
+    appConfigFile.setName(FILE_NAME);
+    appConfigFile.setFileName(FILE_NAME);
+
     FileInputStream fileInputStream = new FileInputStream(createRandomFile(FILE_NAME));
-    String configId = configService.save(configFileBuilder.but().build(), new BoundedInputStream(fileInputStream));
+    String configId = configService.save(appConfigFile, new BoundedInputStream(fileInputStream));
     fileInputStream.close();
     ConfigFile originalConfigFile = configService.get(service.getAppId(), configId);
     // update
-    ConfigFile configFile = configFileBuilder.but().build();
+
+    configFileBuilder = ConfigFile.builder()
+                            .accountId(app.getAccountId())
+                            .entityId(service.getUuid())
+                            .entityType(EntityType.SERVICE)
+                            .templateId(DEFAULT_TEMPLATE_ID)
+                            .envId(GLOBAL_ENV_ID)
+                            .relativeFilePath("tmp");
+
+    ConfigFile configFile = configFileBuilder.build();
+
+    configFile.setAppId(service.getAppId());
+    configFile.setName(FILE_NAME);
+    configFile.setFileName(FILE_NAME);
     configFile.setUuid(configId);
     fileInputStream = new FileInputStream(createRandomFile(FILE_NAME + "_1"));
     configService.update(configFile, new BoundedInputStream(fileInputStream));
@@ -115,7 +143,21 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void shouldSaveEncryptedServiceConfigFile() throws IOException {
-    ConfigFile appConfigFile = configFileBuilder.withEncrypted(true).but().build();
+    configFileBuilder = ConfigFile.builder()
+                            .accountId(app.getAccountId())
+                            .entityId(service.getUuid())
+                            .encrypted(true)
+                            .entityType(EntityType.SERVICE)
+                            .templateId(DEFAULT_TEMPLATE_ID)
+                            .envId(GLOBAL_ENV_ID)
+                            .relativeFilePath("tmp");
+
+    ConfigFile appConfigFile = configFileBuilder.build();
+
+    appConfigFile.setAppId(service.getAppId());
+    appConfigFile.setName(FILE_NAME);
+    appConfigFile.setFileName(FILE_NAME);
+
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
     String configId = configService.save(appConfigFile, new BoundedInputStream(inputStream));
     inputStream.close();

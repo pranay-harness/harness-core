@@ -85,6 +85,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
   }
 
   @Test
+<<<<<<< HEAD
   public void migrateInfraMappings() throws Exception {
     List<InfrastructureMapping> infrastructureMappings =
         wingsPersistence.createQuery(InfrastructureMapping.class).asList();
@@ -98,6 +99,29 @@ public class SecretMigrationUtil extends WingsBaseTest {
       //      wingsPersistence.save(infrastructureMapping);
       updated++;
     }
+=======
+  public void migrateConfigFilesRef() throws Exception {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class).asList();
+    int updated = 0;
+    for (ConfigFile configFile : configFiles) {
+      if (!configFile.isEncrypted()) {
+        continue;
+      }
+
+      System.out.println("Processing " + configFile.getUuid());
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+      Preconditions.checkNotNull(encryptedData, "Did not find reference for " + configFile.getUuid());
+
+      encryptedData.setName(configFile.getName());
+      encryptedData.setEncryptedValue(configFile.getFileUuid().toCharArray());
+
+      System.out.println("setting name of " + encryptedData.getUuid() + "  to " + configFile.getName());
+
+      //      wingsPersistence.save(encryptedData);
+      updated++;
+    }
+    System.out.println("Complete. Updated " + updated + " records.");
+>>>>>>> c48df12... changes for config file
   }
 
   @Test
