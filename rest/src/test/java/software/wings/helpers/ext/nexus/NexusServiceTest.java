@@ -13,17 +13,14 @@ import com.google.inject.Inject;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockito.internal.util.reflection.Whitebox;
 import software.wings.WingsBaseTest;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.security.EncryptionServiceImpl;
 
 import java.io.InputStream;
 import java.util.List;
@@ -49,11 +46,6 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .username("admin")
                                              .password("admin123".toCharArray())
                                              .build();
-
-  @Before
-  public void setUp() {
-    Whitebox.setInternalState(nexusService, "encryptionService", new EncryptionServiceImpl());
-  }
 
   @Test
   public void shouldGetRepositories() {
