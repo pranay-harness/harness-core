@@ -399,7 +399,6 @@ private void checkForUpgrade() {
     logger.info("Watcher stays on version: [{}]", getVersion());
     return;
   }
-  logger.info("Checking for upgrade");
   try {
     String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
     String bucketName =
