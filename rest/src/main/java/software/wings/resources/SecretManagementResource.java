@@ -11,6 +11,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.UuidAware;
+import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -154,7 +155,11 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<List<EncryptedData>> listSecrets(
       @QueryParam("accountId") final String accountId, @QueryParam("type") final SettingVariableTypes type) {
-    return new RestResponse<>(secretManager.listSecrets(accountId, type));
+    try {
+      return new RestResponse<>(secretManager.listSecrets(accountId, type));
+    } catch (IllegalAccessException e) {
+      throw new WingsException(e);
+    }
   }
 
   @GET

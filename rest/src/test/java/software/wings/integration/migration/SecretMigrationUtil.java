@@ -85,7 +85,6 @@ public class SecretMigrationUtil extends WingsBaseTest {
   }
 
   @Test
-<<<<<<< HEAD
   public void migrateInfraMappings() throws Exception {
     List<InfrastructureMapping> infrastructureMappings =
         wingsPersistence.createQuery(InfrastructureMapping.class).asList();
@@ -99,7 +98,9 @@ public class SecretMigrationUtil extends WingsBaseTest {
       //      wingsPersistence.save(infrastructureMapping);
       updated++;
     }
-=======
+  }
+
+  @Test
   public void migrateConfigFilesRef() throws Exception {
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class).asList();
     int updated = 0;
@@ -121,7 +122,6 @@ public class SecretMigrationUtil extends WingsBaseTest {
       updated++;
     }
     System.out.println("Complete. Updated " + updated + " records.");
->>>>>>> c48df12... changes for config file
   }
 
   @Test

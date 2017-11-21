@@ -607,7 +607,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) {
+  public List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException {
     List<EncryptedData> rv = new ArrayList<>();
     Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                         .field("accountId")
@@ -621,6 +621,10 @@ public class SecretManagerImpl implements SecretManager {
       encryptedData.setEncryptionKey(SECRET_MASK);
       encryptedData.setEncryptedBy(getSecretManagerName(
           type, encryptedData.getUuid(), encryptedData.getKmsId(), encryptedData.getEncryptionType()));
+
+      encryptedData.setSetupUsage(getSecretUsage(accountId, encryptedData.getUuid()).size());
+      encryptedData.setRunTimeUsage(getUsageLogs(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
+      encryptedData.setChangeLog(getChangeLogs(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
       rv.add(encryptedData);
     }
 
