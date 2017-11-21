@@ -159,7 +159,7 @@ public class MessageServiceImpl implements MessageService {
     File channelDirectory = new File(ROOT + IO + type.name().toLowerCase() + "/");
     try {
       FileUtils.forceMkdir(channelDirectory);
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
       return null;
     }
@@ -175,7 +175,7 @@ public class MessageServiceImpl implements MessageService {
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error closing channel for {} {}", type, id, e);
     }
   }
@@ -209,7 +209,7 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error writing data to {}. Couldn't store {}", name, dataToWrite);
     }
   }
@@ -223,7 +223,11 @@ public class MessageServiceImpl implements MessageService {
       return null;
     }
     Object value = allData.get(key);
-    if (value != null && !valueClass.isAssignableFrom(value.getClass())) {
+    if (value == null) {
+      logger.info("{} does not contain {}", name, key);
+      return null;
+    }
+    if (!valueClass.isAssignableFrom(value.getClass())) {
       logger.error("Value is not an instance of {}: {}", valueClass.getName(), value);
       return null;
     }
@@ -236,7 +240,7 @@ public class MessageServiceImpl implements MessageService {
     logger.info("Reading data from {}", name);
     try {
       return getDataMap(getDataFile(name));
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error reading data from {}", name);
       return null;
     }
@@ -247,7 +251,7 @@ public class MessageServiceImpl implements MessageService {
     File dataDirectory = new File(ROOT + DATA);
     try {
       FileUtils.forceMkdir(dataDirectory);
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
       return null;
     }
@@ -280,7 +284,7 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error removing data from {}. Couldn't remove {}", name, key);
     }
   }
@@ -293,7 +297,7 @@ public class MessageServiceImpl implements MessageService {
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error closing data: {}", name, e);
     }
   }
@@ -354,7 +358,7 @@ public class MessageServiceImpl implements MessageService {
         FileUtils.forceDelete(lockFile);
       }
       return true;
-    } catch (IOException e) {
+    } catch (Exception e) {
       return false;
     }
   }
