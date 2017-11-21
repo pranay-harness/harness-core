@@ -5,14 +5,16 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
  * The type ELK config.
@@ -46,5 +48,22 @@ public class ElkConfig extends SettingValue implements Encryptable {
 
   public ElkConfig(SettingVariableTypes type) {
     super(type.name());
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends VerificationProviderYaml {
+    private String elkUrl;
+    private String username;
+    private String password;
+    private String connectorType;
+
+    public Yaml(String type, String name, String elkUrl, String username, String password, String connectorType) {
+      super(type, name);
+      this.elkUrl = elkUrl;
+      this.username = username;
+      this.password = password;
+      this.connectorType = connectorType;
+    }
   }
 }

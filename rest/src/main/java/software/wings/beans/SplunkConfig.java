@@ -6,12 +6,14 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
  * The type Splunk config.
@@ -49,5 +51,20 @@ public class SplunkConfig extends SettingValue implements Encryptable {
     this.password = password;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends VerificationProviderYaml {
+    private String splunkUrl;
+    private String username;
+    private String password;
+
+    public Yaml(String type, String name, String splunkUrl, String username, String password) {
+      super(type, name);
+      this.splunkUrl = splunkUrl;
+      this.username = username;
+      this.password = password;
+    }
   }
 }

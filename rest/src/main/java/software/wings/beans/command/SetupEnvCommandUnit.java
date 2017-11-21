@@ -61,6 +61,11 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends ExecCommandUnit.Yaml {
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.SETUP_ENV.name());
+    }
+
     public static final class Builder extends ExecCommandUnit.Yaml.Builder {
       private Builder() {}
 

@@ -5,11 +5,13 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.CloudProviderYaml;
 
 /**
  * Created by anubhaw on 12/27/16.
@@ -39,5 +41,18 @@ public class AwsConfig extends SettingValue implements Encryptable {
     this.secretKey = secretKey;
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends CloudProviderYaml {
+    private String accessKey;
+    private String secretKey;
+
+    public Yaml(String type, String name, String accessKey, String secretKey) {
+      super(type, name);
+      this.accessKey = accessKey;
+      this.secretKey = secretKey;
+    }
   }
 }

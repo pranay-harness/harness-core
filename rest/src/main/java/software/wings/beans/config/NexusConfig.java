@@ -6,11 +6,13 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.ArtifactServerYaml;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -52,5 +54,13 @@ public class NexusConfig extends SettingValue implements Encryptable {
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.version = version;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends ArtifactServerYaml {
+    public Yaml(String type, String name, String url, String username, String password) {
+      super(type, name, url, username, password);
+    }
   }
 }

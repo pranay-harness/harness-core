@@ -255,7 +255,7 @@ public class YamlResource {
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
       @PathParam("uuid") String uuid, @QueryParam("type") String type, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlResourceService.updateSettingAttribute(accountId, uuid, type, yamlPayload, deleteEnabled);
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   /**

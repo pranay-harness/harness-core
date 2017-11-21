@@ -5,12 +5,14 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
  * Created by rsingh on 8/21/17.
@@ -59,5 +61,18 @@ public class LogzConfig extends SettingValue implements Encryptable {
 
   public void setAccountId(String accountId) {
     this.accountId = accountId;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends VerificationProviderYaml {
+    private String logzUrl;
+    private String token;
+
+    public Yaml(String type, String name, String logzUrl, String token) {
+      super(type, name);
+      this.logzUrl = logzUrl;
+      this.token = token;
+    }
   }
 }

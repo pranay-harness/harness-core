@@ -19,6 +19,11 @@ import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHan
 import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
 import software.wings.service.impl.yaml.handler.service.ServiceYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.FailureStrategyYamlHandler;
@@ -40,6 +45,10 @@ public class YamlHandlerFactory {
   @Inject private Map<String, WorkflowYamlHandler> workflowYamlHelperMap;
   @Inject private Map<String, CommandUnitYamlHandler> commandUnitYamlHandlerMap;
   @Inject private Map<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHandlerMap;
+  @Inject private Map<String, ArtifactServerYamlHandler> artifactServerYamlHelperMap;
+  @Inject private Map<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMap;
+  @Inject private Map<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMap;
+  @Inject private Map<String, CloudProviderYamlHandler> cloudProviderYamlHelperMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private EnvironmentYamlHandler environmentYamlHandler;
@@ -62,24 +71,21 @@ public class YamlHandlerFactory {
   @Inject private LogConfigurationYamlHandler logConfigurationYamlHandler;
   @Inject private DefaultSpecificationYamlHandler defaultSpecificationYamlHandler;
   @Inject private FunctionSpecificationYamlHandler functionSpecificationYamlHandler;
+  @Inject private ElasticLoadBalancerConfigYamlHandler elbConfigYamlHandler;
 
   // TODO change the return type to generics so that we don't have to explicitly downcast
   public BaseYamlHandler getYamlHandler(YamlType yamlType, String subType) {
     switch (yamlType) {
       case CLOUD_PROVIDER:
-        break;
+        return cloudProviderYamlHelperMap.get(subType);
       case ARTIFACT_SERVER:
-        // TODO
-        break;
+        return artifactServerYamlHelperMap.get(subType);
       case COLLABORATION_PROVIDER:
-        // TODO
-        break;
+        return collaborationProviderYamlHelperMap.get(subType);
       case LOADBALANCER_PROVIDER:
-        // TODO
-        break;
+        return elbConfigYamlHandler;
       case VERIFICATION_PROVIDER:
-        // TODO
-        break;
+        return verificationProviderYamlHelperMap.get(subType);
       case APPLICATION:
         return applicationYamlHandler;
       case SERVICE:

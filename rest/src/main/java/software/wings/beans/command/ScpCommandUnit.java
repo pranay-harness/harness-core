@@ -304,10 +304,16 @@ public class ScpCommandUnit extends SshCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("SCP")
   public static class Yaml extends SshCommandUnit.Yaml {
     // maps to fileCategory
     private String source;
     private String destinationDirectoryPath;
+
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.SCP.name());
+    }
 
     public static final class Builder extends SshCommandUnit.Yaml.Builder {
       // maps to fileCategory

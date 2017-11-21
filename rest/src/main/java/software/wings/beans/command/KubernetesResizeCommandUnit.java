@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -45,6 +46,7 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("RESIZE_KUBERNETES")
   public static class Yaml extends ContainerOrchestrationCommandUnit.Yaml {
     public static final class Builder extends ContainerOrchestrationCommandUnit.Yaml.Builder {
       private Builder() {}
