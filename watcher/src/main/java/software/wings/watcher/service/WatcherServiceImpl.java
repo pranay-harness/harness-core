@@ -209,10 +209,17 @@ private void watchDelegate() {
                 && !StringUtils.equals(process, messageService.getData(WATCHER_DATA, NEXT_WATCHER, String.class)))
         .forEach(process -> {
           logger.info(
-              "Message channel found for another watcher process {} that isn't the next watcher. Closing channel",
+              "Message channel found for another watcher process {} that isn't the next watcher. Shutting it down",
               process);
           messageService.retrieveMessage(WATCHER, process, 500L);
-          messageService.closeChannel(WATCHER, process);
+          executorService.submit(() -> {
+            try {
+              new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", process).start();
+              messageService.closeChannel(WATCHER, process);
+            } catch (Exception e) {
+              logger.error("Error killing watcher {}", process, e);
+            }
+          });
         });
 
     if (isEmpty(runningDelegates)) {
