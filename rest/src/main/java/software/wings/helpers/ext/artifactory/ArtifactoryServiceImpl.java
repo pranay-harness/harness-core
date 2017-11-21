@@ -20,9 +20,6 @@ import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-
 import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -50,7 +47,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -366,7 +362,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             }
           }
         }
+        Collections.reverse(artifactPaths);
         artifactPaths = artifactPaths.stream().limit(maxVersions).collect(Collectors.toList());
+        Collections.reverse(artifactPaths);
       } else {
         throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Artifact path can not be empty");
       }

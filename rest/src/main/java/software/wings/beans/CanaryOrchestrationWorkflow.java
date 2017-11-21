@@ -14,11 +14,13 @@ import static software.wings.common.Constants.PRE_DEPLOYMENT;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
+import static software.wings.common.Constants.phaseNamePattern;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -233,7 +235,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
       int i = 0;
       for (WorkflowPhase workflowPhase : workflowPhases) {
-        workflowPhase.setName(PHASE_NAME_PREFIX + ++i);
+        if (StringUtils.isBlank(workflowPhase.getName())
+            || phaseNamePattern.matcher(workflowPhase.getName()).matches()) {
+          workflowPhase.setName(PHASE_NAME_PREFIX + ++i);
+        }
         workflowPhaseIds.add(workflowPhase.getUuid());
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
         populatePhaseStepIds(workflowPhase);

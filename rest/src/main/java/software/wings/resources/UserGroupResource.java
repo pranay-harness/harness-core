@@ -111,6 +111,7 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> updateOverview(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
+    userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
     return new RestResponse<>(userGroupService.updateOverview(userGroup));
   }
@@ -129,6 +130,7 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> updateMembers(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
+    userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
     return new RestResponse<>(userGroupService.updateMembers(userGroup));
   }
@@ -147,6 +149,7 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> updatePermissions(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
+    userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
     return new RestResponse<>(userGroupService.updatePermissions(userGroup));
   }

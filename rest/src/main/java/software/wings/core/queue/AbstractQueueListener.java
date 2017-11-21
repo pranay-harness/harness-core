@@ -46,9 +46,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         message = queue.get();
         logger.trace("got message {}", message);
       } catch (Exception exception) {
-        if (exception instanceof InterruptedException
-            || exception.getCause() != null
-                && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
+        if (exception.getCause() != null && exception.getCause() instanceof InterruptedException) {
           logger.info("Thread interrupted, shutting down for queue " + queue.name(), exception);
           run = false;
         } else {
@@ -88,7 +86,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    * @param exception the exception
    * @param message   the message
    */
-  protected void onException(Exception exception, T message) {
+  void onException(Exception exception, T message) {
     logger.error("Exception happened while processing message " + message, exception);
     if (message.getRetries() > 0) {
       message.setRetries(message.getRetries() - 1);

@@ -6,19 +6,21 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static software.wings.utils.ArtifactType.DOCKER;
+
+import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.internal.util.reflection.Whitebox;
+import org.mockito.InjectMocks;
+import software.wings.WingsBaseTest;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.security.EncryptionServiceImpl;
 
 import java.io.InputStream;
 import java.util.List;
@@ -26,7 +28,7 @@ import java.util.List;
 /**
  * Created by srinivas on 3/30/17.
  */
-public class NexusServiceTest {
+public class NexusServiceTest extends WingsBaseTest {
   /**
    * The Wire mock rule.
    */
@@ -34,15 +36,16 @@ public class NexusServiceTest {
 
   private static final String DEFAULT_NEXUS_URL = "http://localhost:8881/nexus/";
 
-  private NexusService nexusService = new NexusServiceImpl();
+  @Inject @InjectMocks private NexusService nexusService;
 
   private NexusConfig nexusConfig =
       NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("admin123".toCharArray()).build();
-
-  @Before
-  public void setUp() {
-    Whitebox.setInternalState(nexusService, "encryptionService", new EncryptionServiceImpl());
-  }
+  private NexusConfig nexusThreeConfig = NexusConfig.builder()
+                                             .nexusUrl(DEFAULT_NEXUS_URL)
+                                             .version("3.x")
+                                             .username("admin")
+                                             .password("admin123".toCharArray())
+                                             .build();
 
   @Test
   public void shouldGetRepositories() {
@@ -548,6 +551,29 @@ public class NexusServiceTest {
         nexusService.getLatestVersion(nexusConfig, null, "releases", "software.wings.nexus", "rest-client");
     assertThat(buildDetails).extracting(BuildDetails::getNumber).containsExactly("3.0");
   }
+
+  @Test
+  public void shouldGetDockerRepositories() {
+    assertThat(nexusService.getRepositories(nexusThreeConfig, null, DOCKER))
+        .hasSize(3)
+        .containsEntry("docker-group", "docker-group");
+  }
+
+  @Test
+  public void shouldDockerImages() {
+    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group"))
+        .hasSize(1)
+        .contains("wingsplugins/todolist");
+  }
+
+  @Test
+  public void shouldDockerTags() {
+    assertThat(nexusService.getBuilds(nexusThreeConfig, null, "docker-group", "wingsplugins/todolist", 10))
+        .hasSize(3)
+        .extracting(buildDetails -> buildDetails.getNumber())
+        .contains("latest");
+  }
+
   private void setPomModelWireMock() {
     // First return the POM Model
     wireMockRule.stubFor(

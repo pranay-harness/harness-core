@@ -42,15 +42,21 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType) {
-    return getPlans(config, encryptionDetails);
+    return nexusService.getRepositories(config, encryptionDetails, artifactType);
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
-    return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+    if ((artifactStreamAttributes.getArtifactType() != null
+            && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER))) {
+      return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+          artifactStreamAttributes.getImageName(), 50);
+    } else {
+      return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+          artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+    }
   }
 
   @Override
@@ -83,15 +89,15 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(NexusConfig config) {
-    if (!validUrl(config.getNexusUrl())) {
+  public boolean validateArtifactServer(NexusConfig nexusConfig) {
+    if (!validUrl(nexusConfig.getNexusUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Nexus URL must be a valid URL");
     }
-    if (!connectableHttpUrl(config.getNexusUrl())) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Could not reach Nexus Server at : " + config.getNexusUrl());
+    if (!connectableHttpUrl(nexusConfig.getNexusUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Could not reach Nexus Server at : " + nexusConfig.getNexusUrl());
     }
-    return nexusService.getRepositories(config, Collections.emptyList()) != null;
+    return nexusService.isRunning(nexusConfig, Collections.emptyList());
   }
 
   @Override

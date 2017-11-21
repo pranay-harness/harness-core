@@ -54,9 +54,6 @@ then
   cd ..
   rm -rf jre tmp
   ln -s $JRE_DIR jre
-else
-  rm -rf run.sh upgrade.sh README.txt
-  echo "Install the Harness Delegate by executing start.sh in this directory." >> README.txt
 fi
 
 
@@ -106,31 +103,24 @@ then
   cp watcher.jar watcherBackup.$CURRENT_VERSION
   $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml upgrade $2
 else
-  if [[ $1 == "transition" ]]
+  if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
   then
-    echo "Transition"
-    CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-    $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml transition
+    echo "Watcher already running"
   else
-    if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
+    nohup $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
+    sleep 1
+    if [ -s nohup-watcher.out ]
     then
-      echo "Watcher already running"
+      echo "Failed to start Watcher."
+      echo "$(cat nohup-watcher.out)"
     else
-      nohup $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
-      sleep 1
-      if [ -s nohup-watcher.out ]
+      sleep 3
+      if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
       then
-        echo "Failed to start Watcher."
-        echo "$(cat nohup-watcher.out)"
+        echo "Watcher started"
       else
-        sleep 3
-        if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
-        then
-          echo "Watcher started"
-        else
-          echo "Failed to start Watcher."
-          echo "$(tail -n 30 watcher.log)"
-        fi
+        echo "Failed to start Watcher."
+        echo "$(tail -n 30 watcher.log)"
       fi
     fi
   fi

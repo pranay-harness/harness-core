@@ -27,19 +27,6 @@ public class SignalService {
     }
   }
 
-  void resume() {
-    if (state.compareAndSet(State.PAUSE, State.RUNNING)) {
-      logger.info("[Old] Setting state to running from pause");
-      delegateService.resume();
-      logger.info("[Old] Delegate resumed");
-    }
-    if (state.compareAndSet(State.PAUSED, State.RUNNING)) {
-      logger.info("[Old] Setting state to running from paused");
-      delegateService.resume();
-      logger.info("[Old] Delegate running");
-    }
-  }
-
   void stop() {
     state.set(State.STOP);
     logger.info("[Old] Setting state to stopped");
@@ -47,5 +34,5 @@ public class SignalService {
     logger.info("[Old] Delegate stopped");
   }
 
-  public enum State { RUNNING, PAUSE, PAUSED, STOP }
+  public enum State { RUNNING, PAUSE, STOP }
 }

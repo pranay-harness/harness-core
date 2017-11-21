@@ -50,7 +50,7 @@ public class MessageServiceImpl implements MessageService {
   private final String processId;
 
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
-  private Map<File, Long> timestamps = new HashMap<>();
+  private Map<File, Long> messageTimestamps = new HashMap<>();
 
   public MessageServiceImpl(Clock clock, MessengerType messengerType, String processId) {
     this.clock = clock;
@@ -106,7 +106,7 @@ public class MessageServiceImpl implements MessageService {
     boolean isInput = messengerType == sourceType && processId.equals(sourceProcessId);
     try {
       File file = getMessageFile(sourceType, sourceProcessId);
-      long lastReadTimestamp = Optional.ofNullable(timestamps.get(file)).orElse(0L);
+      long lastReadTimestamp = Optional.ofNullable(messageTimestamps.get(file)).orElse(0L);
       if (!file.exists()) {
         FileUtils.touch(file);
       }
@@ -139,7 +139,7 @@ public class MessageServiceImpl implements MessageService {
                                     .build();
               logger.info("{}: {}",
                   isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
-              timestamps.put(file, timestamp);
+              messageTimestamps.put(file, timestamp);
               reader.close();
               return message;
             }
@@ -159,7 +159,7 @@ public class MessageServiceImpl implements MessageService {
     File channelDirectory = new File(ROOT + IO + type.name().toLowerCase() + "/");
     try {
       FileUtils.forceMkdir(channelDirectory);
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
       return null;
     }
@@ -171,11 +171,11 @@ public class MessageServiceImpl implements MessageService {
     logger.info("Closing channel for {} {}", type, id);
     try {
       File file = getMessageFile(type, id);
-      timestamps.remove(file);
+      messageTimestamps.remove(file);
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error closing channel for {} {}", type, id, e);
     }
   }
@@ -209,21 +209,30 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error writing data to {}. Couldn't store {}", name, dataToWrite);
     }
   }
 
   @Override
-  public Object getData(String name, String key) {
+  @SuppressWarnings({"unchecked"})
+  public <T> T getData(String name, String key, Class<T> valueClass) {
     Map<String, Object> allData = getAllData(name);
     if (allData == null) {
       logger.error("Error reading data from {}. Couldn't get {}", name, key);
       return null;
     }
     Object value = allData.get(key);
+    if (value == null) {
+      logger.info("{} does not contain {}", name, key);
+      return null;
+    }
+    if (!valueClass.isAssignableFrom(value.getClass())) {
+      logger.error("Value is not an instance of {}: {}", valueClass.getName(), value);
+      return null;
+    }
     logger.info("Value read from {}: {} = {}", name, key, value);
-    return value;
+    return (T) value;
   }
 
   @Override
@@ -231,7 +240,7 @@ public class MessageServiceImpl implements MessageService {
     logger.info("Reading data from {}", name);
     try {
       return getDataMap(getDataFile(name));
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error reading data from {}", name);
       return null;
     }
@@ -242,7 +251,7 @@ public class MessageServiceImpl implements MessageService {
     File dataDirectory = new File(ROOT + DATA);
     try {
       FileUtils.forceMkdir(dataDirectory);
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
       return null;
     }
@@ -275,7 +284,7 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error removing data from {}. Couldn't remove {}", name, key);
     }
   }
@@ -288,7 +297,7 @@ public class MessageServiceImpl implements MessageService {
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error closing data: {}", name, e);
     }
   }
@@ -305,7 +314,8 @@ public class MessageServiceImpl implements MessageService {
     return file;
   }
 
-  private Map getDataMap(File file) throws IOException {
+  @SuppressWarnings({"unchecked"})
+  private Map<String, Object> getDataMap(File file) throws IOException {
     if (file.exists()) {
       return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
     }
@@ -348,7 +358,7 @@ public class MessageServiceImpl implements MessageService {
         FileUtils.forceDelete(lockFile);
       }
       return true;
-    } catch (IOException e) {
+    } catch (Exception e) {
       return false;
     }
   }
