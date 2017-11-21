@@ -69,7 +69,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -116,7 +115,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CacheHelper cacheHelper;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
