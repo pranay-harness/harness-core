@@ -1,7 +1,10 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.CloudProviderYaml;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -61,6 +64,14 @@ public class PhysicalDataCenterConfig extends SettingValue {
       PhysicalDataCenterConfig physicalDataCenterConfig = new PhysicalDataCenterConfig();
       physicalDataCenterConfig.setType(type);
       return physicalDataCenterConfig;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends CloudProviderYaml {
+    public Yaml(String type, String name) {
+      super(type, name);
     }
   }
 }

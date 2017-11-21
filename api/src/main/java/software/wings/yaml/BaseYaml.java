@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -7,6 +8,5 @@ import lombok.Data;
  * @author rktummala on 10/17/17
  */
 @Data
-public abstract class BaseYaml {
-  protected BaseYaml() {}
-}
+@AllArgsConstructor
+public abstract class BaseYaml {}

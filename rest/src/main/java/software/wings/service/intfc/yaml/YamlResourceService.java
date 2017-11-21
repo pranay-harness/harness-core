@@ -5,7 +5,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
@@ -95,27 +94,6 @@ public interface YamlResourceService {
   RestResponse<YamlPayload> getSettingAttributesList(String accountId, String type);
 
   /**
-   * Gets the yaml for a setting attribute by accountId and uuid
-   *
-   * @param accountId the account id
-   * @param uuid      the uid of the setting attribute
-   * @return the rest response
-   */
-  RestResponse<YamlPayload> getSettingAttribute(String accountId, String uuid);
-
-  /**
-   * Update setting attribute sent as Yaml (in a JSON "wrapper")
-   *
-   * @param accountId   the account id
-   * @param uuid        the uid of the setting attribute
-   * @param type        the SettingVariableTypes
-   * @param yamlPayload the yaml version of setup
-   * @return the rest response
-   */
-  RestResponse<SettingAttribute> updateSettingAttribute(
-      String accountId, String uuid, String type, YamlPayload yamlPayload, boolean deleteEnabled);
-
-  /**
    * Gets the yaml version of an environment by envId
    *
    * @param appId   the app id
@@ -149,4 +127,6 @@ public interface YamlResourceService {
   RestResponse<Service> updateService(String accountId, YamlPayload yamlPayload);
 
   RestResponse<YamlPayload> getLambdaSpec(String accountId, String appId, String lambdaSpecId);
+
+  RestResponse<YamlPayload> getSettingAttribute(String accountId, String uuid);
 }

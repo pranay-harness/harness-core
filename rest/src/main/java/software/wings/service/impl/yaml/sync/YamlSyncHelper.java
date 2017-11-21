@@ -9,6 +9,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.YamlType;
@@ -18,6 +19,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.Validator;
 
@@ -35,6 +37,34 @@ public class YamlSyncHelper {
   @Inject InfrastructureMappingService infraMappingService;
   @Inject WorkflowService workflowService;
   @Inject PipelineService pipelineService;
+  @Inject SettingsService settingsService;
+
+  public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
+  }
+
+  public SettingAttribute getArtifactServer(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, YamlType.ARTIFACT_SERVER, yamlFilePath);
+  }
+
+  public SettingAttribute getCollaborationProvider(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, YamlType.COLLABORATION_PROVIDER, yamlFilePath);
+  }
+
+  public SettingAttribute getVerificationProvider(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, YamlType.VERIFICATION_PROVIDER, yamlFilePath);
+  }
+
+  public SettingAttribute getLoadBalancerProvider(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, YamlType.LOADBALANCER_PROVIDER, yamlFilePath);
+  }
+
+  private SettingAttribute getSettingAttribute(String accountId, YamlType yamlType, String yamlFilePath) {
+    String artifactServerName =
+        extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, artifactServerName);
+    return settingsService.getSettingAttributeByName(accountId, artifactServerName);
+  }
 
   public String getAppId(String accountId, String yamlFilePath) {
     Application app = getApp(accountId, yamlFilePath);

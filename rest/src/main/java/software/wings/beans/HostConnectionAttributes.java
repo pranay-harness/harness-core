@@ -7,9 +7,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
+import lombok.EqualsAndHashCode;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 
 import javax.validation.constraints.NotNull;
@@ -191,6 +192,23 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setUserName(userName);
       hostConnectionAttributes.setAccountId(accountId);
       return hostConnectionAttributes;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends SettingValue.Yaml {
+    private String connectionType;
+    private String accessType;
+    private String userName;
+    private String key;
+
+    public Yaml(String type, String name, String connectionType, String accessType, String userName, String key) {
+      super(type, name);
+      this.connectionType = connectionType;
+      this.accessType = accessType;
+      this.userName = userName;
+      this.key = key;
     }
   }
 }

@@ -68,11 +68,11 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
             commandUnits.stream()
                 .map(commandUnitYaml -> {
                   try {
-                    BaseYamlHandler phaseYamlHandler =
-                        yamlHandlerFactory.getYamlHandler(YamlType.COMMAND, commandUnitYaml.getCommandUnitType());
+                    BaseYamlHandler commandUnitYamlHandler =
+                        yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
                     ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
                     CommandUnit commandUnit = (CommandUnit) createOrUpdateFromYaml(
-                        isCreate, phaseYamlHandler, clonedContext.build(), changeSetContext);
+                        isCreate, commandUnitYamlHandler, clonedContext.build(), changeSetContext);
                     return commandUnit;
                   } catch (HarnessException e) {
                     throw new WingsException(e);
