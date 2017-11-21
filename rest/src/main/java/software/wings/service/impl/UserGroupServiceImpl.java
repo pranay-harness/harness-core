@@ -6,12 +6,14 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Account;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
@@ -30,6 +32,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class UserGroupServiceImpl implements UserGroupService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
+  @Inject private AccountService accountService;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
@@ -39,9 +42,13 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public PageResponse<UserGroup> list(PageRequest<UserGroup> req) {
+  public PageResponse<UserGroup> list(String accountId, PageRequest<UserGroup> req) {
+    Validator.notNullCheck("accountId", accountId);
+    Account account = accountService.get(accountId);
+    Validator.notNullCheck("account", account);
+    req.addFilter("accountId", accountId, Operator.EQ);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
-    res.getResponse().forEach(userGroup -> loadUsers(userGroup));
+    res.getResponse().forEach(userGroup -> loadUsers(userGroup, account));
     return res;
   }
 
@@ -50,15 +57,16 @@ public class UserGroupServiceImpl implements UserGroupService {
     PageRequest<UserGroup> req =
         aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter(ID_KEY, Operator.EQ, uuid).build();
     UserGroup userGroup = wingsPersistence.get(UserGroup.class, req);
-    loadUsers(userGroup);
+    Account account = accountService.get(accountId);
+    loadUsers(userGroup, account);
     return userGroup;
   }
 
-  private void loadUsers(UserGroup userGroup) {
+  private void loadUsers(UserGroup userGroup, Account account) {
     if (userGroup.getMemberIds() != null) {
       PageRequest<User> req = aPageRequest()
-                                  .addFilter("accountId", Operator.EQ, userGroup.getAccountId())
                                   .addFilter(ID_KEY, Operator.IN, userGroup.getMemberIds().toArray())
+                                  .addFilter("accounts", Operator.IN, account)
                                   .build();
       PageResponse<User> res = userService.list(req);
       userGroup.setMembers(res.getResponse());
