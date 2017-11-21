@@ -77,6 +77,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -243,6 +244,7 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withParameters(new Object[] {contextData.command, commandExecutionContext})
                                       .withEnvId(contextData.env.getUuid())
                                       .withInfrastructureMappingId(contextData.infrastructureMappingId)
+                                      .withTimeout(TimeUnit.HOURS.toMillis(1))
                                       .build());
 
     return anExecutionResponse()
