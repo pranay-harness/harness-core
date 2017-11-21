@@ -52,6 +52,7 @@ import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
+import software.wings.settings.SettingValue;
 
 /**
  * @author rktummala on 10/17/17
@@ -153,7 +154,9 @@ public enum YamlType {
   PORT_MAPPING(ObjectType.PORT_MAPPING, "", "", PortMapping.class),
   STORAGE_CONFIGURATION(ObjectType.STORAGE_CONFIGURATION, "", "", StorageConfiguration.class),
   DEFAULT_SPECIFICATION(ObjectType.DEFAULT_SPECIFICATION, "", "", DefaultSpecification.class),
-  FUNCTION_SPECIFICATION(ObjectType.FUNCTION_SPECIFICATION, "", "", FunctionSpecification.class);
+  FUNCTION_SPECIFICATION(ObjectType.FUNCTION_SPECIFICATION, "", "", FunctionSpecification.class),
+  SETTING_ATTRIBUTE(ObjectType.SETTING_ATTRIBUTE, "", "", SettingAttribute.class),
+  SETTING_VALUE(ObjectType.SETTING_VALUE, "", "", SettingValue.class);
 
   private String entityType;
   private String pathExpression;

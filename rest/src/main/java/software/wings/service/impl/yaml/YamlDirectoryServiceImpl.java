@@ -681,6 +681,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doVerificationProviderType(accountId, verificationProvidersFolder, SettingVariableTypes.ELK, directoryPath.clone());
     doVerificationProviderType(
         accountId, verificationProvidersFolder, SettingVariableTypes.LOGZ, directoryPath.clone());
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, SettingVariableTypes.SUMO, directoryPath.clone());
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, SettingVariableTypes.NEW_RELIC, directoryPath.clone());
 
     return verificationProvidersFolder;
   }

@@ -287,6 +287,7 @@ public class ExecCommandUnit extends SshCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("EXEC")
   public static class Yaml extends SshCommandUnit.Yaml {
     // maps to commandPath
     private String workingDirectory;

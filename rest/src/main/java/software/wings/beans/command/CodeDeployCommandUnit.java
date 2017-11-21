@@ -10,6 +10,7 @@ import com.amazonaws.services.codedeploy.model.AutoRollbackConfiguration;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -123,6 +124,7 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("CODE_DEPLOY")
   public static class Yaml extends AbstractCommandUnit.Yaml {
     public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
       private Builder() {}

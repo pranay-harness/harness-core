@@ -83,6 +83,27 @@ import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYaml
 import software.wings.service.impl.yaml.handler.inframapping.GcpKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.GitConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.JenkinsConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.AwsConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.GcpConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.PhysicalDataCenterConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SlackConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.MultiServiceWorkflowYamlHandler;
@@ -95,6 +116,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 /**
  * Guice Module for initializing all yaml classes.
@@ -147,6 +169,46 @@ public class YamlModule extends AbstractModule {
         .to(KubernetesContainerTaskYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AWS_LAMBDA.name())
         .to(LambdaSpecificationYamlHandler.class);
+
+    MapBinder<String, ArtifactServerYamlHandler> artifactServerYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ArtifactServerYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.ARTIFACTORY.name())
+        .to(ArtifactoryConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.BAMBOO.name()).to(BambooConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.DOCKER.name())
+        .to(DockerRegistryConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.GIT.name()).to(GitConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.JENKINS.name())
+        .to(JenkinsConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.NEXUS.name()).to(NexusConfigYamlHandler.class);
+
+    MapBinder<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, VerificationProviderYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.APP_DYNAMICS.name())
+        .to(AppDynamicsConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.ELK.name()).to(ElkConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.LOGZ.name())
+        .to(LogzConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.NEW_RELIC.name())
+        .to(NewRelicConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SPLUNK.name())
+        .to(SplunkConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SUMO.name())
+        .to(SumoConfigYamlHandler.class);
+
+    MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);
+    collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SMTP.name())
+        .to(SmtpConfigYamlHandler.class);
+    collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SLACK.name())
+        .to(SlackConfigYamlHandler.class);
+
+    MapBinder<String, CloudProviderYamlHandler> cloudProviderYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, CloudProviderYamlHandler.class);
+    cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.AWS.name()).to(AwsConfigYamlHandler.class);
+    cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.GCP.name()).to(GcpConfigYamlHandler.class);
+    cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+        .to(PhysicalDataCenterConfigYamlHandler.class);
 
     MapBinder<String, WorkflowYamlHandler> workflowYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, WorkflowYamlHandler.class);

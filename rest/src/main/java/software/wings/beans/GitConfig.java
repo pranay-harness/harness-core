@@ -6,12 +6,14 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.ArtifactServerYaml;
 
 @JsonTypeName("GIT")
 @Data
@@ -47,5 +49,16 @@ public class GitConfig extends SettingValue implements Encryptable {
     this.branch = branch;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends ArtifactServerYaml {
+    private String branch;
+
+    public Yaml(String type, String name, String url, String username, String password, String branch) {
+      super(type, name, url, username, password);
+      this.branch = branch;
+    }
   }
 }
