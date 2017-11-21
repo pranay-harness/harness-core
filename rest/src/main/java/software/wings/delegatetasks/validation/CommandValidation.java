@@ -74,8 +74,14 @@ public class CommandValidation extends AbstractDelegateValidateTask {
       DelegateConnectionResultBuilder resultBuilder, CommandExecutionContext context, String deploymentType) {
     if (DeploymentType.KUBERNETES.name().equals(deploymentType) && context.getCloudProviderSetting() != null
         && context.getCloudProviderSetting().getValue() instanceof KubernetesConfig) {
-      resultBuilder.validated(
-          connectableHttpUrl(((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl()));
+      boolean validated;
+      try {
+        validated =
+            connectableHttpUrl(((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl());
+      } catch (Exception e) {
+        validated = false;
+      }
+      resultBuilder.validated(validated);
     } else if (DeploymentType.ECS.name().equals(deploymentType)
         || DeploymentType.AWS_CODEDEPLOY.name().equals(deploymentType)) {
       CloseableHttpClient httpclient =
