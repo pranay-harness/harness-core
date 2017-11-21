@@ -25,15 +25,16 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.xml.stream.XMLStreamException;
 
@@ -43,8 +44,6 @@ import javax.xml.stream.XMLStreamException;
 @Singleton
 public class NexusServiceImpl implements NexusService {
   private final static Logger logger = LoggerFactory.getLogger(NexusServiceImpl.class);
-
-  @Inject private EncryptionService encryptionService;
 
   @Inject private NexusThreeServiceImpl nexusThreeService;
 
@@ -266,5 +265,20 @@ public class NexusServiceImpl implements NexusService {
       handleException(e);
     }
     return new ArrayList<>();
+  }
+
+  @Override
+  public boolean isRunning(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
+    List<String> images = new ArrayList<>();
+    if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
+      return getRepositories(nexusConfig, Collections.emptyList()) != null;
+    } else {
+      Map<String, String> repositories = getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER);
+      Optional<String> repoKey = repositories.keySet().stream().findFirst();
+      if (repoKey.isPresent()) {
+        images = getGroupIdPaths(nexusConfig, encryptionDetails, repoKey.get());
+      }
+    }
+    return (images != null);
   }
 }
