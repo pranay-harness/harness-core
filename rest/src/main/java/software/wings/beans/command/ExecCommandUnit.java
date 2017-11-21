@@ -296,6 +296,11 @@ public class ExecCommandUnit extends SshCommandUnit {
     // maps to tailPatterns
     private List<TailFilePatternEntry.Yaml> filePatternEntryList;
 
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.EXEC.name());
+    }
+
     public static class Builder extends SshCommandUnit.Yaml.Builder {
       // maps to commandPath
       protected String workingDirectory;
