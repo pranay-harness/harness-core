@@ -30,8 +30,6 @@ import software.wings.delegate.service.DelegateService;
 import software.wings.delegate.service.DelegateServiceImpl;
 import software.wings.delegate.service.LogAnalysisStoreServiceImpl;
 import software.wings.delegate.service.MetricDataStoreServiceImpl;
-import software.wings.delegate.service.UpgradeService;
-import software.wings.delegate.service.UpgradeServiceImpl;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -147,7 +145,6 @@ public class DelegateModule extends AbstractModule {
             new ThreadFactoryBuilder().setNameFormat("delegate-task-%d").build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class);
-    bind(UpgradeService.class).to(UpgradeServiceImpl.class);
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);

@@ -90,7 +90,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   @Override
   @SuppressWarnings({"unchecked"})
-  public void run(boolean upgrade, boolean transition) {
+  public void run(boolean upgrade) {
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
       runningDelegates.addAll(
@@ -102,25 +102,6 @@ public class WatcherServiceImpl implements WatcherService {
         Message message = waitForIncomingMessage(GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
-      } else if (transition) {
-        // TODO - Legacy path for transitioning from delegate only. Remove after watcher is standard
-        logger.info("[New] Transitioned to watcher. Process started. Sending confirmation");
-        System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
-
-        logger.info("[New] Waiting for go ahead from old delegate");
-        int secs = 0;
-        File goaheadFile = new File("goahead");
-        while (!goaheadFile.exists() && secs++ < 7200) {
-          Thread.sleep(1000L);
-          logger.info("[New] Waiting for go ahead... ({} seconds elapsed)", secs);
-        }
-
-        if (secs < 7200) {
-          logger.info("[New] Go ahead received from old delegate. Sending confirmation");
-        } else {
-          logger.info("[New] Timed out waiting for go ahead. Proceeding anyway");
-        }
-        System.out.println("proceeding"); // Don't remove this. It is used as message in upgrade flow.
       }
 
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
