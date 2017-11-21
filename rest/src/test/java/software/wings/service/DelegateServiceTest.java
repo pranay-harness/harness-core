@@ -282,9 +282,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateScripts delegateScripts =
         delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "0.0.0", "https://localhost:9090");
     assertThat(delegateScripts.isDoUpgrade()).isTrue();
-    assertThat(delegateScripts.getUpgradeScript())
-        .isEqualTo(
-            CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateUpgrade.sh"))));
   }
 
   @Test

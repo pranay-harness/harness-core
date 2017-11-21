@@ -122,7 +122,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
   httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.zip"));
   new ProcessExecutor()
       .command("/bin/sh", "-c",
-          "unzip delegate.zip && cd harness-delegate && sed -i'' 's/doUpgrade: true/doUpgrade: false/' run.sh")
+          "unzip delegate.zip && cd harness-delegate && sed -i'' 's/doUpgrade: true/doUpgrade: false/' start.sh")
       .readOutput(true)
       .execute()
       .getOutput()
@@ -133,7 +133,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
       .hasSize(0); // no delegate registered
 
   int commandStatus = new ProcessExecutor()
-                          .command("/bin/sh", "-c", "cd harness-delegate && ./run.sh")
+                          .command("/bin/sh", "-c", "cd harness-delegate && ./start.sh")
                           .readOutput(true)
                           .execute()
                           .getExitValue();
@@ -165,7 +165,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
 
   new ProcessExecutor()
       .command("/bin/sh", "-c",
-          "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i'' 's/REMOTE_DELEGATE_URL=.*/REMOTE_DELEGATE_URL=https:\\/\\/s3.amazonaws.com\\/wingsdelegates\\/jobs\\/test-delegate\\/delegate.jar/' run.sh && sed -i'' 's/doUpgrade: false/doUpgrade: true/' run.sh")
+          "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i'' 's/REMOTE_DELEGATE_URL=.*/REMOTE_DELEGATE_URL=https:\\/\\/s3.amazonaws.com\\/wingsdelegates\\/jobs\\/test-delegate\\/delegate.jar/' start.sh && sed -i'' 's/doUpgrade: false/doUpgrade: true/' start.sh")
       .readOutput(true)
       .execute()
       .getOutput()
@@ -173,7 +173,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
       .forEach(logger::info);
 
   commandStatus = new ProcessExecutor()
-                      .command("/bin/sh", "-c", "cd harness-delegate && ./run.sh")
+                      .command("/bin/sh", "-c", "cd harness-delegate && ./start.sh")
                       .readOutput(true)
                       .execute()
                       .getExitValue();
