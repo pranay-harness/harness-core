@@ -211,7 +211,6 @@ private void watchDelegate() {
           logger.info(
               "Message channel found for another watcher process {} that isn't the next watcher. Shutting it down",
               process);
-          messageService.retrieveMessage(WATCHER, process, 500L);
           executorService.submit(() -> {
             try {
               new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", process).start();
