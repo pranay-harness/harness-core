@@ -54,6 +54,12 @@ public class EncryptedData extends Base {
 
   @SchemaIgnore @Transient private transient String encryptedBy;
 
+  @SchemaIgnore @Transient private transient int setupUsage;
+
+  @SchemaIgnore @Transient private transient int runTimeUsage;
+
+  @SchemaIgnore @Transient private transient int changeLog;
+
   public void addParent(String parentId) {
     if (parentIds == null) {
       parentIds = new HashSet<>();

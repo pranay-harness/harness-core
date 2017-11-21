@@ -552,13 +552,42 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void listSecrets() throws IOException, IllegalAccessException {
-    int numOfSecrets = 10;
+    int numOfSecrets = 3;
+    int numOfVariable = 4;
+    int numOfAccess = 3;
+    int numOfUpdates = 2;
     List<EncryptedData> secrets = secretManager.listSecrets(accountId, SECRET_TEXT);
     assertTrue(secrets.isEmpty());
     for (int i = 0; i < numOfSecrets; i++) {
       String secretName = UUID.randomUUID().toString();
       String secretValue = UUID.randomUUID().toString();
-      secretManager.saveSecret(accountId, secretName, secretValue);
+      String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
+      for (int j = 0; j < numOfVariable; j++) {
+        final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                    .templateId(UUID.randomUUID().toString())
+                                                    .envId(UUID.randomUUID().toString())
+                                                    .entityType(EntityType.APPLICATION)
+                                                    .entityId(UUID.randomUUID().toString())
+                                                    .parentServiceVariableId(UUID.randomUUID().toString())
+                                                    .overrideType(OverrideType.ALL)
+                                                    .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                    .expression(UUID.randomUUID().toString())
+                                                    .accountId(accountId)
+                                                    .name(UUID.randomUUID().toString())
+                                                    .value(secretId.toCharArray())
+                                                    .type(Type.ENCRYPTED_TEXT)
+                                                    .build();
+
+        wingsPersistence.save(serviceVariable);
+        for (int k = 0; k < numOfAccess; k++) {
+          secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId);
+        }
+
+        for (int l = 0; l < numOfUpdates; l++) {
+          secretManager.updateSecret(accountId, secretId, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        }
+      }
 
       secrets = secretManager.listSecrets(accountId, SECRET_TEXT);
       assertEquals(i + 1, secrets.size());
@@ -573,6 +602,13 @@ public class SecretTextTest extends WingsBaseTest {
         assertEquals(SECRET_TEXT, secret.getType());
         assertEquals(encryptedBy, secret.getEncryptedBy());
       }
+    }
+
+    secrets = secretManager.listSecrets(accountId, SECRET_TEXT);
+    for (EncryptedData secret : secrets) {
+      assertEquals(numOfVariable, secret.getSetupUsage());
+      assertEquals(numOfAccess * numOfVariable, secret.getRunTimeUsage());
+      assertEquals(numOfUpdates * numOfVariable + 1, secret.getChangeLog());
     }
   }
 

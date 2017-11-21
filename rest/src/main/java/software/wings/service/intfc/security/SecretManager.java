@@ -59,7 +59,7 @@ public interface SecretManager {
 
   boolean deleteFile(String accountId, String uuId);
 
-  List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type);
+  List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException;
 
   List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 }
