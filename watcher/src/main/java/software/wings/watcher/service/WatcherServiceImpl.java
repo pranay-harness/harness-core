@@ -16,9 +16,9 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -72,6 +72,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String WATCHER_DATA = "watcher-data";
   private static final String RUNNING_DELEGATES = "running-delegates";
   private static final String NEXT_WATCHER = "next-watcher";
+  private static final String EXTRA_WATCHER = "extra-watcher";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
@@ -202,24 +203,33 @@ private void watchDelegate() {
           shutdownDelegate(process);
         });
 
-    messageService.listChannels(WATCHER)
-        .stream()
-        .filter(process
-            -> !StringUtils.equals(process, getProcessId())
-                && !StringUtils.equals(process, messageService.getData(WATCHER_DATA, NEXT_WATCHER, String.class)))
-        .forEach(process -> {
-          logger.info(
-              "Message channel found for another watcher process {} that isn't the next watcher. Shutting it down",
-              process);
-          executorService.submit(() -> {
-            try {
-              new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", process).start();
-              messageService.closeChannel(WATCHER, process);
-            } catch (Exception e) {
-              logger.error("Error killing watcher {}", process, e);
-            }
-          });
+    String extraWatcher = messageService.getData(WATCHER_DATA, EXTRA_WATCHER, String.class);
+    if (StringUtils.isNotEmpty(extraWatcher)) {
+      if (!StringUtils.equals(extraWatcher, getProcessId())) {
+        logger.info("Shutting down extra watcher {}", extraWatcher);
+        executorService.submit(() -> {
+          try {
+            new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", extraWatcher).start();
+            messageService.closeChannel(WATCHER, extraWatcher);
+            messageService.removeData(WATCHER_DATA, EXTRA_WATCHER);
+          } catch (Exception e) {
+            logger.error("Error killing watcher {}", extraWatcher, e);
+          }
         });
+      }
+    } else {
+      messageService.listChannels(WATCHER)
+          .stream()
+          .filter(process
+              -> !StringUtils.equals(process, getProcessId())
+                  && !StringUtils.equals(process, messageService.getData(WATCHER_DATA, NEXT_WATCHER, String.class)))
+          .forEach(process -> {
+            logger.info(
+                "Message channel found for another watcher process that isn't the next watcher. {} will be shut down",
+                process);
+            messageService.putData(WATCHER_DATA, EXTRA_WATCHER, process);
+          });
+    }
 
     if (isEmpty(runningDelegates)) {
       if (working.compareAndSet(false, true)) {
