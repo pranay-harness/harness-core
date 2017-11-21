@@ -122,4 +122,12 @@ public interface NexusService {
    */
   List<BuildDetails> getBuilds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoKey,
       String imageName, int maxNumberOfBuilds);
+
+  /**
+   *  Checks if it is connectable and valid credentials
+   * @param nexusConfig
+   * @param encryptionDetails
+   * @return
+   */
+  boolean isRunning(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails);
 }
