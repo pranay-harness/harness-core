@@ -37,6 +37,11 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("RESIZE")
   public static class Yaml extends ContainerOrchestrationCommandUnit.Yaml {
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.RESIZE.name());
+    }
+
     public static final class Builder extends ContainerOrchestrationCommandUnit.Yaml.Builder {
       private Builder() {}
 

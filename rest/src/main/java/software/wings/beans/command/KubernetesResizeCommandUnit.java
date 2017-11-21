@@ -48,6 +48,11 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("RESIZE_KUBERNETES")
   public static class Yaml extends ContainerOrchestrationCommandUnit.Yaml {
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.RESIZE_KUBERNETES.name());
+    }
+
     public static final class Builder extends ContainerOrchestrationCommandUnit.Yaml.Builder {
       private Builder() {}
 

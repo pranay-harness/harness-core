@@ -126,6 +126,11 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("CODE_DEPLOY")
   public static class Yaml extends AbstractCommandUnit.Yaml {
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.CODE_DEPLOY.name());
+    }
+
     public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
       private Builder() {}
 
