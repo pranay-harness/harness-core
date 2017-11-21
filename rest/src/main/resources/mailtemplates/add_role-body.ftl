@@ -76,7 +76,7 @@
                                 <tr>
                                     <!-- Facebook -->
                                     <td align="center" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0; padding-left: 10px; padding-right: 10px; border-spacing: 0; border-collapse: collapse;">
-                                        <a target="_blank" href="https://raw.githubusercontent.com/konsav/email-templates/" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;">
+                                        <a target="_blank" href="https://www.facebook.com/harness.io" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;">
                                             <img border="0" vspace="0" hspace="0" style="line-height: 100%; padding: 0; margin: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; border: none; display: inline-block; color: #000000;" alt="F" title="Follow us on Facebook" width="44" height="44" src="https://s3.amazonaws.com/wings-assets/email-assets/facebook.png">
                                         </a>
                                     </td>
