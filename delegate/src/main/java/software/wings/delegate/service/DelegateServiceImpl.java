@@ -736,14 +736,14 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         Thread.sleep(5000);
       } catch (InterruptedException e) {
-        logger.warn("Time limiter thread interrupted", e);
+        logger.error("Time limiter thread interrupted", e);
       }
 
       Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }
     if (stillRunning) {
-      logger.info("Task {} timed out after {} milliseconds", delegateTask.getUuid(), timeout);
+      logger.error("Task {} timed out after {} milliseconds", delegateTask.getUuid(), timeout);
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
     }
