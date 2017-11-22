@@ -58,6 +58,8 @@ public class ElkConfig extends SettingValue implements Encryptable {
     private String password;
     private String connectorType;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String elkUrl, String username, String password, String connectorType) {
       super(type, name);
       this.elkUrl = elkUrl;

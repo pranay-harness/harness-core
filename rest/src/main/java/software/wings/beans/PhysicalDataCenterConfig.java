@@ -70,6 +70,8 @@ public class PhysicalDataCenterConfig extends SettingValue {
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
+    public Yaml() {}
+
     public Yaml(String type, String name) {
       super(type, name);
     }

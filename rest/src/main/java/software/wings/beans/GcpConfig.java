@@ -44,6 +44,8 @@ public class GcpConfig extends SettingValue implements Encryptable {
   public static final class Yaml extends CloudProviderYaml {
     private String serviceAccountKeyFileContent;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String serviceAccountKeyFileContent) {
       super(type, name);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;

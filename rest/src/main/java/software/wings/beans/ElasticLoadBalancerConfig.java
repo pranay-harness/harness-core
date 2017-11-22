@@ -66,6 +66,8 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     private String accessKey;
     private String secretKey;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String region, String loadBalancerName, String accessKey, String secretKey) {
       super(type, name);
       this.region = region;

@@ -54,6 +54,8 @@ public class SumoConfig extends SettingValue implements Encryptable {
     private String accessId;
     private String accessKey;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String sumoUrl, String accessId, String accessKey) {
       super(type, name);
       this.sumoUrl = sumoUrl;

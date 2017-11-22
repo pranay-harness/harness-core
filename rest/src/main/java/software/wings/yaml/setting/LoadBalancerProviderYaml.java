@@ -10,6 +10,8 @@ import software.wings.settings.SettingValue;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public abstract class LoadBalancerProviderYaml extends SettingValue.Yaml {
+  public LoadBalancerProviderYaml() {}
+
   public LoadBalancerProviderYaml(String type, String name) {
     super(type, name);
   }
