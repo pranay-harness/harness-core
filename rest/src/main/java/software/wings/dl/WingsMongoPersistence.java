@@ -683,8 +683,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   private boolean isReferencedSecretText(Encryptable object, Field encryptedField) throws IllegalAccessException {
-    if (ServiceVariable.class.isInstance(object) && encryptedField.get(object) != null
-        && ((ServiceVariable) object).isUpdateReference()) {
+    if (ServiceVariable.class.isInstance(object) && encryptedField.get(object) != null) {
       return true;
     }
     return false;

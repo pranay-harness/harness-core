@@ -9,7 +9,10 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Util;
 
 /**
@@ -18,11 +21,21 @@ import software.wings.utils.Util;
 @JsonTypeName("DIRECT_KUBERNETES")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
+public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping implements Encryptable {
   @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
   @Attributes(title = "Namespace") @NotEmpty private String namespace;
+
+  @SchemaIgnore private String encryptedPassword;
+
+  @SchemaIgnore @Transient private boolean decrypted;
+
+  @Override
+  @SchemaIgnore
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.DIRECT;
+  }
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -177,12 +190,12 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore
   public KubernetesConfig createKubernetesConfig() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
+                                            .accountId(getAccountId())
                                             .masterUrl(masterUrl)
                                             .username(username)
-                                            .password(password)
+                                            .encryptedPassword(encryptedPassword)
                                             .namespace(isNotEmpty(namespace) ? namespace : "default")
                                             .build();
-    kubernetesConfig.setDecrypted(true);
     return kubernetesConfig;
   }
 
