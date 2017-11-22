@@ -9,6 +9,7 @@ import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysic
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -39,7 +40,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -93,10 +93,11 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .withEnvId(environment.getUuid())
             .withServiceTemplateId(serviceTemplateId)
             .withDeploymentType(DeploymentType.SSH.name())
-            .withComputeProviderType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+            .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
             .withHostConnectionAttrs(hostConnectionAttr.getUuid())
             .withComputeProviderSettingId(computeProviderSetting.getUuid())
             .withHostNames(asList("host1", "host2"))
+            .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
             .build();
     PhysicalInfrastructureMapping infrastructureMapping =
         (PhysicalInfrastructureMapping) infrastructureMappingService.save(physicalInfrastructureMapping);
