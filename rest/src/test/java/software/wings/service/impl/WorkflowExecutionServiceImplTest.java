@@ -31,6 +31,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
@@ -1826,6 +1827,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
                                               .withHostConnectionAttrs(AccessType.KEY.name())
+                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                               .build());
 
     triggerWorkflow(app.getAppId(), env, service, infrastructureMapping);
@@ -1861,6 +1863,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
                                               .withHostConnectionAttrs(AccessType.KEY.name())
+                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                               .build());
 
     InfrastructureMapping templateInfraMapping =
@@ -1873,6 +1876,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
                                               .withHostConnectionAttrs(AccessType.KEY.name())
+                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                               .build());
 
     triggerTemplateWorkflow(app.getAppId(), env, service, infrastructureMapping, templateService, templateInfraMapping);
