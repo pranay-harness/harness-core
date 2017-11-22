@@ -10,6 +10,8 @@ import software.wings.settings.SettingValue;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public abstract class CollaborationProviderYaml extends SettingValue.Yaml {
+  public CollaborationProviderYaml() {}
+
   public CollaborationProviderYaml(String type, String name) {
     super(type, name);
   }

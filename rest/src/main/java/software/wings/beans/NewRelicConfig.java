@@ -65,6 +65,8 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
   public static final class Yaml extends VerificationProviderYaml {
     private String apiKey;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String apiKey) {
       super(type, name);
       this.apiKey = apiKey;
