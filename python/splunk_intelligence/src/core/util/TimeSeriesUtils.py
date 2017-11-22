@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum
+from math import ceil
 
 
 class MetricType(Enum):
@@ -75,12 +76,12 @@ def moving_average(a, n=5):
 def smooth(w, data, metric_type):
     if metric_type == MetricType.COUNT:
         n = len(data)
-        l = np.array_split(data, n / w) if n >= w else data
+        l = np.array_split(data, ceil(n / w)) if n >= w else data
         sums = [np.nansum(z) for z in l]
         return np.asarray(sums)
     else:
         n = len(data)
-        l = np.array_split(data, n / w) if n >= w else data
+        l = np.array_split(data, ceil(n / w)) if n >= w else data
         means = [np.nanmean(z) for z in l]
         return np.asarray(means)
 
