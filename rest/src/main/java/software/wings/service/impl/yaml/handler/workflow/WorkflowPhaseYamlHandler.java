@@ -167,6 +167,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
     Service service = serviceResourceService.get(appId, bean.getServiceId());
     String serviceName = service != null ? service.getName() : null;
+    String deploymentType = Util.getStringFromEnum(bean.getDeploymentType());
     return Yaml.Builder.anYaml()
         .withComputeProviderName(computeProviderName)
         .withInfraMappingName(bean.getInfraMappingName())
@@ -176,7 +177,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .withPhaseSteps(phaseStepYamlList)
         .withProvisionNodes(bean.isProvisionNodes())
         .withTemplateExpressions(templateExprYamlList)
-        .withType(bean.getDeploymentType().name())
+        .withType(deploymentType)
         .build();
   }
 
