@@ -15,6 +15,7 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -67,11 +68,11 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
             commandUnits.stream()
                 .map(commandUnitYaml -> {
                   try {
-                    BaseYamlHandler phaseYamlHandler =
-                        yamlHandlerFactory.getYamlHandler(YamlType.COMMAND, commandUnitYaml.getCommandUnitType());
+                    BaseYamlHandler commandUnitYamlHandler =
+                        yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
                     ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
                     CommandUnit commandUnit = (CommandUnit) createOrUpdateFromYaml(
-                        isCreate, phaseYamlHandler, clonedContext.build(), changeSetContext);
+                        isCreate, commandUnitYamlHandler, clonedContext.build(), changeSetContext);
                     return commandUnit;
                   } catch (HarnessException e) {
                     throw new WingsException(e);
@@ -168,6 +169,16 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   }
 
   @Override
+  public ServiceCommand upsertFromYaml(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
   public ServiceCommand updateFromYaml(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return setWithYamlValues(changeContext, changeSetContext, false);
@@ -194,11 +205,5 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         YamlType.COMMAND.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("commandName is null for given yamlFilePath: " + yamlFilePath, commandName);
     return serviceResourceService.getCommandByName(appId, serviceId, commandName);
-  }
-
-  @Override
-  public ServiceCommand update(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return updateFromYaml(changeContext, changeSetContext);
   }
 }

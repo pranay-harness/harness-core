@@ -176,8 +176,14 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("COPY_CONFIGS")
   public static class Yaml extends AbstractCommandUnit.Yaml {
     private String destinationParentPath;
+
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.COPY_CONFIGS.name());
+    }
 
     public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
       private String destinationParentPath;

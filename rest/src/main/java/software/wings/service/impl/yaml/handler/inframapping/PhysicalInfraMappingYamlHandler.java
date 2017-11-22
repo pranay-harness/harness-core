@@ -8,6 +8,7 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class PhysicalInfraMappingYamlHandler
         .withDeploymentType(infraMapping.getDeploymentType())
         .withComputeProviderName(infraMapping.getComputeProviderName())
         .withName(infraMapping.getName())
+        .withComputeProviderType(infraMapping.getComputeProviderType())
         .withConnection(infraMapping.getHostConnectionAttrs())
         .withHostNames(infraMapping.getHostNames())
         .withLoadBalancer(infraMapping.getLoadBalancerName())
@@ -33,68 +35,9 @@ public class PhysicalInfraMappingYamlHandler
   }
 
   @Override
-  public PhysicalInfrastructureMapping updateFromYaml(
+  public PhysicalInfrastructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    PhysicalInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
-
-    PhysicalInfrastructureMapping previous =
-        (PhysicalInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
-    PhysicalInfrastructureMapping.Builder builder = previous.deepClone();
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
-  }
-
-  private void setWithYamlValues(PhysicalInfrastructureMapping.Builder builder,
-      PhysicalInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
-      String serviceId) {
-    // common stuff for all infra mapping
-    builder.withComputeProviderSettingId(computeProviderId)
-        .withComputeProviderName(infraMappingYaml.getComputeProviderName())
-        .withComputeProviderType(infraMappingYaml.getComputeProviderType())
-        .withEnvId(envId)
-        .withServiceId(serviceId)
-        .withDeploymentType(infraMappingYaml.getDeploymentType())
-        .withName(infraMappingYaml.getName())
-        .withAppId(appId);
-
-    builder.withHostConnectionAttrs(infraMappingYaml.getConnection())
-        .withHostNames(infraMappingYaml.getHostNames())
-        .withLoadBalancerId(getSettingId(appId, infraMappingYaml.getLoadBalancer()))
-        .build();
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    PhysicalInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-    return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
-        || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
-        || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getConnection())
-        || isEmpty(infraMappingYaml.getHostNames()) || isEmpty(infraMappingYaml.getLoadBalancer()));
-  }
-
-  @Override
-  public PhysicalInfrastructureMapping createFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
+    ensureValidChange(changeContext, changeSetContext);
 
     PhysicalInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
@@ -112,19 +55,71 @@ public class PhysicalInfraMappingYamlHandler
     PhysicalInfrastructureMapping.Builder builder =
         PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping();
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    return builder.build();
+    PhysicalInfrastructureMapping current = builder.build();
+
+    PhysicalInfrastructureMapping previous =
+        (PhysicalInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
+            appId, envId, serviceId, computeProviderId);
+
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return (PhysicalInfrastructureMapping) infraMappingService.update(current);
+    } else {
+      return (PhysicalInfrastructureMapping) infraMappingService.save(current);
+    }
+  }
+
+  @Override
+  public PhysicalInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  @Override
+  public PhysicalInfrastructureMapping createFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  private void setWithYamlValues(PhysicalInfrastructureMapping.Builder builder,
+      PhysicalInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
+      String serviceId) {
+    // common stuff for all infra mapping
+    builder.withAutoPopulate(false)
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withName(infraMappingYaml.getName())
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
+        .withComputeProviderSettingId(computeProviderId)
+        .withComputeProviderName(infraMappingYaml.getComputeProviderName())
+        .withComputeProviderType(infraMappingYaml.getComputeProviderType())
+        .withEnvId(envId)
+        .withServiceId(serviceId)
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
+        .withDeploymentType(infraMappingYaml.getDeploymentType())
+        .withName(infraMappingYaml.getName())
+        .withAppId(appId);
+
+    if (!Misc.isNullOrEmpty(infraMappingYaml.getLoadBalancer())) {
+      builder.withLoadBalancerId(getSettingId(appId, infraMappingYaml.getLoadBalancer()));
+    }
+    builder.withHostConnectionAttrs(infraMappingYaml.getConnection())
+        .withHostNames(infraMappingYaml.getHostNames())
+        .build();
+  }
+
+  @Override
+  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+    PhysicalInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
+    return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
+        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
+        || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
+        || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getConnection())
+        || isEmpty(infraMappingYaml.getHostNames()));
   }
 
   @Override
   public PhysicalInfrastructureMapping get(String accountId, String yamlFilePath) {
     return (PhysicalInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
-  }
-
-  @Override
-  public PhysicalInfrastructureMapping update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    PhysicalInfrastructureMapping infrastructureMapping = updateFromYaml(changeContext, changeSetContext);
-    return (PhysicalInfrastructureMapping) infraMappingService.update(infrastructureMapping);
   }
 
   @Override

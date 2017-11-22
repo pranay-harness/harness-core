@@ -340,16 +340,14 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
         .withLastUpdatedAt(getLastUpdatedAt())
         .withComputeProviderType(getComputeProviderType())
         .withInfraMappingType(getInfraMappingType())
-        .withEntityPath(entityYamlPath)
+        .withEntityYamlPath(entityYamlPath)
         .withDeploymentType(getDeploymentType())
         .withComputeProviderName(getComputeProviderName())
         .withName(getName());
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
     private String clusterName;
     private String region;
@@ -362,20 +360,21 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     private String ami;
     private int numberOfNodes;
     private String uuid;
-    private String computeProviderSettingId;
-    private String envId;
     private EmbeddedUser createdBy;
-    private String serviceTemplateId;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
-    private String serviceId;
     private long lastUpdatedAt;
+    private String computeProviderSettingId;
+    private String envId;
+    private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
     private String infraMappingType;
-    private String entityPath;
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    // auto populate name
+    private boolean autoPopulate = true;
 
     private Builder() {}
 
@@ -438,28 +437,13 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return this;
     }
 
-    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
-      this.computeProviderSettingId = computeProviderSettingId;
-      return this;
-    }
-
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
@@ -473,13 +457,33 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return this;
     }
 
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
+    public Builder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
+      return this;
+    }
+
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
+      this.computeProviderSettingId = computeProviderSettingId;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
@@ -490,11 +494,6 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
 
     public Builder withInfraMappingType(String infraMappingType) {
       this.infraMappingType = infraMappingType;
-      return this;
-    }
-
-    public Builder withEntityPath(String entityPath) {
-      this.entityPath = entityPath;
       return this;
     }
 
@@ -513,6 +512,11 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return this;
     }
 
+    public Builder withAutoPopulate(boolean autoPopulate) {
+      this.autoPopulate = autoPopulate;
+      return this;
+    }
+
     public Builder but() {
       return anEcsInfrastructureMapping()
           .withClusterName(clusterName)
@@ -526,21 +530,22 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
           .withAmi(ami)
           .withNumberOfNodes(numberOfNodes)
           .withUuid(uuid)
-          .withComputeProviderSettingId(computeProviderSettingId)
           .withAppId(appId)
-          .withEnvId(envId)
           .withCreatedBy(createdBy)
-          .withServiceTemplateId(serviceTemplateId)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withServiceId(serviceId)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withEntityYamlPath(entityYamlPath)
+          .withComputeProviderSettingId(computeProviderSettingId)
+          .withEnvId(envId)
+          .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withInfraMappingType(infraMappingType)
-          .withEntityPath(entityPath)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withName(name);
+          .withName(name)
+          .withAutoPopulate(autoPopulate);
     }
 
     public EcsInfrastructureMapping build() {
@@ -556,21 +561,22 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       ecsInfrastructureMapping.setAmi(ami);
       ecsInfrastructureMapping.setNumberOfNodes(numberOfNodes);
       ecsInfrastructureMapping.setUuid(uuid);
-      ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       ecsInfrastructureMapping.setAppId(appId);
-      ecsInfrastructureMapping.setEnvId(envId);
       ecsInfrastructureMapping.setCreatedBy(createdBy);
-      ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       ecsInfrastructureMapping.setCreatedAt(createdAt);
       ecsInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
-      ecsInfrastructureMapping.setServiceId(serviceId);
       ecsInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      ecsInfrastructureMapping.setEntityYamlPath(entityYamlPath);
+      ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      ecsInfrastructureMapping.setEnvId(envId);
+      ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      ecsInfrastructureMapping.setServiceId(serviceId);
       ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
       ecsInfrastructureMapping.setInfraMappingType(infraMappingType);
-      ecsInfrastructureMapping.setEntityYamlPath(entityPath);
       ecsInfrastructureMapping.setDeploymentType(deploymentType);
       ecsInfrastructureMapping.setComputeProviderName(computeProviderName);
       ecsInfrastructureMapping.setName(name);
+      ecsInfrastructureMapping.setAutoPopulate(autoPopulate);
       return ecsInfrastructureMapping;
     }
   }

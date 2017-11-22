@@ -9,6 +9,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ObjectType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -115,6 +116,16 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
   }
 
   @Override
+  public Node upsertFromYaml(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
   public Node updateFromYaml(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return setWithYamlValues(false, changeContext, changeSetContext);
@@ -132,12 +143,6 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
 
   @Override
   public Node get(String accountId, String yamlFilePath) {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
-
-  @Override
-  public Node update(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 }
