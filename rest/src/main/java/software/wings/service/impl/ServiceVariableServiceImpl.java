@@ -8,7 +8,9 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
@@ -27,6 +29,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -69,7 +72,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request, boolean maskEncryptedFields) {
     PageResponse<ServiceVariable> response = wingsPersistence.query(ServiceVariable.class, request);
     if (maskEncryptedFields) {
-      response.getResponse().forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
+      response.getResponse().forEach(
+          serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
     }
     return response;
   }
@@ -123,7 +127,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, appId, settingId);
     Validator.notNullCheck("ServiceVariable", serviceVariable);
     if (maskEncryptedFields) {
-      maskEncryptedFields(serviceVariable);
+      processEncryptedServiceVariable(maskEncryptedFields, serviceVariable);
     }
     return serviceVariable;
   }
@@ -207,9 +211,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
             .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
             .build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
-    if (maskEncryptedFields) {
-      variables.forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
-    }
+    variables.forEach(serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
     return variables;
   }
 
@@ -223,9 +225,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
             .addFilter(aSearchFilter().withField("templateId", Operator.EQ, serviceTemplate.getUuid()).build())
             .build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
-    if (maskEncryptedFields) {
-      variables.forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
-    }
+    variables.forEach(serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
     return variables;
   }
 
@@ -247,9 +247,14 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
                                 .equal(entityId));
   }
 
-  private void maskEncryptedFields(ServiceVariable serviceVariable) {
+  private void processEncryptedServiceVariable(boolean maskEncryptedFields, ServiceVariable serviceVariable) {
     if (serviceVariable.getType() == ENCRYPTED_TEXT) {
-      serviceVariable.setValue("******".toCharArray());
+      if (maskEncryptedFields) {
+        serviceVariable.setValue(SECRET_MASK.toCharArray());
+      }
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, serviceVariable.getEncryptedValue());
+      Preconditions.checkNotNull(encryptedData, "no encrypted ref found for " + serviceVariable.getUuid());
+      serviceVariable.setSecretTextName(encryptedData.getName());
     }
   }
 }

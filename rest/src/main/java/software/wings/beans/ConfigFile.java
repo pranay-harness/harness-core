@@ -6,9 +6,11 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -43,6 +45,8 @@ import javax.ws.rs.DefaultValue;
         unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConfigFile extends BaseFile implements Encryptable {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
@@ -88,7 +92,9 @@ public class ConfigFile extends BaseFile implements Encryptable {
 
   @FormDataParam("encrypted") private boolean encrypted = false;
 
-  private String encryptedFileId;
+  @FormDataParam("encryptedFileId") private String encryptedFileId;
+
+  @SchemaIgnore @Transient private String secretFileName;
 
   @SchemaIgnore @Transient private String serviceId;
 

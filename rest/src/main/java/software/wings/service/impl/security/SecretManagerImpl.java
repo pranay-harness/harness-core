@@ -8,6 +8,7 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
@@ -274,12 +275,13 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public Collection<UuidAware> listEncryptedValues(String accountId) {
     Map<String, UuidAware> rv = new HashMap<>();
-    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("type")
-                                        .notEqual(SettingVariableTypes.SECRET_TEXT)
-                                        .fetch();
+    Iterator<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class)
+            .field("accountId")
+            .equal(accountId)
+            .field("type")
+            .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
+            .fetch();
     while (query.hasNext()) {
       EncryptedData data = query.next();
       if (data.getType() != SettingVariableTypes.KMS) {
@@ -555,6 +557,7 @@ public class SecretManagerImpl implements SecretManager {
 
     encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
     encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
+    encryptedData.setName(name);
     wingsPersistence.save(encryptedData);
 
     if (UserThreadLocal.get() != null) {
@@ -587,7 +590,7 @@ public class SecretManagerImpl implements SecretManager {
     if (!configFiles.isEmpty()) {
       String errorMessage = "Being used by ";
       for (ConfigFile configFile : configFiles) {
-        errorMessage += configFile.getName() + ", ";
+        errorMessage += configFile.getFileName() + ", ";
       }
 
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", errorMessage);
@@ -597,11 +600,13 @@ public class SecretManagerImpl implements SecretManager {
       case LOCAL:
       case KMS:
         fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
-        return true;
+        break;
       case VAULT:
         vaultService.deleteSecret(accountId, encryptedData.getEncryptionKey(),
             vaultService.getVaultConfig(accountId, encryptedData.getKmsId()));
-        return true;
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
     }
     return wingsPersistence.delete(EncryptedData.class, uuId);
   }

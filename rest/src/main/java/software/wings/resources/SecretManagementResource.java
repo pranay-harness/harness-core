@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -122,9 +124,10 @@ public class SecretManagementResource {
   @POST
   @Path("/add-file")
   @Timed
+  @Consumes(MULTIPART_FORM_DATA)
   @ExceptionMetered
   public RestResponse<String> saveFile(@QueryParam("accountId") final String accountId,
-      @QueryParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream) {
+      @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream) {
     return new RestResponse<>(secretManager.saveFile(accountId, name,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
   }
@@ -132,9 +135,10 @@ public class SecretManagementResource {
   @POST
   @Path("/update-file")
   @Timed
+  @Consumes(MULTIPART_FORM_DATA)
   @ExceptionMetered
-  public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
-      @QueryParam("name") final String name, @QueryParam("uuid") final String fileId,
+  public RestResponse<Boolean> updateFile(@QueryParam("accountId") final String accountId,
+      @FormDataParam("name") final String name, @FormDataParam("uuid") final String fileId,
       @FormDataParam("file") InputStream uploadedInputStream) {
     return new RestResponse<>(secretManager.updateFile(accountId, name, fileId,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
