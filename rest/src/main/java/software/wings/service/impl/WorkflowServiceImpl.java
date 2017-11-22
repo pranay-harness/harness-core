@@ -270,7 +270,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             workflowPhase =
                 ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
           }
-          if (workflowPhase.getInfraMappingId() != null) {
+          if (workflowPhase != null && workflowPhase.getInfraMappingId() != null) {
             InfrastructureMapping infrastructureMapping =
                 infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
             predicate = stencil -> stencil.matches(infrastructureMapping);

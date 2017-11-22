@@ -94,6 +94,8 @@ public class SlackConfig extends SettingValue {
   public static final class Yaml extends CollaborationProviderYaml {
     private String outgoingWebhookUrl;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String outgoingWebhookUrl) {
       super(type, name);
       this.outgoingWebhookUrl = outgoingWebhookUrl;

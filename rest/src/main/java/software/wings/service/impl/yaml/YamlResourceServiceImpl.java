@@ -26,6 +26,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -42,6 +43,8 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
@@ -357,10 +360,76 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     SettingAttribute settingAttribute = settingsService.get(uuid);
     Validator.notNullCheck("SettingAttribute is not null for:" + uuid, settingAttribute);
 
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.SETTING_ATTRIBUTE, settingAttribute.getValue().getType())
-                        .toYaml(settingAttribute, GLOBAL_APP_ID);
+    BaseYamlHandler yamlHandler = getSettingAttributeYamlHandler(settingAttribute);
+    BaseYaml yaml = null;
+    if (yamlHandler != null) {
+      // TODO check if this is true
+      yaml = yamlHandler.toYaml(settingAttribute, GLOBAL_APP_ID);
+    }
+
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, settingAttribute.getUuid(), accountId, yaml,
         YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
+  }
+
+  private BaseYamlHandler getSettingAttributeYamlHandler(SettingAttribute settingAttribute) {
+    SettingValue settingValue = settingAttribute.getValue();
+    SettingVariableTypes settingVariableType = settingValue.getSettingType();
+
+    switch (settingVariableType) {
+      // cloud providers
+      case AWS:
+      case GCP:
+      case PHYSICAL_DATA_CENTER:
+        return yamlHandlerFactory.getYamlHandler(YamlType.CLOUD_PROVIDER, settingVariableType.name());
+
+      // artifact servers - these don't have separate folders
+      case JENKINS:
+      case BAMBOO:
+      case DOCKER:
+      case NEXUS:
+      case ARTIFACTORY:
+      case ECR:
+      case GCR:
+      case AMAZON_S3:
+      case GIT:
+        return yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SERVER, settingVariableType.name());
+
+      // collaboration providers
+      case SMTP:
+      case SLACK:
+        return yamlHandlerFactory.getYamlHandler(YamlType.COLLABORATION_PROVIDER, settingVariableType.name());
+
+      // load balancers
+      case ELB:
+        return yamlHandlerFactory.getYamlHandler(YamlType.LOADBALANCER_PROVIDER, settingVariableType.name());
+
+      // verification providers
+      // JENKINS is also a (logical) part of this group
+      case APP_DYNAMICS:
+      case SPLUNK:
+      case ELK:
+      case LOGZ:
+      case SUMO:
+      case NEW_RELIC:
+        return yamlHandlerFactory.getYamlHandler(YamlType.VERIFICATION_PROVIDER, settingVariableType.name());
+
+      case HOST_CONNECTION_ATTRIBUTES:
+      case BASTION_HOST_CONNECTION_ATTRIBUTES:
+        break;
+      case KMS:
+      case VAULT:
+        break;
+      case SERVICE_VARIABLE:
+      case CONFIG_FILE:
+      case SSH_SESSION_CONFIG:
+      case YAML_GIT_SYNC:
+      case DIRECT:
+      case KUBERNETES:
+        break;
+      default:
+        logger.warn("Unknown SettingVariable type:" + settingVariableType);
+    }
+    return null;
   }
 
   /**

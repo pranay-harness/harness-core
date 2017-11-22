@@ -203,6 +203,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private String userName;
     private String key;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String connectionType, String accessType, String userName, String key) {
       super(type, name);
       this.connectionType = connectionType;

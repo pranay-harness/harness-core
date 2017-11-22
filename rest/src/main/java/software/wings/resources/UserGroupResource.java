@@ -7,7 +7,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -61,8 +60,7 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<PageResponse<UserGroup>> list(
       @BeanParam PageRequest<UserGroup> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    pageRequest.addFilter("accountId", accountId, Operator.EQ);
-    PageResponse<UserGroup> pageResponse = userGroupService.list(pageRequest);
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
     return new RestResponse<>(pageResponse);
   }
 

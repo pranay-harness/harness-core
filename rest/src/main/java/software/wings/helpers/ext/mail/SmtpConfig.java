@@ -64,6 +64,8 @@ public class SmtpConfig extends SettingValue implements Encryptable {
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String host, int port, String fromAddress, boolean useSSL, String username,
         String password) {
       super(type, name);
