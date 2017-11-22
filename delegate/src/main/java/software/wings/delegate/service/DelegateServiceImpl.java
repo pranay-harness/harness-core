@@ -87,6 +87,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -104,14 +105,14 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
+
   private static final String GO_AHEAD = "go-ahead";
   private static final String UPGRADING = "upgrading";
   private static final String STOP_ACQUIRING = "stop-acquiring";
   private static final String RESUME = "resume";
   private static final String DELEGATE_DASH = "delegate-";
   private static final String DELEGATE_STARTED = "delegate-started";
-  private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
-  private final Object waiter = new Object();
+
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -126,12 +127,18 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
   @Inject private Clock clock;
+
+  private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
+  private final Object waiter = new Object();
+
   private final ConcurrentHashMap<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
-  private static long lastHeartbeatSentAt = System.currentTimeMillis();
-  private static long lastHeartbeatReceivedAt = System.currentTimeMillis();
 
+  private final BlockingQueue<Message> delegateMessages = new LinkedBlockingQueue<>();
+
+  private final AtomicLong lastHeartbeatSentAt = new AtomicLong(System.currentTimeMillis());
+  private final AtomicLong lastHeartbeatReceivedAt = new AtomicLong(System.currentTimeMillis());
   private final AtomicBoolean upgradePending = new AtomicBoolean(false);
   private final AtomicBoolean upgradeNeeded = new AtomicBoolean(false);
   private final AtomicBoolean restartNeeded = new AtomicBoolean(false);
@@ -143,8 +150,6 @@ public class DelegateServiceImpl implements DelegateService {
   private long stoppedAcquiringAt;
   private String delegateId;
   private String accountId;
-
-  private BlockingQueue<Message> delegateMessages = new LinkedBlockingQueue<>();
 
   @Override
   public void run(boolean watched) {
@@ -316,7 +321,7 @@ public class DelegateServiceImpl implements DelegateService {
       String receivedId = message.substring(3); // Remove the "[X]"
       if (delegateId.equals(receivedId)) {
         logger.info("Delegate {} received heartbeat response", receivedId);
-        lastHeartbeatReceivedAt = clock.millis();
+        lastHeartbeatReceivedAt.set(clock.millis());
       } else {
         logger.info("Delegate {} received heartbeat response for another delegate, {}", delegateId, receivedId);
       }
@@ -537,8 +542,8 @@ public class DelegateServiceImpl implements DelegateService {
   private boolean doRestartDelegate() {
     long now = clock.millis();
     return new File("delegate.sh").exists()
-        && (restartNeeded.get() || now - lastHeartbeatSentAt > MAX_HB_TIMEOUT
-               || now - lastHeartbeatReceivedAt > MAX_HB_TIMEOUT);
+        && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > MAX_HB_TIMEOUT
+               || now - lastHeartbeatReceivedAt.get() > MAX_HB_TIMEOUT);
   }
 
   private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
@@ -550,7 +555,7 @@ public class DelegateServiceImpl implements DelegateService {
               .withConnected(true)
               .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
               .build()));
-      lastHeartbeatSentAt = clock.millis();
+      lastHeartbeatSentAt.set(clock.millis());
     }
   }
 

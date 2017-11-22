@@ -10,8 +10,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.utils.message.MessageService;
 import software.wings.utils.message.MessageServiceImpl;
 import software.wings.utils.message.MessengerType;
@@ -30,8 +28,6 @@ import java.util.concurrent.TimeUnit;
  * Created by brett on 10/26/17
  */
 public class WatcherModule extends AbstractModule {
-  private static final Logger logger = LoggerFactory.getLogger(WatcherModule.class);
-
   @Override
   protected void configure() {
     bind(WatcherService.class).to(WatcherServiceImpl.class);
