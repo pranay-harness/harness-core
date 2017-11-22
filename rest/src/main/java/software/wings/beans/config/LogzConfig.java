@@ -69,6 +69,8 @@ public class LogzConfig extends SettingValue implements Encryptable {
     private String logzUrl;
     private String token;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String logzUrl, String token) {
       super(type, name);
       this.logzUrl = logzUrl;

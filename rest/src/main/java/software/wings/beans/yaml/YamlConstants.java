@@ -28,7 +28,7 @@ public interface YamlConstants {
   String GCP_FOLDER = "Google Cloud Platform";
   String PHYSICAL_DATA_CENTER_FOLDER = "Physical Data Centers";
 
-  String ARTIFACT_SOURCES_FOLDER = "Artifact Sources";
+  String ARTIFACT_SOURCES_FOLDER = "Artifact Servers";
   String DEPLOYMENT_SPECIFICATION_FOLDER = "Deployment Specifications";
 
   String SMTP_FOLDER = "SMTP";

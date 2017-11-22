@@ -60,6 +60,8 @@ public class SplunkConfig extends SettingValue implements Encryptable {
     private String username;
     private String password;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String splunkUrl, String username, String password) {
       super(type, name);
       this.splunkUrl = splunkUrl;

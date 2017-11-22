@@ -54,6 +54,8 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
+    public Yaml() {}
+
     public Yaml(String type, String name, String url, String username, String password) {
       super(type, name, url, username, password);
     }

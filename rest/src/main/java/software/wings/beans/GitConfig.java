@@ -56,6 +56,8 @@ public class GitConfig extends SettingValue implements Encryptable {
   public static final class Yaml extends ArtifactServerYaml {
     private String branch;
 
+    public Yaml() {}
+
     public Yaml(String type, String name, String url, String username, String password, String branch) {
       super(type, name, url, username, password);
       this.branch = branch;

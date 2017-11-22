@@ -10,6 +10,8 @@ import software.wings.settings.SettingValue;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public abstract class CloudProviderYaml extends SettingValue.Yaml {
+  public CloudProviderYaml() {}
+
   public CloudProviderYaml(String type, String name) {
     super(type, name);
   }
