@@ -6,6 +6,7 @@ import static software.wings.utils.Util.isEmpty;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.Builder;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -30,6 +31,16 @@ public class AmazonS3ArtifactStreamYamlHandler
   }
 
   @Override
+  public AmazonS3ArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
   public AmazonS3ArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     if (!validate(changeContext, changeSetContext)) {
@@ -40,7 +51,7 @@ public class AmazonS3ArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (AmazonS3ArtifactStream) artifactStreamService.update(builder.build());
   }
 
   private void setWithYamlValues(
@@ -73,7 +84,7 @@ public class AmazonS3ArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
     Builder builder = Builder.anAmazonS3ArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (AmazonS3ArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override

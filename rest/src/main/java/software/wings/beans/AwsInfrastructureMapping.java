@@ -69,6 +69,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     super(InfrastructureMappingType.AWS_SSH.name());
   }
 
+  /**
+   * The type Yaml.
+   */
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends InfrastructureMapping.Yaml {
@@ -91,6 +94,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private List<String> securityGroupIds = new ArrayList<>();
     private List<NameValuePair.Yaml> tags = new ArrayList<>();
 
+    /**
+     * The type Builder.
+     */
     public static final class Builder {
       private String computeProviderType;
       // maps to restrictionType
@@ -119,110 +125,240 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
       private Builder() {}
 
+      /**
+       * A yaml builder.
+       *
+       * @return the builder
+       */
       public static Builder aYaml() {
         return new Builder();
       }
 
+      /**
+       * With compute provider type builder.
+       *
+       * @param computeProviderType the compute provider type
+       * @return the builder
+       */
       public Builder withComputeProviderType(String computeProviderType) {
         this.computeProviderType = computeProviderType;
         return this;
       }
 
+      /**
+       * With restrictions builder.
+       *
+       * @param restrictions the restrictions
+       * @return the builder
+       */
       public Builder withRestrictions(String restrictions) {
         this.restrictions = restrictions;
         return this;
       }
 
+      /**
+       * With service name builder.
+       *
+       * @param serviceName the service name
+       * @return the builder
+       */
       public Builder withServiceName(String serviceName) {
         this.serviceName = serviceName;
         return this;
       }
 
+      /**
+       * With expression builder.
+       *
+       * @param expression the expression
+       * @return the builder
+       */
       public Builder withExpression(String expression) {
         this.expression = expression;
         return this;
       }
 
+      /**
+       * With infra mapping type builder.
+       *
+       * @param infraMappingType the infra mapping type
+       * @return the builder
+       */
       public Builder withInfraMappingType(String infraMappingType) {
         this.infraMappingType = infraMappingType;
         return this;
       }
 
+      /**
+       * With type builder.
+       *
+       * @param type the type
+       * @return the builder
+       */
       public Builder withType(String type) {
         this.type = type;
         return this;
       }
 
+      /**
+       * With region builder.
+       *
+       * @param region the region
+       * @return the builder
+       */
       public Builder withRegion(String region) {
         this.region = region;
         return this;
       }
 
+      /**
+       * With deployment type builder.
+       *
+       * @param deploymentType the deployment type
+       * @return the builder
+       */
       public Builder withDeploymentType(String deploymentType) {
         this.deploymentType = deploymentType;
         return this;
       }
 
+      /**
+       * With compute provider name builder.
+       *
+       * @param computeProviderName the compute provider name
+       * @return the builder
+       */
       public Builder withComputeProviderName(String computeProviderName) {
         this.computeProviderName = computeProviderName;
         return this;
       }
 
+      /**
+       * With connection type builder.
+       *
+       * @param connectionType the connection type
+       * @return the builder
+       */
       public Builder withConnectionType(String connectionType) {
         this.connectionType = connectionType;
         return this;
       }
 
+      /**
+       * With name builder.
+       *
+       * @param name the name
+       * @return the builder
+       */
       public Builder withName(String name) {
         this.name = name;
         return this;
       }
 
+      /**
+       * With load balancer builder.
+       *
+       * @param loadBalancer the load balancer
+       * @return the builder
+       */
       public Builder withLoadBalancer(String loadBalancer) {
         this.loadBalancer = loadBalancer;
         return this;
       }
 
+      /**
+       * With use public dns builder.
+       *
+       * @param usePublicDns the use public dns
+       * @return the builder
+       */
       public Builder withUsePublicDns(boolean usePublicDns) {
         this.usePublicDns = usePublicDns;
         return this;
       }
 
+      /**
+       * With provision instances builder.
+       *
+       * @param provisionInstances the provision instances
+       * @return the builder
+       */
       public Builder withProvisionInstances(boolean provisionInstances) {
         this.provisionInstances = provisionInstances;
         return this;
       }
 
+      /**
+       * With auto scaling group builder.
+       *
+       * @param autoScalingGroup the auto scaling group
+       * @return the builder
+       */
       public Builder withAutoScalingGroup(String autoScalingGroup) {
         this.autoScalingGroup = autoScalingGroup;
         return this;
       }
 
+      /**
+       * With desired capacity builder.
+       *
+       * @param desiredCapacity the desired capacity
+       * @return the builder
+       */
       public Builder withDesiredCapacity(int desiredCapacity) {
         this.desiredCapacity = desiredCapacity;
         return this;
       }
 
+      /**
+       * With vpcs builder.
+       *
+       * @param vpcs the vpcs
+       * @return the builder
+       */
       public Builder withVpcs(List<String> vpcs) {
         this.vpcs = vpcs;
         return this;
       }
 
+      /**
+       * With subnet ids builder.
+       *
+       * @param subnetIds the subnet ids
+       * @return the builder
+       */
       public Builder withSubnetIds(List<String> subnetIds) {
         this.subnetIds = subnetIds;
         return this;
       }
 
+      /**
+       * With security group ids builder.
+       *
+       * @param securityGroupIds the security group ids
+       * @return the builder
+       */
       public Builder withSecurityGroupIds(List<String> securityGroupIds) {
         this.securityGroupIds = securityGroupIds;
         return this;
       }
 
+      /**
+       * With tags builder.
+       *
+       * @param tags the tags
+       * @return the builder
+       */
       public Builder withTags(List<NameValuePair.Yaml> tags) {
         this.tags = tags;
         return this;
       }
 
+      /**
+       * But builder.
+       *
+       * @return the builder
+       */
       public Builder but() {
         return aYaml()
             .withComputeProviderType(computeProviderType)
@@ -247,6 +383,11 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
             .withTags(tags);
       }
 
+      /**
+       * Build yaml.
+       *
+       * @return the yaml
+       */
       public Yaml build() {
         Yaml yaml = new Yaml();
         yaml.setComputeProviderType(computeProviderType);
@@ -274,6 +415,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
+  /**
+   * Validate.
+   */
   public void validate() {
     if (provisionInstances) {
       if (isEmpty(autoScalingGroupName)) {
@@ -421,51 +565,111 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.awsInstanceFilter = awsInstanceFilter;
   }
 
+  /**
+   * Is provision instances boolean.
+   *
+   * @return the boolean
+   */
   public boolean isProvisionInstances() {
     return provisionInstances;
   }
 
+  /**
+   * Sets provision instances.
+   *
+   * @param provisionInstances the provision instances
+   */
   public void setProvisionInstances(boolean provisionInstances) {
     this.provisionInstances = provisionInstances;
   }
 
+  /**
+   * Is use public dns boolean.
+   *
+   * @return the boolean
+   */
   public boolean isUsePublicDns() {
     return usePublicDns;
   }
 
+  /**
+   * Sets use public dns.
+   *
+   * @param usePublicDns the use public dns
+   */
   public void setUsePublicDns(boolean usePublicDns) {
     this.usePublicDns = usePublicDns;
   }
 
+  /**
+   * Gets auto scaling group name.
+   *
+   * @return the auto scaling group name
+   */
   public String getAutoScalingGroupName() {
     return autoScalingGroupName;
   }
 
+  /**
+   * Sets auto scaling group name.
+   *
+   * @param autoScalingGroupName the auto scaling group name
+   */
   public void setAutoScalingGroupName(String autoScalingGroupName) {
     this.autoScalingGroupName = autoScalingGroupName;
   }
 
+  /**
+   * Gets custom name.
+   *
+   * @return the custom name
+   */
   @SchemaIgnore
   public String getCustomName() {
     return customName;
   }
 
+  /**
+   * Sets custom name.
+   *
+   * @param customName the custom name
+   */
   public void setCustomName(String customName) {
     this.customName = customName;
   }
 
+  /**
+   * Is set desired capacity boolean.
+   *
+   * @return the boolean
+   */
   public boolean isSetDesiredCapacity() {
     return setDesiredCapacity;
   }
 
+  /**
+   * Sets set desired capacity.
+   *
+   * @param setDesiredCapacity the set desired capacity
+   */
   public void setSetDesiredCapacity(boolean setDesiredCapacity) {
     this.setDesiredCapacity = setDesiredCapacity;
   }
 
+  /**
+   * Gets desired capacity.
+   *
+   * @return the desired capacity
+   */
   public int getDesiredCapacity() {
     return desiredCapacity;
   }
 
+  /**
+   * Sets desired capacity.
+   *
+   * @param desiredCapacity the desired capacity
+   */
   public void setDesiredCapacity(int desiredCapacity) {
     this.desiredCapacity = desiredCapacity;
   }
@@ -541,6 +745,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   /**
    * Clone and return builder.
+   *
    * @return the builder
    */
   public Builder deepClone() {
@@ -573,176 +778,394 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         .withSetDesiredCapacity(isSetDesiredCapacity());
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
+    /**
+     * The Entity yaml path.
+     */
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+    /**
+     * The App id.
+     */
     protected String appId;
     private String restrictionType;
     private String restrictionExpression;
     private String region;
     private String uuid;
-    private String hostConnectionAttrs;
     private EmbeddedUser createdBy;
-    private String loadBalancerId;
+    private String hostConnectionAttrs;
     private long createdAt;
-    private String loadBalancerName;
+    private String loadBalancerId;
     private EmbeddedUser lastUpdatedBy;
-    private String computeProviderSettingId;
     private long lastUpdatedAt;
-    private String envId;
+    private String loadBalancerName;
+    private String customName;
     private boolean usePublicDns;
-    private String serviceTemplateId;
+    private String computeProviderSettingId;
     private boolean provisionInstances;
-    private String serviceId;
-    private String computeProviderType;
+    private String envId;
+    private String serviceTemplateId;
     private AwsInstanceFilter awsInstanceFilter;
-    private String infraMappingType;
+    private String serviceId;
     private String autoScalingGroupName;
+    private String computeProviderType;
+    private String infraMappingType;
+    private boolean setDesiredCapacity;
     private String deploymentType;
+    private int desiredCapacity;
     private String computeProviderName;
     private String name;
-    private boolean setDesiredCapacity;
-    private int desiredCapacity;
+    // auto populate name
+    private boolean autoPopulate = true;
 
     private Builder() {}
 
+    /**
+     * An aws infrastructure mapping builder.
+     *
+     * @return the builder
+     */
     public static Builder anAwsInfrastructureMapping() {
       return new Builder();
     }
 
+    /**
+     * With restriction type builder.
+     *
+     * @param restrictionType the restriction type
+     * @return the builder
+     */
     public Builder withRestrictionType(String restrictionType) {
       this.restrictionType = restrictionType;
       return this;
     }
 
+    /**
+     * With restriction expression builder.
+     *
+     * @param restrictionExpression the restriction expression
+     * @return the builder
+     */
     public Builder withRestrictionExpression(String restrictionExpression) {
       this.restrictionExpression = restrictionExpression;
       return this;
     }
 
+    /**
+     * With region builder.
+     *
+     * @param region the region
+     * @return the builder
+     */
     public Builder withRegion(String region) {
       this.region = region;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
-      this.hostConnectionAttrs = hostConnectionAttrs;
-      return this;
-    }
-
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withLoadBalancerId(String loadBalancerId) {
-      this.loadBalancerId = loadBalancerId;
+    /**
+     * With host connection attrs builder.
+     *
+     * @param hostConnectionAttrs the host connection attrs
+     * @return the builder
+     */
+    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public Builder withLoadBalancerName(String loadBalancerName) {
-      this.loadBalancerName = loadBalancerName;
+    /**
+     * With load balancer id builder.
+     *
+     * @param loadBalancerId the load balancer id
+     * @return the builder
+     */
+    public Builder withLoadBalancerId(String loadBalancerId) {
+      this.loadBalancerId = loadBalancerId;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
-      this.computeProviderSettingId = computeProviderSettingId;
-      return this;
-    }
-
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
+    /**
+     * With load balancer name builder.
+     *
+     * @param loadBalancerName the load balancer name
+     * @return the builder
+     */
+    public Builder withLoadBalancerName(String loadBalancerName) {
+      this.loadBalancerName = loadBalancerName;
       return this;
     }
 
+    /**
+     * With custom name builder.
+     *
+     * @param customName the custom name
+     * @return the builder
+     */
+    public Builder withCustomName(String customName) {
+      this.customName = customName;
+      return this;
+    }
+
+    /**
+     * With entity yaml path builder.
+     *
+     * @param entityYamlPath the entity yaml path
+     * @return the builder
+     */
+    public Builder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
+      return this;
+    }
+
+    /**
+     * With use public dns builder.
+     *
+     * @param usePublicDns the use public dns
+     * @return the builder
+     */
     public Builder withUsePublicDns(boolean usePublicDns) {
       this.usePublicDns = usePublicDns;
       return this;
     }
 
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
+    /**
+     * With compute provider setting id builder.
+     *
+     * @param computeProviderSettingId the compute provider setting id
+     * @return the builder
+     */
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
+      this.computeProviderSettingId = computeProviderSettingId;
       return this;
     }
 
+    /**
+     * With provision instances builder.
+     *
+     * @param provisionInstances the provision instances
+     * @return the builder
+     */
     public Builder withProvisionInstances(boolean provisionInstances) {
       this.provisionInstances = provisionInstances;
       return this;
     }
 
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
       return this;
     }
 
-    public Builder withComputeProviderType(String computeProviderType) {
-      this.computeProviderType = computeProviderType;
+    /**
+     * With service template id builder.
+     *
+     * @param serviceTemplateId the service template id
+     * @return the builder
+     */
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
+    /**
+     * With aws instance filter builder.
+     *
+     * @param awsInstanceFilter the aws instance filter
+     * @return the builder
+     */
     public Builder withAwsInstanceFilter(AwsInstanceFilter awsInstanceFilter) {
       this.awsInstanceFilter = awsInstanceFilter;
       return this;
     }
 
-    public Builder withInfraMappingType(String infraMappingType) {
-      this.infraMappingType = infraMappingType;
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
+    /**
+     * With auto scaling group name builder.
+     *
+     * @param autoScalingGroupName the auto scaling group name
+     * @return the builder
+     */
     public Builder withAutoScalingGroupName(String autoScalingGroupName) {
       this.autoScalingGroupName = autoScalingGroupName;
       return this;
     }
 
-    public Builder withDeploymentType(String deploymentType) {
-      this.deploymentType = deploymentType;
+    /**
+     * With compute provider type builder.
+     *
+     * @param computeProviderType the compute provider type
+     * @return the builder
+     */
+    public Builder withComputeProviderType(String computeProviderType) {
+      this.computeProviderType = computeProviderType;
       return this;
     }
 
-    public Builder withComputeProviderName(String computeProviderName) {
-      this.computeProviderName = computeProviderName;
+    /**
+     * With infra mapping type builder.
+     *
+     * @param infraMappingType the infra mapping type
+     * @return the builder
+     */
+    public Builder withInfraMappingType(String infraMappingType) {
+      this.infraMappingType = infraMappingType;
       return this;
     }
 
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
+    /**
+     * With set desired capacity builder.
+     *
+     * @param setDesiredCapacity the set desired capacity
+     * @return the builder
+     */
     public Builder withSetDesiredCapacity(boolean setDesiredCapacity) {
       this.setDesiredCapacity = setDesiredCapacity;
       return this;
     }
 
+    /**
+     * With deployment type builder.
+     *
+     * @param deploymentType the deployment type
+     * @return the builder
+     */
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    /**
+     * With desired capacity builder.
+     *
+     * @param desiredCapacity the desired capacity
+     * @return the builder
+     */
     public Builder withDesiredCapacity(int desiredCapacity) {
       this.desiredCapacity = desiredCapacity;
       return this;
     }
 
+    /**
+     * With compute provider name builder.
+     *
+     * @param computeProviderName the compute provider name
+     * @return the builder
+     */
+    public Builder withComputeProviderName(String computeProviderName) {
+      this.computeProviderName = computeProviderName;
+      return this;
+    }
+
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    /**
+     * With auto populate builder.
+     *
+     * @param autoPopulate the auto populate
+     * @return the builder
+     */
+    public Builder withAutoPopulate(boolean autoPopulate) {
+      this.autoPopulate = autoPopulate;
+      return this;
+    }
+
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anAwsInfrastructureMapping()
           .withRestrictionType(restrictionType)
@@ -750,29 +1173,38 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withRegion(region)
           .withUuid(uuid)
           .withAppId(appId)
-          .withHostConnectionAttrs(hostConnectionAttrs)
           .withCreatedBy(createdBy)
-          .withLoadBalancerId(loadBalancerId)
+          .withHostConnectionAttrs(hostConnectionAttrs)
           .withCreatedAt(createdAt)
-          .withLoadBalancerName(loadBalancerName)
+          .withLoadBalancerId(loadBalancerId)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withComputeProviderSettingId(computeProviderSettingId)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withEnvId(envId)
+          .withLoadBalancerName(loadBalancerName)
+          .withCustomName(customName)
+          .withEntityYamlPath(entityYamlPath)
           .withUsePublicDns(usePublicDns)
-          .withServiceTemplateId(serviceTemplateId)
+          .withComputeProviderSettingId(computeProviderSettingId)
           .withProvisionInstances(provisionInstances)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
+          .withEnvId(envId)
+          .withServiceTemplateId(serviceTemplateId)
           .withAwsInstanceFilter(awsInstanceFilter)
-          .withInfraMappingType(infraMappingType)
+          .withServiceId(serviceId)
           .withAutoScalingGroupName(autoScalingGroupName)
+          .withComputeProviderType(computeProviderType)
+          .withInfraMappingType(infraMappingType)
+          .withSetDesiredCapacity(setDesiredCapacity)
           .withDeploymentType(deploymentType)
+          .withDesiredCapacity(desiredCapacity)
           .withComputeProviderName(computeProviderName)
           .withName(name)
-          .withSetDesiredCapacity(setDesiredCapacity);
+          .withAutoPopulate(autoPopulate);
     }
 
+    /**
+     * Build aws infrastructure mapping.
+     *
+     * @return the aws infrastructure mapping
+     */
     public AwsInfrastructureMapping build() {
       AwsInfrastructureMapping awsInfrastructureMapping = new AwsInfrastructureMapping();
       awsInfrastructureMapping.setRestrictionType(restrictionType);
@@ -780,27 +1212,31 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setRegion(region);
       awsInfrastructureMapping.setUuid(uuid);
       awsInfrastructureMapping.setAppId(appId);
-      awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       awsInfrastructureMapping.setCreatedBy(createdBy);
-      awsInfrastructureMapping.setLoadBalancerId(loadBalancerId);
+      awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       awsInfrastructureMapping.setCreatedAt(createdAt);
-      awsInfrastructureMapping.setLoadBalancerName(loadBalancerName);
+      awsInfrastructureMapping.setLoadBalancerId(loadBalancerId);
       awsInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
-      awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
-      awsInfrastructureMapping.setEnvId(envId);
+      awsInfrastructureMapping.setLoadBalancerName(loadBalancerName);
+      awsInfrastructureMapping.setCustomName(customName);
+      awsInfrastructureMapping.setEntityYamlPath(entityYamlPath);
       awsInfrastructureMapping.setUsePublicDns(usePublicDns);
-      awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setProvisionInstances(provisionInstances);
-      awsInfrastructureMapping.setServiceId(serviceId);
-      awsInfrastructureMapping.setComputeProviderType(computeProviderType);
+      awsInfrastructureMapping.setEnvId(envId);
+      awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
+      awsInfrastructureMapping.setServiceId(serviceId);
       awsInfrastructureMapping.setAutoScalingGroupName(autoScalingGroupName);
+      awsInfrastructureMapping.setComputeProviderType(computeProviderType);
+      awsInfrastructureMapping.setInfraMappingType(infraMappingType);
+      awsInfrastructureMapping.setSetDesiredCapacity(setDesiredCapacity);
       awsInfrastructureMapping.setDeploymentType(deploymentType);
+      awsInfrastructureMapping.setDesiredCapacity(desiredCapacity);
       awsInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsInfrastructureMapping.setName(name);
-      awsInfrastructureMapping.setSetDesiredCapacity(setDesiredCapacity);
-      awsInfrastructureMapping.setDesiredCapacity(desiredCapacity);
+      awsInfrastructureMapping.setAutoPopulate(autoPopulate);
       return awsInfrastructureMapping;
     }
   }

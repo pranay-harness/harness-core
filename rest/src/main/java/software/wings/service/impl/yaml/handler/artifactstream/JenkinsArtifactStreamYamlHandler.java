@@ -6,6 +6,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream.Builder;
 import software.wings.beans.artifact.JenkinsArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -30,6 +31,16 @@ public class JenkinsArtifactStreamYamlHandler
   }
 
   @Override
+  public JenkinsArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
   public JenkinsArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     if (!validate(changeContext, changeSetContext)) {
@@ -40,7 +51,7 @@ public class JenkinsArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (JenkinsArtifactStream) artifactStreamService.update(builder.build());
   }
 
   @Override
@@ -63,7 +74,7 @@ public class JenkinsArtifactStreamYamlHandler
 
     Builder builder = Builder.aJenkinsArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (JenkinsArtifactStream) artifactStreamService.create(builder.build());
   }
 
   private void setWithYamlValues(

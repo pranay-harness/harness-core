@@ -3,9 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -150,18 +148,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName) {
-    ArtifactStream artifactStream = wingsPersistence.createQuery(ArtifactStream.class)
-                                        .field("appId")
-                                        .equal(appId)
-                                        .field("serviceId")
-                                        .equal(serviceId)
-                                        .field("sourceName")
-                                        .equal(artifactStreamName)
-                                        .get();
-    if (artifactStream == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "ArtifactStream - '" + artifactStreamName + "' doesn't exist");
-    }
-    return artifactStream;
+    return wingsPersistence.createQuery(ArtifactStream.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .field("sourceName")
+        .equal(artifactStreamName)
+        .get();
   }
 
   @Override

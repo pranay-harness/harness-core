@@ -1,17 +1,21 @@
 package software.wings.helpers.ext.mail;
 
+import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
+import software.wings.yaml.setting.CollaborationProviderYaml;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
@@ -48,5 +52,29 @@ public class SmtpConfig extends SettingValue implements Encryptable {
     this.password = password;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends CollaborationProviderYaml {
+    private String host;
+    private int port;
+    private String fromAddress;
+    private boolean useSSL;
+    private String username;
+    private String password = ENCRYPTED_VALUE_STR;
+
+    public Yaml() {}
+
+    public Yaml(String type, String name, String host, int port, String fromAddress, boolean useSSL, String username,
+        String password) {
+      super(type, name);
+      this.host = host;
+      this.port = port;
+      this.fromAddress = fromAddress;
+      this.useSSL = useSSL;
+      this.username = username;
+      this.password = password;
+    }
   }
 }

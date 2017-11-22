@@ -935,16 +935,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public InfrastructureMapping getInfraMappingByName(String appId, String envId, String name) {
-    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                      .field("appId")
-                                                      .equal(appId)
-                                                      .field("envId")
-                                                      .equal(envId)
-                                                      .field("name")
-                                                      .equal(name)
-                                                      .get();
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-    return infrastructureMapping;
+    return wingsPersistence.createQuery(InfrastructureMapping.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("name")
+        .equal(name)
+        .get();
   }
 
   @Override
@@ -952,18 +950,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       String appId, String envId, String serviceId, String computeProviderId) {
     Object serviceTemplateId =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
-    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                      .field("appId")
-                                                      .equal(appId)
-                                                      .field("envId")
-                                                      .equal(envId)
-                                                      .field("serviceTemplateId")
-                                                      .equal(serviceTemplateId)
-                                                      .field("computeProviderSettingId")
-                                                      .equal(computeProviderId)
-                                                      .get();
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-    return infrastructureMapping;
+    return wingsPersistence.createQuery(InfrastructureMapping.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("serviceTemplateId")
+        .equal(serviceTemplateId)
+        .field("computeProviderSettingId")
+        .equal(computeProviderId)
+        .get();
   }
 
   @Override

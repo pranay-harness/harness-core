@@ -2,8 +2,11 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
+import software.wings.yaml.setting.CollaborationProviderYaml;
 
 /**
  * Created by anubhaw on 12/14/16.
@@ -83,6 +86,19 @@ public class SlackConfig extends SettingValue {
       SlackConfig slackConfig = new SlackConfig();
       slackConfig.setOutgoingWebhookUrl(outgoingWebhookUrl);
       return slackConfig;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends CollaborationProviderYaml {
+    private String outgoingWebhookUrl;
+
+    public Yaml() {}
+
+    public Yaml(String type, String name, String outgoingWebhookUrl) {
+      super(type, name);
+      this.outgoingWebhookUrl = outgoingWebhookUrl;
     }
   }
 }

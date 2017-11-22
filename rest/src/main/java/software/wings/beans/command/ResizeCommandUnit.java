@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -34,7 +35,13 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("RESIZE")
   public static class Yaml extends ContainerOrchestrationCommandUnit.Yaml {
+    public Yaml() {
+      super();
+      setCommandUnitType(CommandUnitType.RESIZE.name());
+    }
+
     public static final class Builder extends ContainerOrchestrationCommandUnit.Yaml.Builder {
       private Builder() {}
 

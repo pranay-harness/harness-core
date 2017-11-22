@@ -1,10 +1,12 @@
 package software.wings.yaml;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
 public abstract class BaseYamlWithType extends BaseYaml {
   /**
    * There are several types at different levels.
@@ -14,4 +16,6 @@ public abstract class BaseYamlWithType extends BaseYaml {
    * The type reflects the sub type.
    */
   private String type;
+
+  protected BaseYamlWithType() {}
 }

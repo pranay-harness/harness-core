@@ -6,6 +6,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryDockerArtifactStream;
 import software.wings.beans.artifact.ArtifactoryDockerArtifactStream.Builder;
 import software.wings.beans.artifact.ArtifactoryDockerArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -30,6 +31,16 @@ public class ArtifactoryDockerArtifactStreamYamlHandler
         .build();
   }
 
+  @Override
+  public ArtifactoryDockerArtifactStream upsertFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
   public ArtifactoryDockerArtifactStream updateFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     if (!validate(changeContext, changeSetContext)) {
@@ -40,7 +51,7 @@ public class ArtifactoryDockerArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (ArtifactoryDockerArtifactStream) artifactStreamService.update(builder.build());
   }
 
   private void setWithYamlValues(
@@ -73,7 +84,7 @@ public class ArtifactoryDockerArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Builder builder = Builder.anArtifactoryDockerArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (ArtifactoryDockerArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override
