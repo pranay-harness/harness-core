@@ -6,14 +6,16 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
-import software.wings.annotation.Encrypted;
-import software.wings.annotation.Encryptable;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.yaml.setting.LoadBalancerProviderYaml;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
@@ -54,5 +56,24 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     this.secretKey = secretKey;
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends LoadBalancerProviderYaml {
+    private String region;
+    private String loadBalancerName;
+    private String accessKey;
+    private String secretKey;
+
+    public Yaml() {}
+
+    public Yaml(String type, String name, String region, String loadBalancerName, String accessKey, String secretKey) {
+      super(type, name);
+      this.region = region;
+      this.loadBalancerName = loadBalancerName;
+      this.accessKey = accessKey;
+      this.secretKey = secretKey;
+    }
   }
 }

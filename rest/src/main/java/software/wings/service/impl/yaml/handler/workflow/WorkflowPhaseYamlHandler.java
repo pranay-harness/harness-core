@@ -14,6 +14,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.Yaml;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -180,6 +181,16 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   }
 
   @Override
+  public WorkflowPhase upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
   public WorkflowPhase updateFromYaml(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return setWithYamlValues(false, context, changeSetContext);
@@ -198,11 +209,5 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   @Override
   public WorkflowPhase get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
-
-  @Override
-  public WorkflowPhase update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    throw new HarnessException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 }

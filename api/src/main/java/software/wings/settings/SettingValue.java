@@ -4,8 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ro.fortsoft.pf4j.ExtensionPoint;
 import software.wings.utils.WingsReflectionUtils;
+import software.wings.yaml.BaseYamlWithType;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -259,6 +263,20 @@ public abstract class SettingValue implements ExtensionPoint {
      */
     public String getDisplayName() {
       return displayName;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @AllArgsConstructor
+  public static abstract class Yaml extends BaseYamlWithType {
+    protected String name;
+
+    public Yaml() {}
+
+    public Yaml(String type, String name) {
+      super(type);
+      this.name = name;
     }
   }
 }

@@ -8,6 +8,7 @@ import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationGroup.AddressYaml;
 import software.wings.beans.NotificationGroup.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -62,6 +63,16 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
         .build();
   }
 
+  @Override
+  public NotificationGroup upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
   private List<AddressYaml> toAddressYamlList(Map<NotificationChannelType, List<String>> addressesByChannelType) {
     return addressesByChannelType.entrySet().stream().map(entry -> toAddressYaml(entry)).collect(Collectors.toList());
   }
@@ -97,12 +108,6 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
 
   @Override
   public NotificationGroup get(String accountId, String yamlFilePath) {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
-
-  @Override
-  public NotificationGroup update(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 }

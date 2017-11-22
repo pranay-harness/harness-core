@@ -9,6 +9,7 @@ import static software.wings.beans.yaml.YamlType.COLLABORATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.COMMAND;
 import static software.wings.beans.yaml.YamlType.CONFIG_FILE;
 import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
@@ -34,13 +35,11 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -51,7 +50,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlSyncService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
@@ -83,8 +81,8 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
   private List<YamlType> getEntityProcessingOrder() {
     return Lists.newArrayList(CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER,
-        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, CONFIG_FILE, ENVIRONMENT, INFRA_MAPPING,
-        CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
+        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE,
+        ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
   @Override
@@ -275,8 +273,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
     List<ChangeContext> changeContextList = Lists.newArrayList();
 
     try {
-      changeList.stream().forEachOrdered(change -> {
-
+      changeList.forEach(change -> {
         try {
           validateYaml(change.getFileContent());
           YamlType yamlType = findYamlType(change.getFilePath());
@@ -297,12 +294,8 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
             changeContextList.add(changeContext);
             yamlSyncHandler.validate(changeContext, changeContextList);
           } else {
-            ChangeContext.Builder changeContextBuilder =
-                ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
-            ChangeContext changeContext = changeContextBuilder.build();
-            changeContextList.add(changeContext);
-
-            processGitSyncFilesPostedToWebhook(change.getAccountId(), changeContext, yamlSubType);
+            throw new HarnessException(
+                "Can't find yaml handler for type: " + yamlType + " and subType: " + yamlSubType);
           }
 
         } catch (IOException | HarnessException ex) {
@@ -335,12 +328,15 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
     try {
       changeContextList.stream().forEachOrdered(changeContext -> {
         try {
+          logger.info("Processing change [{}]", changeContext.getChange());
           processChange(changeContext, changeContextList);
+          logger.info("Processing done for change [{}]", changeContext.getChange());
         } catch (HarnessException ex) {
           Throwables.propagate(ex);
         }
       });
     } catch (RuntimeException ex) {
+      logger.error("Exception: ", ex);
       throw new HarnessException(ex);
     }
   }
@@ -356,10 +352,8 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
     switch (change.getChangeType()) {
       case ADD:
-        yamlSyncHandler.createFromYaml(changeContext, changeContextList);
-        break;
       case MODIFY:
-        yamlSyncHandler.update(changeContext, changeContextList);
+        yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
         break;
       case DELETE:
         // TODO
@@ -369,256 +363,6 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
       default:
         // TODO
         break;
-    }
-  }
-
-  // this method assumes the list of git sync files have been sorted prior, and can be processed in the provided order
-
-  private void processGitSyncFilesPostedToWebhook(String accountId, ChangeContext changeContext, String yamlSubType) {
-    String settingAttributeId = null;
-    ChangeType changeType = changeContext.getChange().getChangeType();
-    String yaml = changeContext.getChange().getFileContent();
-    YamlType yamlType = changeContext.getYamlType();
-
-    // TODO - not sure how we want to manage this (default seems like it needs to be true)
-    boolean deleteEnabled = true;
-    // we use the mapper to create an Entity Yaml from the yaml (String) for each Class before we proceed
-    try {
-      if (yamlType != null) {
-        switch (yamlType) {
-          // cloud providers
-          case CLOUD_PROVIDER:
-            if (SettingVariableTypes.AWS.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.AWS.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-
-            } else if (SettingVariableTypes.GCP.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.GCP.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-
-            } else if (SettingVariableTypes.PHYSICAL_DATA_CENTER.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.PHYSICAL_DATA_CENTER.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            }
-            break;
-
-          // artifact servers
-          case ARTIFACT_SERVER:
-            // TODO - we need to know the SettingVariableTypes - this won't be know when coming from the Webhook POST
-            // unless we divide Artifact Servers into separate folders like we have done with the other types
-
-            switch (changeType) {
-              case ADD:
-                SettingAttribute settingAttribute =
-                    wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                settingAttributeId = settingAttribute.getUuid();
-              case MODIFY:
-                yamlResourceService.updateSettingAttribute(
-                    accountId, settingAttributeId, YamlConstants.ARTIFACT_SERVER, new YamlPayload(yaml), deleteEnabled);
-                break;
-              default:
-                throw new WingsException(
-                    ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-            }
-            break;
-
-          // collaboration providers
-          case COLLABORATION_PROVIDER:
-            if (SettingVariableTypes.SMTP.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.SMTP.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            } else if (SettingVariableTypes.SLACK.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.SLACK.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            }
-            break;
-
-          // load balancers
-          case LOADBALANCER_PROVIDER:
-            if (SettingVariableTypes.ELB.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.ELB.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            }
-            break;
-
-          // verification providers
-          case VERIFICATION_PROVIDER:
-            if (SettingVariableTypes.JENKINS.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.JENKINS.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-
-            } else if (SettingVariableTypes.APP_DYNAMICS.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.APP_DYNAMICS.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            } else if (SettingVariableTypes.SPLUNK.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.SPLUNK.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            } else if (SettingVariableTypes.ELK.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.ELK.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            } else if (SettingVariableTypes.LOGZ.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.LOGZ.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            } else if (SettingVariableTypes.NEW_RELIC.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.NEW_RELIC.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            } else if (SettingVariableTypes.SUMO.name().equals(yamlSubType)) {
-              switch (changeType) {
-                case ADD:
-                  SettingAttribute settingAttribute =
-                      wingsPersistence.saveAndGet(SettingAttribute.class, new SettingAttribute());
-                  settingAttributeId = settingAttribute.getUuid();
-                case MODIFY:
-                  yamlResourceService.updateSettingAttribute(accountId, settingAttributeId,
-                      SettingVariableTypes.SUMO.name(), new YamlPayload(yaml), deleteEnabled);
-                  break;
-                default:
-                  throw new WingsException(
-                      ErrorCode.YAML_GIT_SYNC_ERROR, "message", "changeType not recognized: " + changeType + ".");
-              }
-            }
-            break;
-
-          default:
-            logger.warn("Unrecognized Class name!");
-        }
-      }
-    } catch (Exception e) {
-      // TODO - handle yaml (String) that cannot be mapped to the yaml class - send alert/notification
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message",
-          "Tha yaml type " + yamlType + ":" + yamlSubType + "cannot be mapped");
     }
   }
 

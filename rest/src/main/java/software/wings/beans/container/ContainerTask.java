@@ -2,14 +2,18 @@ package software.wings.beans.container;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.beans.Base;
+import software.wings.beans.DeploymentSpecification;
 import software.wings.beans.EmbeddedUser;
+
+import java.util.List;
 
 /**
  * Created by anubhaw on 2/6/17.
@@ -18,7 +22,7 @@ import software.wings.beans.EmbeddedUser;
 @Indexes(@Index(fields = { @Field("serviceId")
                            , @Field("deploymentType") }, options = @IndexOptions(unique = true)))
 @Entity("containerTasks")
-public abstract class ContainerTask extends Base {
+public abstract class ContainerTask extends DeploymentSpecification {
   public static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
   public static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
   public static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
@@ -32,8 +36,18 @@ public abstract class ContainerTask extends Base {
   private AdvancedType advancedType;
   private String advancedConfig;
 
+  private List<ContainerDefinition> containerDefinitions;
+
   public ContainerTask(String deploymentType) {
     this.deploymentType = deploymentType;
+  }
+
+  public List<ContainerDefinition> getContainerDefinitions() {
+    return containerDefinitions;
+  }
+
+  public void setContainerDefinitions(List<ContainerDefinition> containerDefinitions) {
+    this.containerDefinitions = containerDefinitions;
   }
 
   public String getDeploymentType() {
@@ -107,4 +121,22 @@ public abstract class ContainerTask extends Base {
   public abstract void validateAdvanced();
 
   public enum AdvancedType { JSON, YAML }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends DeploymentSpecification.Yaml {
+    private String advancedType;
+    private String advancedConfig;
+    private ContainerDefinition.Yaml containerDefinition;
+
+    protected Yaml() {}
+
+    protected Yaml(String deploymentType, String advancedType, String advancedConfig,
+        ContainerDefinition.Yaml containerDefinition) {
+      super(deploymentType);
+      this.advancedType = advancedType;
+      this.advancedConfig = advancedConfig;
+      this.containerDefinition = containerDefinition;
+    }
+  }
 }

@@ -2,12 +2,14 @@ package software.wings.beans;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.utils.Misc;
+import software.wings.yaml.BaseYaml;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -15,10 +17,31 @@ import javax.validation.Valid;
 @Entity("lambdaSpecifications")
 @Data
 @Builder
-public class LambdaSpecification extends Base {
+public class LambdaSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   private DefaultSpecification defaults;
   @Valid private List<FunctionSpecification> functions;
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @Builder
+  public static final class Yaml extends DeploymentSpecification.Yaml {
+    private DefaultSpecification.Yaml defaults;
+    private List<FunctionSpecification.Yaml> functions;
+
+    public Yaml() {}
+
+    public Yaml(DefaultSpecification.Yaml defaults, List<FunctionSpecification.Yaml> functions) {
+      this.defaults = defaults;
+      this.functions = functions;
+    }
+
+    public Yaml(String type, DefaultSpecification.Yaml defaults, List<FunctionSpecification.Yaml> functions) {
+      super(type);
+      this.defaults = defaults;
+      this.functions = functions;
+    }
+  }
 
   @Data
   @Builder
@@ -28,6 +51,15 @@ public class LambdaSpecification extends Base {
     private Integer timeout = 3;
     public String getRuntime() {
       return Misc.trim(runtime);
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @Builder
+    public static final class Yaml extends BaseYaml {
+      private String runtime;
+      private Integer memorySize = 128;
+      private Integer timeout = 3;
     }
   }
 
@@ -48,6 +80,17 @@ public class LambdaSpecification extends Base {
     }
     public String getHandler() {
       return Misc.trim(handler);
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @Builder
+    public static final class Yaml extends BaseYaml {
+      private String runtime;
+      private Integer memorySize = 128;
+      private Integer timeout = 3;
+      private String functionName;
+      private String handler;
     }
   }
 }
