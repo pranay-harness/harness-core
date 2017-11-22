@@ -2,6 +2,11 @@ package software.wings.sm.states;
 
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -27,12 +32,13 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -66,12 +72,6 @@ public abstract class ContainerServiceSetup extends State {
   static final int KEEP_N_REVISIONS = 3;
 
   @Transient private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
-
-  private int maxInstances;
-  private ResizeStrategy resizeStrategy;
-  @Inject @Transient private transient EcrService ecrService;
-  @Inject @Transient private transient EcrClassicService ecrClassicService;
-  @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
@@ -79,6 +79,11 @@ public abstract class ContainerServiceSetup extends State {
   @Inject @Transient protected transient FeatureFlagService featureFlagService;
   @Inject @Transient protected transient SecretManager secretManager;
   @Inject @Transient protected transient EncryptionService encryptionService;
+  private int maxInstances;
+  private ResizeStrategy resizeStrategy;
+  @Inject @Transient private transient EcrService ecrService;
+  @Inject @Transient private transient EcrClassicService ecrClassicService;
+  @Inject @Transient private transient AwsHelperService awsHelperService;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);
@@ -170,15 +175,6 @@ public abstract class ContainerServiceSetup extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  protected class ImageDetails {
-    String name;
-    String tag;
-    String sourceName;
-    String registryUrl;
-    String username;
-    String password;
-  }
-
   /**
    * Fetches artifact image details
    */
@@ -187,7 +183,7 @@ public abstract class ContainerServiceSetup extends State {
     imageDetails.tag = artifact.getBuildNo();
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     String settingId = artifactStream.getSettingId();
-    if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
+    if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
       imageDetails.name = dockerArtifactStream.getImageName();
       imageDetails.sourceName = dockerArtifactStream.getSourceName();
@@ -197,7 +193,7 @@ public abstract class ContainerServiceSetup extends State {
       imageDetails.registryUrl = dockerConfig.getDockerRegistryUrl();
       imageDetails.username = dockerConfig.getUsername();
       imageDetails.password = new String(dockerConfig.getPassword());
-    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
+    } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
       // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
       String imageUrl = getImageUrl(ecrArtifactStream, context);
@@ -224,13 +220,13 @@ public abstract class ContainerServiceSetup extends State {
         imageDetails.password = awsHelperService.getAmazonEcrAuthToken(ecrConfig,
             secretManager.getEncryptionDetails(ecrConfig, context.getAppId(), context.getWorkflowExecutionId()));
       }
-    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
+    } else if (artifactStream.getArtifactStreamType().equals(GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
       String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
       imageDetails.name = imageName;
       imageDetails.sourceName = imageName;
       imageDetails.registryUrl = imageName;
-    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
+    } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       imageDetails.name = artifactoryArtifactStream.getImageName();
       imageDetails.sourceName = artifactoryArtifactStream.getSourceName();
@@ -240,6 +236,16 @@ public abstract class ContainerServiceSetup extends State {
       imageDetails.registryUrl = artifactoryConfig.getArtifactoryUrl();
       imageDetails.username = artifactoryConfig.getUsername();
       imageDetails.password = new String(artifactoryConfig.getPassword());
+    } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+      NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
+      imageDetails.name = nexusArtifactStream.getImageName();
+      imageDetails.sourceName = nexusArtifactStream.getSourceName();
+      NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
+      encryptionService.decrypt(nexusConfig,
+          secretManager.getEncryptionDetails(nexusConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      imageDetails.registryUrl = nexusConfig.getNexusUrl();
+      imageDetails.username = nexusConfig.getUsername();
+      imageDetails.password = new String(nexusConfig.getPassword());
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
@@ -286,4 +292,13 @@ public abstract class ContainerServiceSetup extends State {
   protected abstract ContainerServiceElement buildContainerServiceElement(PhaseElement phaseElement, String serviceId,
       String appId, String workflowExecutionId, ContainerInfrastructureMapping infrastructureMapping,
       String containerServiceName);
+
+  protected class ImageDetails {
+    String name;
+    String tag;
+    String sourceName;
+    String registryUrl;
+    String username;
+    String password;
+  }
 }

@@ -55,70 +55,23 @@ public class DelegateApplication {
 
     String configFile = args[0];
 
+    String watcherProcess = null;
     if (args.length > 1 && StringUtils.equals(args[1], "watched")) {
-      // Watched path
-      String watcherProcess = args[2];
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        MessageService messageService = Guice.createInjector(new DelegateModule()).getInstance(MessageService.class);
-        messageService.closeChannel(DELEGATE, processId);
-        messageService.closeData("delegate-" + processId);
-        logger.info("Log manager shutdown hook executing.");
-        LogManager.shutdown();
-      }));
-      logger.info("Starting Delegate");
-      logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
-      DelegateApplication delegateApplication = new DelegateApplication();
-      delegateApplication.run(
-          new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class),
-          watcherProcess);
-    } else {
-      // TODO - Legacy path. Remove once watcher is standard
-      boolean upgrade = false;
-      boolean restart = false;
-      if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
-        upgrade = true;
-      }
-      if (args.length > 1 && StringUtils.equals(args[1], "restart")) {
-        restart = true;
-      }
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        logger.info("Log manager shutdown hook executing.");
-        LogManager.shutdown();
-      }));
-      logger.info("Starting Delegate");
-      logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
-      DelegateApplication delegateApplication = new DelegateApplication();
-      delegateApplication.runLegacy(
-          new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class), upgrade,
-          restart);
+      watcherProcess = args[2];
     }
-  }
-
-  private void runLegacy(DelegateConfiguration configuration, boolean upgrade, boolean restart) throws Exception {
-    // TODO - Legacy path. Remove once watcher is standard
-    Injector injector = Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(DelegateConfiguration.class).toInstance(configuration);
-          }
-        },
-        new ManagerClientModule(
-            configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
-        new DelegateModule());
-    DelegateService delegateService = injector.getInstance(DelegateService.class);
-    delegateService.run(false, upgrade, restart);
-
-    // This should run in case of upgrade flow otherwise never called
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("verificationExecutor"))).shutdownNow();
-    injector.getInstance(ExecutorService.class).shutdown();
-    injector.getInstance(ExecutorService.class).awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
-    injector.getInstance(AsyncHttpClient.class).close();
-    logger.info("Flushing logs");
-    LogManager.shutdown();
-    System.exit(0);
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      MessageService messageService = Guice.createInjector(new DelegateModule()).getInstance(MessageService.class);
+      messageService.closeChannel(DELEGATE, processId);
+      messageService.closeData("delegate-" + processId);
+      logger.info("Log manager shutdown hook executing.");
+      LogManager.shutdown();
+    }));
+    logger.info("Starting Delegate");
+    logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
+    DelegateApplication delegateApplication = new DelegateApplication();
+    delegateApplication.run(
+        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class),
+        watcherProcess);
   }
 
   private void run(DelegateConfiguration configuration, String watcherProcess) throws Exception {
@@ -133,11 +86,13 @@ public class DelegateApplication {
             configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
         new DelegateModule());
 
-    MessageService messageService = injector.getInstance(MessageService.class);
-    messageService.sendMessage(WATCHER, watcherProcess, "new-delegate", processId);
-
+    boolean watched = watcherProcess != null;
+    if (watched) {
+      MessageService messageService = injector.getInstance(MessageService.class);
+      messageService.sendMessage(WATCHER, watcherProcess, "new-delegate", processId);
+    }
     DelegateService delegateService = injector.getInstance(DelegateService.class);
-    delegateService.run(true, false, false);
+    delegateService.run(watched);
 
     // This should run in case of upgrade flow otherwise never called
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();

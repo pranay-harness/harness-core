@@ -1,0 +1,29 @@
+{
+  "tid": 15,
+  "action": "coreui_Repository",
+  "method": "readReferences",
+  "result": {
+    "success": true,
+    "data": [
+      {
+        "type": "hosted",
+        "format": "docker",
+        "id": "docker-private",
+        "name": "docker-private"
+      },
+      {
+        "type": "group",
+        "format": "docker",
+        "id": "docker-group",
+        "name": "docker-group"
+      },
+      {
+        "type": "proxy",
+        "format": "docker",
+        "id": "docker-hub",
+        "name": "docker-hub"
+      }
+    ]
+  },
+  "type": "rpc"
+}

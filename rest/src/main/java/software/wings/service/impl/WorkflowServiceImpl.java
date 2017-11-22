@@ -63,6 +63,7 @@ import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPL
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 import static software.wings.sm.StateType.values;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
@@ -149,7 +150,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
-import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -270,7 +270,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             workflowPhase =
                 ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
           }
-          if (workflowPhase.getInfraMappingId() != null) {
+          if (workflowPhase != null && workflowPhase.getInfraMappingId() != null) {
             InfrastructureMapping infrastructureMapping =
                 infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
             predicate = stencil -> stencil.matches(infrastructureMapping);
@@ -455,8 +455,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
         // Create Single Phase
-        Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
-        Validator.notNullCheck("serviceId", workflow.getServiceId());
+        notNullCheck("infraMappingId", workflow.getInfraMappingId());
+        notNullCheck("serviceId", workflow.getServiceId());
         WorkflowPhase workflowPhase = aWorkflowPhase()
                                           .withInfraMappingId(workflow.getInfraMappingId())
                                           .withServiceId(workflow.getServiceId())
@@ -774,7 +774,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .collect(toList());
     if (isEnvironmentTemplatized(templateExpressions) && !isInfraTemplatized(phaseTemplateExpressions)) {
       Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
-      Validator.notNullCheck("Service", service);
+      notNullCheck("Service", service);
       TemplateExpression templateExpression = new TemplateExpression();
 
       Map<String, Object> metaData = new HashMap<>();
@@ -984,9 +984,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (serviceId != null && oldServiceId != null) {
       if (!serviceId.equals(oldServiceId)) {
         Service oldService = serviceResourceService.get(appId, oldServiceId, false);
-        Validator.notNullCheck("service", oldService);
+        notNullCheck("service", oldService);
         Service newService = serviceResourceService.get(appId, serviceId, false);
-        Validator.notNullCheck("service", newService);
+        notNullCheck("service", newService);
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
           throw new WingsException(INVALID_REQUEST, "message",
@@ -1010,7 +1010,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         phase.setInfraMappingId(inframappingId);
         InfrastructureMapping infrastructureMapping =
             infrastructureMappingService.get(appId, phase.getInfraMappingId());
-        Validator.notNullCheck("InfraMapping", infrastructureMapping);
+        notNullCheck("InfraMapping", infrastructureMapping);
         phase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
         phase.setInfraMappingName(infrastructureMapping.getName());
         phase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
@@ -1241,10 +1241,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     orchestrationWorkflow.setPreDeploymentSteps(phaseStep);
 
     orchestrationWorkflow =
@@ -1255,10 +1255,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public PhaseStep updatePostDeployment(String appId, String workflowId, PhaseStep phaseStep) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     orchestrationWorkflow.setPostDeploymentSteps(phaseStep);
 
     orchestrationWorkflow =
@@ -1268,16 +1268,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase createWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
-    Validator.notNullCheck("workflow", workflowPhase);
+    notNullCheck("workflow", workflowPhase);
 
     validateServiceandInframapping(appId, workflowPhase.getServiceId(), workflowPhase.getInfraMappingId());
 
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
 
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     attachWorkflowPhase(workflow, workflowPhase);
 
@@ -1314,13 +1314,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String phaseId = workflowPhase.getUuid();
     String phaseName = workflowPhase.getName();
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     workflowPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
-    Validator.notNullCheck("workflowPhase", workflowPhase);
+    notNullCheck("workflowPhase", workflowPhase);
 
     WorkflowPhase clonedWorkflowPhase = workflowPhase.clone();
     clonedWorkflowPhase.setName(phaseName);
@@ -1346,7 +1346,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflow.getAppId(), workflowPhase.getInfraMappingId());
-    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+    notNullCheck("InfraMapping", infrastructureMapping);
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     workflowPhase.setInfraMappingName(infrastructureMapping.getName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
@@ -1418,7 +1418,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           INVALID_REQUEST, "message", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
     }
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+    notNullCheck("InfraMapping", infrastructureMapping);
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new WingsException(INVALID_REQUEST, "message",
           "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service [" + service.getName()
@@ -1430,11 +1430,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Workflow workflow = readWorkflow(appId, workflowId);
 
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
-    Validator.notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()));
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()));
 
     boolean found = false;
     boolean inframappingChanged = false;
@@ -1496,11 +1496,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String workflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
-    Validator.notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
 
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(phaseId, rollbackWorkflowPhase);
     orchestrationWorkflow =
@@ -1511,11 +1511,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public void deleteWorkflowPhase(String appId, String workflowId, String phaseId) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
-    Validator.notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
 
     orchestrationWorkflow.getWorkflowPhases().remove(orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
     orchestrationWorkflow.getWorkflowPhaseIdMap().remove(phaseId);
@@ -1527,10 +1527,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Node updateGraphNode(String appId, String workflowId, String subworkflowId, Node node) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(subworkflowId);
 
@@ -1576,9 +1576,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow cloneWorkflow(String appId, String originalWorkflowId, CloneMetadata cloneMetadata) {
-    Validator.notNullCheck("cloneMetadata", cloneMetadata);
+    notNullCheck("cloneMetadata", cloneMetadata);
     Workflow workflow = cloneMetadata.getWorkflow();
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     workflow.setAppId(appId);
     String targetAppId = cloneMetadata.getTargetAppId();
     if (targetAppId == null || targetAppId.equals(appId)) {
@@ -1620,9 +1620,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String targetServiceId = serviceMapping.get(serviceId);
       if (serviceId != null && targetServiceId != null) {
         Service oldService = serviceResourceService.get(appId, serviceId, false);
-        Validator.notNullCheck("service", oldService);
+        notNullCheck("service", oldService);
         Service newService = serviceResourceService.get(targetAppId, targetServiceId, false);
-        Validator.notNullCheck("targetService", newService);
+        notNullCheck("targetService", newService);
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
           throw new WingsException(INVALID_REQUEST, "message",
@@ -1659,10 +1659,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public List<NotificationRule> updateNotificationRules(
       String appId, String workflowId, List<NotificationRule> notificationRules) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     orchestrationWorkflow.setNotificationRules(notificationRules);
     orchestrationWorkflow =
@@ -1674,10 +1674,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public List<FailureStrategy> updateFailureStrategies(
       String appId, String workflowId, List<FailureStrategy> failureStrategies) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     orchestrationWorkflow.setFailureStrategies(failureStrategies);
     orchestrationWorkflow =
@@ -1691,10 +1691,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       userVariables.stream().forEach(variable -> ExpressionEvaluator.isValidVariableName(variable.getName()));
     }
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     orchestrationWorkflow.setUserVariables(userVariables);
     orchestrationWorkflow =
@@ -1703,7 +1703,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private Set<EntityType> updateRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
-    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       Set<EntityType> requiredEntityTypes = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
                                                 .getWorkflowPhases()
@@ -2245,7 +2245,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-      Validator.notNullCheck("multiServiceOrchestrationWorkflow", multiServiceOrchestrationWorkflow);
+      notNullCheck("multiServiceOrchestrationWorkflow", multiServiceOrchestrationWorkflow);
       multiServiceOrchestrationWorkflow.setNotificationRules(notificationRules);
     }
   }
@@ -2275,8 +2275,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null && orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       // Create Single Phase
-      Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
-      Validator.notNullCheck("serviceId", workflow.getServiceId());
+      notNullCheck("infraMappingId", workflow.getInfraMappingId());
+      notNullCheck("serviceId", workflow.getServiceId());
     }
   }
 }

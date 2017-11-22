@@ -750,6 +750,9 @@ public class StateMachineExecutor {
       if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
         delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
       }
+      if (stateExecutionInstance.getStateParams() != null) {
+        MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
+      }
       currentState.handleAbortEvent(context);
       updated =
           updateStateExecutionData(stateExecutionInstance, null, ABORTED, null, asList(ABORTING), null, null, null);
@@ -1389,6 +1392,10 @@ public class StateMachineExecutor {
     public void run() {
       try {
         if (!asyncError) {
+          StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
+          if (stateExecutionInstance.getStateParams() != null) {
+            MapperUtils.mapObject(stateExecutionInstance.getStateParams(), state);
+          }
           ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
           stateMachineExecutor.handleExecuteResponse(context, executionResponse);
         } else {

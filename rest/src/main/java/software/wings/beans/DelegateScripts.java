@@ -11,8 +11,6 @@ public class DelegateScripts {
   private String delegateId;
   private String version;
   @Transient private boolean doUpgrade;
-  @Transient private String upgradeScript;
-  @Transient private String runScript;
   @Transient private String stopScript;
   @Transient private String startScript;
   @Transient private String delegateScript;
@@ -41,22 +39,6 @@ public class DelegateScripts {
     this.doUpgrade = doUpgrade;
   }
 
-  public String getUpgradeScript() {
-    return upgradeScript;
-  }
-
-  public void setUpgradeScript(String upgradeScript) {
-    this.upgradeScript = upgradeScript;
-  }
-
-  public String getRunScript() {
-    return runScript;
-  }
-
-  public void setRunScript(String runScript) {
-    this.runScript = runScript;
-  }
-
   public String getStopScript() {
     return stopScript;
   }
@@ -83,10 +65,6 @@ public class DelegateScripts {
 
   public String getScriptByName(String fileName) {
     switch (fileName) {
-      case "upgrade.sh":
-        return getUpgradeScript();
-      case "run.sh":
-        return getRunScript();
       case "start.sh":
         return getStartScript();
       case "stop.sh":

@@ -24,7 +24,7 @@ public interface MessageService {
 
   void putAllData(String name, Map<String, Object> dataToWrite);
 
-  Object getData(String name, String key);
+  <T> T getData(String name, String key, Class<T> valueClass);
 
   Map<String, Object> getAllData(String name);
 
