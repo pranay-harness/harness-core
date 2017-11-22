@@ -79,7 +79,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
@@ -157,6 +156,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withDeploymentType(DeploymentType.SSH.name())
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(singletonList(HOST_NAME))
+            .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
             .build();
 
     PhysicalInfrastructureMapping savedPhysicalInfrastructureMapping =
@@ -173,6 +173,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withServiceId(SERVICE_ID)
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(singletonList(HOST_NAME))
+            .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
             .build();
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(wingsPersistence.saveAndGet(InfrastructureMapping.class, physicalInfrastructureMapping))
@@ -224,6 +225,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .withUuid(INFRA_MAPPING_ID)
                                                    .withServiceTemplateId(TEMPLATE_ID)
                                                    .withHostNames(singletonList(HOST_NAME))
+                                                   .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                                    .build();
 
     PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
@@ -238,6 +240,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withServiceId(SERVICE_ID)
                                                      .withServiceTemplateId(TEMPLATE_ID)
                                                      .withHostNames(singletonList("HOST_NAME_1"))
+                                                     .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                                      .build();
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID)).thenReturn(savedInfra);
