@@ -23,7 +23,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,7 +58,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     if (isNotEmpty(containerServiceElement.getName())) {
       ReplicationController replicationController = kubernetesContainerService.getController(
-          getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), Collections.emptyList(),
+          getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), encryptedDataDetails,
           containerServiceElement.getName());
       if (replicationController != null) {
         return Optional.of(replicationController.getSpec().getReplicas());
@@ -73,7 +72,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(
-        getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), Collections.emptyList());
+        getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), encryptedDataDetails);
     if (replicationControllers != null) {
       String controllerNamePrefix =
           getReplicationControllerNamePrefixFromControllerName(containerServiceElement.getName());

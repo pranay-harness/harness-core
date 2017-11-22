@@ -22,6 +22,7 @@ import software.wings.WingsBaseTest;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
@@ -34,6 +35,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -64,6 +66,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
   @Inject private VaultService vaultService;
   @Inject private FileService fileService;
   @Inject private ConfigService configService;
+  @Inject private AppService appService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
   @Before
@@ -75,6 +78,24 @@ public class SecretMigrationUtil extends WingsBaseTest {
     setInternalState(secretManager, "kmsService", kmsService);
     setInternalState(secretManager, "vaultService", vaultService);
     setInternalState(wingsPersistence, "secretManager", secretManager);
+  }
+
+  @Test
+  public void migrateInfraMappings() throws Exception {
+    List<InfrastructureMapping> infrastructureMappings =
+        wingsPersistence.createQuery(InfrastructureMapping.class).asList();
+
+    System.out.println("will go through " + infrastructureMappings.size() + " records");
+
+    int updated = 0;
+    for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
+      infrastructureMapping.setAccountId(appService.get(infrastructureMapping.getAppId()).getAccountId());
+
+      //      wingsPersistence.save(infrastructureMapping);
+      updated++;
+    }
+
+    System.out.println("Complete. Updated " + updated + " records.");
   }
 
   @Test
@@ -101,7 +122,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
 
       System.out.println("going to save " + encryptedData);
       updated++;
-      wingsPersistence.save(encryptedData);
+      //      wingsPersistence.save(encryptedData);
     }
 
     System.out.println("Complete. Updated " + updated + " records.");
@@ -117,7 +138,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
     for (EncryptedData encryptedData : encryptedDataRecords) {
       if (StringUtils.isBlank(encryptedData.getName())) {
         encryptedData.setName(UUID.randomUUID().toString());
-        wingsPersistence.save(encryptedData);
+        //        wingsPersistence.save(encryptedData);
         updated++;
       }
     }
@@ -167,7 +188,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       }
 
       if (changeCount) {
-        wingsPersistence.save(settingAttribute);
+        //        wingsPersistence.save(settingAttribute);
       }
     }
 
@@ -211,7 +232,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       }
 
       if (changeCount) {
-        wingsPersistence.save(serviceVariable);
+        //        wingsPersistence.save(serviceVariable);
       }
     }
 
@@ -235,7 +256,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       EncryptionUtils.decrypt(file, configFile.getAccountId());
       System.out.println("going to save: " + FileUtils.readFileToString(file));
 
-      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
+      //      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
       changedObject++;
     }
 
@@ -264,7 +285,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
         continue;
       }
 
-      wingsPersistence.save(settingAttribute);
+      //      wingsPersistence.save(settingAttribute);
       changedObject++;
     }
 
