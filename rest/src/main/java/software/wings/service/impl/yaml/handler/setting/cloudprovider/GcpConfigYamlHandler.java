@@ -25,7 +25,7 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
     String accountId = changeContext.getChange().getAccountId();
     GcpConfig config = GcpConfig.builder()
                            .accountId(accountId)
-                           .serviceAccountKeyFileContent(null)
+                           .serviceAccountKeyFileContent(yaml.getServiceAccountKeyFileContent().toCharArray())
                            .encryptedServiceAccountKeyFileContent(yaml.getServiceAccountKeyFileContent())
                            .build();
     return buildSettingAttribute(accountId, yaml.getName(), uuid, config);

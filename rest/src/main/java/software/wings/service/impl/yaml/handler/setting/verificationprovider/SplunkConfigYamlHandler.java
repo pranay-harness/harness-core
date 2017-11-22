@@ -26,7 +26,7 @@ public class SplunkConfigYamlHandler extends VerificationProviderYamlHandler<Yam
     SplunkConfig config = SplunkConfig.builder()
                               .accountId(accountId)
                               .splunkUrl(yaml.getSplunkUrl())
-                              .password(null)
+                              .password(yaml.getPassword().toCharArray())
                               .encryptedPassword(yaml.getPassword())
                               .username(yaml.getUsername())
                               .build();

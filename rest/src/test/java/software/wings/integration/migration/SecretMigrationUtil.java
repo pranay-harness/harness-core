@@ -42,8 +42,10 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -99,7 +101,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
 
       System.out.println("going to save " + encryptedData);
       updated++;
-      //      wingsPersistence.save(encryptedData);
+      wingsPersistence.save(encryptedData);
     }
 
     System.out.println("Complete. Updated " + updated + " records.");
@@ -165,7 +167,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       }
 
       if (changeCount) {
-        //        wingsPersistence.save(settingAttribute);
+        wingsPersistence.save(settingAttribute);
       }
     }
 
@@ -209,7 +211,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       }
 
       if (changeCount) {
-        //        wingsPersistence.save(serviceVariable);
+        wingsPersistence.save(serviceVariable);
       }
     }
 
@@ -233,7 +235,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       EncryptionUtils.decrypt(file, configFile.getAccountId());
       System.out.println("going to save: " + FileUtils.readFileToString(file));
 
-      //      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
+      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
       changedObject++;
     }
 
@@ -262,7 +264,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
         continue;
       }
 
-      //      wingsPersistence.save(settingAttribute);
+      wingsPersistence.save(settingAttribute);
       changedObject++;
     }
 

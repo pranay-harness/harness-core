@@ -22,8 +22,11 @@ public class NewRelicConfigYamlHandler extends VerificationProviderYamlHandler<Y
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-    NewRelicConfig config =
-        NewRelicConfig.builder().accountId(accountId).apiKey(null).encryptedApiKey(yaml.getApiKey()).build();
+    NewRelicConfig config = NewRelicConfig.builder()
+                                .accountId(accountId)
+                                .apiKey(yaml.getApiKey().toCharArray())
+                                .encryptedApiKey(yaml.getApiKey())
+                                .build();
     return buildSettingAttribute(accountId, yaml.getName(), uuid, config);
   }
 

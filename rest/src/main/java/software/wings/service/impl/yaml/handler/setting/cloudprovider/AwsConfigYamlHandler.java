@@ -26,7 +26,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
     AwsConfig config = AwsConfig.builder()
                            .accountId(accountId)
                            .accessKey(yaml.getAccessKey())
-                           .secretKey(null)
+                           .secretKey(yaml.getSecretKey().toCharArray())
                            .encryptedSecretKey(yaml.getSecretKey())
                            .build();
     return buildSettingAttribute(accountId, yaml.getName(), uuid, config);

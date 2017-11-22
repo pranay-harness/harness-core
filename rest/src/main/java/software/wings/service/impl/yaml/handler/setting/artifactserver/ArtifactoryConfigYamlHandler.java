@@ -26,7 +26,7 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
     ArtifactoryConfig config = ArtifactoryConfig.builder()
                                    .accountId(accountId)
                                    .artifactoryUrl(yaml.getUrl())
-                                   .password(null)
+                                   .password(yaml.getPassword().toCharArray())
                                    .encryptedPassword(yaml.getPassword())
                                    .username(yaml.getUsername())
                                    .build();

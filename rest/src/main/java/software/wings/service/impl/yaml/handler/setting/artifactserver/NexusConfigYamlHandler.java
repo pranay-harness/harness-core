@@ -26,7 +26,7 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
     NexusConfig config = NexusConfig.builder()
                              .accountId(accountId)
                              .nexusUrl(yaml.getUrl())
-                             .password(null)
+                             .password(yaml.getPassword().toCharArray())
                              .encryptedPassword(yaml.getPassword())
                              .username(yaml.getUsername())
                              .build();

@@ -30,7 +30,7 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
     config.setAccountId(accountId);
     config.setElkUrl(yaml.getElkUrl());
     config.setEncryptedPassword(yaml.getPassword());
-    config.setPassword(null);
+    config.setPassword(yaml.getPassword().toCharArray());
     config.setUsername(yaml.getUsername());
     ElkConnector elkConnector = Util.getEnumFromString(ElkConnector.class, yaml.getConnectorType());
     config.setElkConnector(elkConnector);
