@@ -363,6 +363,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      * The App id.
      */
     protected String appId;
+    protected String accountId;
     private String hostConnectionAttrs;
     private List<String> hostNames;
     private String loadBalancerId;
@@ -458,6 +459,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -653,7 +659,8 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
           .withName(name)
-          .withAutoPopulate(autoPopulate);
+          .withAutoPopulate(autoPopulate)
+          .withAccountId(accountId);
     }
 
     /**
@@ -669,6 +676,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
       physicalInfrastructureMapping.setLoadBalancerName(loadBalancerName);
       physicalInfrastructureMapping.setUuid(uuid);
       physicalInfrastructureMapping.setAppId(appId);
+      physicalInfrastructureMapping.setAccountId(accountId);
       physicalInfrastructureMapping.setCreatedBy(createdBy);
       physicalInfrastructureMapping.setCreatedAt(createdAt);
       physicalInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
