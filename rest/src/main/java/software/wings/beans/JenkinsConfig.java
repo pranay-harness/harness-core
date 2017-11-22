@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -14,6 +16,7 @@ import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.ArtifactServerYaml;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
  * Created by peeyushaggarwal on 5/26/16.
@@ -58,6 +61,23 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
 
     public Yaml(String type, String name, String url, String username, String password) {
       super(type, name, url, username, password);
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class VerificationYaml extends VerificationProviderYaml {
+    private String url;
+    private String username;
+    private String password = ENCRYPTED_VALUE_STR;
+
+    public VerificationYaml() {}
+
+    public VerificationYaml(String type, String name, String url, String username, String password) {
+      super(type, name);
+      this.url = url;
+      this.username = username;
+      this.password = password;
     }
   }
 }

@@ -99,6 +99,7 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Sl
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
@@ -184,6 +185,8 @@ public class YamlModule extends AbstractModule {
 
     MapBinder<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VerificationProviderYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.JENKINS.name())
+        .to(JenkinsConfigVerificationYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.APP_DYNAMICS.name())
         .to(AppDynamicsConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.ELK.name()).to(ElkConfigYamlHandler.class);
