@@ -91,7 +91,15 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public PageResponse<ConfigFile> list(PageRequest<ConfigFile> request) {
-    return wingsPersistence.query(ConfigFile.class, request);
+    PageResponse<ConfigFile> response = wingsPersistence.query(ConfigFile.class, request);
+    response.getResponse().forEach(configFile -> {
+      if (configFile.isEncrypted()) {
+        EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+        Preconditions.checkNotNull(encryptedData, "No encrypted record found for " + configFile.getUuid());
+        configFile.setSecretFileName(encryptedData.getName());
+      }
+    });
+    return response;
   }
 
   /* (non-Javadoc)
