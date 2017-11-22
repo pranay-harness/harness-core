@@ -1,8 +1,5 @@
 package software.wings.helpers.ext.nexus;
 
-import java.util.Map;
-import javax.ws.rs.QueryParam;
-import okhttp3.ResponseBody;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
@@ -13,6 +10,8 @@ import retrofit2.http.QueryMap;
 import retrofit2.http.Url;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
+
+import java.util.Map;
 
 /**
  * Created by srinivas on 3/30/17.

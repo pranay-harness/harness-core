@@ -49,7 +49,7 @@ public class HttpUtil {
   }
 
   public static boolean connectableHttpUrl(String url) {
-    logger.info("Testing url {} is connectable or not", url);
+    logger.info("Testing connectivity to url {}", url);
     // Create a trust manager that does not validate certificate chains
     try {
       // Install the all-trusting trust manager
@@ -70,7 +70,7 @@ public class HttpUtil {
         return true;
       }
     } catch (Exception e) {
-      logger.warn("Error occurred while validating url {} connectivity.", url, e);
+      logger.info("Could not connect to url {}: {}", url, e.getMessage());
       return false;
     }
     return false;
