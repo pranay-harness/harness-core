@@ -153,16 +153,12 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment getEnvironmentByName(String appId, String environmentName) {
-    Environment environment = wingsPersistence.createQuery(Environment.class)
-                                  .field("appId")
-                                  .equal(appId)
-                                  .field("name")
-                                  .equal(environmentName)
-                                  .get();
-    if (environment == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Environment - '" + environmentName + "' doesn't exist");
-    }
-    return environment;
+    return wingsPersistence.createQuery(Environment.class)
+        .field("appId")
+        .equal(appId)
+        .field("name")
+        .equal(environmentName)
+        .get();
   }
 
   @Override
@@ -222,7 +218,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment savedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    String description = Optional.of(environment.getDescription()).orElse("");
+    String description = Optional.ofNullable(environment.getDescription()).orElse("");
     ImmutableMap<String, Object> paramMap = ImmutableMap.of(
         "name", environment.getName(), "environmentType", environment.getEnvironmentType(), "description", description);
 

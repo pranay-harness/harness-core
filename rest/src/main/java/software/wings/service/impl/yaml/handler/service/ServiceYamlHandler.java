@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml.handler.service;
 
+import static java.util.Collections.emptyList;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;
@@ -12,7 +14,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
 import software.wings.beans.Service;
-import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
@@ -85,54 +86,41 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   }
 
   @Override
-  public Service updateFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public Service upsertFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
+    ensureValidChange(changeContext, changeSetContext);
 
     String appId =
         yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
+
+    Service current = aService()
+                          .withAppId(appId)
+                          .withName(changeContext.getYaml().getName())
+                          .withDescription(changeContext.getYaml().getDescription())
+                          .build();
+
     Service previous = yamlSyncHelper.getService(appId, changeContext.getChange().getFilePath());
-    Builder builder = previous.toBuilder();
-    setWithYamlValues(builder, changeContext.getYaml());
 
-    Service.Yaml previousYaml = toYaml(previous, previous.getAppId());
-    saveOrUpdateServiceVariables(
-        previousYaml, changeContext.getYaml(), previous.getServiceVariables(), previous.getAppId(), previous.getUuid());
-
-    return builder.build();
-  }
-
-  private void setWithYamlValues(Builder builder, Service.Yaml serviceYaml) throws HarnessException {
-    ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, serviceYaml.getArtifactType());
-    builder.withName(serviceYaml.getName())
-        .withDescription(serviceYaml.getDescription())
-        .withArtifactType(artifactType)
-        .build();
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      current = serviceResourceService.update(current);
+      Service.Yaml previousYaml = toYaml(previous, previous.getAppId());
+      saveOrUpdateServiceVariables(
+          previousYaml, changeContext.getYaml(), previous.getServiceVariables(), current.getAppId(), current.getUuid());
+    } else {
+      ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, changeContext.getYaml().getArtifactType());
+      current.setArtifactType(artifactType);
+      current = serviceResourceService.save(current, true);
+      saveOrUpdateServiceVariables(null, changeContext.getYaml(), emptyList(), current.getAppId(), current.getUuid());
+    }
+    return current;
   }
 
   @Override
   public boolean validate(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Service.Yaml applicationYaml = changeContext.getYaml();
     return !(isEmpty(applicationYaml.getName()));
-  }
-
-  @Override
-  public Service createFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
-    Builder builder = Builder.aService().withAppId(appId);
-    setWithYamlValues(builder, changeContext.getYaml());
-    Service savedService = serviceResourceService.save(builder.build());
-    saveOrUpdateServiceVariables(null, changeContext.getYaml(), null, savedService.getAppId(), savedService.getUuid());
-    return savedService;
   }
 
   @Override
@@ -147,10 +135,15 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   }
 
   @Override
-  public Service update(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public Service createFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    Service application = updateFromYaml(changeContext, changeSetContext);
-    return serviceResourceService.update(application);
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  @Override
+  public Service updateFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   private void saveOrUpdateServiceVariables(Service.Yaml previousYaml, Service.Yaml updatedYaml,

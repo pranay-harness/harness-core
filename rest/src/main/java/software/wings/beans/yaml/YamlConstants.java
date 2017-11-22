@@ -28,7 +28,8 @@ public interface YamlConstants {
   String GCP_FOLDER = "Google Cloud Platform";
   String PHYSICAL_DATA_CENTER_FOLDER = "Physical Data Centers";
 
-  String ARTIFACT_SOURCES_FOLDER = "Artifact Sources";
+  String ARTIFACT_SOURCES_FOLDER = "Artifact Servers";
+  String DEPLOYMENT_SPECIFICATION_FOLDER = "Deployment Specifications";
 
   String SMTP_FOLDER = "SMTP";
   String SLACK_FOLDER = "Slack";
@@ -48,4 +49,10 @@ public interface YamlConstants {
   String COLLABORATION_PROVIDER = "COLLABORATION_PROVIDER";
   String LOADBALANCER_PROVIDER = "LOADBALANCER_PROVIDER";
   String VERIFICATION_PROVIDER = "VERIFICATION_PROVIDER";
+
+  String DEPLOYMENT_SPECIFICATION = "DEPLOYMENT_SPECIFICATION";
+
+  String LAMBDA_SPEC_YAML_FILE_NAME = "Lambda";
+  String ECS_CONTAINER_TASK_YAML_FILE_NAME = "Ecs";
+  String KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME = "Kubernetes";
 }

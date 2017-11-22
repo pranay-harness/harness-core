@@ -6,6 +6,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream.Builder;
 import software.wings.beans.artifact.NexusArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -31,6 +32,16 @@ public class NexusArtifactStreamYamlHandler
   }
 
   @Override
+  public NexusArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
   public NexusArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     if (!validate(changeContext, changeSetContext)) {
@@ -41,7 +52,7 @@ public class NexusArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (NexusArtifactStream) artifactStreamService.update(builder.build());
   }
 
   private void setWithYamlValues(
@@ -76,7 +87,7 @@ public class NexusArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Builder builder = Builder.aNexusArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (NexusArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override

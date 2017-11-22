@@ -205,13 +205,14 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
         .withLastUpdatedAt(getLastUpdatedAt())
         .withComputeProviderType(getComputeProviderType())
         .withInfraMappingType(getInfraMappingType())
-        .withEntityPath(entityYamlPath)
+        .withEntityYamlPath(entityYamlPath)
         .withDeploymentType(getDeploymentType())
         .withComputeProviderName(getComputeProviderName())
         .withName(getName());
   }
 
   public static final class Builder {
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
     private String clusterName;
     private String masterUrl;
@@ -219,20 +220,21 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private char[] password;
     private String namespace;
     private String uuid;
-    private String computeProviderSettingId;
-    private String envId;
     private EmbeddedUser createdBy;
-    private String serviceTemplateId;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
-    private String serviceId;
     private long lastUpdatedAt;
+    private String computeProviderSettingId;
+    private String envId;
+    private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
     private String infraMappingType;
-    private String entityPath;
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    // auto populate name
+    private boolean autoPopulate = true;
 
     private Builder() {}
 
@@ -270,28 +272,13 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       return this;
     }
 
-    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
-      this.computeProviderSettingId = computeProviderSettingId;
-      return this;
-    }
-
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
@@ -305,13 +292,33 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       return this;
     }
 
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
+    public Builder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
+      return this;
+    }
+
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
+      this.computeProviderSettingId = computeProviderSettingId;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
@@ -322,11 +329,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
     public Builder withInfraMappingType(String infraMappingType) {
       this.infraMappingType = infraMappingType;
-      return this;
-    }
-
-    public Builder withEntityPath(String entityPath) {
-      this.entityPath = entityPath;
       return this;
     }
 
@@ -345,6 +347,11 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       return this;
     }
 
+    public Builder withAutoPopulate(boolean autoPopulate) {
+      this.autoPopulate = autoPopulate;
+      return this;
+    }
+
     public Builder but() {
       return aDirectKubernetesInfrastructureMapping()
           .withClusterName(clusterName)
@@ -353,21 +360,22 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
           .withPassword(password)
           .withNamespace(namespace)
           .withUuid(uuid)
-          .withComputeProviderSettingId(computeProviderSettingId)
           .withAppId(appId)
-          .withEnvId(envId)
           .withCreatedBy(createdBy)
-          .withServiceTemplateId(serviceTemplateId)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withServiceId(serviceId)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withEntityYamlPath(entityYamlPath)
+          .withComputeProviderSettingId(computeProviderSettingId)
+          .withEnvId(envId)
+          .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withInfraMappingType(infraMappingType)
-          .withEntityPath(entityPath)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withName(name);
+          .withName(name)
+          .withAutoPopulate(autoPopulate);
     }
 
     public DirectKubernetesInfrastructureMapping build() {
@@ -379,21 +387,22 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setPassword(password);
       directKubernetesInfrastructureMapping.setNamespace(namespace);
       directKubernetesInfrastructureMapping.setUuid(uuid);
-      directKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       directKubernetesInfrastructureMapping.setAppId(appId);
-      directKubernetesInfrastructureMapping.setEnvId(envId);
       directKubernetesInfrastructureMapping.setCreatedBy(createdBy);
-      directKubernetesInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       directKubernetesInfrastructureMapping.setCreatedAt(createdAt);
       directKubernetesInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
-      directKubernetesInfrastructureMapping.setServiceId(serviceId);
       directKubernetesInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      directKubernetesInfrastructureMapping.setEntityYamlPath(entityYamlPath);
+      directKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      directKubernetesInfrastructureMapping.setEnvId(envId);
+      directKubernetesInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      directKubernetesInfrastructureMapping.setServiceId(serviceId);
       directKubernetesInfrastructureMapping.setComputeProviderType(computeProviderType);
       directKubernetesInfrastructureMapping.setInfraMappingType(infraMappingType);
-      directKubernetesInfrastructureMapping.setEntityYamlPath(entityPath);
       directKubernetesInfrastructureMapping.setDeploymentType(deploymentType);
       directKubernetesInfrastructureMapping.setComputeProviderName(computeProviderName);
       directKubernetesInfrastructureMapping.setName(name);
+      directKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
       return directKubernetesInfrastructureMapping;
     }
   }

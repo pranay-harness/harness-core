@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.command.AbstractCommandUnit;
-import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.yaml.ChangeContext;
@@ -61,17 +60,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   }
 
   @Override
-  public Class getYamlClass() {
-    return AwsLambdaCommandUnit.Yaml.class;
-  }
-
-  @Override
   public C get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
-  }
-
-  @Override
-  public C update(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return updateFromYaml(changeContext, changeSetContext);
   }
 }

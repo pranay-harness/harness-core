@@ -274,7 +274,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
         .withLastUpdatedAt(getLastUpdatedAt())
         .withServiceId(getServiceId())
         .withComputeProviderType(getComputeProviderType())
-        .withEntityPath(entityYamlPath)
+        .withEntityYamlPath(entityYamlPath)
         .withInfraMappingType(getInfraMappingType())
         .withDeploymentType(getDeploymentType())
         .withComputeProviderName(getComputeProviderName())
@@ -282,6 +282,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   }
 
   public static final class Builder {
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
     private String region;
     private String vpcId;
@@ -289,20 +290,21 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
     private List<String> securityGroupIds = new ArrayList<>();
     private String role;
     private String uuid;
-    private String computeProviderSettingId;
     private EmbeddedUser createdBy;
-    private String envId;
     private long createdAt;
-    private String serviceTemplateId;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String computeProviderSettingId;
+    private String envId;
+    private String serviceTemplateId;
     private String serviceId;
     private String computeProviderType;
-    private String entityPath;
     private String infraMappingType;
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    // auto populate name
+    private boolean autoPopulate = true;
 
     private Builder() {}
 
@@ -345,28 +347,13 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       return this;
     }
 
-    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
-      this.computeProviderSettingId = computeProviderSettingId;
-      return this;
-    }
-
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
@@ -380,6 +367,26 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public Builder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
+      return this;
+    }
+
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
+      this.computeProviderSettingId = computeProviderSettingId;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
@@ -387,11 +394,6 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
 
     public Builder withComputeProviderType(String computeProviderType) {
       this.computeProviderType = computeProviderType;
-      return this;
-    }
-
-    public Builder withEntityPath(String entityPath) {
-      this.entityPath = entityPath;
       return this;
     }
 
@@ -415,6 +417,11 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public Builder withAutoPopulate(boolean autoPopulate) {
+      this.autoPopulate = autoPopulate;
+      return this;
+    }
+
     public Builder but() {
       return anAwsLambdaInfraStructureMapping()
           .withRegion(region)
@@ -424,20 +431,21 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
           .withRole(role)
           .withUuid(uuid)
           .withAppId(appId)
-          .withComputeProviderSettingId(computeProviderSettingId)
           .withCreatedBy(createdBy)
-          .withEnvId(envId)
           .withCreatedAt(createdAt)
-          .withServiceTemplateId(serviceTemplateId)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withEntityYamlPath(entityYamlPath)
+          .withComputeProviderSettingId(computeProviderSettingId)
+          .withEnvId(envId)
+          .withServiceTemplateId(serviceTemplateId)
           .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
-          .withEntityPath(entityPath)
           .withInfraMappingType(infraMappingType)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withName(name);
+          .withName(name)
+          .withAutoPopulate(autoPopulate);
     }
 
     public AwsLambdaInfraStructureMapping build() {
@@ -449,20 +457,21 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       awsLambdaInfraStructureMapping.setRole(role);
       awsLambdaInfraStructureMapping.setUuid(uuid);
       awsLambdaInfraStructureMapping.setAppId(appId);
-      awsLambdaInfraStructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsLambdaInfraStructureMapping.setCreatedBy(createdBy);
-      awsLambdaInfraStructureMapping.setEnvId(envId);
       awsLambdaInfraStructureMapping.setCreatedAt(createdAt);
-      awsLambdaInfraStructureMapping.setServiceTemplateId(serviceTemplateId);
       awsLambdaInfraStructureMapping.setLastUpdatedBy(lastUpdatedBy);
       awsLambdaInfraStructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      awsLambdaInfraStructureMapping.setEntityYamlPath(entityYamlPath);
+      awsLambdaInfraStructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      awsLambdaInfraStructureMapping.setEnvId(envId);
+      awsLambdaInfraStructureMapping.setServiceTemplateId(serviceTemplateId);
       awsLambdaInfraStructureMapping.setServiceId(serviceId);
       awsLambdaInfraStructureMapping.setComputeProviderType(computeProviderType);
-      awsLambdaInfraStructureMapping.setEntityYamlPath(entityPath);
+      awsLambdaInfraStructureMapping.setInfraMappingType(infraMappingType);
       awsLambdaInfraStructureMapping.setDeploymentType(deploymentType);
       awsLambdaInfraStructureMapping.setComputeProviderName(computeProviderName);
       awsLambdaInfraStructureMapping.setName(name);
-      awsLambdaInfraStructureMapping.setInfraMappingType(infraMappingType);
+      awsLambdaInfraStructureMapping.setAutoPopulate(autoPopulate);
       return awsLambdaInfraStructureMapping;
     }
   }

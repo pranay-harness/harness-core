@@ -6,6 +6,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.Builder;
 import software.wings.beans.artifact.DockerArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -27,6 +28,16 @@ public class DockerArtifactStreamYamlHandler
         .build();
   }
 
+  @Override
+  public DockerArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
   public DockerArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     if (!validate(changeContext, changeSetContext)) {
@@ -37,7 +48,7 @@ public class DockerArtifactStreamYamlHandler
         getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Builder builder = previous.deepClone();
     setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return builder.build();
+    return (DockerArtifactStream) artifactStreamService.update(builder.build());
   }
 
   @Override
@@ -59,7 +70,7 @@ public class DockerArtifactStreamYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Builder builder = Builder.aDockerArtifactStream().withServiceId(serviceId).withAppId(appId);
     setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return builder.build();
+    return (DockerArtifactStream) artifactStreamService.create(builder.build());
   }
 
   private void setWithYamlValues(

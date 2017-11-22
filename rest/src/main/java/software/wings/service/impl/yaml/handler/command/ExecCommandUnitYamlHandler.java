@@ -4,6 +4,7 @@ import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.Yaml;
 import software.wings.beans.command.ExecCommandUnit.Yaml.Builder;
 import software.wings.beans.command.TailFilePatternEntry;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Util;
@@ -46,6 +47,16 @@ public class ExecCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, 
 
     yaml.setFilePatternEntryList(convertToYaml(bean.getTailPatterns()));
     return yaml;
+  }
+
+  @Override
+  public ExecCommandUnit upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   private List<TailFilePatternEntry.Yaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {

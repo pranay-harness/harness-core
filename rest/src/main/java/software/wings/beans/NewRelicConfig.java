@@ -6,17 +6,19 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.service.impl.newrelic.NewRelicUrlProvider;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
  * Created by raghu on 8/28/17.
@@ -56,5 +58,18 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
     this.apiKey = apiKey;
     this.accountId = accountId;
     this.encryptedApiKey = encryptedApiKey;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends VerificationProviderYaml {
+    private String apiKey;
+
+    public Yaml() {}
+
+    public Yaml(String type, String name, String apiKey) {
+      super(type, name);
+      this.apiKey = apiKey;
+    }
   }
 }
