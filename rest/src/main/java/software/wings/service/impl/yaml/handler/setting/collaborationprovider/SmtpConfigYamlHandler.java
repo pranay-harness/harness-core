@@ -28,7 +28,7 @@ public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml
                             .accountId(accountId)
                             .host(yaml.getHost())
                             .port(yaml.getPort())
-                            .password(null)
+                            .password(yaml.getPassword().toCharArray())
                             .encryptedPassword(yaml.getPassword())
                             .username(yaml.getUsername())
                             .fromAddress(yaml.getFromAddress())

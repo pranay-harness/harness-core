@@ -27,7 +27,7 @@ public class GitConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, GitCon
                            .accountId(accountId)
                            .repoUrl(yaml.getUrl())
                            .branch(yaml.getBranch())
-                           .password(null)
+                           .password(yaml.getPassword().toCharArray())
                            .encryptedPassword(yaml.getPassword())
                            .username(yaml.getUsername())
                            .build();

@@ -27,7 +27,7 @@ public class AppDynamicsConfigYamlHandler extends VerificationProviderYamlHandle
                                    .accountId(accountId)
                                    .accountname(yaml.getAccountName())
                                    .controllerUrl(yaml.getControllerUrl())
-                                   .password(null)
+                                   .password(yaml.getPassword().toCharArray())
                                    .encryptedPassword(yaml.getPassword())
                                    .username(yaml.getUsername())
                                    .build();

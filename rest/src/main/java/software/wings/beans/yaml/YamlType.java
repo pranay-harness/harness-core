@@ -8,7 +8,6 @@ import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
-import static software.wings.beans.yaml.YamlConstants.CONNECTORS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
@@ -62,23 +61,17 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
   ARTIFACT_SERVER(YamlConstants.ARTIFACT_SERVER,
-      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, CONNECTORS_FOLDER, ARTIFACT_SERVERS_FOLDER, YAML_EXPRESSION),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CONNECTORS_FOLDER, ARTIFACT_SERVERS_FOLDER, ANY),
-      SettingAttribute.class),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, ANY), SettingAttribute.class),
   COLLABORATION_PROVIDER(YamlConstants.COLLABORATION_PROVIDER,
-      generatePath(
-          PATH_DELIMITER, false, SETUP_FOLDER, CONNECTORS_FOLDER, COLLABORATION_PROVIDERS_FOLDER, YAML_EXPRESSION),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CONNECTORS_FOLDER, COLLABORATION_PROVIDERS_FOLDER, ANY),
-      SettingAttribute.class),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, COLLABORATION_PROVIDERS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, COLLABORATION_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
   LOADBALANCER_PROVIDER(YamlConstants.LOADBALANCER_PROVIDER,
-      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, CONNECTORS_FOLDER, LOAD_BALANCERS_FOLDER, YAML_EXPRESSION),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CONNECTORS_FOLDER, LOAD_BALANCERS_FOLDER, ANY),
-      SettingAttribute.class),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, LOAD_BALANCERS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, LOAD_BALANCERS_FOLDER, ANY), SettingAttribute.class),
   VERIFICATION_PROVIDER(YamlConstants.VERIFICATION_PROVIDER,
-      generatePath(
-          PATH_DELIMITER, false, SETUP_FOLDER, CONNECTORS_FOLDER, VERIFICATION_PROVIDERS_FOLDER, YAML_EXPRESSION),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CONNECTORS_FOLDER, VERIFICATION_PROVIDERS_FOLDER, ANY),
-      SettingAttribute.class),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, VERIFICATION_PROVIDERS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, VERIFICATION_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
   APPLICATION(EntityType.APPLICATION.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY), Application.class),

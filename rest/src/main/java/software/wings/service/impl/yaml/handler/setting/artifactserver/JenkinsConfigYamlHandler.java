@@ -26,7 +26,7 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
     JenkinsConfig config = JenkinsConfig.builder()
                                .accountId(accountId)
                                .jenkinsUrl(yaml.getUrl())
-                               .password(null)
+                               .password(yaml.getPassword().toCharArray())
                                .encryptedPassword(yaml.getPassword())
                                .username(yaml.getUsername())
                                .build();

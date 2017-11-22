@@ -1,11 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.loadbalancer;
 
 import com.amazonaws.regions.Regions;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig.Yaml;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
 import software.wings.utils.Util;
 
 import java.util.List;
@@ -32,7 +31,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
                                            .accessKey(yaml.getAccessKey())
                                            .loadBalancerName(yaml.getLoadBalancerName())
                                            .region(region)
-                                           .secretKey(null)
+                                           .secretKey(yaml.getSecretKey().toCharArray())
                                            .encryptedSecretKey(yaml.getSecretKey())
                                            .build();
     return buildSettingAttribute(accountId, yaml.getName(), uuid, config);

@@ -27,9 +27,9 @@ public class SumoConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
     SumoConfig config = new SumoConfig();
     config.setAccountId(accountId);
     config.setSumoUrl(yaml.getSumoUrl());
-    config.setAccessId(null);
+    config.setAccessId(yaml.getAccessId().toCharArray());
     config.setEncryptedAccessId(yaml.getAccessId());
-    config.setAccessKey(null);
+    config.setAccessKey(yaml.getAccessKey().toCharArray());
     config.setEncryptedAccessKey(yaml.getAccessKey());
 
     return buildSettingAttribute(accountId, yaml.getName(), uuid, config);

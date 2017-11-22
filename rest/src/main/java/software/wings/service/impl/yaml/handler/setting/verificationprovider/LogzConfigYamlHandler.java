@@ -27,7 +27,7 @@ public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
     LogzConfig config = new LogzConfig();
     config.setAccountId(accountId);
     config.setEncryptedToken(yaml.getToken());
-    config.setToken(null);
+    config.setToken(yaml.getToken().toCharArray());
     config.setLogzUrl(yaml.getLogzUrl());
 
     return buildSettingAttribute(accountId, yaml.getName(), uuid, config);

@@ -26,7 +26,7 @@ public class BambooConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Bam
     BambooConfig config = BambooConfig.builder()
                               .accountId(accountId)
                               .bambooUrl(yaml.getUrl())
-                              .password(null)
+                              .password(yaml.getPassword().toCharArray())
                               .encryptedPassword(yaml.getPassword())
                               .username(yaml.getUsername())
                               .build();

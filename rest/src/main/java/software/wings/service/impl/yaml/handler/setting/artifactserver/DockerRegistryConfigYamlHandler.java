@@ -26,7 +26,7 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
     DockerConfig config = DockerConfig.builder()
                               .accountId(accountId)
                               .dockerRegistryUrl(yaml.getUrl())
-                              .password(null)
+                              .password(yaml.getPassword().toCharArray())
                               .encryptedPassword(yaml.getPassword())
                               .username(yaml.getUsername())
                               .build();
