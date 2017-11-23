@@ -64,6 +64,15 @@ if [ ! -e watcher.jar ]
 then
   echo "Downloading Watcher..."
   curl -#k $REMOTE_WATCHER_URL -o watcher.jar
+else
+  WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
+  then
+    echo "Downloading Watcher..."
+    mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
+    cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
+    curl -#k $REMOTE_WATCHER_URL -o watcher.jar
+  fi
 fi
 
 REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
