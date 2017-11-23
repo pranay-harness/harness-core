@@ -90,6 +90,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
             .withAppId(app.getUuid())
+            .withAccountId(accountId)
             .withEnvId(environment.getUuid())
             .withServiceTemplateId(serviceTemplateId)
             .withDeploymentType(DeploymentType.SSH.name())
