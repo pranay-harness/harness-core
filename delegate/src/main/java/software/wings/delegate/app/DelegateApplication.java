@@ -1,5 +1,7 @@
 package software.wings.delegate.app;
 
+import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
+import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
 import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
@@ -62,7 +64,7 @@ public class DelegateApplication {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       MessageService messageService = Guice.createInjector(new DelegateModule()).getInstance(MessageService.class);
       messageService.closeChannel(DELEGATE, processId);
-      messageService.closeData("delegate-" + processId);
+      messageService.closeData(DELEGATE_DASH + processId);
       logger.info("Log manager shutdown hook executing.");
       LogManager.shutdown();
     }));
@@ -89,7 +91,7 @@ public class DelegateApplication {
     boolean watched = watcherProcess != null;
     if (watched) {
       MessageService messageService = injector.getInstance(MessageService.class);
-      messageService.sendMessage(WATCHER, watcherProcess, "new-delegate", processId);
+      messageService.sendMessage(WATCHER, watcherProcess, NEW_DELEGATE, processId);
     }
     DelegateService delegateService = injector.getInstance(DelegateService.class);
     delegateService.run(watched);

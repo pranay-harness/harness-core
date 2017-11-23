@@ -7,6 +7,31 @@ import static java.util.Collections.synchronizedList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
+import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
+import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
+import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
+import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_STARTED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
+import static software.wings.utils.message.MessageConstants.DELEGATE_VERSION;
+import static software.wings.utils.message.MessageConstants.EXTRA_WATCHER;
+import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
+import static software.wings.utils.message.MessageConstants.WATCHER_GO_AHEAD;
+import static software.wings.utils.message.MessageConstants.WATCHER_HEARTBEAT;
+import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
+import static software.wings.utils.message.MessageConstants.NEW_WATCHER;
+import static software.wings.utils.message.MessageConstants.NEXT_WATCHER;
+import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
+import static software.wings.utils.message.MessageConstants.RUNNING_DELEGATES;
+import static software.wings.utils.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
+import static software.wings.utils.message.MessageConstants.UPGRADING_DELEGATE;
+import static software.wings.utils.message.MessageConstants.WATCHER_PROCESS;
+import static software.wings.utils.message.MessageConstants.WATCHER_VERSION;
+import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
+import static software.wings.utils.message.MessageConstants.WATCHER_STARTED;
 import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
@@ -60,20 +85,6 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long MAX_DELEGATE_STARTUP_GRACE_PERIOD = TimeUnit.MINUTES.toMillis(2);
   private static final long MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD = TimeUnit.HOURS.toMillis(2);
 
-  private static final String DELEGATE_DASH = "delegate-";
-  private static final String NEW_DELEGATE = "new-delegate";
-  private static final String DELEGATE_STARTED = "delegate-started";
-  private static final String UPGRADING = "upgrading";
-  private static final String STOP_ACQUIRING = "stop-acquiring";
-  private static final String NEW_WATCHER = "new-watcher";
-  private static final String WATCHER_STARTED = "watcher-started";
-  private static final String GO_AHEAD = "go-ahead";
-  private static final String RESUME = "resume";
-  private static final String WATCHER_DATA = "watcher-data";
-  private static final String RUNNING_DELEGATES = "running-delegates";
-  private static final String NEXT_WATCHER = "next-watcher";
-  private static final String EXTRA_WATCHER = "extra-watcher";
-
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
@@ -100,12 +111,14 @@ public class WatcherServiceImpl implements WatcherService {
       startInputCheck();
 
       if (upgrade) {
-        Message message = waitForIncomingMessage(GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
+        Message message = waitForIncomingMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
 
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
+      messageService.putData(WATCHER_DATA, WATCHER_VERSION, getVersion());
+      messageService.putData(WATCHER_DATA, WATCHER_PROCESS, getProcessId());
       startUpgradeCheck();
       startWatching();
 
@@ -170,13 +183,14 @@ public class WatcherServiceImpl implements WatcherService {
 }
 
 private void startWatching() {
-    watchExecutor.scheduleWithFixedDelay(() -> {
-      synchronized (this) {
-        if (!working.get()) {
-          watchDelegate();
-}
-}
-}, 0, 10, TimeUnit.SECONDS);
+  watchExecutor.scheduleWithFixedDelay(() -> {
+    messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
+    synchronized (this) {
+      if (!working.get()) {
+        watchDelegate();
+      }
+    }
+  }, 0, 10, TimeUnit.SECONDS);
 }
 
 private void watchDelegate() {
@@ -188,7 +202,7 @@ private void watchDelegate() {
         .map(dataName -> dataName.substring(DELEGATE_DASH.length()))
         .filter(process -> !runningDelegates.contains(process))
         .forEach(process -> {
-          if (!Optional.ofNullable(messageService.getData(DELEGATE_DASH + process, "newDelegate", Boolean.class))
+          if (!Optional.ofNullable(messageService.getData(DELEGATE_DASH + process, DELEGATE_IS_NEW, Boolean.class))
                    .orElse(false)) {
             logger.info("Data found for untracked delegate process {}. Shutting it down", process);
             shutdownDelegate(process);
@@ -247,22 +261,28 @@ private void watchDelegate() {
         for (String delegateProcess : runningDelegates) {
           Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
           if (delegateData != null && !delegateData.isEmpty()) {
-            long heartbeat = Optional.ofNullable((Long) delegateData.get("heartbeat")).orElse(0L);
-            boolean newDelegate = Optional.ofNullable((Boolean) delegateData.get("newDelegate")).orElse(false);
-            boolean restartNeeded = Optional.ofNullable((Boolean) delegateData.get("restartNeeded")).orElse(false);
-            boolean upgradeNeeded = Optional.ofNullable((Boolean) delegateData.get("upgradeNeeded")).orElse(false);
-            boolean upgradePending = Optional.ofNullable((Boolean) delegateData.get("upgradePending")).orElse(false);
-            boolean shutdownPending = Optional.ofNullable((Boolean) delegateData.get("shutdownPending")).orElse(false);
-            long shutdownStarted = Optional.ofNullable((Long) delegateData.get("shutdownStarted")).orElse(0L);
+            String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
+            long heartbeat = Optional.ofNullable((Long) delegateData.get(DELEGATE_HEARTBEAT)).orElse(0L);
+            boolean newDelegate = Optional.ofNullable((Boolean) delegateData.get(DELEGATE_IS_NEW)).orElse(false);
+            boolean restartNeeded =
+                Optional.ofNullable((Boolean) delegateData.get(DELEGATE_RESTART_NEEDED)).orElse(false);
+            boolean upgradeNeeded =
+                Optional.ofNullable((Boolean) delegateData.get(DELEGATE_UPGRADE_NEEDED)).orElse(false);
+            boolean upgradePending =
+                Optional.ofNullable((Boolean) delegateData.get(DELEGATE_UPGRADE_PENDING)).orElse(false);
+            boolean shutdownPending =
+                Optional.ofNullable((Boolean) delegateData.get(DELEGATE_SHUTDOWN_PENDING)).orElse(false);
+            long shutdownStarted = Optional.ofNullable((Long) delegateData.get(DELEGATE_SHUTDOWN_STARTED)).orElse(0L);
 
             if (newDelegate) {
-              logger.info("New delegate process {} is starting", delegateProcess);
+              logger.info("New delegate process {} is starting with version {}", delegateProcess, delegateVersion);
               if (now - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
                 newDelegateTimedOut = true;
                 shutdownNeededList.add(delegateProcess);
               }
             } else if (shutdownPending) {
-              logger.info("Shutdown is pending for {}", delegateProcess);
+              logger.info(
+                  "Shutdown is pending for delegate process {} with version {}", delegateProcess, delegateVersion);
               if (now - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD
                   || now - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
                 shutdownNeededList.add(delegateProcess);
@@ -286,7 +306,7 @@ private void watchDelegate() {
         shutdownNeededList.forEach(this ::shutdownDelegate);
         if (newDelegateTimedOut && upgradePendingDelegate != null) {
           logger.info("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
-          messageService.sendMessage(DELEGATE, upgradePendingDelegate, RESUME);
+          messageService.sendMessage(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
         }
       }
       if (isNotEmpty(restartNeededList)) {
@@ -297,7 +317,7 @@ private void watchDelegate() {
         if (working.compareAndSet(false, true)) {
           logger.info("Delegate processes {} ready for upgrade", upgradeNeededList);
           upgradeNeededList.forEach(
-              delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING));
+              delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
           startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
         }
       }
@@ -333,17 +353,17 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
         if (message != null) {
           String newDelegateProcess = message.getParams().get(0);
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
-          messageService.putData(DELEGATE_DASH + newDelegateProcess, "newDelegate", true);
-          messageService.putData(DELEGATE_DASH + newDelegateProcess, "heartbeat", clock.millis());
+          messageService.putData(DELEGATE_DASH + newDelegateProcess, DELEGATE_IS_NEW, true);
+          messageService.putData(DELEGATE_DASH + newDelegateProcess, DELEGATE_HEARTBEAT, clock.millis());
           synchronized (runningDelegates) {
             runningDelegates.add(newDelegateProcess);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           }
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
-            oldDelegateProcesses.forEach(
-                oldDelegateProcess -> messageService.sendMessage(DELEGATE, oldDelegateProcess, STOP_ACQUIRING));
-            messageService.sendMessage(DELEGATE, newDelegateProcess, GO_AHEAD);
+            oldDelegateProcesses.forEach(oldDelegateProcess
+                -> messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING));
+            messageService.sendMessage(DELEGATE, newDelegateProcess, DELEGATE_GO_AHEAD);
           }
         }
       } else {
@@ -453,7 +473,7 @@ private void upgradeWatcher(InputStream newVersionJarStream, String version, Str
         messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcessId);
         message = messageService.retrieveMessage(WATCHER, newWatcherProcessId, TimeUnit.MINUTES.toMillis(2));
         if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
-          messageService.sendMessage(WATCHER, newWatcherProcessId, GO_AHEAD);
+          messageService.sendMessage(WATCHER, newWatcherProcessId, WATCHER_GO_AHEAD);
           logger.info("[Old] Watcher upgraded. Stopping");
           removeWatcherVersionFromCapsule(version, newVersion);
           cleanupOldWatcherVersionFromBackup(version, newVersion);
