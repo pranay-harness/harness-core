@@ -1821,6 +1821,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                                               .withAppId(app.getUuid())
                                               .withEnvId(env.getUuid())
+                                              .withAccountId(app.getAccountId())
                                               .withHostNames(Lists.newArrayList("host1"))
                                               .withServiceTemplateId(serviceTemplate.getUuid())
                                               .withComputeProviderSettingId(computeProvider.getUuid())
@@ -1856,6 +1857,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                                               .withAppId(app.getUuid())
+                                              .withAccountId(app.getAccountId())
                                               .withEnvId(env.getUuid())
                                               .withHostNames(Lists.newArrayList("host1"))
                                               .withServiceTemplateId(serviceTemplate.getUuid())
@@ -1870,6 +1872,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                                               .withAppId(app.getUuid())
                                               .withEnvId(env.getUuid())
+                                              .withAccountId(app.getAccountId())
                                               .withHostNames(Lists.newArrayList("host12"))
                                               .withServiceTemplateId(serviceTemplate.getUuid())
                                               .withComputeProviderSettingId(computeProvider.getUuid())

@@ -484,6 +484,7 @@ public class WorkflowPhase implements UuidAware {
         Yaml yaml = new Yaml();
         yaml.setName(name);
         yaml.setInfraMappingName(infraMappingName);
+        yaml.setServiceName(serviceName);
         yaml.setComputeProviderName(computeProviderName);
         yaml.setProvisionNodes(provisionNodes);
         yaml.setType(type);
