@@ -8,12 +8,16 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GitCommit;
+import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.UUIDGenerator;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DelegateService;
@@ -32,6 +36,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -50,10 +55,11 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private DelegateService delegateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private SecretManager secretManager;
   @Inject private ExecutorService executorService;
+  @Inject protected DelegateProxyFactory delegateProxyFactory;
+  @Inject private DelegateService delegateService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -73,6 +79,7 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig save(YamlGitConfig ygs) {
+    validateGit(ygs.getGitConfig());
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> pushDirectory(ygs.getAccountId()));
     return yamlGitSync;
@@ -86,9 +93,38 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig update(YamlGitConfig ygs) {
+    validateGit(ygs.getGitConfig());
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> pushDirectory(ygs.getAccountId()));
     return yamlGitSync;
+  }
+
+  private void validateGit(GitConfig gitConfig) {
+    /*
+    1. Invalid repoUrl
+    2. Invalid credentials
+    3. No write access
+    4. Branch doesn't exist
+     */
+    try {
+      GitCommandExecutionResponse gitCommandExecutionResponse =
+          delegateService.executeTask(aDelegateTask()
+                                          .withTaskType(TaskType.GIT_COMMAND)
+                                          .withAccountId(gitConfig.getAccountId())
+                                          .withAppId(GLOBAL_APP_ID)
+                                          .withAsync(false)
+                                          .withTimeout(TimeUnit.SECONDS.toMillis(60))
+                                          .withParameters(new Object[] {GitCommandType.VALIDATE, gitConfig,
+                                              secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null)})
+                                          .build());
+      logger.info("GitConfigValidation [{}]", gitCommandExecutionResponse);
+      if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", gitCommandExecutionResponse.getErrorMessage());
+      }
+    } catch (InterruptedException e) {
+      logger.error("Execution inturrpted {}", e);
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT);
+    }
   }
 
   @Override
