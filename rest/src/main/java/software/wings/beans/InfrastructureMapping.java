@@ -63,6 +63,8 @@ public abstract class InfrastructureMapping extends Base {
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;
 
+  @SchemaIgnore @NotEmpty private String accountId;
+
   /**
    * Instantiates a new Infrastructure mapping.
    */
@@ -87,6 +89,15 @@ public abstract class InfrastructureMapping extends Base {
     private String deploymentType;
     private String computeProviderName;
     private String name;
+  }
+
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /**

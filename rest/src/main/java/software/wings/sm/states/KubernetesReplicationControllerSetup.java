@@ -111,7 +111,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getReplicationControllerNamePrefix(appName, serviceName, envName);
-    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
+    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, context, rcNamePrefix);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
 
@@ -191,7 +191,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getReplicationControllerNamePrefix(appName, serviceName, envName);
-    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
+    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, context, rcNamePrefix);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
     return KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
@@ -292,9 +292,10 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     return loadBalancerEndpoint;
   }
 
-  private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {
-    ReplicationControllerList replicationControllers =
-        kubernetesContainerService.listControllers(kubernetesConfig, Collections.emptyList());
+  private String lastReplicationController(
+      KubernetesConfig kubernetesConfig, ExecutionContext context, String controllerNamePrefix) {
+    ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig,
+        secretManager.getEncryptionDetails(kubernetesConfig, context.getAppId(), context.getWorkflowExecutionId()));
     if (replicationControllers == null) {
       return null;
     }
