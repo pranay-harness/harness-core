@@ -9,6 +9,24 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
+import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
+import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
+import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
+import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
+import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_STARTED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
+import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
+import static software.wings.utils.message.MessageConstants.DELEGATE_VERSION;
+import static software.wings.utils.message.MessageConstants.UPGRADING_DELEGATE;
+import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
+import static software.wings.utils.message.MessageConstants.WATCHER_HEARTBEAT;
+import static software.wings.utils.message.MessageConstants.WATCHER_PROCESS;
+import static software.wings.utils.message.MessageConstants.WATCHER_VERSION;
 import static software.wings.utils.message.MessengerType.DELEGATE;
 
 import com.google.common.collect.Lists;
@@ -106,13 +124,6 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
 
-  private static final String GO_AHEAD = "go-ahead";
-  private static final String UPGRADING = "upgrading";
-  private static final String STOP_ACQUIRING = "stop-acquiring";
-  private static final String RESUME = "resume";
-  private static final String DELEGATE_DASH = "delegate-";
-  private static final String DELEGATE_STARTED = "delegate-started";
-
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -163,10 +174,10 @@ public class DelegateServiceImpl implements DelegateService {
         messageService.writeMessage(DELEGATE_STARTED);
         startInputCheck();
         logger.info("[New] Waiting for go ahead from watcher");
-        Message message = waitForIncomingMessage(GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
+        Message message = waitForIncomingMessage(DELEGATE_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
-        messageService.removeData(DELEGATE_DASH + getProcessId(), "newDelegate");
+        messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
         startLocalHeartbeat();
       } else {
         logger.info("Delegate process started");
@@ -425,11 +436,11 @@ public class DelegateServiceImpl implements DelegateService {
     inputExecutor.scheduleWithFixedDelay(() -> {
       Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(2));
       if (message != null) {
-        if (UPGRADING.equals(message.getMessage())) {
+        if (UPGRADING_DELEGATE.equals(message.getMessage())) {
           upgradeNeeded.set(false);
-        } else if (STOP_ACQUIRING.equals(message.getMessage())) {
+        } else if (DELEGATE_STOP_ACQUIRING.equals(message.getMessage())) {
           handleStopAcquiringMessage(message.getFromProcess());
-        } else if (RESUME.equals(message.getMessage())) {
+        } else if (DELEGATE_RESUME.equals(message.getMessage())) {
           resume();
         }
         try {
@@ -446,8 +457,8 @@ public class DelegateServiceImpl implements DelegateService {
     if (acquireTasks.get()) {
       acquireTasks.set(false);
       stoppedAcquiringAt = clock.millis();
-      messageService.putData(DELEGATE_DASH + getProcessId(), "shutdownPending", true);
-      messageService.putData(DELEGATE_DASH + getProcessId(), "shutdownStarted", stoppedAcquiringAt);
+      messageService.putData(DELEGATE_DASH + getProcessId(), DELEGATE_SHUTDOWN_PENDING, true);
+      messageService.putData(DELEGATE_DASH + getProcessId(), DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
       executorService.submit(() -> {
         int secs = 0;
         while ((long) currentlyExecutingTasks.size() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
@@ -525,18 +536,28 @@ public class DelegateServiceImpl implements DelegateService {
     localHeartbeatExecutor.scheduleAtFixedRate(()
                                                    -> executorService.submit(() -> {
       Map<String, Object> statusData = new HashMap<>();
-      statusData.put("heartbeat", clock.millis());
-      statusData.put("newDelegate", false);
-      statusData.put("restartNeeded", doRestartDelegate());
-      statusData.put("upgradeNeeded", upgradeNeeded.get());
-      statusData.put("upgradePending", upgradePending.get());
-      statusData.put("shutdownPending", !acquireTasks.get());
+      statusData.put(DELEGATE_HEARTBEAT, clock.millis());
+      statusData.put(DELEGATE_VERSION, getVersion());
+      statusData.put(DELEGATE_IS_NEW, false);
+      statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
+      statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
+      statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
+      statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
       if (!acquireTasks.get()) {
-        statusData.put("shutdownStarted", stoppedAcquiringAt);
+        statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
       }
       messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
+      watchWatcher();
     }),
         0, 5, TimeUnit.SECONDS);
+  }
+
+  private void watchWatcher() {
+    Long watcherHeartbeat = messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class);
+    String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
+    String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
+
+    // TODO - Check heartbeat and restart watcher if needed
   }
 
   private boolean doRestartDelegate() {

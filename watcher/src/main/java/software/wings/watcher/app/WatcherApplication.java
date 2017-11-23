@@ -1,5 +1,6 @@
 package software.wings.watcher.app;
 
+import static software.wings.utils.message.MessageConstants.NEW_WATCHER;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.base.Splitter;
@@ -81,7 +82,7 @@ public class WatcherApplication {
     }, new WatcherModule());
     if (upgrade) {
       MessageService messageService = injector.getInstance(MessageService.class);
-      messageService.sendMessage(WATCHER, previousWatcherProcess, "new-watcher", processId);
+      messageService.sendMessage(WATCHER, previousWatcherProcess, NEW_WATCHER, processId);
     }
 
     WatcherService watcherService = injector.getInstance(WatcherService.class);
