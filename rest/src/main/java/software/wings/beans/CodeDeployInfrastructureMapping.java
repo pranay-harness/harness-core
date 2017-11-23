@@ -218,6 +218,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   public static final class CodeDeployInfrastructureMappingBuilder {
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
+    private String accountId;
     private String region;
     private String applicationName;
     private String deploymentGroup;
@@ -272,6 +273,11 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
 
     public CodeDeployInfrastructureMappingBuilder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public CodeDeployInfrastructureMappingBuilder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -358,6 +364,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
           .withDeploymentConfig(deploymentConfig)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -398,6 +405,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       codeDeployInfrastructureMapping.setComputeProviderName(computeProviderName);
       codeDeployInfrastructureMapping.setName(name);
       codeDeployInfrastructureMapping.setAutoPopulate(autoPopulate);
+      codeDeployInfrastructureMapping.setAccountId(accountId);
       return codeDeployInfrastructureMapping;
     }
   }

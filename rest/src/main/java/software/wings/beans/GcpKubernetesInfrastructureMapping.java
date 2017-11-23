@@ -243,6 +243,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
      * The App id.
      */
     protected String appId;
+    private String accountId;
     private String clusterName;
     private String namespace;
     private String uuid;
@@ -314,6 +315,11 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
      */
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -493,6 +499,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
           .withNamespace(namespace)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -536,6 +543,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
       gcpKubernetesInfrastructureMapping.setComputeProviderName(computeProviderName);
       gcpKubernetesInfrastructureMapping.setName(name);
       gcpKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
+      gcpKubernetesInfrastructureMapping.setAccountId(accountId);
       return gcpKubernetesInfrastructureMapping;
     }
   }

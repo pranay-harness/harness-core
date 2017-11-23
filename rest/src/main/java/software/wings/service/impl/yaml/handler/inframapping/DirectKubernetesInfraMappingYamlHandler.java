@@ -53,7 +53,8 @@ public class DirectKubernetesInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
     DirectKubernetesInfrastructureMapping.Builder builder =
-        DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping();
+        DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
     DirectKubernetesInfrastructureMapping current = builder.build();
 

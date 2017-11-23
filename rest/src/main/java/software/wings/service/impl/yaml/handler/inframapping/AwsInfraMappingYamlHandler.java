@@ -79,7 +79,9 @@ public class AwsInfraMappingYamlHandler
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
-    AwsInfrastructureMapping.Builder builder = AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping();
+    AwsInfrastructureMapping.Builder builder =
+        AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
     AwsInfrastructureMapping current = builder.build();
 

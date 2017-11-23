@@ -790,6 +790,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      * The App id.
      */
     protected String appId;
+    private String accountId;
     private String restrictionType;
     private String restrictionExpression;
     private String region;
@@ -883,6 +884,11 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -1173,6 +1179,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withRegion(region)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withHostConnectionAttrs(hostConnectionAttrs)
           .withCreatedAt(createdAt)
@@ -1237,6 +1244,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsInfrastructureMapping.setName(name);
       awsInfrastructureMapping.setAutoPopulate(autoPopulate);
+      awsInfrastructureMapping.setAccountId(accountId);
       return awsInfrastructureMapping;
     }
   }

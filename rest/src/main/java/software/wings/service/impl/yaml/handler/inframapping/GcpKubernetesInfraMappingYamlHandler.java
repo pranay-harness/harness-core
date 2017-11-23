@@ -49,7 +49,8 @@ public class GcpKubernetesInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
     GcpKubernetesInfrastructureMapping.Builder builder =
-        GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping();
+        GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
     GcpKubernetesInfrastructureMapping current = builder.build();
     GcpKubernetesInfrastructureMapping previous =

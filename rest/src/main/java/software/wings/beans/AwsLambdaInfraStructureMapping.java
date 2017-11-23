@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.AwsInfrastructureMapping.Builder;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
@@ -284,6 +285,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   public static final class Builder {
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
+    private String accountId;
     private String region;
     private String vpcId;
     private List<String> subnetIds = new ArrayList<>();
@@ -344,6 +346,11 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
 
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -431,6 +438,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
           .withRole(role)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -472,6 +480,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       awsLambdaInfraStructureMapping.setComputeProviderName(computeProviderName);
       awsLambdaInfraStructureMapping.setName(name);
       awsLambdaInfraStructureMapping.setAutoPopulate(autoPopulate);
+      awsLambdaInfraStructureMapping.setAccountId(accountId);
       return awsLambdaInfraStructureMapping;
     }
   }

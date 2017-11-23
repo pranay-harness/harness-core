@@ -14,6 +14,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -42,6 +43,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.APPLICATION)
 public class InfrastructureMappingResource {
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private AppService appService;
 
   @GET
   @Timed
@@ -58,6 +60,7 @@ public class InfrastructureMappingResource {
       InfrastructureMapping infrastructureMapping) {
     infrastructureMapping.setAppId(appId);
     infrastructureMapping.setEnvId(envId);
+    infrastructureMapping.setAccountId(appService.getAccountIdByAppId(appId));
     return new RestResponse<>(infrastructureMappingService.save(infrastructureMapping));
   }
 
