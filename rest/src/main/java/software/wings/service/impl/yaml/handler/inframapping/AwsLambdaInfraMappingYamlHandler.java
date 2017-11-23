@@ -53,7 +53,8 @@ public class AwsLambdaInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
     AwsLambdaInfraStructureMapping.Builder builder =
-        AwsLambdaInfraStructureMapping.Builder.anAwsLambdaInfraStructureMapping();
+        AwsLambdaInfraStructureMapping.Builder.anAwsLambdaInfraStructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
     AwsLambdaInfraStructureMapping current = builder.build();
 

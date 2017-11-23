@@ -53,7 +53,8 @@ public class PhysicalInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
     PhysicalInfrastructureMapping.Builder builder =
-        PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping();
+        PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
     PhysicalInfrastructureMapping current = builder.build();
 

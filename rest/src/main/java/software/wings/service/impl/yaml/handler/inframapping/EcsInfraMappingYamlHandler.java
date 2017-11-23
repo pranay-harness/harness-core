@@ -48,7 +48,9 @@ public class EcsInfraMappingYamlHandler
     String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
-    EcsInfrastructureMapping.Builder builder = EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping();
+    EcsInfrastructureMapping.Builder builder =
+        EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
     EcsInfrastructureMapping current = builder.build();
     EcsInfrastructureMapping previous =

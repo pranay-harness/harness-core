@@ -227,6 +227,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   public static final class Builder {
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
+    private String accountId;
     private String clusterName;
     private String masterUrl;
     private String username;
@@ -287,6 +288,11 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -374,6 +380,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
           .withNamespace(namespace)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -416,6 +423,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setComputeProviderName(computeProviderName);
       directKubernetesInfrastructureMapping.setName(name);
       directKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
+      directKubernetesInfrastructureMapping.setAccountId(accountId);
       return directKubernetesInfrastructureMapping;
     }
   }

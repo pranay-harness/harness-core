@@ -645,6 +645,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
           .withLoadBalancerName(loadBalancerName)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -692,6 +693,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
       physicalInfrastructureMapping.setComputeProviderName(computeProviderName);
       physicalInfrastructureMapping.setName(name);
       physicalInfrastructureMapping.setAutoPopulate(autoPopulate);
+      physicalInfrastructureMapping.setAccountId(accountId);
       return physicalInfrastructureMapping;
     }
   }

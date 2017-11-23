@@ -349,6 +349,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   public static final class Builder {
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
+    private String accountId;
     private String clusterName;
     private String region;
     private String vpc;
@@ -442,6 +443,11 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return this;
     }
 
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -531,6 +537,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
           .withNumberOfNodes(numberOfNodes)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -577,6 +584,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       ecsInfrastructureMapping.setComputeProviderName(computeProviderName);
       ecsInfrastructureMapping.setName(name);
       ecsInfrastructureMapping.setAutoPopulate(autoPopulate);
+      ecsInfrastructureMapping.setAccountId(accountId);
       return ecsInfrastructureMapping;
     }
   }

@@ -53,7 +53,8 @@ public class CodeDeployInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
 
     CodeDeployInfrastructureMappingBuilder builder =
-        CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping();
+        CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
     setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
     CodeDeployInfrastructureMapping current = builder.build();
 
