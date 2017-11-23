@@ -21,7 +21,7 @@ public interface GitClient {
   /**
    * Clone git clone result.
    *
-   * @param gitConfig  the git config
+   * @param gitConfig the git config
    * @return the git clone result
    */
   GitCloneResult clone(GitConfig gitConfig);
@@ -76,4 +76,11 @@ public interface GitClient {
    * @return the git pull result
    */
   PullResult pull(GitConfig gitConfig);
+
+  /**
+   * Validate.
+   *
+   * @param gitConfig the git config
+   */
+  String validate(GitConfig gitConfig);
 }

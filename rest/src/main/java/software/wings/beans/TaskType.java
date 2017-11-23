@@ -135,6 +135,7 @@ public enum TaskType {
   KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
+  GIT_VALIDATE(TaskGroup.GIT, ServiceImplDelegateTask.class, GitValidation.class),
   VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class);

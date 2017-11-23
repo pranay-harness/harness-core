@@ -6,5 +6,14 @@ package software.wings.beans.yaml;
 public interface GitCommand {
   GitCommandType getGitCommandType();
 
-  enum GitCommandType { CLONE, CHECKOUT, DIFF, COMMIT, PUSH, PULL, COMMIT_AND_PUSH }
+  enum GitCommandType {
+    CLONE,
+    CHECKOUT,
+    DIFF,
+    COMMIT,
+    PUSH,
+    PULL,
+    COMMIT_AND_PUSH,
+    VALIDATE;
+  }
 }

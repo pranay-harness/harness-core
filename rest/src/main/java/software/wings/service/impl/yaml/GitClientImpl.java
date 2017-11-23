@@ -7,9 +7,11 @@ import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -51,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -340,6 +343,28 @@ public class GitClientImpl implements GitClient {
       logger.error("Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in getting commit diff");
     }
+  }
+
+  @Override
+  public String validate(GitConfig gitConfig) {
+    try {
+      Collection<Ref> refs = Git.lsRemoteRepository()
+                                 .setRemote(gitConfig.getRepoUrl())
+                                 .setHeads(true)
+                                 .setTags(true)
+                                 .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+                                     gitConfig.getUsername(), gitConfig.getPassword()))
+                                 .call();
+      logger.info("Remote branches [{}]", refs);
+    } catch (Exception e) {
+      logger.error("Git validation failed [{}]", e);
+      if (e instanceof InvalidRemoteException | e.getCause() instanceof NoRemoteRepositoryException) {
+        return "Invalid git repo " + gitConfig.getRepoUrl();
+      }
+      // Any generic error
+      return e.getMessage();
+    }
+    return null; // no error
   }
 
   /**
