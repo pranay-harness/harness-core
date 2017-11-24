@@ -11,7 +11,7 @@ class SAXHMMDistance(object):
     Defines the methods to find the distances between 2 discretized comparison
     units
     """
-    # Partitions a Gaussian distribution into equally probable bucktes
+    # Partitions a Gaussian distribution into equally probable buckets
     cutpoints = {3: [-np.inf, -0.43, 0.43, np.inf],
                  4: [-np.inf, -0.67, 0, 0.67, np.inf],
                  5: [-np.inf, -0.84, -0.25, 0.25, 0.84, np.inf],
@@ -66,9 +66,9 @@ class SAXHMMDistance(object):
     def create_threshold(distance_matrix):
         """
          calculate allowable distances between any 2 comparison units based on tolerance
-         1 => allows 1 standard deviations
-         2 => allows 2 standard deviations
-         3 => allows 3 standard deviations
+         1 => allows 1 standard deviations (low)
+         2 => allows 2 standard deviations (med)
+         3 => allows 3 standard deviations (high)
          4 => allows 4 standard deviations
 
         """
@@ -83,6 +83,9 @@ class SAXHMMDistance(object):
                     continue
                 threshold = max(distance_matrix[i][ind], threshold)
             thresholds[tolerance] = threshold
+        # tolerance of 1 will always have a threshold of 0
+        # setting threshold for tolerance of 1 to 75% of tolerance of 2
+        thresholds[1] = 0.75 * thresholds[2]
         return thresholds
 
     @staticmethod
@@ -354,14 +357,16 @@ class SAXHMMDistanceFinder(object):
         dist_vector = []
         w = self.comparison_unit_window
         n = len(test_cut)
-        for i in range(0, n - w + 1, w):
+        new_test_cut = []
+        for i in range(0, n, w):
             control_sub_cut = sorted(control_cut[i:i+w])
             test_sub_cut = sorted(test_cut[i:i+w])
 
             dist_vector.extend(np.asarray(
                 [self.get_dist_value_letter(control_data[z + i], test_data[z + i], a, b)
                  for z, (a, b) in enumerate(zip(control_sub_cut, test_sub_cut))]))
-        return np.asarray(dist_vector)
+            new_test_cut.extend(test_sub_cut)
+        return np.asarray(dist_vector), np.asarray(new_test_cut)
 
     def compute_dist(self):
 
@@ -402,7 +407,7 @@ class SAXHMMDistanceFinder(object):
             for j, a_control_cut in enumerate(self.control_cuts):
 
                 a_test_cut_str = ''.join(a_test_cut)
-                dist_vector = self.get_distance(a_control_cut, a_test_cut, control_data_smoothed[j],
+                dist_vector, new_test_cut = self.get_distance(a_control_cut, a_test_cut, control_data_smoothed[j],
                                                 test_data_smoothed[i])
 
                 a_optimal_test_cut = ''
@@ -415,7 +420,7 @@ class SAXHMMDistanceFinder(object):
                                            test_data_smoothed[i][a_optimal_test_indices[z]] for z in
                                            a_optimal_test_indices]
 
-                    dist_vector = self.get_distance(a_control_cut, a_optimal_test_cut, control_data_smoothed[j],
+                    dist_vector, new_test_cut = self.get_distance(a_control_cut, a_optimal_test_cut, control_data_smoothed[j],
                                                     a_optimal_test_data)
 
                     dist_vector = np.asarray([dist if dist == 0.0 or a_control_cut[k] != 'x'
@@ -435,7 +440,7 @@ class SAXHMMDistanceFinder(object):
 
                 # Time weight the distance scores. More recent time stamps are weighted higher.
                 w_dist = np.sum(
-                        [((p + 1) * v) for (p, v) in enumerate(dist_vector[~np.isnan(test_data_smoothed[i])])])
+                    [((p + 1) * v) for (p, v) in enumerate(dist_vector[new_test_cut != 'x'])])
 
                 w_dist /= ((buckets * (buckets + 1)) / 2) * 1.0
 

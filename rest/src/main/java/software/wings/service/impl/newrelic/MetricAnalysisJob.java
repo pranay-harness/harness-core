@@ -226,6 +226,10 @@ public class MetricAnalysisJob implements Job {
       command.add(String.valueOf(context.getTolerance()));
       command.add("--min_rpm");
       command.add(String.valueOf(context.getMinimumRequestsPerMinute()));
+      command.add("--comparison_unit_window");
+      command.add(String.valueOf(context.getComparisonWindow()));
+      command.add("--parallelProcesses");
+      command.add(String.valueOf(context.getParallelProcesses()));
 
       int attempt = 0;
       for (; attempt < PYTHON_JOB_RETRIES; attempt++) {
