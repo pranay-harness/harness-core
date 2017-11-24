@@ -1,11 +1,14 @@
 from __future__ import division
 
 import argparse
+import hashlib
 import json
 import logging
 import sys
 import time
 from collections import OrderedDict
+
+import multiprocessing
 import numpy as np
 
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
@@ -234,7 +237,7 @@ class TSAnomlyDetector(object):
                                         test_data_dict=test_data_dict,
                                         metric_deviation_type=get_deviation_type(metric_name),
                                         min_metric_threshold=get_deviation_min_threshold(metric_name),
-                                        comparison_unit_window=1)
+                                        comparison_unit_window=self._options.comparison_unit_window)
 
             result = shdf.compute_dist()
 
@@ -341,6 +344,7 @@ class TSAnomlyDetector(object):
         control_txn_groups = self.group_txns(self.raw_control_txns)
         test_txn_groups = self.group_txns(self.raw_test_txns)
 
+        txns_count = 0
         if len(control_txn_groups) == 0 or len(test_txn_groups) == 0:
             logger.warn(
                 "No control or test data given for minute " + str(
@@ -372,9 +376,10 @@ class TSAnomlyDetector(object):
                         result['transactions'][txn_ind] = dict(txn_name=txn_name, metrics={})
 
                     result['transactions'][txn_ind]['metrics'][metric_ind] = response
+                txns_count += 1
 
         #print(json.dumps(result))
-        logger.info('time taken ' + str(time.time() - start_time))
+        logger.info('time taken ' + str(time.time() - start_time) + ' for # txns = ' + str(txns_count))
         return result
 
 ''' End class TSA Anomlay detector'''
@@ -457,8 +462,63 @@ def parse(cli_args):
     parser.add_argument("--tolerance", type=int, required=True)
     parser.add_argument("--smooth_window", type=int, required=True)
     parser.add_argument("--min_rpm", type=int, required=True)
+    parser.add_argument("--comparison_unit_window", type=int, required=True)
+    parser.add_argument("--parallelProcesses", type=int, required=True)
 
     return parser.parse_args(cli_args)
+
+
+def analyze_parallel(queue, options, control_metrics_batch, test_metrics_batch):
+    """
+    Method will be called in parallel. the result will be placed on 'queue'
+    """
+    anomaly_detector = TSAnomlyDetector(options, control_metrics_batch, test_metrics_batch)
+    queue.put(anomaly_detector.analyze())
+
+
+def parallelize_processing(options, control_metrics, test_metrics):
+    """
+    Break the work into parallel units. Each transaction and its metrics constitute a unit.
+    The transactions will be run in upto 7 parallel processes. Once all processing is complete,
+    the result is merged and returned.
+    """
+    transaction_names = set()
+    for transactions in control_metrics:
+        transaction_names.add(transactions['name'])
+
+    workers = min(options.parallelProcesses, len(transaction_names))
+
+    transaction_names = list(transaction_names)
+    control_metrics_batch = [[] for i in range(workers)]
+    test_metrics_batch = [[] for i in range(workers)]
+    jobs = []
+    for transaction in control_metrics:
+        control_metrics_batch[transaction_names.index(transaction['name']) % workers].append(transaction)
+
+    for transaction in test_metrics:
+        test_metrics_batch[transaction_names.index(transaction['name']) % workers].append(transaction)
+
+    queue = multiprocessing.Queue()
+    job_id = 0
+    for i in range(workers):
+        p = multiprocessing.Process(target=analyze_parallel,
+                                    args=(queue, options, control_metrics_batch[i], test_metrics_batch[i]))
+        job_id = job_id + 1
+        jobs.append(p)
+        p.start()
+
+    result = {"transactions":{}}
+    txn_id = 0
+    processed = 0
+    while processed < len(jobs):
+        # TODO - get blocks forever. Will java kill us?
+        val = queue.get()
+        for txn_data in val['transactions'].values():
+            result[txn_id] = txn_data
+            txn_id += 1
+        processed = processed + 1
+
+    return result
 
 
 def main(args):
@@ -480,8 +540,7 @@ def main(args):
     test_metrics = load_from_harness_server(options.test_input_url, options.test_nodes, options)
     logger.info('test_events = ' + str(len(test_metrics)))
 
-    anomaly_detector = TSAnomlyDetector(options, control_metrics, test_metrics)
-    result = anomaly_detector.analyze()
+    result = parallelize_processing(options, control_metrics, test_metrics)
     post_to_wings_server(options, result)
 
 

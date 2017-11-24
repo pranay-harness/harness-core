@@ -1,4 +1,6 @@
 import argparse
+import json
+
 import numpy as np
 
 import sys
@@ -11,7 +13,11 @@ parser.add_argument("--analysis_minute", type=int, required=True)
 parser.add_argument("--tolerance", type=int, required=True)
 parser.add_argument("--smooth_window", type=int, required=True)
 parser.add_argument("--min_rpm", type=int, required=True)
-options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10'])
+parser.add_argument("--comparison_unit_window", type=int, required=True)
+parser.add_argument("--parallelProcesses", type=int, required=True)
+
+options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10',
+                             '--comparison_unit_window', '1', '--parallelProcesses', '1'])
 
 
 def compare(a, b):
