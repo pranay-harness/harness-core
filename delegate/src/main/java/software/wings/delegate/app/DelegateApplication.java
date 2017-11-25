@@ -2,6 +2,9 @@ package software.wings.delegate.app;
 
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
+import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
+import static software.wings.utils.message.MessageConstants.WATCHER_HEARTBEAT;
+import static software.wings.utils.message.MessageConstants.WATCHER_PROCESS;
 import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
@@ -26,6 +29,8 @@ import software.wings.utils.message.MessageService;
 
 import java.io.FileReader;
 import java.lang.management.ManagementFactory;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +97,10 @@ public class DelegateApplication {
     if (watched) {
       MessageService messageService = injector.getInstance(MessageService.class);
       messageService.sendMessage(WATCHER, watcherProcess, NEW_DELEGATE, processId);
+      Map<String, Object> watcherData = new HashMap<>();
+      watcherData.put(WATCHER_HEARTBEAT, System.currentTimeMillis());
+      watcherData.put(WATCHER_PROCESS, watcherProcess);
+      messageService.putAllData(WATCHER_DATA, watcherData);
     }
     DelegateService delegateService = injector.getInstance(DelegateService.class);
     delegateService.run(watched);

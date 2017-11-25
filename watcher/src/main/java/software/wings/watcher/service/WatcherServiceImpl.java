@@ -2,36 +2,37 @@ package software.wings.watcher.service;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.hazelcast.util.CollectionUtil.isNotEmpty;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
+import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_STARTED;
+import static software.wings.utils.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_VERSION;
 import static software.wings.utils.message.MessageConstants.EXTRA_WATCHER;
-import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
-import static software.wings.utils.message.MessageConstants.WATCHER_GO_AHEAD;
-import static software.wings.utils.message.MessageConstants.WATCHER_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
 import static software.wings.utils.message.MessageConstants.NEW_WATCHER;
 import static software.wings.utils.message.MessageConstants.NEXT_WATCHER;
-import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
 import static software.wings.utils.message.MessageConstants.RUNNING_DELEGATES;
-import static software.wings.utils.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
 import static software.wings.utils.message.MessageConstants.UPGRADING_DELEGATE;
-import static software.wings.utils.message.MessageConstants.WATCHER_PROCESS;
-import static software.wings.utils.message.MessageConstants.WATCHER_VERSION;
 import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
+import static software.wings.utils.message.MessageConstants.WATCHER_GO_AHEAD;
+import static software.wings.utils.message.MessageConstants.WATCHER_HEARTBEAT;
+import static software.wings.utils.message.MessageConstants.WATCHER_PROCESS;
 import static software.wings.utils.message.MessageConstants.WATCHER_STARTED;
+import static software.wings.utils.message.MessageConstants.WATCHER_VERSION;
 import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
@@ -61,6 +62,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -117,8 +119,6 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
-      messageService.putData(WATCHER_DATA, WATCHER_VERSION, getVersion());
-      messageService.putData(WATCHER_DATA, WATCHER_PROCESS, getProcessId());
       startUpgradeCheck();
       startWatching();
 
@@ -184,7 +184,11 @@ public class WatcherServiceImpl implements WatcherService {
 
 private void startWatching() {
   watchExecutor.scheduleWithFixedDelay(() -> {
-    messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
+    Map<String, Object> heartbeatData = new HashMap<>();
+    heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
+    heartbeatData.put(WATCHER_PROCESS, getProcessId());
+    heartbeatData.put(WATCHER_VERSION, getVersion());
+    messageService.putAllData(WATCHER_DATA, heartbeatData);
     synchronized (this) {
       if (!working.get()) {
         watchDelegate();
@@ -353,8 +357,10 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
         if (message != null) {
           String newDelegateProcess = message.getParams().get(0);
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
-          messageService.putData(DELEGATE_DASH + newDelegateProcess, DELEGATE_IS_NEW, true);
-          messageService.putData(DELEGATE_DASH + newDelegateProcess, DELEGATE_HEARTBEAT, clock.millis());
+          Map<String, Object> delegateData = new HashMap<>();
+          delegateData.put(DELEGATE_IS_NEW, true);
+          delegateData.put(DELEGATE_HEARTBEAT, clock.millis());
+          messageService.putAllData(DELEGATE_DASH + newDelegateProcess, delegateData);
           synchronized (runningDelegates) {
             runningDelegates.add(newDelegateProcess);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
@@ -435,8 +441,7 @@ private void checkForUpgrade() {
     if (upgrade) {
       logger.info("[Old] Upgrading watcher");
       working.set(true);
-      S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
-      upgradeWatcher(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
+      upgradeWatcher(bucketName, watcherJarRelativePath, getVersion(), latestVersion);
     } else {
       logger.info("Watcher up to date");
     }
@@ -446,10 +451,13 @@ private void checkForUpgrade() {
   }
 }
 
-private void upgradeWatcher(InputStream newVersionJarStream, String version, String newVersion)
+private void upgradeWatcher(String bucketName, String watcherJarRelativePath, String version, String newVersion)
     throws IOException, TimeoutException, InterruptedException {
+  S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
+  InputStream newVersionJarStream = newVersionJarObj.getObjectContent();
   File watcherJarFile = new File("watcher.jar");
   FileUtils.copyInputStreamToFile(newVersionJarStream, watcherJarFile);
+  updateStartScript(newVersion, watcherJarRelativePath);
 
   StartedProcess process = null;
   try {
@@ -510,6 +518,32 @@ private void upgradeWatcher(InputStream newVersionJarStream, String version, Str
     }
   } finally {
     working.set(false);
+  }
+}
+
+private void updateStartScript(String newVersion, String watcherJarRelativePath) {
+  File start = new File("start.sh");
+  if (start.exists()) {
+    try {
+      List<String> lines = FileUtils.readLines(start, UTF_8);
+      List<String> outLines = new ArrayList<>();
+      String remoteWatcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
+      String remoteWatcherUrlPrefix = "REMOTE_WATCHER_URL=http://wingswatchers.s3-website-us-east-1.amazonaws.com/";
+      for (String line : lines) {
+        if (StringUtils.startsWith(line, remoteWatcherVersionPrefix)) {
+          outLines.add(remoteWatcherVersionPrefix + newVersion);
+        } else if (StringUtils.startsWith(line, remoteWatcherUrlPrefix)) {
+          outLines.add(remoteWatcherUrlPrefix + watcherJarRelativePath);
+        } else {
+          outLines.add(line);
+        }
+      }
+      FileUtils.forceDelete(start);
+      FileUtils.touch(start);
+      FileUtils.writeLines(start, outLines);
+    } catch (Exception e) {
+      logger.error("Error modifying start script.", e);
+    }
   }
 }
 

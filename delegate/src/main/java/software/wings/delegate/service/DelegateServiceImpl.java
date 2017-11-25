@@ -28,6 +28,7 @@ import static software.wings.utils.message.MessageConstants.WATCHER_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.WATCHER_PROCESS;
 import static software.wings.utils.message.MessageConstants.WATCHER_VERSION;
 import static software.wings.utils.message.MessengerType.DELEGATE;
+import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -55,6 +56,8 @@ import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
@@ -123,6 +126,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
+  private static final long MAX_WATCHER_HEARTBEAT_INTERVAL = TimeUnit.MINUTES.toMillis(2);
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
@@ -457,8 +461,11 @@ public class DelegateServiceImpl implements DelegateService {
     if (acquireTasks.get()) {
       acquireTasks.set(false);
       stoppedAcquiringAt = clock.millis();
-      messageService.putData(DELEGATE_DASH + getProcessId(), DELEGATE_SHUTDOWN_PENDING, true);
-      messageService.putData(DELEGATE_DASH + getProcessId(), DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+      Map<String, Object> shutdownData = new HashMap<>();
+      shutdownData.put(DELEGATE_SHUTDOWN_PENDING, true);
+      shutdownData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+      messageService.putAllData(DELEGATE_DASH + getProcessId(), shutdownData);
+
       executorService.submit(() -> {
         int secs = 0;
         while ((long) currentlyExecutingTasks.size() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
@@ -547,9 +554,12 @@ public class DelegateServiceImpl implements DelegateService {
         statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
       }
       messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-      watchWatcher();
+
+      if (!doRestartDelegate() && !upgradeNeeded.get() && !upgradePending.get() && acquireTasks.get()) {
+        watchWatcher();
+      }
     }),
-        0, 5, TimeUnit.SECONDS);
+        0, 10, TimeUnit.SECONDS);
   }
 
   private void watchWatcher() {
@@ -557,7 +567,33 @@ public class DelegateServiceImpl implements DelegateService {
     String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
     String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
 
-    // TODO - Check heartbeat and restart watcher if needed
+    if (watcherHeartbeat == null || clock.millis() - watcherHeartbeat > MAX_WATCHER_HEARTBEAT_INTERVAL) {
+      logger.warn("Watcher process {} version {} needs restart. Shutting down", watcherProcess, watcherVersion);
+      executorService.submit(() -> {
+        try {
+          new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
+          messageService.closeChannel(WATCHER, watcherProcess);
+        } catch (Exception e) {
+          logger.error("Error killing watcher {}", watcherProcess, e);
+        }
+      });
+      executorService.submit(() -> {
+        try {
+          Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+          new ProcessExecutor()
+              .timeout(1, TimeUnit.MINUTES)
+              .command("nohup", "./start.sh")
+              .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
+              .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())
+              .readOutput(true)
+              .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+              .start();
+          messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
+        } catch (Exception e) {
+          logger.error("Error starting watcher", e);
+        }
+      });
+    }
   }
 
   private boolean doRestartDelegate() {
