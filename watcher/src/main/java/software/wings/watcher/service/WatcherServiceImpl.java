@@ -106,12 +106,9 @@ public class WatcherServiceImpl implements WatcherService {
   private final BlockingQueue<Message> watcherMessages = new LinkedBlockingQueue<>();
 
   @Override
-  @SuppressWarnings({"unchecked"})
   public void run(boolean upgrade) {
     try {
-      logger.info(upgrade ? "[New] Upgraded watcher process started" : "Watcher process started");
-      runningDelegates.addAll(
-          Optional.ofNullable(messageService.getData(WATCHER_DATA, RUNNING_DELEGATES, List.class)).orElse(emptyList()));
+      logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
@@ -185,7 +182,11 @@ public class WatcherServiceImpl implements WatcherService {
 }, 0, watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
 }
 
+@SuppressWarnings({"unchecked"})
 private void startWatching() {
+  runningDelegates.addAll(
+      Optional.ofNullable(messageService.getData(WATCHER_DATA, RUNNING_DELEGATES, List.class)).orElse(emptyList()));
+
   watchExecutor.scheduleWithFixedDelay(() -> {
     Map<String, Object> heartbeatData = new HashMap<>();
     heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
@@ -322,7 +323,7 @@ private void watchDelegate() {
       }
       if (isNotEmpty(upgradeNeededList)) {
         if (working.compareAndSet(false, true)) {
-          logger.info("Delegate processes {} ready for upgrade", upgradeNeededList);
+          logger.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
           upgradeNeededList.forEach(
               delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
           startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
@@ -355,6 +356,8 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
                         .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                         .start();
 
+      boolean success = false;
+
       if (newDelegate.getProcess().isAlive()) {
         Message message = waitForIncomingMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(2));
         if (message != null) {
@@ -369,13 +372,20 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           }
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
+          logger.info("Retrieved message from new delegate {}: {}", newDelegateProcess, message);
           if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
-            oldDelegateProcesses.forEach(oldDelegateProcess
-                -> messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING));
+            oldDelegateProcesses.forEach(oldDelegateProcess -> {
+              logger.info("Sending old delegate process {} stop-acquiring message", oldDelegateProcess);
+              messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING);
+            });
+            logger.info("Sending new delegate process {} go-ahead message", newDelegateProcess);
             messageService.sendMessage(DELEGATE, newDelegateProcess, DELEGATE_GO_AHEAD);
+            success = true;
           }
         }
-      } else {
+      }
+      if (!success) {
+        logger.error("Failed to start new delegate");
         newDelegate.getProcess().destroy();
         newDelegate.getProcess().waitFor();
       }
@@ -479,12 +489,14 @@ private void upgradeWatcher(String bucketName, String watcherJarRelativePath, St
     if (process.getProcess().isAlive()) {
       Message message = waitForIncomingMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(2));
       if (message != null) {
-        String newWatcherProcessId = message.getParams().get(0);
-        logger.info("[Old] Got process ID from new watcher: " + newWatcherProcessId);
-        messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcessId);
-        message = messageService.retrieveMessage(WATCHER, newWatcherProcessId, TimeUnit.MINUTES.toMillis(2));
+        String newWatcherProcess = message.getParams().get(0);
+        logger.info("[Old] Got process ID from new watcher: " + newWatcherProcess);
+        messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcess);
+        message = messageService.retrieveMessage(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
+        logger.info("[Old] Retrieved message from new watcher {}: {}", newWatcherProcess, message);
         if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
-          messageService.sendMessage(WATCHER, newWatcherProcessId, WATCHER_GO_AHEAD);
+          logger.info("[Old] Sending new watcher process {} go-ahead message", newWatcherProcess);
+          messageService.sendMessage(WATCHER, newWatcherProcess, WATCHER_GO_AHEAD);
           logger.info("[Old] Watcher upgraded. Stopping");
           removeWatcherVersionFromCapsule(version, newVersion);
           cleanupOldWatcherVersionFromBackup(version, newVersion);

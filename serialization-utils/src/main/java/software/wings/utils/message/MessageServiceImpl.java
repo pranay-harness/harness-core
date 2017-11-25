@@ -71,8 +71,9 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public void sendMessage(MessengerType targetType, String targetProcessId, String message, String... params) {
     boolean isOutput = messengerType == targetType && processId.equals(targetProcessId);
-    logger.info("{}: {}({})", isOutput ? "Writing message" : "Sending message to " + targetType + " " + targetProcessId,
-        message, params != null ? Joiner.on(", ").join(params) : "");
+    logger.debug("{}: {}({})",
+        isOutput ? "Writing message" : "Sending message to " + targetType + " " + targetProcessId, message,
+        params != null ? Joiner.on(", ").join(params) : "");
     try {
       File file = getMessageFile(targetType, targetProcessId);
       List<String> messageContent = new ArrayList<>();
@@ -137,7 +138,7 @@ public class MessageServiceImpl implements MessageService {
                                     .fromType(fromType)
                                     .fromProcess(fromProcess)
                                     .build();
-              logger.info("{}: {}",
+              logger.debug("{}: {}",
                   isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
               messageTimestamps.put(file, timestamp);
               reader.close();
@@ -168,7 +169,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void closeChannel(MessengerType type, String id) {
-    logger.info("Closing channel for {} {}", type, id);
+    logger.debug("Closing channel for {} {}", type, id);
     try {
       File file = getMessageFile(type, id);
       messageTimestamps.remove(file);
@@ -189,7 +190,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void putAllData(String name, Map<String, Object> dataToWrite) {
-    logger.info("Writing data to {}: {}", name, dataToWrite);
+    logger.debug("Writing data to {}: {}", name, dataToWrite);
     try {
       File file = getDataFile(name);
       try {
@@ -230,7 +231,7 @@ public class MessageServiceImpl implements MessageService {
       logger.error("Value is not an instance of {}: {}", valueClass.getName(), value);
       return null;
     }
-    logger.info("Value read from {}: {} = {}", name, key, value);
+    logger.debug("Value read from {}: {} = {}", name, key, value);
     return (T) value;
   }
 
@@ -262,7 +263,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void removeData(String name, String key) {
-    logger.info("Removing data from {}: {}", name, key);
+    logger.debug("Removing data from {}: {}", name, key);
     try {
       File file = getDataFile(name);
       try {
@@ -289,7 +290,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void closeData(String name) {
-    logger.info("Closing data: {}", name);
+    logger.debug("Closing data: {}", name);
     try {
       File file = getDataFile(name);
       if (file.exists()) {
