@@ -372,8 +372,8 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           }
           message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
-          logger.info("Retrieved message from new delegate {}: {}", newDelegateProcess, message);
           if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
+            logger.info("Retrieved delegate-started message from new delegate {}", newDelegateProcess);
             oldDelegateProcesses.forEach(oldDelegateProcess -> {
               logger.info("Sending old delegate process {} stop-acquiring message", oldDelegateProcess);
               messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING);
@@ -493,9 +493,9 @@ private void upgradeWatcher(String bucketName, String watcherJarRelativePath, St
         logger.info("[Old] Got process ID from new watcher: " + newWatcherProcess);
         messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcess);
         message = messageService.retrieveMessage(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
-        logger.info("[Old] Retrieved message from new watcher {}: {}", newWatcherProcess, message);
         if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
-          logger.info("[Old] Sending new watcher process {} go-ahead message", newWatcherProcess);
+          logger.info(
+              "[Old] Retrieved watcher-started message from new watcher {}. Sending go-ahead", newWatcherProcess);
           messageService.sendMessage(WATCHER, newWatcherProcess, WATCHER_GO_AHEAD);
           logger.info("[Old] Watcher upgraded. Stopping");
           removeWatcherVersionFromCapsule(version, newVersion);
