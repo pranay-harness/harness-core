@@ -282,7 +282,7 @@ private void watchDelegate() {
             long shutdownStarted = Optional.ofNullable((Long) delegateData.get(DELEGATE_SHUTDOWN_STARTED)).orElse(0L);
 
             if (newDelegate) {
-              logger.info("New delegate process {} is starting with version {}", delegateProcess, delegateVersion);
+              logger.info("New delegate process {} is starting", delegateProcess);
               if (now - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
                 newDelegateTimedOut = true;
                 shutdownNeededList.add(delegateProcess);
