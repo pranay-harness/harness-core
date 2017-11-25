@@ -37,6 +37,7 @@ import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
@@ -60,6 +61,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -541,6 +544,9 @@ private void updateStartScript(String newVersion, String watcherJarRelativePath)
       FileUtils.forceDelete(start);
       FileUtils.touch(start);
       FileUtils.writeLines(start, outLines);
+      Files.setPosixFilePermissions(start.toPath(),
+          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
     } catch (Exception e) {
       logger.error("Error modifying start script.", e);
     }
