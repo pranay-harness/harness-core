@@ -262,10 +262,16 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           } catch (Exception ex) {
             if (retry == 0) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              taskResult.setErrorMessage(ex.getMessage());
               completed.set(true);
               break;
             } else {
+              /*
+               * Save the exception from the first attempt. This is usually
+               * more meaningful to trouble shoot.
+               */
+              if (retry == RETRIES) {
+                taskResult.setErrorMessage(ex.getMessage());
+              }
               --retry;
               logger.warn("error fetching new relic metrics for minute " + dataCollectionMinute + ". retrying in "
                       + RETRY_SLEEP_SECS + "s",

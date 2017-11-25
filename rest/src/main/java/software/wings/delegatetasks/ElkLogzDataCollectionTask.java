@@ -235,11 +235,17 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               } catch (Exception e) {
                 if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                  taskResult.setErrorMessage(e.getMessage());
                   completed.set(true);
                   throw(e);
                 } else {
-                  logger.warn("error fetching elk logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
+                  /*
+                   * Save the exception from the first attempt. This is usually
+                   * more meaningful to trouble shoot.
+                   */
+                  if (retry == 1) {
+                    taskResult.setErrorMessage(e.getMessage());
+                  }
+                  logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
                   Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
                 }
               }
@@ -252,7 +258,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
       } catch (Exception e) {
         completed.set(true);
-        logger.error("error fetching elk logs", e);
+        if (taskResult.getStatus() != DataCollectionTaskStatus.FAILURE) {
+          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+          taskResult.setErrorMessage("error fetching elk/logz logs for minute " + logCollectionMinute);
+        }
+        logger.error("error fetching elk/logz logs", e);
       }
 
       if (completed.get()) {

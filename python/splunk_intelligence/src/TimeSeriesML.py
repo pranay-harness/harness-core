@@ -463,7 +463,7 @@ def parse(cli_args):
     parser.add_argument("--smooth_window", type=int, required=True)
     parser.add_argument("--min_rpm", type=int, required=True)
     parser.add_argument("--comparison_unit_window", type=int, required=True)
-    parser.add_argument("--parallelProcesses", type=int, required=True)
+    parser.add_argument("--parallel_processes", type=int, required=True)
 
     return parser.parse_args(cli_args)
 
@@ -486,7 +486,10 @@ def parallelize_processing(options, control_metrics, test_metrics):
     for transactions in control_metrics:
         transaction_names.add(transactions['name'])
 
-    workers = min(options.parallelProcesses, len(transaction_names))
+    for transactions in test_metrics:
+        transaction_names.add(transactions['name'])
+
+    workers = min(options.parallel_processes, len(transaction_names))
 
     transaction_names = list(transaction_names)
     control_metrics_batch = [[] for i in range(workers)]
@@ -507,14 +510,14 @@ def parallelize_processing(options, control_metrics, test_metrics):
         jobs.append(p)
         p.start()
 
-    result = {"transactions":{}}
+    result = {"transactions": {}}
     txn_id = 0
     processed = 0
     while processed < len(jobs):
         # TODO - get blocks forever. Will java kill us?
         val = queue.get()
         for txn_data in val['transactions'].values():
-            result[txn_id] = txn_data
+            result['transactions'][txn_id] = txn_data
             txn_id += 1
         processed = processed + 1
 

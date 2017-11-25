@@ -179,7 +179,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public int getMaxControlMinute(StateType stateType, String serviceId, String workflowId, String workflowExecutionId) {
+  public int getMaxControlMinuteWithData(
+      StateType stateType, String serviceId, String workflowId, String workflowExecutionId) {
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .field("stateType")
                                                             .equal(stateType)
@@ -189,7 +190,29 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .equal(workflowExecutionId)
                                                             .field("serviceId")
                                                             .equal(serviceId)
+                                                            .field("level")
+                                                            .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
                                                             .order("-dataCollectionMinute")
+                                                            .get(new FindOptions().limit(1));
+
+    return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
+  }
+
+  @Override
+  public int getMinControlMinuteWithData(
+      StateType stateType, String serviceId, String workflowId, String workflowExecutionId) {
+    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                            .field("stateType")
+                                                            .equal(stateType)
+                                                            .field("workflowId")
+                                                            .equal(workflowId)
+                                                            .field("workflowExecutionId")
+                                                            .equal(workflowExecutionId)
+                                                            .field("serviceId")
+                                                            .equal(serviceId)
+                                                            .field("level")
+                                                            .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                            .order("dataCollectionMinute")
                                                             .get(new FindOptions().limit(1));
 
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
@@ -209,6 +232,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
               .equal(successfulExecution)
               .field("serviceId")
               .equal(serviceId)
+              .field("level")
+              .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
               .asList(new FindOptions().limit(1));
       if (isNotEmpty(lastSuccessfulRecords)) {
         return successfulExecution;
