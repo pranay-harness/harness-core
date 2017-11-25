@@ -228,7 +228,7 @@ public class MetricAnalysisJob implements Job {
       command.add(String.valueOf(context.getMinimumRequestsPerMinute()));
       command.add("--comparison_unit_window");
       command.add(String.valueOf(context.getComparisonWindow()));
-      command.add("--parallelProcesses");
+      command.add("--parallel_processes");
       command.add(String.valueOf(context.getParallelProcesses()));
 
       int attempt = 0;
@@ -245,7 +245,7 @@ public class MetricAnalysisJob implements Job {
             logger.info("Metric analysis done for " + context.getStateExecutionId() + " for minute " + analysisMinute);
             attempt += PYTHON_JOB_RETRIES;
             break;
-          case 2:
+          case 200:
             logger.warn("No test data from the deployed nodes " + context.getStateExecutionId() + " for minute "
                 + analysisMinute);
             attempt += PYTHON_JOB_RETRIES;
@@ -258,7 +258,7 @@ public class MetricAnalysisJob implements Job {
       }
 
       if (attempt == PYTHON_JOB_RETRIES) {
-        throw new RuntimeException("Finished all retries.");
+        throw new RuntimeException("Error running ML analysis. Finished all retries.");
       }
     }
 
@@ -267,6 +267,8 @@ public class MetricAnalysisJob implements Job {
       logger.info("Starting analysis for " + context.getStateExecutionId());
 
       boolean completeCron = false;
+      boolean error = false;
+      String errMsg = "";
 
       try {
         /**
@@ -289,25 +291,51 @@ public class MetricAnalysisJob implements Job {
           return;
         }
 
-        int maxControlMinute = Integer.MAX_VALUE;
-        if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-          maxControlMinute = analysisService.getMaxControlMinute(context.getStateType(), context.getServiceId(),
-              context.getWorkflowId(), context.getPrevWorkflowExecutionId());
+        boolean runTimeSeriesML = context.getStateType() == StateType.NEW_RELIC;
+
+        if (runTimeSeriesML) {
+          switch (context.getComparisonStrategy()) {
+            case COMPARE_WITH_PREVIOUS:
+              if (context.getPrevWorkflowExecutionId().equals("-1")) {
+                runTimeSeriesML = false;
+                break;
+              }
+              int minControlMinute = analysisService.getMinControlMinuteWithData(context.getStateType(),
+                  context.getServiceId(), context.getWorkflowId(), context.getPrevWorkflowExecutionId());
+
+              if (analysisMinute < minControlMinute) {
+                logger.info("Baseline control minute starts at " + minControlMinute
+                    + ". But current analysis minute is  " + analysisMinute
+                    + "Will run local analysis instead of ML for minute " + analysisMinute);
+                runTimeSeriesML = false;
+                break;
+              }
+
+              int maxControlMinute = analysisService.getMaxControlMinuteWithData(context.getStateType(),
+                  context.getServiceId(), context.getWorkflowId(), context.getPrevWorkflowExecutionId());
+
+              if (analysisMinute > maxControlMinute) {
+                logger.warn("Not enough control data. analysis minute = " + analysisMinute
+                    + " , max control minute = " + maxControlMinute);
+                // Do nothing. Don't run any analysis.
+                break;
+              }
+              // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
+            case COMPARE_WITH_CURRENT:
+              logger.info("running time series ml analysis for minute " + analysisMinute);
+              timeSeriesML(analysisMinute);
+              break;
+            default:
+              runTimeSeriesML = false;
+          }
         }
 
-        boolean isBaseLineCreated =
-            context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT || maxControlMinute > -1;
-        if (isBaseLineCreated && context.getStateType() == StateType.NEW_RELIC) {
-          if (analysisMinute <= maxControlMinute) {
-            timeSeriesML(analysisMinute);
-          } else {
-            logger.warn("Not enough control data. analysis minute = " + analysisMinute
-                + " , max control minute = " + maxControlMinute);
-          }
-        } else {
+        if (!runTimeSeriesML) {
+          logger.info("running local time series analysis");
           NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute);
           analysisService.saveAnalysisRecords(analysisRecord);
         }
+
         analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
             context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
 
@@ -318,6 +346,8 @@ public class MetricAnalysisJob implements Job {
             + ". Next minute is " + nextAnalysisMinute);
       } catch (Exception ex) {
         completeCron = true;
+        error = true;
+        errMsg = ex.getMessage();
         logger.warn("analysis failed", ex);
       } finally {
         try {
@@ -325,7 +355,7 @@ public class MetricAnalysisJob implements Job {
           if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
               delegateService.abortTask(context.getAccountId(), delegateTaskId);
-              sendStateNotification(context);
+              sendStateNotification(context, error, errMsg);
             } catch (Exception e) {
               logger.error("Send notification failed for new relic analysis manager", e);
             } finally {
@@ -358,7 +388,8 @@ public class MetricAnalysisJob implements Job {
       return rv;
     }
 
-    private void sendStateNotification(AnalysisContext context) {
+    private void sendStateNotification(AnalysisContext context, boolean error, String errMsg) {
+      final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
       final MetricAnalysisExecutionData executionData =
           MetricAnalysisExecutionData.builder()
               .workflowExecutionId(context.getWorkflowExecutionId())
@@ -369,10 +400,13 @@ public class MetricAnalysisJob implements Job {
               .lastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
               .correlationId(context.getCorrelationId())
               .build();
-      executionData.setStatus(ExecutionStatus.SUCCESS);
+      executionData.setStatus(status);
+      if (error) {
+        executionData.setErrorMsg(errMsg);
+      }
       final MetricDataAnalysisResponse response =
           MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-      response.setExecutionStatus(ExecutionStatus.SUCCESS);
+      response.setExecutionStatus(status);
       waitNotifyEngine.notify(context.getCorrelationId(), response);
     }
   }
