@@ -126,7 +126,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
-  private static final long MAX_WATCHER_HEARTBEAT_INTERVAL = TimeUnit.MINUTES.toMillis(2);
+  private static final long MAX_WATCHER_HEARTBEAT_INTERVAL = TimeUnit.MINUTES.toMillis(1);
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
@@ -554,10 +554,7 @@ public class DelegateServiceImpl implements DelegateService {
         statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
       }
       messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-
-      if (!doRestartDelegate() && !upgradeNeeded.get() && !upgradePending.get() && acquireTasks.get()) {
-        watchWatcher();
-      }
+      watchWatcher();
     }),
         0, 10, TimeUnit.SECONDS);
   }
