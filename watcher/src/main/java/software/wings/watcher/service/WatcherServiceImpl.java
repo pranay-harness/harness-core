@@ -450,7 +450,7 @@ private void checkForUpgrade() {
     }
   } catch (Exception e) {
     working.set(false);
-    logger.error("[Old] Exception while checking for upgrade", e);
+    logger.error("Exception while checking for upgrade", e);
   }
 }
 
@@ -464,7 +464,7 @@ private void upgradeWatcher(String bucketName, String watcherJarRelativePath, St
 
   StartedProcess process = null;
   try {
-    logger.info("[Old] Upgrading the watcher");
+    logger.info("[Old] Starting new watcher");
     process = new ProcessExecutor()
                   .timeout(5, TimeUnit.MINUTES)
                   .command("nohup", "./start.sh", "upgrade", WatcherApplication.getProcessId())
