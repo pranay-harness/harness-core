@@ -212,7 +212,7 @@ private void watchDelegate() {
         .forEach(process -> {
           if (!Optional.ofNullable(messageService.getData(DELEGATE_DASH + process, DELEGATE_IS_NEW, Boolean.class))
                    .orElse(false)) {
-            logger.info("Data found for untracked delegate process {}. Shutting it down", process);
+            logger.warn("Data found for untracked delegate process {}. Shutting it down", process);
             shutdownDelegate(process);
           }
         });
@@ -221,14 +221,14 @@ private void watchDelegate() {
         .stream()
         .filter(process -> !runningDelegates.contains(process))
         .forEach(process -> {
-          logger.info("Message channel found for untracked delegate process {}. Shutting it down", process);
+          logger.warn("Message channel found for untracked delegate process {}. Shutting it down", process);
           shutdownDelegate(process);
         });
 
     String extraWatcher = messageService.getData(WATCHER_DATA, EXTRA_WATCHER, String.class);
     if (StringUtils.isNotEmpty(extraWatcher)) {
       if (!StringUtils.equals(extraWatcher, getProcessId())) {
-        logger.info("Shutting down extra watcher {}", extraWatcher);
+        logger.warn("Shutting down extra watcher {}", extraWatcher);
         executorService.submit(() -> {
           try {
             new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", extraWatcher).start();
@@ -246,7 +246,7 @@ private void watchDelegate() {
               -> !StringUtils.equals(process, getProcessId())
                   && !StringUtils.equals(process, messageService.getData(WATCHER_DATA, NEXT_WATCHER, String.class)))
           .forEach(process -> {
-            logger.info(
+            logger.warn(
                 "Message channel found for another watcher process that isn't the next watcher. {} will be shut down",
                 process);
             messageService.putData(WATCHER_DATA, EXTRA_WATCHER, process);
@@ -313,7 +313,7 @@ private void watchDelegate() {
         logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
         shutdownNeededList.forEach(this ::shutdownDelegate);
         if (newDelegateTimedOut && upgradePendingDelegate != null) {
-          logger.info("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
+          logger.warn("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
           messageService.sendMessage(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
         }
       }
