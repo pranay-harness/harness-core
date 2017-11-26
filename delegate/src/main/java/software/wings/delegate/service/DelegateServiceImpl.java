@@ -1,5 +1,6 @@
 package software.wings.delegate.service;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.awaitility.Awaitility.await;
@@ -563,20 +564,29 @@ public class DelegateServiceImpl implements DelegateService {
     Long watcherHeartbeat = messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class);
     String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
     String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
+    String expectedVersion = findExpectedWatcherVersion();
+    long timeSinceLastHeartbeat = clock.millis() - Optional.ofNullable(watcherHeartbeat).orElse(0L);
+    boolean heartbeatTimedOut = timeSinceLastHeartbeat > MAX_WATCHER_HEARTBEAT_INTERVAL;
+    boolean versionMismatch = expectedVersion != null && !expectedVersion.equals(watcherVersion);
+    if (heartbeatTimedOut) {
+      logger.warn("Watcher heartbeat not seen for {} seconds", timeSinceLastHeartbeat / 1000L);
+    }
+    if (versionMismatch) {
+      logger.warn("Watcher version is {} but should be {}", watcherVersion, expectedVersion);
+    }
 
-    if (watcherHeartbeat == null || clock.millis() - watcherHeartbeat > MAX_WATCHER_HEARTBEAT_INTERVAL) {
-      logger.warn("Watcher process {} version {} needs restart. Shutting down", watcherProcess, watcherVersion);
+    if (heartbeatTimedOut || versionMismatch) {
+      logger.warn("Watcher process {} needs restart", watcherProcess);
+
       executorService.submit(() -> {
         try {
+          Thread.sleep(TimeUnit.SECONDS.toMillis(1));
           new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
           messageService.closeChannel(WATCHER, watcherProcess);
-        } catch (Exception e) {
-          logger.error("Error killing watcher {}", watcherProcess, e);
-        }
-      });
-      executorService.submit(() -> {
-        try {
-          Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+          Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+          // Prevent a second restart attempt right away at next heartbeat by writing the expected watcher data
+          messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
+          messageService.putData(WATCHER_DATA, WATCHER_VERSION, expectedVersion);
           new ProcessExecutor()
               .timeout(1, TimeUnit.MINUTES)
               .command("nohup", "./start.sh")
@@ -585,11 +595,25 @@ public class DelegateServiceImpl implements DelegateService {
               .readOutput(true)
               .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
               .start();
-          messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
         } catch (Exception e) {
-          logger.error("Error starting watcher", e);
+          logger.error("Error restarting watcher {}", watcherProcess, e);
         }
       });
+    }
+  }
+
+  private String findExpectedWatcherVersion() {
+    String watcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
+    try {
+      return FileUtils.readLines(new File("start.sh"), UTF_8)
+          .stream()
+          .filter(line -> StringUtils.startsWith(line, watcherVersionPrefix))
+          .map(line -> line.substring(watcherVersionPrefix.length()))
+          .findFirst()
+          .orElse(null);
+    } catch (Exception e) {
+      logger.error("Error reading start script.", e);
+      return null;
     }
   }
 

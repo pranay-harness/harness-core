@@ -537,31 +537,28 @@ private void upgradeWatcher(String bucketName, String watcherJarRelativePath, St
 }
 
 private void updateStartScript(String newVersion, String watcherJarRelativePath) {
-  File start = new File("start.sh");
-  if (start.exists()) {
-    try {
-      List<String> lines = FileUtils.readLines(start, UTF_8);
-      List<String> outLines = new ArrayList<>();
-      String remoteWatcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
-      String remoteWatcherUrlPrefix = "REMOTE_WATCHER_URL=http://wingswatchers.s3-website-us-east-1.amazonaws.com/";
-      for (String line : lines) {
-        if (StringUtils.startsWith(line, remoteWatcherVersionPrefix)) {
-          outLines.add(remoteWatcherVersionPrefix + newVersion);
-        } else if (StringUtils.startsWith(line, remoteWatcherUrlPrefix)) {
-          outLines.add(remoteWatcherUrlPrefix + watcherJarRelativePath);
-        } else {
-          outLines.add(line);
-        }
+  String remoteWatcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
+  String remoteWatcherUrlPrefix = "REMOTE_WATCHER_URL=http://wingswatchers.s3-website-us-east-1.amazonaws.com/";
+  try {
+    File start = new File("start.sh");
+    List<String> outLines = new ArrayList<>();
+    for (String line : FileUtils.readLines(start, UTF_8)) {
+      if (StringUtils.startsWith(line, remoteWatcherVersionPrefix)) {
+        outLines.add(remoteWatcherVersionPrefix + newVersion);
+      } else if (StringUtils.startsWith(line, remoteWatcherUrlPrefix)) {
+        outLines.add(remoteWatcherUrlPrefix + watcherJarRelativePath);
+      } else {
+        outLines.add(line);
       }
-      FileUtils.forceDelete(start);
-      FileUtils.touch(start);
-      FileUtils.writeLines(start, outLines);
-      Files.setPosixFilePermissions(start.toPath(),
-          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-    } catch (Exception e) {
-      logger.error("Error modifying start script.", e);
     }
+    FileUtils.forceDelete(start);
+    FileUtils.touch(start);
+    FileUtils.writeLines(start, outLines);
+    Files.setPosixFilePermissions(start.toPath(),
+        Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+            PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+  } catch (Exception e) {
+    logger.error("Error modifying start script.", e);
   }
 }
 
