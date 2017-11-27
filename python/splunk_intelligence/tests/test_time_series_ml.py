@@ -43,7 +43,6 @@ def test_run_2():
     out = FileLoader.load_data('tests/resources/ts/nr_out_live.json')['transactions']
     anomaly_detector = TSAnomlyDetector(options, control, test)
     result = anomaly_detector.analyze()
-
     for txn_id, txn_data in result['transactions'].items():
         assert txn_data['txn_name'] == out[str(txn_id)]['txn_name']
         for metrics_id, metric_data in txn_data['metrics'].items():

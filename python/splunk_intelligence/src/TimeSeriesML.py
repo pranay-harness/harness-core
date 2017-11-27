@@ -173,7 +173,7 @@ class TSAnomlyDetector(object):
                 data.append(host_data['data'])
                 weights.append(txn_data_dict['callCount'][host_name]['data'])
             return dict(host_names=host_names,
-                        data=np.array(data, dtype=np.float64) * np.array(weights, dtype=np.float64),
+                        data=np.array(data, dtype=np.float64),
                         weights=np.array(weights, dtype=np.float64),
                         data_type=MetricType.HISTOGRAM, weights_type=MetricType.COUNT)
 
