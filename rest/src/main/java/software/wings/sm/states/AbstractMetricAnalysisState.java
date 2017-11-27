@@ -43,6 +43,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   protected static final int SMOOTH_WINDOW = 3;
   protected static final int TOLERANCE = 1;
   protected static final int MIN_REQUESTS_PER_MINUTE = 10;
+  protected static final int COMPARISON_WINDOW = 3;
+  protected static final int PARALLEL_PROCESSES = 7;
 
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
@@ -234,6 +236,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .smooth_window(SMOOTH_WINDOW)
           .tolerance(TOLERANCE)
           .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
+          .comparisonWindow(COMPARISON_WINDOW)
+          .parallelProcesses(PARALLEL_PROCESSES)
           .build();
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);

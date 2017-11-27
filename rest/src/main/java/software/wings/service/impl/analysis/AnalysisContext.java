@@ -38,6 +38,8 @@ public class AnalysisContext {
   private int tolerance;
   private String prevWorkflowExecutionId;
   private int minimumRequestsPerMinute;
+  private int comparisonWindow;
+  private int parallelProcesses;
 
   public LogClusterContext getClusterContext() {
     return LogClusterContext.builder()

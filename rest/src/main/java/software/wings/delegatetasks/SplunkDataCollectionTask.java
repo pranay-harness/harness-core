@@ -212,7 +212,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
               if (!response) {
                 if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                  taskResult.setErrorMessage("Cannot save log records. Server returned error");
+                  // TODO capture error code and send back for all collectors
+                  taskResult.setErrorMessage("Cannot save log records. Server returned error ");
                   completed.set(true);
                   break;
                 }
@@ -225,10 +226,16 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
             } catch (Exception e) {
               if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                taskResult.setErrorMessage(e.getMessage());
                 completed.set(true);
                 throw(e);
               } else {
+                /*
+                 * Save the exception from the first attempt. This is usually
+                 * more meaningful to trouble shoot.
+                 */
+                if (retry == 1) {
+                  taskResult.setErrorMessage(e.getMessage());
+                }
                 logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
                 Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
               }
@@ -241,6 +248,10 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
 
       } catch (Exception e) {
         completed.set(true);
+        if (taskResult.getStatus() != DataCollectionTaskStatus.FAILURE) {
+          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+          taskResult.setErrorMessage("error fetching splunk logs for minute " + logCollectionMinute);
+        }
         logger.error("error fetching splunk logs", e);
       }
 

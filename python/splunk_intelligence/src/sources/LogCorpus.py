@@ -115,7 +115,7 @@ class LogCorpus(object):
         if (control_events is None or len(control_events) == 0) \
                 and (test_events is None or len(test_events) == 0):
             logger.error("No new control events or test events")
-            sys.exit(2)
+            sys.exit(200)
 
         self.new_data = True
         for event in control_events:
