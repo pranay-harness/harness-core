@@ -16,6 +16,7 @@ import software.wings.service.intfc.UserGroupService;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -150,5 +151,21 @@ public class UserGroupResource {
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
     return new RestResponse<>(userGroupService.updatePermissions(userGroup));
+  }
+
+  /**
+   * Delete.
+   *
+   * @param accountId   the account id
+   * @param userGroupId  the userGroupId
+   * @return the rest response
+   */
+  @DELETE
+  @Path("{userGroupId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> delete(
+      @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {
+    return new RestResponse<>(userGroupService.delete(accountId, userGroupId));
   }
 }

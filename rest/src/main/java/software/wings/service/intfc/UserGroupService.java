@@ -60,4 +60,6 @@ public interface UserGroupService {
    * @return the userGroup
    */
   UserGroup updatePermissions(UserGroup userGroup);
+
+  Boolean delete(String accountId, String userGroupId);
 }
