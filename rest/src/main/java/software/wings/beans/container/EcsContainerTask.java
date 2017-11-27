@@ -147,13 +147,15 @@ public class EcsContainerTask extends ContainerTask {
     for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
       if (CollectionUtils.isNotEmpty(containerDefinition.getStorageConfigurations())) {
         for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
-          Volume volume = new Volume();
-          String volumeName = EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
-          volume.setName(volumeName);
-          HostVolumeProperties hostVolumeProperties = new HostVolumeProperties();
-          hostVolumeProperties.setSourcePath(strip(storageConfiguration.getHostSourcePath()));
-          volume.setHost(hostVolumeProperties);
-          volumeMap.put(volume.getName(), volume);
+          if (isNotBlank(storageConfiguration.getHostSourcePath())) {
+            String volumeName = EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
+            Volume volume = new Volume();
+            volume.setName(volumeName);
+            HostVolumeProperties hostVolumeProperties = new HostVolumeProperties();
+            hostVolumeProperties.setSourcePath(strip(storageConfiguration.getHostSourcePath()));
+            volume.setHost(hostVolumeProperties);
+            volumeMap.put(volume.getName(), volume);
+          }
         }
       }
     }
