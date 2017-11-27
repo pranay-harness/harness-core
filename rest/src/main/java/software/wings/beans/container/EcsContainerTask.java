@@ -224,6 +224,7 @@ public class EcsContainerTask extends ContainerTask {
       List<StorageConfiguration> harnessStorageConfigurations = harnessContainerDefinition.getStorageConfigurations();
       containerDefinition.setMountPoints(
           harnessStorageConfigurations.stream()
+              .filter(storageConfiguration -> isNotBlank(storageConfiguration.getContainerPath()))
               .map(storageConfiguration
                   -> new MountPoint()
                          .withContainerPath(strip(storageConfiguration.getContainerPath()))
