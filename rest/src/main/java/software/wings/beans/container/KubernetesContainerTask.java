@@ -1,5 +1,6 @@
 package software.wings.beans.container;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
@@ -159,12 +160,14 @@ public class KubernetesContainerTask extends ContainerTask {
     for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
       if (containerDefinition.getStorageConfigurations() != null) {
         for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
-          String volumeName = KubernetesConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
-          volumeMap.put(volumeName,
-              new VolumeBuilder()
-                  .withName(volumeName)
-                  .withHostPath(new HostPathVolumeSource(strip(storageConfiguration.getHostSourcePath())))
-                  .build());
+          if (isNotBlank(storageConfiguration.getHostSourcePath())) {
+            String volumeName = KubernetesConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
+            volumeMap.put(volumeName,
+                new VolumeBuilder()
+                    .withName(volumeName)
+                    .withHostPath(new HostPathVolumeSource(strip(storageConfiguration.getHostSourcePath())))
+                    .build());
+          }
         }
       }
     }
