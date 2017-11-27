@@ -152,8 +152,8 @@ public class LogAnalysisManagerJob implements Job {
             /*
              * Run even if we don't have test data, since we may have control data for this minute.
              * If not, then the control data for this minute will be lost forever. The analysis job
-             * should fail with error code -2 if no control and no test data is provided. The manager
-             * should ignore failures with status code -2. If control is present and no test, the control data
+             * should fail with error code - 200 if no control and no test data is provided. The manager
+             * should ignore failures with status code - 200. If control is present and no test, the control data
              * is processed and added to the result. If test is present, but no control, the test events
              * are saved for future processing.
              */
