@@ -234,12 +234,17 @@ public class KubernetesContainerTask extends ContainerTask {
     }
 
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
-      wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
-          -> containerBuilder.addNewVolumeMount()
-                 .withName(KubernetesConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath())))
-                 .withMountPath(strip(storageConfiguration.getContainerPath()))
-                 .withReadOnly(storageConfiguration.isReadonly())
-                 .endVolumeMount());
+      wingsContainerDefinition.getStorageConfigurations()
+          .stream()
+          .filter(storageConfiguration
+              -> isNotBlank(storageConfiguration.getHostSourcePath())
+                  && isNotBlank(storageConfiguration.getContainerPath()))
+          .forEach(storageConfiguration
+              -> containerBuilder.addNewVolumeMount()
+                     .withName(KubernetesConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath())))
+                     .withMountPath(strip(storageConfiguration.getContainerPath()))
+                     .withReadOnly(storageConfiguration.isReadonly())
+                     .endVolumeMount());
     }
 
     return containerBuilder.build();

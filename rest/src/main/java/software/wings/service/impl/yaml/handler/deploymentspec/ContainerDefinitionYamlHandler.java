@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;
@@ -61,6 +62,9 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     if (!Util.isEmpty(storageConfigurations)) {
       storageConfigYamlList =
           storageConfigurations.stream()
+              .filter(storageConfiguration
+                  -> isNotBlank(storageConfiguration.getHostSourcePath())
+                      && isNotBlank(storageConfiguration.getContainerPath()))
               .map(storageConfiguration
                   -> (StorageConfiguration.Yaml) storageConfigYamlHandler.toYaml(storageConfiguration, appId))
               .collect(Collectors.toList());
