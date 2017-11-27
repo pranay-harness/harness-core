@@ -123,12 +123,12 @@ import javax.validation.constraints.NotNull;
  */
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
-  private static final int MAX_UPGRADE_WAIT_SECS = 2 * 60 * 60; // 2 hours max
   private static final int MAX_CONNECT_ATTEMPTS = 50;
-  private static final int CONNECT_INTERVAL_SECONDS = 10;
-  private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
-  private static final long MAX_WATCHER_HEARTBEAT_INTERVAL = TimeUnit.MINUTES.toMillis(1);
-  private static final long MAX_WATCHER_VERSION_MISMATCH_INTERVAL = TimeUnit.MINUTES.toMillis(1);
+  private static final int RECONNECT_INTERVAL_SECONDS = 10;
+  private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
+  private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
+  private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+  private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
@@ -170,6 +170,7 @@ public class DelegateServiceImpl implements DelegateService {
   private long watcherVersionMatchedAt = System.currentTimeMillis();
 
   @Override
+  @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
@@ -218,7 +219,7 @@ public class DelegateServiceImpl implements DelegateService {
               .queryString("delegateId", delegateId)
               .queryString("token", tokenGenerator.getToken("https", "localhost", 9090))
               .header("Version", getVersion())
-              .encoder(new Encoder<Delegate, Reader>() { // Do not change this wasync doesn't like lambda's
+              .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
                 @Override
                 public Reader encode(Delegate s) {
                   return new StringReader(JsonUtils.asJson(s));
@@ -231,32 +232,32 @@ public class DelegateServiceImpl implements DelegateService {
               .runtime(asyncHttpClient, true)
               .reconnect(true)
               .reconnectAttempts(new File("delegate.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
-              .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
+              .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
               .build();
       socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
-              new Function<String>() { // Do not change this wasync doesn't like lambda's
+              new Function<String>() { // Do not change this, wasync doesn't like lambdas
                 @Override
                 public void on(String message) {
                   handleMessageSubmit(message, fixedThreadPool);
                 }
               })
           .on(Event.ERROR,
-              new Function<Exception>() { // Do not change this wasync doesn't like lambda's
+              new Function<Exception>() { // Do not change this, wasync doesn't like lambdas
                 @Override
                 public void on(Exception e) {
                   handleError(e);
                 }
               })
           .on(Event.REOPENED,
-              new Function<Object>() { // Do not change this wasync doesn't like lambda's
+              new Function<Object>() { // Do not change this, wasync doesn't like lambdas
                 @Override
                 public void on(Object o) {
                   handleReopened(o, builder);
                 }
               })
-          .on(Event.CLOSE, new Function<Object>() { // Do not change this wasync doesn't like lambda's
+          .on(Event.CLOSE, new Function<Object>() { // Do not change this, wasync doesn't like lambdas
             @Override
             public void on(Object o) {
               handleClose(o);
@@ -461,8 +462,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void handleStopAcquiringMessage(String sender) {
     logger.info("Got stop-acquiring message from watcher {}", sender);
-    if (acquireTasks.get()) {
-      acquireTasks.set(false);
+    if (acquireTasks.getAndSet(false)) {
       stoppedAcquiringAt = clock.millis();
       Map<String, Object> shutdownData = new HashMap<>();
       shutdownData.put(DELEGATE_SHUTDOWN_PENDING, true);
@@ -470,20 +470,20 @@ public class DelegateServiceImpl implements DelegateService {
       messageService.putAllData(DELEGATE_DASH + getProcessId(), shutdownData);
 
       executorService.submit(() -> {
-        int secs = 0;
-        while ((long) currentlyExecutingTasks.size() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
+        long started = clock.millis();
+        long now = started;
+        while (currentlyExecutingTasks.size() > 0 && now - started < UPGRADE_TIMEOUT) {
           try {
             Thread.sleep(1000);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
-          logger.info("[Old] Completing {} tasks... ({} seconds elapsed)", (long) currentlyExecutingTasks.size(), secs);
+          now = clock.millis();
+          logger.info("[Old] Completing {} tasks... ({} seconds elapsed)", currentlyExecutingTasks.size(),
+              (now - started) / 1000L);
         }
-        if (secs < MAX_UPGRADE_WAIT_SECS) {
-          logger.info("[Old] Delegate finished with tasks. Pausing");
-        } else {
-          logger.info("[Old] Timed out waiting to complete tasks. Pausing");
-        }
+        logger.info(now - started < UPGRADE_TIMEOUT ? "[Old] Delegate finished with tasks. Pausing"
+                                                    : "[Old] Timed out waiting to complete tasks. Pausing");
         signalService.pause();
         logger.info("[Old] Shutting down");
 
@@ -565,19 +565,19 @@ public class DelegateServiceImpl implements DelegateService {
   private void watchWatcher() {
     long watcherHeartbeat =
         Optional.ofNullable(messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class)).orElse(0L);
-    boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > MAX_WATCHER_HEARTBEAT_INTERVAL;
+    boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
     if (heartbeatTimedOut) {
-      logger.warn("Watcher heartbeat not seen for {} seconds", MAX_WATCHER_HEARTBEAT_INTERVAL / 1000L);
+      logger.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
     }
     String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
     String expectedVersion = findExpectedWatcherVersion();
     if (StringUtils.equals(expectedVersion, watcherVersion)) {
       watcherVersionMatchedAt = clock.millis();
     }
-    boolean versionMatchTimedOut = clock.millis() - watcherVersionMatchedAt > MAX_WATCHER_VERSION_MISMATCH_INTERVAL;
+    boolean versionMatchTimedOut = clock.millis() - watcherVersionMatchedAt > WATCHER_VERSION_MATCH_TIMEOUT;
     if (versionMatchTimedOut) {
       logger.warn("Watcher version mismatched for {} seconds. Version is {} but should be {}",
-          MAX_WATCHER_VERSION_MISMATCH_INTERVAL / 1000L, watcherVersion, expectedVersion);
+          WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
     }
 
     if (heartbeatTimedOut || versionMatchTimedOut) {
@@ -586,13 +586,13 @@ public class DelegateServiceImpl implements DelegateService {
 
       executorService.submit(() -> {
         try {
-          Thread.sleep(TimeUnit.SECONDS.toMillis(1));
           new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
           messageService.closeChannel(WATCHER, watcherProcess);
-          Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-          // Prevent a second restart attempt right away at next heartbeat by writing the expected watcher data
+          Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+          // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
+          // resetting version matched timestamp
           messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
-          messageService.putData(WATCHER_DATA, WATCHER_VERSION, expectedVersion);
+          watcherVersionMatchedAt = clock.millis();
           new ProcessExecutor()
               .timeout(1, TimeUnit.MINUTES)
               .command("nohup", "./start.sh")
@@ -626,8 +626,8 @@ public class DelegateServiceImpl implements DelegateService {
   private boolean doRestartDelegate() {
     long now = clock.millis();
     return new File("delegate.sh").exists()
-        && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > MAX_HB_TIMEOUT
-               || now - lastHeartbeatReceivedAt.get() > MAX_HB_TIMEOUT);
+        && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > HEARTBEAT_TIMEOUT
+               || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
   }
 
   private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
