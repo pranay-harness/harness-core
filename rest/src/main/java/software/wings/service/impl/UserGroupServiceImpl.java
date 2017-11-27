@@ -53,12 +53,20 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup get(String accountId, String uuid) {
-    PageRequest<UserGroup> req =
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter(ID_KEY, Operator.EQ, uuid).build();
+  public UserGroup get(String accountId, String userGroupId) {
+    return get(accountId, userGroupId, true);
+  }
+
+  private UserGroup get(String accountId, String userGroupId, boolean loadUsers) {
+    PageRequest<UserGroup> req = aPageRequest()
+                                     .addFilter("accountId", Operator.EQ, accountId)
+                                     .addFilter(ID_KEY, Operator.EQ, userGroupId)
+                                     .build();
     UserGroup userGroup = wingsPersistence.get(UserGroup.class, req);
-    Account account = accountService.get(accountId);
-    loadUsers(userGroup, account);
+    if (loadUsers) {
+      Account account = accountService.get(accountId);
+      loadUsers(userGroup, account);
+    }
     return userGroup;
   }
 
@@ -111,5 +119,17 @@ public class UserGroupServiceImpl implements UserGroupService {
                                  .equal(userGroup.getAccountId());
     wingsPersistence.update(query, operations);
     return get(userGroup.getAccountId(), userGroup.getUuid());
+  }
+
+  @Override
+  public Boolean delete(String accountId, String userGroupId) {
+    UserGroup userGroup = get(accountId, userGroupId, false);
+    Validator.notNullCheck("userGroup", userGroup);
+    Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
+                                          .field("accountId")
+                                          .equal(accountId)
+                                          .field(ID_KEY)
+                                          .equal(userGroupId);
+    return wingsPersistence.delete(userGroupQuery);
   }
 }
