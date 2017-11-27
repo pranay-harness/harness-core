@@ -128,6 +128,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final long MAX_WATCHER_HEARTBEAT_INTERVAL = TimeUnit.MINUTES.toMillis(1);
+  private static final long MAX_WATCHER_VERSION_MISMATCH_INTERVAL = TimeUnit.MINUTES.toMillis(1);
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
@@ -166,6 +167,7 @@ public class DelegateServiceImpl implements DelegateService {
   private long stoppedAcquiringAt;
   private String delegateId;
   private String accountId;
+  private long watcherVersionMatchedAt = System.currentTimeMillis();
 
   @Override
   public void run(boolean watched) {
@@ -561,21 +563,25 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void watchWatcher() {
-    Long watcherHeartbeat = messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class);
-    String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
-    String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
-    String expectedVersion = findExpectedWatcherVersion();
-    long timeSinceLastHeartbeat = clock.millis() - Optional.ofNullable(watcherHeartbeat).orElse(0L);
-    boolean heartbeatTimedOut = timeSinceLastHeartbeat > MAX_WATCHER_HEARTBEAT_INTERVAL;
-    boolean versionMismatch = expectedVersion != null && !expectedVersion.equals(watcherVersion);
+    long watcherHeartbeat =
+        Optional.ofNullable(messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class)).orElse(0L);
+    boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > MAX_WATCHER_HEARTBEAT_INTERVAL;
     if (heartbeatTimedOut) {
-      logger.warn("Watcher heartbeat not seen for {} seconds", timeSinceLastHeartbeat / 1000L);
+      logger.warn("Watcher heartbeat not seen for {} seconds", MAX_WATCHER_HEARTBEAT_INTERVAL / 1000L);
     }
-    if (versionMismatch) {
-      logger.warn("Watcher version is {} but should be {}", watcherVersion, expectedVersion);
+    String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
+    String expectedVersion = findExpectedWatcherVersion();
+    if (StringUtils.equals(expectedVersion, watcherVersion)) {
+      watcherVersionMatchedAt = clock.millis();
+    }
+    boolean versionMatchTimedOut = clock.millis() - watcherVersionMatchedAt > MAX_WATCHER_VERSION_MISMATCH_INTERVAL;
+    if (versionMatchTimedOut) {
+      logger.warn("Watcher version mismatched for {} seconds. Version is {} but should be {}",
+          MAX_WATCHER_VERSION_MISMATCH_INTERVAL / 1000L, watcherVersion, expectedVersion);
     }
 
-    if (heartbeatTimedOut || versionMismatch) {
+    if (heartbeatTimedOut || versionMatchTimedOut) {
+      String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
       logger.warn("Watcher process {} needs restart", watcherProcess);
 
       executorService.submit(() -> {
