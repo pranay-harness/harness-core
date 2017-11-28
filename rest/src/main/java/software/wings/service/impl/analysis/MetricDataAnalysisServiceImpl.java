@@ -403,7 +403,12 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
 
     if (analysisRecord == null) {
-      return null;
+      return NewRelicMetricAnalysisRecord.builder()
+          .showTimeSeries(false)
+          .stateType(StateType.NEW_RELIC)
+          .riskLevel(RiskLevel.NA)
+          .message("No data available")
+          .build();
     }
 
     if (analysisRecord.getMetricAnalyses() != null) {
@@ -439,9 +444,14 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         analysisRecord.setRiskLevel(RiskLevel.HIGH);
       } else if (mediumRisk > 0) {
         analysisRecord.setRiskLevel(RiskLevel.MEDIUM);
+      } else {
+        analysisRecord.setRiskLevel(RiskLevel.LOW);
       }
 
       Collections.sort(analysisRecord.getMetricAnalyses());
+    } else {
+      analysisRecord.setRiskLevel(RiskLevel.NA);
+      analysisRecord.setMessage("No data available");
     }
     return analysisRecord;
   }

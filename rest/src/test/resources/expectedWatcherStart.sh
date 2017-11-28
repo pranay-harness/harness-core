@@ -40,7 +40,7 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-if [ ! -d $JRE_DIR ]
+if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
@@ -50,6 +50,7 @@ then
   mv $JVM_TAR_FILENAME tmp
   cd tmp
   tar xzf $JVM_TAR_FILENAME
+  rm -rf ../$JRE_DIR
   mv $JRE_DIR_OLD ../$JRE_DIR
   cd ..
   rm -rf jre tmp

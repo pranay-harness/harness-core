@@ -86,9 +86,9 @@ import javax.inject.Named;
 public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private static final long MAX_DELEGATE_HEARTBEAT_INTERVAL = TimeUnit.SECONDS.toMillis(30);
-  private static final long MAX_DELEGATE_STARTUP_GRACE_PERIOD = TimeUnit.MINUTES.toMillis(2);
-  private static final long MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD = TimeUnit.HOURS.toMillis(2);
+  private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+  private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+  private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
@@ -284,18 +284,17 @@ private void watchDelegate() {
 
             if (newDelegate) {
               logger.info("New delegate process {} is starting", delegateProcess);
-              if (now - heartbeat > MAX_DELEGATE_STARTUP_GRACE_PERIOD) {
+              if (now - heartbeat > DELEGATE_STARTUP_TIMEOUT) {
                 newDelegateTimedOut = true;
                 shutdownNeededList.add(delegateProcess);
               }
             } else if (shutdownPending) {
               logger.info(
                   "Shutdown is pending for delegate process {} with version {}", delegateProcess, delegateVersion);
-              if (now - shutdownStarted > MAX_DELEGATE_SHUTDOWN_GRACE_PERIOD
-                  || now - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
+              if (now - shutdownStarted > DELEGATE_SHUTDOWN_TIMEOUT || now - heartbeat > DELEGATE_HEARTBEAT_TIMEOUT) {
                 shutdownNeededList.add(delegateProcess);
               }
-            } else if (restartNeeded || now - heartbeat > MAX_DELEGATE_HEARTBEAT_INTERVAL) {
+            } else if (restartNeeded || now - heartbeat > DELEGATE_HEARTBEAT_TIMEOUT) {
               restartNeededList.add(delegateProcess);
             } else if (upgradeNeeded) {
               upgradeNeededList.add(delegateProcess);
@@ -388,10 +387,18 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
         logger.error("Failed to start new delegate");
         newDelegate.getProcess().destroy();
         newDelegate.getProcess().waitFor();
+        oldDelegateProcesses.forEach(oldDelegateProcess -> {
+          logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
+          messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
+        });
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("[Old] Exception while upgrading", e);
+      logger.error("Exception while upgrading", e);
+      oldDelegateProcesses.forEach(oldDelegateProcess -> {
+        logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
+        messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
+      });
       if (newDelegate != null) {
         try {
           newDelegate.getProcess().destroy();
@@ -407,7 +414,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
             }
           }
         } catch (Exception ex) {
-          logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
+          logger.error("ALERT: Couldn't kill forcibly", ex);
         }
       }
     } finally {
