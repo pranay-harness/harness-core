@@ -7,7 +7,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_PORT;
 import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
@@ -227,13 +226,10 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
 
-    ConfigFile appConfigFile = aConfigFile()
-                                   .withName("FILE_NAME")
-                                   .withTemplateId("TEMPLATE_ID")
-                                   .withEntityId("ENTITY_ID")
-                                   .withRelativeFilePath("/configs/")
-                                   .withFileName("text.txt")
-                                   .build();
+    ConfigFile appConfigFile =
+        ConfigFile.builder().templateId("TEMPLATE_ID").entityId("ENTITY_ID").relativeFilePath("/configs/").build();
+    appConfigFile.setName("FILE_NAME");
+    appConfigFile.setFileName("text.txt");
     FileInputStream fileInputStream = new FileInputStream(file);
     when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
@@ -258,13 +254,10 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
 
-    ConfigFile appConfigFile = aConfigFile()
-                                   .withName("FILE_NAME")
-                                   .withTemplateId("TEMPLATE_ID")
-                                   .withEntityId("ENTITY_ID")
-                                   .withRelativeFilePath("/configs/")
-                                   .withFileName("text.txt")
-                                   .build();
+    ConfigFile appConfigFile =
+        ConfigFile.builder().templateId("TEMPLATE_ID").entityId("ENTITY_ID").relativeFilePath("/configs/").build();
+    appConfigFile.setName("FILE_NAME");
+    appConfigFile.setFileName("text.txt");
     FileInputStream fileInputStream = new FileInputStream(file);
     when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
