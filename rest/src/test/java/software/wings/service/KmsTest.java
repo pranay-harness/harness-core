@@ -2276,14 +2276,6 @@ public class KmsTest extends WingsBaseTest {
                             .asList();
     assertEquals(1, encryptedFileData.size());
     assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
-
-    Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
-    assertEquals(1, uuidAwares.size());
-    ConfigFile listedVariable = (ConfigFile) uuidAwares.iterator().next();
-    assertEquals(EntityType.SERVICE_TEMPLATE, listedVariable.getEntityType());
-    assertTrue(listedVariable.isEncrypted());
-    assertEquals(SettingVariableTypes.CONFIG_FILE, listedVariable.getSettingType());
-    assertEquals(serviceId, listedVariable.getServiceId());
   }
 
   @Test

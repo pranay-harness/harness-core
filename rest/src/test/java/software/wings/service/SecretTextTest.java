@@ -758,7 +758,7 @@ public class SecretTextTest extends WingsBaseTest {
     query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE);
     assertEquals(1, query.asList().size());
     encryptedData = query.asList().get(0);
-    assertEquals(secretName, encryptedData.getName());
+    assertEquals(newSecretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
     assertEquals(accountId, encryptedData.getAccountId());
