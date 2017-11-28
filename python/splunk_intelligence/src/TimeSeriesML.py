@@ -482,6 +482,14 @@ def parallelize_processing(options, control_metrics, test_metrics):
     The transactions will be run in upto 7 parallel processes. Once all processing is complete,
     the result is merged and returned.
     """
+    result = {"transactions": {}}
+
+    if len(control_metrics) == 0 or len(test_metrics) == 0:
+        logger.warn(
+            "No control or test data given for minute " + str(
+                options.analysis_minute) + ". Skipping analysis!!")
+        return result
+
     transaction_names = set()
     for transactions in control_metrics:
         transaction_names.add(transactions['name'])
@@ -490,7 +498,7 @@ def parallelize_processing(options, control_metrics, test_metrics):
         transaction_names.add(transactions['name'])
 
     workers = min(options.parallel_processes, len(transaction_names))
-
+    print('workers=', workers)
     transaction_names = list(transaction_names)
     control_metrics_batch = [[] for i in range(workers)]
     test_metrics_batch = [[] for i in range(workers)]
@@ -510,7 +518,6 @@ def parallelize_processing(options, control_metrics, test_metrics):
         jobs.append(p)
         p.start()
 
-    result = {"transactions": {}}
     txn_id = 0
     processed = 0
     while processed < len(jobs):
