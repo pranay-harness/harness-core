@@ -304,6 +304,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       String fileId = fileService.saveFile(
           baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
       fileData.setEncryptedValue(fileId.toCharArray());
+      fileData.setFileSize(inputStream.getTotalBytesRead());
       return fileData;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
