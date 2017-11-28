@@ -1204,7 +1204,7 @@ public class VaultTest extends WingsBaseTest {
     for (int i = 0; i < numOfAccess; i++) {
       configService.downloadForActivity(appId, configFileId, activity.getUuid());
     }
-    List<SecretUsageLog> usageLogs = secretManager.getUsageLogs(configFileId, CONFIG_FILE);
+    List<SecretUsageLog> usageLogs = secretManager.getUsageLogs(encryptedUuid, CONFIG_FILE);
     assertEquals(numOfAccess, usageLogs.size());
 
     for (SecretUsageLog usageLog : usageLogs) {

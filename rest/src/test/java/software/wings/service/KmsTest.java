@@ -2164,7 +2164,7 @@ public class KmsTest extends WingsBaseTest {
     for (int i = 0; i < numOfAccess; i++) {
       configService.downloadForActivity(appId, configFileId, activity.getUuid());
     }
-    List<SecretUsageLog> usageLogs = secretManager.getUsageLogs(configFileId, SettingVariableTypes.CONFIG_FILE);
+    List<SecretUsageLog> usageLogs = secretManager.getUsageLogs(encryptedUuid, SettingVariableTypes.CONFIG_FILE);
     assertEquals(numOfAccess, usageLogs.size());
 
     for (SecretUsageLog usageLog : usageLogs) {
