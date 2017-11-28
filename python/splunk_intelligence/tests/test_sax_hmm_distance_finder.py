@@ -36,9 +36,10 @@ def create_nan(data):
                 if d == -1:
                     data_list[i] = np.nan
 
+
 def run_analysis(filename, make_nan=False):
-    txns = FileLoader.load_data(filename)
-    for txn_name, txn_data in txns.items():
+    txns = FileLoader.load_data(filename)['transactions']
+    for txn_id, txn_data in txns.items():
         for metric_name, metric_data in txn_data['metrics'].items():
             if 'verify-email' in txn_data['txn_name']:
                 print('hi')
@@ -50,49 +51,37 @@ def run_analysis(filename, make_nan=False):
                                        metric_data['control'],
                                        metric_data['test'],
                                        get_deviation_type(metric_data['metric_name']),
-                                       get_deviation_min_threshold(metric_data['metric_name']))
+                                       get_deviation_min_threshold(metric_data['metric_name']), 1)
 
             results = shd.compute_dist()
-            # if 'results' in metric_data:
-            #     for index, (host, host_data) in enumerate(metric_data['results'].items()):
-            #         assert str_equal(host_data['test_cuts'], results['test_cuts'][index])
-            #         assert str_equal(host_data['control_cuts'], results['control_cuts'][index])
-            #         assert compare(host_data['risk'], results['risk'][index])
-            #         assert compare(host_data['score'], results['score'][index])
-            #         assert host_data['nn'] == metric_data['control']['host_names'][results['nn'][index]]
-            #         assert lists_equal(host_data['distance'], results['distances'][index])
-            #         if 'optimal_cuts' in host_data:
-            #             assert str_equal(host_data['optimal_cuts'], results['optimal_test_cuts'][index])
-            #             assert lists_equal(host_data['optimal_data'], results['optimal_test_data'][index])
+            if 'results' in metric_data:
+                for index, (host, host_data) in enumerate(metric_data['results'].items()):
+                    assert str_equal(host_data['test_cuts'], results['test_cuts'][index])
+                    assert str_equal(host_data['control_cuts'], results['control_cuts'][index])
+                    if host_data['risk'] == -1:
+                        for metric_id, metric_values in  txn_data['metrics'].items():
+                            if 'requestsPerMinute' in metric_values['metric_name']:
+                                break
+                        if np.nansum(metric_values['test']['data'][index]) < 10:
+                            assert compare(host_data['risk'], "-1")
+                        else:
+                            assert False
+                    else:
+                        assert compare(host_data['risk'], results['risk'][index])
+                    assert compare(host_data['score'], results['score'][index])
+                    assert host_data['nn'] == metric_data['control']['host_names'][results['nn'][index]]
+                    assert lists_equal(host_data['distance'], results['distances'][index])
+                    if 'optimal_cuts' in host_data:
+                        assert str_equal(host_data['optimal_cuts'], results['optimal_test_cuts'][index])
+                        assert lists_equal(host_data['optimal_data'], results['optimal_test_data'][index])
 
 
 def test_1():
-    # run_analysis('tests/resources/ts/ts_out_harness_1.json')
-    print('hi')
-
-
-def test_2():
-    # run_analysis('tests/resources/ts/ts_out_harness_2.json')
-    print('hi')
-
-
-def test_3():
-    # run_analysis('tests/resources/ts/ts_out_harness_3.json', True)
-    print('hi')
-
-
-def test_4():
-    # run_analysis('tests/resources/ts/ts_out_harness_4.json')
-    print('hi')
-
-def test_5():
-    #run_analysis('resources/ts/ts_out_harness_5.json', True)
-    print('hi')
+    run_analysis('tests/resources/ts/nr_out_live.json', True)
 
 
 def main(args):
-    dist = SAXHMMDistance()
-    print(dist.distance_matrix)
+    test_1()
 
 
 if __name__ == "__main__":

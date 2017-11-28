@@ -79,7 +79,11 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig save(YamlGitConfig ygs) {
-    validateGit(ygs.getGitConfig());
+    //
+    GitConfig gitConfig = ygs.getGitConfig();
+    gitConfig.setDecrypted(true);
+    validateGit(gitConfig);
+    gitConfig.setDecrypted(false);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> pushDirectory(ygs.getAccountId()));
     return yamlGitSync;
@@ -93,7 +97,10 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig update(YamlGitConfig ygs) {
-    validateGit(ygs.getGitConfig());
+    GitConfig gitConfig = ygs.getGitConfig();
+    gitConfig.setDecrypted(true);
+    validateGit(gitConfig);
+    gitConfig.setDecrypted(false);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> pushDirectory(ygs.getAccountId()));
     return yamlGitSync;

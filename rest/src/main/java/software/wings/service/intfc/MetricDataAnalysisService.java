@@ -55,7 +55,9 @@ public interface MetricDataAnalysisService {
   void bumpCollectionMinuteToProcess(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute);
 
-  int getMaxControlMinute(StateType stateType, String serviceId, String workflowId, String workflowExecutionId);
+  int getMaxControlMinuteWithData(StateType stateType, String serviceId, String workflowId, String workflowExecutionId);
+
+  int getMinControlMinuteWithData(StateType stateType, String serviceId, String workflowId, String workflowExecutionId);
 
   String getLastSuccessfulWorkflowExecutionIdWithData(StateType stateType, String workflowId, String serviceId);
 
