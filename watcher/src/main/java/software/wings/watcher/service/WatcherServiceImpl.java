@@ -387,10 +387,18 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
         logger.error("Failed to start new delegate");
         newDelegate.getProcess().destroy();
         newDelegate.getProcess().waitFor();
+        oldDelegateProcesses.forEach(oldDelegateProcess -> {
+          logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
+          messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
+        });
       }
     } catch (Exception e) {
       e.printStackTrace();
       logger.error("[Old] Exception while upgrading", e);
+      oldDelegateProcesses.forEach(oldDelegateProcess -> {
+        logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
+        messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
+      });
       if (newDelegate != null) {
         try {
           newDelegate.getProcess().destroy();
