@@ -8,6 +8,9 @@ import com.google.inject.Inject;
 
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
+import software.wings.beans.Graph;
+import software.wings.beans.Graph.Link;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.AbstractCommandUnit.Yaml;
 import software.wings.beans.command.Command;
@@ -17,9 +20,10 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.sync.YamlSyncHelper;
@@ -59,36 +63,48 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
     Validator.notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId);
     CommandYaml commandYaml = changeContext.getYaml();
-
+    List<Node> nodeList = Lists.newArrayList();
     List<Yaml> commandUnits = commandYaml.getCommandUnits();
     List<CommandUnit> commandUnitList = Lists.newArrayList();
+    List<Link> linkList = Lists.newArrayList();
+    Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(commandYaml.getName());
+
     if (!Util.isEmpty(commandUnits)) {
-      try {
-        commandUnitList =
-            commandUnits.stream()
-                .map(commandUnitYaml -> {
-                  try {
-                    BaseYamlHandler commandUnitYamlHandler =
-                        yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
-                    CommandUnit commandUnit = (CommandUnit) createOrUpdateFromYaml(
-                        isCreate, commandUnitYamlHandler, clonedContext.build(), changeSetContext);
-                    return commandUnit;
-                  } catch (HarnessException e) {
-                    throw new WingsException(e);
-                  }
-                })
-                .collect(Collectors.toList());
-      } catch (WingsException ex) {
-        throw new HarnessException(ex);
+      Node previousGraphNode = null;
+      for (Yaml commandUnitYaml : commandUnits) {
+        CommandUnitYamlHandler commandUnitYamlHandler = (CommandUnitYamlHandler) yamlHandlerFactory.getYamlHandler(
+            YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
+        ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
+        CommandUnit commandUnit = (CommandUnit) createOrUpdateFromYaml(
+            isCreate, commandUnitYamlHandler, clonedContext.build(), changeSetContext);
+        commandUnitList.add(commandUnit);
+        Node graphNode = commandUnitYamlHandler.getGraphNode(clonedContext.build(), previousGraphNode);
+        if (previousGraphNode != null) {
+          Link link = Link.Builder.aLink()
+                          .withType("SUCCESS")
+                          .withFrom(previousGraphNode.getId())
+                          .withTo(graphNode.getId())
+                          .withId(getLinkId())
+                          .build();
+          linkList.add(link);
+        }
+        previousGraphNode = graphNode;
+        nodeList.add(graphNode);
       }
+
+      if (!Util.isEmpty(linkList)) {
+        graphBuilder.withLinks(linkList);
+      }
+      graphBuilder.withNodes(nodeList);
     }
 
     CommandType commandType = Util.getEnumFromString(CommandType.class, commandYaml.getType());
+
     Command command = Builder.aCommand()
                           .withCommandType(commandType)
                           .withCommandUnits(commandUnitList)
                           .withName(commandYaml.getName())
+                          .withGraph(graphBuilder.build())
                           .build();
 
     List<String> envNameList = commandYaml.getTargetEnvs();
@@ -102,20 +118,36 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       });
     }
 
-    ServiceCommand serviceCommand = ServiceCommand.Builder.aServiceCommand()
-                                        .withAppId(appId)
-                                        .withCommand(command)
-                                        .withEnvIdVersionMap(envIdMap)
-                                        .withName(commandYaml.getName())
-                                        .withServiceId(serviceId)
-                                        .withTargetToAllEnv(commandYaml.isTargetToAllEnv())
-                                        .build();
+    ServiceCommand serviceCommand;
+    ServiceCommand.Builder builder = ServiceCommand.Builder.aServiceCommand();
+    if (!isCreate) {
+      ServiceCommand existingSvcCommand =
+          serviceResourceService.getCommandByName(appId, serviceId, commandYaml.getName());
+      Validator.notNullCheck(
+          "Service command with the given name doesn't exist: " + commandYaml.getName(), existingSvcCommand);
+      builder.withUuid(existingSvcCommand.getUuid());
+    }
+
+    serviceCommand = builder.withAppId(appId)
+                         .withCommand(command)
+                         .withEnvIdVersionMap(envIdMap)
+                         .withName(commandYaml.getName())
+                         .withServiceId(serviceId)
+                         .withTargetToAllEnv(commandYaml.isTargetToAllEnv())
+                         .withSetAsDefault(true)
+                         .build();
+
     if (isCreate) {
       serviceResourceService.addCommand(appId, serviceId, serviceCommand, false);
     } else {
       serviceResourceService.updateCommand(appId, serviceId, serviceCommand);
     }
+
     return commandService.getServiceCommandByName(appId, serviceId, commandYaml.getName());
+  }
+
+  private String getLinkId() {
+    return UUIDGenerator.graphIdGenerator(YamlConstants.LINK_PREFIX);
   }
 
   @Override

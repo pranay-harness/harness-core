@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import software.wings.beans.command.PortCheckClearedCommandUnit;
 import software.wings.beans.command.PortCheckClearedCommandUnit.Yaml;
 import software.wings.beans.command.PortCheckClearedCommandUnit.Yaml.Builder;
-import software.wings.beans.command.PortCheckClearedCommandUnit;
 
 /**
  * @author rktummala on 11/13/17

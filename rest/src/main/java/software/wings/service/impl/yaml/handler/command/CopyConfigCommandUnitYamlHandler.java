@@ -1,13 +1,16 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import software.wings.beans.command.CopyConfigCommandUnit.Yaml.Builder;
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_DESTINATION_PARENT_PATH;
+
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
+import software.wings.beans.command.CopyConfigCommandUnit.Yaml.Builder;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author rktummala on 11/13/17
@@ -77,5 +80,12 @@ public class CopyConfigCommandUnitYamlHandler
     }
 
     return validate;
+  }
+
+  @Override
+  protected Map<String, Object> getNodeProperties(ChangeContext<Yaml> changeContext) {
+    Map<String, Object> nodeProperties = super.getNodeProperties(changeContext);
+    nodeProperties.put(NODE_PROPERTY_DESTINATION_PARENT_PATH, "$WINGS_RUNTIME_PATH");
+    return nodeProperties;
   }
 }

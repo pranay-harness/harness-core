@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
+
 import com.google.inject.Inject;
 
 import software.wings.beans.command.Command;
@@ -17,6 +19,7 @@ import software.wings.yaml.command.CommandRefYaml;
 import software.wings.yaml.command.CommandRefYaml.Builder;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author rktummala on 11/13/17
@@ -99,5 +102,12 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
     } else {
       return updateFromYaml(changeContext, changeSetContext);
     }
+  }
+
+  @Override
+  protected Map<String, Object> getNodeProperties(ChangeContext<CommandRefYaml> changeContext) {
+    Map<String, Object> nodeProperties = super.getNodeProperties(changeContext);
+    nodeProperties.put(NODE_PROPERTY_REFERENCEID, changeContext.getYaml().getName());
+    return nodeProperties;
   }
 }

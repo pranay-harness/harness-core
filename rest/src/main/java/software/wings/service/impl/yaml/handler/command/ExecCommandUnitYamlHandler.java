@@ -1,5 +1,11 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_PATH;
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_STRING;
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE;
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_FILES;
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERNS;
+
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.Yaml;
 import software.wings.beans.command.ExecCommandUnit.Yaml.Builder;
@@ -11,6 +17,7 @@ import software.wings.utils.Util;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -105,5 +112,27 @@ public class ExecCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return super.validate(changeContext, changeSetContext);
+  }
+
+  @Override
+  protected Map<String, Object> getNodeProperties(ChangeContext<Yaml> changeContext) {
+    Yaml yaml = changeContext.getYaml();
+
+    Map<String, Object> nodeProperties = super.getNodeProperties(changeContext);
+
+    nodeProperties.put(NODE_PROPERTY_COMMAND_PATH, yaml.getWorkingDirectory());
+    nodeProperties.put(NODE_PROPERTY_COMMAND_STRING, yaml.getCommand());
+    nodeProperties.put(NODE_PROPERTY_COMMAND_TYPE, yaml.getCommandUnitType());
+
+    List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
+    if (!Util.isEmpty(filePatternEntryList)) {
+      List<String> patternList = filePatternEntryList.stream()
+                                     .map(filePatternEntry -> filePatternEntry.getSearchPattern())
+                                     .collect(Collectors.toList());
+      nodeProperties.put(NODE_PROPERTY_TAIL_FILES, true);
+      nodeProperties.put(NODE_PROPERTY_TAIL_PATTERNS, patternList);
+    }
+
+    return nodeProperties;
   }
 }

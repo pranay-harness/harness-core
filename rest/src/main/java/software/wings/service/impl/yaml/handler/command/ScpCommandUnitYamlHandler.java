@@ -6,10 +6,12 @@ import software.wings.beans.command.ScpCommandUnit.Yaml;
 import software.wings.beans.command.ScpCommandUnit.Yaml.Builder;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Util;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author rktummala on 11/13/17
@@ -80,5 +82,14 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     }
 
     return validate;
+  }
+
+  @Override
+  protected Map<String, Object> getNodeProperties(ChangeContext<Yaml> changeContext) {
+    Map<String, Object> nodeProperties = super.getNodeProperties(changeContext);
+    Yaml yaml = changeContext.getYaml();
+    nodeProperties.put(YamlConstants.NODE_PROPERTY_FILE_CATEGORY, yaml.getSource());
+    nodeProperties.put(YamlConstants.NODE_PROPERTY_DESTINATION_DIR_PATH, yaml.getDestinationDirectoryPath());
+    return nodeProperties;
   }
 }
