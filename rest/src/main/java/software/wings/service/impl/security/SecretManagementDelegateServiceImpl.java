@@ -189,6 +189,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
   }
 
+  @Override
+  public void deleteVaultSecret(String path, VaultConfig vaultConfig) throws IOException {
+    getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
+  }
+
   private char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
                                                      InvalidKeyException, IllegalBlockSizeException,
                                                      BadPaddingException, InvalidAlgorithmParameterException {

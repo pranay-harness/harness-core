@@ -15,7 +15,6 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -364,8 +363,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .when(spyServiceResourceService)
         .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(false));
 
-    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
-        .thenReturn(asList(aConfigFile().withAppId(APP_ID).withUuid("CONFIG_FILE_ID").build()));
+    ConfigFile configFile = ConfigFile.builder().build();
+    configFile.setAppId(APP_ID);
+    configFile.setUuid("CONFIG_FILE_ID");
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(asList(configFile));
     when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
 
     ServiceVariable serviceVariable = ServiceVariable.builder().build();
