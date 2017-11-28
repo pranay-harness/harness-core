@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -193,16 +192,17 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   }
 
   private void saveConfigFile(String entityId, EntityType entityType, String fileName) throws IOException {
-    ConfigFile appConfigFile = aConfigFile()
-                                   .withAppId(template.getAppId())
-                                   .withEnvId(template.getEnvId())
-                                   .withName(fileName)
-                                   .withFileName(fileName)
-                                   .withTemplateId(template.getUuid())
-                                   .withEntityId(entityId)
-                                   .withEntityType(entityType)
-                                   .withRelativeFilePath("configs/" + fileName)
+    ConfigFile appConfigFile = ConfigFile.builder()
+                                   .envId(template.getEnvId())
+                                   .templateId(template.getUuid())
+                                   .entityId(entityId)
+                                   .entityType(entityType)
+                                   .relativeFilePath("configs/" + fileName)
                                    .build();
+
+    appConfigFile.setFileName(fileName);
+    appConfigFile.setName(fileName);
+    appConfigFile.setAppId(template.getAppId());
     if (entityType == EntityType.SERVICE) {
       appConfigFile.setEnvId(GLOBAL_ENV_ID);
       appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);

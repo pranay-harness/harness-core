@@ -12,6 +12,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -627,7 +628,10 @@ public class KmsTest extends WingsBaseTest {
   @Test
   public void noKmsEncryptionUpdateServiceVariable() throws IOException, IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
-    final String value = UUID.randomUUID().toString();
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .templateId(UUID.randomUUID().toString())
                                           .envId(UUID.randomUUID().toString())
@@ -639,7 +643,7 @@ public class KmsTest extends WingsBaseTest {
                                           .expression(UUID.randomUUID().toString())
                                           .accountId(accountId)
                                           .name(UUID.randomUUID().toString())
-                                          .value(value.toCharArray())
+                                          .value(secretId.toCharArray())
                                           .type(Type.ENCRYPTED_TEXT)
                                           .build();
 
@@ -658,16 +662,19 @@ public class KmsTest extends WingsBaseTest {
 
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
-    assertEquals(value, String.valueOf(savedVariable.getValue()));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
 
-    final String newValue = UUID.randomUUID().toString();
+    secretName = UUID.randomUUID().toString();
+    secretValue = UUID.randomUUID().toString();
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
     String updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
     keyValuePairs.put("appId", updatedAppId);
-    keyValuePairs.put("value", newValue.toCharArray());
+    keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
+    keyValuePairs.put("value", secretId.toCharArray());
 
     wingsPersistence.updateFields(ServiceVariable.class, savedServiceVariableId, keyValuePairs);
     query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedServiceVariableId);
@@ -676,7 +683,7 @@ public class KmsTest extends WingsBaseTest {
     encryptedData = query.asList().get(0);
     assertEquals(accountId, encryptedData.getAccountId());
     assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
-    assertEquals(SettingVariableTypes.SERVICE_VARIABLE, encryptedData.getType());
+    assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());
     assertNull(encryptedData.getKmsId());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
@@ -684,10 +691,11 @@ public class KmsTest extends WingsBaseTest {
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedServiceVariableId);
     assertEquals(updatedName, savedVariable.getName());
     assertEquals(updatedAppId, savedVariable.getAppId());
+    assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
-        savedVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
-    assertEquals(newValue, String.valueOf(savedVariable.getValue()));
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
   }
 
   @Test
@@ -967,6 +975,7 @@ public class KmsTest extends WingsBaseTest {
   public void saveServiceVariableNoKMS() throws IOException {
     final String accountId = UUID.randomUUID().toString();
 
+    String value = UUID.randomUUID().toString();
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
                                                 .envId(UUID.randomUUID().toString())
@@ -978,20 +987,25 @@ public class KmsTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(value.toCharArray())
                                                 .type(Type.TEXT)
                                                 .build();
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(serviceVariable, savedAttribute);
+    assertEquals(value, String.valueOf(savedAttribute.getValue()));
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     // update to encrypt the variable
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
-    keyValuePairs.put("value", "newValue".toCharArray());
+    keyValuePairs.put("value", secretId.toCharArray());
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), keyValuePairs);
     savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
 
@@ -999,7 +1013,7 @@ public class KmsTest extends WingsBaseTest {
     assertNull(savedAttribute.getValue());
     encryptionService.decrypt(
         savedAttribute, secretManager.getEncryptionDetails(savedAttribute, workflowExecutionId, appId));
-    assertEquals("newValue", new String(savedAttribute.getValue()));
+    assertEquals(secretValue, String.valueOf(savedAttribute.getValue()));
     assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     keyValuePairs = new HashMap<>();
@@ -1009,8 +1023,8 @@ public class KmsTest extends WingsBaseTest {
     savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
 
     assertEquals(Type.TEXT, savedAttribute.getType());
-    assertEquals("unencrypted", new String(savedAttribute.getValue()));
-    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals("unencrypted", String.valueOf(savedAttribute.getValue()));
+    assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
   }
 
   @Test
@@ -1020,6 +1034,7 @@ public class KmsTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     enableKmsFeatureFlag();
 
+    String value = UUID.randomUUID().toString();
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
                                                 .envId(UUID.randomUUID().toString())
@@ -1031,20 +1046,25 @@ public class KmsTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(value.toCharArray())
                                                 .type(Type.TEXT)
                                                 .build();
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(serviceVariable, savedAttribute);
+    assertEquals(value, String.valueOf(savedAttribute.getValue()));
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncryptedValsForKms, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     // update to encrypt the variable
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
-    keyValuePairs.put("value", "newValue".toCharArray());
+    keyValuePairs.put("value", secretId.toCharArray());
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), keyValuePairs);
     savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
 
@@ -1052,7 +1072,7 @@ public class KmsTest extends WingsBaseTest {
     assertNull(savedAttribute.getValue());
     encryptionService.decrypt(
         savedAttribute, secretManager.getEncryptionDetails(savedAttribute, workflowExecutionId, appId));
-    assertEquals("newValue", new String(savedAttribute.getValue()));
+    assertEquals(secretValue, String.valueOf(savedAttribute.getValue()));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     keyValuePairs = new HashMap<>();
@@ -1063,7 +1083,13 @@ public class KmsTest extends WingsBaseTest {
 
     assertEquals(Type.TEXT, savedAttribute.getType());
     assertEquals("unencrypted", new String(savedAttribute.getValue()));
-    assertEquals(numOfEncryptedValsForKms, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertNull(wingsPersistence.createQuery(EncryptedData.class)
+                   .field("type")
+                   .equal(SettingVariableTypes.SECRET_TEXT)
+                   .asList()
+                   .get(0)
+                   .getParentIds());
   }
 
   @Test
@@ -1072,6 +1098,10 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
     enableKmsFeatureFlag();
+
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1084,7 +1114,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(secretId.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
@@ -1094,43 +1124,31 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
+    secretName = UUID.randomUUID().toString();
+    secretValue = UUID.randomUUID().toString();
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
-    keyValuePairs.put("value", "newValue".toCharArray());
+    keyValuePairs.put("value", secretId.toCharArray());
     wingsPersistence.updateFields(ServiceVariable.class, savedAttributeId, keyValuePairs);
-    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals(numOfEncryptedValsForKms + 2, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.asList().size());
 
-    Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
-    assertEquals(1, uuidAwares.size());
-    ServiceVariable listedVariable = (ServiceVariable) uuidAwares.iterator().next();
-    assertEquals(KmsServiceImpl.SECRET_MASK, new String(listedVariable.getValue()));
-    assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
-    assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
-    assertEquals(EncryptionType.KMS, listedVariable.getEncryptionType());
-    assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
-    assertEquals("newName", listedVariable.getName());
-
     // decrypt and verify
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
-    assertEquals("newValue", String.valueOf(savedVariable.getValue()));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
 
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
-    assertEquals(2, changeLogs.size());
+    assertEquals(1, changeLogs.size());
     SecretChangeLog secretChangeLog = changeLogs.get(0);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed value", secretChangeLog.getDescription());
-
-    secretChangeLog = changeLogs.get(1);
     assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
     assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
     assertEquals(user.getName(), secretChangeLog.getUser().getName());
@@ -1143,6 +1161,10 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
     enableKmsFeatureFlag();
+
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
     String serviceId = wingsPersistence.save(Service.Builder.aService().withName(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -1159,25 +1181,20 @@ public class KmsTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(secretId.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(serviceVariable, savedAttribute);
+    assertNull(savedAttribute.getValue());
+    encryptionService.decrypt(
+        savedAttribute, secretManager.getEncryptionDetails(savedAttribute, appId, workflowExecutionId));
+    assertEquals(secretValue, String.valueOf(savedAttribute.getValue()));
+
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
-
-    Collection<UuidAware> uuidAwares = secretManager.listEncryptedValues(accountId);
-    assertEquals(1, uuidAwares.size());
-    ServiceVariable listedVariable = (ServiceVariable) uuidAwares.iterator().next();
-    assertEquals(KmsServiceImpl.SECRET_MASK, new String(listedVariable.getValue()));
-    assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
-    assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
-    assertEquals(EncryptionType.KMS, listedVariable.getEncryptionType());
-    assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
-    assertEquals(serviceId, listedVariable.getServiceId());
   }
 
   @Test
@@ -1186,6 +1203,10 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
     enableKmsFeatureFlag();
+
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1198,7 +1219,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(secretId.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
@@ -1220,12 +1241,15 @@ public class KmsTest extends WingsBaseTest {
 
     updatedEnvId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
-    char[] updatedValue = UUID.randomUUID().toString().toCharArray();
+    String updatedSecretName = UUID.randomUUID().toString();
+    String updatedSecretValue = UUID.randomUUID().toString();
+    String updatedSecretId = secretManager.saveSecret(accountId, updatedSecretName, updatedSecretValue);
 
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
     keyValuePairs.put("envId", updatedEnvId);
-    keyValuePairs.put("value", updatedValue);
+    keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
+    keyValuePairs.put("value", updatedSecretId.toCharArray());
 
     wingsPersistence.updateFields(ServiceVariable.class, savedAttributeId, keyValuePairs);
     updatedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
@@ -1234,9 +1258,9 @@ public class KmsTest extends WingsBaseTest {
     assertNull(updatedAttribute.getValue());
     encryptionService.decrypt(
         updatedAttribute, secretManager.getEncryptionDetails(updatedAttribute, workflowExecutionId, appId));
-    assertEquals(new String(updatedValue), new String(updatedAttribute.getValue()));
+    assertEquals(updatedSecretValue, String.valueOf(updatedAttribute.getValue()));
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
-    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals(numOfEncryptedValsForKms + 2, wingsPersistence.createQuery(EncryptedData.class).asList().size());
   }
 
   @Test
@@ -1926,32 +1950,33 @@ public class KmsTest extends WingsBaseTest {
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
     wingsPersistence.save(service);
 
-    ConfigFile.Builder configFileBuilder = ConfigFile.Builder.aConfigFile()
-                                               .withTemplateId(UUID.randomUUID().toString())
-                                               .withEnvId(UUID.randomUUID().toString())
-                                               .withEntityType(EntityType.SERVICE)
-                                               .withEntityId(service.getUuid())
-                                               .withDescription(UUID.randomUUID().toString())
-                                               .withParentConfigFileId(UUID.randomUUID().toString())
-                                               .withRelativeFilePath(UUID.randomUUID().toString())
-                                               .withTargetToAllEnv(r.nextBoolean())
-                                               .withDefaultVersion(r.nextInt())
-                                               .withEnvIdVersionMapString(UUID.randomUUID().toString())
-                                               .withSetAsDefault(r.nextBoolean())
-                                               .withNotes(UUID.randomUUID().toString())
-                                               .withOverridePath(UUID.randomUUID().toString())
-                                               .withConfigOverrideType(ConfigOverrideType.CUSTOM)
-                                               .withConfigOverrideExpression(UUID.randomUUID().toString())
-                                               .withAppId(appId)
-                                               .withAccountId(accountId)
-                                               .withFileName(UUID.randomUUID().toString())
-                                               .withName(UUID.randomUUID().toString())
-                                               .withEncrypted(false);
+    ConfigFile configFile = ConfigFile.builder()
+                                .templateId(UUID.randomUUID().toString())
+                                .envId(UUID.randomUUID().toString())
+                                .entityType(EntityType.SERVICE)
+                                .entityId(service.getUuid())
+                                .description(UUID.randomUUID().toString())
+                                .parentConfigFileId(UUID.randomUUID().toString())
+                                .relativeFilePath(UUID.randomUUID().toString())
+                                .targetToAllEnv(r.nextBoolean())
+                                .defaultVersion(r.nextInt())
+                                .envIdVersionMapString(UUID.randomUUID().toString())
+                                .setAsDefault(r.nextBoolean())
+                                .notes(UUID.randomUUID().toString())
+                                .overridePath(UUID.randomUUID().toString())
+                                .configOverrideType(ConfigOverrideType.CUSTOM)
+                                .configOverrideExpression(UUID.randomUUID().toString())
+                                .accountId(accountId)
+                                .encrypted(false)
+                                .build();
+
+    configFile.setName(UUID.randomUUID().toString());
+    configFile.setFileName(UUID.randomUUID().toString());
+    configFile.setAppId(appId);
 
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
 
-    String configFileId =
-        configService.save(configFileBuilder.but().build(), new BoundedInputStream(new FileInputStream(fileToSave)));
+    String configFileId = configService.save(configFile, new BoundedInputStream(new FileInputStream(fileToSave)));
     File download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
     assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -1961,9 +1986,13 @@ public class KmsTest extends WingsBaseTest {
     assertTrue(wingsPersistence.createQuery(EncryptedData.class).asList().isEmpty());
 
     // now make the same file encrypted
+    String secretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    configService.update(configFileBuilder.withUuid(configFileId).withEncrypted(true).but().build(),
-        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    String secretFileId =
+        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    configFile.setEncrypted(true);
+    configFile.setEncryptedFileId(secretFileId);
+    configService.update(configFile, null);
     download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
     savedConfigFile = configService.get(appId, configFileId);
@@ -1983,24 +2012,24 @@ public class KmsTest extends WingsBaseTest {
 
     // now make the same file not encrypted
     fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    configService.update(configFileBuilder.withUuid(configFileId).withEncrypted(false).but().build(),
-        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    configFile.setEncrypted(false);
+    configService.update(configFile, new BoundedInputStream(new FileInputStream(fileToUpdate)));
     download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
     savedConfigFile = configService.get(appId, configFileId);
     assertFalse(savedConfigFile.isEncrypted());
     assertTrue(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
 
-    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
-    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(configFileId, SettingVariableTypes.CONFIG_FILE);
+    assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(secretFileId, SettingVariableTypes.CONFIG_FILE);
     assertEquals(1, changeLogs.size());
     SecretChangeLog changeLog = changeLogs.get(0);
     assertEquals(accountId, changeLog.getAccountId());
-    assertEquals(configFileId, changeLog.getEncryptedDataId());
+    assertEquals(secretFileId, changeLog.getEncryptedDataId());
     assertEquals(userName, changeLog.getUser().getName());
     assertEquals(userEmail, changeLog.getUser().getEmail());
     assertEquals(user.getUuid(), changeLog.getUser().getUuid());
-    assertEquals("File updated", changeLog.getDescription());
+    assertEquals("File uploaded", changeLog.getDescription());
   }
 
   @Test
@@ -2018,28 +2047,29 @@ public class KmsTest extends WingsBaseTest {
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
     wingsPersistence.save(service);
 
-    ConfigFile configFile = ConfigFile.Builder.aConfigFile()
-                                .withTemplateId(UUID.randomUUID().toString())
-                                .withEnvId(UUID.randomUUID().toString())
-                                .withEntityType(EntityType.SERVICE)
-                                .withEntityId(service.getUuid())
-                                .withDescription(UUID.randomUUID().toString())
-                                .withParentConfigFileId(UUID.randomUUID().toString())
-                                .withRelativeFilePath(UUID.randomUUID().toString())
-                                .withTargetToAllEnv(r.nextBoolean())
-                                .withDefaultVersion(r.nextInt())
-                                .withEnvIdVersionMapString(UUID.randomUUID().toString())
-                                .withSetAsDefault(r.nextBoolean())
-                                .withNotes(UUID.randomUUID().toString())
-                                .withOverridePath(UUID.randomUUID().toString())
-                                .withConfigOverrideType(ConfigOverrideType.CUSTOM)
-                                .withConfigOverrideExpression(UUID.randomUUID().toString())
-                                .withAppId(appId)
-                                .withAccountId(accountId)
-                                .withFileName(UUID.randomUUID().toString())
-                                .withName(UUID.randomUUID().toString())
-                                .withEncrypted(false)
+    ConfigFile configFile = ConfigFile.builder()
+                                .templateId(UUID.randomUUID().toString())
+                                .envId(UUID.randomUUID().toString())
+                                .entityType(EntityType.SERVICE)
+                                .entityId(service.getUuid())
+                                .description(UUID.randomUUID().toString())
+                                .parentConfigFileId(UUID.randomUUID().toString())
+                                .relativeFilePath(UUID.randomUUID().toString())
+                                .targetToAllEnv(r.nextBoolean())
+                                .defaultVersion(r.nextInt())
+                                .envIdVersionMapString(UUID.randomUUID().toString())
+                                .setAsDefault(r.nextBoolean())
+                                .notes(UUID.randomUUID().toString())
+                                .overridePath(UUID.randomUUID().toString())
+                                .configOverrideType(ConfigOverrideType.CUSTOM)
+                                .configOverrideExpression(UUID.randomUUID().toString())
+                                .accountId(accountId)
+                                .encrypted(false)
                                 .build();
+
+    configFile.setName(UUID.randomUUID().toString());
+    configFile.setFileName(UUID.randomUUID().toString());
+    configFile.setAppId(appId);
 
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
 
@@ -2068,32 +2098,39 @@ public class KmsTest extends WingsBaseTest {
     activity.setAppId(appId);
     wingsPersistence.save(activity);
 
-    ConfigFile.Builder configFileBuilder = ConfigFile.Builder.aConfigFile()
-                                               .withTemplateId(UUID.randomUUID().toString())
-                                               .withEnvId(UUID.randomUUID().toString())
-                                               .withEntityType(EntityType.SERVICE)
-                                               .withEntityId(service.getUuid())
-                                               .withDescription(UUID.randomUUID().toString())
-                                               .withParentConfigFileId(UUID.randomUUID().toString())
-                                               .withRelativeFilePath(UUID.randomUUID().toString())
-                                               .withTargetToAllEnv(r.nextBoolean())
-                                               .withDefaultVersion(r.nextInt())
-                                               .withEnvIdVersionMapString(UUID.randomUUID().toString())
-                                               .withSetAsDefault(r.nextBoolean())
-                                               .withNotes(UUID.randomUUID().toString())
-                                               .withOverridePath(UUID.randomUUID().toString())
-                                               .withConfigOverrideType(ConfigOverrideType.CUSTOM)
-                                               .withConfigOverrideExpression(UUID.randomUUID().toString())
-                                               .withAppId(appId)
-                                               .withAccountId(accountId)
-                                               .withFileName(UUID.randomUUID().toString())
-                                               .withName(UUID.randomUUID().toString())
-                                               .withEncrypted(true);
-
+    String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    String secretFileId =
+        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String encryptedUuid =
+        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE).asList().get(0).getUuid();
 
-    String configFileId =
-        configService.save(configFileBuilder.but().build(), new BoundedInputStream(new FileInputStream(fileToSave)));
+    ConfigFile configFile = ConfigFile.builder()
+                                .templateId(UUID.randomUUID().toString())
+                                .envId(UUID.randomUUID().toString())
+                                .entityType(EntityType.SERVICE)
+                                .entityId(service.getUuid())
+                                .description(UUID.randomUUID().toString())
+                                .parentConfigFileId(UUID.randomUUID().toString())
+                                .relativeFilePath(UUID.randomUUID().toString())
+                                .targetToAllEnv(r.nextBoolean())
+                                .defaultVersion(r.nextInt())
+                                .envIdVersionMapString(UUID.randomUUID().toString())
+                                .setAsDefault(r.nextBoolean())
+                                .notes(UUID.randomUUID().toString())
+                                .overridePath(UUID.randomUUID().toString())
+                                .configOverrideType(ConfigOverrideType.CUSTOM)
+                                .configOverrideExpression(UUID.randomUUID().toString())
+                                .accountId(accountId)
+                                .encryptedFileId(secretFileId)
+                                .encrypted(true)
+                                .build();
+
+    configFile.setName(UUID.randomUUID().toString());
+    configFile.setFileName(UUID.randomUUID().toString());
+    configFile.setAppId(appId);
+
+    String configFileId = configService.save(configFile, null);
     File download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -2103,11 +2140,15 @@ public class KmsTest extends WingsBaseTest {
                                                 .equal(SettingVariableTypes.CONFIG_FILE)
                                                 .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
+    assertEquals(1, encryptedFileData.get(0).getParentIds().size());
+    assertTrue(encryptedFileData.get(0).getParentIds().contains(configFileId));
+
     // test update
+    String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    configService.update(configFileBuilder.withUuid(configFileId).but().build(),
-        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    secretManager.updateFile(
+        accountId, newSecretName, encryptedUuid, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+
     download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -2133,19 +2174,19 @@ public class KmsTest extends WingsBaseTest {
       assertEquals(appId, usageLog.getAppId());
     }
 
-    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(configFileId, SettingVariableTypes.CONFIG_FILE);
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(secretFileId, SettingVariableTypes.CONFIG_FILE);
     assertEquals(2, changeLogs.size());
     SecretChangeLog changeLog = changeLogs.get(0);
     assertEquals(accountId, changeLog.getAccountId());
-    assertEquals(configFileId, changeLog.getEncryptedDataId());
+    assertEquals(secretFileId, changeLog.getEncryptedDataId());
     assertEquals(userName, changeLog.getUser().getName());
     assertEquals(userEmail, changeLog.getUser().getEmail());
     assertEquals(user.getUuid(), changeLog.getUser().getUuid());
-    assertEquals("File updated", changeLog.getDescription());
+    assertEquals("Changed Name and File", changeLog.getDescription());
 
     changeLog = changeLogs.get(1);
     assertEquals(accountId, changeLog.getAccountId());
-    assertEquals(configFileId, changeLog.getEncryptedDataId());
+    assertEquals(secretFileId, changeLog.getEncryptedDataId());
     assertEquals(userName, changeLog.getUser().getName());
     assertEquals(userEmail, changeLog.getUser().getEmail());
     assertEquals(user.getUuid(), changeLog.getUser().getUuid());
@@ -2175,33 +2216,40 @@ public class KmsTest extends WingsBaseTest {
     activity.setAppId(appId);
     wingsPersistence.save(activity);
 
-    ConfigFile.Builder configFileBuilder = ConfigFile.Builder.aConfigFile()
-                                               .withTemplateId(UUID.randomUUID().toString())
-                                               .withEnvId(UUID.randomUUID().toString())
-                                               .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                               .withEntityId(serviceTemplateId)
-                                               .withTemplateId(serviceTemplateId)
-                                               .withDescription(UUID.randomUUID().toString())
-                                               .withParentConfigFileId(UUID.randomUUID().toString())
-                                               .withRelativeFilePath(UUID.randomUUID().toString())
-                                               .withTargetToAllEnv(r.nextBoolean())
-                                               .withDefaultVersion(r.nextInt())
-                                               .withEnvIdVersionMapString(UUID.randomUUID().toString())
-                                               .withSetAsDefault(r.nextBoolean())
-                                               .withNotes(UUID.randomUUID().toString())
-                                               .withOverridePath(UUID.randomUUID().toString())
-                                               .withConfigOverrideType(ConfigOverrideType.CUSTOM)
-                                               .withConfigOverrideExpression(UUID.randomUUID().toString())
-                                               .withAppId(appId)
-                                               .withAccountId(accountId)
-                                               .withFileName(UUID.randomUUID().toString())
-                                               .withName(UUID.randomUUID().toString())
-                                               .withEncrypted(true);
-
+    String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    String secretFileId =
+        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String encryptedUuid =
+        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE).asList().get(0).getUuid();
 
-    String configFileId =
-        configService.save(configFileBuilder.but().build(), new BoundedInputStream(new FileInputStream(fileToSave)));
+    ConfigFile configFile = ConfigFile.builder()
+                                .templateId(UUID.randomUUID().toString())
+                                .envId(UUID.randomUUID().toString())
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(serviceTemplateId)
+                                .description(UUID.randomUUID().toString())
+                                .parentConfigFileId(UUID.randomUUID().toString())
+                                .relativeFilePath(UUID.randomUUID().toString())
+                                .targetToAllEnv(r.nextBoolean())
+                                .defaultVersion(r.nextInt())
+                                .envIdVersionMapString(UUID.randomUUID().toString())
+                                .setAsDefault(r.nextBoolean())
+                                .notes(UUID.randomUUID().toString())
+                                .overridePath(UUID.randomUUID().toString())
+                                .configOverrideType(ConfigOverrideType.CUSTOM)
+                                .configOverrideExpression(UUID.randomUUID().toString())
+                                .accountId(accountId)
+                                .encryptedFileId(secretFileId)
+                                .templateId(serviceTemplateId)
+                                .encrypted(true)
+                                .build();
+
+    configFile.setName(UUID.randomUUID().toString());
+    configFile.setFileName(UUID.randomUUID().toString());
+    configFile.setAppId(appId);
+
+    String configFileId = configService.save(configFile, null);
     File download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -2213,9 +2261,11 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(1, encryptedFileData.size());
     assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
     // test update
+    String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    configService.update(configFileBuilder.withUuid(configFileId).but().build(),
-        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    secretManager.updateFile(
+        accountId, newSecretName, encryptedUuid, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+
     download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -2479,6 +2529,10 @@ public class KmsTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     enableKmsFeatureFlag();
 
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
                                                 .envId(UUID.randomUUID().toString())
@@ -2490,7 +2544,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
                                                 .name(UUID.randomUUID().toString())
-                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .value(secretId.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 

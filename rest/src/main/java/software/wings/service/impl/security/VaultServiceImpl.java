@@ -2,7 +2,6 @@ package software.wings.service.impl.security;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
-import static software.wings.helpers.ext.vault.VaultRestClient.BASE_VAULT_URL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 
@@ -252,17 +251,17 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid) {
+  public EncryptedData encryptFile(
+      String accountId, String name, BoundedInputStream inputStream, EncryptedData savedEncryptedData) {
     try {
       VaultConfig vaultConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(vaultConfig);
       byte[] bytes = ByteStreams.toByteArray(inputStream);
-      EncryptedData fileData = encrypt("FILE", new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
-          SettingVariableTypes.CONFIG_FILE, vaultConfig, null);
+      EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
+          SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
       fileData.setAccountId(accountId);
+      fileData.setName(name);
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
-      fileData.setUuid(uuid);
-      wingsPersistence.save(fileData);
       return fileData;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
@@ -280,6 +279,17 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
+
+  @Override
+  public void deleteSecret(String accountId, String path, VaultConfig vaultConfig) {
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    try {
+      delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .deleteVaultSecret(path, vaultConfig);
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", e.getMessage());
     }
   }
 

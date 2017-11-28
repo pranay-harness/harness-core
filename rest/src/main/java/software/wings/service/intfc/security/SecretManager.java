@@ -1,6 +1,7 @@
 package software.wings.service.intfc.security;
 
 import software.wings.annotation.Encryptable;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.UuidAware;
 import software.wings.dl.PageResponse;
 import software.wings.security.EncryptionType;
@@ -13,7 +14,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,10 +37,6 @@ public interface SecretManager {
 
   Collection<UuidAware> listEncryptedValues(String accountId);
 
-  EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid);
-
-  File decryptFile(File file, String accountId, EncryptedData encryptedData);
-
   String getEncryptedYamlRef(Encryptable object, String... fieldName) throws IllegalAccessException;
 
   EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
@@ -55,5 +51,15 @@ public interface SecretManager {
 
   boolean deleteSecret(String accountId, String uuId);
 
-  List<EncryptedData> listSecrets(String accountId);
+  String saveFile(String accountId, String name, BoundedInputStream inputStream);
+
+  File getFile(String accountId, String uuId, File readInto);
+
+  boolean updateFile(String accountId, String name, String uuid, BoundedInputStream inputStream);
+
+  boolean deleteFile(String accountId, String uuId);
+
+  List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException;
+
+  List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 }

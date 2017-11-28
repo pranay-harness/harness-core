@@ -1,11 +1,14 @@
 package software.wings.service.impl.security;
 
+import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
+import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
+import software.wings.beans.BaseFile;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
@@ -46,6 +50,7 @@ import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -53,8 +58,10 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -80,6 +87,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private VaultService vaultService;
   @Inject private AccountService accountService;
   @Inject private AlertService alertService;
+  @Inject private FileService fileService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -267,12 +275,13 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public Collection<UuidAware> listEncryptedValues(String accountId) {
     Map<String, UuidAware> rv = new HashMap<>();
-    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("type")
-                                        .notEqual(SettingVariableTypes.SECRET_TEXT)
-                                        .fetch();
+    Iterator<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class)
+            .field("accountId")
+            .equal(accountId)
+            .field("type")
+            .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
+            .fetch();
     while (query.hasNext()) {
       EncryptedData data = query.next();
       if (data.getType() != SettingVariableTypes.KMS) {
@@ -288,54 +297,6 @@ public class SecretManagerImpl implements SecretManager {
       }
     }
     return rv.values();
-  }
-
-  @Override
-  public EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid) {
-    EncryptionType encryptionType = getEncryptionType(accountId);
-    switch (encryptionType) {
-      case LOCAL:
-        char[] encryptedFileData = EncryptionUtils.encrypt(inputStream, accountId);
-        EncryptedData encryptedData = EncryptedData.builder()
-                                          .accountId(accountId)
-                                          .encryptionKey(accountId)
-                                          .encryptionType(EncryptionType.LOCAL)
-                                          .kmsId(null)
-                                          .type(SettingVariableTypes.CONFIG_FILE)
-                                          .enabled(true)
-                                          .build();
-        encryptedData.setUuid(uuid);
-        wingsPersistence.save(encryptedData);
-        encryptedData.setEncryptedValue(encryptedFileData);
-        return encryptedData;
-
-      case KMS:
-        return kmsService.encryptFile(inputStream, accountId, uuid);
-
-      case VAULT:
-        return vaultService.encryptFile(inputStream, accountId, uuid);
-
-      default:
-        throw new IllegalArgumentException("Invalid type " + encryptionType);
-    }
-  }
-
-  @Override
-  public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
-    EncryptionType encryptionType = encryptedData.getEncryptionType();
-    switch (encryptionType) {
-      case LOCAL:
-        return EncryptionUtils.decrypt(file, encryptedData.getEncryptionKey());
-
-      case KMS:
-        return kmsService.decryptFile(file, accountId, encryptedData);
-
-      case VAULT:
-        return vaultService.decryptFile(file, accountId, encryptedData);
-
-      default:
-        throw new IllegalArgumentException("Invalid type " + encryptionType);
-    }
   }
 
   @Override
@@ -488,21 +449,207 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<EncryptedData> listSecrets(String accountId) {
+  public String saveFile(String accountId, String name, BoundedInputStream inputStream) {
+    EncryptionType encryptionType = getEncryptionType(accountId);
+    String recordId;
+    switch (encryptionType) {
+      case LOCAL:
+        char[] encryptedFileData = EncryptionUtils.encrypt(inputStream, accountId);
+        BaseFile baseFile = new BaseFile();
+        baseFile.setFileName(name);
+        String fileId = fileService.saveFile(
+            baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileData)).array()), CONFIGS);
+        EncryptedData encryptedData = EncryptedData.builder()
+                                          .accountId(accountId)
+                                          .name(name)
+                                          .encryptionKey(accountId)
+                                          .encryptedValue(fileId.toCharArray())
+                                          .encryptionType(EncryptionType.LOCAL)
+                                          .kmsId(null)
+                                          .type(SettingVariableTypes.CONFIG_FILE)
+                                          .enabled(true)
+                                          .build();
+        recordId = wingsPersistence.save(encryptedData);
+        break;
+
+      case KMS:
+        recordId = wingsPersistence.save(kmsService.encryptFile(accountId, name, inputStream));
+        break;
+
+      case VAULT:
+        recordId = wingsPersistence.save(vaultService.encryptFile(accountId, name, inputStream, null));
+        break;
+
+      default:
+        throw new IllegalArgumentException("Invalid type " + encryptionType);
+    }
+
+    if (UserThreadLocal.get() != null) {
+      wingsPersistence.save(SecretChangeLog.builder()
+                                .accountId(accountId)
+                                .encryptedDataId(recordId)
+                                .description("File uploaded")
+                                .user(EmbeddedUser.builder()
+                                          .uuid(UserThreadLocal.get().getUuid())
+                                          .email(UserThreadLocal.get().getEmail())
+                                          .name(UserThreadLocal.get().getName())
+                                          .build())
+                                .build());
+    }
+    return recordId;
+  }
+
+  @Override
+  public File getFile(String accountId, String uuid, File readInto) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
+    Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
+    EncryptionType encryptionType = encryptedData.getEncryptionType();
+    switch (encryptionType) {
+      case LOCAL:
+        fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
+        return EncryptionUtils.decrypt(readInto, encryptedData.getEncryptionKey());
+
+      case KMS:
+        fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
+        return kmsService.decryptFile(readInto, accountId, encryptedData);
+
+      case VAULT:
+        return vaultService.decryptFile(readInto, accountId, encryptedData);
+
+      default:
+        throw new IllegalArgumentException("Invalid type " + encryptionType);
+    }
+  }
+
+  @Override
+  public boolean updateFile(String accountId, String name, String uuid, BoundedInputStream inputStream) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
+    String oldName = encryptedData.getName();
+    Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
+
+    String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
+    EncryptionType encryptionType = encryptedData.getEncryptionType();
+    EncryptedData encryptedFileData = null;
+    switch (encryptionType) {
+      case LOCAL:
+        char[] encryptedFileDataVal = EncryptionUtils.encrypt(inputStream, accountId);
+        BaseFile baseFile = new BaseFile();
+        baseFile.setFileName(name);
+        String fileId = fileService.saveFile(
+            baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileDataVal)).array()), CONFIGS);
+        encryptedFileData =
+            EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();
+        fileService.deleteFile(savedFileId, CONFIGS);
+        break;
+
+      case KMS:
+        encryptedFileData = kmsService.encryptFile(accountId, name, inputStream);
+        fileService.deleteFile(savedFileId, CONFIGS);
+        break;
+
+      case VAULT:
+        encryptedFileData = vaultService.encryptFile(accountId, name, inputStream, encryptedData);
+        break;
+
+      default:
+        throw new IllegalArgumentException("Invalid type " + encryptionType);
+    }
+
+    encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
+    encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
+    encryptedData.setName(name);
+    wingsPersistence.save(encryptedData);
+
+    if (UserThreadLocal.get() != null) {
+      String description = oldName.equals(name) ? "Changed File" : "Changed Name and File";
+      wingsPersistence.save(SecretChangeLog.builder()
+                                .accountId(accountId)
+                                .encryptedDataId(uuid)
+                                .description(description)
+                                .user(EmbeddedUser.builder()
+                                          .uuid(UserThreadLocal.get().getUuid())
+                                          .email(UserThreadLocal.get().getEmail())
+                                          .name(UserThreadLocal.get().getName())
+                                          .build())
+                                .build());
+    }
+
+    return true;
+  }
+
+  @Override
+  public boolean deleteFile(String accountId, String uuId) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
+    Preconditions.checkNotNull("No encrypted record found with id " + uuId);
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .field("accountId")
+                                       .equal(accountId)
+                                       .field("encryptedFileId")
+                                       .equal(uuId)
+                                       .asList();
+    if (!configFiles.isEmpty()) {
+      String errorMessage = "Being used by ";
+      for (ConfigFile configFile : configFiles) {
+        errorMessage += configFile.getFileName() + ", ";
+      }
+
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", errorMessage);
+    }
+
+    switch (encryptedData.getEncryptionType()) {
+      case LOCAL:
+      case KMS:
+        fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
+        break;
+      case VAULT:
+        vaultService.deleteSecret(accountId, encryptedData.getEncryptionKey(),
+            vaultService.getVaultConfig(accountId, encryptedData.getKmsId()));
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
+    }
+    return wingsPersistence.delete(EncryptedData.class, uuId);
+  }
+
+  @Override
+  public List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException {
     List<EncryptedData> rv = new ArrayList<>();
     Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                         .field("accountId")
                                         .equal(accountId)
                                         .field("type")
-                                        .equal(SettingVariableTypes.SECRET_TEXT)
+                                        .equal(type)
                                         .fetch(new FindOptions());
     while (query.hasNext()) {
       EncryptedData encryptedData = query.next();
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
-      encryptedData.setEncryptedBy(getSecretManagerName(SettingVariableTypes.SECRET_TEXT, encryptedData.getUuid(),
-          encryptedData.getKmsId(), encryptedData.getEncryptionType()));
+      encryptedData.setEncryptedBy(getSecretManagerName(
+          type, encryptedData.getUuid(), encryptedData.getKmsId(), encryptedData.getEncryptionType()));
+
+      encryptedData.setSetupUsage(getSecretUsage(accountId, encryptedData.getUuid()).size());
+      encryptedData.setRunTimeUsage(getUsageLogs(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
+      encryptedData.setChangeLog(getChangeLogs(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
       rv.add(encryptedData);
+    }
+
+    return rv;
+  }
+
+  @Override
+  public List<UuidAware> getSecretUsage(String accountId, String secretTextId) {
+    EncryptedData secretText = wingsPersistence.get(EncryptedData.class, secretTextId);
+    Preconditions.checkNotNull(secretText, "could not find secret with id " + secretTextId);
+    List<UuidAware> rv = new ArrayList<>();
+    if (secretText.getParentIds() == null) {
+      return rv;
+    }
+
+    SettingVariableTypes type = secretText.getType() == SettingVariableTypes.SECRET_TEXT
+        ? SettingVariableTypes.SERVICE_VARIABLE
+        : secretText.getType();
+    for (String parentId : secretText.getParentIds()) {
+      rv.add(fetchParent(type, accountId, parentId, secretText.getKmsId(), secretText.getEncryptionType()));
     }
 
     return rv;

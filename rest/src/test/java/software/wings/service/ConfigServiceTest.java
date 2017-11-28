@@ -4,10 +4,10 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -39,6 +39,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -87,6 +88,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
+    when(query.get()).thenReturn(ConfigFile.builder().build());
   }
 
   /**
@@ -94,15 +96,15 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldList() {
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withEntityType(EntityType.SERVICE)
-                                .withEntityId(SERVICE_ID)
-                                .withTemplateId(ConfigFile.DEFAULT_TEMPLATE_ID)
-                                .withName(FILE_NAME)
-                                .withFileName(FILE_NAME)
+    ConfigFile configFile = ConfigFile.builder()
+                                .entityType(EntityType.SERVICE)
+                                .entityId(SERVICE_ID)
+                                .templateId(ConfigFile.DEFAULT_TEMPLATE_ID)
                                 .build();
 
+    configFile.setAppId(APP_ID);
+    configFile.setName(FILE_NAME);
+    configFile.setFileName(FILE_NAME);
     PageResponse<ConfigFile> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(configFile));
     pageResponse.setTotal(1);
@@ -132,18 +134,18 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
         .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.exist(APP_ID, TEMPLATE_ID)).thenReturn(true);
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withAccountId(ACCOUNT_ID)
-                                .withEnvId(ENV_ID)
-                                .withUuid(FILE_ID)
-                                .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                .withEntityId(TEMPLATE_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withName("NAME")
-                                .withRelativeFilePath("PATH/" + FILE_NAME)
-                                .withFileName(FILE_NAME)
+    ConfigFile configFile = ConfigFile.builder()
+                                .accountId(ACCOUNT_ID)
+                                .envId(ENV_ID)
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(TEMPLATE_ID)
+                                .templateId(TEMPLATE_ID)
+                                .relativeFilePath("PATH/" + FILE_NAME)
                                 .build();
+    configFile.setAppId(APP_ID);
+    configFile.setName(FILE_NAME);
+    configFile.setFileName(FILE_NAME);
+    configFile.setUuid(FILE_ID);
     BoundedInputStream inputStream = new BoundedInputStream(this.inputStream);
     configService.save(configFile, inputStream);
     verify(fileService).saveFile(configFile, inputStream, FileBucket.CONFIGS);
@@ -156,15 +158,15 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withAccountId(ACCOUNT_ID)
-                                .withEntityType(EntityType.ENVIRONMENT)
-                                .withEntityId(ENV_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withName(FILE_NAME)
-                                .withFileName(FILE_NAME)
+    ConfigFile configFile = ConfigFile.builder()
+                                .accountId(ACCOUNT_ID)
+                                .entityType(EntityType.ENVIRONMENT)
+                                .entityId(ENV_ID)
+                                .templateId(TEMPLATE_ID)
                                 .build();
+    configFile.setAppId(APP_ID);
+    configFile.setName(FILE_NAME);
+    configFile.setFileName(FILE_NAME);
     Assertions.assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> configService.save(configFile, new BoundedInputStream(inputStream)));
   }
@@ -174,9 +176,12 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGet() {
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID))
-        .thenReturn(aConfigFile().withAppId(APP_ID).withUuid(FILE_ID).build());
-    ConfigFile configFile = configService.get(APP_ID, FILE_ID);
+    ConfigFile configFile = ConfigFile.builder().build();
+    configFile.setAppId(APP_ID);
+    configFile.setUuid(FILE_ID);
+    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+
+    configFile = configService.get(APP_ID, FILE_ID);
     verify(wingsPersistence).get(ConfigFile.class, APP_ID, FILE_ID);
     assertThat(configFile.getUuid()).isEqualTo(FILE_ID);
   }
@@ -188,14 +193,14 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldGetConfigFileByTemplate() {
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                .withEntityId(TEMPLATE_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withName(FILE_NAME)
-                                .withFileName(FILE_NAME)
+    ConfigFile configFile = ConfigFile.builder()
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(TEMPLATE_ID)
+                                .templateId(TEMPLATE_ID)
                                 .build();
+    configFile.setAppId(APP_ID);
+    configFile.setName(FILE_NAME);
+    configFile.setFileName(FILE_NAME);
 
     when(query.asList()).thenReturn(Arrays.asList(configFile));
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
@@ -215,20 +220,20 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDownload() {
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withEnvId(ENV_ID)
-                                .withUuid(FILE_ID)
-                                .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                .withEntityId(TEMPLATE_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withName(FILE_NAME)
-                                .withRelativeFilePath("PATH")
-                                .withFileUuid("GFS_FILE_ID")
-                                .withFileName(FILE_NAME)
-                                .withChecksum("CHECKSUM")
-                                .withSize(12)
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(ENV_ID)
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(TEMPLATE_ID)
+                                .templateId(TEMPLATE_ID)
+                                .relativeFilePath("PATH")
                                 .build();
+    configFile.setAppId(APP_ID);
+    configFile.setName(FILE_NAME);
+    configFile.setFileName(FILE_NAME);
+    configFile.setUuid(FILE_ID);
+    configFile.setFileUuid("GFS_FILE_ID");
+    configFile.setChecksum("CHECKSUM");
+    configFile.setSize(12);
 
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     File file = configService.download(APP_ID, FILE_ID);
@@ -242,34 +247,33 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdate() {
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withAccountId(ACCOUNT_ID)
-                                .withEnvId(ENV_ID)
-                                .withUuid(FILE_ID)
-                                .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                .withEntityId(TEMPLATE_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withRelativeFilePath("PATH")
-                                .withFileUuid("GFS_FILE_ID")
-                                .withFileName(FILE_NAME)
-                                .withChecksum("CHECKSUM")
-                                .withSize(12)
-                                .withEncrypted(true)
+    ConfigFile configFile = ConfigFile.builder()
+                                .accountId(ACCOUNT_ID)
+                                .envId(ENV_ID)
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(TEMPLATE_ID)
+                                .templateId(TEMPLATE_ID)
+                                .relativeFilePath("PATH")
+                                .encrypted(true)
                                 .build();
+    configFile.setAppId(APP_ID);
+    configFile.setUuid(FILE_ID);
+    configFile.setFileUuid("GFS_FILE_ID");
+    configFile.setFileName(FILE_NAME);
+    configFile.setChecksum("CHECKSUM");
+    configFile.setSize(12);
+    configFile.setEncryptedFileId("ENC_ID");
+
+    when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
+        .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).build());
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     BoundedInputStream boundedInputStream = new BoundedInputStream(this.inputStream);
     configService.update(configFile, boundedInputStream);
-    verify(fileService).saveFile(eq(configFile), any(InputStream.class), eq(FileBucket.CONFIGS));
     ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
     verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(FILE_ID), argumentCaptor.capture());
 
     Map<String, Object> updateMap = argumentCaptor.getValue();
-    assertThat(updateMap.size()).isEqualTo(9);
-    assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
-    assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
-    assertThat(updateMap.get("size")).isEqualTo(12L);
-    assertThat(updateMap.get("fileName")).isEqualTo(FILE_NAME);
+    assertThat(updateMap.size()).isEqualTo(5);
     assertThat(updateMap.get("encrypted")).isEqualTo(true);
     assertThat(updateMap.get("encryptedFileId")).isNotNull();
   }
@@ -291,15 +295,15 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetConfigFilesForEntity() {
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                .withEntityId(TEMPLATE_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withName(FILE_NAME)
-                                .withFileName(FILE_NAME)
+    ConfigFile configFile = ConfigFile.builder()
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(TEMPLATE_ID)
+                                .templateId(TEMPLATE_ID)
                                 .build();
 
+    configFile.setAppId(APP_ID);
+    configFile.setName(FILE_NAME);
+    configFile.setFileName(FILE_NAME);
     PageResponse<ConfigFile> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(configFile));
     pageResponse.setTotal(1);
@@ -322,20 +326,21 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteByEntityId() {
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withEnvId(ENV_ID)
-                                .withUuid(FILE_ID)
-                                .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                .withEntityId(TEMPLATE_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withName(FILE_NAME)
-                                .withRelativeFilePath("PATH")
-                                .withFileUuid("GFS_FILE_ID")
-                                .withFileName(FILE_NAME)
-                                .withChecksum("CHECKSUM")
-                                .withSize(12)
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(ENV_ID)
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(TEMPLATE_ID)
+                                .templateId(TEMPLATE_ID)
+                                .relativeFilePath("PATH")
                                 .build();
+
+    configFile.setAppId(APP_ID);
+    configFile.setUuid(FILE_ID);
+    configFile.setName(FILE_NAME);
+    configFile.setFileUuid("GFS_FILE_ID");
+    configFile.setFileName(FILE_NAME);
+    configFile.setChecksum("CHECKSUM");
+    configFile.setSize(12);
 
     PageResponse<ConfigFile> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(configFile));

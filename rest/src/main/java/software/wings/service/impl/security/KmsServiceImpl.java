@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
+import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -12,6 +13,7 @@ import com.google.common.io.Files;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
+import software.wings.beans.BaseFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
@@ -21,11 +23,14 @@ import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -44,6 +49,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public static final String SECRET_MASK = "**************";
 
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private FileService fileService;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
@@ -283,20 +289,21 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   @Override
-  public EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid) {
+  public EncryptedData encryptFile(String accountId, String name, BoundedInputStream inputStream) {
     try {
       KmsConfig kmsConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(kmsConfig);
       byte[] bytes = ByteStreams.toByteArray(inputStream);
       EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
+      fileData.setName(name);
       fileData.setAccountId(accountId);
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
       char[] encryptedValue = fileData.getEncryptedValue();
-      fileData.setEncryptedValue(null);
-      fileData.setUuid(uuid);
-      wingsPersistence.save(fileData);
-
-      fileData.setEncryptedValue(encryptedValue);
+      BaseFile baseFile = new BaseFile();
+      baseFile.setFileName(name);
+      String fileId = fileService.saveFile(
+          baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
+      fileData.setEncryptedValue(fileId.toCharArray());
       return fileData;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

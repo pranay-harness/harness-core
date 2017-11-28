@@ -79,7 +79,7 @@ public class ConfigResource {
    * @param entityId            the entity id
    * @param entityType          the entity type
    * @param uploadedInputStream the uploaded input stream
-   * @param fileDetail          the file detail
+   * @param fileName            the file name
    * @param configFile          the config file
    * @return the rest response
    */
@@ -89,13 +89,13 @@ public class ConfigResource {
   @ExceptionMetered
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
       @QueryParam("entityType") EntityType entityType, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
+      @FormDataParam("fileName") String fileName, @BeanParam ConfigFile configFile) {
     Application application = appService.get(appId);
     configFile.setAppId(application.getAppId());
     configFile.setAccountId(application.getAccountId());
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
-    configFile.setFileName(new File(fileDetail.getFileName()).getName());
+    configFile.setFileName(fileName);
     if (configFile.getEnvIdVersionMapString() != null) {
       try {
         Map<String, EntityVersion> envIdVersionMap = JsonUtils.asObject(
