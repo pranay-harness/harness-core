@@ -98,6 +98,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       //      wingsPersistence.save(infrastructureMapping);
       updated++;
     }
+    System.out.println("Complete. Updated " + updated + " records.");
   }
 
   @Test
@@ -113,10 +114,10 @@ public class SecretMigrationUtil extends WingsBaseTest {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
       Preconditions.checkNotNull(encryptedData, "Did not find reference for " + configFile.getUuid());
 
-      encryptedData.setName(configFile.getName());
+      encryptedData.setName(configFile.getFileName());
       encryptedData.setEncryptedValue(configFile.getFileUuid().toCharArray());
 
-      System.out.println("setting name of " + encryptedData.getUuid() + "  to " + configFile.getName());
+      System.out.println("setting name of " + encryptedData.getUuid() + "  to " + configFile.getFileName());
 
       //      wingsPersistence.save(encryptedData);
       updated++;
@@ -143,8 +144,6 @@ public class SecretMigrationUtil extends WingsBaseTest {
         serviceVariable.setEntityId(serviceTemplate.getServiceId());
       }
 
-      Service service = wingsPersistence.get(Service.class, serviceVariable.getEntityId());
-      Preconditions.checkNotNull(service, "Could not find service for " + serviceVariable);
       String secretTextName = serviceVariable.getName();
       encryptedData.setName(secretTextName);
       encryptedData.setType(SettingVariableTypes.SECRET_TEXT);

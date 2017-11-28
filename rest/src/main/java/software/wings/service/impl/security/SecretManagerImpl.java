@@ -467,6 +467,7 @@ public class SecretManagerImpl implements SecretManager {
                                           .encryptionType(EncryptionType.LOCAL)
                                           .kmsId(null)
                                           .type(SettingVariableTypes.CONFIG_FILE)
+                                          .fileSize(inputStream.getTotalBytesRead())
                                           .enabled(true)
                                           .build();
         recordId = wingsPersistence.save(encryptedData);
@@ -558,7 +559,16 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
     encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
     encryptedData.setName(name);
+    encryptedData.setFileSize(inputStream.getTotalBytesRead());
     wingsPersistence.save(encryptedData);
+
+    // update parent's file size
+    for (String parentId : encryptedData.getParentIds()) {
+      ConfigFile configFile = (ConfigFile) fetchParent(SettingVariableTypes.CONFIG_FILE, encryptedData.getAccountId(),
+          parentId, encryptedData.getKmsId(), encryptionType);
+      configFile.setSize(inputStream.getTotalBytesRead());
+      wingsPersistence.save(configFile);
+    }
 
     if (UserThreadLocal.get() != null) {
       String description = oldName.equals(name) ? "Changed File" : "Changed Name and File";

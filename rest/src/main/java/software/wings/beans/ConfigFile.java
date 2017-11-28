@@ -110,9 +110,12 @@ public class ConfigFile extends BaseFile implements Encryptable {
    */
   @JsonIgnore
   public int getVersionForEnv(String envId) {
-    return Optional.ofNullable(envIdVersionMap.get(envId))
-        .orElse(anEntityVersion().withVersion(defaultVersion).build())
-        .getVersion();
+    EntityVersion defualtVersion = anEntityVersion().withVersion(defaultVersion).build();
+    if (envIdVersionMap == null || envIdVersionMap.get(envId) == null) {
+      return defualtVersion.getVersion();
+    }
+
+    return envIdVersionMap.get(envId).getVersion();
   }
 
   /**

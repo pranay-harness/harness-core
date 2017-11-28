@@ -262,6 +262,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       fileData.setAccountId(accountId);
       fileData.setName(name);
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
+      fileData.setFileSize(inputStream.getTotalBytesRead());
       return fileData;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
