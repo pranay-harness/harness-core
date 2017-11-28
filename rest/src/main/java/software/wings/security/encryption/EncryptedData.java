@@ -52,6 +52,8 @@ public class EncryptedData extends Base {
 
   @NotEmpty private EncryptionType encryptionType;
 
+  @NotEmpty private long fileSize;
+
   @SchemaIgnore @Transient private transient String encryptedBy;
 
   @SchemaIgnore @Transient private transient int setupUsage;
