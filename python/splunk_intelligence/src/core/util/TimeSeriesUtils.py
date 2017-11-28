@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum
+from math import ceil
 
 
 class MetricType(Enum):
@@ -26,6 +27,7 @@ def get_deviation_type(metric_name):
 
     return type
 
+
 def get_deviation_min_threshold(metric_name):
     if 'averageResponseTime' == metric_name:
         return 50
@@ -35,6 +37,8 @@ def get_deviation_min_threshold(metric_name):
         return 0.3
     elif 'requestsPerMinute' == metric_name:
         return 20
+    elif 'other' == metric_name:
+        return 0
 
 def normalize_metric(control_data, test_data):
     """
@@ -75,12 +79,12 @@ def moving_average(a, n=5):
 def smooth(w, data, metric_type):
     if metric_type == MetricType.COUNT:
         n = len(data)
-        l = np.array_split(data, n / w) if n >= w else data
+        l = np.array_split(data, ceil(n / w)) if n >= w else data
         sums = [np.nansum(z) for z in l]
         return np.asarray(sums)
     else:
         n = len(data)
-        l = np.array_split(data, n / w) if n >= w else data
+        l = np.array_split(data, ceil(n / w)) if n >= w else data
         means = [np.nanmean(z) for z in l]
         return np.asarray(means)
 

@@ -87,7 +87,8 @@ class NewRelicSource(object):
                                              averageResponseTime=timeslice['values']['average_response_time'],
                                              apdexScore=-1,
                                              error=-1,
-                                             callCount=timeslice['values']['call_count']))
+                                             callCount=timeslice['values']['call_count'],
+                                             requestsPerMinute=timeslice['values']['requests_per_minute']))
                     count = 0
                     metric_string = ''
         return result
