@@ -328,6 +328,7 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (Exception ex) {
         // Ignore
       }
+      restartNeeded.set(true);
     }
   }
 
