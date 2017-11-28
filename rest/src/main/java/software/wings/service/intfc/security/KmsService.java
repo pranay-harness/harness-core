@@ -31,7 +31,7 @@ public interface KmsService {
 
   void changeKms(String accountId, String entityId, String fromKmsId, String toKmsId);
 
-  EncryptedData encryptFile(BoundedInputStream inputStream, String accountId, String uuid);
+  EncryptedData encryptFile(String accountId, String name, BoundedInputStream inputStream);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 }

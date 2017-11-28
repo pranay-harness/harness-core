@@ -432,8 +432,10 @@ public class DataGenUtil extends BaseIntegrationTest {
         appId, entityId, entityType, templateId));
     File file = getTestFile(getName(configFileNames) + ".properties");
     FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-    FormDataMultiPart multiPart =
-        new FormDataMultiPart().field("name", file.getName()).field("relativeFilePath", "configs/" + file.getName());
+    FormDataMultiPart multiPart = new FormDataMultiPart()
+                                      .field("fileName", file.getName())
+                                      .field("name", file.getName())
+                                      .field("relativeFilePath", "configs/" + file.getName());
     multiPart.bodyPart(filePart);
     Response response =
         getRequestBuilderWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));

@@ -9,7 +9,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
@@ -251,13 +250,24 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldOverrideConfigFiles() {
-    List<ConfigFile> existingFiles = asList(
-        aConfigFile().withUuid("FILE_ID_1").withRelativeFilePath("app.properties").withName("app.properties").build(),
-        aConfigFile().withUuid("FILE_ID_2").withRelativeFilePath("cache.xml").withName("cache.xml").build());
+    ConfigFile configFile1 = ConfigFile.builder().relativeFilePath("app.properties").build();
+    configFile1.setName("app.properties");
+    configFile1.setUuid("FILE_ID_1");
 
-    List<ConfigFile> newFiles = asList(
-        aConfigFile().withUuid("FILE_ID_3").withRelativeFilePath("app.properties").withName("app.properties").build(),
-        aConfigFile().withUuid("FILE_ID_4").withRelativeFilePath("cache.xml").withName("cache.xml").build());
+    ConfigFile configFile2 = ConfigFile.builder().relativeFilePath("cache.xml").build();
+    configFile2.setName("cache.xml");
+    configFile2.setUuid("FILE_ID_2");
+
+    ConfigFile configFile3 = ConfigFile.builder().relativeFilePath("app.properties").build();
+    configFile3.setName("app.properties");
+    configFile3.setUuid("FILE_ID_3");
+
+    ConfigFile configFile4 = ConfigFile.builder().relativeFilePath("cache.xml").build();
+    configFile4.setName("cache.xml");
+    configFile4.setUuid("FILE_ID_4");
+    List<ConfigFile> existingFiles = asList(configFile1, configFile2);
+
+    List<ConfigFile> newFiles = asList(configFile3, configFile4);
 
     List<ConfigFile> computedConfigFiles = templateService.overrideConfigFiles(existingFiles, newFiles);
     assertThat(computedConfigFiles).isEqualTo(newFiles);
@@ -268,14 +278,18 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldComputeConfigFilesForHosts() {
     when(wingsPersistence.get(ServiceTemplate.class, TEMPLATE_ID)).thenReturn(builder.build());
 
+    ConfigFile configFile1 = ConfigFile.builder().build();
+    configFile1.setName("PROPERTIES_FILE");
+    configFile1.setUuid("FILE_ID_1");
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
-        .thenReturn(asList(aConfigFile().withUuid("FILE_ID_1").withName("PROPERTIES_FILE").build()));
+        .thenReturn(asList(configFile1));
 
-    when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", "HOST_ID_1"))
-        .thenReturn(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
+    ConfigFile configFile2 = ConfigFile.builder().build();
+    configFile1.setName("PROPERTIES_FILE");
+    configFile1.setUuid("FILE_ID_3");
+    when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", "HOST_ID_1")).thenReturn(asList(configFile2));
 
     List<ConfigFile> hostConfigFiles = templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID, HOST_ID);
-    assertThat(hostConfigFiles)
-        .isEqualTo(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
+    assertThat(hostConfigFiles).isEqualTo(asList(configFile2));
   }
 }

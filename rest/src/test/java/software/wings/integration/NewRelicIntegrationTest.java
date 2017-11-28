@@ -1,10 +1,18 @@
 package software.wings.integration;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
@@ -12,23 +20,43 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.Scheduler;
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.metrics.RiskLevel;
+import software.wings.scheduler.LogAnalysisManagerJob.LogAnalysisTask;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.newrelic.MetricAnalysisJob;
+import software.wings.service.impl.newrelic.MetricAnalysisJob.MetricAnalysisGenerator;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AbstractAnalysisState;
+import software.wings.utils.JsonUtils;
+import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,6 +76,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   private Set<String> hosts = new HashSet<>();
   @Inject private NewRelicService newRelicService;
   @Inject private SettingsService settingsService;
+  @Inject private MetricDataAnalysisService metricDataAnalysisService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private DelegateService delegateService;
 
   @Before
   public void setUp() throws Exception {
@@ -82,19 +113,19 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, "NewRelic").build();
     PageResponse<SettingAttribute> settings = settingsService.list(pageRequest);
 
-    Assert.assertEquals(1, settings.size());
+    assertEquals(1, settings.size());
 
     WebTarget target = client.target(
         API_BASE + "/newrelic/applications?settingId=" + settings.get(0).getUuid() + "&accountId=" + accountId);
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
-    Assert.assertEquals(0, restResponse.getResponseMessages().size());
-    Assert.assertTrue(restResponse.getResource().size() > 0);
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertTrue(restResponse.getResource().size() > 0);
 
     for (NewRelicApplication app : restResponse.getResource()) {
-      Assert.assertTrue(app.getId() > 0);
-      Assert.assertFalse(StringUtils.isBlank(app.getName()));
+      assertTrue(app.getId() > 0);
+      assertFalse(StringUtils.isBlank(app.getName()));
     }
   }
 
@@ -170,10 +201,10 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
           + applicationId + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
           Entity.entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-      Assert.assertTrue(restResponse.getResource());
+      assertTrue(restResponse.getResource());
 
       Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class);
-      Assert.assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.asList().size());
+      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.asList().size());
     }
   }
 
@@ -224,12 +255,531 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     Assert.assertNotNull(savedRecord);
 
     final List<NewRelicMetricAnalysis> analyses = savedRecord.getMetricAnalyses();
-    Assert.assertEquals(record.getMetricAnalyses().size(), analyses.size());
+    assertEquals(record.getMetricAnalyses().size(), analyses.size());
 
-    Assert.assertEquals(analysis1, analyses.get(0));
-    Assert.assertEquals(analysis2, analyses.get(1));
-    Assert.assertEquals(analysis5, analyses.get(2));
-    Assert.assertEquals(analysis4, analyses.get(3));
-    Assert.assertEquals(analysis3, analyses.get(4));
+    assertEquals(analysis1, analyses.get(0));
+    assertEquals(analysis2, analyses.get(1));
+    assertEquals(analysis5, analyses.get(2));
+    assertEquals(analysis4, analyses.get(3));
+    assertEquals(analysis3, analyses.get(4));
+  }
+
+  @Test
+  public void noControlNoTest() throws IOException {
+    final String workflowId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
+    final String serviceId = UUID.randomUUID().toString();
+    final String stateExecutionId = UUID.randomUUID().toString();
+    final String applicationId = UUID.randomUUID().toString();
+    final String delegateTaskId = UUID.randomUUID().toString();
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(applicationId)
+            .withName(workflowId + "-prev-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(prevStateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.HF);
+    record.setStateType(StateType.NEW_RELIC);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, prevStateExecutionId, delegateTaskId, Collections.singletonList(record));
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(applicationId)
+                            .withName(workflowId + "-curr-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(workflowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(stateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.H0);
+    record.setStateType(StateType.NEW_RELIC);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, stateExecutionId, delegateTaskId, Collections.singletonList(record));
+
+    String prevWorkflowExecutionID = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+        StateType.NEW_RELIC, workflowId, serviceId);
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(applicationId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.NEW_RELIC)
+            .stateBaseUrl("/newrelic")
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    new MetricAnalysisGenerator(metricDataAnalysisService, waitNotifyEngine, delegateService, analysisContext,
+        jobExecutionContext, delegateTaskId)
+        .run();
+
+    NewRelicMetricAnalysisRecord metricsAnalysis =
+        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.NA);
+    assertFalse(metricsAnalysis.isShowTimeSeries());
+    assertEquals(metricsAnalysis.getMessage(), "No data available");
+  }
+
+  @Test
+  public void controlNoTest() throws IOException {
+    final String workflowId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
+    final String serviceId = UUID.randomUUID().toString();
+    final String stateExecutionId = UUID.randomUUID().toString();
+    final String applicationId = UUID.randomUUID().toString();
+    final String delegateTaskId = UUID.randomUUID().toString();
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(applicationId)
+            .withName(workflowId + "-prev-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(prevStateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.HF);
+    record.setStateType(StateType.NEW_RELIC);
+
+    NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
+    record1.setName("Dummy txn1");
+    record1.setWorkflowId(workflowId);
+    record1.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record1.setServiceId(serviceId);
+    record1.setStateExecutionId(prevStateExecutionId);
+    record1.setTimeStamp(System.currentTimeMillis());
+    record1.setDataCollectionMinute(0);
+    record1.setRequestsPerMinute(20);
+    record1.setAverageResponseTime(50);
+    record1.setError(-1);
+    record1.setApdexScore(1.0);
+    record1.setHost("host1");
+    record1.setStateType(StateType.NEW_RELIC);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, prevStateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(applicationId)
+                            .withName(workflowId + "-curr-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(workflowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(stateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.H0);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, stateExecutionId, delegateTaskId, Collections.singletonList(record));
+
+    String prevWorkflowExecutionID = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+        StateType.NEW_RELIC, workflowId, serviceId);
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(applicationId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.NEW_RELIC)
+            .stateBaseUrl("newrelic")
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    new MetricAnalysisGenerator(metricDataAnalysisService, waitNotifyEngine, delegateService, analysisContext,
+        jobExecutionContext, delegateTaskId)
+        .run();
+
+    NewRelicMetricAnalysisRecord metricsAnalysis =
+        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+
+    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.NA);
+    assertFalse(metricsAnalysis.isShowTimeSeries());
+    assertEquals(metricsAnalysis.getMessage(), "No data available");
+  }
+
+  @Test
+  public void testNoControl() throws IOException {
+    final String workflowId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
+    final String serviceId = UUID.randomUUID().toString();
+    final String stateExecutionId = UUID.randomUUID().toString();
+    final String applicationId = UUID.randomUUID().toString();
+    final String delegateTaskId = UUID.randomUUID().toString();
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(applicationId)
+            .withName(workflowId + "-prev-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(prevStateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.HF);
+    record.setStateType(StateType.NEW_RELIC);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, prevStateExecutionId, delegateTaskId, Lists.newArrayList(record));
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(applicationId)
+                            .withName(workflowId + "-curr-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setHost("");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(workflowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(stateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.H0);
+
+    NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
+    record1.setName("Dummy txn1");
+    record1.setWorkflowId(workflowId);
+    record1.setWorkflowExecutionId(workflowExecutionId);
+    record1.setServiceId(serviceId);
+    record1.setStateExecutionId(stateExecutionId);
+    record1.setTimeStamp(System.currentTimeMillis());
+    record1.setDataCollectionMinute(0);
+    record1.setRequestsPerMinute(20);
+    record1.setAverageResponseTime(50);
+    record1.setError(-1);
+    record1.setApdexScore(1.0);
+    record1.setHost("host1");
+    record1.setStateType(StateType.NEW_RELIC);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, stateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
+
+    String prevWorkflowExecutionID = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+        StateType.NEW_RELIC, workflowId, serviceId);
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(applicationId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.NEW_RELIC)
+            .stateBaseUrl("newrelic")
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    new MetricAnalysisGenerator(metricDataAnalysisService, waitNotifyEngine, delegateService, analysisContext,
+        jobExecutionContext, delegateTaskId)
+        .run();
+
+    NewRelicMetricAnalysisRecord metricsAnalysis =
+        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+
+    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.LOW);
+    assertFalse(metricsAnalysis.isShowTimeSeries());
+    assertEquals(metricsAnalysis.getMessage(), "No problems found");
+  }
+
+  @Test
+  public void txnInTestButNotControl() throws IOException {
+    final String workflowId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
+    final String serviceId = UUID.randomUUID().toString();
+    final String stateExecutionId = UUID.randomUUID().toString();
+    final String applicationId = UUID.randomUUID().toString();
+    final String delegateTaskId = UUID.randomUUID().toString();
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(applicationId)
+            .withName(workflowId + "-prev-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(prevStateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.HF);
+    record.setStateType(StateType.NEW_RELIC);
+
+    NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
+    record1.setName("Dummy txn1");
+    record1.setWorkflowId(workflowId);
+    record1.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record1.setServiceId(serviceId);
+    record1.setStateExecutionId(prevStateExecutionId);
+    record1.setTimeStamp(System.currentTimeMillis());
+    record1.setDataCollectionMinute(0);
+    record1.setRequestsPerMinute(20);
+    record1.setAverageResponseTime(50);
+    record1.setError(-1);
+    record1.setApdexScore(1.0);
+    record1.setHost("host1");
+    record1.setStateType(StateType.NEW_RELIC);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, prevStateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(applicationId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(applicationId)
+                            .withName(workflowId + "-curr-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    record = new NewRelicMetricDataRecord();
+    record.setName("New Relic Heartbeat");
+    record.setWorkflowId(workflowId);
+    record.setWorkflowExecutionId(workflowExecutionId);
+    record.setServiceId(serviceId);
+    record.setStateExecutionId(stateExecutionId);
+    record.setTimeStamp(System.currentTimeMillis());
+    record.setDataCollectionMinute(0);
+    record.setLevel(ClusterLevel.H0);
+
+    record1 = new NewRelicMetricDataRecord();
+    record1.setName("Dummy txn2");
+    record1.setWorkflowId(workflowId);
+    record1.setWorkflowExecutionId(workflowExecutionId);
+    record1.setServiceId(serviceId);
+    record1.setStateExecutionId(stateExecutionId);
+    record1.setTimeStamp(System.currentTimeMillis());
+    record1.setDataCollectionMinute(0);
+    record1.setRequestsPerMinute(20);
+    record1.setAverageResponseTime(50);
+    record1.setError(-1);
+    record1.setApdexScore(1.0);
+    record1.setHost("host1");
+    record1.setStateType(StateType.NEW_RELIC);
+
+    metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, stateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
+
+    String prevWorkflowExecutionID = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+        StateType.NEW_RELIC, workflowId, serviceId);
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(applicationId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.NEW_RELIC)
+            .stateBaseUrl("newrelic")
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
+            .parallelProcesses(1)
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    new MetricAnalysisGenerator(metricDataAnalysisService, waitNotifyEngine, delegateService, analysisContext,
+        jobExecutionContext, delegateTaskId)
+        .run();
+
+    NewRelicMetricAnalysisRecord metricsAnalysis =
+        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+
+    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.LOW);
+    assertTrue(metricsAnalysis.isShowTimeSeries());
+    assertEquals(metricsAnalysis.getMessage(), "No problems found");
+    assertEquals(metricsAnalysis.getMetricAnalyses().size(), 1);
   }
 }
