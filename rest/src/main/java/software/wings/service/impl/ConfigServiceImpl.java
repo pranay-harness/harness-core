@@ -120,6 +120,7 @@ public class ConfigServiceImpl implements ConfigService {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
       Preconditions.checkNotNull(encryptedData, "No encrypted record found " + configFile);
       fileId = String.valueOf(encryptedData.getEncryptedValue());
+      configFile.setSize(encryptedData.getFileSize());
     } else {
       fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
       configFile.setSize(inputStream.getTotalBytesRead()); // set this only after saving file to gridfs
@@ -249,7 +250,7 @@ public class ConfigServiceImpl implements ConfigService {
       Activity activity = activityService.get(activityId, appId);
       Preconditions.checkNotNull(activity, "Could not find activity " + activityId + " for app " + appId);
       SecretUsageLog secretUsageLog = SecretUsageLog.builder()
-                                          .encryptedDataId(configFile.getUuid())
+                                          .encryptedDataId(encryptedData.getUuid())
                                           .workflowExecutionId(activity.getWorkflowExecutionId())
                                           .envId(activity.getEnvironmentId())
                                           .accountId(encryptedData.getAccountId())
@@ -282,6 +283,7 @@ public class ConfigServiceImpl implements ConfigService {
       Preconditions.checkNotNull(encryptedData, "No encrypted record found " + inputConfigFile);
       fileId = String.valueOf(encryptedData.getEncryptedValue());
       updateMap.put("encryptedFileId", inputConfigFile.getEncryptedFileId());
+      updateMap.put("size", encryptedData.getFileSize());
       updateParentForEncryptedData(inputConfigFile);
     } else if (uploadedInputStream != null) {
       fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
