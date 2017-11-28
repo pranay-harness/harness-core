@@ -9,6 +9,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -151,10 +152,12 @@ public class MessageServiceImpl implements MessageService {
           Thread.sleep(100L);
         }
       }, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.debug("Timed out retrieving message from {} {}", sourceType, sourceProcessId);
     } catch (Exception e) {
       logger.error("Error retrieving message from {} {}", sourceType, sourceProcessId, e);
-      return null;
     }
+    return null;
   }
 
   @Override
