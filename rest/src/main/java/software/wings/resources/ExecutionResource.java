@@ -87,8 +87,11 @@ public class ExecutionResource {
     if (appIds != null && !appIds.isEmpty()) {
       authorizedAppIds = appIds; //(List<String>) CollectionUtils.intersection(authorizedAppIds, appIds);
     } else {
-      PageRequest<Application> applicationPageRequest =
-          aPageRequest().addFieldsIncluded("uuid").addFilter("accountId", Operator.EQ, accountId).build();
+      PageRequest<Application> applicationPageRequest = aPageRequest()
+                                                            .addFieldsIncluded("uuid")
+                                                            .addFilter("accountId", Operator.EQ, accountId)
+                                                            .withLimit(PageRequest.UNLIMITED)
+                                                            .build();
       PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
       if (res == null || res.isEmpty()) {
         return new RestResponse<>(new PageResponse<>());

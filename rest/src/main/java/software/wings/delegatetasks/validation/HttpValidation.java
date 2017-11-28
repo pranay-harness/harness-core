@@ -19,7 +19,6 @@ import org.apache.http.ssl.SSLContextBuilder;
 import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -60,63 +59,70 @@ public class HttpValidation extends AbstractDelegateValidateTask {
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
       e.printStackTrace();
     }
+    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
     HttpUriRequest httpUriRequest = getHttpUriRequest(method, url, body, headers);
-    DelegateConnectionResultBuilder resultBuilder =
-        DelegateConnectionResult.builder().criteria(httpUriRequest.getURI().toString());
-    try {
-      int responseCode =
-          HttpClients.custom()
-              .setSSLSocketFactory(sslsf)
-              .setDefaultRequestConfig(
-                  RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(socketTimeoutMillis).build())
-              .build()
-              .execute(httpUriRequest)
-              .getStatusLine()
-              .getStatusCode();
-      resultBuilder.validated(
-          (responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403);
-    } catch (IOException e) {
-      resultBuilder.validated(false);
+    if (httpUriRequest == null) {
+      resultBuilder.criteria(method + "|" + url).validated(false);
+    } else {
+      resultBuilder.criteria(httpUriRequest.getURI().toString());
+      try {
+        int responseCode =
+            HttpClients.custom()
+                .setSSLSocketFactory(sslsf)
+                .setDefaultRequestConfig(
+                    RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(socketTimeoutMillis).build())
+                .build()
+                .execute(httpUriRequest)
+                .getStatusLine()
+                .getStatusCode();
+        resultBuilder.validated(
+            (responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403);
+      } catch (Exception e) {
+        resultBuilder.validated(false);
+      }
     }
     return resultBuilder.build();
   }
 
   private HttpUriRequest getHttpUriRequest(String method, String url, String body, String headers) {
     HttpUriRequest httpUriRequest;
+    try {
+      switch (toUpperCase(method)) {
+        case "GET":
+          httpUriRequest = new HttpGet(url);
+          break;
+        case "POST":
+          HttpPost post = new HttpPost(url);
+          if (body != null) {
+            post.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
+          }
+          httpUriRequest = post;
+          break;
+        case "PUT":
+          HttpPut put = new HttpPut(url);
+          if (body != null) {
+            put.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
+          }
+          httpUriRequest = put;
+          break;
+        case "DELETE":
+          httpUriRequest = new HttpDelete(url);
+          break;
+        case "HEAD":
+        default:
+          httpUriRequest = new HttpHead(url);
+      }
 
-    switch (toUpperCase(method)) {
-      case "GET":
-        httpUriRequest = new HttpGet(url);
-        break;
-      case "POST":
-        HttpPost post = new HttpPost(url);
-        if (body != null) {
-          post.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
-        }
-        httpUriRequest = post;
-        break;
-      case "PUT":
-        HttpPut put = new HttpPut(url);
-        if (body != null) {
-          put.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
-        }
-        httpUriRequest = put;
-        break;
-      case "DELETE":
-        httpUriRequest = new HttpDelete(url);
-        break;
-      case "HEAD":
-      default:
-        httpUriRequest = new HttpHead(url);
-    }
-
-    if (headers != null) {
-      for (String header : HEADERS_SPLITTER.split(headers)) {
-        List<String> headerPair = HEADER_SPLITTER.splitToList(header);
-        if (headerPair.size() == 2) {
-          httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
+      if (headers != null) {
+        for (String header : HEADERS_SPLITTER.split(headers)) {
+          List<String> headerPair = HEADER_SPLITTER.splitToList(header);
+          if (headerPair.size() == 2) {
+            httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
+          }
         }
       }
+    } catch (Exception e) {
+      return null;
     }
     return httpUriRequest;
   }
@@ -124,9 +130,11 @@ public class HttpValidation extends AbstractDelegateValidateTask {
   @Override
   public List<String> getCriteria() {
     Object[] parameters = getParameters();
-    return singletonList(getHttpUriRequest(
-        (String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3])
-                             .getURI()
-                             .toString());
+    String method = (String) parameters[0];
+    String url = (String) parameters[1];
+    String body = (String) parameters[2];
+    String headers = (String) parameters[3];
+    HttpUriRequest httpUriRequest = getHttpUriRequest(method, url, body, headers);
+    return singletonList(httpUriRequest == null ? method + "|" + url : httpUriRequest.getURI().toString());
   }
 }
