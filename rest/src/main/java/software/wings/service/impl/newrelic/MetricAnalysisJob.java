@@ -67,7 +67,9 @@ public class MetricAnalysisJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new MetricAnalysisGenerator(context, jobExecutionContext, delegateTaskId).run();
+      new MetricAnalysisGenerator(
+          analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext, delegateTaskId)
+          .run();
 
     } catch (Exception ex) {
       logger.warn("Log analysis cron failed with error", ex);
@@ -79,7 +81,7 @@ public class MetricAnalysisJob implements Job {
     }
   }
 
-  public class MetricAnalysisGenerator implements Runnable {
+  public static class MetricAnalysisGenerator implements Runnable {
     public static final int PYTHON_JOB_RETRIES = 3;
     public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
     protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
@@ -90,9 +92,16 @@ public class MetricAnalysisJob implements Job {
     private final String delegateTaskId;
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
+    private MetricDataAnalysisService analysisService;
+    private final WaitNotifyEngine waitNotifyEngine;
+    private final DelegateService delegateService;
 
-    public MetricAnalysisGenerator(
-        AnalysisContext context, JobExecutionContext jobExecutionContext, String delegateTaskId) {
+    public MetricAnalysisGenerator(MetricDataAnalysisService service, WaitNotifyEngine waitNotifyEngine,
+        DelegateService delegateService, AnalysisContext context, JobExecutionContext jobExecutionContext,
+        String delegateTaskId) {
+      this.analysisService = service;
+      this.waitNotifyEngine = waitNotifyEngine;
+      this.delegateService = delegateService;
       this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
       Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
       this.context = context;
