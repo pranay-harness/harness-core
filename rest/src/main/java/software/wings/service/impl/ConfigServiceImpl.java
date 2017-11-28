@@ -250,7 +250,7 @@ public class ConfigServiceImpl implements ConfigService {
       Activity activity = activityService.get(activityId, appId);
       Preconditions.checkNotNull(activity, "Could not find activity " + activityId + " for app " + appId);
       SecretUsageLog secretUsageLog = SecretUsageLog.builder()
-                                          .encryptedDataId(configFile.getUuid())
+                                          .encryptedDataId(encryptedData.getUuid())
                                           .workflowExecutionId(activity.getWorkflowExecutionId())
                                           .envId(activity.getEnvironmentId())
                                           .accountId(encryptedData.getAccountId())
