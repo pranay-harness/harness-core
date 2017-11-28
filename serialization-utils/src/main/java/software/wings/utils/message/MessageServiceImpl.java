@@ -111,48 +111,50 @@ public class MessageServiceImpl implements MessageService {
       if (!file.exists()) {
         FileUtils.touch(file);
       }
-      LineIterator reader = FileUtils.lineIterator(file);
       return timeLimiter.callWithTimeout(() -> {
-        while (reader.hasNext()) {
-          String line = reader.nextLine();
-          if (StringUtils.startsWith(line, (isInput ? IN : OUT) + PRIMARY_DELIMITER)) {
-            List<String> components = Splitter.on(PRIMARY_DELIMITER).splitToList(line);
-            long timestamp = Long.parseLong(components.get(1));
-            if (timestamp > lastReadTimestamp) {
-              MessengerType fromType = MessengerType.valueOf(components.get(2));
-              String fromProcess = components.get(3);
-              String messageName = components.get(4);
-              List<String> msgParams = new ArrayList<>();
-              if (components.size() == 6) {
-                String params = components.get(5);
-                if (!params.contains(SECONDARY_DELIMITER)) {
-                  msgParams.add(params);
-                } else {
-                  msgParams.addAll(Splitter.on(SECONDARY_DELIMITER).splitToList(params));
+        while (true) {
+          LineIterator reader = FileUtils.lineIterator(file);
+          while (reader.hasNext()) {
+            String line = reader.nextLine();
+            if (StringUtils.startsWith(line, (isInput ? IN : OUT) + PRIMARY_DELIMITER)) {
+              List<String> components = Splitter.on(PRIMARY_DELIMITER).splitToList(line);
+              long timestamp = Long.parseLong(components.get(1));
+              if (timestamp > lastReadTimestamp) {
+                MessengerType fromType = MessengerType.valueOf(components.get(2));
+                String fromProcess = components.get(3);
+                String messageName = components.get(4);
+                List<String> msgParams = new ArrayList<>();
+                if (components.size() == 6) {
+                  String params = components.get(5);
+                  if (!params.contains(SECONDARY_DELIMITER)) {
+                    msgParams.add(params);
+                  } else {
+                    msgParams.addAll(Splitter.on(SECONDARY_DELIMITER).splitToList(params));
+                  }
                 }
+                Message message = Message.builder()
+                                      .message(messageName)
+                                      .params(msgParams)
+                                      .timestamp(timestamp)
+                                      .fromType(fromType)
+                                      .fromProcess(fromProcess)
+                                      .build();
+                logger.debug("{}: {}",
+                    isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
+                messageTimestamps.put(file, timestamp);
+                reader.close();
+                return message;
               }
-              Message message = Message.builder()
-                                    .message(messageName)
-                                    .params(msgParams)
-                                    .timestamp(timestamp)
-                                    .fromType(fromType)
-                                    .fromProcess(fromProcess)
-                                    .build();
-              logger.debug("{}: {}",
-                  isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
-              messageTimestamps.put(file, timestamp);
-              reader.close();
-              return message;
             }
           }
+          reader.close();
+          Thread.sleep(100L);
         }
-        reader.close();
-        return null;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       logger.error("Error retrieving message from {} {}", sourceType, sourceProcessId, e);
+      return null;
     }
-    return null;
   }
 
   @Override
