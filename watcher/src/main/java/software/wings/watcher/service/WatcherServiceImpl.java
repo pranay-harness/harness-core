@@ -394,7 +394,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("[Old] Exception while upgrading", e);
+      logger.error("Exception while upgrading", e);
       oldDelegateProcesses.forEach(oldDelegateProcess -> {
         logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
         messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
@@ -414,7 +414,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
             }
           }
         } catch (Exception ex) {
-          logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
+          logger.error("ALERT: Couldn't kill forcibly", ex);
         }
       }
     } finally {
