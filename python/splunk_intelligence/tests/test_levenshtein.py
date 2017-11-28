@@ -5,7 +5,7 @@ from core.util.TimeSeriesUtils import MetricToDeviationType
 
 
 def get_dist(x, y, a, b):
-    return SAXHMMDistance.get_bucket_dist(MetricToDeviationType.HIGHER,
+    return SAXHMMDistance.get_letter_dist(MetricToDeviationType.HIGHER,
                                           SAXHMMDistance.inverted_alphabet[a], SAXHMMDistance.inverted_alphabet[b])
 
 

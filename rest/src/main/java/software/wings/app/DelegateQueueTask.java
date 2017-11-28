@@ -5,6 +5,7 @@ import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -80,7 +81,15 @@ public class DelegateQueueTask implements Runnable {
                                        .filter(DelegateTask::isTimedOut)
                                        .collect(Collectors.toList());
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
-        logger.warn("Delegate task schema backwards incompatibilty ", kryo);
+        logger.warn("Delegate task schema backwards incompatibilty", kryo);
+        for (Key<DelegateTask> key :
+            wingsPersistence.createQuery(DelegateTask.class).field("status").equal(Status.STARTED).asKeyList()) {
+          try {
+            wingsPersistence.get(DelegateTask.class, key.getId().toString());
+          } catch (com.esotericsoftware.kryo.KryoException ex) {
+            wingsPersistence.delete(DelegateTask.class, key.getId().toString());
+          }
+        }
       }
 
       if (longRunningTimedOutTasks.size() > 0) {
