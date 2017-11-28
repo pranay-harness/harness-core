@@ -75,6 +75,7 @@ public class YamlGitConfig extends Base implements Encryptable {
         .accountId(this.accountId)
         .repoUrl(this.url)
         .username(this.username)
+        .password(this.password)
         .encryptedPassword(this.encryptedPassword)
         .branch(this.branchName.trim())
         .build();
