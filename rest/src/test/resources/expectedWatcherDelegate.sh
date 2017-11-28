@@ -46,6 +46,23 @@ then
   exit 0
 fi
 
+if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
+then
+  echo "Downloading JRE packages..."
+  JVM_TAR_FILENAME=$(basename "$JVM_URL")
+  curl -#kLO $JVM_URL
+  echo "Extracting JRE packages..."
+  mkdir -p tmp
+  mv $JVM_TAR_FILENAME tmp
+  cd tmp
+  tar xzf $JVM_TAR_FILENAME
+  rm -rf ../$JRE_DIR
+  mv $JRE_DIR_OLD ../$JRE_DIR
+  cd ..
+  rm -rf jre tmp
+  ln -s $JRE_DIR jre
+fi
+
 REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
 REMOTE_DELEGATE_VERSION=9.9.9
 

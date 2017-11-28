@@ -142,7 +142,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 404) {
           throw new WingsException(INVALID_ARTIFACT_SERVER, "message",
-              "Artifact server may not be running at " + artifactoryConfig.getArtifactoryUrl());
+              "Artifact server may not be running at " + artifactoryConfig.getArtifactoryUrl(), e);
         }
       }
       handleException(e);
@@ -890,6 +890,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "User not authorized to access artifactory");
       }
     }
-    throw new WingsException(ARTIFACT_SERVER_ERROR, "message", e.getMessage());
+    throw new WingsException(ARTIFACT_SERVER_ERROR, "message", e.getMessage(), e);
   }
 }
