@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/13/17
  */
-public class ResizeCommandUnitYamlHandler extends CommandUnitYamlHandler<Yaml, ResizeCommandUnit, Builder> {
+public class ResizeCommandUnitYamlHandler extends ContainerCommandUnitYamlHandler<Yaml, ResizeCommandUnit, Builder> {
   @Override
   public ResizeCommandUnit upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {

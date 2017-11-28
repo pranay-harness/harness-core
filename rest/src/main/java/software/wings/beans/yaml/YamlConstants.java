@@ -55,4 +55,20 @@ public interface YamlConstants {
   String LAMBDA_SPEC_YAML_FILE_NAME = "Lambda";
   String ECS_CONTAINER_TASK_YAML_FILE_NAME = "Ecs";
   String KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME = "Kubernetes";
+
+  String LINK_PREFIX = "link";
+  String NODE_PREFIX = "node";
+
+  int DEFAULT_COORDINATE = 50;
+  int COORDINATE_INCREMENT_BY = 150;
+
+  String NODE_PROPERTY_REFERENCEID = "referenceId";
+  String NODE_PROPERTY_COMMAND_STRING = "commandString";
+  String NODE_PROPERTY_TAIL_FILES = "tailFiles";
+  String NODE_PROPERTY_TAIL_PATTERNS = "tailPatterns";
+  String NODE_PROPERTY_COMMAND_TYPE = "commandType";
+  String NODE_PROPERTY_COMMAND_PATH = "commandPath";
+  String NODE_PROPERTY_FILE_CATEGORY = "fileCategory";
+  String NODE_PROPERTY_DESTINATION_DIR_PATH = "destinationDirectoryPath";
+  String NODE_PROPERTY_DESTINATION_PARENT_PATH = "destinationParentPath";
 }

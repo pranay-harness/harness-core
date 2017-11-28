@@ -244,6 +244,7 @@ public class ServiceCommand extends Base {
     private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
     private Integer defaultVersion = 1;
     private boolean targetToAllEnv;
+    private boolean setAsDefault;
     private Command command;
     private String uuid;
     private String appId;
@@ -280,6 +281,11 @@ public class ServiceCommand extends Base {
 
     public Builder withTargetToAllEnv(boolean targetToAllEnv) {
       this.targetToAllEnv = targetToAllEnv;
+      return this;
+    }
+
+    public Builder withSetAsDefault(boolean setAsDefault) {
+      this.setAsDefault = setAsDefault;
       return this;
     }
 
@@ -331,7 +337,8 @@ public class ServiceCommand extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withSetAsDefault(setAsDefault);
     }
 
     public ServiceCommand build() {
@@ -347,6 +354,7 @@ public class ServiceCommand extends Base {
       serviceCommand.setCreatedAt(createdAt);
       serviceCommand.setLastUpdatedBy(lastUpdatedBy);
       serviceCommand.setLastUpdatedAt(lastUpdatedAt);
+      serviceCommand.setSetAsDefault(setAsDefault);
       serviceCommand.targetToAllEnv = this.targetToAllEnv;
       return serviceCommand;
     }
