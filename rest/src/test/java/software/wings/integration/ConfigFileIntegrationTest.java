@@ -25,12 +25,14 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.scheduler.JobScheduler;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
@@ -42,6 +44,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.UUID;
 import javax.inject.Inject;
 
 /**
@@ -55,6 +58,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private FileService fileService;
+  @Inject private SecretManager secretManager;
 
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Application app;
@@ -151,22 +155,29 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
                             .templateId(DEFAULT_TEMPLATE_ID)
                             .envId(GLOBAL_ENV_ID)
                             .relativeFilePath("tmp");
+    String secretName = UUID.randomUUID().toString();
+    InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
+    String secretFileId =
+        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new BoundedInputStream(inputStream)));
 
     ConfigFile appConfigFile = configFileBuilder.build();
 
     appConfigFile.setAppId(service.getAppId());
     appConfigFile.setName(FILE_NAME);
     appConfigFile.setFileName(FILE_NAME);
+    appConfigFile.setEncryptedFileId(secretFileId);
 
-    InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
-    String configId = configService.save(appConfigFile, new BoundedInputStream(inputStream));
+    String configId = configService.save(appConfigFile, null);
     inputStream.close();
 
     ConfigFile configFile = configService.get(service.getAppId(), configId);
     assertThat(configFile).isNotNull().hasFieldOrPropertyWithValue("fileName", FILE_NAME);
 
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+    String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
+
     File encryptedFile = testFolder.newFile();
-    fileService.download(configFile.getFileUuid(), encryptedFile, FileBucket.CONFIGS);
+    fileService.download(savedFileId, encryptedFile, FileBucket.CONFIGS);
     String encryptedText = String.join("", Files.readAllLines(encryptedFile.toPath(), Charset.forName("ISO-8859-1")));
     assertThat(encryptedText).isNotEmpty().isNotEqualTo(INPUT_TEXT);
 
