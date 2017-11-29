@@ -198,8 +198,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ContainerResizeCommandUnit.Yaml {
-    public static final class Builder extends ContainerResizeCommandUnit.Yaml.Builder {
+  public static class Yaml extends ContainerSetupCommandUnit.Yaml {
+    public static final class Builder extends ContainerSetupCommandUnit.Yaml.Builder {
       private Builder() {}
 
       public static Builder aYaml() {

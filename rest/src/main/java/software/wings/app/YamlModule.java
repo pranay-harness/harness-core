@@ -25,7 +25,9 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
 import static software.wings.beans.command.CommandUnitType.DOCKER_START;
 import static software.wings.beans.command.CommandUnitType.DOCKER_STOP;
+import static software.wings.beans.command.CommandUnitType.ECS_SETUP;
 import static software.wings.beans.command.CommandUnitType.EXEC;
+import static software.wings.beans.command.CommandUnitType.KUBERNETES_SETUP;
 import static software.wings.beans.command.CommandUnitType.PORT_CHECK_CLEARED;
 import static software.wings.beans.command.CommandUnitType.PORT_CHECK_LISTENING;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
@@ -62,8 +64,10 @@ import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CopyConfigCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.DockerStartCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.DockerStopCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.EcsSetupCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.ExecCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.KubernetesResizeCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.KubernetesSetupCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.PortCheckClearedCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.PortCheckListeningCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.ProcessCheckRunningCommandUnitYamlHandler;
@@ -236,10 +240,12 @@ public class YamlModule extends AbstractModule {
         .to(PortCheckClearedCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(PORT_CHECK_LISTENING.name())
         .to(PortCheckListeningCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(RESIZE.name()).to(ResizeCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(CODE_DEPLOY.name()).to(CodeDeployCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(AWS_LAMBDA.name()).to(AwsLambdaCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(RESIZE.name()).to(ResizeCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(RESIZE_KUBERNETES.name())
         .to(KubernetesResizeCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(ECS_SETUP.name()).to(EcsSetupCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(KUBERNETES_SETUP.name()).to(KubernetesSetupCommandUnitYamlHandler.class);
   }
 }

@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import software.wings.beans.command.ResizeCommandUnit;
-import software.wings.beans.command.ResizeCommandUnit.Yaml;
-import software.wings.beans.command.ResizeCommandUnit.Yaml.Builder;
+import software.wings.beans.command.EcsSetupCommandUnit;
+import software.wings.beans.command.EcsSetupCommandUnit.Yaml;
+import software.wings.beans.command.EcsSetupCommandUnit.Yaml.Builder;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -10,12 +10,12 @@ import software.wings.exception.HarnessException;
 import java.util.List;
 
 /**
- * @author rktummala on 11/13/17
+ * @author brett on 11/28/17
  */
-public class ResizeCommandUnitYamlHandler
-    extends ContainerResizeCommandUnitYamlHandler<Yaml, ResizeCommandUnit, Builder> {
+public class EcsSetupCommandUnitYamlHandler
+    extends ContainerSetupCommandUnitYamlHandler<Yaml, EcsSetupCommandUnit, Builder> {
   @Override
-  public ResizeCommandUnit upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public EcsSetupCommandUnit upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
       return createFromYaml(changeContext, changeSetContext);
@@ -35,7 +35,7 @@ public class ResizeCommandUnitYamlHandler
   }
 
   @Override
-  protected ResizeCommandUnit getCommandUnit() {
-    return new ResizeCommandUnit();
+  protected EcsSetupCommandUnit getCommandUnit() {
+    return new EcsSetupCommandUnit();
   }
 }
