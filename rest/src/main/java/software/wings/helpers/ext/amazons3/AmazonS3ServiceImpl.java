@@ -130,17 +130,24 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
     ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
     listObjectsV2Request.withBucketName(bucketName).withMaxKeys(500);
-    ListObjectsV2Result result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
-    List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
-    // in descending order. The most recent one comes first
-    Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
 
-    List<String> objectKeyList =
-        objectSummaryList.stream()
-            .filter(objectSummary
-                -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
-            .map(S3ObjectSummary::getKey)
-            .collect(Collectors.toList());
+    List<String> objectKeyList = Lists.newArrayList();
+    ListObjectsV2Result result;
+    do {
+      result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
+      List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
+      // in descending order. The most recent one comes first
+      Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
+
+      List<String> objectKeyListForCurrentBatch =
+          objectSummaryList.stream()
+              .filter(objectSummary
+                  -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
+              .map(S3ObjectSummary::getKey)
+              .collect(Collectors.toList());
+      objectKeyList.addAll(objectKeyListForCurrentBatch);
+      listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
+    } while (result.isTruncated() == true);
 
     // We are not using stream here since addDataToResponse throws a bunch of exceptions and we want to throw them back
     // to the caller.
