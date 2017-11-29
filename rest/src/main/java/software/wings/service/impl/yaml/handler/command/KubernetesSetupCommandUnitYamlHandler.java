@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import software.wings.beans.command.KubernetesResizeCommandUnit;
-import software.wings.beans.command.KubernetesResizeCommandUnit.Yaml;
-import software.wings.beans.command.KubernetesResizeCommandUnit.Yaml.Builder;
+import software.wings.beans.command.KubernetesSetupCommandUnit.Yaml;
+import software.wings.beans.command.KubernetesSetupCommandUnit.Yaml.Builder;
+import software.wings.beans.command.KubernetesSetupCommandUnit;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -10,12 +10,12 @@ import software.wings.exception.HarnessException;
 import java.util.List;
 
 /**
- * @author rktummala on 11/13/17
+ * @author brett on 11/28/17
  */
-public class KubernetesResizeCommandUnitYamlHandler
-    extends ContainerResizeCommandUnitYamlHandler<Yaml, KubernetesResizeCommandUnit, Builder> {
+public class KubernetesSetupCommandUnitYamlHandler
+    extends ContainerSetupCommandUnitYamlHandler<Yaml, KubernetesSetupCommandUnit, Builder> {
   @Override
-  public KubernetesResizeCommandUnit upsertFromYaml(
+  public KubernetesSetupCommandUnit upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
       return createFromYaml(changeContext, changeSetContext);
@@ -26,7 +26,7 @@ public class KubernetesResizeCommandUnitYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return KubernetesResizeCommandUnit.Yaml.class;
+    return Yaml.class;
   }
 
   @Override
@@ -35,7 +35,7 @@ public class KubernetesResizeCommandUnitYamlHandler
   }
 
   @Override
-  protected KubernetesResizeCommandUnit getCommandUnit() {
-    return new KubernetesResizeCommandUnit();
+  protected KubernetesSetupCommandUnit getCommandUnit() {
+    return new KubernetesSetupCommandUnit();
   }
 }
