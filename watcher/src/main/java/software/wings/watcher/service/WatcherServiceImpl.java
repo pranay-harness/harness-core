@@ -266,6 +266,7 @@ private void watchDelegate() {
       String upgradePendingDelegate = null;
       boolean newDelegateTimedOut = false;
       long now = clock.millis();
+
       synchronized (runningDelegates) {
         for (String delegateProcess : runningDelegates) {
           Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
@@ -308,39 +309,38 @@ private void watchDelegate() {
             obsolete.add(delegateProcess);
           }
         }
-      }
 
-      if (shutdownPendingList.containsAll(runningDelegates)) {
-        if (working.compareAndSet(false, true)) {
-          startDelegateProcess(emptyList(), "DelegateStartScript", getProcessId());
-        }
-      } else {
-        if (isNotEmpty(shutdownNeededList)) {
-          logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
-          shutdownNeededList.forEach(this ::shutdownDelegate);
-          if (newDelegateTimedOut && upgradePendingDelegate != null) {
-            logger.warn("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
-            messageService.sendMessage(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
-          }
-        }
-        if (isNotEmpty(restartNeededList)) {
-          logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
-          restartNeededList.forEach(this ::shutdownDelegate);
-        }
-        if (isNotEmpty(upgradeNeededList)) {
-          if (working.compareAndSet(false, true)) {
-            logger.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
-            upgradeNeededList.forEach(
-                delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
-            startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
-          }
-        }
-      }
-      if (isNotEmpty(obsolete)) {
-        logger.info("Obsolete processes {} no longer tracked", obsolete);
-        synchronized (runningDelegates) {
+        if (isNotEmpty(obsolete)) {
+          logger.info("Obsolete processes {} no longer tracked", obsolete);
           runningDelegates.removeAll(obsolete);
           messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+        }
+
+        if (shutdownPendingList.containsAll(runningDelegates)) {
+          logger.warn("No delegates acquiring tasks. Delegate processes {} pending shutdown. Forcing shutdown now",
+              shutdownPendingList);
+          shutdownPendingList.forEach(this ::shutdownDelegate);
+        }
+      }
+
+      if (isNotEmpty(shutdownNeededList)) {
+        logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
+        shutdownNeededList.forEach(this ::shutdownDelegate);
+        if (newDelegateTimedOut && upgradePendingDelegate != null) {
+          logger.warn("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
+          messageService.sendMessage(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
+        }
+      }
+      if (isNotEmpty(restartNeededList)) {
+        logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
+        restartNeededList.forEach(this ::shutdownDelegate);
+      }
+      if (isNotEmpty(upgradeNeededList)) {
+        if (working.compareAndSet(false, true)) {
+          logger.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
+          upgradeNeededList.forEach(
+              delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
+          startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
         }
       }
     }
