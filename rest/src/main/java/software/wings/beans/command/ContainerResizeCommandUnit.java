@@ -2,7 +2,6 @@ package software.wings.beans.command;
 
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder.aResizeCommandUnitExecutionData;
 
 import com.google.inject.Inject;
 
@@ -57,7 +56,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
           -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, cloudProviderCredentials, clusterName,
               namespace, dc.getName(), dc.getPreviousCount(), dc.getDesiredCount(), serviceSteadyStateTimeout,
               executionLogCallback)));
-      context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
+      context.setCommandExecutionData(ResizeCommandUnitExecutionData.builder().containerInfos(containerInfos).build());
       boolean allContainersSuccess =
           containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
       int totalDesiredCount = desiredCounts.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
@@ -65,7 +64,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         commandExecutionStatus = SUCCESS;
       }
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
     return commandExecutionStatus;
   }
