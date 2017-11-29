@@ -82,7 +82,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       if (StringUtils.isNotEmpty(name)) {
         envVariables.put("ARTIFACT_FILE_NAME", name);
       }
-    } else if (!isEmpty(context.getMetadata())) {
+    } else if (context.getMetadata() != null) {
       String value = context.getMetadata().get(Constants.ARTIFACT_FILE_NAME);
       if (StringUtils.isNotEmpty(value)) {
         envVariables.put("ARTIFACT_FILE_NAME", value);
