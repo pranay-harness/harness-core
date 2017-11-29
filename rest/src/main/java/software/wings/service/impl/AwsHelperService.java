@@ -64,6 +64,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
 import com.amazonaws.services.ec2.model.DescribeTagsRequest;
+import com.amazonaws.services.ec2.model.DescribeTagsResult;
 import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
@@ -184,6 +185,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -793,21 +795,25 @@ public class AwsHelperService {
   }
 
   public Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    String nextToken = null;
+    Set<String> tags = new LinkedHashSet<>();
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      return amazonEC2Client
-          .describeTags(new DescribeTagsRequest()
-                            .withFilters(new Filter("resource-type").withValues("instance"))
-                            .withMaxResults(1000))
-          .getTags()
-          .stream()
-          .map(TagDescription::getKey)
-          .collect(Collectors.toSet());
+      do {
+        encryptionService.decrypt(awsConfig, encryptionDetails);
+        AmazonEC2Client amazonEC2Client =
+            getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        DescribeTagsResult describeTagsResult =
+            amazonEC2Client.describeTags(new DescribeTagsRequest()
+                                             .withNextToken(nextToken)
+                                             .withFilters(new Filter("resource-type").withValues("instance"))
+                                             .withMaxResults(1000));
+        tags.addAll(describeTagsResult.getTags().stream().map(TagDescription::getKey).collect(Collectors.toSet()));
+        nextToken = describeTagsResult.getNextToken();
+      } while (nextToken != null);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return emptySet();
+    return tags;
   }
 
   public List<String> listAutoScalingGroups(
