@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CodeDeployParams;
-import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.ContainerSetupParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -56,6 +56,8 @@ public class CommandStateExecutionData extends StateExecutionData {
 
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
+  private ContainerSetupParams containerSetupParams;
+  private String containerServiceName;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -163,6 +165,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
     private CodeDeployParams codeDeployParams;
     private CodeDeployParams oldCodeDeployParams;
+    private ContainerSetupParams containerSetupParams;
     private transient ActivityService activityService;
 
     private Builder() {}
@@ -311,6 +314,11 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withContainerSetupParams(ContainerSetupParams containerSetupParams) {
+      this.containerSetupParams = containerSetupParams;
+      return this;
+    }
+
     public Builder withActivityService(ActivityService activityService) {
       this.activityService = activityService;
       return this;
@@ -346,6 +354,7 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withNewInstanceStatusSummaries(newInstanceStatusSummaries)
           .withCodeDeployParams(codeDeployParams)
           .withOldCodeDeployParams(oldCodeDeployParams)
+          .withContainerSetupParams(containerSetupParams)
           .withActivityService(activityService);
     }
 
@@ -379,6 +388,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);
       commandStateExecutionData.setCodeDeployParams(codeDeployParams);
       commandStateExecutionData.setOldCodeDeployParams(oldCodeDeployParams);
+      commandStateExecutionData.setContainerSetupParams(containerSetupParams);
       commandStateExecutionData.setActivityService(activityService);
       return commandStateExecutionData;
     }

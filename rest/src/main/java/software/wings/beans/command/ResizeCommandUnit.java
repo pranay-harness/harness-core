@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
-public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
+public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   @Inject @Transient protected transient AwsClusterService awsClusterService;
 
   public ResizeCommandUnit() {
@@ -36,13 +36,13 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("RESIZE")
-  public static class Yaml extends ContainerOrchestrationCommandUnit.Yaml {
+  public static class Yaml extends ContainerResizeCommandUnit.Yaml {
     public Yaml() {
       super();
       setCommandUnitType(CommandUnitType.RESIZE.name());
     }
 
-    public static final class Builder extends ContainerOrchestrationCommandUnit.Yaml.Builder {
+    public static final class Builder extends ContainerResizeCommandUnit.Yaml.Builder {
       private Builder() {}
 
       public static Builder aYaml() {

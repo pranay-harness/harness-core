@@ -54,6 +54,7 @@ public class CommandExecutionContext {
   private String region;
   private int ecsServiceSteadyStateTimeout;
   private CodeDeployParams codeDeployParams;
+  private ContainerSetupParams containerSetupParams;
   private Map<String, String> metadata = Maps.newHashMap();
   private List<ContainerServiceData> desiredCounts = new ArrayList<>();
   private CommandExecutionData commandExecutionData;
@@ -93,6 +94,7 @@ public class CommandExecutionContext {
     this.serviceName = other.serviceName;
     this.region = other.region;
     this.codeDeployParams = other.codeDeployParams;
+    this.containerSetupParams = other.containerSetupParams;
     this.metadata = other.metadata;
     this.desiredCounts = other.desiredCounts;
     this.commandExecutionData = other.commandExecutionData;
@@ -157,6 +159,7 @@ public class CommandExecutionContext {
     private String region;
     private int ecsServiceSteadyStateTimeout;
     private CodeDeployParams codeDeployParams;
+    private ContainerSetupParams containerSetupParams;
     private Map<String, String> metadata = Maps.newHashMap();
     private List<ContainerServiceData> desiredCounts = new ArrayList<>();
     private CommandExecutionData commandExecutionData;
@@ -307,6 +310,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withContainerSetupParams(ContainerSetupParams containerSetupParams) {
+      this.containerSetupParams = containerSetupParams;
+      return this;
+    }
+
     public Builder withMetadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
@@ -354,6 +362,7 @@ public class CommandExecutionContext {
           .withDesiredCounts(desiredCounts)
           .withCommandExecutionData(commandExecutionData)
           .withEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout)
+          .withContainerSetupParams(containerSetupParams)
           .withSafeDisplayServiceVariables(safeDisplayServiceVariables);
     }
 
@@ -390,6 +399,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setDesiredCounts(desiredCounts);
       commandExecutionContext.setCommandExecutionData(commandExecutionData);
       commandExecutionContext.setEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout);
+      commandExecutionContext.setContainerSetupParams(containerSetupParams);
       return commandExecutionContext;
     }
   }

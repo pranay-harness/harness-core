@@ -8,7 +8,9 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.CODE_DEPLOY;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
+import static software.wings.beans.command.CommandUnitType.ECS_SETUP;
 import static software.wings.beans.command.CommandUnitType.EXEC;
+import static software.wings.beans.command.CommandUnitType.KUBERNETES_SETUP;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_STOPPED;
 import static software.wings.beans.command.CommandUnitType.RESIZE;
@@ -492,19 +494,47 @@ public enum ArtifactType {
     @Override
     public List<Command> getDefaultCommands() {
       return asList(aCommand()
-                        .withCommandType(CommandType.RESIZE)
+                        .withCommandType(CommandType.SETUP)
                         .withGraph(aGraph()
-                                       .withGraphName("Resize Service Cluster")
+                                       .withGraphName("Setup Service Cluster")
                                        .addNodes(aNode()
                                                      .withOrigin(true)
                                                      .withX(50)
                                                      .withY(50)
                                                      .withId(UUIDGenerator.graphIdGenerator("node"))
-                                                     .withName("Resize ECS Service")
-                                                     .withType(RESIZE.name())
+                                                     .withName("Setup ECS Service")
+                                                     .withType(ECS_SETUP.name())
                                                      .build())
                                        .buildPipeline())
                         .build(),
+          aCommand()
+              .withCommandType(CommandType.SETUP)
+              .withGraph(aGraph()
+                             .withGraphName("Setup Replication Controller")
+                             .addNodes(aNode()
+                                           .withOrigin(true)
+                                           .withX(50)
+                                           .withY(50)
+                                           .withId(UUIDGenerator.graphIdGenerator("node"))
+                                           .withName("Setup Kubernetes Replication Controller")
+                                           .withType(KUBERNETES_SETUP.name())
+                                           .build())
+                             .buildPipeline())
+              .build(),
+          aCommand()
+              .withCommandType(CommandType.RESIZE)
+              .withGraph(aGraph()
+                             .withGraphName("Resize Service Cluster")
+                             .addNodes(aNode()
+                                           .withOrigin(true)
+                                           .withX(50)
+                                           .withY(50)
+                                           .withId(UUIDGenerator.graphIdGenerator("node"))
+                                           .withName("Resize ECS Service")
+                                           .withType(RESIZE.name())
+                                           .build())
+                             .buildPipeline())
+              .build(),
           aCommand()
               .withCommandType(CommandType.RESIZE)
               .withGraph(aGraph()

@@ -57,6 +57,8 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   protected Optional<Integer> getServiceDesiredCount(SettingAttribute settingAttribute,
       List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     if (isNotEmpty(containerServiceElement.getName())) {
+      // TODO - sync task?
+
       ReplicationController replicationController = kubernetesContainerService.getController(
           getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), encryptedDataDetails,
           containerServiceElement.getName());
@@ -70,6 +72,8 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   @Override
   protected LinkedHashMap<String, Integer> getActiveServiceCounts(SettingAttribute settingAttribute,
       List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
+    // TODO - sync task?
+
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(
         getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), encryptedDataDetails);

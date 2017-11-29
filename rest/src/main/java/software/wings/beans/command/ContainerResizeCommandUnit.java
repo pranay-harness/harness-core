@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 2/1/17.
  */
-public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandUnit {
+public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   @Inject @Transient private transient DelegateLogService logService;
 
   /**
@@ -32,7 +32,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
    *
    * @param commandUnitType the command unit type
    */
-  public ContainerOrchestrationCommandUnit(CommandUnitType commandUnitType) {
+  public ContainerResizeCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
     setArtifactNeeded(true);
   }

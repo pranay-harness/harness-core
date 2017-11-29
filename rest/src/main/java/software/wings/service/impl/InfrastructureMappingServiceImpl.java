@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.eclipse.jetty.util.StringUtil.isNotBlank;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
@@ -193,7 +194,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
-      validateGcpInfraMapping((GcpKubernetesInfrastructureMapping) infraMapping, computeProviderSetting);
+      GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
+          (GcpKubernetesInfrastructureMapping) infraMapping;
+      if (isBlank(gcpKubernetesInfrastructureMapping.getNamespace())) {
+        gcpKubernetesInfrastructureMapping.setNamespace("default");
+      }
+      validateGcpInfraMapping(gcpKubernetesInfrastructureMapping, computeProviderSetting);
+    }
+
+    if (infraMapping instanceof DirectKubernetesInfrastructureMapping) {
+      DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
+          (DirectKubernetesInfrastructureMapping) infraMapping;
+      if (isBlank(directKubernetesInfrastructureMapping.getNamespace())) {
+        directKubernetesInfrastructureMapping.setNamespace("default");
+      }
+      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping, computeProviderSetting);
     }
 
     if (infraMapping instanceof PhysicalInfrastructureMapping) {
@@ -285,6 +300,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  private void validateDirectKubernetesInfraMapping(
+      DirectKubernetesInfrastructureMapping infraMapping, SettingAttribute settingAttribute) {
+    infraMapping.createKubernetesConfig();
+  }
+
   @Override
   public InfrastructureMapping get(String appId, String infraMappingId) {
     return wingsPersistence.get(InfrastructureMapping.class, appId, infraMappingId);
@@ -322,12 +342,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
       updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
       updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
+      updateOperations.set("namespace",
+          isNotBlank(directKubernetesInfrastructureMapping.getNamespace())
+              ? directKubernetesInfrastructureMapping.getNamespace()
+              : "default");
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
       validateGcpInfraMapping(gcpKubernetesInfrastructureMapping, computeProviderSetting);
       updateOperations.set("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
-      updateOperations.set("namespace", gcpKubernetesInfrastructureMapping.getNamespace());
+      updateOperations.set("namespace",
+          isNotBlank(gcpKubernetesInfrastructureMapping.getNamespace())
+              ? gcpKubernetesInfrastructureMapping.getNamespace()
+              : "default");
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       awsInfrastructureMapping.validate();
