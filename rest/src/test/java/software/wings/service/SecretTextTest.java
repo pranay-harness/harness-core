@@ -1013,6 +1013,87 @@ public class SecretTextTest extends WingsBaseTest {
     }
   }
 
+  @Test
+  @RealMongo
+  public void deleteEncryptedConfigFile() throws IOException, IllegalAccessException, InterruptedException {
+    final long seed = System.currentTimeMillis();
+    System.out.println("seed: " + seed);
+    Random r = new Random(seed);
+
+    String secretName = UUID.randomUUID().toString();
+    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    String secretFileId =
+        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE);
+    List<EncryptedData> encryptedDataList = query.asList();
+    assertEquals(1, encryptedDataList.size());
+    EncryptedData encryptedData = encryptedDataList.get(0);
+    assertEquals(secretName, encryptedData.getName());
+    assertNotNull(encryptedData.getEncryptionKey());
+    assertNotNull(encryptedData.getEncryptedValue());
+    assertNull(encryptedData.getParentIds());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertEquals(kmsId, encryptedData.getKmsId());
+    assertEquals(encryptionType, encryptedData.getEncryptionType());
+    assertEquals(CONFIG_FILE, encryptedData.getType());
+    assertEquals(secretFileId, encryptedData.getUuid());
+
+    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+    wingsPersistence.save(service);
+
+    ConfigFile configFile = ConfigFile.builder()
+                                .templateId(UUID.randomUUID().toString())
+                                .envId(UUID.randomUUID().toString())
+                                .entityType(EntityType.SERVICE)
+                                .entityId(service.getUuid())
+                                .description(UUID.randomUUID().toString())
+                                .parentConfigFileId(UUID.randomUUID().toString())
+                                .relativeFilePath(UUID.randomUUID().toString())
+                                .targetToAllEnv(r.nextBoolean())
+                                .defaultVersion(r.nextInt())
+                                .envIdVersionMapString(UUID.randomUUID().toString())
+                                .setAsDefault(r.nextBoolean())
+                                .notes(UUID.randomUUID().toString())
+                                .overridePath(UUID.randomUUID().toString())
+                                .configOverrideType(ConfigOverrideType.CUSTOM)
+                                .configOverrideExpression(UUID.randomUUID().toString())
+                                .accountId(accountId)
+                                .encryptedFileId(secretFileId)
+                                .encrypted(true)
+                                .build();
+    configFile.setAppId(appId);
+
+    String configFileId = configService.save(configFile, null);
+
+    query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE);
+    assertEquals(1, query.asList().size());
+    encryptedData = query.asList().get(0);
+    assertEquals(secretName, encryptedData.getName());
+    assertNotNull(encryptedData.getEncryptionKey());
+    assertNotNull(encryptedData.getEncryptedValue());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertEquals(kmsId, encryptedData.getKmsId());
+    assertEquals(encryptionType, encryptedData.getEncryptionType());
+    assertEquals(CONFIG_FILE, encryptedData.getType());
+
+    try {
+      secretManager.deleteFile(accountId, secretFileId);
+      fail("Deleted referenced secret");
+    } catch (WingsException e) {
+      // expected
+    }
+
+    configService.delete(appId, configFileId);
+    Thread.sleep(2000);
+
+    secretManager.deleteSecret(accountId, secretFileId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE);
+    assertTrue(query.asList().isEmpty());
+  }
+
   private VaultConfig getVaultConfig() throws IOException {
     URL resource = getClass().getClassLoader().getResource("vault_token.txt");
 
