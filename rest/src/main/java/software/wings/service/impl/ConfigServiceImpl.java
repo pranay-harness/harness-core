@@ -387,7 +387,9 @@ public class ConfigServiceImpl implements ConfigService {
       if (configFiles.size() != 0) {
         configFiles.forEach(file -> delete(appId, file.getUuid()));
       }
-      executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
+      if (!configFile.isEncrypted()) {
+        executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
+      }
     }
   }
 
