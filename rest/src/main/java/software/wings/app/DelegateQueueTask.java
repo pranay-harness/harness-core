@@ -142,12 +142,29 @@ public class DelegateQueueTask implements Runnable {
         delegateSyncCache.clear();
       }
 
-      List<DelegateTask> unassignedTasks = wingsPersistence.createQuery(DelegateTask.class)
-                                               .field("status")
-                                               .equal(DelegateTask.Status.QUEUED)
-                                               .field("delegateId")
-                                               .doesNotExist()
-                                               .asList();
+      List<DelegateTask> unassignedTasks = null;
+      try {
+        unassignedTasks = wingsPersistence.createQuery(DelegateTask.class)
+                              .field("status")
+                              .equal(Status.QUEUED)
+                              .field("delegateId")
+                              .doesNotExist()
+                              .asList();
+      } catch (com.esotericsoftware.kryo.KryoException kryo) {
+        logger.warn("Delegate task schema backwards incompatibilty", kryo);
+        for (Key<DelegateTask> key : wingsPersistence.createQuery(DelegateTask.class)
+                                         .field("status")
+                                         .equal(Status.QUEUED)
+                                         .field("delegateId")
+                                         .doesNotExist()
+                                         .asKeyList()) {
+          try {
+            wingsPersistence.get(DelegateTask.class, key.getId().toString());
+          } catch (com.esotericsoftware.kryo.KryoException ex) {
+            wingsPersistence.delete(DelegateTask.class, key.getId().toString());
+          }
+        }
+      }
 
       if (isNotEmpty(unassignedTasks)) {
         unassignedTasks.forEach(delegateTask -> {
