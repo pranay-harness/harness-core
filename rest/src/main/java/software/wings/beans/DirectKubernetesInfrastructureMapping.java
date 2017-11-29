@@ -3,6 +3,7 @@ package software.wings.beans;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -33,6 +34,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
   @Override
   @SchemaIgnore
+  @JsonIgnore
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.DIRECT;
   }
@@ -49,7 +51,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   public static class Yaml extends ContainerInfrastructureMapping.Yaml {
     private String masterUrl;
     private String username;
-    // TODO, use kms
     private char[] password;
     private String namespace;
 
@@ -58,7 +59,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       private String masterUrl;
       private String username;
       private String computeProviderType;
-      // TODO, use kms
       private char[] password;
       private String serviceName;
       private String namespace;
@@ -189,14 +189,13 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
   @SchemaIgnore
   public KubernetesConfig createKubernetesConfig() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
-                                            .accountId(getAccountId())
-                                            .masterUrl(masterUrl)
-                                            .username(username)
-                                            .encryptedPassword(encryptedPassword)
-                                            .namespace(isNotEmpty(namespace) ? namespace : "default")
-                                            .build();
-    return kubernetesConfig;
+    return KubernetesConfig.builder()
+        .accountId(getAccountId())
+        .masterUrl(masterUrl)
+        .username(username)
+        .encryptedPassword(encryptedPassword)
+        .namespace(isNotEmpty(namespace) ? namespace : "default")
+        .build();
   }
 
   public Builder deepClone() {

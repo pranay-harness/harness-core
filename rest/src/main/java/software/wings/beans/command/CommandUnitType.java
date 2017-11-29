@@ -20,83 +20,28 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 6/2/16.
  */
 public enum CommandUnitType implements CommandUnitDescriptor {
-  /**
-   * Exec command unit type.
-   */
   EXEC(ExecCommandUnit.class, "Exec", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * Scp command unit type.
-   */
   SCP(ScpCommandUnit.class, "Copy", StencilCategory.COPY, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Copy configs.
-   */
   COPY_CONFIGS(CopyConfigCommandUnit.class, "Copy Configs", StencilCategory.COPY, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * Command command unit type.
-   */
   COMMAND(Command.class, "Command", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * Setup env command unit type.
-   */
   SETUP_ENV(SetupEnvCommandUnit.class, "Setup Env", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Docker run.
-   */
   DOCKER_START(DockerStartCommandUnit.class, "Docker Start", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Docker stop.
-   */
   DOCKER_STOP(DockerStopCommandUnit.class, "Docker Stop", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * Process check command unit type.
-   */
   PROCESS_CHECK_RUNNING(
       ProcessCheckRunningCommandUnit.class, "Process Running", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Process check stopped.
-   */
   PROCESS_CHECK_STOPPED(
       ProcessCheckStoppedCommandUnit.class, "Process Stopped", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Port check cleared.
-   */
   PORT_CHECK_CLEARED(
       PortCheckClearedCommandUnit.class, "Port Cleared", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Port check listening.
-   */
   PORT_CHECK_LISTENING(
       PortCheckListeningCommandUnit.class, "Port Listening", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Install.
-   */
-  RESIZE(ResizeCommandUnit.class, "Resize Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Code deploy.
-   */
-  CODE_DEPLOY(CodeDeployCommandUnit.class, "Amazon Code Deploy", StencilCategory.COMMANDS,
-      DEFAULT_DISPLAY_ORDER), /**
-                               * The Aws lambda.
-                               */
+  CODE_DEPLOY(CodeDeployCommandUnit.class, "Amazon Code Deploy", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
   AWS_LAMBDA(AwsLambdaCommandUnit.class, "AWS Lambda", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
-
-  /**
-   * The Install.
-   */
-  RESIZE_KUBERNETES(KubernetesResizeCommandUnit.class, "Resize Kubernetes Controller", StencilCategory.CONTAINERS,
+  ECS_SETUP(EcsSetupCommandUnit.class, "Setup ECS Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
+  KUBERNETES_SETUP(
+      KubernetesSetupCommandUnit.class, "Setup Kubernetes Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
+  RESIZE(ResizeCommandUnit.class, "Resize ECS Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
+  RESIZE_KUBERNETES(KubernetesResizeCommandUnit.class, "Resize Kubernetes Service", StencilCategory.CONTAINERS,
       DEFAULT_DISPLAY_ORDER);
 
   private static final String stencilsPath = "/templates/commandstencils/";
@@ -110,16 +55,6 @@ public enum CommandUnitType implements CommandUnitDescriptor {
 
   private StencilCategory stencilCategory;
   private Integer displayOrder;
-
-  /**
-   * Instantiates a new command unit type.
-   *
-   * @param commandUnitClass the command unit class
-   * @param name
-   */
-  CommandUnitType(Class<? extends CommandUnit> commandUnitClass, String name) {
-    this(commandUnitClass, name, StencilCategory.OTHERS, DEFAULT_DISPLAY_ORDER);
-  }
 
   /**
    * Instantiates a new command unit type.

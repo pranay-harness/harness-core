@@ -19,10 +19,10 @@ import java.util.List;
 /**
  * Created by brett on 3/3/17
  */
-public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUnit {
-  @Inject @Transient protected transient GkeClusterService gkeClusterService;
+public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
+  @Inject @Transient private transient GkeClusterService gkeClusterService;
 
-  @Inject @Transient protected transient KubernetesContainerService kubernetesContainerService;
+  @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
 
   public KubernetesResizeCommandUnit() {
     super(CommandUnitType.RESIZE_KUBERNETES);
@@ -47,13 +47,13 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("RESIZE_KUBERNETES")
-  public static class Yaml extends ContainerOrchestrationCommandUnit.Yaml {
+  public static class Yaml extends ContainerResizeCommandUnit.Yaml {
     public Yaml() {
       super();
       setCommandUnitType(CommandUnitType.RESIZE_KUBERNETES.name());
     }
 
-    public static final class Builder extends ContainerOrchestrationCommandUnit.Yaml.Builder {
+    public static final class Builder extends ContainerResizeCommandUnit.Yaml.Builder {
       private Builder() {}
 
       public static Builder aYaml() {
