@@ -30,10 +30,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Migration script to make node select counts cumulative
@@ -57,7 +57,6 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
       return;
     }
     System.out.println("Updating " + apps.size() + " applications.");
-    StringBuilder result = new StringBuilder();
     for (Application app : apps) {
       PageRequest<Service> svcPageRequest =
           aPageRequest()
@@ -92,7 +91,12 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
                                   .build();
 
             updatedServices.add(serviceResourceService.addCommand(service.getAppId(), service.getUuid(),
-                aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true));
+                aServiceCommand()
+                    .withTargetToAllEnv(true)
+                    .withCommand(command)
+                    .withName("Setup Service Cluster")
+                    .build(),
+                true));
           }
           if (!containsKubeSetup && "Resize Replication Controller".equals(serviceCommand.getName())) {
             Command command = aCommand()
@@ -111,21 +115,19 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
                                   .build();
 
             updatedServices.add(serviceResourceService.addCommand(service.getAppId(), service.getUuid(),
-                aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true));
+                aServiceCommand()
+                    .withTargetToAllEnv(true)
+                    .withCommand(command)
+                    .withName("Setup Replication Controller")
+                    .build(),
+                true));
           }
         }
       }
       if (isNotEmpty(updatedServices)) {
-        System.out.println("Updated services in app " + app.getName());
-        List<Service> updatedServicesList = new ArrayList<>(updatedServices);
-        try {
-          Thread.sleep(100L);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        wingsPersistence.save(updatedServicesList);
+        System.out.println("Updated services in app " + app.getName() + ": "
+            + updatedServices.stream().map(Service::getName).collect(Collectors.toList()));
       }
     }
-    System.out.println(result.toString());
   }
 }
