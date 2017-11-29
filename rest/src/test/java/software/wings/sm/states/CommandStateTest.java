@@ -297,7 +297,7 @@ public class CommandStateTest extends WingsBaseTest {
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(5)).getWorkflowExecutionId();
@@ -319,7 +319,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
 
-    verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, serviceCommandExecutorService,
+    verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, serviceCommandExecutorService,
         activityService, settingsService, workflowExecutionService, artifactStreamService);
   }
 

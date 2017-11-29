@@ -301,14 +301,10 @@ public class CommandState extends State {
             (Encryptable) bastionConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
       }
 
-      if (command.isArtifactNeeded()) {
-        Artifact artifact = findArtifact(context, workflowStandardParams, service.getUuid());
-        if (artifact == null) {
-          throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
-        }
+      Artifact artifact = findArtifact(context, workflowStandardParams, service.getUuid());
+      if (artifact != null) {
         commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-
         if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
             || artifactStream.getArtifactStreamType().equals(ECR.name())
             || artifactStream.getArtifactStreamType().equals(GCR.name())) {
@@ -316,15 +312,15 @@ public class CommandState extends State {
           artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
           commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
         }
-
         activityBuilder.artifactStreamId(artifactStream.getUuid())
             .artifactStreamName(artifactStream.getSourceName())
             .artifactName(artifact.getDisplayName())
             .artifactId(artifact.getUuid());
         commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
         executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
+      } else if (command.isArtifactNeeded()) {
+        throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
       }
-
       Activity act = activityBuilder.build();
       act.setAppId(application.getUuid());
       Activity activity = activityService.save(act);
