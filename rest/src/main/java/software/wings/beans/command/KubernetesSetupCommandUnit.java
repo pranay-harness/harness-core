@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
@@ -169,8 +170,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     executionLogCallback.saveExecutionLog("Cluster Name: " + clusterName, LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Replication Controller Name: " + containerServiceName, LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Service Name: " + kubernetesServiceName, LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Service Cluster IP: " + serviceClusterIP, LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Load Balancer Endpoint: " + serviceLoadBalancerEndpoint, LogLevel.INFO);
+    if (isNotBlank(serviceClusterIP)) {
+      executionLogCallback.saveExecutionLog("Service Cluster IP: " + serviceClusterIP, LogLevel.INFO);
+    }
+    if (isNotBlank(serviceLoadBalancerEndpoint)) {
+      executionLogCallback.saveExecutionLog("Load Balancer Endpoint: " + serviceLoadBalancerEndpoint, LogLevel.INFO);
+    }
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
 
     return containerServiceName;
