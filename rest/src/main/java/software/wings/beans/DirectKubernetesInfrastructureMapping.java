@@ -169,6 +169,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     }
   }
 
+  @SchemaIgnore
   @Override
   @Attributes(title = "Display Name")
   public String getClusterName() {
