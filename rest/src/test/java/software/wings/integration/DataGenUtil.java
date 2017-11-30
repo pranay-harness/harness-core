@@ -520,4 +520,13 @@ public class DataGenUtil extends BaseIntegrationTest {
     names.remove(nameIdx);
     return name;
   }
+
+  /**
+   * Please do not remove the main class as UI test needs datagen as Jar
+   * @param args
+   */
+  public static void main(String[] args) {
+    System.out.println("Running tests!");
+    JUnitCore.main("software.wings.integration.DataGenUtil");
+  }
 }
