@@ -38,6 +38,7 @@ import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -362,6 +363,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             }
           }
         }
+        // Sort the alphanumeric order
+        artifactPaths = artifactPaths.stream().sorted(new AlphanumComparator()).collect(Collectors.toList());
         Collections.reverse(artifactPaths);
         artifactPaths = artifactPaths.stream().limit(maxVersions).collect(Collectors.toList());
         Collections.reverse(artifactPaths);
