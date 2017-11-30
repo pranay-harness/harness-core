@@ -278,6 +278,42 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  public void saveAndEditConfig() throws IOException {
+    String accountId = UUID.randomUUID().toString();
+    String name = UUID.randomUUID().toString();
+    VaultConfig vaultConfig = getVaultConfig();
+    vaultConfig.setName(name);
+    vaultConfig.setAccountId(accountId);
+
+    vaultService.saveVaultConfig(accountId, vaultConfig);
+
+    VaultConfig savedConfig = vaultService.getSecretConfig(accountId);
+    vaultConfig = getVaultConfig();
+    vaultConfig.setName(name);
+    vaultConfig.setAccountId(accountId);
+    assertEquals(vaultConfig, savedConfig);
+    assertEquals(name, savedConfig.getName());
+    List<EncryptedData> encryptedDataList =
+        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.VAULT).asList();
+    assertEquals(1, encryptedDataList.size());
+    assertEquals(1, encryptedDataList.get(0).getParentIds().size());
+    assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
+    assertEquals(name + "_token", encryptedDataList.get(0).getName());
+
+    name = UUID.randomUUID().toString();
+    vaultConfig = getVaultConfig();
+    savedConfig.setAuthToken(vaultConfig.getAuthToken());
+    savedConfig.setName(name);
+    vaultService.saveVaultConfig(accountId, savedConfig);
+    encryptedDataList =
+        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.VAULT).asList();
+    assertEquals(1, encryptedDataList.size());
+    assertEquals(1, encryptedDataList.get(0).getParentIds().size());
+    assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
+    assertEquals(name + "_token", encryptedDataList.get(0).getName());
+  }
+
+  @Test
   public void saveConfigDefaultWithDefaultKms() throws IOException {
     if (isKmsEnabled) {
       wingsPersistence.delete(KmsConfig.class, kmsId);

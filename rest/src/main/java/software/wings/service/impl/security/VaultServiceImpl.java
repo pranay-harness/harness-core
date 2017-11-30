@@ -9,6 +9,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import com.mongodb.DuplicateKeyException;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.KmsTransitionEvent;
@@ -139,14 +141,31 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     EncryptedData encryptedData =
         kmsService.encrypt(vaultConfig.getAuthToken().toCharArray(), accountId, kmsService.getSecretConfig(accountId));
+    if (!StringUtils.isBlank(vaultConfig.getUuid())) {
+      EncryptedData savedEncryptedData = wingsPersistence.get(
+          EncryptedData.class, wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid()).getAuthToken());
+      Preconditions.checkNotNull(savedEncryptedData, "reference is null for " + vaultConfig.getUuid());
+      savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
+      savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+      encryptedData = savedEncryptedData;
+    }
+    vaultConfig.setAuthToken(null);
+    String vaultConfigId;
+    try {
+      vaultConfigId = wingsPersistence.save(vaultConfig);
+    } catch (DuplicateKeyException e) {
+      throw new WingsException(
+          ErrorCode.VAULT_OPERATION_ERROR, "reason", "Another configuration with the same name exists");
+    }
+
     encryptedData.setAccountId(accountId);
-    String encryptedDataId = wingsPersistence.save(encryptedData);
-    vaultConfig.setAuthToken(encryptedDataId);
-    String vaultConfigId = wingsPersistence.save(vaultConfig);
     encryptedData.addParent(vaultConfigId);
     encryptedData.setType(SettingVariableTypes.VAULT);
     encryptedData.setName(vaultConfig.getName() + "_token");
-    wingsPersistence.save(encryptedData);
+    String encryptedDataId = wingsPersistence.save(encryptedData);
+
+    vaultConfig.setAuthToken(encryptedDataId);
+    wingsPersistence.save(vaultConfig);
 
     if (vaultConfig.isDefault() && (!savedConfigs.isEmpty() || !kmsConfigs.isEmpty())) {
       for (VaultConfig savedConfig : savedConfigs) {

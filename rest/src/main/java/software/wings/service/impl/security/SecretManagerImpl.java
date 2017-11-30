@@ -345,6 +345,9 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean transitionSecrets(
       String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType) {
+    Preconditions.checkState(!StringUtils.isBlank(accountId), "accountId can't be blank");
+    Preconditions.checkState(!StringUtils.isBlank(fromVaultId), "fromVaultId can't be blank");
+    Preconditions.checkState(!StringUtils.isBlank(toVaultId), "toVaultId can't be blank");
     switch (encryptionType) {
       case KMS:
         return kmsService.transitionKms(accountId, fromVaultId, toVaultId);
