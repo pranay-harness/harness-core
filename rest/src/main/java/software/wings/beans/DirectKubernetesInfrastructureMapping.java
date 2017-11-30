@@ -26,7 +26,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
-  @Attributes(title = "Namespace") @NotEmpty private String namespace;
+  @Attributes(title = "Namespace") private String namespace;
 
   @SchemaIgnore private String encryptedPassword;
 
