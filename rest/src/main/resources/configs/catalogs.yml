@@ -222,8 +222,6 @@ LOG_DRIVER:
       value: ""
     - name: awslogs
       value: awslogs
-    - name: splunk
-      value: splunk
     - name: fluentd
       value: fluentd
     - name: gelf
