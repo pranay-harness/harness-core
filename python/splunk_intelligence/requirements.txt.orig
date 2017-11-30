@@ -1,0 +1,18 @@
+pyopenssl
+nose
+sphinx
+splunk-sdk
+numpy
+pandas
+nltk
+scipy
+sklearn
+plotly
+debacl
+cython
+statsmodels
+hmmlearn
+gensim
+pymongo; sys_platform == 'darwin'
+ipython==5.0; sys_platform == 'darwin'
+jupyter; sys_platform == 'darwin'
