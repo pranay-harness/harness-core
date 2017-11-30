@@ -75,7 +75,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -96,7 +95,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +109,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
-  @Mock private AwsClusterService awsClusterService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -210,15 +207,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Test
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
-
-    com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
-    ecsService.setServiceName(ECS_SERVICE_NAME);
-    ecsService.setCreatedAt(new Date());
-    ecsService.setDesiredCount(0);
-    when(awsClusterService.getServices(
-             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), CLUSTER_NAME))
-        .thenReturn(Lists.newArrayList(ecsService));
-
     ExecutionResponse response = ecsServiceDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
@@ -259,14 +247,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteAsyncWithOldService() {
-    com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
-    ecsService.setServiceName(ECS_SERVICE_OLD_NAME);
-    ecsService.setCreatedAt(new Date());
-    ecsService.setDesiredCount(1);
-    when(awsClusterService.getServices(
-             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), CLUSTER_NAME))
-        .thenReturn(Lists.newArrayList(ecsService));
-
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
