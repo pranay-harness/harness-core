@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
@@ -141,6 +142,14 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
 
     EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
+    if (!StringUtils.isBlank(kmsConfig.getUuid())) {
+      EncryptedData savedAccessKey = wingsPersistence.get(
+          EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getAccessKey());
+      Preconditions.checkNotNull(savedAccessKey, "reference is null for " + kmsConfig.getUuid());
+      savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
+      savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
+      accessKeyData = savedAccessKey;
+    }
     accessKeyData.setAccountId(accountId);
     accessKeyData.setType(SettingVariableTypes.KMS);
     accessKeyData.setName(kmsConfig.getName() + "_accessKey");
@@ -148,6 +157,14 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     kmsConfig.setAccessKey(accessKeyId);
 
     EncryptedData secretKeyData = encrypt(kmsConfig.getSecretKey().toCharArray(), accountId, null);
+    if (!StringUtils.isBlank(kmsConfig.getUuid())) {
+      EncryptedData savedSecretKey = wingsPersistence.get(
+          EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getSecretKey());
+      Preconditions.checkNotNull(savedSecretKey, "reference is null for " + kmsConfig.getUuid());
+      savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
+      savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
+      secretKeyData = savedSecretKey;
+    }
     secretKeyData.setAccountId(accountId);
     secretKeyData.setType(SettingVariableTypes.KMS);
     secretKeyData.setName(kmsConfig.getName() + "_secretKey");
@@ -155,6 +172,14 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     kmsConfig.setSecretKey(secretKeyId);
 
     EncryptedData arnKeyData = encrypt(kmsConfig.getKmsArn().toCharArray(), accountId, null);
+    if (!StringUtils.isBlank(kmsConfig.getUuid())) {
+      EncryptedData savedArn = wingsPersistence.get(
+          EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getKmsArn());
+      Preconditions.checkNotNull(savedArn, "reference is null for " + kmsConfig.getUuid());
+      savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
+      savedArn.setEncryptedValue(arnKeyData.getEncryptedValue());
+      arnKeyData = savedArn;
+    }
     arnKeyData.setAccountId(accountId);
     arnKeyData.setType(SettingVariableTypes.KMS);
     arnKeyData.setName(kmsConfig.getName() + "_arn");
