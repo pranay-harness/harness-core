@@ -9,15 +9,6 @@ import com.google.common.collect.Sets;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DelegateTask;
@@ -25,9 +16,9 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -37,11 +28,7 @@ import javax.inject.Inject;
  * Created by brett on 11/5/17
  */
 public class CommandValidation extends AbstractDelegateValidateTask {
-  private static final String AWS_AVAILABILITY_ZONE_CHECK =
-      "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   private static final String NON_SSH_COMMAND_ALWAYS_TRUE = "NON_SSH_COMMAND_ALWAYS_TRUE";
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private EncryptionService encryptionService;
 
@@ -78,20 +65,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
           connectableHttpUrl(((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl()));
     } else if (DeploymentType.ECS.name().equals(deploymentType)
         || DeploymentType.AWS_CODEDEPLOY.name().equals(deploymentType)) {
-      CloseableHttpClient httpclient =
-          HttpClients.custom()
-              .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(2000).build())
-              .build();
-      try {
-        HttpEntity entity = httpclient.execute(new HttpGet(AWS_AVAILABILITY_ZONE_CHECK)).getEntity();
-        String availabilityZone =
-            entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "none";
-        logger.info("Delegate AWS availability zone: " + availabilityZone);
-        resultBuilder.validated(StringUtils.startsWith(availabilityZone, context.getRegion()));
-      } catch (IOException e) {
-        logger.info("Can't get AWS region");
-        resultBuilder.validated(false);
-      }
+      resultBuilder.validated(AwsHelperService.isInAwsRegion(context.getRegion()));
     } else {
       resultBuilder.validated(true);
     }

@@ -1,29 +1,15 @@
 package software.wings.sm.states;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
-import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
-
 import com.google.inject.Inject;
 
-import com.amazonaws.services.ecs.model.Service;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 2/8/17.
@@ -45,39 +31,6 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
-  }
-
-  @Override
-  protected Optional<Integer> getServiceDesiredCount(SettingAttribute settingAttribute,
-      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
-    if (isNotEmpty(containerServiceElement.getName())) {
-      Optional<Service> service =
-          awsClusterService
-              .getServices(region, settingAttribute, encryptedDataDetails, containerServiceElement.getClusterName())
-              .stream()
-              .filter(svc -> svc.getServiceName().equals(containerServiceElement.getName()))
-              .findFirst();
-      if (service.isPresent()) {
-        return Optional.of(service.get().getDesiredCount());
-      }
-    }
-    return Optional.empty();
-  }
-
-  @Override
-  protected LinkedHashMap<String, Integer> getActiveServiceCounts(SettingAttribute settingAttribute,
-      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
-    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceElement.getName());
-    List<Service> activeOldServices =
-        awsClusterService
-            .getServices(region, settingAttribute, encryptedDataDetails, containerServiceElement.getClusterName())
-            .stream()
-            .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
-            .collect(Collectors.toList());
-    activeOldServices.sort(Comparator.comparingInt(service -> getRevisionFromServiceName(service.getServiceName())));
-    activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
-    return result;
   }
 
   @Override

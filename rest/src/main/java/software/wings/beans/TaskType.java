@@ -33,6 +33,7 @@ import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
+import software.wings.delegatetasks.validation.ContainerValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
@@ -138,7 +139,9 @@ public enum TaskType {
   GIT_VALIDATE(TaskGroup.GIT, ServiceImplDelegateTask.class, GitValidation.class),
   VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class);
+  HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class),
+  CONTAINER_SERVICE_DESIRED_COUNT(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
+  CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class);
 
   private TaskGroup taskGroup;
   private Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

@@ -9,6 +9,7 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -34,6 +35,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -53,9 +55,11 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -93,6 +97,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient protected transient SecretManager secretManager;
+  @Inject @Transient protected transient DelegateProxyFactory delegateProxyFactory;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -146,8 +151,13 @@ public abstract class ContainerServiceDeploy extends State {
   }
 
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
-    Optional<Integer> previousDesiredCount = getServiceDesiredCount(contextData.settingAttribute,
-        contextData.encryptedDataDetails, contextData.region, contextData.containerElement);
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
+    Optional<Integer> previousDesiredCount =
+        delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+            .getServiceDesiredCount(contextData.settingAttribute, contextData.encryptedDataDetails,
+                contextData.containerElement, contextData.region);
+
     if (!previousDesiredCount.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           "Service setup not done, service name: " + contextData.containerElement.getName());
@@ -173,8 +183,12 @@ public abstract class ContainerServiceDeploy extends State {
   private int getNewInstancesDesiredCount(ContextData contextData) {
     if (getInstanceUnitType() == PERCENTAGE) {
       int percent = Math.min(getInstanceCount(), 100);
-      LinkedHashMap<String, Integer> activeServiceCounts = getActiveServiceCounts(contextData.settingAttribute,
-          contextData.encryptedDataDetails, contextData.region, contextData.containerElement);
+      SyncTaskContext syncTaskContext =
+          aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
+      LinkedHashMap<String, Integer> activeServiceCounts =
+          delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+              .getActiveServiceCounts(contextData.settingAttribute, contextData.encryptedDataDetails,
+                  contextData.containerElement, contextData.region);
       int totalActiveInstances = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
       int totalInstancesAvailable = Math.max(contextData.containerElement.getMaxInstances(), totalActiveInstances);
       int instanceCount = Long.valueOf(Math.round(percent * totalInstancesAvailable / 100.0)).intValue();
@@ -186,8 +200,12 @@ public abstract class ContainerServiceDeploy extends State {
 
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
     List<ContainerServiceData> desiredCounts = new ArrayList<>();
-    LinkedHashMap<String, Integer> previousCounts = getActiveServiceCounts(contextData.settingAttribute,
-        contextData.encryptedDataDetails, contextData.region, contextData.containerElement);
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
+    LinkedHashMap<String, Integer> previousCounts =
+        delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+            .getActiveServiceCounts(contextData.settingAttribute, contextData.encryptedDataDetails,
+                contextData.containerElement, contextData.region);
     previousCounts.remove(newServiceData.getName());
     int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
     for (String serviceName : previousCounts.keySet()) {
@@ -321,12 +339,6 @@ public abstract class ContainerServiceDeploy extends State {
   public abstract InstanceUnitType getInstanceUnitType();
 
   public abstract String getCommandName();
-
-  protected abstract Optional<Integer> getServiceDesiredCount(SettingAttribute settingAttribute,
-      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement);
-
-  protected abstract LinkedHashMap<String, Integer> getActiveServiceCounts(SettingAttribute settingAttribute,
-      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement);
 
   private Activity buildActivity(ExecutionContext context, ContextData contextData) {
     Activity activity = Activity.builder()
