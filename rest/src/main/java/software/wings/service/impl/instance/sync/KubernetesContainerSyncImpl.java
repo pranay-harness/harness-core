@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance.sync;
 
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -20,6 +22,7 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.instance.sync.request.ContainerFilter;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
@@ -59,14 +62,26 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
         Validator.notNullCheck("InfrastructureMapping is null for id:" + containerDeploymentInfo.getInfraMappingId(),
             infrastructureMapping);
 
-        KubernetesConfig kubernetesConfig =
-            getKubernetesConfig(infrastructureMapping, containerDeploymentInfo.getWorkflowExecutionId());
+        SettingAttribute settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+            ? aSettingAttribute()
+                  .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
+                  .build()
+            : settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
+        List<EncryptedDataDetail> encryptionDetails =
+            secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(),
+                infrastructureMapping.getAppId(), containerDeploymentInfo.getWorkflowExecutionId());
+
+        KubernetesConfig kubernetesConfig = getKubernetesConfig(infrastructureMapping, encryptionDetails);
         Validator.notNullCheck(
             "KubernetesConfig is null for given infraMappingId:" + containerDeploymentInfo.getInfraMappingId(),
             infrastructureMapping);
 
+        // TODO(brett) - sync task?
+
         ReplicationController replicationController = kubernetesContainerService.getController(
-            kubernetesConfig, Collections.emptyList(), containerDeploymentInfo.getContainerSvcName());
+            kubernetesConfig, encryptionDetails, containerDeploymentInfo.getContainerSvcName());
+
         if (replicationController != null) {
           Map<String, String> labels = replicationController.getMetadata().getLabels();
           List<Service> services =
@@ -100,21 +115,15 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
   }
 
   private KubernetesConfig getKubernetesConfig(
-      InfrastructureMapping infrastructureMapping, String workflowExecutionId) {
-    KubernetesConfig kubernetesConfig;
-
+      InfrastructureMapping infrastructureMapping, List<EncryptedDataDetail> encryptionDetails) {
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
       SettingAttribute computeProviderSetting =
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting,
-          secretManager.getEncryptionDetails(
-              (Encryptable) computeProviderSetting.getValue(), infrastructureMapping.getAppId(), workflowExecutionId),
-          gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
+      return gkeClusterService.getCluster(
+          computeProviderSetting, encryptionDetails, gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
     } else {
-      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
+      return ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
     }
-
-    return kubernetesConfig;
   }
 }

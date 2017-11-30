@@ -17,7 +17,6 @@ import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.UUIDGenerator;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DelegateService;
@@ -58,7 +57,6 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private SecretManager secretManager;
   @Inject private ExecutorService executorService;
-  @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject private DelegateService delegateService;
 
   /**

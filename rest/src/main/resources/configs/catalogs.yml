@@ -309,6 +309,10 @@ TASK_TYPES:
       value: SUMO
     - name: Key Management Service
       value: KMS
+    - name: Git
+      value: GIT
+    - name: Container
+      value: CONTAINER
 
 EXECUTION_STATUS:
     - name: Aborted

@@ -24,5 +24,6 @@ public enum TaskGroup {
   ARTIFACTORY,
   HOST_VALIDATION,
   KMS,
-  GIT
+  GIT,
+  CONTAINER
 }

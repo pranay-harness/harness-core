@@ -2,12 +2,12 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.collect.Lists;
@@ -166,6 +166,12 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -197,6 +203,8 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class AwsHelperService {
+  private static final String AWS_AVAILABILITY_ZONE_CHECK =
+      "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   private static final int SLEEP_INTERVAL = 30 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
   @Inject private EncryptionService encryptionService;
@@ -1523,5 +1531,21 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return null;
+  }
+
+  public static boolean isInAwsRegion(String region) {
+    try {
+      HttpEntity entity =
+          HttpClients.custom()
+              .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(2000).build())
+              .build()
+              .execute(new HttpGet(AWS_AVAILABILITY_ZONE_CHECK))
+              .getEntity();
+      String availabilityZone =
+          entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "none";
+      return startsWith(availabilityZone, region);
+    } catch (Exception e) {
+      return false;
+    }
   }
 }
