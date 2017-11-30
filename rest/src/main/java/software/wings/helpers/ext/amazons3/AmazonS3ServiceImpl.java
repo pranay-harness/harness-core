@@ -39,6 +39,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject AwsHelperService awsHelperService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
+  private static final int MAX_FILES_IN_BUCKET = 10000;
 
   @Override
   public Map<String, String> getBuckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
@@ -66,7 +67,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
                                                       .collect(Collectors.toList());
       objectKeyList.addAll(objectKeyListForCurrentBatch);
       listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
-    } while (result.isTruncated() == true);
+    } while (result.isTruncated() == true || objectKeyList.size() < MAX_FILES_IN_BUCKET);
 
     return objectKeyList;
   }
