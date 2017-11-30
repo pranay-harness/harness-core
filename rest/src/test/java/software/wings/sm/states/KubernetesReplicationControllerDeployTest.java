@@ -54,10 +54,12 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -78,9 +80,11 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -88,7 +92,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -99,7 +102,9 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by brett on 3/10/17
@@ -121,7 +126,13 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SecretManager secretManager;
   @Mock private WorkflowExecutionService workflowExecutionService;
-  private ExecutionContextImpl context;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
+
+  @InjectMocks
+  private KubernetesReplicationControllerDeploy kubernetesReplicationControllerDeploy =
+      aKubernetesReplicationControllerDeploy(STATE_NAME).withCommandName(COMMAND_NAME).withInstanceCount(1).build();
+
+  @Mock private ContainerService containerService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -160,9 +171,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
       aSettingAttribute()
           .withValue(GcpConfig.builder().serviceAccountKeyFileContent("keyFileContent".toCharArray()).build())
           .build();
-
-  private KubernetesReplicationControllerDeploy kubernetesReplicationControllerDeploy =
-      aKubernetesReplicationControllerDeploy(STATE_NAME).withCommandName(COMMAND_NAME).withInstanceCount(1).build();
+  private ExecutionContextImpl context;
 
   /**
    * Set up.
@@ -180,15 +189,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME)).thenReturn(serviceCommand);
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
-
-    on(kubernetesReplicationControllerDeploy).set("settingsService", settingsService);
-    on(kubernetesReplicationControllerDeploy).set("delegateService", delegateService);
-    on(kubernetesReplicationControllerDeploy).set("serviceResourceService", serviceResourceService);
-    on(kubernetesReplicationControllerDeploy).set("activityService", activityService);
-    on(kubernetesReplicationControllerDeploy).set("infrastructureMappingService", infrastructureMappingService);
-    on(kubernetesReplicationControllerDeploy).set("gkeClusterService", gkeClusterService);
-    on(kubernetesReplicationControllerDeploy).set("kubernetesContainerService", kubernetesContainerService);
-    on(kubernetesReplicationControllerDeploy).set("serviceTemplateService", serviceTemplateService);
 
     InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
@@ -212,6 +212,12 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
+
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
+        .thenReturn(containerService);
+    when(containerService.getServiceDesiredCount(
+             any(SettingAttribute.class), any(List.class), any(ContainerServiceElement.class), any(String.class)))
+        .thenReturn(Optional.of(0));
   }
 
   @Test
@@ -244,6 +250,9 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteThrowInvalidRequest() {
+    when(containerService.getServiceDesiredCount(
+             any(SettingAttribute.class), any(List.class), any(ContainerServiceElement.class), any(String.class)))
+        .thenReturn(Optional.empty());
     try {
       on(context).set("serviceTemplateService", serviceTemplateService);
       kubernetesReplicationControllerDeploy.execute(context);
