@@ -174,6 +174,48 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  public void saveAndEditConfig() throws IOException {
+    String accountId = UUID.randomUUID().toString();
+    String name = UUID.randomUUID().toString();
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setName(name);
+    kmsConfig.setAccountId(accountId);
+
+    kmsService.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
+
+    KmsConfig savedConfig = kmsService.getSecretConfig(kmsConfig.getAccountId());
+    kmsConfig = getKmsConfig();
+    kmsConfig.setName(name);
+    kmsConfig.setAccountId(accountId);
+    assertEquals(kmsConfig, savedConfig);
+    assertEquals(name, savedConfig.getName());
+    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class).asList();
+    assertEquals(numOfEncryptedValsForKms, encryptedDataList.size());
+    for (EncryptedData encryptedData : encryptedDataList) {
+      assertTrue(encryptedData.getName().equals(name + "_accessKey")
+          || encryptedData.getName().equals(name + "_secretKey") || encryptedData.getName().equals(name + "_arn"));
+      assertEquals(1, encryptedData.getParentIds().size());
+      assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
+    }
+
+    name = UUID.randomUUID().toString();
+    kmsConfig = getKmsConfig();
+    savedConfig.setAccessKey(kmsConfig.getAccessKey());
+    savedConfig.setSecretKey(kmsConfig.getSecretKey());
+    savedConfig.setKmsArn(kmsConfig.getKmsArn());
+    savedConfig.setName(name);
+    kmsService.saveKmsConfig(accountId, savedConfig);
+    encryptedDataList = wingsPersistence.createQuery(EncryptedData.class).asList();
+    assertEquals(numOfEncryptedValsForKms, encryptedDataList.size());
+    for (EncryptedData encryptedData : encryptedDataList) {
+      assertTrue(encryptedData.getName().equals(name + "_accessKey")
+          || encryptedData.getName().equals(name + "_secretKey") || encryptedData.getName().equals(name + "_arn"));
+      assertEquals(1, encryptedData.getParentIds().size());
+      assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
+    }
+  }
+
+  @Test
   public void localNullEncryption() throws Exception {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
