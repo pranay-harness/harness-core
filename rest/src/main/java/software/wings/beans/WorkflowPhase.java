@@ -6,9 +6,9 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.PHASE;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by rishi on 12/21/16.
@@ -31,9 +30,9 @@ import javax.validation.constraints.NotNull;
 public class WorkflowPhase implements UuidAware {
   private String uuid = UUIDGenerator.getUuid();
   private String name;
-  private @NotNull String serviceId;
+  private String serviceId;
 
-  @NotNull private String infraMappingId;
+  private String infraMappingId;
 
   private DeploymentType deploymentType;
   private String computeProviderId;
@@ -43,7 +42,7 @@ public class WorkflowPhase implements UuidAware {
   private boolean rollback;
   private String phaseNameForRollback;
 
-  private boolean valid;
+  private boolean valid = true;
   private String validationMessage;
 
   private List<TemplateExpression> templateExpressions;
@@ -272,14 +271,21 @@ public class WorkflowPhase implements UuidAware {
   }
 
   @JsonIgnore
-  public boolean isServiceTemplatized() {
-    if (templateExpressions != null) {
-      if (templateExpressions.stream().anyMatch(
-              templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
-        return true;
-      }
+  public boolean checkServiceTemplatized() {
+    return checkFieldTemplatized("serviceId");
+  }
+
+  @JsonIgnore
+  public boolean checkInfraTemplatized() {
+    return checkFieldTemplatized("infraMappingId");
+  }
+
+  private boolean checkFieldTemplatized(String fieldName) {
+    if (templateExpressions == null) {
+      return false;
     }
-    return false;
+    return templateExpressions.stream().anyMatch(
+        templateExpression -> templateExpression.getFieldName().equals(fieldName));
   }
 
   public static final class WorkflowPhaseBuilder {
@@ -292,7 +298,7 @@ public class WorkflowPhase implements UuidAware {
     private String infraMappingName;
     private boolean rollback;
     private String phaseNameForRollback;
-    private boolean valid;
+    private boolean valid = true;
     private String validationMessage;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
     private List<TemplateExpression> templateExpressions;

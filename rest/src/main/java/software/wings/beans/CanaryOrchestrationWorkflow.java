@@ -244,10 +244,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         populatePhaseStepIds(workflowPhase);
 
         WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
-        rollbackPhase.setName(ROLLBACK_PREFIX + workflowPhase.getName());
-        rollbackPhase.setPhaseNameForRollback(workflowPhase.getName());
-        rollbackPhase.setTemplateExpressions(workflowPhase.getTemplateExpressions());
-        populatePhaseStepIds(rollbackPhase);
+        if (rollbackPhase != null) {
+          rollbackPhase.setName(ROLLBACK_PREFIX + workflowPhase.getName());
+          rollbackPhase.setPhaseNameForRollback(workflowPhase.getName());
+          rollbackPhase.setTemplateExpressions(workflowPhase.getTemplateExpressions());
+          populatePhaseStepIds(rollbackPhase);
+        }
       }
     }
     populatePhaseStepIds(postDeploymentSteps);
@@ -464,10 +466,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (workflowPhases != null) {
       List<String> invalidInfraPhaseIds = new ArrayList<>();
       for (WorkflowPhase phase : workflowPhases) {
-        if (phase != null) {
-          if (phase.getInfraMappingId() == null || phase.getInfraMappingId().isEmpty()) {
-            invalidInfraPhaseIds.add(phase.getName());
-          }
+        if (phase == null || phase.checkInfraTemplatized()) {
+          continue;
+        }
+        if (phase.getInfraMappingId() == null || phase.getInfraMappingId().isEmpty()) {
+          invalidInfraPhaseIds.add(phase.getName());
         }
       }
       if (!CollectionUtils.isEmpty(invalidInfraPhaseIds)) {
@@ -545,7 +548,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public boolean isServiceTemplatized() {
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
-        if (workflowPhase.isServiceTemplatized()) {
+        if (workflowPhase.checkServiceTemplatized()) {
           return true;
         }
       }

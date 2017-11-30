@@ -203,6 +203,16 @@ public interface Constants {
   String AWS_LAMBDA = "AWS Lambda";
 
   /**
+   * The constant COLLECT_ARTIFACT.
+   */
+  String COLLECT_ARTIFACT = "Collect Artifact";
+
+  /**
+   * The constant COLLECT_ARTIFACT.
+   */
+  String ARTIFACT_COLLECTION = "Artifact Collection";
+
+  /**
    * The constant AWS_LAMBDA_COMMAND_NAME.
    */
   String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";

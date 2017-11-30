@@ -37,6 +37,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.LambdaSpecification;
@@ -194,7 +195,8 @@ public class AwsLambdaState extends State {
                                                    .serviceVariables(context.getServiceVariables())
                                                    .status(ExecutionStatus.RUNNING);
 
-    Artifact artifact = getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), workflowStandardParams);
+    Artifact artifact =
+        getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), (DeploymentExecutionContext) context);
     if (artifact == null) {
       throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
     }
@@ -487,12 +489,12 @@ public class AwsLambdaState extends State {
    * @param appId                  the app id
    * @param serviceId              the service id
    * @param workflowExecutionId    the workflow execution id
-   * @param workflowStandardParams the workflow standard params
+   * @param deploymentExecutionContext the deploymentExecutionContext
    * @return the artifact
    */
-  protected Artifact getArtifact(
-      String appId, String serviceId, String workflowExecutionId, WorkflowStandardParams workflowStandardParams) {
-    return workflowStandardParams.getArtifactForService(serviceId);
+  protected Artifact getArtifact(String appId, String serviceId, String workflowExecutionId,
+      DeploymentExecutionContext deploymentExecutionContext) {
+    return deploymentExecutionContext.getArtifactForService(serviceId);
   }
 
   private VpcConfig constructVpcConfig(AwsLambdaInfraStructureMapping infrastructureMapping) {

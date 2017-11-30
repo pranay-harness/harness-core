@@ -62,6 +62,10 @@ public class WorkflowExecution extends Base {
 
   private PipelineSummary pipelineSummary;
 
+  private List<BuildExecutionSummary> buildExecutionSummaries;
+
+  private OrchestrationWorkflowType orchestrationType;
+
   /**
    * Gets name.
    *
@@ -498,6 +502,22 @@ public class WorkflowExecution extends Base {
     this.pipelineSummary = pipelineSummary;
   }
 
+  public List<BuildExecutionSummary> getBuildExecutionSummaries() {
+    return buildExecutionSummaries;
+  }
+
+  public void setBuildExecutionSummaries(List<BuildExecutionSummary> buildExecutionSummaries) {
+    this.buildExecutionSummaries = buildExecutionSummaries;
+  }
+
+  public OrchestrationWorkflowType getOrchestrationType() {
+    return orchestrationType;
+  }
+
+  public void setOrchestrationType(OrchestrationWorkflowType orchestrationType) {
+    this.orchestrationType = orchestrationType;
+  }
+
   public static final class WorkflowExecutionBuilder {
     private String workflowId;
     private String stateMachineId;
@@ -530,6 +550,8 @@ public class WorkflowExecution extends Base {
     private PipelineSummary pipelineSummary;
     private List<String> serviceIds;
     private List<String> envIds;
+    private List<BuildExecutionSummary> buildExecutionSummaries;
+    private OrchestrationWorkflowType orchestrationWorkflowType;
 
     private WorkflowExecutionBuilder() {}
 
@@ -691,6 +713,16 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
+    public WorkflowExecutionBuilder withBuildExecutionSummaries(List<BuildExecutionSummary> buildExecutionSummaries) {
+      this.buildExecutionSummaries = buildExecutionSummaries;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withOrchestratonWorkflowType(OrchestrationWorkflowType orchestratonWorkflowType) {
+      this.orchestrationWorkflowType = orchestratonWorkflowType;
+      return this;
+    }
+
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
@@ -736,7 +768,9 @@ public class WorkflowExecution extends Base {
           .withPipelineSummary(pipelineSummary)
           .withInfraMappingSummary(infraMappingSummary)
           .withServiceIds(serviceIds)
-          .withEnvIds(envIds);
+          .withEnvIds(envIds)
+          .withBuildExecutionSummaries(buildExecutionSummaries)
+          .withOrchestratonWorkflowType(orchestrationWorkflowType);
     }
 
     public WorkflowExecution build() {
@@ -771,6 +805,8 @@ public class WorkflowExecution extends Base {
       workflowExecution.setPipelineSummary(pipelineSummary);
       workflowExecution.setServiceIds(serviceIds);
       workflowExecution.setEnvIds(envIds);
+      workflowExecution.setBuildExecutionSummaries(buildExecutionSummaries);
+      workflowExecution.setOrchestrationType(orchestrationWorkflowType);
       return workflowExecution;
     }
   }
