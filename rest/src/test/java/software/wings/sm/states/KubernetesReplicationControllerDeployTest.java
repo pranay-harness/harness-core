@@ -49,9 +49,6 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
 
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -71,15 +68,12 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -118,11 +112,8 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
-  @Mock private GkeClusterService gkeClusterService;
-  @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
-  @Mock private KubernetesConfig kubernetesConfig;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SecretManager secretManager;
   @Mock private WorkflowExecutionService workflowExecutionService;
@@ -224,22 +215,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
 
-    ReplicationController replicationController = new ReplicationControllerBuilder()
-                                                      .withApiVersion("v1")
-                                                      .withNewMetadata()
-                                                      .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-                                                      .endMetadata()
-                                                      .withNewSpec()
-                                                      .withReplicas(0)
-                                                      .endSpec()
-                                                      .build();
-    when(gkeClusterService.getCluster(computeProvider, Collections.emptyList(), CLUSTER_NAME, "default"))
-        .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.listControllers(kubernetesConfig, Collections.emptyList()))
-        .thenReturn(new ReplicationControllerListBuilder().addToItems(replicationController).build());
-    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
-        .thenReturn(replicationController);
-
     ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -283,22 +258,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   public void shouldExecuteAsyncWithOldReplicationController() {
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
-
-    ReplicationController replicationController = new ReplicationControllerBuilder()
-                                                      .withApiVersion("v1")
-                                                      .withNewMetadata()
-                                                      .withName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
-                                                      .endMetadata()
-                                                      .withNewSpec()
-                                                      .withReplicas(2)
-                                                      .endSpec()
-                                                      .build();
-    when(gkeClusterService.getCluster(computeProvider, Collections.emptyList(), CLUSTER_NAME, "default"))
-        .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.listControllers(kubernetesConfig, Collections.emptyList()))
-        .thenReturn(new ReplicationControllerListBuilder().addToItems(replicationController).build());
-    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
-        .thenReturn(replicationController);
 
     CommandStateExecutionData commandStateExecutionData =
         aCommandStateExecutionData()
