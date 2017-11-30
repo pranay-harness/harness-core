@@ -8,6 +8,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -52,10 +53,12 @@ import com.google.common.collect.Lists;
 import com.amazonaws.regions.Regions;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -73,16 +76,17 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -94,7 +98,9 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by rishi on 2/27/17.
@@ -110,7 +116,13 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SecretManager secretManager;
-  private ExecutionContextImpl context;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
+
+  @InjectMocks
+  private EcsServiceDeploy ecsServiceDeploy =
+      anEcsServiceDeploy(STATE_NAME).withCommandName(COMMAND_NAME).withInstanceCount(1).build();
+
+  @Mock private ContainerService containerService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -145,22 +157,17 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private SettingAttribute computeProvider = aSettingAttribute().build();
-
-  private EcsServiceDeploy ecsServiceDeploy =
-      anEcsServiceDeploy(STATE_NAME).withCommandName(COMMAND_NAME).withInstanceCount(1).build();
-
-  @Before
-  public void setUp() {
-    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(ecsServiceDeploy, "secretManager", secretManager);
-    context = new ExecutionContextImpl(stateExecutionInstance);
-  }
+  private ExecutionContextImpl context;
 
   /**
    * Set up.
    */
   @Before
   public void setup() {
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(ecsServiceDeploy, "secretManager", secretManager);
+    context = new ExecutionContextImpl(stateExecutionInstance);
+
     when(appService.get(APP_ID)).thenReturn(app);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
@@ -172,14 +179,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME)).thenReturn(serviceCommand);
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
-
-    on(ecsServiceDeploy).set("settingsService", settingsService);
-    on(ecsServiceDeploy).set("delegateService", delegateService);
-    on(ecsServiceDeploy).set("serviceResourceService", serviceResourceService);
-    on(ecsServiceDeploy).set("activityService", activityService);
-    on(ecsServiceDeploy).set("infrastructureMappingService", infrastructureMappingService);
-    on(ecsServiceDeploy).set("awsClusterService", awsClusterService);
-    on(ecsServiceDeploy).set("serviceTemplateService", serviceTemplateService);
 
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withRegion(Regions.US_EAST_1.getName())
@@ -200,6 +199,12 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null)).thenReturn(emptyList());
+
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
+        .thenReturn(containerService);
+    when(containerService.getServiceDesiredCount(
+             any(SettingAttribute.class), any(List.class), any(ContainerServiceElement.class), any(String.class)))
+        .thenReturn(Optional.of(0));
   }
 
   @Test
@@ -223,6 +228,9 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteThrowInvalidRequest() {
+    when(containerService.getServiceDesiredCount(
+             any(SettingAttribute.class), any(List.class), any(ContainerServiceElement.class), any(String.class)))
+        .thenReturn(Optional.empty());
     try {
       on(context).set("serviceTemplateService", serviceTemplateService);
       ecsServiceDeploy.execute(context);
