@@ -3,7 +3,6 @@ package software.wings.service.impl.instance;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,8 +65,7 @@ public class ContainerInstanceHelper {
   @Inject private InstanceHelper instanceHelper;
   @Inject private InstanceService instanceService;
 
-  @Inject @Named("KubernetesInstanceSync") private ContainerSync kubernetesSyncService;
-  @Inject @Named("EcsInstanceSync") private ContainerSync ecsSyncService;
+  @Inject private ContainerSync containerSync;
 
   // This queue is used to asynchronously process all the container deployment information that the workflow touched
   // upon.
@@ -336,10 +334,9 @@ public class ContainerInstanceHelper {
         ContainerFilter.builder().containerDeploymentInfoCollection(containerDeploymentInfoCollection).build();
 
     ContainerSyncRequest instanceSyncRequest = ContainerSyncRequest.builder().filter(containerFilter).build();
-    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      return kubernetesSyncService.getInstances(instanceSyncRequest);
-    } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
-      return ecsSyncService.getInstances(instanceSyncRequest);
+    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE
+        || instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
+      return containerSync.getInstances(instanceSyncRequest);
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);

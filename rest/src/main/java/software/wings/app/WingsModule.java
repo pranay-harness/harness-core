@@ -124,8 +124,7 @@ import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
-import software.wings.service.impl.instance.sync.EcsContainerSyncImpl;
-import software.wings.service.impl.instance.sync.KubernetesContainerSyncImpl;
+import software.wings.service.impl.instance.sync.ContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
@@ -407,10 +406,7 @@ public class WingsModule extends AbstractModule {
         .toProvider(VerificationJobScheduler.JobSchedulerProvider.class)
         .asEagerSingleton();
 
-    bind(ContainerSync.class)
-        .annotatedWith(Names.named("KubernetesInstanceSync"))
-        .to(KubernetesContainerSyncImpl.class);
-    bind(ContainerSync.class).annotatedWith(Names.named("EcsInstanceSync")).to(EcsContainerSyncImpl.class);
+    bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);
   }
 }
