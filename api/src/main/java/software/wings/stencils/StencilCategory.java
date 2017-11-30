@@ -56,7 +56,11 @@ public enum StencilCategory {
   OTHERS(10), /**
                * Configurations stencil category.
                */
-  CONFIGURATIONS;
+  CONFIGURATIONS,
+  /**
+   * Collections stencil category.
+   */
+  COLLECTIONS;
 
   private String displayName;
 

@@ -42,6 +42,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
 
   private String appId;
   private String artifactId;
+  private boolean acs;
 
   public ArtifactCollectionCallback() {}
 
@@ -70,7 +71,6 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       }
       artifact = artifactService.get(appId, artifactId);
       triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
-      //      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
       notificationService.sendNotificationAsync(
           anApprovalNotification()
               .withAppId(artifact.getAppId())

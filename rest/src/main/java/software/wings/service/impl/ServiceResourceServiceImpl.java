@@ -585,7 +585,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         }
         List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
         for (WorkflowPhase workflowPhase : workflowPhases) {
-          if (workflowPhase.isServiceTemplatized() || !service.getUuid().equals(workflowPhase.getServiceId())) {
+          if (workflowPhase.checkServiceTemplatized() || !service.getUuid().equals(workflowPhase.getServiceId())) {
             continue;
           }
           for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {

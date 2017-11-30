@@ -279,7 +279,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    handleElementNotifyResponseData(phaseElement, response, executionResponse);
+    if (phaseElement != null) {
+      handleElementNotifyResponseData(phaseElement, response, executionResponse);
+    }
     PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) context.getStateExecutionData();
     phaseStepExecutionData.setPhaseStepExecutionSummary(workflowExecutionService.getPhaseStepExecutionSummary(
         context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
@@ -300,30 +302,33 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
     if (elementNotifyResponseData.getExecutionStatus() != ExecutionStatus.ABORTED) {
       String deploymentType = phaseElement.getDeploymentType();
-      if (deploymentType.equals(DeploymentType.AWS_LAMBDA.name()) && phaseStepType == PhaseStepType.DEPLOY_AWS_LAMBDA) {
-        AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) notifiedElement(
-            elementNotifyResponseData, AwsLambdaContextElement.class, "Missing AwsLambdaContextElement");
-        executionResponse.setContextElements(Lists.newArrayList(awsLambdaContextElement));
-      } else if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
-        ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
-            elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
+      if (deploymentType != null) {
+        if (deploymentType.equals(DeploymentType.AWS_LAMBDA.name())
+            && phaseStepType == PhaseStepType.DEPLOY_AWS_LAMBDA) {
+          AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) notifiedElement(
+              elementNotifyResponseData, AwsLambdaContextElement.class, "Missing AwsLambdaContextElement");
+          executionResponse.setContextElements(Lists.newArrayList(awsLambdaContextElement));
+        } else if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
+          ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
+              elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
-        executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
-      } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
-        ClusterElement clusterElement =
-            (ClusterElement) notifiedElement(elementNotifyResponseData, ClusterElement.class, "Missing ClusterElement");
-        executionResponse.setContextElements(singletonList(clusterElement));
-        executionResponse.setNotifyElements(singletonList(clusterElement));
-      } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-        ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
-            elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
-        executionResponse.setContextElements(singletonList(containerServiceElement));
-        executionResponse.setNotifyElements(singletonList(containerServiceElement));
-      } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY
-          || phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
-        InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-            elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-        executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+          executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
+        } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
+          ClusterElement clusterElement = (ClusterElement) notifiedElement(
+              elementNotifyResponseData, ClusterElement.class, "Missing ClusterElement");
+          executionResponse.setContextElements(singletonList(clusterElement));
+          executionResponse.setNotifyElements(singletonList(clusterElement));
+        } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
+          ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
+              elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
+          executionResponse.setContextElements(singletonList(containerServiceElement));
+          executionResponse.setNotifyElements(singletonList(containerServiceElement));
+        } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY
+            || phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
+          InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+              elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
+          executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+        }
       }
     }
   }

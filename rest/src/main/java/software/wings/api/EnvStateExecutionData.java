@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -10,6 +11,7 @@ public class EnvStateExecutionData extends StateExecutionData {
   private String workflowId;
   private String workflowExecutionId;
   private String envId;
+  private OrchestrationWorkflowType orchestrationWorkflowType;
 
   /**
    * Gets workflow id.
@@ -65,6 +67,14 @@ public class EnvStateExecutionData extends StateExecutionData {
     this.envId = envId;
   }
 
+  public OrchestrationWorkflowType getOrchestrationWorkflowType() {
+    return orchestrationWorkflowType;
+  }
+
+  public void setOrchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
+    this.orchestrationWorkflowType = orchestrationWorkflowType;
+  }
+
   /**
    * The type Builder.
    */
@@ -72,6 +82,7 @@ public class EnvStateExecutionData extends StateExecutionData {
     private String workflowId;
     private String workflowExecutionId;
     private String envId;
+    private OrchestrationWorkflowType orchestrationWorkflowType;
     private String stateName;
     private Long startTs;
     private Long endTs;
@@ -119,6 +130,17 @@ public class EnvStateExecutionData extends StateExecutionData {
      */
     public Builder withEnvId(String envId) {
       this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With env id builder.
+     *
+     * @param orchestrationWorkflowType the orchestrationWorkflowType
+     * @return the builder
+     */
+    public Builder withOrchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
+      this.orchestrationWorkflowType = orchestrationWorkflowType;
       return this;
     }
 
@@ -191,7 +213,8 @@ public class EnvStateExecutionData extends StateExecutionData {
           .withStartTs(startTs)
           .withEndTs(endTs)
           .withStatus(status)
-          .withErrorMsg(errorMsg);
+          .withErrorMsg(errorMsg)
+          .withOrchestrationWorkflowType(orchestrationWorkflowType);
     }
 
     /**
@@ -209,6 +232,7 @@ public class EnvStateExecutionData extends StateExecutionData {
       envStateExecutionData.setEndTs(endTs);
       envStateExecutionData.setStatus(status);
       envStateExecutionData.setErrorMsg(errorMsg);
+      envStateExecutionData.setOrchestrationWorkflowType(orchestrationWorkflowType);
       return envStateExecutionData;
     }
   }

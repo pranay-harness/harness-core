@@ -72,7 +72,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
       }
       checkValidImage(imageName, response);
-      return processBuildResponse(response.body());
+      return processBuildResponse(response.body(), dockerConfig, imageName);
     } catch (IOException e) {
       logger.error(e.getMessage(), e);
     }
@@ -88,11 +88,15 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     }
   }
 
-  private List<BuildDetails> processBuildResponse(DockerImageTagResponse dockerImageTagResponse) {
+  private List<BuildDetails> processBuildResponse(
+      DockerImageTagResponse dockerImageTagResponse, DockerConfig dockerConfig, String imageName) {
+    String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
+        ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
+        : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
     if (dockerImageTagResponse != null && isNotEmpty(dockerImageTagResponse.getTags())) {
       return dockerImageTagResponse.getTags()
           .stream()
-          .map(tag -> aBuildDetails().withNumber(tag).build())
+          .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
           .collect(Collectors.toList());
     } else {
       if (dockerImageTagResponse == null) {
