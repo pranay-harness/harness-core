@@ -58,7 +58,6 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
-import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -77,6 +76,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -96,7 +96,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -199,9 +198,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
-    when(containerService.getServiceDesiredCount(
-             any(SettingAttribute.class), any(List.class), any(ContainerServiceElement.class), any(String.class)))
-        .thenReturn(Optional.of(0));
+    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
   }
 
   @Test
@@ -216,9 +213,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteThrowInvalidRequest() {
-    when(containerService.getServiceDesiredCount(
-             any(SettingAttribute.class), any(List.class), any(ContainerServiceElement.class), any(String.class)))
-        .thenReturn(Optional.empty());
+    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.empty());
     try {
       on(context).set("serviceTemplateService", serviceTemplateService);
       ecsServiceDeploy.execute(context);

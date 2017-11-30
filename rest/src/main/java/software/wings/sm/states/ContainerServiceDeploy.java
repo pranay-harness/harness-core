@@ -58,6 +58,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
@@ -90,14 +91,14 @@ import java.util.stream.Collectors;
 public abstract class ContainerServiceDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
-  @Inject @Transient protected transient SettingsService settingsService;
-  @Inject @Transient protected transient DelegateService delegateService;
-  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-  @Inject @Transient protected transient ActivityService activityService;
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
-  @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient DelegateProxyFactory delegateProxyFactory;
+  @Inject @Transient private transient SettingsService settingsService;
+  @Inject @Transient private transient DelegateService delegateService;
+  @Inject @Transient private transient ServiceResourceService serviceResourceService;
+  @Inject @Transient private transient ActivityService activityService;
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
+  @Inject @Transient private transient SecretManager secretManager;
+  @Inject @Transient private transient DelegateProxyFactory delegateProxyFactory;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -153,10 +154,16 @@ public abstract class ContainerServiceDeploy extends State {
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-    Optional<Integer> previousDesiredCount =
-        delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-            .getServiceDesiredCount(contextData.settingAttribute, contextData.encryptedDataDetails,
-                contextData.containerElement, contextData.region);
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(contextData.settingAttribute)
+                                                        .containerServiceName(contextData.containerElement.getName())
+                                                        .encryptionDetails(contextData.encryptedDataDetails)
+                                                        .clusterName(contextData.containerElement.getClusterName())
+                                                        .namespace(contextData.containerElement.getNamespace())
+                                                        .region(contextData.region)
+                                                        .build();
+    Optional<Integer> previousDesiredCount = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                                                 .getServiceDesiredCount(containerServiceParams);
 
     if (!previousDesiredCount.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
@@ -185,10 +192,17 @@ public abstract class ContainerServiceDeploy extends State {
       int percent = Math.min(getInstanceCount(), 100);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
+      ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                          .settingAttribute(contextData.settingAttribute)
+                                                          .containerServiceName(contextData.containerElement.getName())
+                                                          .encryptionDetails(contextData.encryptedDataDetails)
+                                                          .clusterName(contextData.containerElement.getClusterName())
+                                                          .namespace(contextData.containerElement.getNamespace())
+                                                          .region(contextData.region)
+                                                          .build();
       LinkedHashMap<String, Integer> activeServiceCounts =
           delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-              .getActiveServiceCounts(contextData.settingAttribute, contextData.encryptedDataDetails,
-                  contextData.containerElement, contextData.region);
+              .getActiveServiceCounts(containerServiceParams);
       int totalActiveInstances = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
       int totalInstancesAvailable = Math.max(contextData.containerElement.getMaxInstances(), totalActiveInstances);
       int instanceCount = Long.valueOf(Math.round(percent * totalInstancesAvailable / 100.0)).intValue();
@@ -202,10 +216,16 @@ public abstract class ContainerServiceDeploy extends State {
     List<ContainerServiceData> desiredCounts = new ArrayList<>();
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-    LinkedHashMap<String, Integer> previousCounts =
-        delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-            .getActiveServiceCounts(contextData.settingAttribute, contextData.encryptedDataDetails,
-                contextData.containerElement, contextData.region);
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(contextData.settingAttribute)
+                                                        .containerServiceName(contextData.containerElement.getName())
+                                                        .encryptionDetails(contextData.encryptedDataDetails)
+                                                        .clusterName(contextData.containerElement.getClusterName())
+                                                        .namespace(contextData.containerElement.getNamespace())
+                                                        .region(contextData.region)
+                                                        .build();
+    LinkedHashMap<String, Integer> previousCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                                                        .getActiveServiceCounts(containerServiceParams);
     previousCounts.remove(newServiceData.getName());
     int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
     for (String serviceName : previousCounts.keySet()) {

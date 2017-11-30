@@ -9,9 +9,9 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
@@ -46,20 +46,25 @@ public class ContainerValidation extends AbstractDelegateValidateTask {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public List<String> getCriteria() {
-    return singletonList(getCriteria((SettingAttribute) getParameters()[2], (String) getParameters()[5]));
+    return singletonList(getCriteria((ContainerServiceParams) getParameters()[2]));
   }
 
-  private String getCriteria(SettingAttribute settingAttribute, String region) {
-    SettingValue value = settingAttribute.getValue();
+  private String getCriteria(ContainerServiceParams containerServiceParams) {
+    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+
     if (value instanceof KubernetesConfig) {
       return ((KubernetesConfig) value).getMasterUrl();
-    } else if (value instanceof GcpConfig) {
-      return "GCP";
-    } else if (value instanceof AwsConfig) {
-      return "AWS:" + region;
     }
+
+    if (value instanceof GcpConfig) {
+      return "GCP";
+    }
+
+    if (value instanceof AwsConfig) {
+      return "AWS:" + containerServiceParams.getRegion();
+    }
+
     return "none";
   }
 }
