@@ -19,7 +19,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.User;
-import software.wings.beans.alert.ApprovalAlert;
+import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AlertService;
 import software.wings.sm.ContextElementType;
@@ -55,7 +55,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     pageResponse.setResponse(Arrays.asList(User.Builder.anUser().build()));
 
     ExecutionResponse executionResponse = approvalState.execute(context);
-    verify(alertService).openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalAlert.class));
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
     assertThat(executionResponse.isAsync()).isTrue();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.PAUSED);
   }

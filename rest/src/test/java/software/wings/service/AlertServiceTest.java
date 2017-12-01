@@ -36,7 +36,7 @@ import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.alert.Alert;
-import software.wings.beans.alert.ApprovalAlert;
+import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
@@ -93,7 +93,7 @@ public class AlertServiceTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withType(ApprovalNeeded)
           .withAlertData(
-              ApprovalAlert.builder().approvalId("approvalId").executionId("executionId").name("name").build())
+              ApprovalNeededAlert.builder().approvalId("approvalId").executionId("executionId").name("name").build())
           .withStatus(AlertStatus.Open)
           .build();
 
