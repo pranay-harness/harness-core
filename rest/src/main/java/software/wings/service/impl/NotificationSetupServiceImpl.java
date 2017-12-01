@@ -90,6 +90,15 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
+  public NotificationGroup readNotificationGroupByName(String accountId, String notificationGroupName) {
+    PageRequest<NotificationGroup> pageRequest = PageRequest.Builder.aPageRequest()
+                                                     .addFilter("accountId", Operator.EQ, accountId)
+                                                     .addFilter("name", Operator.EQ, notificationGroupName)
+                                                     .build();
+    return wingsPersistence.get(NotificationGroup.class, pageRequest);
+  }
+
+  @Override
   public NotificationGroup createNotificationGroup(NotificationGroup notificationGroup) {
     return Validator.duplicateCheck(()
                                         -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),

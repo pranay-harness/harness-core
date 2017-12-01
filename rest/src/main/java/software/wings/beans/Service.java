@@ -614,13 +614,11 @@ public class Service extends Base {
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
-    private String name;
     private String description;
     private String artifactType;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     public static final class Builder {
-      private String name;
       private String description;
       private String artifactType;
       private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
@@ -630,11 +628,6 @@ public class Service extends Base {
 
       public static Builder anYaml() {
         return new Builder();
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
       }
 
       public Builder withDescription(String description) {
@@ -659,7 +652,6 @@ public class Service extends Base {
 
       public Builder but() {
         return anYaml()
-            .withName(name)
             .withDescription(description)
             .withArtifactType(artifactType)
             .withConfigVariables(configVariables)
@@ -668,7 +660,6 @@ public class Service extends Base {
 
       public Yaml build() {
         Yaml yaml = new Yaml();
-        yaml.setName(name);
         yaml.setDescription(description);
         yaml.setArtifactType(artifactType);
         yaml.setConfigVariables(configVariables);

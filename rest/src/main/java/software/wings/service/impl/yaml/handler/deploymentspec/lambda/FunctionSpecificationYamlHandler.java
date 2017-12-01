@@ -69,4 +69,9 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
   public FunctionSpecification get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
+
+  @Override
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+    // do nothing
+  }
 }

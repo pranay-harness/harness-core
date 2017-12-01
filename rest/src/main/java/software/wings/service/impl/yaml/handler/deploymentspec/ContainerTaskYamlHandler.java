@@ -134,4 +134,12 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
       return (C) serviceResourceService.createContainerTask(containerTask, false);
     }
   }
+
+  //  @Override
+  //  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+  //    C containerTask = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+  //    if (containerTask != null) {
+  //      serviceResourceService.deleteContainerTask(containerTask.getAppId(), containerTask.getUuid());
+  //    }
+  //  }
 }

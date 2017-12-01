@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.environment;
 
 import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.utils.Util.isEmpty;
 
 import com.google.inject.Inject;
 
@@ -29,7 +28,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   public Environment.Yaml toYaml(Environment environment, String appId) {
     return Environment.Yaml.Builder.anYaml()
         .withType(ENVIRONMENT.name())
-        .withName(environment.getName())
         .withDescription(environment.getDescription())
         .withEnvironmentType(environment.getEnvironmentType().name())
         .build();
@@ -42,14 +40,14 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     String appId =
         yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
-
-    Environment current =
-        Builder.anEnvironment()
-            .withAppId(appId)
-            .withName(changeContext.getYaml().getName())
-            .withDescription(changeContext.getYaml().getDescription())
-            .withEnvironmentType(EnvironmentType.valueOf(changeContext.getYaml().getEnvironmentType()))
-            .build();
+    Yaml yaml = changeContext.getYaml();
+    String environmentName = yamlSyncHelper.getEnvironmentName(changeContext.getChange().getFilePath());
+    Environment current = Builder.anEnvironment()
+                              .withAppId(appId)
+                              .withName(environmentName)
+                              .withDescription(yaml.getDescription())
+                              .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
+                              .build();
 
     Environment previous = yamlSyncHelper.getEnvironment(appId, changeContext.getChange().getFilePath());
 
@@ -63,8 +61,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Environment.Yaml envYaml = changeContext.getYaml();
-    return !(isEmpty(envYaml.getName()));
+    return true;
   }
 
   @Override
@@ -87,5 +84,13 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   public Environment updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  @Override
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+    Environment environment = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (environment != null) {
+      environmentService.delete(environment.getAppId(), environment.getUuid());
+    }
   }
 }

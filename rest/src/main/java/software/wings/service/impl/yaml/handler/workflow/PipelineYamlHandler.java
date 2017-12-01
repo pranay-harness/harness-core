@@ -130,4 +130,14 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   public Pipeline get(String accountId, String yamlFilePath) {
     return yamlSyncHelper.getPipeline(accountId, yamlFilePath);
   }
+
+  @Override
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+    String accountId = changeContext.getChange().getAccountId();
+    String filePath = changeContext.getChange().getFilePath();
+    Pipeline pipeline = get(accountId, filePath);
+    if (pipeline != null) {
+      pipelineService.deletePipeline(pipeline.getAppId(), pipeline.getUuid());
+    }
+  }
 }
