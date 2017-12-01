@@ -39,7 +39,8 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject AwsHelperService awsHelperService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
-  private static final int MAX_FILES_IN_BUCKET = 2000;
+  private static final int MAX_FILES_TO_SHOW_IN_UI = 1000;
+  private static final int FETCH_FILE_COUNT_IN_BUCKET = 500;
 
   @Override
   public Map<String, String> getBuckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
@@ -51,7 +52,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   public List<String> getArtifactPaths(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
-    listObjectsV2Request.withBucketName(bucketName).withMaxKeys(500);
+    listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
     ListObjectsV2Result result;
     List<String> objectKeyList = Lists.newArrayList();
 
@@ -67,7 +68,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
                                                       .collect(Collectors.toList());
       objectKeyList.addAll(objectKeyListForCurrentBatch);
       listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
-    } while (result.isTruncated() == true && objectKeyList.size() < MAX_FILES_IN_BUCKET);
+    } while (result.isTruncated() == true && objectKeyList.size() < MAX_FILES_TO_SHOW_IN_UI);
 
     return objectKeyList;
   }
@@ -93,7 +94,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
       ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
-      listObjectsV2Request.withBucketName(bucketName).withMaxKeys(500);
+      listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
       List<String> objectKeyList = Lists.newArrayList();
       ListObjectsV2Result result;
       do {
@@ -146,7 +147,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     Pattern pattern = Pattern.compile(artifactpathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
     ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
-    listObjectsV2Request.withBucketName(bucketName).withMaxKeys(500);
+    listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
 
     List<String> objectKeyList = Lists.newArrayList();
     ListObjectsV2Result result;
