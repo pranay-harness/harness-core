@@ -10,7 +10,7 @@ import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 
 public enum AlertType {
-  ApprovalNeeded(Approval, Warning, ApprovalAlert.class),
+  ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
   ManualInterventionNeeded(ManualIntervention, Warning, ManualInterventionNeededAlert.class),
   NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class),
   NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),

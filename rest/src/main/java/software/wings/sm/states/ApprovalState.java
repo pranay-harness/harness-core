@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
-import software.wings.beans.alert.ApprovalAlert;
+import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.AlertService;
@@ -57,12 +57,12 @@ public class ApprovalState extends State {
 
     // Open an alert
     Application app = ((ExecutionContextImpl) context).getApp();
-    ApprovalAlert approvalAlert = ApprovalAlert.builder()
-                                      .executionId(context.getWorkflowExecutionId())
-                                      .approvalId(approvalId)
-                                      .name(context.getWorkflowExecutionName())
-                                      .build();
-    alertService.openAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalAlert);
+    ApprovalNeededAlert approvalNeededAlert = ApprovalNeededAlert.builder()
+                                                  .executionId(context.getWorkflowExecutionId())
+                                                  .approvalId(approvalId)
+                                                  .name(context.getWorkflowExecutionName())
+                                                  .build();
+    alertService.openAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
     return anExecutionResponse()
         .withAsync(true)
@@ -85,7 +85,7 @@ public class ApprovalState extends State {
     // Close the alert
     Application app = ((ExecutionContextImpl) context).getApp();
     alertService.closeAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded,
-        ApprovalAlert.builder()
+        ApprovalNeededAlert.builder()
             .executionId(context.getWorkflowExecutionId())
             .approvalId(approvalNotifyResponse.getApprovalId())
             .build());
