@@ -58,6 +58,8 @@ public interface NotificationSetupService {
    */
   NotificationGroup readNotificationGroup(String accountId, String notificationGroupId);
 
+  NotificationGroup readNotificationGroupByName(String accountId, String notificationGroupName);
+
   /**
    * Create notification group notification group.
    *

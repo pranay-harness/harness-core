@@ -85,4 +85,9 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   public FailureStrategy get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
+
+  @Override
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+    // DO nothing
+  }
 }

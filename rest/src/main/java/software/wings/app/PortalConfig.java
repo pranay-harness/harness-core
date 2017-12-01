@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import software.wings.beans.KmsConfig;
 
 import java.util.List;
 
@@ -27,6 +26,7 @@ public class PortalConfig {
   private String executionUrlPattern = "/app/%s/env/%s/execution/%s/detail";
   private String jwtPasswordSecret;
   private String jwtExternalServiceSecret;
+  private String jwtZendeskSecret;
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**

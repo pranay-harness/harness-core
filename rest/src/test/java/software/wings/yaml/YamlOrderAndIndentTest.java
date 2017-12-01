@@ -43,15 +43,15 @@ public class YamlOrderAndIndentTest {
     oitYaml.setDescription("This is the OrderIndentTest");
 
     Application.Yaml appYaml1 = new Application.Yaml();
-    appYaml1.setName("testApp1");
+    //    appYaml1.setName("testApp1");
     appYaml1.setDescription("This is testApp1");
 
     Application.Yaml appYaml2 = new Application.Yaml();
-    appYaml2.setName("testApp2");
+    //    appYaml2.setName("testApp2");
     appYaml2.setDescription("This is testApp2");
 
     Application.Yaml appYaml3 = new Application.Yaml();
-    appYaml3.setName("testApp3");
+    //    appYaml3.setName("testApp3");
     appYaml3.setDescription("This is testApp3");
 
     oitYaml.setApplications(Arrays.asList(appYaml1, appYaml3, appYaml2));

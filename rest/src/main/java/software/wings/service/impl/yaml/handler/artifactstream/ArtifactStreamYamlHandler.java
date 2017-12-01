@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.yaml.ChangeContext;
+import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -39,5 +41,17 @@ public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStream.Yaml, B
   @Override
   public B get(String accountId, String yamlFilePath) {
     return getArtifactStream(accountId, yamlFilePath);
+  }
+
+  @Override
+  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId);
+    ArtifactStream artifactStream = yamlSyncHelper.getArtifactStream(accountId, yamlFilePath);
+    if (artifactStream != null) {
+      artifactStreamService.delete(appId, artifactStream.getUuid());
+    }
   }
 }

@@ -356,7 +356,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
         yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
         break;
       case DELETE:
-        // TODO
+        yamlSyncHandler.delete(changeContext);
         break;
       case RENAME:
         // TODO
