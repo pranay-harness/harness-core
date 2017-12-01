@@ -48,6 +48,8 @@ public interface YamlGitService {
    */
   void pushDirectory(@NotEmpty String accountId);
 
+  void performFullSyncDryRun(String accountId);
+
   /**
    * Handle change set boolean.
    *

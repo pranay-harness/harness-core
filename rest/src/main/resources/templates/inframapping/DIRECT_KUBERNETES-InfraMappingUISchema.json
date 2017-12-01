@@ -5,6 +5,6 @@
   "password":{"ui:widget":"password"},
   "custom:encryptedFields": [ "password" ],
   "namespace":{"ui:placeholder": "default"},
-  "ui:order": ["name", "autoPopulate","serviceId","deploymentType", "computeProviderSettingId", "masterUrl", "username", "password","namespace","clusterName","infraMappingType","computeProviderType"]
+  "ui:order": ["name", "autoPopulate","serviceId","deploymentType", "computeProviderSettingId", "masterUrl", "username", "password","namespace","infraMappingType","computeProviderType"]
 
 }

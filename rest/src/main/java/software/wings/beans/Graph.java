@@ -347,7 +347,7 @@ public class Graph {
     private boolean expanded;
     private boolean origin;
 
-    private boolean valid;
+    private boolean valid = true;
     private String validationMessage;
     private Map<String, String> inValidFieldMessages;
 
@@ -867,7 +867,7 @@ public class Graph {
       private boolean expanded;
       private boolean origin;
 
-      private boolean valid;
+      private boolean valid = true;
       private String validationMessage;
       private Map<String, String> inValidFieldMessages;
 

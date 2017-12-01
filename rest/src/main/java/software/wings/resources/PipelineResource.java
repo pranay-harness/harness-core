@@ -7,7 +7,10 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.EntityType;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -168,5 +171,22 @@ public class PipelineResource {
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
     return new RestResponse<>(workflowService.stencils(appId, null, null, StateTypeScope.PIPELINE_STENCILS)
                                   .get(StateTypeScope.PIPELINE_STENCILS));
+  }
+
+  /**
+   * Required args rest response.
+   *
+   * @param appId         the app id
+   * @param pipelineId    the pipelineId
+   * @return the rest response
+   */
+  @GET
+  @Path("required-entities")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
+  public RestResponse<List<EntityType>> requiredEntities(
+      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId) {
+    return new RestResponse<>(pipelineService.getRequiredEntities(appId, pipelineId));
   }
 }

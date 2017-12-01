@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
@@ -8,6 +9,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -80,11 +82,11 @@ public interface WorkflowExecutionService {
    * @param executionArgs   the execution args
    * @return the workflow execution
    */
-  WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, @NotNull String envId,
-      @NotNull String orchestrationId, @NotNull ExecutionArgs executionArgs);
+  WorkflowExecution triggerOrchestrationExecution(
+      @NotNull String appId, String envId, @NotNull String orchestrationId, @NotNull ExecutionArgs executionArgs);
 
-  WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, @NotNull String envId,
-      @NotNull String orchestrationId, String pipelineExecutionId, @NotNull ExecutionArgs executionArgs);
+  WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, String envId, @NotNull String orchestrationId,
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs);
 
   WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
       String pipelineExecutionId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate);
@@ -223,4 +225,9 @@ public interface WorkflowExecutionService {
   boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs);
 
   boolean approveOrRejectExecution(String appId, String workflowExecutionId, ApprovalDetails approvalDetails);
+
+  List<Artifact> getArtifactsCollected(String appId, String executionUuid);
+
+  void refreshBuildExecutionSummary(
+      String appId, String workflowExecutionId, BuildExecutionSummary buildExecutionSummary);
 }

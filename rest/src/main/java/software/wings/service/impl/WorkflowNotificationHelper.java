@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORTED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSED_NOTIFICATION;
@@ -27,6 +28,7 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;
@@ -71,7 +73,9 @@ public class WorkflowNotificationHelper {
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
     Map<String, String> placeHolders = new HashMap<>();
     placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
-    placeHolders.put("ENV_NAME", env.getName());
+    if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
+      placeHolders.put("ENV_NAME", env.getName());
+    }
     placeHolders.put("DATE", getDateString(executionDetails.getStartTs()));
 
     String messageTemplate = null;
@@ -111,7 +115,7 @@ public class WorkflowNotificationHelper {
       FailureNotification notification = aFailureNotification()
                                              .withAccountId(app.getAccountId())
                                              .withAppId(app.getUuid())
-                                             .withEnvironmentId(env.getUuid())
+                                             .withEnvironmentId(env == null ? null : env.getUuid())
                                              .withEntityId(context.getWorkflowExecutionId())
                                              .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                              .withEntityName("Deployment")

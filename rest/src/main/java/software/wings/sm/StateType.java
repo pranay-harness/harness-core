@@ -3,6 +3,7 @@ package software.wings.sm;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
@@ -21,7 +22,9 @@ import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.stencils.StencilCategory.*;
 import static software.wings.stencils.StencilCategory.CLOUD;
+import static software.wings.stencils.StencilCategory.COLLECTIONS;
 import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.OTHERS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
@@ -41,6 +44,7 @@ import software.wings.beans.PhaseStepType;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
+import software.wings.sm.states.ArtifactCollectionState;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsCodeDeployRollback;
@@ -98,27 +102,27 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Subworkflow state type.
    */
-  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, asList(), ORCHESTRATION_STENCILS),
+  SUB_WORKFLOW(SubWorkflowState.class, CONTROLS, 0, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, asList(), ORCHESTRATION_STENCILS),
+  REPEAT(RepeatState.class, CONTROLS, 1, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Fork state type.
    */
-  FORK(ForkState.class, StencilCategory.CONTROLS, 2, asList(), ORCHESTRATION_STENCILS),
+  FORK(ForkState.class, CONTROLS, 2, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Wait state type.
    */
-  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, asList(), ORCHESTRATION_STENCILS),
+  WAIT(WaitState.class, CONTROLS, 3, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Pause state type.
    */
-  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", asList(), ORCHESTRATION_STENCILS),
+  PAUSE(PauseState.class, CONTROLS, 4, "Manual Step", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Http state type.
@@ -148,17 +152,17 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 6, "ELK", Collections.emptyList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 6, "ELK", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * LOGZ state type.
    */
-  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 7, "LOGZ", Collections.emptyList(), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 7, "LOGZ", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 8, "SumoLogic", Collections.emptyList(), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 8, "SumoLogic", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
@@ -169,29 +173,29 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Email state type.
    */
-  EMAIL(EmailState.class, StencilCategory.OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
+  EMAIL(EmailState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Env state state type.
    */
-  ENV_STATE(EnvState.class, StencilCategory.ENVIRONMENTS, asList(), PIPELINE_STENCILS),
+  ENV_STATE(EnvState.class, ENVIRONMENTS, asList(), PIPELINE_STENCILS),
 
   /**
    * Command state type.
    */
-  COMMAND(CommandState.class, StencilCategory.COMMANDS,
+  COMMAND(CommandState.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
       asList(START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS),
 
   /**
    * Approval state type.
    */
-  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, asList(), PIPELINE_STENCILS, COMMON),
+  APPROVAL(ApprovalState.class, OTHERS, asList(), PIPELINE_STENCILS, COMMON),
 
   /**
    * The Load balancer.
    */
-  ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, StencilCategory.COMMANDS, "Elastic Load Balancer",
+  ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, COMMANDS, "Elastic Load Balancer",
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
       asList(ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS),
 
@@ -204,6 +208,12 @@ public enum StateType implements StateTypeDescriptor {
    * Bamboo state type.
    */
   BAMBOO(BambooState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  /**
+   * Artifact Collection state type.
+   */
+  ARTIFACT_COLLECTION(ArtifactCollectionState.class, COLLECTIONS, "Artifact Collection", emptyList(), emptyList(),
+      ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * AWS Node Select state.
@@ -286,7 +296,7 @@ public enum StateType implements StateTypeDescriptor {
   private StencilCategory stencilCategory;
   private Integer displayOrder = DEFAULT_DISPLAY_ORDER;
   private String displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
-  private List<InfrastructureMappingType> supportedInfrastructureMappingTypes = Collections.emptyList();
+  private List<InfrastructureMappingType> supportedInfrastructureMappingTypes = emptyList();
 
   /**
    * Instantiates a new state type.
@@ -315,7 +325,7 @@ public enum StateType implements StateTypeDescriptor {
    */
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
       List<PhaseStepType> phaseStepTypes, StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, displayOrder, Collections.emptyList(), phaseStepTypes, scopes);
+    this(stateClass, stencilCategory, displayOrder, emptyList(), phaseStepTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
@@ -333,7 +343,7 @@ public enum StateType implements StateTypeDescriptor {
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
       String displayName, List<PhaseStepType> phaseStepTypes, StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, displayOrder, displayName, Collections.emptyList(), phaseStepTypes, scopes);
+    this(stateClass, stencilCategory, displayOrder, displayName, emptyList(), phaseStepTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
