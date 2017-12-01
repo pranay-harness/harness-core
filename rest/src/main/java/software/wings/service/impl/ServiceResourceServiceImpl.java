@@ -493,18 +493,24 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
             .getResponse();
 
-    List<Workflow> serviceWorkflows =
+    List<String> referencingWorkflowNames =
         workflows.stream()
-            .filter(wfl -> wfl.getServices().stream().anyMatch(s -> service.getUuid().equals(s.getUuid())))
+            .filter(wfl -> {
+              if (wfl.getOrchestrationWorkflow() != null
+                  && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+                Map<String, WorkflowPhase> workflowPhaseIdMap =
+                    ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
+                return workflowPhaseIdMap.values().stream().anyMatch(
+                    workflowPhase -> service.getUuid().equals(workflowPhase.getServiceId()));
+              }
+              return false;
+            })
+            .map(Workflow::getName)
             .collect(Collectors.toList());
-
-    if (serviceWorkflows != null && serviceWorkflows.size() > 0) {
-      String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
-      String message =
-          String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
-                  + workflowNames + "]",
-              service.getName());
-      throw new WingsException(INVALID_REQUEST, "message", message);
+    if (referencingWorkflowNames.size() > 0) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          String.format("Service is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),
+              referencingWorkflowNames.size() == 1 ? "" : "s", Joiner.on(", ").join(referencingWorkflowNames)));
     }
   }
 
