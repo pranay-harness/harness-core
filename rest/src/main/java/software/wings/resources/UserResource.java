@@ -18,6 +18,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -469,6 +470,13 @@ public class UserResource {
   public RestResponse<UserInvite> deleteInvite(
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(userService.deleteInvite(accountId, inviteId));
+  }
+
+  @POST
+  @Path("sso/zendesk")
+  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  public RestResponse<ZendeskSsoLoginResponse> zendDesk(@QueryParam("returnTo") @NotEmpty String returnTo) {
+    return new RestResponse(userService.generateZendeskSsoJwt(returnTo));
   }
 
   /**

@@ -7,6 +7,7 @@ import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -65,7 +66,7 @@ public interface UserService {
    * Delete.
    *
    * @param accountId the account id
-   * @param userId the user id
+   * @param userId    the user id
    */
   void delete(@NotEmpty String accountId, @NotEmpty String userId);
 
@@ -101,6 +102,13 @@ public interface UserService {
    */
   User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
 
+  /**
+   * Add account account.
+   *
+   * @param account the account
+   * @param user    the user
+   * @return the account
+   */
   Account addAccount(Account account, User user);
 
   /**
@@ -210,5 +218,18 @@ public interface UserService {
    */
   boolean updatePassword(String resetPasswordToken, char[] password);
 
+  /**
+   * Logout.
+   *
+   * @param userId the user id
+   */
   void logout(String userId);
+
+  /**
+   * Generate zendesk sso jwt zendesk sso login response.
+   *
+   * @param returnToUrl the return to url
+   * @return the zendesk sso login response
+   */
+  ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl);
 }
