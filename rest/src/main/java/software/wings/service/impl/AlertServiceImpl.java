@@ -27,7 +27,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.ApprovalAlert;
+import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
@@ -35,6 +35,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
@@ -53,6 +54,7 @@ public class AlertServiceImpl implements AlertService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private AssignDelegateService assignDelegateService;
+  @Inject private PersistentLocker persistentLocker;
   @Inject private Injector injector;
 
   @Override
@@ -80,38 +82,33 @@ public class AlertServiceImpl implements AlertService {
     executorService.submit(() -> deploymentCompletedInternal(appId, executionId));
   }
 
-  private void deploymentCompletedInternal(String appId, String executionId) {
-    wingsPersistence.createQuery(Alert.class)
-        .field("appId")
-        .equal(appId)
-        .field("type")
-        .in(asList(ApprovalNeeded, ManualInterventionNeeded))
-        .field("status")
-        .equal(Open)
-        .asList()
-        .stream()
-        .filter(alert
-            -> executionId.equals(alert.getType().equals(ApprovalNeeded)
-                    ? ((ApprovalAlert) alert.getAlertData()).getExecutionId()
-                    : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId()))
-        .forEach(this ::close);
-  }
-
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    if (!findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
-      injector.injectMembers(alertData);
-      Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
-          anAlert()
-              .withAppId(appId)
-              .withAccountId(accountId)
-              .withType(alertType)
-              .withStatus(Open)
-              .withAlertData(alertData)
-              .withTitle(alertData.buildTitle())
-              .withCategory(alertType.getCategory())
-              .withSeverity(alertType.getSeverity())
-              .build());
-      logger.warn("Alert opened: {}", persistedAlert);
+    boolean lockAcquired = false;
+    try {
+      lockAcquired = persistentLocker.acquireLock(AlertType.class, alertType.name());
+      if (!lockAcquired) {
+        logger.warn("Persistent lock could not be acquired for the AlertType {}", alertType.name());
+        return;
+      }
+      if (!findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
+        injector.injectMembers(alertData);
+        Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
+            anAlert()
+                .withAppId(appId)
+                .withAccountId(accountId)
+                .withType(alertType)
+                .withStatus(Open)
+                .withAlertData(alertData)
+                .withTitle(alertData.buildTitle())
+                .withCategory(alertType.getCategory())
+                .withSeverity(alertType.getSeverity())
+                .build());
+        logger.warn("Alert opened: {}", persistedAlert);
+      }
+    } finally {
+      if (lockAcquired) {
+        persistentLocker.releaseLock(AlertType.class, alertType.name());
+      }
     }
   }
 
@@ -133,6 +130,23 @@ public class AlertServiceImpl implements AlertService {
           return assignDelegateService.canAssign(
               delegateId, accountId, data.getAppId(), data.getEnvId(), data.getInfraMappingId(), data.getTaskGroup());
         })
+        .forEach(this ::close);
+  }
+
+  private void deploymentCompletedInternal(String appId, String executionId) {
+    wingsPersistence.createQuery(Alert.class)
+        .field("appId")
+        .equal(appId)
+        .field("type")
+        .in(asList(ApprovalNeeded, ManualInterventionNeeded))
+        .field("status")
+        .equal(Open)
+        .asList()
+        .stream()
+        .filter(alert
+            -> executionId.equals(alert.getType().equals(ApprovalNeeded)
+                    ? ((ApprovalNeededAlert) alert.getAlertData()).getExecutionId()
+                    : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId()))
         .forEach(this ::close);
   }
 
