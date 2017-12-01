@@ -33,11 +33,11 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private YamlDirectoryService yamlDirectoryService;
 
   private GitFileChange createGitFileChnage(
-      String accountId, String path, String name, String yaml, ChangeType changeType, boolean isDirectory) {
+      String accountId, String path, String name, String yamlContent, ChangeType changeType, boolean isDirectory) {
     return Builder.aGitFileChange()
         .withAccountId(accountId)
         .withChangeType(changeType)
-        .withFileContent(yaml)
+        .withFileContent(yamlContent)
         .withFilePath(changeType.equals(ChangeType.DELETE) && isDirectory ? path : path + "/" + name + YAML_SUFFIX)
         .build();
   }
@@ -49,7 +49,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       yaml = appYamlResourceService.getApp(app.getUuid()).getResource().getYaml();
     }
     return createGitFileChnage(
-        app.getAccountId(), yamlDirectoryService.getRootPathByApp(app), app.getName(), yaml, changeType, true);
+        app.getAccountId(), yamlDirectoryService.getRootPathByApp(app), "Entity", yaml, changeType, true);
   }
 
   @Override
@@ -59,7 +59,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       yaml = yamlResourceService.getService(service.getAppId(), service.getUuid()).getResource().getYaml();
     }
     return createGitFileChnage(
-        accountId, yamlDirectoryService.getRootPathByService(service), service.getName(), yaml, changeType, true);
+        accountId, yamlDirectoryService.getRootPathByService(service), "Entity", yaml, changeType, true);
   }
 
   @Override
@@ -80,8 +80,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     if (!changeType.equals(ChangeType.DELETE)) {
       yaml = yamlResourceService.getEnvironment(environment.getAppId(), environment.getUuid()).getResource().getYaml();
     }
-    return createGitFileChnage(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
-        environment.getName(), yaml, changeType, true);
+    return createGitFileChnage(
+        accountId, yamlDirectoryService.getRootPathByEnvironment(environment), "Entity", yaml, changeType, true);
   }
 
   @Override
