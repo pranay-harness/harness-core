@@ -107,4 +107,9 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   public TemplateExpression get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
+
+  @Override
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+    // Do nothing
+  }
 }

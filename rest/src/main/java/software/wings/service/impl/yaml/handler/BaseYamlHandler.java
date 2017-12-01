@@ -16,6 +16,8 @@ import java.util.List;
  * @author rktummala on 10/16/17
  */
 public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
+  public abstract void delete(ChangeContext<Y> changeContext) throws HarnessException;
+
   public abstract Y toYaml(B bean, String appId);
 
   public abstract B upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)

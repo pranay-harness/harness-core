@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler.service;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -48,7 +47,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
     List<NameValuePair.Yaml> nameValuePairList = convertToNameValuePair(service.getServiceVariables());
     return Service.Yaml.Builder.anYaml()
         .withType(SERVICE.name())
-        .withName(service.getName())
         .withDescription(service.getDescription())
         .withArtifactType(service.getArtifactType().name())
         .withConfigVariables(nameValuePairList)
@@ -90,37 +88,35 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
       throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
 
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("appId null for given yaml file:" + yamlFilePath, appId);
 
-    Service current = aService()
-                          .withAppId(appId)
-                          .withName(changeContext.getYaml().getName())
-                          .withDescription(changeContext.getYaml().getDescription())
-                          .build();
+    String serviceName = yamlSyncHelper.getServiceName(yamlFilePath);
+    Service.Yaml yaml = changeContext.getYaml();
+    Service current = aService().withAppId(appId).withName(serviceName).withDescription(yaml.getDescription()).build();
 
-    Service previous = yamlSyncHelper.getService(appId, changeContext.getChange().getFilePath());
+    Service previous = yamlSyncHelper.getService(appId, yamlFilePath);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
       current = serviceResourceService.update(current);
       Service.Yaml previousYaml = toYaml(previous, previous.getAppId());
       saveOrUpdateServiceVariables(
-          previousYaml, changeContext.getYaml(), previous.getServiceVariables(), current.getAppId(), current.getUuid());
+          previousYaml, yaml, previous.getServiceVariables(), current.getAppId(), current.getUuid());
     } else {
-      ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, changeContext.getYaml().getArtifactType());
+      ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
       current.setArtifactType(artifactType);
       current = serviceResourceService.save(current, true);
-      saveOrUpdateServiceVariables(null, changeContext.getYaml(), emptyList(), current.getAppId(), current.getUuid());
+      saveOrUpdateServiceVariables(null, yaml, emptyList(), current.getAppId(), current.getUuid());
     }
     return current;
   }
 
   @Override
   public boolean validate(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Service.Yaml applicationYaml = changeContext.getYaml();
-    return !(isEmpty(applicationYaml.getName()));
+    return true;
   }
 
   @Override
@@ -246,5 +242,13 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
     newServiceVariable.setAppId(appId);
 
     return newServiceVariable;
+  }
+
+  @Override
+  public void delete(ChangeContext<Service.Yaml> changeContext) throws HarnessException {
+    Service service = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (service != null) {
+      serviceResourceService.delete(service.getAppId(), service.getUuid());
+    }
   }
 }

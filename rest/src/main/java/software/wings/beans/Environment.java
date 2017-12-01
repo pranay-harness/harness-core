@@ -399,12 +399,10 @@ public class Environment extends Base {
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
-    private String name;
     private String description;
     private String environmentType = "NON_PROD";
 
     public static final class Builder {
-      private String name;
       private String description;
       private String environmentType = "NON_PROD";
       private String type;
@@ -413,11 +411,6 @@ public class Environment extends Base {
 
       public static Builder anYaml() {
         return new Builder();
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
       }
 
       public Builder withDescription(String description) {
@@ -436,12 +429,11 @@ public class Environment extends Base {
       }
 
       public Builder but() {
-        return anYaml().withName(name).withDescription(description).withEnvironmentType(environmentType).withType(type);
+        return anYaml().withDescription(description).withEnvironmentType(environmentType).withType(type);
       }
 
       public Yaml build() {
         Yaml yaml = new Yaml();
-        yaml.setName(name);
         yaml.setDescription(description);
         yaml.setEnvironmentType(environmentType);
         yaml.setType(type);

@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.app;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
-import static software.wings.utils.Util.isEmpty;
 
 import com.google.inject.Inject;
 
@@ -24,10 +23,17 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   @Inject AppService appService;
 
   @Override
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+    Application application = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (application != null) {
+      appService.delete(application.getUuid());
+    }
+  }
+
+  @Override
   public Application.Yaml toYaml(Application application, String appId) {
     return Application.Yaml.Builder.anApplicationYaml()
         .withType(APPLICATION.name())
-        .withName(application.getName())
         .withDescription(application.getDescription())
         .build();
   }
@@ -36,13 +42,13 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   public Application upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
-
-    Application current = anApplication()
-                              .withAccountId(changeContext.getChange().getAccountId())
-                              .withName(changeContext.getYaml().getName())
-                              .withDescription(changeContext.getYaml().getDescription())
-                              .build();
-    Application previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    String accountId = changeContext.getChange().getAccountId();
+    Yaml yaml = changeContext.getYaml();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String appName = yamlSyncHelper.getAppName(yamlFilePath);
+    Application current =
+        anApplication().withAccountId(accountId).withName(appName).withDescription(yaml.getDescription()).build();
+    Application previous = get(accountId, yamlFilePath);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -66,8 +72,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Application.Yaml applicationYaml = changeContext.getYaml();
-    return !(isEmpty(applicationYaml.getName()));
+    return true;
   }
 
   @Override
