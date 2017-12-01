@@ -15,7 +15,6 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -244,19 +243,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
 
-      String oldEnvnPath =
-          yamlDirectoryService.getRootPathByEnvironment(oldEnv) + "/" + oldEnv.getName() + YAML_EXTENSION;
-
-      GitFileChange gitFileChange = entityUpdateService.getEnvironmentGitSyncFile(accountId, newEnv, ChangeType.MODIFY);
+      String oldEnvnPath = yamlDirectoryService.getRootPathByEnvironment(oldEnv);
+      String newEnvnPath = yamlDirectoryService.getRootPathByEnvironment(newEnv);
 
       changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(gitFileChange.getAccountId())
+                        .withAccountId(accountId)
                         .withChangeType(ChangeType.RENAME)
-                        .withFilePath(gitFileChange.getFilePath())
+                        .withFilePath(newEnvnPath)
                         .withOldFilePath(oldEnvnPath)
                         .build());
-
-      changeSet.add(gitFileChange);
+      changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, newEnv, ChangeType.MODIFY));
       yamlChangeSetService.queueChangeSet(ygs, changeSet);
     }
   }
