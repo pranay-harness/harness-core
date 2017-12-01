@@ -66,6 +66,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -349,6 +350,8 @@ public class CommandStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
+    when(context.getArtifactForService(SERVICE_ID)).thenReturn(artifact);
+
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
@@ -439,7 +442,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
-    verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
+    verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
   }
 
