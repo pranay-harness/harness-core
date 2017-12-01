@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateLogService;
@@ -45,6 +46,7 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
           ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build());
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
   }
