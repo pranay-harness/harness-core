@@ -143,6 +143,7 @@ public class ArtifactCollectionJob implements Job {
 
             Map<String, String> metadata = lastSuccessfulBuild.getBuildParameters();
             metadata.put(BUILD_NO, lastSuccessfulBuild.getNumber());
+            metadata.put(URL, lastSuccessfulBuild.getBuildUrl());
 
             Artifact artifact =
                 anArtifact()

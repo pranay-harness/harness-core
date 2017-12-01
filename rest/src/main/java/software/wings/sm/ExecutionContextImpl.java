@@ -13,15 +13,20 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
+import software.wings.api.ServiceArtifactElement;
 import software.wings.beans.Application;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
@@ -41,16 +46,17 @@ import java.util.regex.Pattern;
  *
  * @author Rishi
  */
-public class ExecutionContextImpl implements ExecutionContext {
+public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final String CURRENT_STATE = "currentState";
   private static final Pattern wildCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   private static final Pattern argsCharPattern = Pattern.compile("[(|)|\"|\']");
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  @Inject private ExpressionEvaluator evaluator;
-  @Inject private ExpressionProcessorFactory expressionProcessorFactory;
-  @Inject private VariableProcessor variableProcessor;
+  @Inject @Transient private ExpressionEvaluator evaluator;
+  @Inject @Transient private ExpressionProcessorFactory expressionProcessorFactory;
+  @Inject @Transient private VariableProcessor variableProcessor;
   @Inject @Transient private SettingsService settingsService;
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
+  @Inject @Transient private ArtifactService artifactService;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
@@ -180,6 +186,50 @@ public class ExecutionContextImpl implements ExecutionContext {
         .filter(contextElement -> contextElement.getElementType() == contextElementType)
         .map(contextElement -> (T) contextElement)
         .collect(toList());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<Artifact> getArtifacts() {
+    WorkflowStandardParams workflowStandardParams =
+        (WorkflowStandardParams) getContextElement(ContextElementType.STANDARD);
+    List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
+    if (contextElementList == null || contextElementList.isEmpty()) {
+      return workflowStandardParams.getArtifacts();
+    } else {
+      List<Artifact> list = new ArrayList<>();
+      for (ContextElement contextElement : contextElementList) {
+        list.add(artifactService.get(workflowStandardParams.getAppId(), contextElement.getUuid()));
+      }
+      return list;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Artifact getArtifactForService(String serviceId) {
+    WorkflowStandardParams workflowStandardParams =
+        (WorkflowStandardParams) getContextElement(ContextElementType.STANDARD);
+    List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
+    if (contextElementList == null) {
+      return workflowStandardParams.getArtifactForService(serviceId);
+    }
+    Optional<ContextElement> contextElementOptional =
+        contextElementList.stream()
+            .filter(art
+                -> ((ServiceArtifactElement) art).getServiceIds() != null
+                    && ((ServiceArtifactElement) art).getServiceIds().contains(serviceId))
+            .findFirst();
+
+    if (contextElementOptional.isPresent()) {
+      return artifactService.get(workflowStandardParams.getAppId(), contextElementOptional.get().getUuid());
+    } else {
+      return workflowStandardParams.getArtifactForService(serviceId);
+    }
   }
 
   public Application getApp() {
@@ -379,6 +429,11 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   @Override
+  public OrchestrationWorkflowType getOrchestrationWorkflowType() {
+    return stateExecutionInstance.getOrchestrationWorkflowType();
+  }
+
+  @Override
   public String getStateExecutionInstanceId() {
     return stateExecutionInstance.getUuid();
   }
@@ -436,6 +491,16 @@ public class ExecutionContextImpl implements ExecutionContext {
     return settingsService.getSettingAttributesByType(getEnv().getAppId(), getEnv().getUuid(), type)
         .stream()
         .filter(settingAttribute -> StringUtils.equals(settingAttribute.getUuid(), id))
+        .findFirst()
+        .map(SettingAttribute::getValue)
+        .orElse(null);
+  }
+
+  @Override
+  public SettingValue getGlobalSettingValue(String accountId, String settingId, String type) {
+    return settingsService.getGlobalSettingAttributesByType(accountId, type)
+        .stream()
+        .filter(settingAttribute -> StringUtils.equals(settingAttribute.getUuid(), settingId))
         .findFirst()
         .map(SettingAttribute::getValue)
         .orElse(null);

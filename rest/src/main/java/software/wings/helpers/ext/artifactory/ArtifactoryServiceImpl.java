@@ -218,7 +218,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           logger.info("No  docker tags for repoKey {} imageName {} success ", repoKey, imageName);
           return buildDetails;
         }
-        buildDetails = tags.stream().map(s -> aBuildDetails().withNumber(s).build()).collect(toList());
+        String tagUrl = getBaseUrl(artifactoryConfig) + repoKey + "/" + imageName + "/";
+        buildDetails = tags.stream()
+                           .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
+                           .collect(toList());
       }
     } catch (Exception e) {
       logger.error("Error occurred while listing docker tags from artifactory {} for Repo {} for image {} ",
@@ -287,7 +290,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
         Collections.reverse(artifactPaths);
         return artifactPaths.stream()
-            .map(s -> aBuildDetails().withNumber(s.substring(s.lastIndexOf('/') + 1)).withArtifactPath(s).build())
+            .map(s
+                -> aBuildDetails()
+                       .withNumber(s.substring(s.lastIndexOf('/') + 1))
+                       .withArtifactPath(s)
+                       .withBuildUrl(getBaseUrl(artifactoryConfig) + s)
+                       .build())
             .collect(toList());
       } else {
         throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Artifact path can not be empty");
@@ -299,7 +307,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           logger.warn("User not authorized to perform deep level search. Trying with different search api");
           artifactPaths = getFilePathsForAnonymousUser(artifactory, repoKey, artifactPath, maxVersions);
           return artifactPaths.stream()
-              .map(s -> aBuildDetails().withNumber(s.substring(s.lastIndexOf('/') + 1)).withArtifactPath(s).build())
+              .map(s
+                  -> aBuildDetails()
+                         .withNumber(s.substring(s.lastIndexOf('/') + 1))
+                         .withArtifactPath(s)
+                         .withBuildUrl(getBaseUrl(artifactoryConfig) + s)
+                         .build())
               .collect(toList());
         }
       }

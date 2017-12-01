@@ -2,7 +2,10 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -165,7 +168,7 @@ public class JenkinsState extends State {
   }
 
   @Override
-  @Attributes(title = "Wait interval before execution(in seconds)")
+  @Attributes(title = "Wait interval before execution (s)")
   public Integer getWaitInterval() {
     return super.getWaitInterval();
   }
@@ -190,7 +193,9 @@ public class JenkinsState extends State {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
 
     String jenkinsConfigExpression = null;
     String jobNameExpression = null;
@@ -216,7 +221,8 @@ public class JenkinsState extends State {
         jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
       }
     } else {
-      jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
+      jenkinsConfig =
+          (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId, StateType.JENKINS.name());
     }
     Validator.notNullCheck("JenkinsConfig", jenkinsConfig);
 
@@ -347,9 +353,6 @@ public class JenkinsState extends State {
     Activity.ActivityBuilder activityBuilder =
         Activity.builder()
             .applicationName(app.getName())
-            .environmentId(env.getUuid())
-            .environmentName(env.getName())
-            .environmentType(env.getEnvironmentType())
             .commandName(getName())
             .type(Type.Verification)
             .workflowType(executionContext.getWorkflowType())
@@ -364,6 +367,14 @@ public class JenkinsState extends State {
             .status(ExecutionStatus.RUNNING)
             .commandUnitType(CommandUnitType.JENKINS);
 
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
+    } else {
+      activityBuilder.environmentId(env.getUuid())
+          .environmentName(env.getName())
+          .environmentType(env.getEnvironmentType());
+    }
     if (instanceElement != null) {
       activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
           .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())

@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.ContainerInfo;
@@ -64,6 +65,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         commandExecutionStatus = SUCCESS;
       }
     } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
     return commandExecutionStatus;

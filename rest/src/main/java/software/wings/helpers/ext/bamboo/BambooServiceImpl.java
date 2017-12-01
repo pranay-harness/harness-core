@@ -113,6 +113,7 @@ public class BambooServiceImpl implements BambooService {
         return aBuildDetails()
             .withNumber(next.get("buildNumber").asText())
             .withRevision(next.get("vcsRevisionKey").asText())
+            .withBuildUrl(next.get("link").get("href").asText())
             .build();
       }
     } catch (Exception e) {

@@ -1,25 +1,30 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
+import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBuilder.aServiceArtifactElement;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
-import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EnvStateExecutionData;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.OrchestrationWorkflowType;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -32,7 +37,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -55,6 +59,8 @@ public class EnvState extends State {
 
   @SchemaIgnore private Map<String, String> workflowVariables;
 
+  @Transient @Inject private WorkflowService workflowService;
+
   @Transient @Inject private WorkflowExecutionService executionService;
 
   /**
@@ -71,15 +77,10 @@ public class EnvState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    String appId = ((ExecutionContextImpl) context).getApp().getUuid();
-
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    List<Artifact> artifacts = workflowStandardParams.getArtifactIds() == null
-        ? new ArrayList<>()
-        : workflowStandardParams.getArtifactIds()
-              .stream()
-              .map(artifactId -> anArtifact().withUuid(artifactId).build())
-              .collect(Collectors.toList());
+    String appId = workflowStandardParams.getAppId();
+
+    List<Artifact> artifacts = ((DeploymentExecutionContext) context).getArtifacts();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
@@ -91,10 +92,19 @@ public class EnvState extends State {
     executionArgs.setTriggeredBy(workflowStandardParams.getCurrentUser());
     executionArgs.setWorkflowVariables(getWorkflowVariables());
 
-    EnvStateExecutionData envStateExecutionData = new EnvStateExecutionData();
-    envStateExecutionData.setWorkflowId(workflowId);
-    envStateExecutionData.setEnvId(envId);
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    EnvStateExecutionData envStateExecutionData =
+        anEnvStateExecutionData().withWorkflowId(workflowId).withEnvId(envId).build();
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("Invalid Workflow")
+          .withStateExecutionData(envStateExecutionData)
+          .build();
+    }
 
+    envStateExecutionData.setOrchestrationWorkflowType(
+        workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     WorkflowExecution execution = executionService.triggerOrchestrationExecution(
         appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs);
     envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
@@ -115,7 +125,29 @@ public class EnvState extends State {
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
-    return anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
+    ExecutionResponse executionResponse = anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
+
+    if (responseData.getStatus() != ExecutionStatus.SUCCESS) {
+      return executionResponse;
+    }
+
+    EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) context.getStateExecutionData();
+    if (stateExecutionData.getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
+      List<Artifact> artifacts =
+          executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
+      if (artifacts != null && !artifacts.isEmpty()) {
+        List<ContextElement> artifactElements = new ArrayList<>();
+        artifacts.forEach(artifact
+            -> artifactElements.add(aServiceArtifactElement()
+                                        .withUuid(artifact.getUuid())
+                                        .withName(artifact.getDisplayName())
+                                        .withServiceIds(artifact.getServiceIds())
+                                        .build()));
+        executionResponse.setContextElements(artifactElements);
+      }
+    }
+
+    return executionResponse;
   }
 
   /**

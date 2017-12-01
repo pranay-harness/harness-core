@@ -15,6 +15,7 @@ import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
 import org.mongodb.morphia.query.FindOptions;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+@Singleton
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
 

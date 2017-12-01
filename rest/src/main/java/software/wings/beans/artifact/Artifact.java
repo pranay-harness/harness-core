@@ -107,6 +107,10 @@ public class Artifact extends Base {
   }
 
   /**
+   *
+   */
+
+  /**
    * The Enum Status.
    */
   public enum Status {
@@ -125,22 +129,34 @@ public class Artifact extends Base {
     WAITING, /**
               * Ready status.
               */
-    READY, /**
-            * Aborted status.
-            */
-    APPROVED, /**
-               * Rejected status.
-               */
-    REJECTED, /**
-               * Aborted status.
-               */
-    ABORTED, /**
-              * Failed status.
-              */
-    FAILED, /**
-             * Error status.
-             */
-    ERROR
+    READY(true), /**
+                  * Aborted status.
+                  */
+    APPROVED(true), /**
+                     * Rejected status.
+                     */
+    REJECTED(true), /**
+                     * Aborted status.
+                     */
+    ABORTED(true), /**
+                    * Failed status.
+                    */
+    FAILED(true), /**
+                   * Error status.
+                   */
+    ERROR(true);
+
+    Status() {}
+
+    Status(boolean finalStatus) {
+      this.finalStatus = finalStatus;
+    }
+
+    public boolean isFinalStatus() {
+      return finalStatus;
+    }
+
+    private boolean finalStatus = false;
   }
 
   /**

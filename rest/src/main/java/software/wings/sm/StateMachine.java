@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.Transition.Builder.aTransition;
@@ -118,9 +119,12 @@ public class StateMachine extends Base {
       orchestrationWorkflow.setValid(false);
       orchestrationWorkflow.setValidationMessage(sb.toString());
     }
-    if (workflow.getEnvId() == null || workflow.getEnvId().isEmpty()) {
-      orchestrationWorkflow.setValid(false);
-      orchestrationWorkflow.setValidationMessage(Constants.WORKFLOW_ENV_VALIDATION_MESSAGE);
+
+    if (!workflow.envValid()) {
+      if (!BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
+        orchestrationWorkflow.setValid(false);
+        orchestrationWorkflow.setValidationMessage(Constants.WORKFLOW_ENV_VALIDATION_MESSAGE);
+      }
     } else if (orchestrationWorkflow.isValid()) {
       orchestrationWorkflow.setValid(true);
       orchestrationWorkflow.setValidationMessage(null);

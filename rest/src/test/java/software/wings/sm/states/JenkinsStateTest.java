@@ -69,10 +69,10 @@ public class JenkinsStateTest {
     on(jenkinsState).set("executorService", new CurrentThreadExecutor());
     jenkinsState.setJenkinsConfigId(SETTING_ID);
     jenkinsState.setJobName("testjob");
-    when(executionContext.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(executionContext.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
     when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
-    when(executionContext.getSettingValue(SETTING_ID, SettingVariableTypes.JENKINS.name()))
+    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.JENKINS.name()))
         .thenReturn(JenkinsConfig.builder()
                         .jenkinsUrl("http://jenkins")
                         .username("username")

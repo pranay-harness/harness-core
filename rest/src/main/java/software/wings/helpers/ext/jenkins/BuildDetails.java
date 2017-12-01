@@ -14,6 +14,7 @@ public class BuildDetails {
   private String revision;
   private String description;
   private String artifactPath;
+  private String buildUrl;
   private Map<String, String> buildParameters = new HashMap<>();
 
   /**
@@ -67,6 +68,14 @@ public class BuildDetails {
    */
   public void setArtifactPath(String artifactPath) {
     this.artifactPath = artifactPath;
+  }
+
+  public String getBuildUrl() {
+    return buildUrl;
+  }
+
+  public void setBuildUrl(String buildUrl) {
+    this.buildUrl = buildUrl;
   }
 
   @Override
@@ -136,6 +145,7 @@ public class BuildDetails {
     private String description;
     private Map<String, String> buildParameters = new HashMap<>();
     private String artifactPath;
+    private String buildUrl;
 
     private Builder() {}
 
@@ -200,6 +210,11 @@ public class BuildDetails {
       return this;
     }
 
+    public Builder withBuildUrl(String buildUrl) {
+      this.buildUrl = buildUrl;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -211,7 +226,8 @@ public class BuildDetails {
           .withRevision(revision)
           .withDescription(description)
           .withArtifactPath(artifactPath)
-          .withBuildParameters(buildParameters);
+          .withBuildParameters(buildParameters)
+          .withBuildUrl(buildUrl);
     }
 
     /**
@@ -226,6 +242,7 @@ public class BuildDetails {
       buildDetails.setDescription(description);
       buildDetails.setBuildParameters(buildParameters);
       buildDetails.setArtifactPath(artifactPath);
+      buildDetails.setBuildUrl(buildUrl);
       return buildDetails;
     }
   }

@@ -153,6 +153,19 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
+  public void performFullSyncDryRun(String accountId) {
+    try {
+      logger.info("Performing full sync dry-run for account:" + accountId);
+      FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
+      List<GitFileChange> gitFileChanges = new ArrayList<>();
+      yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "");
+      logger.info("Performed full sync dry-run for account:" + accountId);
+    } catch (Exception ex) {
+      logger.error("Failed to perform full sync dry run for account: " + accountId, ex);
+    }
+  }
+
+  @Override
   public boolean handleChangeSet(YamlChangeSet yamlChangeSet) {
     YamlGitConfig yamlGitConfig = get(yamlChangeSet.getAccountId(), yamlChangeSet.getAccountId());
     List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();

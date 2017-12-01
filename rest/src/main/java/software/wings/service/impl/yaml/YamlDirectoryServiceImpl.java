@@ -128,7 +128,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         String entityId = ((YamlNode) dn).getUuid();
         String yaml = "";
         String appId = "";
-        String settingVariableType = "";
 
         switch (dn.getShortClassName()) {
           case "Application":
@@ -164,7 +163,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             break;
           case "SettingAttribute":
             yaml = yamlResourceService.getSettingAttribute(accountId, entityId).getResource().getYaml();
-            settingVariableType = ((SettingAttributeYamlNode) dn).getSettingVariableType();
             break;
           default:
             logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);

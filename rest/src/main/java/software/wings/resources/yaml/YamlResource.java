@@ -598,4 +598,19 @@ public class YamlResource {
     }
     return new RestResponse<>(yamlGitSyncService.getWebhook(entityId, accountId));
   }
+
+  /**
+   * Run a full sync dry-run
+   *
+   * @param accountId the account id
+   * @return
+   */
+  @GET
+  @Path("full-sync-dry-run")
+  @Timed
+  @ExceptionMetered
+  public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId) {
+    yamlGitSyncService.performFullSyncDryRun(accountId);
+    return new RestResponse();
+  }
 }
