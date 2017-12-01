@@ -39,7 +39,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject AwsHelperService awsHelperService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
-  private static final int MAX_FILES_IN_BUCKET = 10000;
+  private static final int MAX_FILES_IN_BUCKET = 2000;
 
   @Override
   public Map<String, String> getBuckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
