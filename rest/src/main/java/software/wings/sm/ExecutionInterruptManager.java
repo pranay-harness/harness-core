@@ -199,8 +199,8 @@ public class ExecutionInterruptManager {
         }
       }
     } catch (Exception e) {
-      logger.error(
-          "Failed to close the ManualNeededAlert/ ApprovalAlert  for appId, executionId  ", appId, executionId, e);
+      logger.error("Failed to close the ManualNeededAlert/ ApprovalNeededAlert  for appId, executionId  ", appId,
+          executionId, e);
     }
   }
 
