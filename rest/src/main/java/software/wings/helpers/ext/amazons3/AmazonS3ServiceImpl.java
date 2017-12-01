@@ -73,6 +73,15 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     return objectKeyList;
   }
 
+  private String getPrefix(String artifactPath) {
+    int index = artifactPath.indexOf('*');
+    String prefix = null;
+    if (index != -1) {
+      prefix = artifactPath.substring(0, index);
+    }
+    return prefix;
+  }
+
   @Override
   public List<BuildDetails> getArtifactsBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, List<String> artifactPaths, boolean isExpression) {
@@ -91,12 +100,19 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket) {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     if (isExpression) {
-      Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-
       ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+
+      String prefix = getPrefix(artifactPath);
+      if (prefix != null) {
+        listObjectsV2Request.withPrefix(prefix);
+      }
+
       listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
       List<String> objectKeyList = Lists.newArrayList();
       ListObjectsV2Result result;
+
+      Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+
       do {
         result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
         List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
@@ -147,6 +163,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     Pattern pattern = Pattern.compile(artifactpathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
     ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+    String prefix = getPrefix(artifactpathRegex);
+    if (prefix != null) {
+      listObjectsV2Request.withPrefix(prefix);
+    }
+
     listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
 
     List<String> objectKeyList = Lists.newArrayList();
