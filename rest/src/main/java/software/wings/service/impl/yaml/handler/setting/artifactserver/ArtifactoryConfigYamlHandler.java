@@ -14,8 +14,13 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
+    String encryptedPassword = null;
+    if (artifactoryConfig.getUsername() != null) {
+      encryptedPassword = getEncryptedValue(artifactoryConfig, "password", false);
+    }
+
     return new Yaml(artifactoryConfig.getType(), settingAttribute.getName(), artifactoryConfig.getArtifactoryUrl(),
-        artifactoryConfig.getUsername(), getEncryptedValue(artifactoryConfig, "password", false));
+        artifactoryConfig.getUsername(), encryptedPassword);
   }
 
   protected SettingAttribute setWithYamlValues(
