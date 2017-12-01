@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.net.URLEncoder.encode;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -36,6 +37,13 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -60,6 +68,7 @@ import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -68,6 +77,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -86,6 +96,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
@@ -737,6 +748,51 @@ public class UserServiceImpl implements UserService {
     }
 
     return null;
+  }
+
+  @Override
+  public ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl) {
+    String jwtZendeskSecret = configuration.getPortal().getJwtZendeskSecret();
+    if (jwtZendeskSecret == null) {
+      throw new WingsException(
+          INVALID_REQUEST, "message", "Request can not be completed. No Zendesk SSO secret found.");
+    }
+
+    User user = UserThreadLocal.get();
+
+    // Given a user instance
+    JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
+                                 .issueTime(new Date())
+                                 .jwtID(UUID.randomUUID().toString())
+                                 .claim("name", user.getName())
+                                 .claim("email", user.getEmail())
+                                 .build();
+
+    // Create JWS header with HS256 algorithm
+    JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256).contentType("text/plain").build();
+
+    // Create JWS object
+    JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaims.toJSONObject()));
+
+    try {
+      // Create HMAC signer
+      JWSSigner signer = new MACSigner(jwtZendeskSecret.getBytes());
+      jwsObject.sign(signer);
+    } catch (com.nimbusds.jose.JOSEException e) {
+      logger.error("Error signing JWT: " + e.getMessage(), e);
+      throw new WingsException(INVALID_REQUEST, "message", "Error signing JWT: " + e.getMessage());
+    }
+
+    // Serialise to JWT compact form
+    String jwtString = jwsObject.serialize();
+
+    String redirectUrl = "https://"
+        + "harnesssupport.zendesk.com/access/jwt?jwt=" + jwtString;
+
+    if (returnToUrl != null) {
+      redirectUrl += "&return_to=" + encode(redirectUrl);
+    }
+    return ZendeskSsoLoginResponse.builder().redirectUrl(redirectUrl).userId(user.getUuid()).build();
   }
 
   private Role ensureRolePresent(String roleId) {

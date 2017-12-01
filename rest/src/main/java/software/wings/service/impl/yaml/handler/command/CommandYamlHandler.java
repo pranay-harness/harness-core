@@ -238,4 +238,14 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     Validator.notNullCheck("commandName is null for given yamlFilePath: " + yamlFilePath, commandName);
     return serviceResourceService.getCommandByName(appId, serviceId, commandName);
   }
+
+  @Override
+  public void delete(ChangeContext<CommandYaml> changeContext) throws HarnessException {
+    ServiceCommand serviceCommand =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (serviceCommand != null) {
+      serviceResourceService.deleteCommand(
+          serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand.getUuid());
+    }
+  }
 }

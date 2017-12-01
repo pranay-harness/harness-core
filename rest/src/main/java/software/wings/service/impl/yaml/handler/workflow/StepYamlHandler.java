@@ -145,4 +145,9 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
   public Node get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
+
+  @Override
+  public void delete(ChangeContext<StepYaml> changeContext) throws HarnessException {
+    // Do nothing
+  }
 }

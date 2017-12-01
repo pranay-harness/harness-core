@@ -8,6 +8,8 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.yaml.ChangeContext;
+import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.EnvironmentService;
@@ -66,5 +68,17 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     Service service = serviceResourceService.get(appId, serviceId);
     Validator.notNullCheck("Service can't be found for Id:" + serviceId, service);
     return service.getName();
+  }
+
+  @Override
+  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId);
+    InfrastructureMapping infraMapping = yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
+    if (infraMapping != null) {
+      infraMappingService.delete(appId, infraMapping.getUuid());
+    }
   }
 }

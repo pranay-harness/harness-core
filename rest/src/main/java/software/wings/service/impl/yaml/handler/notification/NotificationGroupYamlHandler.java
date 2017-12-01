@@ -14,6 +14,7 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.sync.YamlSyncHelper;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.Util;
 
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
  */
 public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, NotificationGroup> {
   @Inject YamlSyncHelper yamlSyncHelper;
+  @Inject NotificationSetupService notificationSetupService;
 
   @Override
   public NotificationGroup createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
@@ -109,5 +111,10 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   @Override
   public NotificationGroup get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
+  }
+
+  @Override
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+    // Do nothing
   }
 }

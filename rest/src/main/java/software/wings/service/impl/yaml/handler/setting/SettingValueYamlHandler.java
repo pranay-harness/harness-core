@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -69,5 +71,14 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
   public SettingAttribute updateFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     throw new HarnessException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
+  }
+
+  @Override
+  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+    SettingAttribute settingAttribute =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (settingAttribute != null) {
+      settingsService.delete(GLOBAL_APP_ID, settingAttribute.getUuid());
+    }
   }
 }

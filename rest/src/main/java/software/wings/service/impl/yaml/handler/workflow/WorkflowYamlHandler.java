@@ -404,6 +404,14 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends Work
     return yamlSyncHelper.getWorkflow(accountId, yamlFilePath);
   }
 
+  @Override
+  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+    Workflow workflow = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (workflow != null) {
+      workflowService.deleteWorkflow(workflow.getAppId(), workflow.getUuid());
+    }
+  }
+
   @Data
   @Builder
   protected static class WorkflowInfo {

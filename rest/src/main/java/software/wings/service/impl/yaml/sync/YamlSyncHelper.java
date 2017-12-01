@@ -59,11 +59,11 @@ public class YamlSyncHelper {
     return getSettingAttribute(accountId, YamlType.LOADBALANCER_PROVIDER, yamlFilePath);
   }
 
-  private SettingAttribute getSettingAttribute(String accountId, YamlType yamlType, String yamlFilePath) {
-    String artifactServerName =
+  public SettingAttribute getSettingAttribute(String accountId, YamlType yamlType, String yamlFilePath) {
+    String settingAttributeName =
         extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, artifactServerName);
-    return settingsService.getSettingAttributeByName(accountId, artifactServerName);
+    Validator.notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
+    return settingsService.getSettingAttributeByName(accountId, settingAttributeName);
   }
 
   public String getAppId(String accountId, String yamlFilePath) {
@@ -79,6 +79,10 @@ public class YamlSyncHelper {
     return appService.getAppByName(accountId, appName);
   }
 
+  public String getAppName(String yamlFilePath) {
+    return extractParentEntityName(YamlType.APPLICATION.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+  }
+
   public String getServiceId(String appId, String yamlFilePath) {
     Service service = getService(appId, yamlFilePath);
     Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, service);
@@ -91,6 +95,10 @@ public class YamlSyncHelper {
     return serviceResourceService.getServiceByName(appId, serviceName);
   }
 
+  public String getServiceName(String yamlFilePath) {
+    return extractParentEntityName(YamlType.SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+  }
+
   public String getEnvironmentId(String appId, String yamlFilePath) {
     Environment environment = getEnvironment(appId, yamlFilePath);
     Validator.notNullCheck("Environment null in the given yaml file: " + yamlFilePath, environment);
@@ -101,6 +109,10 @@ public class YamlSyncHelper {
     String envName = extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("Environment name null in the given yaml file: " + yamlFilePath, envName);
     return environmentService.getEnvironmentByName(appId, envName);
+  }
+
+  public String getEnvironmentName(String yamlFilePath) {
+    return extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
   }
 
   public ArtifactStream getArtifactStream(String accountId, String yamlFilePath) {
