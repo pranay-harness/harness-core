@@ -308,7 +308,11 @@ public class GitClientImpl implements GitClient {
       return GitPushResult.builder().refUpdate(refUpdate).build();
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in writing commit");
+      String errorMsg = ex.getMessage();
+      if (ex instanceof InvalidRemoteException | ex.getCause() instanceof NoRemoteRepositoryException) {
+        errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
+      }
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", errorMsg);
     }
   }
 

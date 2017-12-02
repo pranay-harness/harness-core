@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 
 import com.google.common.base.Joiner;
@@ -60,7 +61,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public ReplicationController getController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return name != null ? controllersOperation(kubernetesConfig, encryptedDataDetails).withName(name).get() : null;
+    return isNotBlank(name) ? controllersOperation(kubernetesConfig, encryptedDataDetails).withName(name).get() : null;
   }
 
   @Override
@@ -79,7 +80,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public void deleteController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     logger.info("Deleting controller {}", name);
-    controllersOperation(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+    if (isNotBlank(name)) {
+      controllersOperation(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+    }
   }
 
   @Override
@@ -213,12 +216,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public Service getService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return name != null ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-                              .services()
-                              .inNamespace(kubernetesConfig.getNamespace())
-                              .withName(name)
-                              .get()
-                        : null;
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+                                  .services()
+                                  .inNamespace(kubernetesConfig.getNamespace())
+                                  .withName(name)
+                                  .get()
+                            : null;
   }
 
   @Override
@@ -253,11 +256,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public Secret getSecret(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String secretName) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-        .secrets()
-        .inNamespace(kubernetesConfig.getNamespace())
-        .withName(secretName)
-        .get();
+    return isNotBlank(secretName) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+                                        .secrets()
+                                        .inNamespace(kubernetesConfig.getNamespace())
+                                        .withName(secretName)
+                                        .get()
+                                  : null;
   }
 
   @Override

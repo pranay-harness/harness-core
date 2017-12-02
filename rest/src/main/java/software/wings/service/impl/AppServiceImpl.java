@@ -337,17 +337,15 @@ public class AppServiceImpl implements AppService {
       List<GitFileChange> changeSet = new ArrayList<>();
 
       String oldPath = yamlDirectoryService.getRootPathByApp(oldApp);
-
       String newPath = yamlDirectoryService.getRootPathByApp(newApp);
 
-      changeSet.add(entityUpdateService.getAppGitSyncFile(oldApp, ChangeType.DELETE));
       changeSet.add(GitFileChange.Builder.aGitFileChange()
                         .withAccountId(accountId)
                         .withChangeType(ChangeType.RENAME)
                         .withFilePath(newPath)
                         .withOldFilePath(oldPath)
                         .build());
-      changeSet.add(entityUpdateService.getAppGitSyncFile(newApp, ChangeType.ADD));
+      changeSet.add(entityUpdateService.getAppGitSyncFile(newApp, ChangeType.MODIFY));
       yamlChangeSetService.queueChangeSet(ygs, changeSet);
     }
   }
