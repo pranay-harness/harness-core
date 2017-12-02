@@ -367,23 +367,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       List<GitFileChange> changeSet = new ArrayList<>();
 
       String oldPath = yamlDirectoryService.getRootPathByService(oldService);
-
       String newPath = yamlDirectoryService.getRootPathByService(newService);
 
-      /*
-      delete old service yaml
-      move all remaining files
-      add new Service yaml
-       */
-
-      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, oldService, ChangeType.DELETE));
       changeSet.add(GitFileChange.Builder.aGitFileChange()
                         .withAccountId(accountId)
                         .withChangeType(ChangeType.RENAME)
                         .withFilePath(newPath)
                         .withOldFilePath(oldPath)
                         .build());
-      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.ADD));
+      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.MODIFY));
       yamlChangeSetService.queueChangeSet(ygs, changeSet);
     }
   }

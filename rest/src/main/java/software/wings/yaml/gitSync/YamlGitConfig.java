@@ -39,7 +39,7 @@ public class YamlGitConfig extends Base implements Encryptable {
 
   @NotNull @Encrypted @JsonView(JsonViews.Internal.class) private char[] password;
 
-  @SchemaIgnore private String encryptedPassword;
+  @SchemaIgnore @JsonIgnore private String encryptedPassword;
 
   @NotNull private SyncMode syncMode;
   private boolean enabled;

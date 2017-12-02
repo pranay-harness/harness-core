@@ -11,7 +11,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.WORKFLOW;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
@@ -274,7 +273,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             workflowPhase =
                 ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
           }
-          if (workflowPhase != null && workflowPhase.getInfraMappingId() != null) {
+          if (workflowPhase != null && workflowPhase.getInfraMappingId() != null
+              && !workflowPhase.checkInfraTemplatized()) {
             InfrastructureMapping infrastructureMapping =
                 infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
             predicate = stencil -> stencil.matches(infrastructureMapping);
@@ -1418,32 +1418,36 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         throw new WingsException(
             INVALID_REQUEST, "message", "Service [" + workflowPhase.getServiceId() + "] does not exist");
       }
-      if (infraMappingId == null) {
-        throw new WingsException(INVALID_REQUEST, "message",
-            String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
+      InfrastructureMapping infrastructureMapping = null;
+      if (!workflowPhase.checkInfraTemplatized()) {
+        if (infraMappingId == null) {
+          throw new WingsException(INVALID_REQUEST, "message",
+              String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
+        }
+        infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+        Validator.notNullCheck("InfraMapping", infrastructureMapping);
+        if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
+          throw new WingsException(INVALID_REQUEST, "message",
+              "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
+                  + service.getName() + "]");
+        }
       }
-      InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-      Validator.notNullCheck("InfraMapping", infrastructureMapping);
-      if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
-        throw new WingsException(INVALID_REQUEST, "message",
-            "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
-                + service.getName() + "]");
+      if (infrastructureMapping != null) {
+        workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
+        workflowPhase.setInfraMappingName(infrastructureMapping.getName());
+        workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
       }
-
-      workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-      workflowPhase.setInfraMappingName(infrastructureMapping.getName());
-      workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
 
       WorkflowPhase rollbackWorkflowPhase =
           orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase.getUuid());
-
       if (rollbackWorkflowPhase != null) {
         rollbackWorkflowPhase.setServiceId(serviceId);
         rollbackWorkflowPhase.setInfraMappingId(infraMappingId);
-        rollbackWorkflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-        rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getName());
-        rollbackWorkflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
-
+        if (infrastructureMapping != null) {
+          rollbackWorkflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
+          rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getName());
+          rollbackWorkflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+        }
         orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       }
     }
@@ -1465,8 +1469,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
       validateServiceCompatibility(appId, serviceId, oldServiceId);
-      if (!infraMappingId.equals(oldInfraMappingId)) {
-        inframappingChanged = true;
+      if (!workflowPhase.checkInfraTemplatized()) {
+        if (!infraMappingId.equals(oldInfraMappingId)) {
+          inframappingChanged = true;
+        }
       }
       // Propagate template expressions to workflow level
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
