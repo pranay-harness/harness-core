@@ -84,10 +84,11 @@ public class AlertServiceImpl implements AlertService {
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
     boolean lockAcquired = false;
+    String lockName = alertType.name() + "-" + (appId == null || appId.equals(GLOBAL_APP_ID) ? accountId : appId);
     try {
-      lockAcquired = persistentLocker.acquireLock(AlertType.class, alertType.name());
+      lockAcquired = persistentLocker.acquireLock(AlertType.class, lockName);
       if (!lockAcquired) {
-        logger.warn("Persistent lock could not be acquired for the AlertType {}", alertType.name());
+        logger.warn("Persistent lock could not be acquired for alert {}", lockName);
         return;
       }
       if (!findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
@@ -107,7 +108,7 @@ public class AlertServiceImpl implements AlertService {
       }
     } finally {
       if (lockAcquired) {
-        persistentLocker.releaseLock(AlertType.class, alertType.name());
+        persistentLocker.releaseLock(AlertType.class, lockName);
       }
     }
   }
