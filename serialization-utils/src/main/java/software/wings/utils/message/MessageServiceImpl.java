@@ -175,6 +175,12 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public Runnable getMessageCheckingRunnableForChannel(
       MessengerType sourceType, String sourceProcessId, long readTimeout, Consumer<Message> messageHandler) {
+    try {
+      messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
+    } catch (IOException e) {
+      logger.error("Couldn't get message channel for {} {}", sourceType, sourceProcessId);
+      return null;
+    }
     return () -> {
       try {
         Message message = readMessageFromChannel(sourceType, sourceProcessId, readTimeout);
@@ -183,8 +189,7 @@ public class MessageServiceImpl implements MessageService {
             messageHandler.accept(message);
           }
           try {
-            messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>())
-                .put(message);
+            messageQueues.get(getMessageChannel(sourceType, sourceProcessId)).put(message);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
@@ -204,10 +209,10 @@ public class MessageServiceImpl implements MessageService {
   public Message waitForMessageOnChannel(
       MessengerType sourceType, String sourceProcessId, String messageName, long timeout) {
     try {
+      BlockingQueue<Message> queue =
+          messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
       return timeLimiter.callWithTimeout(() -> {
         Message message = null;
-        BlockingQueue<Message> queue =
-            messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
         while (message == null || !messageName.equals(message.getMessage())) {
           try {
             message = queue.take();
