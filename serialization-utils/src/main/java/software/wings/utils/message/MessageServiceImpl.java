@@ -243,6 +243,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       File channel = getMessageChannel(type, id);
       messageTimestamps.remove(channel);
+      messageQueues.remove(channel);
       if (channel.exists()) {
         FileUtils.forceDelete(channel);
       }
