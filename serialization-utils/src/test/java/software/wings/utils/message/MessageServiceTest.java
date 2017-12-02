@@ -97,7 +97,7 @@ public class MessageServiceTest {
 
   @Test
   public void shouldSendMessage() throws IOException {
-    messageService.sendMessage(OTHER_MESSENGER_TYPE, otherProcessId, "message-text", "p1", "p2");
+    messageService.writeMessageToChannel(OTHER_MESSENGER_TYPE, otherProcessId, "message-text", "p1", "p2");
 
     List<String> messageLines = FileUtils.readLines(otherMessageFile, UTF_8);
 
@@ -117,7 +117,7 @@ public class MessageServiceTest {
 
     FileUtils.writeLines(otherMessageFile, singletonList(line));
 
-    Message message = messageService.retrieveMessage(OTHER_MESSENGER_TYPE, otherProcessId, 1000L);
+    Message message = messageService.readMessageFromChannel(OTHER_MESSENGER_TYPE, otherProcessId, 1000L);
 
     assertThat(message.getFromProcess()).isEqualTo(otherProcessId);
     assertThat(message.getFromType()).is(OTHER_MESSENGER_TYPE);

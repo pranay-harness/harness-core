@@ -2,19 +2,31 @@ package software.wings.utils.message;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 /**
  * Message service for inter-process communication via the filesystem
+ *
+ * Created by brett on 10/26/17
  */
 public interface MessageService {
   void writeMessage(String message, String... params);
 
+  void writeMessageToChannel(MessengerType targetType, String targetProcessId, String message, String... params);
+
   Message readMessage(long timeout);
 
-  void sendMessage(MessengerType receiverType, String receiverProcessId, String message, String... params);
+  Message readMessageFromChannel(MessengerType sourceType, String sourceProcessId, long timeout);
 
-  Message retrieveMessage(MessengerType senderType, String senderProcessId, long timeout);
+  Runnable getMessageCheckingRunnable(long readTimeout, Consumer<Message> messageHandler);
+
+  Runnable getMessageCheckingRunnableForChannel(
+      MessengerType sourceType, String sourceProcessId, long readTimeout, Consumer<Message> messageHandler);
+
+  Message waitForMessage(String messageName, long timeout);
+
+  Message waitForMessageOnChannel(MessengerType sourceType, String sourceProcessId, String messageName, long timeout);
 
   List<String> listChannels(MessengerType type);
 
