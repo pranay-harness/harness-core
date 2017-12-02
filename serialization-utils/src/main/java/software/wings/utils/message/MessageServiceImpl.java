@@ -179,7 +179,6 @@ public class MessageServiceImpl implements MessageService {
       messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
     } catch (IOException e) {
       logger.error("Couldn't get message channel for {} {}", sourceType, sourceProcessId);
-      return null;
     }
     return () -> {
       try {
