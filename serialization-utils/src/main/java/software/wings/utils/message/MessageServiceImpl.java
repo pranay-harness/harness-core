@@ -218,9 +218,10 @@ public class MessageServiceImpl implements MessageService {
         return message;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.debug("Timed out waiting for message from channel {} {}", sourceType, sourceProcessId);
+      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
     } catch (Exception e) {
-      logger.error("Error while waiting for message from channel {} {}", sourceType, sourceProcessId, e);
+      logger.error(
+          "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
     }
     return null;
   }
