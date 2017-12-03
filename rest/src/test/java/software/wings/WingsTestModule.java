@@ -12,7 +12,7 @@ import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
-import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.MaintenanceServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
@@ -23,7 +23,7 @@ import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.EcrBuildService;
-import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.MaintenanceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -49,5 +49,11 @@ public class WingsTestModule extends AbstractModule {
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
+    bind(MaintenanceService.class).toInstance(new MaintenanceServiceImpl() {
+      @Override
+      public boolean isMaintenance() {
+        return false;
+      }
+    });
   }
 }
