@@ -336,10 +336,11 @@ public class StateMachineExecutor {
     State currentState =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
-      StateExecutionData stateExecutionData = aStateExecutionData()
-                                                  .withWaitInterval(currentState.getWaitInterval())
-                                                  .withErrorMsg("Waiting before execution")
-                                                  .build();
+      StateExecutionData stateExecutionData =
+          aStateExecutionData()
+              .withWaitInterval(currentState.getWaitInterval())
+              .withErrorMsg("Waiting " + currentState.getWaitInterval() + " seconds before execution")
+              .build();
       updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null);
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
