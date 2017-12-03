@@ -47,7 +47,6 @@ import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
@@ -100,7 +99,6 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationService notificationService;
   @Inject private WorkflowService workflowService;
-  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private StatisticsService statisticsService;
   @Inject private RoleService roleService;

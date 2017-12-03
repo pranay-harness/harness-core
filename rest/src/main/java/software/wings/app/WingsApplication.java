@@ -49,6 +49,8 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.User;
+import software.wings.core.maintenance.MaintenanceController;
+import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
@@ -64,6 +66,7 @@ import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.LogAnalysisPurgeManager;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
@@ -168,7 +171,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new YamlModule(),
         new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
-
     Caching.getCachingProvider().getCacheManager().createCache(
         DELEGATE_SYNC_CACHE, new Configuration<String, DelegateTask>() {
           public static final long serialVersionUID = 1l;
@@ -236,7 +238,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerQueueListeners(injector);
 
-    registerScheduledJobs(injector);
+    registerQuartzSchedulers(injector);
+
+    scheduleJobs(injector);
 
     registerCorsFilter(configuration, environment);
 
@@ -311,6 +315,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
     environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
+    environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
     environment.lifecycle().manage(
         (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
     environment.lifecycle().manage(
@@ -322,24 +327,34 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Initializing queuelisteners...");
     Reflections reflections = new Reflections("software.wings");
 
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     Set<Class<? extends AbstractQueueListener>> queueListeners = reflections.getSubTypesOf(AbstractQueueListener.class);
     for (Class<? extends AbstractQueueListener> queueListener : queueListeners) {
       logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
-      injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListener), 5);
+      queueListenerController.register(injector.getInstance(queueListener), 5);
     }
   }
 
-  private void registerScheduledJobs(Injector injector) {
-    logger.info("Initializing scheduledJobs...");
+  private void registerQuartzSchedulers(Injector injector) {
+    logger.info("Registering quartz schedulers...");
+
+    MaintenanceController maintenanceController = injector.getInstance(MaintenanceController.class);
+    maintenanceController.register(
+        (MaintenanceListener) injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler"))));
+    maintenanceController.register((MaintenanceListener) injector.getInstance(
+        Key.get(QuartzScheduler.class, Names.named("VerificationJobScheduler"))));
+  }
+
+  private void scheduleJobs(Injector injector) {
+    logger.info("Initializing scheduled jobs...");
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
-        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30000L, TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifyResponseCleaner")))
-        .scheduleWithFixedDelay(
-            injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30000L, TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 5000L, TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
-        .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2000L, TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2L, TimeUnit.SECONDS);
   }
 
   private void registerJerseyProviders(Environment environment) {

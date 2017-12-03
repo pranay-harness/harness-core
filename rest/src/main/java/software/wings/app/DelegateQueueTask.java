@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -32,28 +33,28 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class DelegateQueueTask implements Runnable {
-  @Inject private WingsPersistence wingsPersistence;
-
-  @Inject private PersistentLocker persistentLocker;
-
-  @Inject private BroadcasterFactory broadcasterFactory;
-
-  @Inject private WaitNotifyEngine waitNotifyEngine;
-
-  @Inject private CacheHelper cacheHelper;
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private PersistentLocker persistentLocker;
+  @Inject private BroadcasterFactory broadcasterFactory;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private CacheHelper cacheHelper;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
    */
   @Override
   public void run() {
+    if (isMaintenance()) {
+      return;
+    }
+
     boolean lockAcquired = false;
     try {
       lockAcquired = persistentLocker.acquireLock(DelegateQueueTask.class, DelegateQueueTask.class.getName());
       if (!lockAcquired) {
-        log().warn("Persistent lock could not be acquired for the DelegateQueue");
+        logger.warn("Persistent lock could not be acquired for the DelegateQueue");
         return;
       }
 
@@ -81,7 +82,7 @@ public class DelegateQueueTask implements Runnable {
                                        .filter(DelegateTask::isTimedOut)
                                        .collect(Collectors.toList());
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
-        logger.warn("Delegate task schema backwards incompatibilty", kryo);
+        logger.warn("Delegate task schema backwards incompatibility", kryo);
         for (Key<DelegateTask> key :
             wingsPersistence.createQuery(DelegateTask.class).field("status").equal(Status.STARTED).asKeyList()) {
           try {
@@ -95,7 +96,6 @@ public class DelegateQueueTask implements Runnable {
       if (longRunningTimedOutTasks.size() > 0) {
         logger.info("Found {} long running tasks, to be killed", longRunningTimedOutTasks.size());
         longRunningTimedOutTasks.forEach(delegateTask -> {
-
           Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                 .field("status")
                                                 .equal(Status.STARTED)
@@ -151,7 +151,7 @@ public class DelegateQueueTask implements Runnable {
                               .doesNotExist()
                               .asList();
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
-        logger.warn("Delegate task schema backwards incompatibilty", kryo);
+        logger.warn("Delegate task schema backwards incompatibility", kryo);
         for (Key<DelegateTask> key : wingsPersistence.createQuery(DelegateTask.class)
                                          .field("status")
                                          .equal(Status.QUEUED)
@@ -174,15 +174,11 @@ public class DelegateQueueTask implements Runnable {
       }
 
     } catch (Exception exception) {
-      log().error("Error seen in the Notifier call", exception);
+      logger.error("Error seen in the Notifier call", exception);
     } finally {
       if (lockAcquired) {
         persistentLocker.releaseLock(DelegateQueueTask.class, DelegateQueueTask.class.getName());
       }
     }
-  }
-
-  private Logger log() {
-    return LoggerFactory.getLogger(getClass());
   }
 }

@@ -1,5 +1,7 @@
 package software.wings.core.queue;
 
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
@@ -42,15 +44,22 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     do {
       T message = null;
       try {
+        while (isMaintenance()) {
+          try {
+            Thread.sleep(100L);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+        }
         logger.trace("Waiting for message");
         message = queue.get();
         logger.trace("got message {}", message);
       } catch (Exception exception) {
         if (exception.getCause() != null && exception.getCause() instanceof InterruptedException) {
-          logger.info("Thread interrupted, shutting down for queue " + queue.name(), exception);
+          logger.info("Thread interrupted, shutting down for queue {}", queue.name());
           run = false;
         } else {
-          logger.error("Exception happened while fetching message from queue " + queue.name(), exception);
+          logger.error("Exception happened while fetching message from queue {}", queue.name(), exception);
         }
       }
 
