@@ -138,7 +138,7 @@ public class WingsRule implements MethodRule {
   protected void before(List<Annotation> annotations, boolean doesExtendBaseIntegrationTest, String testName)
       throws Throwable {
     initializeLogging();
-
+    MaintenanceServiceImpl.forceMaintenanceOff();
     MongoClient mongoClient;
     String dbName = "harness";
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
@@ -252,7 +252,6 @@ public class WingsRule implements MethodRule {
 
     injector = Guice.createInjector(modules);
 
-    MaintenanceServiceImpl.forceMaintenanceOff();
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);

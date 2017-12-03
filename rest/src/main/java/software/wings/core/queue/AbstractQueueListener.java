@@ -1,9 +1,10 @@
 package software.wings.core.queue;
 
+import static software.wings.service.impl.MaintenanceServiceImpl.isMaintenance;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
-import software.wings.service.intfc.MaintenanceService;
 import software.wings.utils.ThreadContext;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,7 +23,6 @@ import javax.inject.Named;
 public abstract class AbstractQueueListener<T extends Queuable> implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(AbstractQueueListener.class);
 
-  @Inject private MaintenanceService maintenanceService;
   @Inject private Queue<T> queue;
 
   private boolean runOnce;
@@ -44,7 +44,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     do {
       T message = null;
       try {
-        while (maintenanceService.isMaintenance()) {
+        while (isMaintenance()) {
           try {
             Thread.sleep(100L);
           } catch (InterruptedException e) {
