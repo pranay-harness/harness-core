@@ -1,5 +1,7 @@
 package software.wings.yaml.gitSync;
 
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
  */
 public class GitChangeSetRunnable implements Runnable {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private WingsPersistence wingsPersistence;
@@ -25,6 +28,10 @@ public class GitChangeSetRunnable implements Runnable {
   @Override
   public void run() {
     try {
+      if (isMaintenance()) {
+        return;
+      }
+
       // TODO:: Use aggregate query for this group by??
       List<String> queuedAccountIdList = wingsPersistence.getDatastore()
                                              .getCollection(YamlChangeSet.class)

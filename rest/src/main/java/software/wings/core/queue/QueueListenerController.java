@@ -1,9 +1,8 @@
 package software.wings.core.queue;
 
-import com.google.common.collect.Lists;
-
 import io.dropwizard.lifecycle.Managed;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,14 +16,8 @@ import javax.inject.Singleton;
 @Singleton
 public class QueueListenerController implements Managed {
   private ExecutorService executorService = Executors.newCachedThreadPool();
-  private List<AbstractQueueListener<?>> abstractQueueListeners = Lists.newArrayList();
+  private List<AbstractQueueListener<?>> abstractQueueListeners = new ArrayList<>();
 
-  /**
-   * Register.
-   *
-   * @param listener the listener
-   * @param threads  the threads
-   */
   public void register(AbstractQueueListener<?> listener, int threads) {
     IntStream.rangeClosed(1, threads).forEach(value -> {
       abstractQueueListeners.add(listener);
@@ -45,7 +38,7 @@ public class QueueListenerController implements Managed {
    */
   @Override
   public void stop() throws Exception {
-    abstractQueueListeners.forEach(abstractQueueListener -> abstractQueueListener.shutDown());
+    abstractQueueListeners.forEach(AbstractQueueListener::shutDown);
     executorService.shutdownNow();
     while (!executorService.awaitTermination(1, TimeUnit.SECONDS))
       ;

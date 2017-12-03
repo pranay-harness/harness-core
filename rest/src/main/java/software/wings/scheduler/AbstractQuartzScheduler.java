@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+
 import com.google.inject.Injector;
 
 import com.mongodb.MongoClientOptions;
@@ -18,6 +20,8 @@ import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.SchedulerConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.core.maintenance.MaintenanceController;
+import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.dl.MongoConfig;
 import software.wings.exception.WingsException;
 
@@ -25,7 +29,7 @@ import java.util.Date;
 import java.util.Properties;
 import javax.inject.Inject;
 
-public class AbstractQuartzScheduler implements QuartzScheduler {
+public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceListener {
   private Injector injector;
   private Scheduler scheduler;
   private MainConfiguration configuration;
@@ -47,6 +51,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
   private void setupScheduler() { // TODO: remove this. find a way to disable cronScheduler in test
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
     if (schedulerConfig.getAutoStart().equals("true")) {
+      injector.getInstance(MaintenanceController.class).register(this);
       this.scheduler = createScheduler();
     }
   }
@@ -56,7 +61,9 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
       StdSchedulerFactory factory = new StdSchedulerFactory(getDefaultProperties());
       Scheduler scheduler = factory.getScheduler();
       scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
-      scheduler.start();
+      if (!isMaintenance()) {
+        scheduler.start();
+      }
       return scheduler;
     } catch (SchedulerException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Could not initialize cron scheduler");
@@ -141,5 +148,27 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
       logger.error("Couldn't reschedule cron for trigger {} with trigger {}", triggerKey, newTrigger);
     }
     return null;
+  }
+
+  @Override
+  public void onEnterMaintenance() {
+    if (this.scheduler != null) {
+      try {
+        this.scheduler.standby();
+      } catch (SchedulerException e) {
+        logger.error("Error putting scheduler into standby.", e);
+      }
+    }
+  }
+
+  @Override
+  public void onLeaveMaintenance() {
+    if (this.scheduler != null) {
+      try {
+        this.scheduler.start();
+      } catch (SchedulerException e) {
+        logger.error("Error starting scheduler.", e);
+      }
+    }
   }
 }
