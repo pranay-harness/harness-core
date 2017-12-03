@@ -49,11 +49,5 @@ public class WingsTestModule extends AbstractModule {
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
-    bind(MaintenanceService.class).toInstance(new MaintenanceServiceImpl() {
-      @Override
-      public boolean isMaintenance() {
-        return false;
-      }
-    });
   }
 }
