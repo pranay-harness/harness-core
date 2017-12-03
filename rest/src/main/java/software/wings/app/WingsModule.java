@@ -32,6 +32,7 @@ import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.service.impl.MaintenanceServiceImpl;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.bamboo.BambooService;
@@ -185,6 +186,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.MaintenanceService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.NotificationDispatcherService;
@@ -354,6 +356,7 @@ public class WingsModule extends AbstractModule {
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
+    bind(MaintenanceService.class).to(MaintenanceServiceImpl.class).asEagerSingleton();
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

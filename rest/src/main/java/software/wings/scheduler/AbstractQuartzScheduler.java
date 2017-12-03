@@ -1,7 +1,5 @@
 package software.wings.scheduler;
 
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-
 import com.google.inject.Injector;
 
 import com.mongodb.MongoClientOptions;
@@ -20,10 +18,10 @@ import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.SchedulerConfig;
 import software.wings.beans.ErrorCode;
-import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.dl.MongoConfig;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.MaintenanceService;
 
 import java.util.Date;
 import java.util.Properties;
@@ -33,6 +31,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
   private Injector injector;
   private Scheduler scheduler;
   private MainConfiguration configuration;
+  private MaintenanceService maintenanceService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
@@ -51,7 +50,8 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
   private void setupScheduler() { // TODO: remove this. find a way to disable cronScheduler in test
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
     if (schedulerConfig.getAutoStart().equals("true")) {
-      injector.getInstance(MaintenanceController.class).register(this);
+      maintenanceService = injector.getInstance(MaintenanceService.class);
+      maintenanceService.register(this);
       this.scheduler = createScheduler();
     }
   }
@@ -61,7 +61,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       StdSchedulerFactory factory = new StdSchedulerFactory(getDefaultProperties());
       Scheduler scheduler = factory.getScheduler();
       scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
-      if (!isMaintenance()) {
+      if (!maintenanceService.isMaintenance()) {
         scheduler.start();
       }
       return scheduler;

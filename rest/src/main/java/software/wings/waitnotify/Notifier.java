@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
@@ -15,6 +14,7 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
+import software.wings.service.intfc.MaintenanceService;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -30,13 +30,14 @@ public class Notifier implements Runnable {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Queue<NotifyEvent> notifyQueue;
+  @Inject private MaintenanceService maintenanceService;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
    */
   @Override
   public void run() {
-    if (isMaintenance()) {
+    if (maintenanceService.isMaintenance()) {
       return;
     }
 

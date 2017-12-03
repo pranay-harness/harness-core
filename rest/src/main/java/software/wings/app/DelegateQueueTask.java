@@ -2,7 +2,6 @@ package software.wings.app;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -16,6 +15,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Status;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
+import software.wings.service.intfc.MaintenanceService;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -40,13 +40,14 @@ public class DelegateQueueTask implements Runnable {
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private CacheHelper cacheHelper;
+  @Inject private MaintenanceService maintenanceService;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
    */
   @Override
   public void run() {
-    if (isMaintenance()) {
+    if (maintenanceService.isMaintenance()) {
       return;
     }
 
