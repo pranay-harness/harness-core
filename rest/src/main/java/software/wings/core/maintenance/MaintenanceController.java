@@ -1,6 +1,6 @@
 package software.wings.core.maintenance;
 
-import static java.util.Collections.synchronizedList;
+import static java.util.Collections.synchronizedSet;
 
 import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,7 +27,7 @@ public class MaintenanceController implements Managed {
 
   @Inject private ExecutorService executorService;
 
-  private final List<MaintenanceListener> maintenanceListeners = synchronizedList(new ArrayList<>());
+  private final Set<MaintenanceListener> maintenanceListeners = synchronizedSet(new HashSet<>());
   private AtomicBoolean running = new AtomicBoolean(true);
 
   public static boolean isMaintenance() {

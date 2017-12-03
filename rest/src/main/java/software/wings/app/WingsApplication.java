@@ -50,7 +50,6 @@ import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.User;
 import software.wings.core.maintenance.MaintenanceController;
-import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
@@ -66,7 +65,6 @@ import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.LogAnalysisPurgeManager;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
@@ -238,8 +236,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerQueueListeners(injector);
 
-    registerQuartzSchedulers(injector);
-
     scheduleJobs(injector);
 
     registerCorsFilter(configuration, environment);
@@ -333,16 +329,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
       queueListenerController.register(injector.getInstance(queueListener), 5);
     }
-  }
-
-  private void registerQuartzSchedulers(Injector injector) {
-    logger.info("Registering quartz schedulers...");
-
-    MaintenanceController maintenanceController = injector.getInstance(MaintenanceController.class);
-    maintenanceController.register(
-        (MaintenanceListener) injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler"))));
-    maintenanceController.register((MaintenanceListener) injector.getInstance(
-        Key.get(QuartzScheduler.class, Names.named("VerificationJobScheduler"))));
   }
 
   private void scheduleJobs(Injector injector) {
