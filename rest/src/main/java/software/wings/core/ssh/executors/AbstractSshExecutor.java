@@ -13,7 +13,7 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.utils.Misc.isNullOrEmpty;
-import static software.wings.utils.Misc.sleepWithRuntimeException;
+import static software.wings.utils.Misc.sleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.common.base.Strings;
@@ -41,10 +41,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -183,7 +183,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           saveExecutionLog("Command finished with status " + commandExecutionStatus);
           return commandExecutionStatus;
         }
-        sleepWithRuntimeException(1000);
+        sleep(1, TimeUnit.SECONDS);
       }
     } catch (JSchException | IOException ex) {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);

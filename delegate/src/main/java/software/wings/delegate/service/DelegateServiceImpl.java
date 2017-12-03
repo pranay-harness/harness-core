@@ -77,6 +77,7 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.utils.message.Message;
 import software.wings.utils.message.MessageService;
 import software.wings.waitnotify.NotifyResponseData;
@@ -443,11 +444,7 @@ public class DelegateServiceImpl implements DelegateService {
         long started = clock.millis();
         long now = started;
         while (currentlyExecutingTasks.size() > 0 && now - started < UPGRADE_TIMEOUT) {
-          try {
-            Thread.sleep(1000);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
+          Misc.sleep(1, TimeUnit.SECONDS);
           now = clock.millis();
           logger.info("[Old] Completing {} tasks... ({} seconds elapsed)", currentlyExecutingTasks.size(),
               (now - started) / 1000L);
@@ -700,13 +697,9 @@ public class DelegateServiceImpl implements DelegateService {
             if (validated) {
               logger.info("Task {} validated but was assigned to another delegate", taskId);
             } else {
-              try {
-                logger.info(
-                    "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
-                Thread.sleep(2000);
-              } catch (InterruptedException e) {
-                logger.warn("Sleep interrupted. Task {}", taskId, e);
-              }
+              logger.info(
+                  "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
+              Misc.sleep(2, TimeUnit.SECONDS);
               try {
                 logger.info("Checking whether all delegates failed for task {}", taskId);
                 DelegateTask delegateTask2 = execute(
@@ -792,12 +785,7 @@ public class DelegateServiceImpl implements DelegateService {
     boolean stillRunning = true;
     long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
     while (stillRunning && clock.millis() - startTime < timeout) {
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        logger.error("Time limiter thread interrupted", e);
-      }
-
+      Misc.sleep(5, TimeUnit.SECONDS);
       Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }

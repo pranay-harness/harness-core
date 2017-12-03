@@ -5,6 +5,7 @@ import static software.wings.core.maintenance.MaintenanceController.isMaintenanc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
+import software.wings.utils.Misc;
 import software.wings.utils.ThreadContext;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,11 +46,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
       T message = null;
       try {
         while (isMaintenance()) {
-          try {
-            Thread.sleep(100L);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
+          Misc.sleep(1, TimeUnit.SECONDS);
         }
         logger.trace("Waiting for message");
         message = queue.get();

@@ -6,6 +6,7 @@ import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.util.HashSet;
@@ -50,21 +51,16 @@ public class MaintenanceController implements Managed {
   public void start() throws Exception {
     executorService.submit(() -> {
       while (running.get()) {
-        try {
-          boolean isMaintenance = new File(Constants.MAINTENANCE).exists();
-          boolean previous = maintenance.getAndSet(isMaintenance);
-          if (isMaintenance != previous) {
-            logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
-            synchronized (maintenanceListeners) {
-              maintenanceListeners.forEach(listener
-                  -> executorService.submit(
-                      isMaintenance ? listener::onEnterMaintenance : listener::onLeaveMaintenance));
-            }
+        boolean isMaintenance = new File(Constants.MAINTENANCE).exists();
+        boolean previous = maintenance.getAndSet(isMaintenance);
+        if (isMaintenance != previous) {
+          logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
+          synchronized (maintenanceListeners) {
+            maintenanceListeners.forEach(listener
+                -> executorService.submit(isMaintenance ? listener::onEnterMaintenance : listener::onLeaveMaintenance));
           }
-          Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
         }
+        Misc.sleep(1, TimeUnit.SECONDS);
       }
     });
   }
