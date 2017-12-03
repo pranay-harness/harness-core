@@ -5,7 +5,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.service.impl.MaintenanceServiceImpl.isMaintenance;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Singleton;
 

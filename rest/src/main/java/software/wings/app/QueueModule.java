@@ -16,11 +16,9 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ExecutionEventListener;
-import software.wings.service.impl.MaintenanceServiceImpl;
 import software.wings.service.impl.instance.ContainerDeploymentEventListener;
 import software.wings.service.impl.instance.InstanceChangeEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
-import software.wings.service.intfc.MaintenanceService;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 

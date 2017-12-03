@@ -60,7 +60,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.EventEmitter;
-import software.wings.service.impl.MaintenanceServiceImpl;
+import software.wings.core.maintenance.MaintenanceController;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
@@ -138,7 +138,7 @@ public class WingsRule implements MethodRule {
   protected void before(List<Annotation> annotations, boolean doesExtendBaseIntegrationTest, String testName)
       throws Throwable {
     initializeLogging();
-    MaintenanceServiceImpl.forceMaintenanceOff();
+    MaintenanceController.forceMaintenanceOff();
     MongoClient mongoClient;
     String dbName = "harness";
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {

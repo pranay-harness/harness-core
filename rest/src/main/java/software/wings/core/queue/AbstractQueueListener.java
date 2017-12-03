@@ -1,6 +1,6 @@
 package software.wings.core.queue;
 
-import static software.wings.service.impl.MaintenanceServiceImpl.isMaintenance;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.MaintenanceServiceImpl;
+import software.wings.core.maintenance.MaintenanceController;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.HashMap;
@@ -40,7 +40,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
    */
   @Override
   public void run() {
-    if (MaintenanceServiceImpl.isMaintenance()) {
+    if (MaintenanceController.isMaintenance()) {
       return;
     }
 

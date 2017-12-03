@@ -1,6 +1,6 @@
 package software.wings.yaml.gitSync;
 
-import static software.wings.service.impl.MaintenanceServiceImpl.isMaintenance;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;
 

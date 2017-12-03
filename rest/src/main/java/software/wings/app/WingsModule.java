@@ -93,7 +93,6 @@ import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
-import software.wings.service.impl.MaintenanceServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -187,7 +186,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.MaintenanceService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.NotificationDispatcherService;
@@ -357,7 +355,6 @@ public class WingsModule extends AbstractModule {
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
-    bind(MaintenanceService.class).to(MaintenanceServiceImpl.class).asEagerSingleton();
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

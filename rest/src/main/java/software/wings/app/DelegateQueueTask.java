@@ -2,7 +2,7 @@ package software.wings.app;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
-import static software.wings.service.impl.MaintenanceServiceImpl.isMaintenance;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import org.atmosphere.cpr.BroadcasterFactory;
