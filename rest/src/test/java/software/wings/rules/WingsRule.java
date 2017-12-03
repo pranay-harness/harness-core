@@ -60,6 +60,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.EventEmitter;
+import software.wings.service.impl.MaintenanceServiceImpl;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
@@ -251,6 +252,7 @@ public class WingsRule implements MethodRule {
 
     injector = Guice.createInjector(modules);
 
+    MaintenanceServiceImpl.forceMaintenanceOff();
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);

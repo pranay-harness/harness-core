@@ -97,7 +97,6 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.MaintenanceService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -129,7 +128,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
-  @Mock private MaintenanceService maintenanceService;
   @Mock private JobScheduler jobScheduler;
   @Inject @InjectMocks private AccountService accountService;
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
@@ -159,7 +157,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Before
   public void setup() {
-    when(maintenanceService.isMaintenance()).thenReturn(false);
     when(jobScheduler.deleteJob(any(), any())).thenReturn(false);
     when(jobScheduler.scheduleJob(any(), any())).thenReturn(null);
     account = accountService.save(

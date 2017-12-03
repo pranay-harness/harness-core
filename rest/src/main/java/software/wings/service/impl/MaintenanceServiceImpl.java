@@ -24,6 +24,12 @@ import javax.inject.Singleton;
 public class MaintenanceServiceImpl implements MaintenanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  private static boolean forceMaintenanceOff = false;
+
+  public static void forceMaintenanceOff() {
+    forceMaintenanceOff = true;
+  }
+
   @Inject private ExecutorService executorService;
 
   private final AtomicBoolean running = new AtomicBoolean(true);
@@ -32,6 +38,9 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
   @Override
   public boolean isMaintenance() {
+    if (forceMaintenanceOff) {
+      return false;
+    }
     return maintenance.get();
   }
 
