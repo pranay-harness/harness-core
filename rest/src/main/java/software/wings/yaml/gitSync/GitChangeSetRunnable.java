@@ -1,12 +1,13 @@
 package software.wings.yaml.gitSync;
 
+import static software.wings.service.impl.MaintenanceServiceImpl.isMaintenance;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.MaintenanceService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
@@ -23,12 +24,11 @@ public class GitChangeSetRunnable implements Runnable {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private MaintenanceService maintenanceService;
 
   @Override
   public void run() {
     try {
-      if (maintenanceService.isMaintenance()) {
+      if (isMaintenance()) {
         return;
       }
 

@@ -17,8 +17,6 @@ import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
-import software.wings.yaml.gitSync.YamlChangeSet;
-import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
 public class QueueModuleTest extends AbstractModule {
   private AdvancedDatastore datastore;

@@ -25,24 +25,20 @@ public class MaintenanceServiceImpl implements MaintenanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private static boolean forceMaintenanceOff = false;
+  private static final AtomicBoolean maintenance = new AtomicBoolean(true);
 
   public static void forceMaintenanceOff() {
     forceMaintenanceOff = true;
   }
 
+  public static boolean isMaintenance() {
+    return !forceMaintenanceOff && maintenance.get();
+  }
+
   @Inject private ExecutorService executorService;
 
   private final AtomicBoolean running = new AtomicBoolean(true);
-  private final AtomicBoolean maintenance = new AtomicBoolean(true);
   private final Set<MaintenanceListener> maintenanceListeners = synchronizedSet(new HashSet<>());
-
-  @Override
-  public boolean isMaintenance() {
-    if (forceMaintenanceOff) {
-      return false;
-    }
-    return maintenance.get();
-  }
 
   @Override
   public void register(MaintenanceListener listener) {
