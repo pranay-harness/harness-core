@@ -205,8 +205,8 @@ import java.util.stream.Collectors;
 public class AwsHelperService {
   private static final String AWS_AVAILABILITY_ZONE_CHECK =
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
-  private static final int SLEEP_INTERVAL = 30 * 1000;
-  private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
+  private static final int SLEEP_INTERVAL = 30;
+  private static final int RETRY_COUNTER = (10 * 60) / SLEEP_INTERVAL; // 10 minutes
   @Inject private EncryptionService encryptionService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -1147,7 +1147,7 @@ public class AwsHelperService {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
-      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
+      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
       instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping);
     }
   }

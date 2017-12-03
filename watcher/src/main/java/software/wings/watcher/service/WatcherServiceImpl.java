@@ -448,7 +448,7 @@ private void checkForWatcherUpgrade() {
 }
 
 private void upgradeWatcher(String bucketName, String watcherJarRelativePath, String version, String newVersion)
-    throws IOException, TimeoutException, InterruptedException {
+    throws IOException, TimeoutException {
   S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
   InputStream newVersionJarStream = newVersionJarObj.getObjectContent();
   File watcherJarFile = new File("watcher.jar");

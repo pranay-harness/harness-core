@@ -26,6 +26,7 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -294,7 +295,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
-    private boolean saveMetrics(List<NewRelicMetricDataRecord> records) throws InterruptedException {
+    private boolean saveMetrics(List<NewRelicMetricDataRecord> records) {
       int retrySave = 0;
       do {
         boolean response = metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
@@ -302,7 +303,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         if (response) {
           return true;
         }
-        Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
+        Misc.sleep(RETRY_SLEEP_SECS, TimeUnit.SECONDS);
       } while (++retrySave != RETRIES);
       return false;
     }

@@ -399,19 +399,18 @@ public class MessageServiceImpl implements MessageService {
 
   private boolean acquireLock(File file) {
     File lockFile = new File(file.getPath() + ".lock");
-    final long finishAt = clock.millis() + 5000L;
+    final long finishAt = clock.millis() + TimeUnit.SECONDS.toMillis(5);
     boolean wasInterrupted = false;
     try {
       while (lockFile.exists()) {
+        final long remaining = finishAt - clock.millis();
+        if (remaining < 0) {
+          break;
+        }
         try {
-          final long remaining = finishAt - Clock.systemUTC().millis();
-          if (remaining < 0) {
-            break;
-          }
           Thread.sleep(Math.min(100, remaining));
-        } catch (final InterruptedException ignore) {
+        } catch (InterruptedException e) {
           wasInterrupted = true;
-        } catch (final Exception ex) {
           return false;
         }
       }

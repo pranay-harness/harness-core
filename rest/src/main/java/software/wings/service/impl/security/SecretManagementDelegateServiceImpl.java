@@ -22,6 +22,7 @@ import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -32,6 +33,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -77,11 +79,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn("Encryption failed. trial num: {}", retry, e);
-          try {
-            Thread.sleep(100);
-          } catch (InterruptedException in) {
-            throw new IOException(in);
-          }
+          Misc.sleep(100, TimeUnit.MILLISECONDS);
         } else {
           logger.error("Encryption failed after {} retries ", retry, e);
           throw new IOException("Encryption failed after " + NUM_OF_RETRIES + " retries", e);
@@ -114,11 +112,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn("Decryption failed. trial num: {}", retry, e);
-          try {
-            Thread.sleep(100);
-          } catch (InterruptedException in) {
-            throw new IOException(in);
-          }
+          Misc.sleep(100, TimeUnit.MILLISECONDS);
         } else {
           logger.error("Decryption failed after {} retries ", retry, e);
           throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
