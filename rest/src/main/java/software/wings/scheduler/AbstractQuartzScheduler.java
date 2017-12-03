@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static software.wings.service.impl.MaintenanceServiceImpl.isMaintenance;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Injector;
 
@@ -20,10 +20,10 @@ import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.SchedulerConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.dl.MongoConfig;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.MaintenanceService;
 
 import java.util.Date;
 import java.util.Properties;
@@ -51,7 +51,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
   private void setupScheduler() { // TODO: remove this. find a way to disable cronScheduler in test
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
     if (schedulerConfig.getAutoStart().equals("true")) {
-      injector.getInstance(MaintenanceService.class).register(this);
+      injector.getInstance(MaintenanceController.class).register(this);
       this.scheduler = createScheduler();
     }
   }
