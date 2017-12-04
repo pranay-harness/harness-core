@@ -253,7 +253,7 @@ public class AppServiceTest extends WingsBaseTest {
     verify(updateOperations).set("name", "App_Name");
     verify(updateOperations).set("description", "Description");
     verify(wingsPersistence).update(query, updateOperations);
-    verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
+    verify(wingsPersistence, times(3)).get(Application.class, APP_ID);
   }
 
   /**
