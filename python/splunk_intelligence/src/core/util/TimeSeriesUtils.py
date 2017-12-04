@@ -3,9 +3,30 @@ from enum import Enum
 from math import ceil
 
 
+class RiskLevel(Enum):
+    NA = -1
+
+
+class ThresholdComparisonType(Enum):
+    DELTA = 'DELTA'
+    RATIO = 'RATIO'
+
+
 class MetricType(Enum):
-    COUNT = 1
-    HISTOGRAM = 2
+    # Metrics that represents any observation
+    VALUE = 'VALUE'
+
+    # Metrics that measure time
+    RESP_TIME = 'RESP_TIME'
+
+    # Metrics that count invocations
+    THROUGHPUT = 'THROUGHPUT'
+
+    # Metrics that count error
+    ERROR = 'ERROR'
+
+    # Metrics that count something
+    COUNT = 'COUNT'
 
 
 class MetricToDeviationType(Enum):
@@ -39,6 +60,7 @@ def get_deviation_min_threshold(metric_name):
         return 20
     elif 'other' == metric_name:
         return 0
+
 
 def normalize_metric(control_data, test_data):
     """

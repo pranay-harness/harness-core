@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -192,5 +193,14 @@ public class NewRelicResource {
       @QueryParam("metricName") String metricName) throws IOException {
     return new RestResponse<>(metricDataAnalysisService.getToolTip(
         stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName));
+  }
+
+  @POST
+  @Path("/get-metric-template")
+  @Timed
+  @ExceptionMetered
+  @ExternalServiceAuth
+  public RestResponse<Map<String, TimeSeriesMetricDefinition>> getTooltip(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(StateType.NEW_RELIC));
   }
 }

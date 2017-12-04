@@ -20,8 +20,8 @@ with open("resources/ts/synthetic_control.data",
             errors_1 = 0
             for i in range(100):
                 for j in range(i + 1, 100):
-                    control = {'data': [groups[p][i]], 'data_type': MetricType.HISTOGRAM}
-                    test = {'data': [groups[q][j]], 'data_type': MetricType.HISTOGRAM}
+                    control = {'data': [groups[p][i]], 'data_type': MetricType.TIME}
+                    test = {'data': [groups[q][j]], 'data_type': MetricType.TIME}
                     sdf = SAXHMMDistanceFinder('other', 3, 1, control, test, MetricToDeviationType.BOTH, 0, 3)
                     result = sdf.compute_dist()
                     if result['risk'][0] == 2:
