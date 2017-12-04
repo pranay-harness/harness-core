@@ -14,12 +14,14 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -341,6 +343,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                    .build());
     }
     return hostAnalysisValues;
+  }
+
+  @Override
+  public Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType) {
+    switch (stateType) {
+      case NEW_RELIC:
+        return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE;
+      default:
+        return null;
+    }
   }
 
   @Override

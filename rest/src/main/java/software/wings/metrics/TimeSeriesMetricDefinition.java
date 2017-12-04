@@ -1,8 +1,7 @@
-package software.wings.service.impl.newrelic;
+package software.wings.metrics;
 
 import lombok.Builder;
-import software.wings.metrics.MetricType;
-import software.wings.metrics.Threshold;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +10,9 @@ import java.util.List;
  * Created by sriram_parthasarathy on 11/29/17.
  */
 @Builder
+@Data
 public class TimeSeriesMetricDefinition {
+  private String metricName;
   private List<Threshold> thresholds = new ArrayList<>();
-  private double minThreshold;
   private MetricType metricType;
 }
