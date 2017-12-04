@@ -198,7 +198,7 @@ public class PipelineResource {
    * @return the rest response
    */
   @PUT
-  @Path("{pipelineid}/pipeline-variables")
+  @Path("{pipelineId}/variables")
   @Timed
   @ExceptionMetered
   public RestResponse<List<Variable>> updateUserVariables(
