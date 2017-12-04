@@ -32,6 +32,7 @@ public class Pipeline extends Base {
   private String description;
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
+  private List<Variable> variables = new ArrayList<>();
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private boolean valid = true;
   @Transient private String validationMessage;
@@ -133,6 +134,14 @@ public class Pipeline extends Base {
     this.templatized = templatized;
   }
 
+  public List<Variable> getVariables() {
+    return variables;
+  }
+
+  public void setVariables(List<Variable> variables) {
+    this.variables = variables;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(name, description, pipelineStages, stateEtaMap);
@@ -222,6 +231,7 @@ public class Pipeline extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private List<Service> services;
+    private List<Variable> variables = new ArrayList<>();
 
     private Builder() {}
 
@@ -355,6 +365,16 @@ public class Pipeline extends Base {
     }
 
     /**
+     * With variables
+     * @param variables
+     * @return
+     */
+    public Builder withVariables(List<Variable> variables) {
+      this.variables = variables;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -371,7 +391,8 @@ public class Pipeline extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withServices(services);
+          .withServices(services)
+          .withVariables(variables);
     }
 
     /**
@@ -392,6 +413,7 @@ public class Pipeline extends Base {
       pipeline.setLastUpdatedBy(lastUpdatedBy);
       pipeline.setLastUpdatedAt(lastUpdatedAt);
       pipeline.setServices(services);
+      pipeline.setVariables(variables);
       return pipeline;
     }
   }

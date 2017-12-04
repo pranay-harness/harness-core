@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Variable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -79,4 +80,13 @@ public interface PipelineService extends OwnedByApplication {
   Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline);
 
   List<EntityType> getRequiredEntities(String appId, String pipelineId);
+
+  /**
+   * Update Pipeline variables
+   * @param appId
+   * @param pipelineId
+   * @param variables
+   * @return List of updated Variables
+   */
+  List<Variable> updateVariables(String appId, String pipelineId, List<Variable> variables);
 }
