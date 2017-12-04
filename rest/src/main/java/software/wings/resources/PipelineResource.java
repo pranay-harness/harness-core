@@ -4,6 +4,8 @@
 
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.ResourceType.PIPELINE;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -13,7 +15,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Variable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
@@ -40,6 +41,7 @@ import javax.ws.rs.QueryParam;
 @Api("pipelines")
 @Path("/pipelines")
 @Produces("application/json")
+@AuthRule(value = PIPELINE)
 public class PipelineResource {
   private WorkflowService workflowService;
   private PipelineService pipelineService;
@@ -66,7 +68,7 @@ public class PipelineResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") List<String> appIds, @BeanParam PageRequest<Pipeline> pageRequest) {
     return new RestResponse<>(pipelineService.listPipelines(pageRequest, true));
@@ -83,7 +85,7 @@ public class PipelineResource {
   @Path("{pipelineId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId,
       @QueryParam("withServices") boolean withServices) {
     return new RestResponse<>(pipelineService.readPipeline(appId, pipelineId, withServices));
@@ -99,7 +101,7 @@ public class PipelineResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     return new RestResponse<>(pipelineService.createPipeline(pipeline));
@@ -117,7 +119,7 @@ public class PipelineResource {
   @Path("{pipelineId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
@@ -129,7 +131,7 @@ public class PipelineResource {
   @Path("{pipelineId}/clone")
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse<Pipeline> read(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
@@ -148,7 +150,7 @@ public class PipelineResource {
   @Path("{pipelineId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipelineService.deletePipeline(appId, pipelineId);
@@ -166,7 +168,7 @@ public class PipelineResource {
   @Path("stencils")
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
     return new RestResponse<>(workflowService.stencils(appId, null, null, StateTypeScope.PIPELINE_STENCILS)
                                   .get(StateTypeScope.PIPELINE_STENCILS));
@@ -183,7 +185,7 @@ public class PipelineResource {
   @Path("required-entities")
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.PIPELINE)
+  @AuthRule(value = PIPELINE)
   public RestResponse<List<EntityType>> requiredEntities(
       @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId) {
     return new RestResponse<>(pipelineService.getRequiredEntities(appId, pipelineId));
