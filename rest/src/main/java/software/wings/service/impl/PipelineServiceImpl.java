@@ -14,6 +14,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
@@ -54,7 +55,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
-import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -148,7 +148,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
     Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
-    Validator.notNullCheck("Pipeline", savedPipeline);
+    notNullCheck("Pipeline", savedPipeline);
 
     validatePipeline(pipeline);
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
@@ -261,7 +261,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public List<EntityType> getRequiredEntities(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    Validator.notNullCheck("pipeline", pipeline);
+    notNullCheck("pipeline", pipeline);
     List<EntityType> entityTypes = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
@@ -283,13 +283,21 @@ public class PipelineServiceImpl implements PipelineService {
     return entityTypes;
   }
 
+  @Override
+  public List<Variable> updateVariables(String appId, String pipelineId, List<Variable> variables) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    notNullCheck("pipeline", pipeline);
+    wingsPersistence.updateField(Pipeline.class, pipelineId, "variables", variables);
+    return variables;
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
   public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    Validator.notNullCheck("pipeline", pipeline);
+    notNullCheck("pipeline", pipeline);
     if (withServices) {
       populateAssociatedWorkflowServices(pipeline);
     }
