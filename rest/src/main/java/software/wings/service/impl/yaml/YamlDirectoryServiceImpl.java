@@ -89,13 +89,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
+  @Inject private SettingsService settingsService;
+
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
-  // TODO - not sure what to use for this
-  // @Inject private TriggerService triggerService;
-  @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
+
   @Inject private YamlArtifactStreamService yamlArtifactStreamService;
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private AppYamlResourceService appYamlResourceService;

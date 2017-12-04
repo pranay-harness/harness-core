@@ -35,7 +35,6 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -44,10 +43,10 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
@@ -60,11 +59,8 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,7 +96,6 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationService notificationService;
   @Inject private WorkflowService workflowService;
-  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private StatisticsService statisticsService;
   @Inject private RoleService roleService;
@@ -108,10 +103,9 @@ public class AppServiceImpl implements AppService {
   @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -134,18 +128,9 @@ public class AppServiceImpl implements AppService {
     addCronForStateMachineExecutionCleanup(application);
     addCronForContainerSync(application);
 
-    executorService.submit(()
-                               -> queueApplicationYamlChange(app.getAccountId(),
-                                   entityUpdateService.getAppGitSyncFile(application, ChangeType.ADD)));
+    yamlChangeSetHelper.queueApplicationYamlChangeAsync(application, ChangeType.ADD);
 
     return get(application.getUuid(), INCOMPLETE, true, 0);
-  }
-
-  private void queueApplicationYamlChange(String accountId, GitFileChange gitFileChange) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(gitFileChange));
-    }
   }
 
   List<Role> createDefaultRoles(Application app) {
@@ -320,34 +305,8 @@ public class AppServiceImpl implements AppService {
     wingsPersistence.update(query, operations);
     Application updatedApp = get(app.getUuid());
 
-    executorService.submit(() -> {
-      if (!savedApp.getName().equals(app.getName())) {
-        queueMoveApplicationYamlChange(savedApp, updatedApp);
-      } else {
-        queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, ChangeType.MODIFY));
-      }
-    });
+    yamlChangeSetHelper.queueApplicationUpdateYamlChangeAsync(savedApp, updatedApp);
     return updatedApp;
-  }
-
-  private void queueMoveApplicationYamlChange(Application oldApp, Application newApp) {
-    String accountId = newApp.getAccountId();
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      String oldPath = yamlDirectoryService.getRootPathByApp(oldApp);
-      String newPath = yamlDirectoryService.getRootPathByApp(newApp);
-
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(accountId)
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newPath)
-                        .withOldFilePath(oldPath)
-                        .build());
-      changeSet.add(entityUpdateService.getAppGitSyncFile(newApp, ChangeType.MODIFY));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
   }
 
   /* (non-Javadoc)
@@ -386,9 +345,7 @@ public class AppServiceImpl implements AppService {
       deleteCronForStateMachineExecutionCleanup(appId);
       deleteCronForContainerSync(appId);
 
-      executorService.submit(()
-                                 -> queueApplicationYamlChange(application.getAccountId(),
-                                     entityUpdateService.getAppGitSyncFile(application, ChangeType.DELETE)));
+      yamlChangeSetHelper.queueApplicationYamlChangeAsync(application, ChangeType.DELETE);
     }
   }
 

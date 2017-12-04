@@ -64,6 +64,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -133,6 +134,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private TriggerService triggerService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   /**
    * {@inheritDoc}
@@ -201,7 +203,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .build());
 
     Service finalSavedService = savedService;
-    executorService.submit(() -> queueServiceYamlChangeSet(finalSavedService, ChangeType.ADD));
+    yamlChangeSetHelper.queueServiceYamlChangeAsync(finalSavedService, ChangeType.ADD);
     return savedService;
   }
 
@@ -345,56 +347,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (!savedService.getName().equals(service.getName())) {
       executorService.submit(() -> triggerService.updateByApp(service.getAppId()));
+      serviceTemplateService.updateDefaultServiceTemplateName(
+          service.getAppId(), service.getUuid(), savedService.getName(), service.getName().trim());
     }
 
-    executorService.submit(() -> {
-      if (!savedService.getName().equals(service.getName())) { // Service name changed
-        executorService.submit(()
-                                   -> serviceTemplateService.updateDefaultServiceTemplateName(service.getAppId(),
-                                       service.getUuid(), savedService.getName(), service.getName().trim()));
-        queueMoveServiceChange(savedService, service);
-      } else {
-        queueServiceYamlChangeSet(updatedService, ChangeType.MODIFY);
-      }
-    });
+    yamlChangeSetHelper.queueServiceUpdateYamlChangeAsync(service, savedService, updatedService);
     return updatedService;
-  }
-
-  private void queueMoveServiceChange(Service oldService, Service newService) {
-    String accountId = appService.getAccountIdByAppId(newService.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      String oldPath = yamlDirectoryService.getRootPathByService(oldService);
-      String newPath = yamlDirectoryService.getRootPathByService(newService);
-
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(accountId)
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newPath)
-                        .withOldFilePath(oldPath)
-                        .build());
-      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.MODIFY));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
-  }
-
-  private void queueServiceYamlChangeSet(Service service, ChangeType crudType) {
-    // check whether we need to push changes (through git sync)
-    String accountId = appService.getAccountIdByAppId(service.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, crudType));
-      if (crudType.equals(ChangeType.ADD)) {
-        service.getServiceCommands().forEach(serviceCommand
-            -> changeSet.add(
-                entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
-      }
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
   }
 
   /**
@@ -482,7 +440,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                   ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
               .build());
 
-      executorService.submit(() -> queueServiceYamlChangeSet(service, ChangeType.DELETE));
+      yamlChangeSetHelper.queueServiceYamlChangeAsync(service, ChangeType.DELETE);
     }
   }
 

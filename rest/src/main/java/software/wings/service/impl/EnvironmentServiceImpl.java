@@ -37,13 +37,13 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -62,13 +62,11 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -102,6 +100,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private AppService appService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -204,7 +203,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
 
-    executorService.submit(() -> queueEnvironmentYamlChangeSet(savedEnvironment, ChangeType.ADD));
+    yamlChangeSetHelper.queueEnvironmentYamlChangeAsync(savedEnvironment, ChangeType.DELETE);
 
     return savedEnvironment;
   }
@@ -226,46 +225,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment updatedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    executorService.submit(() -> {
-      if (!savedEnvironment.getName().equals(environment.getName())) {
-        queueMoveEnvironmentChange(savedEnvironment, updatedEnvironment);
-      } else {
-        queueEnvironmentYamlChangeSet(updatedEnvironment, ChangeType.MODIFY);
-      }
-    });
+    yamlChangeSetHelper.queueEnvironmentUpdateYamlChangeAsync(savedEnvironment, updatedEnvironment);
 
     return updatedEnvironment;
-  }
-
-  private void queueMoveEnvironmentChange(Environment oldEnv, Environment newEnv) {
-    String accountId = appService.getAccountIdByAppId(newEnv.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      String oldEnvnPath = yamlDirectoryService.getRootPathByEnvironment(oldEnv);
-      String newEnvnPath = yamlDirectoryService.getRootPathByEnvironment(newEnv);
-
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(accountId)
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newEnvnPath)
-                        .withOldFilePath(oldEnvnPath)
-                        .build());
-      changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, newEnv, ChangeType.MODIFY));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
-  }
-
-  private void queueEnvironmentYamlChangeSet(Environment environment, ChangeType crudType) {
-    // check whether we need to push changes (through git sync)
-    String accountId = appService.getAccountIdByAppId(environment.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, crudType));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
   }
 
   /**
@@ -364,14 +326,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                   ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
               .build());
 
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(environment.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          yamlChangeSetService.queueChangeSet(ygs,
-              Arrays.asList(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, ChangeType.DELETE)));
-        }
-      });
+      yamlChangeSetHelper.queueEnvironmentYamlChangeAsync(environment, ChangeType.DELETE);
     }
   }
 
