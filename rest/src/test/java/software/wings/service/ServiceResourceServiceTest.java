@@ -85,6 +85,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -97,8 +98,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.Stencil;
 import software.wings.utils.BoundedInputStream;
 
@@ -151,9 +150,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private ServiceVariableService serviceVariableService;
   @Mock private ArtifactStreamService artifactStreamService;
-  @Mock private EntityUpdateService entityUpdateService;
   @Mock private AppService appService;
-  @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
   @Mock private ExecutorService executorService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
