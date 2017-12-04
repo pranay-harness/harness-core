@@ -344,11 +344,9 @@ public class MongoQueueTest extends WingsBaseTest {
 
   /**
    * Should requeue message.
-   *
-   * @throws Exception the exception
    */
   @Test
-  public void shouldRequeueMessage() throws Exception {
+  public void shouldRequeueMessage() {
     QueuableObject message = new QueuableObject(0);
 
     queue.send(message);
@@ -377,11 +375,9 @@ public class MongoQueueTest extends WingsBaseTest {
 
   /**
    * Should throw illegal argument exception when requeued with priority na n.
-   *
-   * @throws Exception the exception
    */
   @Test
-  public void shouldThrowIllegalArgumentExceptionWhenRequeuedWithPriorityNaN() throws Exception {
+  public void shouldThrowIllegalArgumentExceptionWhenRequeuedWithPriorityNaN() {
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> queue.requeue(new QueuableObject(1), new Date(), Double.NaN));
   }
@@ -396,11 +392,9 @@ public class MongoQueueTest extends WingsBaseTest {
 
   /**
    * Should throw npe when requeuing with null earliest get.
-   *
-   * @throws Exception the exception
    */
   @Test
-  public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() throws Exception {
+  public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(new QueuableObject(1), null));
   }
 

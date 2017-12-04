@@ -2,7 +2,6 @@ package software.wings.app;
 
 import static software.wings.common.thread.ThreadPool.create;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
@@ -11,7 +10,6 @@ import software.wings.utils.ManagedScheduledExecutorService;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,27 +42,21 @@ public class ExecutorModule extends AbstractModule {
     bind(ExecutorService.class).toInstance(new ManagedExecutorService(executorService));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("waitStateResumer"))
-        .toInstance(new ManagedScheduledExecutorService(
-            new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("WaitStateResumer").build())));
+        .toInstance(new ManagedScheduledExecutorService("WaitStateResumer"));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("timer"))
-        .toInstance(new ManagedScheduledExecutorService(
-            new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("Timer").build())));
+        .toInstance(new ManagedScheduledExecutorService("Timer"));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("notifier"))
-        .toInstance(new ManagedScheduledExecutorService(
-            new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("Notifier").build())));
+        .toInstance(new ManagedScheduledExecutorService("Notifier"));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("notifyResponseCleaner"))
-        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("NotifyResponseCleaner").build())));
+        .toInstance(new ManagedScheduledExecutorService("NotifyResponseCleaner"));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("delegateTaskNotifier"))
-        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("DelegateTaskNotifier").build())));
+        .toInstance(new ManagedScheduledExecutorService("DelegateTaskNotifier"));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
-        .toInstance(new ManagedScheduledExecutorService(
-            new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("gitChangeSet").build())));
+        .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
   }
 }

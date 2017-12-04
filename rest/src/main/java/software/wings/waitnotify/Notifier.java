@@ -5,6 +5,7 @@ import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import org.slf4j.Logger;
@@ -24,10 +25,10 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class Notifier implements Runnable {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
-
   @Inject private PersistentLocker persistentLocker;
-
   @Inject private Queue<NotifyEvent> notifyQueue;
 
   /* (non-Javadoc)
@@ -35,11 +36,15 @@ public class Notifier implements Runnable {
    */
   @Override
   public void run() {
+    if (isMaintenance()) {
+      return;
+    }
+
     boolean lockAcquired = false;
     try {
       lockAcquired = persistentLocker.acquireLock(Notifier.class, Notifier.class.getName());
       if (!lockAcquired) {
-        log().warn("Persistent lock could not be acquired for the Notifier");
+        logger.warn("Persistent lock could not be acquired for the Notifier");
         return;
       }
 
@@ -47,7 +52,7 @@ public class Notifier implements Runnable {
           wingsPersistence.query(NotifyResponse.class, aPageRequest().addFieldsIncluded(ID_KEY).build());
 
       if (isEmpty(notifyPageResponses)) {
-        log().debug("There are no NotifyResponse entries to process");
+        logger.debug("There are no NotifyResponse entries to process");
         return;
       }
 
@@ -60,7 +65,7 @@ public class Notifier implements Runnable {
               .build());
 
       if (isEmpty(waitQueuesResponse)) {
-        log().warn("No entry in the waitQueue found for the correlationIds: {} skipping ...", correlationIds);
+        logger.warn("No entry in the waitQueue found for the correlationIds: {} skipping ...", correlationIds);
         return;
       }
 
@@ -73,15 +78,11 @@ public class Notifier implements Runnable {
                   aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build()));
 
     } catch (Exception exception) {
-      log().error("Error seen in the Notifier call", exception);
+      logger.error("Error seen in the Notifier call", exception);
     } finally {
       if (lockAcquired) {
         persistentLocker.releaseLock(Notifier.class, Notifier.class.getName());
       }
     }
-  }
-
-  private Logger log() {
-    return LoggerFactory.getLogger(getClass());
   }
 }

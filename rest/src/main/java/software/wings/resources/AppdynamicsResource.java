@@ -11,7 +11,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -72,8 +71,7 @@ public class AppdynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<AppdynamicsMetric>> getTierBTMetrics(@QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId)
-      throws IOException, InterruptedException {
+      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId) throws IOException {
     return new RestResponse<>(appdynamicsService.getTierBTMetrics(settingId, appdynamicsAppId, tierId));
   }
 

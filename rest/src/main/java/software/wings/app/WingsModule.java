@@ -3,6 +3,7 @@ package software.wings.app;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
@@ -346,7 +347,7 @@ public class WingsModule extends AbstractModule {
     bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(KmsService.class).to(KmsServiceImpl.class);
-    bind(AlertService.class).to(AlertServiceImpl.class);
+    bind(AlertService.class).to(AlertServiceImpl.class).in(Singleton.class);
     bind(YamlChangeSetService.class).to(YamlChangeSetServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);

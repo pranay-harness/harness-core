@@ -103,8 +103,8 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
 
       try {
         Thread.sleep(pollDuration);
-      } catch (final InterruptedException ex) {
-        throw new RuntimeException(ex);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       } catch (final IllegalArgumentException ex) {
         pollDuration = 0;
       }

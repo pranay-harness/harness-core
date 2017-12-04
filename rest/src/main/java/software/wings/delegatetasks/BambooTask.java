@@ -25,6 +25,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -116,7 +117,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
     Result result;
     do {
       logger.info("Waiting for build execution {} to finish", buildResultKey);
-      Misc.sleepWithRuntimeException(5000);
+      Misc.sleep(5, TimeUnit.SECONDS);
       result = bambooService.getBuildResult(bambooConfig, encryptionDetails, buildResultKey);
       logger.info("Build result for build key {} is {}", buildResultKey, result);
     } while (result.getBuildState() == null || result.getBuildState().equalsIgnoreCase("Unknown"));

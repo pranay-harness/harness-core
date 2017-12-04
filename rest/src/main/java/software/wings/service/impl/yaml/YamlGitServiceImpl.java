@@ -127,8 +127,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message", gitCommandExecutionResponse.getErrorMessage());
       }
     } catch (InterruptedException e) {
-      logger.error("Execution inturrpted {}", e);
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT);
+      Thread.currentThread().interrupt();
     }
   }
 
