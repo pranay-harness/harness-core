@@ -52,8 +52,7 @@ public class MaintenanceController implements Managed {
     executorService.submit(() -> {
       while (running.get()) {
         boolean isMaintenance = new File(Constants.MAINTENANCE).exists();
-        boolean previous = maintenance.getAndSet(isMaintenance);
-        if (isMaintenance != previous) {
+        if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
           logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
           synchronized (maintenanceListeners) {
             maintenanceListeners.forEach(listener
