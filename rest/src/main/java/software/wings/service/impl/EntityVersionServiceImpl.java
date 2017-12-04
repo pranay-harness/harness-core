@@ -5,7 +5,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Singleton;
 
@@ -39,10 +38,6 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   public PageResponse<EntityVersionCollection> listEntityVersions(PageRequest<EntityVersionCollection> pageRequest) {
-    if (isMaintenance()) {
-      logger.info("In maintenance mode, responding RESOURCE_NOT_FOUND for load balancer health check.");
-      throw new WingsException(ErrorCode.RESOURCE_NOT_FOUND);
-    }
     return wingsPersistence.query(EntityVersionCollection.class, pageRequest);
   }
 
