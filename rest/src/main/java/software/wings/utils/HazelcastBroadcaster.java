@@ -2,7 +2,6 @@ package software.wings.utils;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
@@ -102,8 +101,6 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
 
   @Override
   public void outgoingBroadcast(Object message) {
-    if (!isMaintenance()) {
-      topic.publish(message);
-    }
+    topic.publish(message);
   }
 }
