@@ -216,8 +216,8 @@ public class GitClientImpl implements GitClient {
                 writer.close();
               }
               git.add().addFilepattern(".").call();
-              commitMessage.append(
-                  String.format("%s: %s\n", gitFileChange.getChangeType(), gitFileChange.getFilePath()));
+              //              commitMessage.append(String.format("%s: %s\n", gitFileChange.getChangeType(),
+              //              gitFileChange.getFilePath()));
             } catch (IOException | GitAPIException ex) {
               logger.error("Exception in adding/modifying file to git " + ex);
               throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in ADD/MODIFY git operation");
@@ -239,8 +239,9 @@ public class GitClientImpl implements GitClient {
                 Path path = Files.move(oldFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 git.add().addFilepattern(gitFileChange.getFilePath()).call();
                 git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
-                commitMessage.append(String.format("%s: %s -> %s\n", gitFileChange.getChangeType(),
-                    gitFileChange.getOldFilePath(), gitFileChange.getFilePath()));
+                //                commitMessage.append(
+                //                    String.format("%s: %s -> %s\n", gitFileChange.getChangeType(),
+                //                    gitFileChange.getOldFilePath(), gitFileChange.getFilePath()));
               } else {
                 logger.warn("File doesn't exist. path: [{}]", gitFileChange.getOldFilePath());
               }
@@ -256,8 +257,8 @@ public class GitClientImpl implements GitClient {
               if (fileToBeDeleted.exists()) {
                 logger.info("Deleting git file " + gitFileChange.toString());
                 git.rm().addFilepattern(gitFileChange.getFilePath()).call();
-                commitMessage.append(
-                    String.format("%s: %s\n", gitFileChange.getChangeType(), gitFileChange.getFilePath()));
+                //                commitMessage.append(String.format("%s: %s\n", gitFileChange.getChangeType(),
+                //                gitFileChange.getFilePath()));
               } else {
                 logger.warn("File already deleted. path: [{}]", gitFileChange.getFilePath());
               }
@@ -272,6 +273,13 @@ public class GitClientImpl implements GitClient {
       if (status.getAdded().size() == 0 && status.getChanged().size() == 0 && status.getRemoved().size() == 0) {
         logger.warn("No git change to commit. GitCommitRequest: [{}]", gitCommitRequest);
         return GitCommitResult.builder().build(); // do nothing
+      } else {
+        status.getAdded().forEach(
+            filePath -> commitMessage.append(String.format("%s: %s\n", ChangeType.ADD, filePath)));
+        status.getChanged().forEach(
+            filePath -> commitMessage.append(String.format("%s: %s\n", ChangeType.MODIFY, filePath)));
+        status.getRemoved().forEach(
+            filePath -> commitMessage.append(String.format("%s: %s\n", ChangeType.DELETE, filePath)));
       }
       RevCommit revCommit = git.commit()
                                 .setCommitter(gitConfig.getUsername(), "")

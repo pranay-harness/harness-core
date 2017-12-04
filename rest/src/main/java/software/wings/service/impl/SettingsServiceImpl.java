@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
@@ -123,19 +122,18 @@ public class SettingsServiceImpl implements SettingsService {
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
 
-      String oldEnvnPath = yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + "/"
+      String oldSettingAttrPath = yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + "/"
           + oldSettingAttribute.getName() + YAML_EXTENSION;
-
-      GitFileChange newEnvGitSyncFile =
+      GitFileChange newSettingAttrGitSyncFile =
           entityUpdateService.getSettingAttributeGitSyncFile(accountId, newSettingAttribute, ChangeType.MODIFY);
 
       changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(newEnvGitSyncFile.getAccountId())
+                        .withAccountId(newSettingAttrGitSyncFile.getAccountId())
                         .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newEnvGitSyncFile.getFilePath())
-                        .withOldFilePath(oldEnvnPath)
+                        .withFilePath(newSettingAttrGitSyncFile.getFilePath())
+                        .withOldFilePath(oldSettingAttrPath)
                         .build());
-      changeSet.add(newEnvGitSyncFile);
+      changeSet.add(newSettingAttrGitSyncFile);
       yamlChangeSetService.queueChangeSet(ygs, changeSet);
     }
   }

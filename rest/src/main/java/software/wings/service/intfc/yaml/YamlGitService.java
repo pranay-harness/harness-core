@@ -3,6 +3,7 @@ package software.wings.service.intfc.yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.GitCommit;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -10,6 +11,7 @@ import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.List;
 import javax.validation.Valid;
 
 /**
@@ -48,7 +50,7 @@ public interface YamlGitService {
    */
   void pushDirectory(@NotEmpty String accountId);
 
-  void performFullSyncDryRun(String accountId);
+  List<GitFileChange> performFullSyncDryRun(String accountId);
 
   /**
    * Handle change set boolean.
