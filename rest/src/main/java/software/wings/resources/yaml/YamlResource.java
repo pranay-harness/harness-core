@@ -19,6 +19,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.yaml.YamlWebHookPayload;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -57,6 +58,7 @@ public class YamlResource {
   private YamlSyncService yamlSyncService;
   private YamlDirectoryService yamlDirectoryService;
   private YamlGitService yamlGitSyncService;
+  private AuthService authService;
 
   /**
    * Instantiates a new service resource.
@@ -71,13 +73,14 @@ public class YamlResource {
   @Inject
   public YamlResource(YamlResourceService yamlResourceService, AppYamlResourceService appYamlResourceService,
       YamlDirectoryService yamlDirectoryService, YamlArtifactStreamService yamlArtifactStreamService,
-      YamlSyncService yamlSyncService, YamlGitService yamlGitSyncService) {
+      YamlSyncService yamlSyncService, YamlGitService yamlGitSyncService, AuthService authService) {
     this.yamlResourceService = yamlResourceService;
     this.appYamlResourceService = appYamlResourceService;
     this.yamlDirectoryService = yamlDirectoryService;
     this.yamlArtifactStreamService = yamlArtifactStreamService;
     this.yamlSyncService = yamlSyncService;
     this.yamlGitSyncService = yamlGitSyncService;
+    this.authService = authService;
   }
 
   /**
@@ -608,8 +611,10 @@ public class YamlResource {
   @GET
   @Path("full-sync-dry-run")
   @Timed
+  @PublicApi
   @ExceptionMetered
-  public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId) {
+  public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId, @QueryParam("token") String token) {
+    authService.validateToken(token);
     yamlGitSyncService.performFullSyncDryRun(accountId);
     return new RestResponse();
   }
