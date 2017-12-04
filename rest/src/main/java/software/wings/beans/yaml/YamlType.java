@@ -10,6 +10,7 @@ import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -72,9 +73,11 @@ public enum YamlType {
   VERIFICATION_PROVIDER(YamlConstants.VERIFICATION_PROVIDER,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, VERIFICATION_PROVIDERS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, VERIFICATION_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
-  APPLICATION(EntityType.APPLICATION.name(), "",
+  APPLICATION(EntityType.APPLICATION.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY), Application.class),
-  SERVICE(EntityType.SERVICE.name(), "",
+  SERVICE(EntityType.SERVICE.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY), Service.class),
   ARTIFACT_STREAM(EntityType.ARTIFACT_STREAM.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
@@ -100,7 +103,8 @@ public enum YamlType {
       generatePath(
           PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, CONFIG_FILES_FOLDER, ANY),
       ConfigFile.class),
-  ENVIRONMENT(EntityType.ENVIRONMENT.name(), "",
+  ENVIRONMENT(EntityType.ENVIRONMENT.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY),
       Environment.class),
   CONFIG_FILE_OVERRIDE(EntityType.CONFIG.name(),

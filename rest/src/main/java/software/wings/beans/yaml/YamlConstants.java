@@ -45,7 +45,7 @@ public interface YamlConstants {
 
   String YAML_EXPRESSION = ".[^/]*?\\.yaml";
   String YAML_EXTENSION = ".yaml";
-  String ENTITY_YAML = "Entity.yaml";
+  String INDEX_YAML = "Index.yaml";
   String ARTIFACT_SERVER = "ARTIFACT_SERVER";
   String COLLABORATION_PROVIDER = "COLLABORATION_PROVIDER";
   String LOADBALANCER_PROVIDER = "LOADBALANCER_PROVIDER";
