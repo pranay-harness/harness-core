@@ -12,22 +12,17 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.util.AbstractBroadcasterProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.maintenance.MaintenanceController;
-import software.wings.core.maintenance.MaintenanceListener;
 
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 1/11/17.
  */
-public class HazelcastBroadcaster extends AbstractBroadcasterProxy implements MaintenanceListener {
+public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public static HazelcastInstance HAZELCAST_INSTANCE;
-
-  @Inject private MaintenanceController maintenanceController;
 
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private ITopic topic;
@@ -48,7 +43,6 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy implements Ma
   }
 
   public void setUp() {
-    maintenanceController.register(this);
     topic = HAZELCAST_INSTANCE.getTopic(getID());
     config.shutdownHook(() -> {
       HazelcastBroadcaster.HAZELCAST_INSTANCE.shutdown();
@@ -65,7 +59,7 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy implements Ma
   }
 
   private synchronized void removeMessageListener() {
-    if (messageListenerRegistrationId != null && topic != null) {
+    if (isEmpty(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
       topic.removeMessageListener(messageListenerRegistrationId);
       messageListenerRegistrationId = null;
       logger.info("Removed message listener from topic");
@@ -75,18 +69,14 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy implements Ma
   @Override
   public Broadcaster addAtmosphereResource(AtmosphereResource resource) {
     Broadcaster result = super.addAtmosphereResource(resource);
-    if (!isMaintenance()) {
-      addMessageListener();
-    }
+    addMessageListener();
     return result;
   }
 
   @Override
   public Broadcaster removeAtmosphereResource(AtmosphereResource resource) {
     Broadcaster result = super.removeAtmosphereResource(resource);
-    if (isEmpty(getAtmosphereResources())) {
-      removeMessageListener();
-    }
+    removeMessageListener();
     return result;
   }
 
@@ -102,7 +92,6 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy implements Ma
       topic.destroy();
       topic = null;
     }
-
     super.destroy();
   }
 
@@ -113,18 +102,8 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy implements Ma
 
   @Override
   public void outgoingBroadcast(Object message) {
-    topic.publish(message);
-  }
-
-  @Override
-  public void onEnterMaintenance() {
-    logger.info("Entering maintenance mode");
-    removeMessageListener();
-  }
-
-  @Override
-  public void onLeaveMaintenance() {
-    logger.info("Leaving maintenance mode");
-    addMessageListener();
+    if (!isMaintenance()) {
+      topic.publish(message);
+    }
   }
 }
