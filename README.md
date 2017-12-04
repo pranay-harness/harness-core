@@ -7,9 +7,9 @@
 1. Install Homebrew :
 
     `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-2. Install Java download :
+2. Install Java 8 download :
 
-    `brew cask install java`
+    `brew tap caskroom/versions && brew cask install java8`
 3. Install maven :
 
     `brew install maven`
@@ -21,7 +21,7 @@
 
 6. Set up JAVA_HOME: create ~/.bash_profile file and add following line:
 
-   `export JAVA_HOME=$(/usr/libexec/java_home)`
+   `export JAVA_HOME=$(/usr/libexec/java_home -v1.8)`
 
 7. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
 
@@ -104,7 +104,7 @@ Annotations->Mark field as implicitly written if annotated by) Click add, then s
         `$MODULE_DIR$`
     
     * Environment Variable:   
-        `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
+        `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
     
     * Use classpath of module:  
         rest
@@ -112,7 +112,7 @@ Annotations->Mark field as implicitly written if annotated by) Click add, then s
     * JRE:  
         Default (1.8 - SDK of 'rest' module)
     
-    * Ensure [File -> Project Structure -> Project SDK] "java version" is 1.8.0_121.
+    * Ensure [File -> Project Structure -> Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
     * Ensure [IntelliJ IDEA -> Preferences -> Build, Execution, Deployment -> Compile -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
 
 2) Create the "DelegateApplication":  
@@ -121,7 +121,7 @@ Annotations->Mark field as implicitly written if annotated by) Click add, then s
         Use the "+" on the left to add a new application. Call it "DelegateApplication"
     
     * Set Main class:   
-        'DelegateApplication' class (found at software.wings.delegate.app.WingsApplication) with the following configurations.
+        'DelegateApplication' class (found at software.wings.delegate.app.DelegateApplication) with the following configurations.
     
     * VM Options:  
         `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0`
@@ -133,7 +133,7 @@ Annotations->Mark field as implicitly written if annotated by) Click add, then s
         `$MODULE_DIR$`
     
     * Environment Variable:  
-        `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
+        `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
     
     * Use classpath of module:  
         delegate
@@ -157,7 +157,7 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 
 1) Make sure your mongodb is running first.  
 
-2) Run API Server (WingsApplication): [Run -> Run... -> WimngsApplication]   
+2) Run API Server (WingsApplication): [Run -> Run... -> WingsApplication]
 
 3) From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and  
 
