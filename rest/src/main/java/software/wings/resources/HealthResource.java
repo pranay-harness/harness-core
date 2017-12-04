@@ -7,13 +7,11 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.ErrorCode;
-import software.wings.dl.PageRequest;
+import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.PublicApi;
 
-import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -34,11 +32,11 @@ public class HealthResource {
   @GET
   @Timed
   @ExceptionMetered
-  public String get(@BeanParam PageRequest<EntityVersionCollection> pageRequest) {
+  public RestResponse<String> get() {
     if (isMaintenance()) {
       logger.info("In maintenance mode, responding RESOURCE_NOT_FOUND for load balancer health check.");
       throw new WingsException(ErrorCode.RESOURCE_NOT_FOUND);
     }
-    return "healthy";
+    return new RestResponse<>("healthy");
   }
 }
