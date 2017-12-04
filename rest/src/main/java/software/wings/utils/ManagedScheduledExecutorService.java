@@ -1,21 +1,28 @@
 package software.wings.utils;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 4/18/16.
  */
 public class ManagedScheduledExecutorService extends ManagedExecutorService implements ScheduledExecutorService {
+  private static ScheduledThreadPoolExecutor createScheduledThreadPoolExecutor(String name) {
+    return new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat(name).build());
+  }
+
   /**
    * Instantiates a new managed scheduled executor service.
    *
-   * @param executorService the executor service
+   * @param name the name
    */
-  public ManagedScheduledExecutorService(ScheduledExecutorService executorService) {
-    super(executorService);
+  public ManagedScheduledExecutorService(String name) {
+    super(createScheduledThreadPoolExecutor(name));
   }
 
   /* (non-Javadoc)

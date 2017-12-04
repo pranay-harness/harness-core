@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
@@ -17,7 +18,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +32,7 @@ import javax.inject.Inject;
  */
 public final class NotifyResponseCleanupHandler implements Runnable {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
@@ -39,6 +40,10 @@ public final class NotifyResponseCleanupHandler implements Runnable {
    */
   @Override
   public void run() {
+    if (isMaintenance()) {
+      return;
+    }
+
     try {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
           aPageRequest()

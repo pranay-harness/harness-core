@@ -33,7 +33,6 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
@@ -78,6 +77,7 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.utils.message.Message;
 import software.wings.utils.message.MessageService;
 import software.wings.waitnotify.NotifyResponseData;
@@ -99,12 +99,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -138,7 +136,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject private ExecutorService executorService;
   @Inject private SignalService signalService;
-  @Inject private TimeLimiter timeLimiter;
   @Inject private MessageService messageService;
   @Inject private Injector injector;
   @Inject private TokenGenerator tokenGenerator;
@@ -151,8 +148,6 @@ public class DelegateServiceImpl implements DelegateService {
   private final ConcurrentHashMap<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
-
-  private final BlockingQueue<Message> delegateMessages = new LinkedBlockingQueue<>();
 
   private final AtomicLong lastHeartbeatSentAt = new AtomicLong(System.currentTimeMillis());
   private final AtomicLong lastHeartbeatReceivedAt = new AtomicLong(System.currentTimeMillis());
@@ -182,7 +177,7 @@ public class DelegateServiceImpl implements DelegateService {
         messageService.writeMessage(DELEGATE_STARTED);
         startInputCheck();
         logger.info("[New] Waiting for go ahead from watcher");
-        Message message = waitForIncomingMessage(DELEGATE_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
+        Message message = messageService.waitForMessage(DELEGATE_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
         messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
@@ -423,42 +418,17 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private Message waitForIncomingMessage(String messageName, long timeout) {
-    try {
-      return timeLimiter.callWithTimeout(() -> {
-        Message message = null;
-        while (message == null || !messageName.equals(message.getMessage())) {
-          try {
-            message = delegateMessages.take();
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
-        }
-        return message;
-      }, timeout, TimeUnit.MILLISECONDS, true);
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
   private void startInputCheck() {
-    inputExecutor.scheduleWithFixedDelay(() -> {
-      Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(2));
-      if (message != null) {
-        if (UPGRADING_DELEGATE.equals(message.getMessage())) {
-          upgradeNeeded.set(false);
-        } else if (DELEGATE_STOP_ACQUIRING.equals(message.getMessage())) {
-          handleStopAcquiringMessage(message.getFromProcess());
-        } else if (DELEGATE_RESUME.equals(message.getMessage())) {
-          resume();
-        }
-        try {
-          delegateMessages.put(message);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-      }
-    }, 0, 1, TimeUnit.SECONDS);
+    inputExecutor.scheduleWithFixedDelay(
+        messageService.getMessageCheckingRunnable(TimeUnit.SECONDS.toMillis(2), message -> {
+          if (UPGRADING_DELEGATE.equals(message.getMessage())) {
+            upgradeNeeded.set(false);
+          } else if (DELEGATE_STOP_ACQUIRING.equals(message.getMessage())) {
+            handleStopAcquiringMessage(message.getFromProcess());
+          } else if (DELEGATE_RESUME.equals(message.getMessage())) {
+            resume();
+          }
+        }), 0, 1, TimeUnit.SECONDS);
   }
 
   private void handleStopAcquiringMessage(String sender) {
@@ -474,11 +444,7 @@ public class DelegateServiceImpl implements DelegateService {
         long started = clock.millis();
         long now = started;
         while (currentlyExecutingTasks.size() > 0 && now - started < UPGRADE_TIMEOUT) {
-          try {
-            Thread.sleep(1000);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
+          Misc.sleep(1, TimeUnit.SECONDS);
           now = clock.millis();
           logger.info("[Old] Completing {} tasks... ({} seconds elapsed)", currentlyExecutingTasks.size(),
               (now - started) / 1000L);
@@ -731,13 +697,9 @@ public class DelegateServiceImpl implements DelegateService {
             if (validated) {
               logger.info("Task {} validated but was assigned to another delegate", taskId);
             } else {
-              try {
-                logger.info(
-                    "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
-                Thread.sleep(2000);
-              } catch (InterruptedException e) {
-                logger.warn("Sleep interrupted. Task {}", taskId, e);
-              }
+              logger.info(
+                  "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
+              Misc.sleep(2, TimeUnit.SECONDS);
               try {
                 logger.info("Checking whether all delegates failed for task {}", taskId);
                 DelegateTask delegateTask2 = execute(
@@ -823,12 +785,7 @@ public class DelegateServiceImpl implements DelegateService {
     boolean stillRunning = true;
     long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
     while (stillRunning && clock.millis() - startTime < timeout) {
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        logger.error("Time limiter thread interrupted", e);
-      }
-
+      Misc.sleep(5, TimeUnit.SECONDS);
       Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }

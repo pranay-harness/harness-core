@@ -6,9 +6,9 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -59,7 +59,6 @@ import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
@@ -76,7 +75,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -96,9 +94,6 @@ public class StateMachineExecutor {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private DelegateService delegateService;
   @Inject private AlertService alertService;
-  @Inject private FeatureFlagService featureFlagService;
-
-  @Inject @Named("waitStateResumer") private ScheduledExecutorService scheduledExecutorService;
 
   /**
    * Execute.
@@ -341,10 +336,11 @@ public class StateMachineExecutor {
     State currentState =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
-      StateExecutionData stateExecutionData = aStateExecutionData()
-                                                  .withWaitInterval(currentState.getWaitInterval())
-                                                  .withErrorMsg("Waiting before execution")
-                                                  .build();
+      StateExecutionData stateExecutionData =
+          aStateExecutionData()
+              .withWaitInterval(currentState.getWaitInterval())
+              .withErrorMsg("Waiting " + currentState.getWaitInterval() + " seconds before execution")
+              .build();
       updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null);
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");

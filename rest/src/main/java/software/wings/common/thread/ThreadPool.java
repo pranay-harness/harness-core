@@ -22,7 +22,7 @@ public class ThreadPool {
       create(CORE_POOL_SIZE, MAX_POOL_SIZE, IDLE_TIME, TimeUnit.MILLISECONDS);
 
   /**
-   * Creates the.
+   * Creates the thread pool executor.
    *
    * @param corePoolSize the core pool size
    * @param maxPoolSize  the max pool size

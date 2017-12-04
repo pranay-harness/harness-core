@@ -2,6 +2,7 @@ package software.wings.rules;
 
 import static org.mockito.Mockito.mock;
 import static software.wings.app.LoggingInitializer.initializeLogging;
+import static software.wings.core.maintenance.MaintenanceController.forceMaintenanceOff;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
@@ -137,7 +138,7 @@ public class WingsRule implements MethodRule {
   protected void before(List<Annotation> annotations, boolean doesExtendBaseIntegrationTest, String testName)
       throws Throwable {
     initializeLogging();
-
+    forceMaintenanceOff();
     MongoClient mongoClient;
     String dbName = "harness";
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {

@@ -76,18 +76,16 @@ import java.util.stream.IntStream;
  */
 @Singleton
 public class EcsContainerServiceImpl implements EcsContainerService {
-  private static final int SLEEP_INTERVAL = 10 * 1000;
-  private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
+  private static final int SLEEP_INTERVAL = 10;
+  private static final int RETRY_COUNTER = (10 * 60) / SLEEP_INTERVAL; // 10 minutes
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   /**
    * Create cluster.
-   *
-   * @throws InterruptedException the interrupted exception
    */
-  public void createCluster() throws InterruptedException {
+  public void createCluster() {
     CreateStackResult result = awsHelperService.createStack("AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
@@ -421,7 +419,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
-      Thread.sleep(1000);
+      Misc.sleep(1, TimeUnit.SECONDS);
     }
 
     stack.getOutputs().forEach(output -> System.out.println(output.getOutputKey() + " = " + output.getOutputValue()));
@@ -429,10 +427,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   /**
    * Destroy cluster.
-   *
-   * @throws InterruptedException the interrupted exception
    */
-  public void destroyCluster() throws InterruptedException {
+  public void destroyCluster() {
     CreateStackResult result = awsHelperService.createStack("AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
@@ -767,7 +763,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
-      Thread.sleep(1000);
+      Misc.sleep(1, TimeUnit.SECONDS);
     }
 
     stack.getOutputs().forEach(output -> System.out.println(output.getOutputKey() + " = " + output.getOutputValue()));
@@ -818,7 +814,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "All instances didn't registered with cluster");
       }
-      Misc.quietSleep(SLEEP_INTERVAL);
+      Misc.quietSleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
     }
   }
 
@@ -829,7 +825,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances ready to registered with cluster");
       }
-      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
+      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
     }
   }
 
@@ -889,7 +885,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
       }
-      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
+      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
     }
   }
 
@@ -902,7 +898,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (retryCount-- <= 0) {
         break;
       }
-      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
+      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
     }
   }
 
@@ -1062,7 +1058,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    int retryCount = (serviceSteadyStateTimeout * 60 * 1000) / SLEEP_INTERVAL;
+    int retryCount = (serviceSteadyStateTimeout * 60) / SLEEP_INTERVAL;
 
     if (retryCount == 0) {
       return;
@@ -1094,7 +1090,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           excludedEventId[0] = events.get(0).getId();
         }
 
-        Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
+        Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
       } while (retryCount-- > 0);
     } catch (Exception ex) {
       logger.error("Wait for service steady state failed with exception ", ex);

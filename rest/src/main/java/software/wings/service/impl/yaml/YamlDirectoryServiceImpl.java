@@ -229,16 +229,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
           if (fn == null) {
             logger.info("********* failure in completionService");
+          } else {
+            map.put(fn.getName(), fn);
           }
-
-          map.put(fn.getName(), fn);
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Thread.currentThread().interrupt();
         } catch (ExecutionException e) {
-          e.printStackTrace();
+          logger.error(e.getMessage(), e);
         }
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Thread.currentThread().interrupt();
       }
     }
 
@@ -307,16 +307,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
             if (fn == null) {
               logger.info("********* failure in completionService");
+            } else {
+              map.put(fn.getName(), fn);
             }
-
-            map.put(fn.getName(), fn);
           } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
           } catch (ExecutionException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
           }
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Thread.currentThread().interrupt();
         }
       }
 

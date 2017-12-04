@@ -38,7 +38,6 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -69,9 +68,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -94,7 +91,6 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject private ExecutorService executorService;
-  @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
   @Inject private WatcherConfiguration watcherConfiguration;
   @Inject private MessageService messageService;
@@ -103,7 +99,6 @@ public class WatcherServiceImpl implements WatcherService {
   private final Object waiter = new Object();
   private final AtomicBoolean working = new AtomicBoolean(false);
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
-  private final BlockingQueue<Message> watcherMessages = new LinkedBlockingQueue<>();
 
   @Override
   public void run(boolean upgrade) {
@@ -113,7 +108,7 @@ public class WatcherServiceImpl implements WatcherService {
       startInputCheck();
 
       if (upgrade) {
-        Message message = waitForIncomingMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
+        Message message = messageService.waitForMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
@@ -141,42 +136,16 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
-  private Message waitForIncomingMessage(String messageName, long timeout) {
-    try {
-      return timeLimiter.callWithTimeout(() -> {
-        Message message = null;
-        while (message == null || !messageName.equals(message.getMessage())) {
-          try {
-            message = watcherMessages.take();
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
-        }
-        return message;
-      }, timeout, TimeUnit.MILLISECONDS, true);
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
   private void startInputCheck() {
-    inputExecutor.scheduleWithFixedDelay(() -> {
-      Message message = messageService.readMessage(TimeUnit.SECONDS.toMillis(4));
-      if (message != null) {
-        try {
-          watcherMessages.put(message);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-      }
-    }, 0, 1, TimeUnit.SECONDS);
+    inputExecutor.scheduleWithFixedDelay(
+        messageService.getMessageCheckingRunnable(TimeUnit.SECONDS.toMillis(4), null), 0, 1, TimeUnit.SECONDS);
   }
 
   private void startUpgradeCheck() {
     upgradeExecutor.scheduleWithFixedDelay(() -> {
       synchronized (this) {
         if (!working.get()) {
-          checkForUpgrade();
+          checkForWatcherUpgrade();
   }
 }
 }, 0, watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
@@ -328,7 +297,7 @@ private void watchDelegate() {
         shutdownNeededList.forEach(this ::shutdownDelegate);
         if (newDelegateTimedOut && upgradePendingDelegate != null) {
           logger.warn("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
-          messageService.sendMessage(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
+          messageService.writeMessageToChannel(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
         }
       }
       if (isNotEmpty(restartNeededList)) {
@@ -339,7 +308,7 @@ private void watchDelegate() {
         if (working.compareAndSet(false, true)) {
           logger.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
           upgradeNeededList.forEach(
-              delegateProcess -> messageService.sendMessage(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
+              delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
           startDelegateProcess(upgradeNeededList, "DelegateUpgradeScript", getProcessId());
         }
       }
@@ -365,7 +334,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
       boolean success = false;
 
       if (newDelegate.getProcess().isAlive()) {
-        Message message = waitForIncomingMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(2));
+        Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(2));
         if (message != null) {
           String newDelegateProcess = message.getParams().get(0);
           logger.info("Got process ID from new delegate: " + newDelegateProcess);
@@ -377,15 +346,15 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
             runningDelegates.add(newDelegateProcess);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
           }
-          message = messageService.retrieveMessage(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
+          message = messageService.readMessageFromChannel(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
             logger.info("Retrieved delegate-started message from new delegate {}", newDelegateProcess);
             oldDelegateProcesses.forEach(oldDelegateProcess -> {
               logger.info("Sending old delegate process {} stop-acquiring message", oldDelegateProcess);
-              messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING);
+              messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING);
             });
             logger.info("Sending new delegate process {} go-ahead message", newDelegateProcess);
-            messageService.sendMessage(DELEGATE, newDelegateProcess, DELEGATE_GO_AHEAD);
+            messageService.writeMessageToChannel(DELEGATE, newDelegateProcess, DELEGATE_GO_AHEAD);
             success = true;
           }
         }
@@ -396,7 +365,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
         newDelegate.getProcess().waitFor();
         oldDelegateProcesses.forEach(oldDelegateProcess -> {
           logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
-          messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
+          messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
         });
       }
     } catch (Exception e) {
@@ -404,7 +373,7 @@ private void startDelegateProcess(List<String> oldDelegateProcesses, String scri
       logger.error("Exception while upgrading", e);
       oldDelegateProcesses.forEach(oldDelegateProcess -> {
         logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
-        messageService.sendMessage(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
+        messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
       });
       if (newDelegate != null) {
         try {
@@ -446,7 +415,7 @@ private void shutdownDelegate(String delegateProcess) {
   });
 }
 
-private void checkForUpgrade() {
+private void checkForWatcherUpgrade() {
   if (!watcherConfiguration.isDoUpgrade()) {
     logger.info("Auto upgrade is disabled in watcher configuration");
     logger.info("Watcher stays on version: [{}]", getVersion());
@@ -479,7 +448,7 @@ private void checkForUpgrade() {
 }
 
 private void upgradeWatcher(String bucketName, String watcherJarRelativePath, String version, String newVersion)
-    throws IOException, TimeoutException, InterruptedException {
+    throws IOException, TimeoutException {
   S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
   InputStream newVersionJarStream = newVersionJarObj.getObjectContent();
   File watcherJarFile = new File("watcher.jar");
@@ -501,16 +470,16 @@ private void upgradeWatcher(String bucketName, String watcherJarRelativePath, St
     boolean success = false;
 
     if (process.getProcess().isAlive()) {
-      Message message = waitForIncomingMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(2));
+      Message message = messageService.waitForMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(2));
       if (message != null) {
         String newWatcherProcess = message.getParams().get(0);
         logger.info("[Old] Got process ID from new watcher: " + newWatcherProcess);
         messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcess);
-        message = messageService.retrieveMessage(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
+        message = messageService.readMessageFromChannel(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
         if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
           logger.info(
               "[Old] Retrieved watcher-started message from new watcher {}. Sending go-ahead", newWatcherProcess);
-          messageService.sendMessage(WATCHER, newWatcherProcess, WATCHER_GO_AHEAD);
+          messageService.writeMessageToChannel(WATCHER, newWatcherProcess, WATCHER_GO_AHEAD);
           logger.info("[Old] Watcher upgraded. Stopping");
           removeWatcherVersionFromCapsule(version, newVersion);
           cleanupOldWatcherVersionFromBackup(version, newVersion);

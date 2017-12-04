@@ -28,12 +28,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
  * Message service for inter-process communication via the filesystem
+ *
+ * Created by brett on 10/26/17
  */
 public class MessageServiceImpl implements MessageService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -50,8 +55,9 @@ public class MessageServiceImpl implements MessageService {
   private final MessengerType messengerType;
   private final String processId;
 
-  private TimeLimiter timeLimiter = new SimpleTimeLimiter();
-  private Map<File, Long> messageTimestamps = new HashMap<>();
+  private final TimeLimiter timeLimiter = new SimpleTimeLimiter();
+  private final Map<File, Long> messageTimestamps = new HashMap<>();
+  private final Map<File, BlockingQueue<Message>> messageQueues = new HashMap<>();
 
   public MessageServiceImpl(Clock clock, MessengerType messengerType, String processId) {
     this.clock = clock;
@@ -61,22 +67,18 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void writeMessage(String message, String... params) {
-    sendMessage(messengerType, processId, message, params);
+    writeMessageToChannel(messengerType, processId, message, params);
   }
 
   @Override
-  public Message readMessage(long timeout) {
-    return retrieveMessage(messengerType, processId, timeout);
-  }
-
-  @Override
-  public void sendMessage(MessengerType targetType, String targetProcessId, String message, String... params) {
+  public void writeMessageToChannel(
+      MessengerType targetType, String targetProcessId, String message, String... params) {
     boolean isOutput = messengerType == targetType && processId.equals(targetProcessId);
     logger.debug("{}: {}({})",
         isOutput ? "Writing message" : "Sending message to " + targetType + " " + targetProcessId, message,
         params != null ? Joiner.on(", ").join(params) : "");
     try {
-      File file = getMessageFile(targetType, targetProcessId);
+      File channel = getMessageChannel(targetType, targetProcessId);
       List<String> messageContent = new ArrayList<>();
       messageContent.add(isOutput ? OUT : IN);
       messageContent.add(Long.valueOf(clock.millis()).toString());
@@ -87,34 +89,39 @@ public class MessageServiceImpl implements MessageService {
         messageContent.add(Joiner.on(SECONDARY_DELIMITER).join(params));
       }
       try {
-        if (acquireLock(file)) {
-          FileUtils.touch(file);
-          FileUtils.writeLines(file, singletonList(Joiner.on(PRIMARY_DELIMITER).join(messageContent)), true);
+        if (acquireLock(channel)) {
+          FileUtils.touch(channel);
+          FileUtils.writeLines(channel, singletonList(Joiner.on(PRIMARY_DELIMITER).join(messageContent)), true);
         } else {
-          logger.error("Failed to acquire lock {}", file.getPath());
+          logger.error("Failed to acquire lock {}", channel.getPath());
         }
       } finally {
-        if (!releaseLock(file)) {
-          logger.error("Failed to release lock {}", file.getPath());
+        if (!releaseLock(channel)) {
+          logger.error("Failed to release lock {}", channel.getPath());
         }
       }
     } catch (Exception e) {
-      logger.error("Error sending message: {}({})", message, params, e);
+      logger.error("Error writing message to channel: {}({})", message, params, e);
     }
   }
 
   @Override
-  public Message retrieveMessage(MessengerType sourceType, String sourceProcessId, long timeout) {
+  public Message readMessage(long timeout) {
+    return readMessageFromChannel(messengerType, processId, timeout);
+  }
+
+  @Override
+  public Message readMessageFromChannel(MessengerType sourceType, String sourceProcessId, long timeout) {
     boolean isInput = messengerType == sourceType && processId.equals(sourceProcessId);
     try {
-      File file = getMessageFile(sourceType, sourceProcessId);
-      long lastReadTimestamp = Optional.ofNullable(messageTimestamps.get(file)).orElse(0L);
-      if (!file.exists()) {
-        FileUtils.touch(file);
+      File channel = getMessageChannel(sourceType, sourceProcessId);
+      long lastReadTimestamp = Optional.ofNullable(messageTimestamps.get(channel)).orElse(0L);
+      if (!channel.exists()) {
+        FileUtils.touch(channel);
       }
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
-          LineIterator reader = FileUtils.lineIterator(file);
+          LineIterator reader = FileUtils.lineIterator(channel);
           while (reader.hasNext()) {
             String line = reader.nextLine();
             if (StringUtils.startsWith(line, (isInput ? IN : OUT) + PRIMARY_DELIMITER)) {
@@ -142,7 +149,7 @@ public class MessageServiceImpl implements MessageService {
                                       .build();
                 logger.debug("{}: {}",
                     isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
-                messageTimestamps.put(file, timestamp);
+                messageTimestamps.put(channel, timestamp);
                 reader.close();
                 return message;
               }
@@ -153,9 +160,72 @@ public class MessageServiceImpl implements MessageService {
         }
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.debug("Timed out retrieving message from {} {}", sourceType, sourceProcessId);
+      logger.debug("Timed out reading message from channel {} {}", sourceType, sourceProcessId);
     } catch (Exception e) {
-      logger.error("Error retrieving message from {} {}", sourceType, sourceProcessId, e);
+      logger.error("Error reading message from channel {} {}", sourceType, sourceProcessId, e);
+    }
+    return null;
+  }
+
+  @Override
+  public Runnable getMessageCheckingRunnable(long readTimeout, Consumer<Message> messageHandler) {
+    return getMessageCheckingRunnableForChannel(messengerType, processId, readTimeout, messageHandler);
+  }
+
+  @Override
+  public Runnable getMessageCheckingRunnableForChannel(
+      MessengerType sourceType, String sourceProcessId, long readTimeout, Consumer<Message> messageHandler) {
+    try {
+      messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
+    } catch (IOException e) {
+      logger.error("Couldn't get message channel for {} {}", sourceType, sourceProcessId);
+    }
+    return () -> {
+      try {
+        Message message = readMessageFromChannel(sourceType, sourceProcessId, readTimeout);
+        if (message != null) {
+          if (messageHandler != null) {
+            messageHandler.accept(message);
+          }
+          try {
+            messageQueues.get(getMessageChannel(sourceType, sourceProcessId)).put(message);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+        }
+      } catch (Exception e) {
+        logger.error("Error while checking for message from channel {} {}", sourceType, sourceProcessId, e);
+      }
+    };
+  }
+
+  @Override
+  public Message waitForMessage(String messageName, long timeout) {
+    return waitForMessageOnChannel(messengerType, processId, messageName, timeout);
+  }
+
+  @Override
+  public Message waitForMessageOnChannel(
+      MessengerType sourceType, String sourceProcessId, String messageName, long timeout) {
+    try {
+      BlockingQueue<Message> queue =
+          messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
+      return timeLimiter.callWithTimeout(() -> {
+        Message message = null;
+        while (message == null || !messageName.equals(message.getMessage())) {
+          try {
+            message = queue.take();
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+        }
+        return message;
+      }, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+    } catch (Exception e) {
+      logger.error(
+          "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
     }
     return null;
   }
@@ -174,15 +244,16 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void closeChannel(MessengerType type, String id) {
-    logger.debug("Closing channel for {} {}", type, id);
+    logger.debug("Closing channel {} {}", type, id);
     try {
-      File file = getMessageFile(type, id);
-      messageTimestamps.remove(file);
-      if (file.exists()) {
-        FileUtils.forceDelete(file);
+      File channel = getMessageChannel(type, id);
+      messageTimestamps.remove(channel);
+      messageQueues.remove(channel);
+      if (channel.exists()) {
+        FileUtils.forceDelete(channel);
       }
     } catch (Exception e) {
-      logger.error("Error closing channel for {} {}", type, id, e);
+      logger.error("Error closing channel {} {}", type, id, e);
     }
   }
 
@@ -306,10 +377,10 @@ public class MessageServiceImpl implements MessageService {
     }
   }
 
-  private File getMessageFile(MessengerType type, String id) throws IOException {
-    File file = new File(ROOT + IO + type.name().toLowerCase() + "/" + id);
-    FileUtils.forceMkdirParent(file);
-    return file;
+  private File getMessageChannel(MessengerType type, String id) throws IOException {
+    File channel = new File(ROOT + IO + type.name().toLowerCase() + "/" + id);
+    FileUtils.forceMkdirParent(channel);
+    return channel;
   }
 
   private File getDataFile(String name) throws IOException {
@@ -328,19 +399,18 @@ public class MessageServiceImpl implements MessageService {
 
   private boolean acquireLock(File file) {
     File lockFile = new File(file.getPath() + ".lock");
-    final long finishAt = clock.millis() + 5000L;
+    final long finishAt = clock.millis() + TimeUnit.SECONDS.toMillis(5);
     boolean wasInterrupted = false;
     try {
       while (lockFile.exists()) {
+        final long remaining = finishAt - clock.millis();
+        if (remaining < 0) {
+          break;
+        }
         try {
-          final long remaining = finishAt - Clock.systemUTC().millis();
-          if (remaining < 0) {
-            break;
-          }
           Thread.sleep(Math.min(100, remaining));
-        } catch (final InterruptedException ignore) {
+        } catch (InterruptedException e) {
           wasInterrupted = true;
-        } catch (final Exception ex) {
           return false;
         }
       }

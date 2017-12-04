@@ -83,7 +83,7 @@ public class WatcherApplication {
     if (upgrade) {
       MessageService messageService = injector.getInstance(MessageService.class);
       logger.info("Sending previous watcher process {} new watcher process ID: {}", previousWatcherProcess, processId);
-      messageService.sendMessage(WATCHER, previousWatcherProcess, NEW_WATCHER, processId);
+      messageService.writeMessageToChannel(WATCHER, previousWatcherProcess, NEW_WATCHER, processId);
     }
 
     WatcherService watcherService = injector.getInstance(WatcherService.class);

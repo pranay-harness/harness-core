@@ -23,7 +23,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
@@ -33,6 +32,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -137,7 +137,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     AtomicInteger consoleLogsSent = new AtomicInteger();
     do {
       logger.info("Waiting for Job  {} to finish execution", jenkinsBuild.getUrl());
-      Misc.sleepWithRuntimeException(5000);
+      Misc.sleep(5, TimeUnit.SECONDS);
       try {
         jenkinsBuildWithDetails = jenkinsBuild.details();
         saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName);
@@ -187,7 +187,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) throws IOException {
     Build jenkinsBuild = null;
     do {
-      Misc.sleepWithRuntimeException(1000);
+      Misc.sleep(1, TimeUnit.SECONDS);
       try {
         jenkinsBuild = jenkins.getBuild(queueItem);
       } catch (IOException ex) {

@@ -18,8 +18,8 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
   }
 
   public static class JobSchedulerProvider implements Provider<JobScheduler> {
-    @javax.inject.Inject Injector injector;
-    @javax.inject.Inject MainConfiguration configuration;
+    @Inject Injector injector;
+    @Inject MainConfiguration configuration;
 
     @Override
     public JobScheduler get() {

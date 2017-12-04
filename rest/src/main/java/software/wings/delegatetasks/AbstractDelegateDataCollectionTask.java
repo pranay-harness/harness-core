@@ -49,6 +49,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       } catch (InterruptedException e) {
         completed.set(true);
         getLogger().info("{} data collection interrupted", getStateType());
+        Thread.currentThread().interrupt();
       }
     }
   }

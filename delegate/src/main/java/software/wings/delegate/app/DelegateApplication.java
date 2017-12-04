@@ -97,7 +97,7 @@ public class DelegateApplication {
     if (watched) {
       MessageService messageService = injector.getInstance(MessageService.class);
       logger.info("Sending watcher {} new delegate process ID: {}", watcherProcess, processId);
-      messageService.sendMessage(WATCHER, watcherProcess, NEW_DELEGATE, processId);
+      messageService.writeMessageToChannel(WATCHER, watcherProcess, NEW_DELEGATE, processId);
       Map<String, Object> watcherData = new HashMap<>();
       watcherData.put(WATCHER_HEARTBEAT, System.currentTimeMillis());
       watcherData.put(WATCHER_PROCESS, watcherProcess);

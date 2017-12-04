@@ -29,6 +29,7 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 
@@ -262,7 +264,7 @@ public class MetricAnalysisJob implements Job {
           default:
             logger.warn("Log analysis failed for " + context.getStateExecutionId() + " for minute " + analysisMinute
                 + " trial: " + (attempt + 1));
-            Thread.sleep(2000);
+            Misc.sleep(2, TimeUnit.SECONDS);
         }
       }
 

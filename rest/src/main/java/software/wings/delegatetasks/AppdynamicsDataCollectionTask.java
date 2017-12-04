@@ -23,6 +23,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -243,7 +244,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       }
     }
 
-    private boolean saveMetrics(List<NewRelicMetricDataRecord> records) throws InterruptedException {
+    private boolean saveMetrics(List<NewRelicMetricDataRecord> records) {
       int retrySave = 0;
       do {
         boolean response =
@@ -252,7 +253,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         if (response) {
           return true;
         }
-        Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
+        Misc.sleep(RETRY_SLEEP_SECS, TimeUnit.SECONDS);
       } while (++retrySave != RETRIES);
       return false;
     }

@@ -1,8 +1,8 @@
 package software.wings.utils;
 
-/**
- * Created by peeyushaggarwal on 1/11/17.
- */
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
@@ -16,85 +16,94 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Created by peeyushaggarwal on 1/11/17.
+ */
 public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
-  private static final Logger logger = LoggerFactory.getLogger(HazelcastBroadcaster.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   public static HazelcastInstance HAZELCAST_INSTANCE;
+
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private ITopic topic;
   private String messageListenerRegistrationId;
 
   public HazelcastBroadcaster() {}
 
+  @Override
   public Broadcaster initialize(String id, AtmosphereConfig config) {
-    return this.initialize(id, URI.create("http://localhost:6379"), config);
+    return initialize(id, URI.create("http://localhost:6379"), config);
   }
 
+  @Override
   public Broadcaster initialize(String id, URI uri, AtmosphereConfig config) {
     super.initialize(id, uri, config);
-    this.setUp();
+    setUp();
     return this;
   }
 
   public void setUp() {
-    this.topic = HAZELCAST_INSTANCE.getTopic(this.getID());
-    this.config.shutdownHook(() -> {
+    topic = HAZELCAST_INSTANCE.getTopic(getID());
+    config.shutdownHook(() -> {
       HazelcastBroadcaster.HAZELCAST_INSTANCE.shutdown();
-      HazelcastBroadcaster.this.isClosed.set(true);
+      isClosed.set(true);
     });
   }
 
   private synchronized void addMessageListener() {
-    if (this.getAtmosphereResources().size() > 0 && this.messageListenerRegistrationId == null) {
-      this.messageListenerRegistrationId = this.topic.addMessageListener(
-          message -> HazelcastBroadcaster.this.broadcastReceivedMessage(message.getMessageObject()));
+    if (isNotEmpty(getAtmosphereResources()) && messageListenerRegistrationId == null) {
+      messageListenerRegistrationId =
+          topic.addMessageListener(message -> broadcastReceivedMessage(message.getMessageObject()));
       logger.info("Added message listener to topic");
     }
   }
 
   private synchronized void removeMessageListener() {
-    if (this.getAtmosphereResources().size() == 0 && this.messageListenerRegistrationId != null
-        && this.getTopic() != null) {
-      this.getTopic().removeMessageListener(this.messageListenerRegistrationId);
-      this.messageListenerRegistrationId = null;
+    if (isEmpty(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
+      topic.removeMessageListener(messageListenerRegistrationId);
+      messageListenerRegistrationId = null;
       logger.info("Removed message listener from topic");
     }
   }
 
+  @Override
   public Broadcaster addAtmosphereResource(AtmosphereResource resource) {
     Broadcaster result = super.addAtmosphereResource(resource);
-    this.addMessageListener();
+    addMessageListener();
     return result;
   }
 
+  @Override
   public Broadcaster removeAtmosphereResource(AtmosphereResource resource) {
     Broadcaster result = super.removeAtmosphereResource(resource);
-    this.removeMessageListener();
+    removeMessageListener();
     return result;
   }
 
+  @Override
   public synchronized void setID(String id) {
     super.setID(id);
-    this.setUp();
+    setUp();
   }
 
+  @Override
   public void destroy() {
-    if (!this.isClosed.get()) {
-      this.topic.destroy();
-      this.topic = null;
+    if (!isClosed.get()) {
+      topic.destroy();
+      topic = null;
     }
-
     super.destroy();
   }
 
+  @Override
   public void incomingBroadcast() {
-    logger.info("Subscribing to: {}", this.getID());
+    logger.info("Subscribing to: {}", getID());
   }
 
+  @Override
   public void outgoingBroadcast(Object message) {
-    this.topic.publish(message);
-  }
-
-  protected ITopic getTopic() {
-    return this.topic;
+    if (!isMaintenance()) {
+      topic.publish(message);
+    }
   }
 }
