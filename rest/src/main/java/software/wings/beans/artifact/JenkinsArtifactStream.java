@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
+import software.wings.utils.Util;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,6 +38,16 @@ public class JenkinsArtifactStream extends ArtifactStream {
   public JenkinsArtifactStream() {
     super(ArtifactStreamType.JENKINS.name());
     super.setAutoApproveForProduction(true);
+  }
+
+  @Override
+  public String generateName() {
+    return Util.normalize(generateSourceName());
+  }
+
+  @Override
+  public String generateSourceName() {
+    return getJobname();
   }
 
   @Data

@@ -168,6 +168,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
+
+    artifactStream.setSourceName(artifactStream.generateSourceName());
+    if (artifactStream.isAutoPopulate()) {
+      artifactStream.setName(artifactStream.generateName());
+    }
+
     String id = wingsPersistence.save(artifactStream);
     addCronForAutoArtifactCollection(artifactStream);
 
@@ -220,6 +226,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
+
+    artifactStream.setSourceName(artifactStream.generateSourceName());
+    if (artifactStream.isAutoPopulate()) {
+      artifactStream.setName(artifactStream.generateName());
+    }
+
     artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
     if (!artifactStream.isAutoDownload()) {
       jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);

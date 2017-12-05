@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
+import software.wings.utils.Util;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,78 +32,6 @@ public class DockerArtifactStream extends ArtifactStream {
     super(DOCKER.name());
     super.setAutoApproveForProduction(true);
     super.setAutoDownload(true);
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
-    private String imageName;
-
-    public static final class Builder {
-      private String imageName;
-      private String sourceName;
-      private String settingName;
-      private boolean autoApproveForProduction = false;
-      private String type;
-      private boolean metadataOnly = false;
-
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withImageName(String imageName) {
-        this.imageName = imageName;
-        return this;
-      }
-
-      public Builder withSourceName(String sourceName) {
-        this.sourceName = sourceName;
-        return this;
-      }
-
-      public Builder withSettingName(String settingName) {
-        this.settingName = settingName;
-        return this;
-      }
-
-      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-        this.autoApproveForProduction = autoApproveForProduction;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withMetadataOnly(boolean metadataOnly) {
-        this.metadataOnly = metadataOnly;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml()
-            .withImageName(imageName)
-            .withSourceName(sourceName)
-            .withSettingName(settingName)
-            .withAutoApproveForProduction(autoApproveForProduction)
-            .withType(type)
-            .withMetadataOnly(metadataOnly);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setImageName(imageName);
-        yaml.setSourceName(sourceName);
-        yaml.setSettingName(settingName);
-        yaml.setAutoApproveForProduction(autoApproveForProduction);
-        yaml.setType(type);
-        yaml.setMetadataOnly(metadataOnly);
-        return yaml;
-      }
-    }
   }
 
   @Override
@@ -154,6 +83,16 @@ public class DockerArtifactStream extends ArtifactStream {
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
+  }
+
+  @Override
+  public String generateName() {
+    return Util.normalize(generateSourceName());
+  }
+
+  @Override
+  public String generateSourceName() {
+    return getImageName();
   }
 
   @Override
@@ -403,6 +342,78 @@ public class DockerArtifactStream extends ArtifactStream {
       dockerArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       dockerArtifactStream.setStreamActions(streamActions);
       return dockerArtifactStream;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends ArtifactStream.Yaml {
+    private String imageName;
+
+    public static final class Builder {
+      private String imageName;
+      private String sourceName;
+      private String settingName;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withImageName(String imageName) {
+        this.imageName = imageName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withImageName(imageName)
+            .withSourceName(sourceName)
+            .withSettingName(settingName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setImageName(imageName);
+        yaml.setSourceName(sourceName);
+        yaml.setSettingName(settingName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        return yaml;
+      }
     }
   }
 }
