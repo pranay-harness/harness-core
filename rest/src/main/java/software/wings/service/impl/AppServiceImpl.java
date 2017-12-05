@@ -128,7 +128,7 @@ public class AppServiceImpl implements AppService {
     addCronForStateMachineExecutionCleanup(application);
     addCronForContainerSync(application);
 
-    yamlChangeSetHelper.queueApplicationYamlChangeAsync(application, ChangeType.ADD);
+    yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.ADD);
 
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
@@ -305,7 +305,7 @@ public class AppServiceImpl implements AppService {
     wingsPersistence.update(query, operations);
     Application updatedApp = get(app.getUuid());
 
-    yamlChangeSetHelper.queueApplicationUpdateYamlChangeAsync(savedApp, updatedApp);
+    yamlChangeSetHelper.applicationUpdateYamlChangeAsync(savedApp, updatedApp);
     return updatedApp;
   }
 
@@ -345,7 +345,7 @@ public class AppServiceImpl implements AppService {
       deleteCronForStateMachineExecutionCleanup(appId);
       deleteCronForContainerSync(appId);
 
-      yamlChangeSetHelper.queueApplicationYamlChangeAsync(application, ChangeType.DELETE);
+      yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.DELETE);
     }
   }
 
