@@ -239,10 +239,6 @@ class TSAnomlyDetector(object):
 
         response = {'results': {}, 'max_risk': -1, 'control_avg': -1, 'test_avg': -1}
 
-        if txn_name == 'WebTransactionTotalTime/RestWebService/service-variables (GET)' and \
-            metric_name == 'requestsPerMinute':
-            print('Hi')
-
         if self.validate(txn_name, metric_name,
                          control_data_dict, test_data_dict):
 
@@ -307,7 +303,7 @@ class TSAnomlyDetector(object):
                     "test_avg" : -1.0,
                     "max_risk" : -1
                 
-            }
+            }    
             """
 
             for index, host in enumerate(test_txn_data_dict[metric_name].keys()):
