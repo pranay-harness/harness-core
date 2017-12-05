@@ -89,6 +89,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.CryptoUtil;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -171,7 +172,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
     if (artifactStream.isAutoPopulate()) {
-      artifactStream.setName(artifactStream.generateName());
+      setAutoPopulatedName(artifactStream);
     }
 
     String id = wingsPersistence.save(artifactStream);
@@ -191,6 +192,35 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     });
 
     return get(artifactStream.getAppId(), id);
+  }
+
+  /**
+   * This method gets the default name, checks if another entry exists with the same name, if exists, it parses and
+   * extracts the revision and creates a name with the next revision.
+   *
+   * @param artifactStream
+   */
+  private void setAutoPopulatedName(ArtifactStream artifactStream) {
+    String name = artifactStream.generateName();
+
+    String escapedString = Pattern.quote(name);
+
+    // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.
+    PageRequest<ArtifactStream> pageRequest = PageRequest.Builder.aPageRequest()
+                                                  .addFilter("appId", Operator.EQ, artifactStream.getAppId())
+                                                  .addFilter("serviceId", Operator.EQ, artifactStream.getServiceId())
+                                                  .addFilter("name", Operator.STARTS_WITH, escapedString)
+                                                  .addOrder("name", OrderType.DESC)
+                                                  .build();
+    PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
+
+    // If an entry exists with the given default name
+    if (response != null && response.size() > 0) {
+      String existingName = response.get(0).getName();
+      name = Util.getNameWithNextRevision(existingName, name);
+    }
+
+    artifactStream.setName(name);
   }
 
   private void addCronForAutoArtifactCollection(ArtifactStream artifactStream) {
@@ -229,7 +259,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
     if (artifactStream.isAutoPopulate()) {
-      artifactStream.setName(artifactStream.generateName());
+      setAutoPopulatedName(artifactStream);
     }
 
     artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
