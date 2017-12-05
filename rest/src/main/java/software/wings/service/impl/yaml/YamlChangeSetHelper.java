@@ -31,10 +31,10 @@ public class YamlChangeSetHelper {
   @Inject private YamlGitService yamlGitService;
   @Inject private AppService appService;
 
-  public void queueApplicationUpdateYamlChangeAsync(Application savedApp, Application updatedApp) {
+  public void applicationUpdateYamlChangeAsync(Application savedApp, Application updatedApp) {
     executorService.submit(() -> {
       if (!savedApp.getName().equals(updatedApp.getName())) {
-        queueMoveApplicationYamlChange(savedApp, updatedApp);
+        moveApplicationYamlChange(savedApp, updatedApp);
       } else {
         queueApplicationYamlChange(
             updatedApp.getAccountId(), entityUpdateService.getAppGitSyncFile(updatedApp, ChangeType.MODIFY));
@@ -42,7 +42,7 @@ public class YamlChangeSetHelper {
     });
   }
 
-  public void queueApplicationYamlChangeAsync(Application app, ChangeType changeType) {
+  public void applicationYamlChangeAsync(Application app, ChangeType changeType) {
     executorService.submit(
         () -> queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, changeType)));
   }
@@ -54,7 +54,7 @@ public class YamlChangeSetHelper {
     }
   }
 
-  private void queueMoveApplicationYamlChange(Application oldApp, Application newApp) {
+  private void moveApplicationYamlChange(Application oldApp, Application newApp) {
     String accountId = newApp.getAccountId();
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
@@ -75,21 +75,21 @@ public class YamlChangeSetHelper {
     }
   }
 
-  public void queueEnvironmentUpdateYamlChangeAsync(Environment savedEnvironment, Environment updatedEnvironment) {
+  public void environmentUpdateYamlChangeAsync(Environment savedEnvironment, Environment updatedEnvironment) {
     executorService.submit(() -> {
       if (!savedEnvironment.getName().equals(updatedEnvironment.getName())) {
-        queueMoveEnvironmentChange(savedEnvironment, updatedEnvironment);
+        moveEnvironmentChange(savedEnvironment, updatedEnvironment);
       } else {
-        queueEnvironmentYamlChangeSet(updatedEnvironment, ChangeType.MODIFY);
+        environmentYamlChangeSet(updatedEnvironment, ChangeType.MODIFY);
       }
     });
   }
 
-  public void queueEnvironmentYamlChangeAsync(Environment savedEnvironment, ChangeType changeType) {
-    executorService.submit(() -> queueEnvironmentYamlChangeSet(savedEnvironment, changeType));
+  public void environmentYamlChangeAsync(Environment savedEnvironment, ChangeType changeType) {
+    executorService.submit(() -> environmentYamlChangeSet(savedEnvironment, changeType));
   }
 
-  private void queueMoveEnvironmentChange(Environment oldEnv, Environment newEnv) {
+  private void moveEnvironmentChange(Environment oldEnv, Environment newEnv) {
     String accountId = appService.getAccountIdByAppId(newEnv.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
@@ -110,7 +110,7 @@ public class YamlChangeSetHelper {
     }
   }
 
-  private void queueEnvironmentYamlChangeSet(Environment environment, ChangeType crudType) {
+  private void environmentYamlChangeSet(Environment environment, ChangeType crudType) {
     // check whether we need to push changes (through git sync)
     String accountId = appService.getAccountIdByAppId(environment.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
@@ -121,21 +121,21 @@ public class YamlChangeSetHelper {
     }
   }
 
-  public void queueServiceUpdateYamlChangeAsync(Service service, Service savedService, Service updatedService) {
+  public void serviceUpdateYamlChangeAsync(Service service, Service savedService, Service updatedService) {
     executorService.submit(() -> {
       if (!savedService.getName().equals(updatedService.getName())) { // Service name changed
-        queueMoveServiceChange(savedService, service);
+        moveServiceChange(savedService, service);
       } else {
-        queueServiceYamlChangeSet(updatedService, ChangeType.MODIFY);
+        serviceYamlChangeSet(updatedService, ChangeType.MODIFY);
       }
     });
   }
 
-  public void queueServiceYamlChangeAsync(Service finalSavedService, ChangeType add) {
-    executorService.submit(() -> queueServiceYamlChangeSet(finalSavedService, add));
+  public void serviceYamlChangeAsync(Service finalSavedService, ChangeType add) {
+    executorService.submit(() -> serviceYamlChangeSet(finalSavedService, add));
   }
 
-  private void queueMoveServiceChange(Service oldService, Service newService) {
+  private void moveServiceChange(Service oldService, Service newService) {
     String accountId = appService.getAccountIdByAppId(newService.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
@@ -156,7 +156,7 @@ public class YamlChangeSetHelper {
     }
   }
 
-  private void queueServiceYamlChangeSet(Service service, ChangeType crudType) {
+  private void serviceYamlChangeSet(Service service, ChangeType crudType) {
     // check whether we need to push changes (through git sync)
     String accountId = appService.getAccountIdByAppId(service.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);

@@ -203,7 +203,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .build());
 
     Service finalSavedService = savedService;
-    yamlChangeSetHelper.queueServiceYamlChangeAsync(finalSavedService, ChangeType.ADD);
+    yamlChangeSetHelper.serviceYamlChangeAsync(finalSavedService, ChangeType.ADD);
     return savedService;
   }
 
@@ -351,7 +351,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           service.getAppId(), service.getUuid(), savedService.getName(), service.getName().trim());
     }
 
-    yamlChangeSetHelper.queueServiceUpdateYamlChangeAsync(service, savedService, updatedService);
+    yamlChangeSetHelper.serviceUpdateYamlChangeAsync(service, savedService, updatedService);
     return updatedService;
   }
 
@@ -440,7 +440,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                   ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
               .build());
 
-      yamlChangeSetHelper.queueServiceYamlChangeAsync(service, ChangeType.DELETE);
+      yamlChangeSetHelper.serviceYamlChangeAsync(service, ChangeType.DELETE);
     }
   }
 
