@@ -18,8 +18,9 @@ import software.wings.security.EncryptionType;
 @Entity(value = "kmsTransitionEvent", noClassnameStored = true)
 public class KmsTransitionEvent extends Queuable {
   private String entityId;
+  private EncryptionType fromEncryptionType;
   private String fromKmsId;
+  private EncryptionType toEncryptionType;
   private String toKmsId;
   private String accountId;
-  private EncryptionType encryptionType;
 }
