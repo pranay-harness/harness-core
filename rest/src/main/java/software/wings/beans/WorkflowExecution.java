@@ -350,7 +350,7 @@ public class WorkflowExecution extends Base {
   public boolean isRunningStatus() {
     return status != null
         && (status == ExecutionStatus.NEW || status == ExecutionStatus.STARTING || status == ExecutionStatus.RUNNING
-               || status == ExecutionStatus.ABORTING);
+               || status == ExecutionStatus.QUEUED || status == ExecutionStatus.ABORTING);
   }
 
   /**
