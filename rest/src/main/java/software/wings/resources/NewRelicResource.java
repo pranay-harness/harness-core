@@ -24,6 +24,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.analysis.MetricAnalysisResource;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
@@ -47,7 +48,7 @@ import javax.ws.rs.QueryParam;
 @Path("/newrelic")
 @Produces("application/json")
 @AuthRule(ResourceType.SETTING)
-public class NewRelicResource {
+public class NewRelicResource implements MetricAnalysisResource {
   @Inject private NewRelicService newRelicService;
 
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
@@ -200,7 +201,8 @@ public class NewRelicResource {
   @Timed
   @ExceptionMetered
   @ExternalServiceAuth
-  public RestResponse<Map<String, TimeSeriesMetricDefinition>> getTooltip(@QueryParam("accountId") String accountId) {
+  public RestResponse<Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
+      @QueryParam("accountId") String accountId) {
     return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(StateType.NEW_RELIC));
   }
 }

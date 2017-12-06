@@ -350,6 +350,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     switch (stateType) {
       case NEW_RELIC:
         return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE;
+      case APP_DYNAMICS:
+        return NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
       default:
         return null;
     }
