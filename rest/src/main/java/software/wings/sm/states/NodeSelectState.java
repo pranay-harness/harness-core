@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -31,6 +32,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +105,15 @@ public abstract class NodeSelectState extends State {
       }
 
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
-      selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
+      // TODO:
+      List<ServiceInstance> prunedServiceInstances = new ArrayList<>();
+      serviceInstances.forEach(serviceInstance
+          -> prunedServiceInstances.add(aServiceInstance()
+                                            .withUuid(serviceInstance.getUuid())
+                                            .withHostId(serviceInstance.getHostId())
+                                            .withHostName(serviceInstance.getHostName())
+                                            .build()));
+      selectedNodeExecutionData.setServiceInstanceList(prunedServiceInstances);
       selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =
@@ -182,6 +192,10 @@ public abstract class NodeSelectState extends State {
         }
       }
       errorMessage = msg.toString();
+    } else if (serviceInstances.size() > Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
+      errorMessage = "The license for this account does not allow more than "
+          + Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
+          + " concurrent instance deployments. Please contact Harness Support.";
     } else if (serviceInstances.size() > totalAvailableInstances) {
       errorMessage =
           "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
