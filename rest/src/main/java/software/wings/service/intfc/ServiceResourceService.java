@@ -44,7 +44,7 @@ public interface ServiceResourceService {
   /**
    * Save service.
    *
-   * @param service the service
+   * @param service  the service
    * @param fromYaml the from git
    * @return the service
    */
