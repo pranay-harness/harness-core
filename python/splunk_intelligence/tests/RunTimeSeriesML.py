@@ -86,7 +86,7 @@ def run_debug():
               'r') as read_file:
         test_metrics = json.loads(read_file.read())
     anomaly_detector = TSAnomlyDetector(options, metric_template, control_metrics, test_metrics)
-    anomaly_detector.analyze()
+    print(json.dumps(anomaly_detector.analyze()))
 
 
 def write_to_file(filename, data):
