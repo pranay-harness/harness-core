@@ -544,11 +544,38 @@ def parallelize_processing(options, metric_template, control_metrics, test_metri
 
     return result
 
+def write_to_file(filename, data):
+    file_object = open(filename, "w")
+    file_object.write(json.dumps(data))
+    file_object.close()
 
 def main(args):
     """
     load data from Harness Manager, run the anomaly detector,
     and post the results back to the Harness Manager.
+
+    Sample metric template
+
+    "averageResponseTime": {
+        "metricName": "averageResponseTime",
+        "thresholds": [
+          {
+            "thresholdType": "ALERT_WHEN_HIGHER",
+            "comparisonType": "RATIO",
+            "high": 1.5,
+            "medium": 1.25,
+            "min": 0.5
+          },
+          {
+            "thresholdType": "ALERT_WHEN_HIGHER",
+            "comparisonType": "DELTA",
+            "high": 10,
+            "medium": 5,
+            "min": 50
+          }
+        ],
+        "metricType": "RESP_TIME"
+    }
 
     """
     logger.info(args)
@@ -566,6 +593,10 @@ def main(args):
 
     test_metrics = load_from_harness_server(options.test_input_url, options.test_nodes, options)
     logger.info('test_events = ' + str(len(test_metrics)))
+
+    # Uncomment when you want to save the files for local debugging
+    # write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json', test_metrics)
+    # write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json',control_metrics)
 
     result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
     post_to_wings_server(options, result)
