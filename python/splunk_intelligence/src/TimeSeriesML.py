@@ -11,8 +11,7 @@ import multiprocessing
 import numpy as np
 
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
-from core.util.TimeSeriesUtils import MetricType, get_deviation_type, simple_average, get_deviation_min_threshold, \
-    RiskLevel
+from core.util.TimeSeriesUtils import MetricType, simple_average, RiskLevel
 from sources.HarnessLoader import HarnessLoader
 from sources.MetricTemplate import MetricTemplate
 
@@ -327,7 +326,6 @@ class TSAnomlyDetector(object):
                 response['results'][host]['control_cuts'] = result['control_cuts'][index].tolist()
                 throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
                 if throughput_metric_name is not None and test_txn_data_dict[throughput_metric_name][host]['skip']:
-                    # TODO -1 implies risk NA. Make this an enum
                     response['results'][host]['risk'] = RiskLevel.NA.value
                 else:
                     response['results'][host]['risk'] = result['risk'][index]
@@ -372,18 +370,14 @@ class TSAnomlyDetector(object):
 
                 for metric_ind, metric_name in enumerate(self.metric_names):
 
-                    # Not useful to analyze callCount by itself
-                    if metric_name == 'callCount':
-                        continue
-
                     logger.info("Analyzing txn " + txn_name + " metric " + metric_name)
 
                     response = self.analyze_metric(txn_name, metric_name, control_txn_data_dict, test_txn_data_dict)
 
-                    # The numbers for dictionary keys is to avoid a failure on the Harness manager side
-                    # when saving data to Mongo. Mongo does not allow dot chars in the key names for
-                    # dictionaries, and transactions or metric names can contain the dot char.
-                    # so use numbers for keys and stick the name inside the dictionary.
+                    ''' Use numbers for dictionary keys to avoid a failure on the Harness manager side
+                        when saving data to MongoDB. MongoDB does not allow 'dot' chars in the key names for
+                        dictionaries, and transactions or metric names can contain the dot char.
+                        So use numbers for keys and stick the name inside the dictionary. '''
                     if txn_ind not in result['transactions']:
                         result['transactions'][txn_ind] = dict(txn_name=txn_name, metrics={})
 
@@ -565,7 +559,7 @@ def main(args):
     logger.info("Running Time Series analysis ")
 
     metric_template = load_metric_template_harness_server(options.metric_template_url, options)
-    logger.info('metric_template = ', json.dumps(metric_template))
+    logger.info('metric_template = ' + json.dumps(metric_template))
 
     control_metrics = load_from_harness_server(options.control_input_url, options.control_nodes, options)
     logger.info('control events = ' + str(len(control_metrics)))

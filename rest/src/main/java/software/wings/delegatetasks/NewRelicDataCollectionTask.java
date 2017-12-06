@@ -9,6 +9,7 @@ import com.google.common.collect.TreeBasedTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.NewRelicApdex;
@@ -200,8 +201,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     @Override
     public void run() {
       try {
-        int retry = RETRIES;
-        while (!completed.get() && retry > 0) {
+        int retry = 0;
+        while (!completed.get() && retry < RETRIES) {
           try {
             if (metrics == null || metrics.isEmpty() || dataCollectionMinute % DURATION_TO_ASK_MINUTES == 0) {
               metrics = newRelicDelegateService.getMetricsNameToCollect(dataCollectionInfo.getNewRelicConfig(),
@@ -227,8 +228,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
               List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
               if (!saveMetrics(metricRecords)) {
-                retry = 0;
-                throw new RuntimeException("Cannot save new relic metric records. Server returned error");
+                retry = RETRIES;
+                taskResult.setErrorMessage("Cannot save new relic metric records to Harness. Server returned error");
+                throw new RuntimeException("Cannot save new relic metric records to Harness. Server returned error");
               }
               logger.info("Sending " + records.cellSet().size() + " new relic metric records to the server for minute "
                   + dataCollectionMinute);
@@ -261,7 +263,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
             break;
           } catch (Exception ex) {
-            if (retry == 0) {
+            if (++retry >= RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
               completed.set(true);
               break;
@@ -270,10 +272,17 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                * Save the exception from the first attempt. This is usually
                * more meaningful to trouble shoot.
                */
-              if (retry == RETRIES) {
-                taskResult.setErrorMessage(ex.getMessage());
+              if (retry == 1) {
+                if (ex instanceof WingsException) {
+                  if (((WingsException) ex).getParams().containsKey("reason")) {
+                    taskResult.setErrorMessage((String) ((WingsException) ex).getParams().get("reason"));
+                  } else {
+                    taskResult.setErrorMessage(ex.getMessage());
+                  }
+                } else {
+                  taskResult.setErrorMessage(ex.getMessage());
+                };
               }
-              --retry;
               logger.warn("error fetching new relic metrics for minute " + dataCollectionMinute + ". retrying in "
                       + RETRY_SLEEP_SECS + "s",
                   ex);

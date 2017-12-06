@@ -161,7 +161,7 @@ public class MetricAnalysisJob implements Job {
           stateValuesToAnalyze = getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
           break;
         case APP_DYNAMICS:
-          stateValuesToAnalyze = NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
+          stateValuesToAnalyze = getThresholdsMap(NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
           break;
         default:
           throw new IllegalStateException("Invalid stateType " + context.getStateType());
@@ -320,7 +320,7 @@ public class MetricAnalysisJob implements Job {
           return;
         }
 
-        boolean runTimeSeriesML = context.getStateType() == StateType.NEW_RELIC;
+        boolean runTimeSeriesML = true;
 
         if (runTimeSeriesML) {
           switch (context.getComparisonStrategy()) {
