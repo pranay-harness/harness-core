@@ -80,6 +80,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
       BuildResult buildResult = jenkinsBuildWithDetails.getResult();
       jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
+      jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuildWithDetails.getNumber()));
+      jenkinsExecutionResponse.setMetadata(jenkinsBuildWithDetails.getParameters());
 
       if (buildResult == BuildResult.SUCCESS || buildResult == BuildResult.UNSTABLE) {
         if (isNotEmpty(evaluatedFilePathsForAssertion)) {

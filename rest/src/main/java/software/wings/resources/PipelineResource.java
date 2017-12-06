@@ -12,7 +12,6 @@ import io.swagger.annotations.Api;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
-import software.wings.beans.Variable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
@@ -189,22 +188,5 @@ public class PipelineResource {
   public RestResponse<List<EntityType>> requiredEntities(
       @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId) {
     return new RestResponse<>(pipelineService.getRequiredEntities(appId, pipelineId));
-  }
-
-  /**
-   * Update.
-   *
-   * @param appId         the app id
-   * @param pipelineId    the orchestration id
-   * @param variables     the pipeline variables
-   * @return the rest response
-   */
-  @PUT
-  @Path("{pipelineId}/variables")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<Variable>> updateUserVariables(
-      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, List<Variable> variables) {
-    return new RestResponse<>(pipelineService.updateVariables(appId, pipelineId, variables));
   }
 }

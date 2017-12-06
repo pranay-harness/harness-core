@@ -59,6 +59,11 @@ public interface ContextElement {
   String TIMESTAMP_ID = "timestampId";
 
   /**
+   * The constant WORKFLOW
+   */
+  String PIPELINE = "pipeline";
+
+  /**
    * Gets element type.
    *
    * @return the element type

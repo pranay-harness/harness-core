@@ -80,7 +80,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @Transient @JsonIgnore private transient ExecutionContext context;
 
-  private Map<String, Object> workflowVariables;
+  private Map<String, String> workflowVariables;
 
   @JsonIgnore private EmbeddedUser currentUser;
 
@@ -362,11 +362,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     this.workflowElement = workflowElement;
   }
 
-  public Map<String, Object> getWorkflowVariables() {
+  public Map<String, String> getWorkflowVariables() {
     return workflowVariables;
   }
 
-  public void setWorkflowVariables(Map<String, Object> workflowVariables) {
+  public void setWorkflowVariables(Map<String, String> workflowVariables) {
     this.workflowVariables = workflowVariables;
   }
 
