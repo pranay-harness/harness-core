@@ -192,6 +192,10 @@ public abstract class NodeSelectState extends State {
         }
       }
       errorMessage = msg.toString();
+    } else if (serviceInstances.size() > Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
+      errorMessage = "The license for this account does not allow more than "
+          + Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
+          + " concurrent instance deployments. Please contact Harness Support.";
     } else if (serviceInstances.size() > totalAvailableInstances) {
       errorMessage =
           "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
