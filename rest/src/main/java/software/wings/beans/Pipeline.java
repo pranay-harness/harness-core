@@ -32,7 +32,6 @@ public class Pipeline extends Base {
   private String description;
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
-  private List<Variable> variables = new ArrayList<>();
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private boolean valid = true;
   @Transient private String validationMessage;
@@ -132,14 +131,6 @@ public class Pipeline extends Base {
 
   public void setTemplatized(boolean templatized) {
     this.templatized = templatized;
-  }
-
-  public List<Variable> getVariables() {
-    return variables;
-  }
-
-  public void setVariables(List<Variable> variables) {
-    this.variables = variables;
   }
 
   @Override
@@ -413,7 +404,6 @@ public class Pipeline extends Base {
       pipeline.setLastUpdatedBy(lastUpdatedBy);
       pipeline.setLastUpdatedAt(lastUpdatedAt);
       pipeline.setServices(services);
-      pipeline.setVariables(variables);
       return pipeline;
     }
   }

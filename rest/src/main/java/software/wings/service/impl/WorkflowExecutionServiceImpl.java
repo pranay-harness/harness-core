@@ -713,6 +713,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
+    if (executionArgs.getWorkflowVariables() != null && !executionArgs.getWorkflowVariables().isEmpty()) {
+      stdParams.setWorkflowVariables(executionArgs.getWorkflowVariables());
+    }
     User user = UserThreadLocal.get();
     if (user != null) {
       stdParams.setCurrentUser(
@@ -833,6 +836,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
+
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
     return triggerExecution(
@@ -1014,7 +1018,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.getWorkflowElement().setUuid(workflowExecution.getUuid());
       stdParams.getWorkflowElement().setUrl(workflowUrl);
     }
-
     WingsDeque<ContextElement> elements = new WingsDeque<>();
     elements.push(stdParams);
     if (contextElements != null) {

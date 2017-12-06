@@ -283,14 +283,6 @@ public class PipelineServiceImpl implements PipelineService {
     return entityTypes;
   }
 
-  @Override
-  public List<Variable> updateVariables(String appId, String pipelineId, List<Variable> variables) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    notNullCheck("pipeline", pipeline);
-    wingsPersistence.updateField(Pipeline.class, pipelineId, "variables", variables);
-    return variables;
-  }
-
   /**
    * {@inheritDoc}
    */

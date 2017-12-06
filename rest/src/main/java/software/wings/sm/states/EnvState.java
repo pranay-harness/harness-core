@@ -115,6 +115,17 @@ public class EnvState extends State {
         .build();
   }
 
+  private Map<String, String> populatePipelineVariables(WorkflowStandardParams workflowStandardParams) {
+    if (workflowStandardParams.getWorkflowVariables() == null) {
+      return workflowVariables;
+    }
+    Map<String, String> variables = workflowStandardParams.getWorkflowVariables();
+    if (workflowVariables == null || workflowVariables.isEmpty()) {
+      return variables;
+    }
+    variables.putAll(workflowVariables);
+    return variables;
+  }
   /**
    * Handle abort event.
    *

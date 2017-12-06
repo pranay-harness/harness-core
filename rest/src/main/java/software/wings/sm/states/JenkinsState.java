@@ -314,6 +314,8 @@ public class JenkinsState extends State {
     jenkinsExecutionData.setJobStatus(jenkinsExecutionResponse.getJenkinsResult());
     jenkinsExecutionData.setErrorMsg(jenkinsExecutionResponse.getErrorMessage());
     jenkinsExecutionData.setBuildUrl(jenkinsExecutionResponse.getJobUrl());
+    jenkinsExecutionData.setBuildNumber(jenkinsExecutionResponse.getBuildNumber());
+    jenkinsExecutionData.setMetadata(jenkinsExecutionResponse.getMetadata());
     return anExecutionResponse()
         .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
         .withStateExecutionData(jenkinsExecutionData)
@@ -399,6 +401,8 @@ public class JenkinsState extends State {
     private String errorMessage;
     private String jobUrl;
     private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
+    private String buildNumber;
+    private Map<String, String> metadata;
 
     public JenkinsExecutionResponse() {}
 
@@ -492,12 +496,30 @@ public class JenkinsState extends State {
       this.filePathAssertionMap = filePathAssertionMap;
     }
 
+    public String getBuildNumber() {
+      return buildNumber;
+    }
+
+    public void setBuildNumber(String buildNumber) {
+      this.buildNumber = buildNumber;
+    }
+
+    public Map<String, String> getMetadata() {
+      return metadata;
+    }
+
+    public void setMetadata(Map<String, String> metadata) {
+      this.metadata = metadata;
+    }
+
     public static final class Builder {
       private ExecutionStatus executionStatus;
       private String jenkinsResult;
       private String errorMessage;
       private String jobUrl;
       private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
+      private String buildNumber;
+      private Map<String, String> metadata;
 
       private Builder() {}
 
@@ -530,13 +552,25 @@ public class JenkinsState extends State {
         return this;
       }
 
+      public Builder withBuildNumber(String buildNumber) {
+        this.buildNumber = buildNumber;
+        return this;
+      }
+
+      public Builder withMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+        return this;
+      }
+
       public Builder but() {
         return aJenkinsExecutionResponse()
             .withExecutionStatus(executionStatus)
             .withJenkinsResult(jenkinsResult)
             .withErrorMessage(errorMessage)
             .withJobUrl(jobUrl)
-            .withFilePathAssertionMap(filePathAssertionMap);
+            .withFilePathAssertionMap(filePathAssertionMap)
+            .withBuildNumber(buildNumber)
+            .withMetadata(metadata);
       }
 
       public JenkinsExecutionResponse build() {
@@ -546,6 +580,8 @@ public class JenkinsState extends State {
         jenkinsExecutionResponse.setErrorMessage(errorMessage);
         jenkinsExecutionResponse.setJobUrl(jobUrl);
         jenkinsExecutionResponse.setFilePathAssertionMap(filePathAssertionMap);
+        jenkinsExecutionResponse.setBuildNumber(buildNumber);
+        jenkinsExecutionResponse.setMetadata(metadata);
         return jenkinsExecutionResponse;
       }
     }
