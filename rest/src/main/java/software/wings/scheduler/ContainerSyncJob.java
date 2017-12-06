@@ -2,15 +2,18 @@ package software.wings.scheduler;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.name.Named;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.ContainerInstanceHelper;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.instance.InstanceService;
@@ -23,6 +26,7 @@ import javax.inject.Inject;
 
 /**
  * Periodic job that syncs for instances with the current containers like kubernetes and ECS.
+ *
  * @author rktummala on 09/14/17
  */
 public class ContainerSyncJob implements Job {
@@ -30,8 +34,13 @@ public class ContainerSyncJob implements Job {
   // we don't have to process the instances that we have processed less than one hour
   private int INTERVAL = 3600000;
 
+  public static final String GROUP = "CONTAINER_SYNC_CRON_GROUP";
+
+  @Inject private WingsPersistence wingsPersistence;
   @Inject private InstanceService instanceService;
   @Inject private ContainerInstanceHelper containerInstanceHelper;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -42,6 +51,14 @@ public class ContainerSyncJob implements Job {
         instanceService.getLeastRecentSyncedContainerDeployments(appId, System.currentTimeMillis() - INTERVAL);
     if (containerSvcNameNoRevisionSet == null || containerSvcNameNoRevisionSet.isEmpty()) {
       logger.info("No Container deployments to process for appId:" + appId);
+      // This is making the job self pruning. This allow to simplify the logic in deletion of the application.
+      // TODO: generalize this self pruning logic for every job.
+
+      Application application = wingsPersistence.get(Application.class, appId);
+      if (application == null) {
+        jobScheduler.deleteJob(appId, GROUP);
+      }
+
       return;
     }
 
