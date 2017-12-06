@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -31,6 +32,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +105,15 @@ public abstract class NodeSelectState extends State {
       }
 
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
-      selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
+      // TODO:
+      List<ServiceInstance> prunedServiceInstances = new ArrayList<>();
+      serviceInstances.forEach(serviceInstance
+          -> prunedServiceInstances.add(aServiceInstance()
+                                            .withUuid(serviceInstance.getUuid())
+                                            .withHostId(serviceInstance.getHostId())
+                                            .withHostName(serviceInstance.getHostName())
+                                            .build()));
+      selectedNodeExecutionData.setServiceInstanceList(prunedServiceInstances);
       selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =
