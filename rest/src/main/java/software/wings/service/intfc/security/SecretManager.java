@@ -41,7 +41,11 @@ public interface SecretManager {
 
   EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
 
-  boolean transitionSecrets(String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType);
+  boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
+      EncryptionType toEncryptionType, String toSecretId);
+
+  void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType, String fromKmsId,
+      EncryptionType toEncryptionType, String toKmsId);
 
   void checkAndAlertForInvalidManagers();
 
