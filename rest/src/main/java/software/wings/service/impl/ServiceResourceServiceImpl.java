@@ -427,11 +427,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String appId = service.getAppId();
     boolean deleted = wingsPersistence.delete(Service.class, serviceId);
     if (deleted) {
-      executorService.submit(() -> deleteCommands(service));
-      executorService.submit(() -> serviceTemplateService.deleteByService(appId, serviceId));
-      executorService.submit(() -> artifactStreamService.deleteByService(appId, serviceId));
-      executorService.submit(() -> configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId));
-      executorService.submit(() -> serviceVariableService.deleteByEntityId(appId, serviceId));
+      prune(service);
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(service.getAppId())
@@ -442,6 +438,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       yamlChangeSetHelper.serviceYamlChangeAsync(service, ChangeType.DELETE);
     }
+  }
+
+  private void prune(Service service) {
+    // safe to delete
+    String serviceId = service.getUuid();
+    String appId = service.getAppId();
+    executorService.submit(() -> deleteCommands(service));
+    executorService.submit(() -> serviceTemplateService.deleteByService(appId, serviceId));
+    executorService.submit(() -> artifactStreamService.deleteByService(appId, serviceId));
+    executorService.submit(() -> configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId));
+    executorService.submit(() -> serviceVariableService.deleteByEntityId(appId, serviceId));
   }
 
   private void ensureServiceSafeToDelete(Service service) {
@@ -567,15 +574,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void deleteByApp(Application application) {
-    wingsPersistence.createQuery(Service.class)
-        .field("appId")
-        .equal(application.getUuid())
-        .asList()
-        .forEach(service -> {
-          service.setEntityYamlPath(yamlDirectoryService.getRootPathByService(service, application.entityYamlPath));
-          delete(service, true);
-        });
+  public void pruneByApplication(String appId) {
+    wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList().forEach(service -> {
+      prune(service);
+    });
   }
 
   @Override

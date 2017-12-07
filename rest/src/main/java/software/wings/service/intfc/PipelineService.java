@@ -14,7 +14,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 10/26/16.
  */
-public interface PipelineService {
+public interface PipelineService extends OwnedByApplication {
   /**
    * List pipelines page response.
    *
@@ -68,14 +68,6 @@ public interface PipelineService {
    * @return the boolean
    */
   boolean deletePipeline(String appId, String pipelineId);
-
-  /**
-   * Delete pipeline by application
-   *
-   * @param appId
-   * @return
-   */
-  boolean deletePipelineByApplication(String appId);
 
   /**
    * Clone pipeline pipeline.

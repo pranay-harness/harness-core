@@ -95,7 +95,7 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
-  public void deleteByApplication(String appId) {
+  public void pruneByApplication(String appId) {
     wingsPersistence.delete(wingsPersistence.createQuery(Notification.class).field("appId").equal(appId));
   }
 

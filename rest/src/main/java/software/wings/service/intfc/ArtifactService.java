@@ -15,7 +15,7 @@ import javax.validation.Valid;
 /**
  * The Interface ArtifactService.
  */
-public interface ArtifactService {
+public interface ArtifactService extends OwnedByApplication {
   /**
    * List.
    *
@@ -112,13 +112,6 @@ public interface ArtifactService {
    * @return the artifact
    */
   boolean delete(String appId, String artifactId);
-
-  /**
-   * Delete by application.
-   *
-   * @param appId the app id
-   */
-  void deleteByApplication(String appId);
 
   /**
    * Fetch latest artifact for artifact stream artifact.
