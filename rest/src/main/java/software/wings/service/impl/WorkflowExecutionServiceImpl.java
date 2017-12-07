@@ -1798,6 +1798,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("parentInstanceId", Operator.IN, parentStateExecutionInstanceId)
             .addOrder("createdAt", OrderType.ASC)
+            .addFieldsExcluded("contextElements")
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
