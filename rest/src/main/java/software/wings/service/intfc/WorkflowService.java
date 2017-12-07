@@ -40,9 +40,9 @@ public interface WorkflowService {
   /**
    * Read Workflow.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the workflow id
-   * @param version         the version
+   * @param version    the version
    * @return the workflow
    */
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId, Integer version);
@@ -50,7 +50,7 @@ public interface WorkflowService {
   /**
    * Read Workflow.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the workflow id
    * @return the workflow
    */
@@ -85,10 +85,10 @@ public interface WorkflowService {
   /**
    * Update workflow.
    *
-   * @param workflow the workflow
+   * @param workflow            the workflow
    * @param inframappingChanged Inframapping changed or not
-   * @param envChanged Env changed or not
-   * @param cloned cloned request or not
+   * @param envChanged          Env changed or not
+   * @param cloned              cloned request or not
    * @return the workflow
    */
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,

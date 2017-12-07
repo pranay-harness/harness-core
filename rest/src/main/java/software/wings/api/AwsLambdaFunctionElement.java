@@ -71,6 +71,11 @@ public class AwsLambdaFunctionElement implements ContextElement {
     return null;
   }
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   public static final class Builder {
     private String uuid;
     private String name;

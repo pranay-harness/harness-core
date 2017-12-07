@@ -30,7 +30,7 @@ public interface TriggerService {
   /**
    * Get artifact stream.
    *
-   * @param appId            the app id
+   * @param appId     the app id
    * @param triggerId the id
    * @return the artifact stream
    */
@@ -55,7 +55,7 @@ public interface TriggerService {
   /**
    * Delete.
    *
-   * @param appId            the app id
+   * @param appId     the app id
    * @param triggerId the id
    * @return true, if successful
    */
@@ -70,6 +70,7 @@ public interface TriggerService {
 
   /**
    * Delete triggers for pipeline
+   *
    * @param appId
    * @param pipelineId
    */
@@ -77,6 +78,7 @@ public interface TriggerService {
 
   /**
    * Delete triggers for ArtifactStream
+   *
    * @param appId
    * @param artifactStreamId
    */
@@ -85,7 +87,7 @@ public interface TriggerService {
   /**
    * Generate web hook token web hook token.
    *
-   * @param appId    the app id
+   * @param appId     the app id
    * @param triggerId the stream id
    * @return the web hook token
    */
@@ -100,6 +102,7 @@ public interface TriggerService {
 
   /**
    * Trigger post pipeline completion async
+   *
    * @param appId
    * @param pipelineId
    */
@@ -108,13 +111,14 @@ public interface TriggerService {
   /**
    * Trigger scheduled stream action.
    *
-   * @param appId      the app id
-   * @param triggerId   the trigger id
+   * @param appId     the app id
+   * @param triggerId the trigger id
    */
   void triggerScheduledExecutionAsync(String appId, String triggerId);
 
   /**
    * Trigger execution by webhook with the given service build numbers
+   *
    * @param appId
    * @param webHookToken
    * @param serviceBuildNumbers
@@ -126,6 +130,7 @@ public interface TriggerService {
 
   /**
    * Trigger execution by webhook with the given artifact
+   *
    * @param appId
    * @param webHookToken
    * @param artifact
@@ -137,6 +142,7 @@ public interface TriggerService {
 
   /**
    * Triggers that have actions on Pipeline
+   *
    * @param appId
    * @param pipelineId
    * @return List<Trigger></Trigger>
@@ -145,6 +151,7 @@ public interface TriggerService {
 
   /**
    * Triggers that have actions on Artifact Stream
+   *
    * @param appId
    * @param artifactStreamId
    * @return List<Trigger></Trigger>
@@ -153,12 +160,14 @@ public interface TriggerService {
 
   /**
    * Updates by App to resync the filed names with the updated values
+   *
    * @param appId
    */
   void updateByApp(String appId);
 
   /**
    * Gets the cron expression
+   *
    * @param expression
    * @return
    */

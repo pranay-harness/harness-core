@@ -18,7 +18,6 @@ import software.wings.rules.SetupScheduler;
 import software.wings.utils.Misc;
 
 @Integration
-@Ignore
 @SetupScheduler
 public class StateMachineExecutionCleanupJobTest extends WingsBaseTest {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;

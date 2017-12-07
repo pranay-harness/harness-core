@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
+import software.wings.beans.Account;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -23,6 +24,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -51,6 +53,8 @@ public abstract class NodeSelectState extends State {
   private boolean excludeSelectedHostsFromFuturePhases;
 
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
+
+  @Inject @Transient private AccountService accountService;
 
   NodeSelectState(String name, String stateType) {
     super(name, stateType);
@@ -98,7 +102,7 @@ public abstract class NodeSelectState extends State {
           appId, infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
 
       String errorMessage = buildServiceInstancesErrorMessage(
-          serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances);
+          serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
 
       if (isNotEmpty(errorMessage)) {
         return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMessage).build();
@@ -112,6 +116,7 @@ public abstract class NodeSelectState extends State {
                                             .withUuid(serviceInstance.getUuid())
                                             .withHostId(serviceInstance.getHostId())
                                             .withHostName(serviceInstance.getHostName())
+                                            .withPublicDns(serviceInstance.getPublicDns())
                                             .build()));
       selectedNodeExecutionData.setServiceInstanceList(prunedServiceInstances);
       selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
@@ -142,7 +147,8 @@ public abstract class NodeSelectState extends State {
   }
 
   private String buildServiceInstancesErrorMessage(List<ServiceInstance> serviceInstances,
-      List<ServiceInstance> hostExclusionList, InfrastructureMapping infraMapping, int totalAvailableInstances) {
+      List<ServiceInstance> hostExclusionList, InfrastructureMapping infraMapping, int totalAvailableInstances,
+      ExecutionContext context) {
     String errorMessage = null;
     if (isEmpty(serviceInstances)) {
       StringBuilder msg = new StringBuilder("No nodes were selected. ");
@@ -192,13 +198,16 @@ public abstract class NodeSelectState extends State {
         }
       }
       errorMessage = msg.toString();
-    } else if (serviceInstances.size() > Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
-      errorMessage = "The license for this account does not allow more than "
-          + Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
-          + " concurrent instance deployments. Please contact Harness Support.";
     } else if (serviceInstances.size() > totalAvailableInstances) {
       errorMessage =
           "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
+    } else if (serviceInstances.size() > Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
+      Account account = accountService.get(((ExecutionContextImpl) context).getApp().getAccountId());
+      if (account == null || account.getLicenseExpiryTime() == 0) {
+        errorMessage = "The license for this account does not allow more than "
+            + Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
+            + " concurrent instance deployments. Please contact Harness Support.";
+      }
     }
     return errorMessage;
   }

@@ -4,6 +4,8 @@
 
 package software.wings.api;
 
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
+
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -75,6 +77,11 @@ public class ServiceTemplateElement implements ContextElement {
    */
   public void setServiceElement(ServiceElement serviceElement) {
     this.serviceElement = serviceElement;
+  }
+
+  @Override
+  public ContextElement cloneMin() {
+    return aServiceTemplateElement().withUuid(uuid).withName(name).build();
   }
 
   /* (non-Javadoc)

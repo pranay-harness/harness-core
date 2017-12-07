@@ -4,6 +4,8 @@
 
 package software.wings.api;
 
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -128,6 +130,16 @@ public class InstanceElement implements ContextElement {
    */
   public void setServiceTemplateElement(ServiceTemplateElement serviceTemplateElement) {
     this.serviceTemplateElement = serviceTemplateElement;
+  }
+
+  @Override
+  public ContextElement cloneMin() {
+    InstanceElement instanceElement =
+        anInstanceElement().withUuid(uuid).withDisplayName(displayName).withHostName(hostName).build();
+    if (host != null) {
+      instanceElement.setHost((HostElement) host.cloneMin());
+    }
+    return instanceElement;
   }
 
   @Override

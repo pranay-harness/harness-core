@@ -349,4 +349,11 @@ public interface ServiceResourceService {
    * @return the artifact needed or not
    */
   boolean isArtifactNeeded(Service service);
+
+  /**
+   * Returns the list of service commands associated
+   * @param service
+   * @return
+   */
+  List<ServiceCommand> getServiceCommands(Service service);
 }

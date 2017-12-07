@@ -67,7 +67,7 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
       Set<Service> updatedServices = new HashSet<>();
       for (Service service : services) {
         System.out.println("\nservice = " + service.getName());
-        List<ServiceCommand> commands = service.getServiceCommands();
+        List<ServiceCommand> commands = serviceResourceService.getServiceCommands(service);
         boolean containsEcsSetup =
             commands.stream().anyMatch(serviceCommand -> "Setup Service Cluster".equals(serviceCommand.getName()));
         boolean containsKubeSetup = commands.stream().anyMatch(

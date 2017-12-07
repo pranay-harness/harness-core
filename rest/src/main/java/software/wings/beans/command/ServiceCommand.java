@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
@@ -25,7 +26,7 @@ import java.util.Optional;
 @Entity(value = "serviceCommands", noClassnameStored = true)
 public class ServiceCommand extends Base {
   private String name;
-  private String serviceId;
+  @Indexed private String serviceId;
   @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
   private Integer defaultVersion = 1;
 
