@@ -438,6 +438,10 @@ public interface Constants {
   String XPATH = "xpath('//status/text()')";
   String JSONPATH = "jsonpath('health.status')";
 
+  /**
+   * Constants for expression
+   */
+
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
   int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
 }

@@ -10,6 +10,9 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.Api;
+import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.lang.StringUtils;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
@@ -23,13 +26,16 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -411,5 +417,36 @@ public class WorkflowResource {
     return new RestResponse<>(
         workflowService.stencils(appId, workflowId, phaseId, StateTypeScope.ORCHESTRATION_STENCILS)
             .get(StateTypeScope.ORCHESTRATION_STENCILS));
+  }
+
+  /**
+   * Stencils rest response.
+   *
+   * @param appId      the app id
+   * @param workflowId the workflow id
+   * @param strStateType    the state type
+   * @return the rest response
+   */
+  @GET
+  @Path("state-defaults")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> stateDefaults(@QueryParam("appId") String appId,
+      @QueryParam("workflowId") String workflowId, @QueryParam("stateType") String strStateType) {
+    StateType stateType = null;
+    if (!StringUtils.isBlank(strStateType)) {
+      try {
+        if (!strStateType.contentEquals("\"\"")) {
+          stateType = StateType.valueOf(strStateType);
+        }
+      } catch (IllegalArgumentException e) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid state type " + strStateType);
+      }
+    }
+    Map<String, String> stateDefaults = new HashedMap();
+    stateDefaults.put("bucket", "${artifact.bucketName}");
+    stateDefaults.put("key", "${artifact.key}");
+    stateDefaults.put("bundleType", "zip");
+    return new RestResponse<>(stateDefaults);
   }
 }
