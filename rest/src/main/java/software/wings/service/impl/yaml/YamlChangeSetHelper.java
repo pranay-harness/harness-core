@@ -1,9 +1,12 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
+
 import groovy.lang.Singleton;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.AppService;
@@ -170,6 +173,58 @@ public class YamlChangeSetHelper {
             -> changeSet.add(
                 entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
       }
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+  }
+
+  public void queueSettingUpdateYamlChangeAsync(
+      SettingAttribute savedSettingAttributes, SettingAttribute updatedSettingAttribute) {
+    executorService.submit(() -> {
+      if (!updatedSettingAttribute.getName().equals(updatedSettingAttribute.getName())) {
+        queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
+      } else {
+        queueSettingYamlChange(updatedSettingAttribute,
+            entityUpdateService.getSettingAttributeGitSyncFile(
+                updatedSettingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
+      }
+    });
+  }
+
+  public void queueSettingYamlChangeAsync(
+      SettingAttribute settingAttribute, SettingAttribute newSettingAttribute, ChangeType add) {
+    executorService.submit(()
+                               -> queueSettingYamlChange(newSettingAttribute,
+                                   entityUpdateService.getSettingAttributeGitSyncFile(
+                                       settingAttribute.getAccountId(), newSettingAttribute, add)));
+  }
+
+  private void queueSettingYamlChange(SettingAttribute newSettingAttribute, GitFileChange settingAttributeGitSyncFile) {
+    String accountId = newSettingAttribute.getAccountId();
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(settingAttributeGitSyncFile));
+    }
+  }
+
+  private void queueMoveSettingChange(SettingAttribute oldSettingAttribute, SettingAttribute newSettingAttribute) {
+    String accountId = appService.getAccountIdByAppId(newSettingAttribute.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      String oldSettingAttrPath = yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + "/"
+          + oldSettingAttribute.getName() + YAML_EXTENSION;
+      GitFileChange newSettingAttrGitSyncFile =
+          entityUpdateService.getSettingAttributeGitSyncFile(accountId, newSettingAttribute, ChangeType.MODIFY);
+
+      changeSet.add(GitFileChange.Builder.aGitFileChange()
+                        .withAccountId(newSettingAttrGitSyncFile.getAccountId())
+                        .withChangeType(ChangeType.RENAME)
+                        .withFilePath(newSettingAttrGitSyncFile.getFilePath())
+                        .withOldFilePath(oldSettingAttrPath)
+                        .build());
+      changeSet.add(newSettingAttrGitSyncFile);
+      changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
       yamlChangeSetService.queueChangeSet(ygs, changeSet);
     }
   }

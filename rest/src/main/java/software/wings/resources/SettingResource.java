@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
@@ -19,6 +18,7 @@ import io.swagger.annotations.Api;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.RestResponse;
@@ -29,8 +29,6 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.annotation.Encryptable;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -60,7 +58,6 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class SettingResource {
   @Inject private SettingsService attributeService;
-  @Inject private GcpHelperService gcpHelperService;
 
   /**
    * List.
