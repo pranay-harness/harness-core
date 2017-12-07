@@ -5,6 +5,10 @@ import numpy as np
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder, SAXHMMDistance
 from core.util.TimeSeriesUtils import get_deviation_type, get_deviation_min_threshold
 from sources.FileLoader import FileLoader
+from sources.MetricTemplate import MetricTemplate
+
+
+metric_template = MetricTemplate(FileLoader.load_data('tests/resources/ts/metric_template.json'))
 
 
 def lists_equal(a, b):
@@ -39,19 +43,19 @@ def create_nan(data):
 
 def run_analysis(filename, make_nan=False):
     txns = FileLoader.load_data(filename)['transactions']
+    metric_names = set(metric_template.get_metric_names())
     for txn_id, txn_data in txns.items():
         for metric_name, metric_data in txn_data['metrics'].items():
-            if 'verify-email' in txn_data['txn_name']:
-                print('hi')
+            if metric_data['metric_name'] not in metric_names:
+                continue
             if make_nan:
                 create_nan(metric_data['control'])
                 create_nan(metric_data['test'])
 
-            shd = SAXHMMDistanceFinder(metric_name, 3, 1,
+            shd = SAXHMMDistanceFinder(metric_data['metric_name'], 3, 1,
                                        metric_data['control'],
                                        metric_data['test'],
-                                       get_deviation_type(metric_data['metric_name']),
-                                       get_deviation_min_threshold(metric_data['metric_name']), 1)
+                                       metric_template, 1)
 
             results = shd.compute_dist()
             if 'results' in metric_data:

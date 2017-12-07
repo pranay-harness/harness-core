@@ -142,7 +142,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
     return delegateService.queueTask(delegateTask);
   }
 

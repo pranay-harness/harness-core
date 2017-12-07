@@ -1854,7 +1854,8 @@ public class KmsTest extends WingsBaseTest {
       toKmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/e1aebd89-277b-4ec7-a4e9-9a238f8b2594");
       kmsService.saveKmsConfig(accountId, toKmsConfig);
 
-      kmsService.transitionKms(accountId, fromConfig.getUuid(), toKmsConfig.getUuid());
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.KMS, fromConfig.getUuid(), EncryptionType.KMS, toKmsConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       query = wingsPersistence.createQuery(EncryptedData.class);
       // 2 kms configs have been saved so far
@@ -1932,7 +1933,8 @@ public class KmsTest extends WingsBaseTest {
         // expected
       }
 
-      kmsService.transitionKms(accountId, fromConfig.getUuid(), toKmsConfig.getUuid());
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.KMS, fromConfig.getUuid(), EncryptionType.KMS, toKmsConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       kmsService.deleteKmsConfig(accountId, fromConfig.getUuid());
       assertEquals(1, wingsPersistence.createQuery(KmsConfig.class).asList().size());
@@ -2696,7 +2698,7 @@ public class KmsTest extends WingsBaseTest {
     transitionEventListener = new KmsTransitionEventListener();
     setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);
-    setInternalState(transitionEventListener, "kmsService", kmsService);
+    setInternalState(transitionEventListener, "secretManager", secretManager);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();

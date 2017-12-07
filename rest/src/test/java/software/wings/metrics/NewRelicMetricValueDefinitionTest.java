@@ -8,7 +8,9 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -17,6 +19,15 @@ import java.util.Map.Entry;
 public class NewRelicMetricValueDefinitionTest {
   private NewRelicMetricDataRecord testRecord;
   private NewRelicMetricDataRecord controlRecord;
+
+  private Map<String, List<Threshold>> getThresholdsMap(Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
+    Map<String, List<Threshold>> stateValuesToThresholds = new HashMap<>();
+    for (Entry<String, TimeSeriesMetricDefinition> entry : stateValuesToAnalyze.entrySet()) {
+      stateValuesToThresholds.put(entry.getKey(), entry.getValue().getThresholds());
+    }
+
+    return stateValuesToThresholds;
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -56,7 +67,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setApdexScore(0.40);
     controlRecord.setApdexScore(1.0);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -80,7 +91,7 @@ public class NewRelicMetricValueDefinitionTest {
     // test for medium
     testRecord.setApdexScore(0.60);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -104,7 +115,7 @@ public class NewRelicMetricValueDefinitionTest {
     // test for low
     testRecord.setApdexScore(0.85);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -131,7 +142,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setThroughput(98);
     controlRecord.setThroughput(200);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -156,7 +167,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setThroughput(49);
     controlRecord.setThroughput(100);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -181,7 +192,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setThroughput(140);
     controlRecord.setThroughput(200);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -206,7 +217,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setThroughput(85);
     controlRecord.setThroughput(100);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -231,7 +242,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setThroughput(0);
     controlRecord.setThroughput(150);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -258,7 +269,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setAverageResponseTime(100);
     controlRecord.setAverageResponseTime(50);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -283,7 +294,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setAverageResponseTime(130);
     controlRecord.setAverageResponseTime(100);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -308,7 +319,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setAverageResponseTime(16);
     controlRecord.setAverageResponseTime(10);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -333,7 +344,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setAverageResponseTime(85);
     controlRecord.setAverageResponseTime(100);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -360,7 +371,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setError(100);
     controlRecord.setError(50);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -385,7 +396,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setError(130);
     controlRecord.setError(100);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -410,7 +421,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setError(16);
     controlRecord.setError(10);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
@@ -435,7 +446,7 @@ public class NewRelicMetricValueDefinitionTest {
     testRecord.setError(85);
     controlRecord.setError(100);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
-        NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.entrySet()) {
+        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())

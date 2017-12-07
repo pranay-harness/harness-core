@@ -82,7 +82,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
                             .build());
       waitIds[i++] = waitId;
     }
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitIds);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, true), waitIds);
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));

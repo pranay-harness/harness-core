@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
@@ -19,6 +20,7 @@ import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
@@ -116,6 +118,16 @@ public class MetricAnalysisJob implements Job {
       }
     }
 
+    private Map<String, List<Threshold>> getThresholdsMap(
+        Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
+      Map<String, List<Threshold>> stateValuesToThresholds = new HashMap<>();
+      for (Entry<String, TimeSeriesMetricDefinition> entry : stateValuesToAnalyze.entrySet()) {
+        stateValuesToThresholds.put(entry.getKey(), entry.getValue().getThresholds());
+      }
+
+      return stateValuesToThresholds;
+    }
+
     private NewRelicMetricAnalysisRecord analyzeLocal(int analysisMinute) {
       logger.info("running " + context.getStateType().name() + " for minute {}", analysisMinute);
       final List<NewRelicMetricDataRecord> controlRecords =
@@ -146,10 +158,10 @@ public class MetricAnalysisJob implements Job {
       Map<String, List<Threshold>> stateValuesToAnalyze;
       switch (context.getStateType()) {
         case NEW_RELIC:
-          stateValuesToAnalyze = NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE;
+          stateValuesToAnalyze = getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
           break;
         case APP_DYNAMICS:
-          stateValuesToAnalyze = NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
+          stateValuesToAnalyze = getThresholdsMap(NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
           break;
         default:
           throw new IllegalStateException("Invalid stateType " + context.getStateType());
@@ -241,6 +253,12 @@ public class MetricAnalysisJob implements Job {
       command.add(String.valueOf(context.getComparisonWindow()));
       command.add("--parallel_processes");
       command.add(String.valueOf(context.getParallelProcesses()));
+      //      command.add("--metric_names");
+      //      command.addAll(Lists.newArrayList("callCount", "averageResponseTime", "requestsPerMinute", "error",
+      //      "apdexScore"));
+      command.add("--metric_template_url");
+      command.add(
+          serverUrl + "/api/" + context.getStateBaseUrl() + "/get-metric-template?accountId=" + context.getAccountId());
 
       int attempt = 0;
       for (; attempt < PYTHON_JOB_RETRIES; attempt++) {
@@ -302,7 +320,7 @@ public class MetricAnalysisJob implements Job {
           return;
         }
 
-        boolean runTimeSeriesML = context.getStateType() == StateType.NEW_RELIC;
+        boolean runTimeSeriesML = true;
 
         if (runTimeSeriesML) {
           switch (context.getComparisonStrategy()) {

@@ -20,7 +20,7 @@ import java.util.List;
 public class TimeSeriesMLDataSummary {
   private List<List<Double>> data;
   private List<List<Double>> weights;
-  private int weights_type;
-  private int data_type;
+  private String weights_type;
+  private String data_type;
   private List<String> host_names;
 }

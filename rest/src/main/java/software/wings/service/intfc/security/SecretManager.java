@@ -42,9 +42,13 @@ public interface SecretManager {
 
   EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
 
-  char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException;
+  boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
+      EncryptionType toEncryptionType, String toSecretId);
 
-  boolean transitionSecrets(String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType);
+  void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType, String fromKmsId,
+      EncryptionType toEncryptionType, String toKmsId);
+
+  char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException;
 
   void checkAndAlertForInvalidManagers();
 
