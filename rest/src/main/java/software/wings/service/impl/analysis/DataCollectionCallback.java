@@ -4,8 +4,12 @@ import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.a
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionData.StateExecutionDataBuilder;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -23,12 +27,14 @@ public class DataCollectionCallback implements NotifyCallback {
 
   private String appId;
   private String correlationId;
+  private boolean isLogCollection;
 
   public DataCollectionCallback() {}
 
-  public DataCollectionCallback(String appId, String correlationId) {
+  public DataCollectionCallback(String appId, String correlationId, boolean isLogCollection) {
     this.appId = appId;
     this.correlationId = correlationId;
+    this.isLogCollection = isLogCollection;
   }
 
   @Override
@@ -36,15 +42,27 @@ public class DataCollectionCallback implements NotifyCallback {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
     logger.info("data collection result for app " + appId + " is: " + result);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
-      final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                                                         .withStatus(ExecutionStatus.FAILED)
-                                                         .withErrorMsg(result.getErrorMessage())
-                                                         .build();
-      waitNotifyEngine.notify(correlationId,
-          aLogAnalysisResponse()
-              .withLogAnalysisExecutionData(executionData)
-              .withExecutionStatus(ExecutionStatus.FAILED)
-              .build());
+      if (isLogCollection) {
+        final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
+                                                           .withStatus(ExecutionStatus.FAILED)
+                                                           .withErrorMsg(result.getErrorMessage())
+                                                           .build();
+        waitNotifyEngine.notify(correlationId,
+            aLogAnalysisResponse()
+                .withLogAnalysisExecutionData(executionData)
+                .withExecutionStatus(ExecutionStatus.FAILED)
+                .build());
+      } else {
+        MetricDataAnalysisResponse metricDataAnalysisResponse =
+            MetricDataAnalysisResponse.builder()
+                .stateExecutionData(StateExecutionData.StateExecutionDataBuilder.aStateExecutionData()
+                                        .withStatus(ExecutionStatus.FAILED)
+                                        .withErrorMsg(result.getErrorMessage())
+                                        .build())
+                .build();
+        metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.FAILED);
+        waitNotifyEngine.notify(correlationId, metricDataAnalysisResponse);
+      }
     }
   }
 

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.exception.WingsException;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -176,8 +177,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     @Override
     public void run() {
       try {
-        int retry = RETRIES;
-        while (!completed.get() && retry > 0) {
+        int retry = 0;
+        while (!completed.get() && retry < RETRIES) {
           try {
             List<AppdynamicsMetricData> metricsData = getMetricsData();
             TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
@@ -202,9 +203,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             records.putAll(processMetricData(metricsData));
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
             if (!saveMetrics(recordsToSave)) {
-              retry = 0;
-              completed.set(true);
-              throw new RuntimeException("Cannot save new AppDynamics metric records. Server returned error");
+              retry = RETRIES;
+              taskResult.setErrorMessage(
+                  "Cannot save new AppDynamics metric records to Harness. Server returned error");
+              throw new RuntimeException(
+                  "Cannot save new AppDynamics metric records to Harness. Server returned error");
             }
             logger.info("Sent {} appdynamics metric records to the server for minute {}", recordsToSave.size(),
                 dataCollectionMinute);
@@ -215,14 +218,23 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             break;
 
           } catch (Exception ex) {
-            if (retry == 0) {
+            if (++retry >= RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              taskResult.setErrorMessage(ex.getMessage());
               completed.set(true);
               break;
             } else {
-              --retry;
-              logger.warn("error fetching new relic metrics for minute " + dataCollectionMinute + ". retrying in "
+              if (retry == 1) {
+                if (ex instanceof WingsException) {
+                  if (((WingsException) ex).getParams().containsKey("reason")) {
+                    taskResult.setErrorMessage((String) ((WingsException) ex).getParams().get("reason"));
+                  } else {
+                    taskResult.setErrorMessage(ex.getMessage());
+                  }
+                } else {
+                  taskResult.setErrorMessage(ex.getMessage());
+                }
+              }
+              logger.warn("error fetching appdynamics metrics for minute " + dataCollectionMinute + ". retrying in "
                       + RETRY_SLEEP_SECS + "s",
                   ex);
               Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
