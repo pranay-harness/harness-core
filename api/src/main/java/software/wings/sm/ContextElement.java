@@ -81,4 +81,6 @@ public interface ContextElement {
    * @return the map
    */
   Map<String, Object> paramMap(ExecutionContext context);
+
+  ContextElement cloneMin();
 }

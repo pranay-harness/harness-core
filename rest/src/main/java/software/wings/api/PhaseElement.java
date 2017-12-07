@@ -67,6 +67,11 @@ public class PhaseElement implements ContextElement {
   }
 
   @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
+  @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(SERVICE, serviceElement);
