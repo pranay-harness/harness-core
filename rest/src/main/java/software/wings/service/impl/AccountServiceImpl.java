@@ -84,7 +84,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account save(@Valid Account account) {
     account.setAccountKey(generateAccountKey());
-    // licenseManager.setLicense(account);
+    //    licenseManager.setLicense(account);
     wingsPersistence.save(account);
     createDefaultAccountEntites(account);
     addCronForAlertChecks(account);
