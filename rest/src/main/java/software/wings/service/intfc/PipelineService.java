@@ -71,6 +71,7 @@ public interface PipelineService {
 
   /**
    * Delete pipeline by application
+   *
    * @param appId
    * @return
    */
