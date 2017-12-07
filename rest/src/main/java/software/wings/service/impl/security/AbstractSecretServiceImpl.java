@@ -83,26 +83,5 @@ public abstract class AbstractSecretServiceImpl {
     return rv;
   }
 
-  protected boolean transitionSecretStore(
-      String accountId, String fromSecretId, String toSecretId, EncryptionType encryptionType) {
-    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("kmsId")
-                                        .equal(fromSecretId)
-                                        .fetch();
-    while (query.hasNext()) {
-      EncryptedData dataToTransition = query.next();
-      transitionKmsQueue.send(KmsTransitionEvent.builder()
-                                  .accountId(accountId)
-                                  .entityId(dataToTransition.getUuid())
-                                  .encryptionType(encryptionType)
-                                  .fromKmsId(fromSecretId)
-                                  .toKmsId(toSecretId)
-                                  .build());
-    }
-    return true;
-  }
-
   protected abstract EncryptionConfig getSecretConfig(String accountId);
 }

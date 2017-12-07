@@ -4,38 +4,128 @@ import static java.lang.System.currentTimeMillis;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Singleton;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.exception.WingsException;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by rishi on 12/19/16.
  */
 @Singleton
+@ValidateOnExecution
 public class DelegateFileManagerImpl implements DelegateFileManager {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ManagerClient managerClient;
-
   @Inject private DelegateConfiguration delegateConfiguration;
+
+  private static final LoadingCache<String, Object> fileIdLocks =
+      CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).build(CacheLoader.from(Object::new));
+
+  private static final String ARTIFACT_REPO_BASE_DIR = "./repository/artifacts/";
+  private static final String ARTIFACT_REPO_TMP_DIR = "./repository/artifacts/tmp/";
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Override
+  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
+      throws IOException, ExecutionException {
+    logger.info("Downloading file:[{}] , bucket:[{}], accountId:[{}]", fileId, bucket, accountId);
+    synchronized (fileIdLocks.get(fileId)) { // Block all thread only one gets to enter
+      File file = new File(ARTIFACT_REPO_BASE_DIR, fileId);
+      logger.info("check if file:[{}] exists at location: [{}]", fileId, file.getAbsolutePath());
+      if (!file.isDirectory() && file.exists()) {
+        logger.info("file:[{}] found locally", fileId);
+        return new FileInputStream(file);
+      }
+      logger.info("file:[{}] doesn't exist locally. Download from manager", fileId);
+
+      InputStream inputStream = downloadByFileIdInternal(bucket, fileId, accountId, encrypted);
+      logger.info("Input stream acquired for file:[{}]. Saving locally", fileId);
+
+      File downloadedFile = new File(ARTIFACT_REPO_TMP_DIR, fileId);
+      FileUtils.copyInputStreamToFile(inputStream, downloadedFile);
+      logger.info("file:[{}] saved in tmp location:[{}]", fileId, downloadedFile.getAbsolutePath());
+
+      FileUtils.moveFile(downloadedFile, file);
+      logger.info("file:[{}] moved to  final destination:[{}]", fileId, file.getAbsolutePath());
+
+      logger.info("file:[{}] is ready for read access", fileId);
+
+      logger.info("check if downloaded fileId[{}] exists locally", fileId);
+      if (!file.isDirectory() && file.exists()) {
+        logger.info("fileId[{}] found locally", fileId);
+        return new FileInputStream(file);
+      }
+
+      logger.error("fileId[{}] could not be found", fileId);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "File couldn't be downloaded");
+    }
+  }
+
+  @Override
+  public String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId)
+      throws IOException {
+    return execute(managerClient.getFileIdByVersion(entityId, fileBucket, version, accountId)).getResource();
+  }
+
+  private InputStream downloadByFileIdInternal(FileBucket bucket, String fileId, String accountId, boolean encrypted)
+      throws IOException {
+    Response<ResponseBody> response = null;
+    try {
+      response = managerClient.downloadFile(fileId, bucket, accountId, encrypted).execute();
+      return response.body().byteStream();
+    } finally {
+      if (response != null && !response.isSuccessful()) {
+        response.errorBody().close();
+      }
+    }
+  }
+
+  @Override
+  public InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
+      throws IOException {
+    Response<ResponseBody> response = null;
+    try {
+      response = managerClient.downloadFile(fileId, accountId, appId, activityId).execute();
+      return response.body().byteStream();
+    } finally {
+      if (response != null && !response.isSuccessful()) {
+        response.errorBody().close();
+      }
+    }
+  }
+
+  @Override
+  public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
+    return execute(managerClient.getMetaInfo(fileId, fileBucket, accountId)).getResource();
+  }
 
   private void upload(DelegateFile delegateFile, File content) throws IOException {
     RequestBody filename = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), "file");
@@ -77,44 +167,5 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     }
 
     return delegateFile;
-  }
-
-  @Override
-  public String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId)
-      throws IOException {
-    return execute(managerClient.getFileIdByVersion(entityId, fileBucket, version, accountId)).getResource();
-  }
-
-  @Override
-  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
-      throws IOException {
-    Response<ResponseBody> response = null;
-    try {
-      response = managerClient.downloadFile(fileId, bucket, accountId, encrypted).execute();
-      return response.body().byteStream();
-    } finally {
-      if (response != null && !response.isSuccessful()) {
-        response.errorBody().close();
-      }
-    }
-  }
-
-  @Override
-  public InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
-      throws IOException {
-    Response<ResponseBody> response = null;
-    try {
-      response = managerClient.downloadFile(fileId, accountId, appId, activityId).execute();
-      return response.body().byteStream();
-    } finally {
-      if (response != null && !response.isSuccessful()) {
-        response.errorBody().close();
-      }
-    }
-  }
-
-  @Override
-  public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
-    return execute(managerClient.getMetaInfo(fileId, fileBucket, accountId)).getResource();
   }
 }

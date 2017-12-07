@@ -16,8 +16,10 @@ parser.add_argument("--min_rpm", type=int, required=True)
 parser.add_argument("--comparison_unit_window", type=int, required=True)
 parser.add_argument("--parallelProcesses", type=int, required=True)
 
-options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10',
+options = parser.parse_args(['--analysis_minute', '29', '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10',
                              '--comparison_unit_window', '1', '--parallelProcesses', '1'])
+
+metric_template = FileLoader.load_data('tests/resources/ts/metric_template.json')
 
 
 def compare(a, b):
@@ -26,14 +28,14 @@ def compare(a, b):
 
 def test_load_input():
     control = FileLoader.load_data('tests/resources/ts/NRSampleInput.json')
-    anomaly_detector = TSAnomlyDetector(options, control, control)
+    anomaly_detector = TSAnomlyDetector(options, metric_template, control, control)
     anomaly_detector.analyze()
 
 
 def test_run_1():
     control = FileLoader.load_data('tests/resources/ts/NRSampleControl1.json')
     test = FileLoader.load_data('tests/resources/ts/NRSampleTest1.json')
-    anomaly_detector = TSAnomlyDetector(options, control, test)
+    anomaly_detector = TSAnomlyDetector(options, metric_template, control, test)
     anomaly_detector.analyze()
 
 
@@ -41,14 +43,22 @@ def test_run_2():
     control = FileLoader.load_data('tests/resources/ts/nr_control_live.json')
     test = FileLoader.load_data('tests/resources/ts/nr_test_live.json')
     out = FileLoader.load_data('tests/resources/ts/nr_out_live.json')['transactions']
-    anomaly_detector = TSAnomlyDetector(options, control, test)
+    out_mod = {}
+    for o in out.values():
+        out_mod[o['txn_name']] = {'metrics': {}}
+        for m in o['metrics'].values():
+            out_mod[o['txn_name']]['metrics'][m['metric_name']] = m
+
+    out = out_mod
+
+    anomaly_detector = TSAnomlyDetector(options, metric_template, control, test)
     result = anomaly_detector.analyze()
     for txn_id, txn_data in result['transactions'].items():
-        assert txn_data['txn_name'] == out[str(txn_id)]['txn_name']
+        assert txn_data['txn_name'] in out
         for metrics_id, metric_data in txn_data['metrics'].items():
-            assert metric_data['metric_name'] == out[str(txn_id)]['metrics'][str(metrics_id)]['metric_name']
-            assert metric_data['max_risk'] == out[str(txn_id)]['metrics'][str(metrics_id)]['max_risk']
-            out_metric_data = out[str(txn_id)]['metrics'][str(metrics_id)]['results']
+            assert metric_data['metric_name'] in out[txn_data['txn_name']]['metrics']
+            assert metric_data['max_risk'] == out[txn_data['txn_name']]['metrics'][metric_data['metric_name']]['max_risk']
+            out_metric_data = out[txn_data['txn_name']]['metrics'][metric_data['metric_name']]['results']
             for host_name, host_data in metric_data['results'].items():
                 assert out_metric_data[host_name] is not None
                 assert ''.join(host_data['control_cuts']) == ''.join(out_metric_data[host_name]['control_cuts'])
