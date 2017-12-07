@@ -84,6 +84,11 @@ public class ServiceInstanceIdsParam implements ContextElement {
    */
   public void setUuid(String uuid) {}
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   public static final class ServiceInstanceIdsParamBuilder {
     private String serviceId;
     private List<String> instanceIds;
