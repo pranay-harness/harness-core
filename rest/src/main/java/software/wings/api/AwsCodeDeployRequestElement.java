@@ -51,6 +51,11 @@ public class AwsCodeDeployRequestElement implements ContextElement {
     return null;
   }
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   public static final class AwsCodeDeployRequestElementBuilder {
     private CodeDeployParams codeDeployParams;
     private CodeDeployParams oldCodeDeployParams;

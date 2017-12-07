@@ -81,6 +81,11 @@ public class ForkElement implements ContextElement {
     this.parentId = parentId;
   }
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   /**
    * The type Builder.
    */

@@ -2195,10 +2195,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<CommandType, List<Command>> getCommandTypeListMap(Service service) {
     Map<CommandType, List<Command>> commandMap = new HashMap<>();
-    if (service.getServiceCommands() == null) {
+    List<ServiceCommand> serviceCommands = serviceResourceService.getServiceCommands(service);
+    if (serviceCommands == null) {
       return commandMap;
     }
-    for (ServiceCommand sc : service.getServiceCommands()) {
+    for (ServiceCommand sc : serviceCommands) {
       if (sc.getCommand() == null || sc.getCommand().getCommandType() == null) {
         continue;
       }
