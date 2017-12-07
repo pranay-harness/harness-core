@@ -9,7 +9,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
@@ -1859,11 +1858,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         elementExecutionSummary.setEndTs(last.getEndTs());
       }
       if (contextElement != null && contextElement.getElementType() == ContextElementType.INSTANCE) {
-        instanceStatusSummaries.add(
-            anInstanceStatusSummary()
-                .withInstanceElement(anInstanceElement().withUuid(contextElement.getUuid()).build())
-                .withStatus(last.getStatus())
-                .build());
+        instanceStatusSummaries.add(anInstanceStatusSummary()
+                                        .withInstanceElement((InstanceElement) contextElement.cloneMin())
+                                        .withStatus(last.getStatus())
+                                        .build());
       }
 
       instanceStatusSummaries = instanceStatusSummaries.stream()

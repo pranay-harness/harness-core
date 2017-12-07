@@ -78,6 +78,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @JsonIgnore private EmbeddedUser currentUser;
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   /**
    * {@inheritDoc}
    */
