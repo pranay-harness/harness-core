@@ -26,7 +26,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public interface WorkflowService {
+public interface WorkflowService extends OwnedByApplication {
   /**
    * List Workflow.
    *
@@ -150,20 +150,6 @@ public interface WorkflowService {
    * @return the workflow
    */
   Workflow readLatestSimpleWorkflow(String appId, String envId);
-
-  /**
-   * Delete workflow by environment.
-   *
-   * @param appId the app id
-   */
-  void deleteWorkflowByApplication(String appId);
-
-  /**
-   * Delete state machines my application.
-   *
-   * @param appId the app id
-   */
-  void deleteStateMachinesByApplication(String appId);
 
   void deleteWorkflowByEnvironment(String appId, String uuid);
 

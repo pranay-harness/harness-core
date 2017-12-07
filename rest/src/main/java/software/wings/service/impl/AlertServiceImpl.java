@@ -190,7 +190,7 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public void deleteByApp(String appId) {
+  public void pruneByApplication(String appId) {
     List<Alert> alerts = wingsPersistence.createQuery(Alert.class).field("appId").equal(appId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }

@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 7/22/16.
  */
-public interface NotificationService {
+public interface NotificationService extends OwnedByApplication {
   /**
    * List page response.
    *
@@ -67,11 +67,4 @@ public interface NotificationService {
    * @param notificationId the notification id
    */
   void markNotificationCompleted(@NotEmpty String appId, @NotEmpty String notificationId);
-
-  /**
-   * Delete by application.
-   *
-   * @param appId the app id
-   */
-  void deleteByApplication(String appId);
 }

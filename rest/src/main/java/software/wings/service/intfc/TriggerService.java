@@ -18,7 +18,7 @@ import javax.validation.Valid;
 /**
  * Created by sgurubelli on 10/26/17.
  */
-public interface TriggerService {
+public interface TriggerService extends OwnedByApplication {
   /**
    * List.
    *
@@ -60,13 +60,6 @@ public interface TriggerService {
    * @return true, if successful
    */
   boolean delete(@NotEmpty String appId, @NotEmpty String triggerId);
-
-  /**
-   * Delete by application.
-   *
-   * @param appId the app id
-   */
-  void deleteByApp(String appId);
 
   /**
    * Delete triggers for pipeline

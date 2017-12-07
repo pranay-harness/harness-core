@@ -1167,16 +1167,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public void deleteWorkflowByApplication(String appId) {
+  public void pruneByApplication(String appId) {
+    // prune workflows
     List<Key<Workflow>> workflowKeys =
         wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asKeyList();
     for (Key key : workflowKeys) {
       deleteWorkflow(appId, (String) key.getId(), true);
     }
-  }
 
-  @Override
-  public void deleteStateMachinesByApplication(String appId) {
+    // prune state machines
     wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).field("appId").equal(appId));
   }
 
