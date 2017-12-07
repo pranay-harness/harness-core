@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -16,6 +17,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +27,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -36,6 +39,8 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
@@ -56,6 +61,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
@@ -1092,6 +1098,38 @@ public class SecretTextTest extends WingsBaseTest {
     secretManager.deleteSecret(accountId, secretFileId);
     query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE);
     assertTrue(query.asList().isEmpty());
+  }
+
+  @Test
+  public void yamlPasswordDecryption() throws IOException, IllegalAccessException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
+    enableKmsFeatureFlag();
+
+    String password = UUID.randomUUID().toString();
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl(UUID.randomUUID().toString())
+                                              .username(UUID.randomUUID().toString())
+                                              .password(password.toCharArray())
+                                              .accountname(UUID.randomUUID().toString())
+                                              .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withValue(appDynamicsConfig)
+                                            .withAppId(UUID.randomUUID().toString())
+                                            .withCategory(Category.CONNECTOR)
+                                            .withEnvId(UUID.randomUUID().toString())
+                                            .withName(UUID.randomUUID().toString())
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+
+    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+
+    char[] decryptedRef = secretManager.decryptYamlRef(yamlRef);
+    assertEquals(password, String.valueOf(decryptedRef));
   }
 
   private VaultConfig getVaultConfig() throws IOException {
