@@ -20,6 +20,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 2/1/17.
@@ -63,6 +64,22 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       int totalDesiredCount = desiredCounts.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
       if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
         commandExecutionStatus = SUCCESS;
+      } else {
+        if (containerInfos.size() != totalDesiredCount) {
+          executionLogCallback.saveExecutionLog(
+              String.format("Expected data for %d container%s but got %d", totalDesiredCount,
+                  containerInfos.size() == 1 ? "" : "s", containerInfos.size()),
+              LogLevel.ERROR);
+        }
+        if (!allContainersSuccess) {
+          List<ContainerInfo> failed = containerInfos.stream()
+                                           .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
+                                           .collect(Collectors.toList());
+          executionLogCallback.saveExecutionLog(
+              String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
+                  failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList())),
+              LogLevel.ERROR);
+        }
       }
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);

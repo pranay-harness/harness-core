@@ -1,6 +1,5 @@
 package software.wings.cloudprovider.aws;
 
-import static java.util.Collections.emptyList;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
@@ -955,7 +954,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
       waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
           serviceName, desiredCount, executionLogCallback);
-      executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
       waitForTasksToBeInRunningStateButDontThrowException(
           region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
 
@@ -969,7 +968,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                       new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
                                   .getTaskArns();
       if (taskArns == null || taskArns.size() == 0) {
-        return emptyList();
+        executionLogCallback.saveExecutionLog(
+            String.format(
+                "Unable to retrieve list of tasks in %s for cluster %s service %s", region, clusterName, serviceName),
+            LogLevel.ERROR);
+        Exception e = new WingsException(INVALID_REQUEST, "message", "Could not list task definitions.");
+        logger.error(e.getMessage(), e);
+        throw e;
       }
 
       logger.info("Task arns = " + taskArns);
