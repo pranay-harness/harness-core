@@ -10,6 +10,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -33,6 +34,7 @@ public class YamlChangeSetHelper {
   @Inject private ExecutorService executorService;
   @Inject private YamlGitService yamlGitService;
   @Inject private AppService appService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   public void applicationUpdateYamlChangeAsync(Application savedApp, Application updatedApp) {
     executorService.submit(() -> {
@@ -165,10 +167,9 @@ public class YamlChangeSetHelper {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
-
       changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, crudType));
       if (crudType.equals(ChangeType.ADD)) {
-        service.getServiceCommands().forEach(serviceCommand
+        serviceResourceService.getServiceCommands(service).forEach(serviceCommand
             -> changeSet.add(
                 entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
       }

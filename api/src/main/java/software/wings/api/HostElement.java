@@ -4,6 +4,8 @@
 
 package software.wings.api;
 
+import static software.wings.api.HostElement.Builder.aHostElement;
+
 import com.google.common.base.MoreObjects;
 
 import com.amazonaws.services.ec2.model.Instance;
@@ -115,6 +117,16 @@ public class HostElement implements ContextElement {
    */
   public void setInstanceId(String instanceId) {
     this.instanceId = instanceId;
+  }
+
+  @Override
+  public ContextElement cloneMin() {
+    return aHostElement()
+        .withUuid(uuid)
+        .withHostName(hostName)
+        .withPublicDns(publicDns)
+        .withInstanceId(instanceId)
+        .build();
   }
 
   public static final class Builder {
