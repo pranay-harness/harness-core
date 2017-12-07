@@ -18,7 +18,6 @@ import software.wings.rules.SetupScheduler;
 import software.wings.utils.Misc;
 
 @Integration
-@Ignore
 @SetupScheduler
 public class ContainerSyncJobTest extends WingsBaseTest {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
