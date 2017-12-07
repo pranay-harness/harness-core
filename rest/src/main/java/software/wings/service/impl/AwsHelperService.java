@@ -191,7 +191,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -208,9 +207,6 @@ public class AwsHelperService {
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   private static final int SLEEP_INTERVAL = 30;
   private static final int RETRY_COUNTER = (10 * 60) / SLEEP_INTERVAL; // 10 minutes
-
-  private static Map<String, Integer> API_CALL_COUNTS = new HashMap<>();
-
   @Inject private EncryptionService encryptionService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -340,9 +336,6 @@ public class AwsHelperService {
    * @return the amazon ec 2 client
    */
   private AmazonEC2Client getAmazonEc2Client(String region, String accessKey, char[] secretKey) {
-    API_CALL_COUNTS.putIfAbsent(accessKey, 0);
-    API_CALL_COUNTS.put(accessKey, API_CALL_COUNTS.get(accessKey) + 1);
-    logger.info("API_CALL_COUNT [{}] = {}", accessKey, API_CALL_COUNTS.get(accessKey));
     return (AmazonEC2Client) AmazonEC2ClientBuilder.standard()
         .withRegion(region)
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
