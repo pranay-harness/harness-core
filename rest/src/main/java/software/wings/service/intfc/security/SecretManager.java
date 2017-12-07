@@ -14,6 +14,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -46,6 +47,8 @@ public interface SecretManager {
 
   void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType, String fromKmsId,
       EncryptionType toEncryptionType, String toKmsId);
+
+  char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException;
 
   void checkAndAlertForInvalidManagers();
 

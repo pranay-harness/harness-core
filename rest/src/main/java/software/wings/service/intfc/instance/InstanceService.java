@@ -27,6 +27,7 @@ public interface InstanceService {
   /**
    * Update the list of entities. If entity doesn't exist, it creates one.
    * This is not a batch update since morphia client doesn't support bulk writes in version 1.3.1.
+   *
    * @param instances instance entities
    * @return list of updated instances
    */
@@ -39,7 +40,7 @@ public interface InstanceService {
   /**
    * Gets instance information.
    *
-   * @param instanceId  the instance id
+   * @param instanceId the instance id
    * @return the infrastructure mapping
    */
   Instance get(String instanceId);
@@ -56,12 +57,14 @@ public interface InstanceService {
 
   /**
    * Deletes the given instance.
+   *
    * @param instanceId the instance id
    */
   boolean delete(String instanceId);
 
   /**
    * Deletes all the instances of an app
+   *
    * @param appId application id
    * @return
    */
@@ -69,6 +72,7 @@ public interface InstanceService {
 
   /**
    * Deletes the instances with the given ids
+   *
    * @param instanceIdSet
    * @return
    */
@@ -77,6 +81,7 @@ public interface InstanceService {
   /**
    * Handles save or update of container related instances.
    * Stale ones are also deleted.
+   *
    * @param instanceType
    * @param containerSvcNameNoRevision
    * @param instanceList
@@ -98,6 +103,7 @@ public interface InstanceService {
   /**
    * Get the container deployment info of all the container services that belong to the same family
    * containerSvcNameNoRevision for the given app.
+   *
    * @param containerSvcNameNoRevision
    * @param appId
    * @return
@@ -107,6 +113,7 @@ public interface InstanceService {
   /**
    * Get the container service names (taskDefinitionName for ECS and replicationControllerName for Kubernetes) of all
    * the container services that belong to the same family (containerSvcNameNoRevision) for the given app.
+   *
    * @param containerSvcNameNoRevision
    * @param appId
    * @return
@@ -117,6 +124,7 @@ public interface InstanceService {
    * Get the least recently synced container family (all container deployments with the same containerSvcNameNoRevision)
    * info from db. This is done so that no container family is starved from update. Each time the sync job comes up, it
    * picks up a batch of least visited families and updates the instances.
+   *
    * @param appId
    * @param lastSyncTimestamp
    * @return
@@ -125,6 +133,7 @@ public interface InstanceService {
 
   /**
    * Deletes the container deployments that have no active instances on the container server (ECS or Kubernetes).
+   *
    * @param containerSvcNameSetToBeDeleted
    * @param instanceType
    * @param appId

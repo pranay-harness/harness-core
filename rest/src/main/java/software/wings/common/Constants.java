@@ -439,4 +439,5 @@ public interface Constants {
   String JSONPATH = "jsonpath('health.status')";
 
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
+  int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
 }

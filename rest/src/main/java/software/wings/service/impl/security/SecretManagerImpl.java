@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +55,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.EncryptionConfig;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -64,10 +64,10 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -89,6 +89,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
+  @Inject private EncryptionService encryptionService;
   @Inject private AccountService accountService;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
@@ -341,7 +342,6 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException {
     Preconditions.checkState(!StringUtils.isBlank(encryptedYamlRef));
-    logger.info("Decrypting: {}", encryptedYamlRef);
     String[] tags = encryptedYamlRef.split(":");
     String fieldRefId = tags[1];
     return wingsPersistence.get(EncryptedData.class, fieldRefId);
@@ -380,6 +380,19 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return true;
+  }
+
+  public char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException {
+    EncryptedData encryptedData = getEncryptedDataFromYamlRef(encryptedYamlRef);
+    Preconditions.checkNotNull(encryptedData);
+
+    EncryptionConfig encryptionConfig =
+        getEncryptionConfig(encryptedData.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
+    return encryptionService.getDecryptedValue(EncryptedDataDetail.builder()
+                                                   .encryptedData(encryptedData)
+                                                   .encryptionConfig(encryptionConfig)
+                                                   .encryptionType(encryptedData.getEncryptionType())
+                                                   .build());
   }
 
   @Override

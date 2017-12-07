@@ -412,9 +412,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
               WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
                   workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
-              if (!workflowExecution2.getStatus().isFinalStatus()) {
-                populateNodeHierarchyWithGraph(workflowExecution2);
-              }
+              //          if (!workflowExecution2.getStatus().isFinalStatus()) {
+              //            populateNodeHierarchyWithGraph(workflowExecution2);
+              //          }
               stageExecution.setWorkflowExecutions(asList(workflowExecution2));
               stageExecution.setStatus(workflowExecution2.getStatus());
             }
@@ -1797,6 +1797,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("parentInstanceId", Operator.IN, parentStateExecutionInstanceId)
             .addOrder("createdAt", OrderType.ASC)
+            .addFieldsExcluded("contextElements")
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
@@ -1858,7 +1859,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
       if (contextElement != null && contextElement.getElementType() == ContextElementType.INSTANCE) {
         instanceStatusSummaries.add(anInstanceStatusSummary()
-                                        .withInstanceElement((InstanceElement) contextElement)
+                                        .withInstanceElement((InstanceElement) contextElement.cloneMin())
                                         .withStatus(last.getStatus())
                                         .build());
       }

@@ -59,6 +59,11 @@ public class AwsLambdaContextElement implements ContextElement {
   }
 
   @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
+  @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }

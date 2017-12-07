@@ -357,7 +357,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             serviceCommandPath, service.getAppId(), yamlGitSyncService);
         serviceFolder.addChild(serviceCommandsFolder);
 
-        List<ServiceCommand> serviceCommands = service.getServiceCommands();
+        List<ServiceCommand> serviceCommands = serviceResourceService.getServiceCommands(service);
 
         // iterate over service commands
         for (ServiceCommand serviceCommand : serviceCommands) {

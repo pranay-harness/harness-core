@@ -178,20 +178,22 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String id = wingsPersistence.save(artifactStream);
     addCronForAutoArtifactCollection(artifactStream);
 
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-
-        // add GitSyncFiles for trigger (artifact stream)
-        changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
-
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    executorService.submit(() -> { artifactStreamChangeSetAsync(artifactStream); });
 
     return get(artifactStream.getAppId(), id);
+  }
+
+  public void artifactStreamChangeSetAsync(ArtifactStream artifactStream) {
+    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // add GitSyncFiles for trigger (artifact stream)
+      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
+
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
   }
 
   /**
@@ -272,18 +274,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     ArtifactStream finalArtifactStream = artifactStream;
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(finalArtifactStream.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-
-        changeSet.add(
-            entityUpdateService.getArtifactStreamGitSyncFile(accountId, finalArtifactStream, ChangeType.MODIFY));
-
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
-      }
-    });
+    executorService.submit(() -> artifactStreamChangeSetAsync(finalArtifactStream));
 
     return artifactStream;
   }
