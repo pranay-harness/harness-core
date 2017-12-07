@@ -12,6 +12,7 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
+import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
