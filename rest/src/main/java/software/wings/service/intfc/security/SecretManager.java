@@ -14,6 +14,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,6 +41,8 @@ public interface SecretManager {
   String getEncryptedYamlRef(Encryptable object, String... fieldName) throws IllegalAccessException;
 
   EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
+
+  char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException;
 
   boolean transitionSecrets(String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType);
 
