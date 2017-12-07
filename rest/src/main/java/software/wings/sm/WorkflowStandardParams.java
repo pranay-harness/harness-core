@@ -78,6 +78,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @JsonIgnore private EmbeddedUser currentUser;
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -92,31 +97,31 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     map.put(TIMESTAMP_ID, timestampId);
 
     ServiceElement serviceElement = fetchServiceElement(context);
-    if (serviceElement != null && artifactIds != null) {
+    if (serviceElement != null) {
+      List<Key<ServiceTemplate>> templateRefKeysByService =
+          serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
+      if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
+          || templateRefKeysByService.get(0).getId() == null) {
+        map.put(SERVICE_VARIABLE, new HashMap<>());
+        return map;
+      }
+      String templateId = (String) templateRefKeysByService.get(0).getId();
+      List<ServiceVariable> serviceVariables =
+          serviceTemplateService.computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId());
+      if (serviceVariables == null || serviceVariables.isEmpty()) {
+        map.put(SERVICE_VARIABLE, new HashMap<>());
+        return map;
+      }
+
+      HashMap<Object, Object> serviceVariableMap = new HashMap<>();
+      map.put(SERVICE_VARIABLE, serviceVariableMap);
+      serviceVariables.forEach(serviceVariable -> {
+        serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue()));
+      });
+
       Artifact artifact = getArtifactForService(serviceElement.getUuid());
       if (artifact != null) {
         map.put(ARTIFACT, artifact);
-
-        List<Key<ServiceTemplate>> templateRefKeysByService =
-            serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
-        if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
-            || templateRefKeysByService.get(0).getId() == null) {
-          map.put(SERVICE_VARIABLE, new HashMap<>());
-          return map;
-        }
-        String templateId = (String) templateRefKeysByService.get(0).getId();
-        List<ServiceVariable> serviceVariables =
-            serviceTemplateService.computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId());
-        if (serviceVariables == null || serviceVariables.isEmpty()) {
-          map.put(SERVICE_VARIABLE, new HashMap<>());
-          return map;
-        }
-
-        HashMap<Object, Object> serviceVariableMap = new HashMap<>();
-        map.put(SERVICE_VARIABLE, serviceVariableMap);
-        serviceVariables.forEach(serviceVariable -> {
-          serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue()));
-        });
       }
     }
 

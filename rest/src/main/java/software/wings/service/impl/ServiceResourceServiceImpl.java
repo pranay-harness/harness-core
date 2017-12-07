@@ -147,6 +147,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (withServiceCommands) {
       pageResponse.getResponse().forEach(service -> {
         try {
+          service.setServiceCommands(getServiceCommands(service));
           service.getServiceCommands().forEach(serviceCommand
               -> serviceCommand.setCommand(commandService.getCommand(
                   serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
@@ -278,8 +279,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName) {
     Map<String, Integer> commandNameVersionMap =
-        get(appId, serviceId)
-            .getServiceCommands()
+        getServiceCommands(get(appId, serviceId))
             .stream()
             .filter(serviceCommand -> serviceCommand.getVersionForEnv(envId) != 0)
             .collect(toMap(ServiceCommand::getName, serviceCommand -> serviceCommand.getVersionForEnv(envId)));
@@ -388,6 +388,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, service.getUuid()));
     service.setLastProdDeploymentActivity(
         activityService.getLastProductionActivityForService(appId, service.getUuid()));
+    service.setServiceCommands(getServiceCommands(service));
     service.getServiceCommands().forEach(serviceCommand
         -> serviceCommand.setCommand(
             commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
@@ -467,7 +468,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void deleteCommands(Service service) {
-    service.getServiceCommands().forEach(serviceCommand -> deleteCommand(serviceCommand, service));
+    getServiceCommands(service).forEach(serviceCommand -> deleteCommand(serviceCommand, service));
   }
 
   /**
@@ -484,14 +485,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private void deleteCommand(ServiceCommand serviceCommand, Service service) {
     ensureServiceCommandSafeToDelete(service, serviceCommand);
-
-    wingsPersistence.update(wingsPersistence.createQuery(Service.class)
-                                .field(ID_KEY)
-                                .equal(service.getUuid())
-                                .field("appId")
-                                .equal(service.getAppId()),
-        wingsPersistence.createUpdateOperations(Service.class).removeAll("serviceCommands", serviceCommand.getUuid()));
-
     deleteServiceCommand(service, serviceCommand);
   }
 
@@ -677,7 +670,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     commandService.save(command, isDefaultCommand);
-
     service.getServiceCommands().add(serviceCommand);
 
     wingsPersistence.save(service);
@@ -762,7 +754,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ServiceCommand getCommandByName(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
-    Service service = get(appId, serviceId);
+    Service service = getServiceWithServiceCommands(appId, serviceId);
     if (service != null) {
       return service.getServiceCommands()
           .stream()
@@ -776,12 +768,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ServiceCommand getCommandByName(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String envId, @NotEmpty String commandName) {
-    Service service = get(appId, serviceId);
+    Service service = getServiceWithServiceCommands(appId, serviceId);
+
     ServiceCommand serviceCommand = service.getServiceCommands()
                                         .stream()
                                         .filter(command -> equalsIgnoreCase(commandName, command.getName()))
                                         .findFirst()
                                         .orElse(null);
+
     if (serviceCommand != null
         && (serviceCommand.getEnvIdVersionMap().get(envId) != null || serviceCommand.isTargetToAllEnv())) {
       serviceCommand.setCommand(commandService.getCommand(appId, serviceCommand.getUuid(),
@@ -802,14 +796,24 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ServiceCommand getCommandByNameAndVersion(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, int version) {
-    Service service = get(appId, serviceId);
-    ServiceCommand command = service.getServiceCommands()
+    Service service = getServiceWithServiceCommands(appId, serviceId);
+
+    ServiceCommand command = getServiceCommands(service)
                                  .stream()
                                  .filter(serviceCommand -> equalsIgnoreCase(commandName, serviceCommand.getName()))
                                  .findFirst()
                                  .get();
     command.setCommand(commandService.getCommand(appId, command.getUuid(), version));
     return command;
+  }
+
+  private Service getServiceWithServiceCommands(@NotEmpty String appId, @NotEmpty String serviceId) {
+    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    service.setServiceCommands(getServiceCommands(service));
+    service.getServiceCommands().forEach(serviceCommand
+        -> serviceCommand.setCommand(
+            commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+    return service;
   }
 
   /**
@@ -849,11 +853,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    Service service = get(appId, params[0]);
-    if (isEmpty(service.getServiceCommands())) {
+    Service service = wingsPersistence.get(Service.class, appId, params[0]);
+    if (isEmpty(getServiceCommands(service))) {
       return emptyMap();
     } else {
-      return service.getServiceCommands()
+      return getServiceCommands(service)
           .stream()
           .filter(command -> !StringUtils.equals(command.getName(), params[1]))
           .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
@@ -916,8 +920,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public boolean isArtifactNeeded(Service service) {
-    return service.getServiceCommands().stream().anyMatch(serviceCommand
+    return getServiceCommands(service).stream().anyMatch(serviceCommand
         -> commandService.getCommand(service.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())
                .isArtifactNeeded());
+  }
+
+  @Override
+  public List<ServiceCommand> getServiceCommands(Service service) {
+    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
+                                                                .withLimit(PageRequest.UNLIMITED)
+                                                                .addFilter("appId", EQ, service.getAppId())
+                                                                .addFilter("serviceId", EQ, service.getUuid())
+                                                                .build();
+    return wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
   }
 }

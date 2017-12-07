@@ -139,6 +139,17 @@ public class WingsException extends WingsApiException {
   }
 
   /**
+   *
+   * @param messageList
+   * @param params
+   */
+  public WingsException(List<ResponseMessage> messageList, String message, Map<String, Object> params) {
+    super(message, null);
+    this.responseMessageList = messageList;
+    this.params = params;
+  }
+
+  /**
    * Gets params.
    *
    * @return the params

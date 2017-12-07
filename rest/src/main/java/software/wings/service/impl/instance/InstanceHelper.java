@@ -18,6 +18,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
@@ -25,6 +26,7 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.core.queue.Queue;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
@@ -49,6 +51,7 @@ public class InstanceHelper {
   @Inject private AppService appService;
   @Inject private InstanceUtil instanceUtil;
   @Inject private ContainerInstanceHelper containerInstanceHelper;
+  @Inject private HostService hostService;
 
   /**
    *   The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -136,10 +139,13 @@ public class InstanceHelper {
   public Instance buildInstanceUsingHostInfo(WorkflowExecution workflowExecution, Artifact artifact,
       InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData, String infraMappingType) {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
-    Validator.notNullCheck("Host", host);
+    Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
 
+    String hostUuid = host.getUuid();
+    Host hostInfo = hostService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), hostUuid);
+    Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
     Instance.Builder builder = buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMappingType);
-    setInstanceInfoAndKey(builder, host, infraMappingType, phaseExecutionData.getInfraMappingId());
+    setInstanceInfoAndKey(builder, hostInfo, infraMappingType, phaseExecutionData.getInfraMappingId());
 
     return builder.build();
   }
@@ -187,7 +193,7 @@ public class InstanceHelper {
   }
 
   private void setInstanceInfoAndKey(
-      Instance.Builder builder, HostElement host, String infraMappingType, String infraMappingId) {
+      Instance.Builder builder, Host host, String infraMappingType, String infraMappingId) {
     InstanceInfo instanceInfo = null;
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
