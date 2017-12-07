@@ -5,6 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCode.INVALID_EXECUTION_ID;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -44,6 +45,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
@@ -229,6 +231,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                     try (InputStream inputStream = delegateFileManager.downloadByFileId(
                              fileBucket, fileNamesId.getKey(), config.getAccountId(), false)) {
                       IOUtils.copy(inputStream, outputStream);
+                    } catch (ExecutionException e) {
+                      throw new WingsException(INVALID_REQUEST, "message", e.getMessage());
                     }
                   }
                 }))
@@ -254,6 +258,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         try (InputStream inputStream = delegateFileManager.downloadByFileId(configFileMetaData.getFileBucket(),
                  configFileMetaData.getFileId(), config.getAccountId(), configFileMetaData.isEncrypted())) {
           IOUtils.copy(inputStream, outputStream);
+        } catch (ExecutionException e) {
+          throw new WingsException(INVALID_REQUEST, "message", e.getMessage());
         }
       }
     });
