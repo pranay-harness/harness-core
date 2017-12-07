@@ -211,7 +211,7 @@ public class MessageServiceImpl implements MessageService {
       BlockingQueue<Message> queue = messageQueues.get(getMessageChannel(sourceType, sourceProcessId));
       if (queue == null) {
         RuntimeException ex = new RuntimeException(
-            "To wait for a message you must first schedule the runnable returned by getMessageCheckingRunnable[onChannel] at regular intervals.");
+            "To wait for a message you must first schedule the runnable returned by getMessageCheckingRunnable[ForChannel] at regular intervals.");
         logger.error(ex.getMessage(), ex);
         throw ex;
       }
