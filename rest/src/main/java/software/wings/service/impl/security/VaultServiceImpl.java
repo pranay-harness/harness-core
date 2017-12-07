@@ -13,13 +13,11 @@ import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.core.queue.Queue;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -44,7 +42,6 @@ import javax.inject.Inject;
  */
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
   public static final String VAULT_VAILDATION_URL = "harness_vault_validation";
-  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject private KmsService kmsService;
 
   @Override
@@ -237,36 +234,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       rv.add(vaultConfig);
     }
     return rv;
-  }
-
-  @Override
-  public boolean transitionVault(String accountId, String fromVaultId, String toVaultId) {
-    return transitionSecretStore(accountId, fromVaultId, toVaultId, EncryptionType.VAULT);
-  }
-
-  @Override
-  public void changeVault(String accountId, String entityId, String fromVaultId, String toVaultId) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
-    Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
-    VaultConfig fromConfig = getVaultConfig(accountId, fromVaultId);
-    Preconditions.checkNotNull(fromConfig, "No kms found for account " + accountId + " with id " + entityId);
-    VaultConfig toConfig = getVaultConfig(accountId, toVaultId);
-    Preconditions.checkNotNull(toConfig, "No kms found for account " + accountId + " with id " + entityId);
-
-    char[] decrypted = decrypt(encryptedData, accountId, fromConfig);
-
-    String encryptionKey = encryptedData.getEncryptionKey();
-
-    String[] split = encryptionKey.split("/");
-    SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(split[0]);
-    String keyName = split[1];
-    EncryptedData encrypted = encrypt(keyName, String.valueOf(decrypted), accountId, settingVariableType, toConfig,
-        EncryptedData.builder().encryptionKey(encryptionKey).build());
-    encryptedData.setKmsId(toVaultId);
-    encryptedData.setEncryptionKey(encrypted.getEncryptionKey());
-    encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
-
-    wingsPersistence.save(encryptedData);
   }
 
   @Override
