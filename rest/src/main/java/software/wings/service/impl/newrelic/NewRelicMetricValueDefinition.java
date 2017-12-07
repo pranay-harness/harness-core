@@ -111,7 +111,7 @@ public class NewRelicMetricValueDefinition {
                        .min(0.5)
                        .build());
     thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                        .comparisonType(ThresholdComparisonType.DELTA)
                        .high(0.5)
                        .medium(0.3)
