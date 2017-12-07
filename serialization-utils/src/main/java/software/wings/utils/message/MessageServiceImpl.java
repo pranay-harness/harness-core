@@ -208,8 +208,13 @@ public class MessageServiceImpl implements MessageService {
   public Message waitForMessageOnChannel(
       MessengerType sourceType, String sourceProcessId, String messageName, long timeout) {
     try {
-      BlockingQueue<Message> queue =
-          messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
+      BlockingQueue<Message> queue = messageQueues.get(getMessageChannel(sourceType, sourceProcessId));
+      if (queue == null) {
+        RuntimeException ex = new RuntimeException(
+            "To wait for a message you must first schedule the runnable returned by getMessageCheckingRunnable[onChannel] at regular intervals.");
+        logger.error(ex.getMessage(), ex);
+        throw ex;
+      }
       return timeLimiter.callWithTimeout(() -> {
         Message message = null;
         while (message == null || !messageName.equals(message.getMessage())) {
