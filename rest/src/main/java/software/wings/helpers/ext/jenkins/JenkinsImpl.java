@@ -321,8 +321,8 @@ public class JenkinsImpl implements Jenkins {
       }
     } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
       // unexpected exception
-      logger.error(
-          "Error occurred while retrieving build parameters for build number {} ", buildWithDetails.getNumber(), e);
+      logger.warn("Error occurred while retrieving build parameters for build number {} ", buildWithDetails.getNumber(),
+          e.getMessage());
     }
   }
 

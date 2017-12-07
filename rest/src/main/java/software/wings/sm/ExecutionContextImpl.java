@@ -3,6 +3,7 @@ package software.wings.sm;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -59,6 +60,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject @Transient private ArtifactService artifactService;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
+  @Transient private transient Map<String, Object> contextMap;
 
   /**
    * Instantiates a new execution context impl.
@@ -312,7 +314,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   private Map<String, Object> prepareContext() {
     Map<String, Object> context = new HashMap<>();
-    return prepareContext(context);
+    if (contextMap == null) {
+      contextMap = prepareContext(context);
+    }
+    return contextMap;
   }
 
   private String normalizeStateName(String name) {
@@ -459,6 +464,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private Map<String, String> getServiceVariables(boolean withEncryptedValues) {
+    if (contextMap != null) {
+      return (Map<String, String>) contextMap.get(SERVICE_VARIABLE);
+    }
+
     Map<String, String> variables = new HashMap<>();
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     if (phaseElement == null || phaseElement.getServiceElement() == null

@@ -19,7 +19,6 @@ import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
@@ -28,8 +27,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,6 +78,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @JsonIgnore private EmbeddedUser currentUser;
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -104,12 +106,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
             serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
         if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
             || templateRefKeysByService.get(0).getId() == null) {
+          map.put(SERVICE_VARIABLE, new HashMap<>());
           return map;
         }
         String templateId = (String) templateRefKeysByService.get(0).getId();
         List<ServiceVariable> serviceVariables =
             serviceTemplateService.computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId());
         if (serviceVariables == null || serviceVariables.isEmpty()) {
+          map.put(SERVICE_VARIABLE, new HashMap<>());
           return map;
         }
 

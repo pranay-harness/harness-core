@@ -41,4 +41,9 @@ public class ServiceInstanceArtifactParam implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }
+
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
 }
