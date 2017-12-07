@@ -70,10 +70,8 @@ public class InitSshCommandUnit extends SshCommandUnit {
     activityId = context.getActivityId();
     executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
     preInitCommand = "mkdir -p " + executionStagingDir;
-    if (context.getServiceVariables() != null) {
-      for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
-        envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
-      }
+    for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
+      envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
     envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
