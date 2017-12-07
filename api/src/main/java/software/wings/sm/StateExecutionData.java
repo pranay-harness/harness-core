@@ -246,7 +246,9 @@ public class StateExecutionData {
   }
 
   protected void populateStepExecutionSummary(StepExecutionSummary stepExecutionSummary) {
-    stepExecutionSummary.setElement(element);
+    if (element != null) {
+      stepExecutionSummary.setElement(element.cloneMin());
+    }
     stepExecutionSummary.setStepName(stateName);
     stepExecutionSummary.setStatus(status);
     stepExecutionSummary.setMessage(errorMsg);
