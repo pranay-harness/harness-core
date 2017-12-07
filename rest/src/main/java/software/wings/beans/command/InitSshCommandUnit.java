@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.Constants;
+import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -70,6 +71,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
     activityId = context.getActivityId();
     executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
     preInitCommand = "mkdir -p " + executionStagingDir;
+    Validator.notNullCheck("Service Variables", context.getServiceVariables());
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
       envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
@@ -89,6 +91,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       }
     }
 
+    Validator.notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
     for (Map.Entry<String, String> entry : context.getSafeDisplayServiceVariables().entrySet()) {
       safeDisplayEnvVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
