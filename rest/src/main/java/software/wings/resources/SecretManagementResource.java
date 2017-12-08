@@ -90,9 +90,10 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> transitionConfig(@QueryParam("accountId") final String accountId,
-      @QueryParam("fromKmsId") String fromKmsId, @QueryParam("toKmsId") String toKmsId,
-      @QueryParam("encryptionType") EncryptionType encryptionType) {
-    return new RestResponse<>(secretManager.transitionSecrets(accountId, fromKmsId, toKmsId, encryptionType));
+      @QueryParam("fromEncryptionType") EncryptionType fromEncryptionType, @QueryParam("fromKmsId") String fromKmsId,
+      @QueryParam("toEncryptionType") EncryptionType toEncryptionType, @QueryParam("toKmsId") String toKmsId) {
+    return new RestResponse<>(
+        secretManager.transitionSecrets(accountId, fromEncryptionType, fromKmsId, toEncryptionType, toKmsId));
   }
 
   @POST
