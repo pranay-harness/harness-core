@@ -802,7 +802,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return command;
   }
 
-  private Service getServiceWithServiceCommands(@NotEmpty String appId, @NotEmpty String serviceId) {
+  @Override
+  public Service getServiceWithServiceCommands(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     service.setServiceCommands(getServiceCommands(appId, serviceId));
     service.getServiceCommands().forEach(serviceCommand

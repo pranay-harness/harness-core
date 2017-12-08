@@ -68,7 +68,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -155,6 +154,7 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -1870,14 +1870,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(AWS_CODEDEPLOY_STATE.name())
-                                                .withName(Constants.AWS_CODE_DEPLOY)
-                                                //.addProperty()
-                                                .build())
-                                   .build());
+    Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
+    Graph.Node.Builder node =
+        aNode().withId(getUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
+    if (stateDefaults != null && stateDefaults.size() != 0) {
+      if (!Misc.isNullOrEmpty(stateDefaults.get("bucket"))) {
+        node.addProperty("bucket", stateDefaults.get("bucket"));
+      }
+      if (!Misc.isNullOrEmpty(stateDefaults.get("key"))) {
+        node.addProperty("key", stateDefaults.get("key"));
+      }
+      if (!Misc.isNullOrEmpty(stateDefaults.get("bundleType"))) {
+        node.addProperty("bundleType", stateDefaults.get("bundleType"));
+      }
+    }
+    workflowPhase.addPhaseStep(
+        aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE).addStep(node.build()).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
