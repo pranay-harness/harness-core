@@ -83,7 +83,7 @@ import javax.inject.Named;
 public class WatcherServiceImpl implements WatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+  private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
