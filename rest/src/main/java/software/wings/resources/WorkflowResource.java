@@ -423,7 +423,7 @@ public class WorkflowResource {
    * Stencils rest response.
    *
    * @param appId      the app id
-   * @param workflowId the workflow id
+   * @param serviceId the workflow id
    * @param strStateType    the state type
    * @return the rest response
    */
@@ -432,21 +432,11 @@ public class WorkflowResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, String>> stateDefaults(@QueryParam("appId") String appId,
-      @QueryParam("workflowId") String workflowId, @QueryParam("stateType") String strStateType) {
-    StateType stateType = null;
-    if (!StringUtils.isBlank(strStateType)) {
-      try {
-        if (!strStateType.contentEquals("\"\"")) {
-          stateType = StateType.valueOf(strStateType);
-        }
-      } catch (IllegalArgumentException e) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid state type " + strStateType);
-      }
-    }
+      @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
     Map<String, String> stateDefaults = new HashedMap();
     stateDefaults.put("bucket", "${artifact.bucketName}");
     stateDefaults.put("key", "${artifact.key}");
     stateDefaults.put("bundleType", "zip");
-    return new RestResponse<>(stateDefaults);
+    return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId, StateType.valueOf(strStateType)));
   }
 }
