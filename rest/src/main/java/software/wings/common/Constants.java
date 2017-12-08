@@ -441,6 +441,8 @@ public interface Constants {
   /**
    * Constants for expression
    */
+  String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
+  String ARTIFACT__S3_KEY_EXPRESSION = "${artifact.key}";
 
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
   int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
