@@ -18,6 +18,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
+import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
@@ -72,6 +74,16 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       return String.valueOf(15);
     }
     return timeDuration;
+  }
+
+  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
+  @Attributes(required = true, title = "Failure Criteria")
+  @DefaultValue("LOW")
+  public AnalysisTolerance getAnalysisTolerance() {
+    if (StringUtils.isBlank(tolerance)) {
+      return AnalysisTolerance.LOW;
+    }
+    return AnalysisTolerance.valueOf(tolerance);
   }
 
   /**
