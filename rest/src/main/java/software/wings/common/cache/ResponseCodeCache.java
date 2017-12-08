@@ -98,7 +98,10 @@ public class ResponseCodeCache {
     ResponseMessage responseMessage = new ResponseMessage();
     responseMessage.setCode(errorCode);
     responseMessage.setMessage(message);
-    responseMessage.setErrorType(responseTypeEnum);
+    if (responseTypeEnum == null) {
+      responseMessage.setErrorType(ResponseTypeEnum.ERROR);
+    }
+
     return responseMessage;
   }
 }
