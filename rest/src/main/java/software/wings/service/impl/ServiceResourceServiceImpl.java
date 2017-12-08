@@ -563,7 +563,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void pruneByApplication(String appId) {
-    wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList().forEach(service -> {
+    findServicesByApp(appId).forEach(service -> {
+      wingsPersistence.delete(Service.class, service.getUuid());
       prune(service);
     });
   }

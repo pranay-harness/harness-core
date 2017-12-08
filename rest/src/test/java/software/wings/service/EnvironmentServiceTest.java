@@ -356,11 +356,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCode.INVALID_REQUEST.name());
   }
 
-  /**
-   * Should delete by app.
-   */
   @Test
-  public void shouldDeleteByApp() {
+  public void shouldPruneByApplication() {
     when(query.asList())
         .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
