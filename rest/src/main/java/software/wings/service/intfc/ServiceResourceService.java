@@ -351,9 +351,19 @@ public interface ServiceResourceService {
   boolean isArtifactNeeded(Service service);
 
   /**
-   * Returns the list of service commands associated
-   * @param service
+   * Gets the list of service commands with the commands
+   * @param appId
+   * @param serviceId
    * @return
    */
-  List<ServiceCommand> getServiceCommands(Service service);
+  List<ServiceCommand> getServiceCommands(String appId, String serviceId);
+
+  /**
+   * Returns the service commands with the Command details
+   * @param appId
+   * @param serviceId
+   * @param withCommandDetails
+   * @return
+   */
+  List<ServiceCommand> getServiceCommands(String appId, String serviceId, boolean withCommandDetails);
 }

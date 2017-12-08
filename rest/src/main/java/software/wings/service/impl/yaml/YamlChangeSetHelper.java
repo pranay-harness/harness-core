@@ -169,9 +169,10 @@ public class YamlChangeSetHelper {
       List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, crudType));
       if (crudType.equals(ChangeType.ADD)) {
-        serviceResourceService.getServiceCommands(service).forEach(serviceCommand
-            -> changeSet.add(
-                entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
+        serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid())
+            .forEach(serviceCommand
+                -> changeSet.add(
+                    entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
       }
       yamlChangeSetService.queueChangeSet(ygs, changeSet);
     }
