@@ -433,12 +433,11 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> stateDefaults(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
-    Map<String, String> stateDefaults = new HashedMap();
-    stateDefaults.put("bucket", "${artifact.bucketName}");
-    stateDefaults.put("key", "${artifact.key}");
-    stateDefaults.put("bundleType", "zip");
-    //    return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId,
-    //    StateType.valueOf(strStateType)));
-    return new RestResponse<>(stateDefaults);
+    /* Map<String, String> stateDefaults = new HashedMap();
+     stateDefaults.put("bucket", "${artifact.bucketName}");
+     stateDefaults.put("key", "${artifact.key}");
+     stateDefaults.put("bundleType", "zip");*/
+    return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId, StateType.valueOf(strStateType)));
+    // return new RestResponse<>(stateDefaults);
   }
 }
