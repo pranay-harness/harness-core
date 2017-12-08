@@ -1172,6 +1172,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<Key<Workflow>> workflowKeys =
         wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asKeyList();
     for (Key key : workflowKeys) {
+      // TODO: just prune the object
       deleteWorkflow(appId, (String) key.getId(), true);
     }
 
