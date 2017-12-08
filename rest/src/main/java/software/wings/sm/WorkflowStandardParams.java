@@ -98,6 +98,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
     ServiceElement serviceElement = fetchServiceElement(context);
     if (serviceElement != null) {
+      Artifact artifact = getArtifactForService(serviceElement.getUuid());
+      if (artifact != null) {
+        map.put(ARTIFACT, artifact);
+      }
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
       if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
@@ -118,13 +122,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       serviceVariables.forEach(serviceVariable -> {
         serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue()));
       });
-
-      Artifact artifact = getArtifactForService(serviceElement.getUuid());
-      if (artifact != null) {
-        map.put(ARTIFACT, artifact);
-      }
     }
-
     return map;
   }
 
