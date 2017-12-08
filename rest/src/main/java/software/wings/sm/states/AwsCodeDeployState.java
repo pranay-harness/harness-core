@@ -442,7 +442,7 @@ public class AwsCodeDeployState extends State {
     }
   }
 
-  public static Map<String, String> getStateDefaults() {
+  public static Map<String, String> loadDefaults() {
     Map<String, String> stateDefaults = new HashMap<>();
     stateDefaults.put("bucket", ARTIFACT_S3_BUCKET_EXPRESSION);
     stateDefaults.put("key", ARTIFACT__S3_KEY_EXPRESSION);

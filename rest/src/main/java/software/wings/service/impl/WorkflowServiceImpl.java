@@ -1338,8 +1338,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       case AWS_CODEDEPLOY_STATE: {
         List<ArtifactStream> artifactStreams = artifactStreamService.getArtifactStreamsForService(appId, serviceId);
         if (artifactStreams.stream().anyMatch(
-                artifactStream -> ArtifactStreamType.AMAZON_S3.equals(artifactStream.getArtifactStreamType()))) {
-          return AwsCodeDeployState.getStateDefaults();
+                artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
+          return AwsCodeDeployState.loadDefaults();
         }
       }
       default:
