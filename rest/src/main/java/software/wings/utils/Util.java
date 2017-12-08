@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/11/17
  */
 public class Util {
+  private static final String FIRST_REVISION = ".1";
+
   public static boolean isEmpty(String value) {
     return value == null || value.isEmpty();
   }
@@ -76,5 +78,44 @@ public class Util {
       return enumObject.name();
     }
     return null;
+  }
+
+  /**
+   * This method gets the default name, checks if another entry exists with the same name, if exists, it parses and
+   * extracts the revision and creates a name with the next revision.
+   *
+   * @param existingName
+   * @param defaultName
+   */
+  public static String getNameWithNextRevision(String existingName, String defaultName) {
+    String name = defaultName;
+
+    if (isEmpty(existingName)) {
+      return name;
+    }
+
+    int index = existingName.lastIndexOf('.');
+    if (index == -1) {
+      name = name + FIRST_REVISION;
+    } else {
+      if (index < existingName.length() - 1) {
+        String revisionString = existingName.substring(index + 1);
+        int revision = -1;
+        try {
+          revision = Integer.parseInt(revisionString);
+        } catch (NumberFormatException ex) {
+        }
+
+        if (revision != -1) {
+          revision++;
+          name = name + "." + revision;
+        } else {
+          name = name + FIRST_REVISION;
+        }
+      } else {
+        name = name + FIRST_REVISION;
+      }
+    }
+    return name;
   }
 }

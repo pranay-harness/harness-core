@@ -14,6 +14,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,7 +42,13 @@ public interface SecretManager {
 
   EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
 
-  boolean transitionSecrets(String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType);
+  boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
+      EncryptionType toEncryptionType, String toSecretId);
+
+  void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType, String fromKmsId,
+      EncryptionType toEncryptionType, String toKmsId);
+
+  char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException;
 
   void checkAndAlertForInvalidManagers();
 

@@ -78,7 +78,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics nodes");
+      throw new WingsException(
+          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics nodes : " + response);
     }
   }
 
@@ -94,7 +95,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     } else {
       logger.error("Request not successful. Reason: {}", response);
       throw new WingsException(
-          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics business transactions");
+          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics business transactions : " + response);
     }
   }
 
@@ -111,7 +112,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final Response<List<AppdynamicsMetric>> tierBTResponse = tierBTMetricRequest.execute();
     if (!tierBTResponse.isSuccessful()) {
       logger.error("Request not successful. Reason: {}", tierBTResponse);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier BTs");
+      throw new WingsException(
+          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier BTs : " + tierBTResponse);
     }
 
     List<AppdynamicsMetric> rv = tierBTResponse.body();
@@ -142,7 +144,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return tierBTMResponse.body();
     } else {
       logger.error("Request not successful. Reason: {}", tierBTMResponse);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics metric data");
+      throw new WingsException(
+          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics metric data : " + tierBTMResponse);
     }
   }
 
@@ -154,7 +157,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
     if (!tierResponse.isSuccessful()) {
       logger.error("Request not successful. Reason: {}", tierResponse);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier details");
+      throw new WingsException(
+          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier details : " + tierResponse);
     }
 
     return tierResponse.body().get(0);
@@ -193,14 +197,14 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return allMetrices;
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException("could not get appdynami's metrics");
+      throw new WingsException("could not get appdynami's metrics : " + response);
     }
   }
 
   @Override
   public void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
     if (!validUrl(appDynamicsConfig.getControllerUrl())) {
-      throw new RuntimeException("AppDynamics Controller URL must be a valid URL");
+      throw new WingsException("AppDynamics Controller URL must be a valid URL");
     }
     Response<List<NewRelicApplication>> response = null;
     try {
@@ -212,15 +216,15 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         return;
       }
     } catch (Throwable t) {
-      throw new RuntimeException("Could not reach AppDynamics server. " + t.getMessage());
+      throw new WingsException("Could not reach AppDynamics server. " + t.getMessage(), t);
     }
 
     final int errorCode = response.code();
     if (errorCode == HttpStatus.SC_UNAUTHORIZED) {
-      throw new RuntimeException("Could not login to AppDynamics server with the given credentials");
+      throw new WingsException("Could not login to AppDynamics server with the given credentials");
     }
 
-    throw new RuntimeException(response.message());
+    throw new WingsException(response.message());
   }
 
   private AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {

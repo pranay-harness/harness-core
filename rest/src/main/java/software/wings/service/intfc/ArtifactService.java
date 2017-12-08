@@ -37,7 +37,6 @@ public interface ArtifactService {
    * Creates the artifact and validates artifact type
    *
    * @param artifact the artifact
-   *
    * @return the artifact
    */
   Artifact create(@Valid Artifact artifact, ArtifactType artifactType);
@@ -124,8 +123,8 @@ public interface ArtifactService {
   /**
    * Fetch latest artifact for artifact stream artifact.
    *
-   * @param appId            the app id
-   * @param artifactStreamId the artifact stream id
+   * @param appId              the app id
+   * @param artifactStreamId   the artifact stream id
    * @param artifactSourceName the artifact source name
    * @return the artifact
    */
@@ -134,8 +133,8 @@ public interface ArtifactService {
   /**
    * Fetch latest artifact for artifact stream artifact.
    *
-   * @param appId            the app id
-   * @param artifactStreamId the artifact stream id
+   * @param appId              the app id
+   * @param artifactStreamId   the artifact stream id
    * @param artifactSourceName the artifact source name
    * @return the artifact
    */

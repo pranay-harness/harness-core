@@ -14,6 +14,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.utils.WingsReflectionUtils;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 import javax.inject.Inject;
@@ -44,30 +45,32 @@ public class EncryptionServiceImpl implements EncryptionService {
         Preconditions.checkNotNull(f, "could not find " + encryptedDataDetail.getFieldName() + " in " + object);
         f.setAccessible(true);
 
-        switch (encryptedDataDetail.getEncryptionType()) {
-          case LOCAL:
-            SimpleEncryption encryption = new SimpleEncryption(object.getAccountId());
-            decryptedValue = encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
-            break;
-
-          case KMS:
-            decryptedValue = secretManagementDelegateService.decrypt(
-                encryptedDataDetail.getEncryptedData(), (KmsConfig) encryptedDataDetail.getEncryptionConfig());
-            break;
-
-          case VAULT:
-            decryptedValue = secretManagementDelegateService.decrypt(
-                encryptedDataDetail.getEncryptedData(), (VaultConfig) encryptedDataDetail.getEncryptionConfig());
-            break;
-
-          default:
-            throw new IllegalStateException("invalid encryption type: " + encryptedDataDetail.getEncryptionType());
-        }
+        decryptedValue = getDecryptedValue(encryptedDataDetail);
         f.set(object, decryptedValue);
       } catch (Exception e) {
         throw new WingsException(e);
       }
     }
     object.setDecrypted(true);
+  }
+
+  @Override
+  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException {
+    switch (encryptedDataDetail.getEncryptionType()) {
+      case LOCAL:
+        SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
+        return encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
+
+      case KMS:
+        return secretManagementDelegateService.decrypt(
+            encryptedDataDetail.getEncryptedData(), (KmsConfig) encryptedDataDetail.getEncryptionConfig());
+
+      case VAULT:
+        return secretManagementDelegateService.decrypt(
+            encryptedDataDetail.getEncryptedData(), (VaultConfig) encryptedDataDetail.getEncryptionConfig());
+
+      default:
+        throw new IllegalStateException("invalid encryption type: " + encryptedDataDetail.getEncryptionType());
+    }
   }
 }

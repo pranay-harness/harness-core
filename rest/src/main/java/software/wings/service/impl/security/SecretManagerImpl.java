@@ -13,9 +13,11 @@ import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
@@ -34,6 +36,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
+import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -52,6 +55,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.EncryptionConfig;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -60,10 +64,10 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,9 +89,11 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
+  @Inject private EncryptionService encryptionService;
   @Inject private AccountService accountService;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
+  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -336,28 +342,109 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException {
     Preconditions.checkState(!StringUtils.isBlank(encryptedYamlRef));
-    logger.info("Decrypting: {}", encryptedYamlRef);
     String[] tags = encryptedYamlRef.split(":");
     String fieldRefId = tags[1];
     return wingsPersistence.get(EncryptedData.class, fieldRefId);
   }
 
   @Override
-  public boolean transitionSecrets(
-      String accountId, String fromVaultId, String toVaultId, EncryptionType encryptionType) {
+  public boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
+      EncryptionType toEncryptionType, String toSecretId) {
     Preconditions.checkState(!StringUtils.isBlank(accountId), "accountId can't be blank");
-    Preconditions.checkState(!StringUtils.isBlank(fromVaultId), "fromVaultId can't be blank");
-    Preconditions.checkState(!StringUtils.isBlank(toVaultId), "toVaultId can't be blank");
-    switch (encryptionType) {
-      case KMS:
-        return kmsService.transitionKms(accountId, fromVaultId, toVaultId);
+    Preconditions.checkNotNull(fromEncryptionType, "fromEncryptionType can't be blank");
+    Preconditions.checkState(!StringUtils.isBlank(fromSecretId), "fromVaultId can't be blank");
+    Preconditions.checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
+    Preconditions.checkState(!StringUtils.isBlank(toSecretId), "toVaultId can't be blank");
 
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                     .field("accountId")
+                                     .equal(accountId)
+                                     .field("kmsId")
+                                     .equal(fromSecretId);
+
+    if (toEncryptionType == EncryptionType.VAULT) {
+      query = query.field("type").notEqual(SettingVariableTypes.VAULT);
+    }
+
+    Iterator<EncryptedData> iterator = query.fetch();
+    while (iterator.hasNext()) {
+      EncryptedData dataToTransition = iterator.next();
+      transitionKmsQueue.send(KmsTransitionEvent.builder()
+                                  .accountId(accountId)
+                                  .entityId(dataToTransition.getUuid())
+                                  .fromEncryptionType(fromEncryptionType)
+                                  .fromKmsId(fromSecretId)
+                                  .toEncryptionType(toEncryptionType)
+                                  .toKmsId(toSecretId)
+                                  .build());
+    }
+
+    return true;
+  }
+
+  public char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException {
+    EncryptedData encryptedData = getEncryptedDataFromYamlRef(encryptedYamlRef);
+    Preconditions.checkNotNull(encryptedData);
+
+    EncryptionConfig encryptionConfig =
+        getEncryptionConfig(encryptedData.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
+    return encryptionService.getDecryptedValue(EncryptedDataDetail.builder()
+                                                   .encryptedData(encryptedData)
+                                                   .encryptionConfig(encryptionConfig)
+                                                   .encryptionType(encryptedData.getEncryptionType())
+                                                   .build());
+  }
+
+  @Override
+  public void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType,
+      String fromKmsId, EncryptionType toEncryptionType, String toKmsId) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
+    Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
+    Preconditions.checkState(encryptedData.getEncryptionType() == fromEncryptionType,
+        "mismatch between saved encrypted type and from encryption type");
+    EncryptionConfig fromConfig = getEncryptionConfig(accountId, fromKmsId, fromEncryptionType);
+    Preconditions.checkNotNull(
+        fromConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
+    EncryptionConfig toConfig = getEncryptionConfig(accountId, toKmsId, toEncryptionType);
+    Preconditions.checkNotNull(
+        toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
+
+    char[] decrypted = null;
+    switch (fromEncryptionType) {
+      case KMS:
+        decrypted = kmsService.decrypt(encryptedData, accountId, (KmsConfig) fromConfig);
+        break;
       case VAULT:
-        return vaultService.transitionVault(accountId, fromVaultId, toVaultId);
+        decrypted = vaultService.decrypt(encryptedData, accountId, (VaultConfig) fromConfig);
+        break;
 
       default:
-        throw new IllegalArgumentException("Invalid type: " + encryptionType);
+        throw new IllegalStateException("Invalid type : " + fromEncryptionType);
     }
+
+    EncryptedData encrypted;
+    switch (toEncryptionType) {
+      case KMS:
+        encrypted = kmsService.encrypt(decrypted, accountId, (KmsConfig) toConfig);
+        break;
+      case VAULT:
+        String encryptionKey = encryptedData.getEncryptionKey();
+
+        SettingVariableTypes settingVariableType = encryptedData.getType();
+        String keyName = settingVariableType + "/" + encryptedData.getName();
+        encrypted = vaultService.encrypt(keyName, String.valueOf(decrypted), accountId, settingVariableType,
+            (VaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
+        break;
+      default:
+        throw new IllegalStateException("Invalid type : " + toEncryptionType);
+    }
+
+    encryptedData.setKmsId(toKmsId);
+    encryptedData.setEncryptionType(toEncryptionType);
+    encryptedData.setEncryptionKey(encrypted.getEncryptionKey());
+    encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
+
+    wingsPersistence.save(encryptedData);
   }
 
   @Override

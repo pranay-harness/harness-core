@@ -40,8 +40,6 @@ public class Service extends Base {
   private String description;
   private ArtifactType artifactType;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
-
   @Version private long version;
 
   @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
@@ -49,6 +47,7 @@ public class Service extends Base {
   @Transient private List<ConfigFile> configFiles = Lists.newArrayList();
   @Transient private List<ServiceVariable> serviceVariables = Lists.newArrayList();
   @Transient private List<ArtifactStream> artifactStreams = Lists.newArrayList();
+  @Transient private List<ServiceCommand> serviceCommands = Lists.newArrayList();
 
   @Transient private Activity lastDeploymentActivity;
   @Transient private Activity lastProdDeploymentActivity;
@@ -116,24 +115,6 @@ public class Service extends Base {
    */
   public void setArtifactType(ArtifactType artifactType) {
     this.artifactType = artifactType;
-  }
-
-  /**
-   * Gets serviceCommands.
-   *
-   * @return the serviceCommands
-   */
-  public List<ServiceCommand> getServiceCommands() {
-    return serviceCommands;
-  }
-
-  /**
-   * Sets serviceCommands.
-   *
-   * @param serviceCommands the serviceCommands
-   */
-  public void setServiceCommands(List<ServiceCommand> serviceCommands) {
-    this.serviceCommands = serviceCommands;
   }
 
   /**
@@ -263,13 +244,29 @@ public class Service extends Base {
   }
 
   /**
+   * Get Service Commands
+   * @return
+   */
+  public List<ServiceCommand> getServiceCommands() {
+    return serviceCommands;
+  }
+
+  /**
+   * Set service commands
+   * @param serviceCommands
+   */
+  public void setServiceCommands(List<ServiceCommand> serviceCommands) {
+    this.serviceCommands = serviceCommands;
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(name, description, artifactType, serviceCommands, appContainer, configFiles,
-              lastDeploymentActivity, lastProdDeploymentActivity);
+        + Objects.hash(name, description, artifactType, appContainer, configFiles, lastDeploymentActivity,
+              lastProdDeploymentActivity);
   }
 
   /**
@@ -289,7 +286,6 @@ public class Service extends Base {
     final Service other = (Service) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.artifactType, other.artifactType)
-        && Objects.equals(this.serviceCommands, other.serviceCommands)
         && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.lastDeploymentActivity, other.lastDeploymentActivity)
         && Objects.equals(this.lastProdDeploymentActivity, other.lastProdDeploymentActivity);
@@ -304,7 +300,6 @@ public class Service extends Base {
         .add("name", name)
         .add("description", description)
         .add("artifactType", artifactType)
-        .add("serviceCommands", serviceCommands)
         .add("appContainer", appContainer)
         .add("configFiles", configFiles)
         .add("lastDeploymentActivity", lastDeploymentActivity)
@@ -325,7 +320,6 @@ public class Service extends Base {
         .withName(getName())
         .withDescription(getDescription())
         .withArtifactType(getArtifactType())
-        .withCommands(Lists.newArrayList(getServiceCommands()))
         .withVersion(getVersion())
         .withAppContainer(getAppContainer())
         .withConfigFiles(Lists.newArrayList(getConfigFiles()))
@@ -594,7 +588,6 @@ public class Service extends Base {
       service.setName(name);
       service.setDescription(description);
       service.setArtifactType(artifactType);
-      service.setServiceCommands(serviceCommands);
       service.setVersion(version);
       service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);
@@ -607,6 +600,7 @@ public class Service extends Base {
       service.setCreatedAt(createdAt);
       service.setLastUpdatedBy(lastUpdatedBy);
       service.setLastUpdatedAt(lastUpdatedAt);
+      service.setServiceCommands(serviceCommands);
       return service;
     }
   }

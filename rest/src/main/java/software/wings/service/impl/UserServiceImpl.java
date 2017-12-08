@@ -110,6 +110,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class UserServiceImpl implements UserService {
+  public static final String ADD_ROLE_EMAIL_TEMPLATE_NAME = "add_role";
+  public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
+  public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Executor service.
@@ -205,7 +208,7 @@ public class UserServiceImpl implements UserService {
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
       return save(user);
     } else {
-      Map<String, Object> map = new HashMap();
+      Map<String, Object> map = new HashMap<String, Object>();
       map.put("name", user.getName());
       map.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
@@ -233,7 +236,7 @@ public class UserServiceImpl implements UserService {
 
       EmailData emailData = EmailData.builder()
                                 .to(asList(user.getEmail()))
-                                .templateName("signup")
+                                .templateName(SIGNUP_EMAIL_TEMPLATE_NAME)
                                 .templateModel(ImmutableMap.of("name", user.getName(), "url", verificationUrl))
                                 .system(true)
                                 .build();
@@ -349,7 +352,11 @@ public class UserServiceImpl implements UserService {
       } else {
         addAccountRoles(user, account, userInvite.getRoles());
       }
-      sendAddedRoleEmail(user, account, userInvite.getRoles());
+      if (StringUtils.equals(user.getName(), Constants.NOT_REGISTERED)) {
+        sendNewInvitationMail(userInvite, account);
+      } else {
+        sendAddedRoleEmail(user, account, userInvite.getRoles());
+      }
     }
     return wingsPersistence.get(UserInvite.class, userInvite.getAppId(), inviteId);
   }
@@ -362,7 +369,7 @@ public class UserServiceImpl implements UserService {
 
       EmailData emailData = EmailData.builder()
                                 .to(asList(userInvite.getEmail()))
-                                .templateName("invite")
+                                .templateName(INVITE_EMAIL_TEMPLATE_NAME)
                                 .templateModel(ImmutableMap.of("url", inviteUrl, "company", account.getCompanyName()))
                                 .system(true)
                                 .build();
@@ -382,7 +389,7 @@ public class UserServiceImpl implements UserService {
 
       EmailData emailData = EmailData.builder()
                                 .to(asList(user.getEmail()))
-                                .templateName("add_role")
+                                .templateName(ADD_ROLE_EMAIL_TEMPLATE_NAME)
                                 .templateModel(ImmutableMap.of("name", user.getName(), "url", loginUrl, "company",
                                     account.getCompanyName(), "roles", roles))
                                 .system(true)

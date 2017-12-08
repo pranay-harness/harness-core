@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.EmbeddedUser;
+import software.wings.utils.Util;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,6 +62,29 @@ public class NexusArtifactStream extends ArtifactStream {
 
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
+  }
+
+  @Override
+  public String generateName() {
+    return Util.normalize(generateSourceName());
+  }
+
+  @Override
+  public String generateSourceName() {
+    StringBuilder builder = new StringBuilder(getJobname());
+    builder.append("/");
+    builder.append(getGroupId());
+
+    if (StringUtils.isBlank(getImageName())) {
+      getArtifactPaths().stream().forEach(artifactPath -> {
+        builder.append("/");
+        builder.append(artifactPath);
+      });
+    } else {
+      builder.append("/");
+      builder.append(getImageName());
+    }
+    return builder.toString();
   }
 
   /**
