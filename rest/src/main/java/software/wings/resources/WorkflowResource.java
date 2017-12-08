@@ -437,6 +437,8 @@ public class WorkflowResource {
     stateDefaults.put("bucket", "${artifact.bucketName}");
     stateDefaults.put("key", "${artifact.key}");
     stateDefaults.put("bundleType", "zip");
-    return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId, StateType.valueOf(strStateType)));
+    //    return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId,
+    //    StateType.valueOf(strStateType)));
+    return new RestResponse<>(stateDefaults);
   }
 }

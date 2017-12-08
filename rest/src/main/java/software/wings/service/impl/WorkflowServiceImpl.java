@@ -1330,7 +1330,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
-    Service service = serviceResourceService.get(appId, serviceId, false);
     return null;
   }
 
