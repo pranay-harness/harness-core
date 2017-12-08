@@ -3,7 +3,7 @@ import pandas as pd
 
 from core.data_structures.SuffixTree import SuffixTree
 from core.distance.LevenShtein import LevenShteinDistance
-from core.util.TimeSeriesUtils import smooth, MetricToDeviationType, normalize_metric
+from core.util.TimeSeriesUtils import smooth, MetricToDeviationType, normalize_metric, ThresholdComparisonType
 
 
 class SAXHMMDistance(object):
@@ -89,7 +89,7 @@ class SAXHMMDistance(object):
         return thresholds
 
     @staticmethod
-    def get_adjusted_distance(metric_deviation_type, min_threshold, apply_sax, x, y, a, b):
+    def get_adjusted_distance(metric_deviation_type, min_threshold_delta, min_threshold_ratio, apply_sax, x, y, a, b):
         """
 
         The distance is adjusted based on high and low deviation notions, to safe guard against
@@ -97,7 +97,8 @@ class SAXHMMDistance(object):
         on domain knowledge.
 
         :param metric_deviation_type:
-        :param min_threshold:
+        :param min_threshold_delta: absolute difference should be greater than this
+        :param min_threshold_ratio: % change should be greate than this
         :param apply_sax: if true use letter distance else fixed distance
         :param x: the x value
         :param y: the y value
@@ -105,7 +106,7 @@ class SAXHMMDistance(object):
         :param b: the letter from the Alphabet for the y value
         :return: the adjusted distance
         """
-        if SAXHMMDistance.low_deviation(metric_deviation_type, min_threshold, x, y):
+        if SAXHMMDistance.low_deviation(metric_deviation_type, min_threshold_delta, min_threshold_ratio, x, y):
             return 0
         if SAXHMMDistance.high_deviation(metric_deviation_type, x, y):
             return SAXHMMDistance.max_dist
@@ -140,17 +141,17 @@ class SAXHMMDistance(object):
             return False
 
     @staticmethod
-    def low_deviation(metric_deviation_type, min_threshold, x, y):
+    def low_deviation(metric_deviation_type, min_threshold_delta, min_threshold_ratio,  x, y):
         """
             Apply the distribution to compute distance only if the difference is above a specified
             minimum threshold. This information is derived from domain knowledge.
             For instance, if the difference in average response time is less than
             50 ms, then it is acceptable regardless of what the distribution tells us.
 
-            Also, its low deviation if the difference is less than 50%. TODO - is this OK ?
+            Also, its low deviation if the % change is within a specified value. For now its at 50%
         """
         if not np.isnan(x) and not np.isnan(y):
-            return abs(y - x) < min_threshold or abs(y - x) < 0.5 * min(x, y)
+            return abs(y - x) < min_threshold_delta or abs(y - x) < min_threshold_ratio * min(x, y)
         else:
             return False
 
@@ -226,14 +227,13 @@ class SAXHMMDistance(object):
 
 
 class SAXHMMDistanceFinder(object):
-    def __init__(self, metric_name, smooth_window, tolerance, control_data_dict, test_data_dict, metric_deviation_type,
-                 min_metric_threshold, comparison_unit_window):
+    def __init__(self, metric_name, smooth_window, tolerance, control_data_dict, test_data_dict, metric_template,
+                 comparison_unit_window):
         self.metric_name = metric_name
         self.smooth_window = smooth_window
         self.thresholds = SAXHMMDistance.thresholds
         self.tolerance = tolerance
-        self.metric_deviation_type = metric_deviation_type
-        self.min_metric_threshold = min_metric_threshold
+        self.metric_template = metric_template
         self.comparison_unit_window = comparison_unit_window
         self.control_data_dict = control_data_dict
         self.test_data_dict = test_data_dict
@@ -269,8 +269,11 @@ class SAXHMMDistanceFinder(object):
         :param test_letter: the  letter for the value from the alphabet
         :return:
         """
-        return SAXHMMDistance.get_adjusted_distance(self.metric_deviation_type,
-                                                    self.min_metric_threshold,
+        return SAXHMMDistance.get_adjusted_distance(self.metric_template.get_deviation_type(self.metric_name),
+                                                    self.metric_template.get_deviation_min_threshold(self.metric_name,
+                                                                                                     ThresholdComparisonType.DELTA),
+                                                    self.metric_template.get_deviation_min_threshold(self.metric_name,
+                                                                                                     ThresholdComparisonType.RATIO),
                                                     self.apply_sax,
                                                     control_val, test_val,
                                                     control_letter,

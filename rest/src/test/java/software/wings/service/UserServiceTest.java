@@ -27,6 +27,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMEN
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
+import static software.wings.service.impl.UserServiceImpl.SIGNUP_EMAIL_TEMPLATE_NAME;
+import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -76,6 +78,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -211,7 +214,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(USER_EMAIL);
-    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("signup");
+    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(SIGNUP_EMAIL_TEMPLATE_NAME);
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
         .startsWith(PORTAL_URL + "#" + VERIFICATION_PATH);
@@ -403,7 +406,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should invite new user.
    */
   @Test
-  public void shouldInviteNewUser() {
+  public void shouldInviteNewUser() throws EmailException, TemplateException, IOException {
     UserInvite userInvite = UserInviteBuilder.anUserInvite()
                                 .withAppId(GLOBAL_APP_ID)
                                 .withAccountId(ACCOUNT_ID)
@@ -425,7 +428,21 @@ public class UserServiceTest extends WingsBaseTest {
     verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
     verify(cache).remove(USER_ID);
-    ;
+
+    // verify the outgoing email template
+    verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
+    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
+
+    User sameUser = new User();
+    sameUser.setName(Constants.NOT_REGISTERED);
+    when(wingsPersistence.createQuery(User.class).get()).thenReturn(sameUser);
+    // mock out addToSet
+    when(updateOperations.addToSet(anyString(), any(Account.class))).thenReturn(updateOperations);
+
+    // now try to invite same user again, should still be "signup" and not "role"
+    userService.inviteUsers(userInvite);
+    verify(emailDataNotificationService, times(2)).send(emailDataArgumentCaptor.capture());
+    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
   }
 
   /**

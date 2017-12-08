@@ -57,7 +57,7 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     List<ContainerInfo> containerInfos = ecsContainerService.provisionTasks(region, cloudProviderSetting,
         encryptedDataDetails, clusterName, serviceName, desiredSize, serviceSteadyStateTimeout, executionLogCallback);
     executionLogCallback.saveExecutionLog(
-        String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
+        String.format("Completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
     return containerInfos;
   }
 
