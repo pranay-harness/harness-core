@@ -205,4 +205,6 @@ public interface WorkflowService {
   Workflow cloneWorkflow(String appId, String workflowId, CloneMetadata cloneMetadata);
 
   WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
+
+  Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType);
 }
