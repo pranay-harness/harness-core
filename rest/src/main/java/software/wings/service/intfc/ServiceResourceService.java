@@ -22,7 +22,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 3/28/16.
  */
-public interface ServiceResourceService {
+public interface ServiceResourceService extends OwnedByApplication {
   /**
    * List.
    *
@@ -188,14 +188,6 @@ public interface ServiceResourceService {
    * @return the command stencils
    */
   List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName);
-
-  /**
-   * Delete by app id boolean.
-   *
-   * @param application the app id
-   * @return the boolean
-   */
-  void deleteByApp(Application application);
 
   /**
    * Find services by app list.

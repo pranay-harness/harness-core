@@ -314,10 +314,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     boolean deleted = wingsPersistence.delete(environment);
 
     if (deleted) {
-      executorService.submit(() -> serviceTemplateService.deleteByEnv(environment.getAppId(), environment.getUuid()));
-      executorService.submit(
-          () -> workflowService.deleteWorkflowByEnvironment(environment.getAppId(), environment.getUuid()));
-      executorService.submit(() -> activityService.deleteByEnvironment(environment.getAppId(), environment.getUuid()));
+      prune(environment);
+
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(environment.getAppId())
@@ -330,15 +328,18 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
   }
 
+  private void prune(Environment environment) {
+    executorService.submit(() -> serviceTemplateService.deleteByEnv(environment.getAppId(), environment.getUuid()));
+    executorService.submit(
+        () -> workflowService.deleteWorkflowByEnvironment(environment.getAppId(), environment.getUuid()));
+    executorService.submit(() -> activityService.deleteByEnvironment(environment.getAppId(), environment.getUuid()));
+  }
+
   @Override
-  public void deleteByApp(Application application) {
+  public void pruneByApplication(String appId) {
     List<Environment> environments =
-        wingsPersistence.createQuery(Environment.class).field("appId").equal(application.getUuid()).asList();
-    environments.forEach(environment -> {
-      environment.setEntityYamlPath(
-          yamlDirectoryService.getRootPathByEnvironment(environment, application.entityYamlPath));
-      delete(environment);
-    });
+        wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
+    environments.forEach(environment -> { prune(environment); });
   }
 
   @Override

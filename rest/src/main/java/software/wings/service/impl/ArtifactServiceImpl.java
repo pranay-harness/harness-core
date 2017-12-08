@@ -292,7 +292,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public void deleteByApplication(String appId) {
+  public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Artifact.class)
         .field("appId")
         .equal(appId)

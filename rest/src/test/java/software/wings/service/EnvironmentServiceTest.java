@@ -365,7 +365,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
-    environmentService.deleteByApp(Application.Builder.anApplication().withUuid(APP_ID).build());
+    environmentService.pruneByApplication(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
     inOrder.verify(wingsPersistence).delete(any(Environment.class));
     inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
