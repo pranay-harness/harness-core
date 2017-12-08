@@ -49,6 +49,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.OwnedByApplication;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -62,6 +63,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -85,24 +87,24 @@ public class AppServiceImpl implements AppService {
 
   private final static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private SettingsService settingsService;
-  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AlertService alertService;
+  @Inject private ArtifactService artifactService;
   @Inject private EnvironmentService environmentService;
   @Inject private ExecutorService executorService;
-  @Inject private SetupService setupService;
-  @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private NotificationService notificationService;
-  @Inject private WorkflowService workflowService;
-  @Inject private ArtifactService artifactService;
-  @Inject private StatisticsService statisticsService;
-  @Inject private RoleService roleService;
-  @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private AlertService alertService;
+  @Inject private NotificationService notificationService;
+  @Inject private PipelineService pipelineService;
+  @Inject private RoleService roleService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private SettingsService settingsService;
+  @Inject private SetupService setupService;
+  @Inject private StatisticsService statisticsService;
   @Inject private TriggerService triggerService;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -322,16 +324,18 @@ public class AppServiceImpl implements AppService {
     application.setEntityYamlPath(yamlDirectoryService.getRootPathByApp(application));
     if (deleted) {
       executorService.submit(() -> {
-        notificationService.deleteByApplication(appId);
-        environmentService.deleteByApp(application);
-        artifactService.deleteByApplication(appId);
-        workflowService.deleteWorkflowByApplication(appId);
-        workflowService.deleteStateMachinesByApplication(appId);
-        pipelineService.deletePipelineByApplication(appId);
-        serviceResourceService.deleteByApp(application);
-        instanceService.deleteByApp(appId);
-        alertService.deleteByApp(appId);
-        triggerService.deleteByApp(appId);
+        for (Field field : AppServiceImpl.class.getDeclaredFields()) {
+          try {
+            Object obj = field.get(this);
+            if (obj instanceof OwnedByApplication) {
+              OwnedByApplication item = (OwnedByApplication) obj;
+              item.pruneByApplication(appId);
+            }
+          } catch (IllegalAccessException e) {
+            e.printStackTrace();
+          }
+        }
+
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(application.getUuid())

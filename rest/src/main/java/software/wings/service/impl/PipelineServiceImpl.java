@@ -235,13 +235,12 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public boolean deletePipelineByApplication(String appId) {
+  public void pruneByApplication(String appId) {
     List<Key<Pipeline>> pipelineKeys =
         wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList();
     for (Key key : pipelineKeys) {
       deletePipeline(appId, (String) key.getId(), true);
     }
-    return false;
   }
 
   @Override
