@@ -146,7 +146,7 @@ public class DelegateModule extends AbstractModule {
         .toInstance(ThreadPool.create(2 * cores, 50, 0, TimeUnit.MILLISECONDS,
             new ThreadFactoryBuilder().setNameFormat("delegate-task-%d").build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
-    bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class);
+    bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);

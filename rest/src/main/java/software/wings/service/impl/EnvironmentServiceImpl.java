@@ -203,7 +203,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
 
-    yamlChangeSetHelper.queueEnvironmentYamlChangeAsync(savedEnvironment, ChangeType.DELETE);
+    yamlChangeSetHelper.environmentYamlChangeAsync(savedEnvironment, ChangeType.DELETE);
 
     return savedEnvironment;
   }
@@ -225,7 +225,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment updatedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    yamlChangeSetHelper.queueEnvironmentUpdateYamlChangeAsync(savedEnvironment, updatedEnvironment);
+    yamlChangeSetHelper.environmentUpdateYamlChangeAsync(savedEnvironment, updatedEnvironment);
 
     return updatedEnvironment;
   }
@@ -326,7 +326,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                   ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
               .build());
 
-      yamlChangeSetHelper.queueEnvironmentYamlChangeAsync(environment, ChangeType.DELETE);
+      yamlChangeSetHelper.environmentYamlChangeAsync(environment, ChangeType.DELETE);
     }
   }
 

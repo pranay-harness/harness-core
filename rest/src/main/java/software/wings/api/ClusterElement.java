@@ -61,6 +61,11 @@ public class ClusterElement implements ContextElement {
     this.infraMappingId = infraMappingId;
   }
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   public static final class ClusterElementBuilder {
     private String uuid;
     private String name;

@@ -9,11 +9,14 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.WAITING;
 
+import com.google.inject.name.Named;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -21,7 +24,6 @@ import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.utils.Misc;
 
 import javax.inject.Inject;
 
@@ -31,8 +33,12 @@ import javax.inject.Inject;
 public class StateMachineExecutionCleanupJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutionCleanupJob.class);
 
+  public static final String GROUP = "SM_CLEANUP_CRON_GROUP";
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionInterruptManager executionInterruptManager;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -46,6 +52,13 @@ public class StateMachineExecutionCleanupJob implements Job {
             .build());
 
     if (pageResponse == null || pageResponse.isEmpty()) {
+      // This is making the job self pruning. This allow to simplify the logic in deletion of the application.
+      // TODO: generalize this self pruning logic for every job.
+
+      Application application = wingsPersistence.get(Application.class, appId);
+      if (application == null) {
+        jobScheduler.deleteJob(appId, GROUP);
+      }
       return;
     }
 

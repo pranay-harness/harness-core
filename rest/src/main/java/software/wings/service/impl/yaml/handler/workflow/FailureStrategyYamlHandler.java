@@ -44,12 +44,15 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   public Yaml toYaml(FailureStrategy bean, String appId) {
     List<String> failureTypeList =
         bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(Collectors.toList());
+    String repairActionCode = Util.getStringFromEnum(bean.getRepairActionCode());
+    String repairActionCodeAfterRetry = Util.getStringFromEnum(bean.getRepairActionCodeAfterRetry());
+    String executionScope = Util.getStringFromEnum(bean.getExecutionScope());
+
     return FailureStrategy.Yaml.Builder.anYaml()
-        .withExecutionScope(bean.getExecutionScope() != null ? bean.getExecutionScope().name() : null)
+        .withExecutionScope(executionScope)
         .withFailureTypes(failureTypeList)
-        .withRepairActionCode(bean.getRepairActionCode().name())
-        .withRepairActionCodeAfterRetry(
-            bean.getRepairActionCodeAfterRetry() != null ? bean.getRepairActionCodeAfterRetry().name() : null)
+        .withRepairActionCode(repairActionCode)
+        .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)
         .withRetryCount(bean.getRetryCount())
         .withRetryIntervals(bean.getRetryIntervals())
         .build();

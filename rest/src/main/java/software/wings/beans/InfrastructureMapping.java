@@ -78,19 +78,6 @@ public abstract class InfrastructureMapping extends Base {
     this.infraMappingType = infraMappingType;
   }
 
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static abstract class Yaml extends BaseEntityYaml {
-    private String computeProviderType;
-    private String serviceName;
-
-    private String infraMappingType;
-
-    private String deploymentType;
-    private String computeProviderName;
-    private String name;
-  }
-
   @SchemaIgnore
   public String getAccountId() {
     return accountId;
@@ -340,5 +327,18 @@ public abstract class InfrastructureMapping extends Base {
           .collect(Collectors.toMap(
               SettingAttribute::getUuid, SettingAttribute::getName, (v1, v2) -> v1, LinkedHashMap::new));
     }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends BaseEntityYaml {
+    private String computeProviderType;
+    private String serviceName;
+
+    private String infraMappingType;
+
+    private String deploymentType;
+    private String computeProviderName;
+    private String name;
   }
 }

@@ -87,6 +87,7 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.HostValidationService;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -129,7 +130,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
-  private static final String FIRST_REVISION = ".1";
   @Inject private SecretManager secretManager;
 
   @Override
@@ -252,33 +252,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     // If an entry exists with the given default name
     if (response != null && response.size() > 0) {
       String existingName = response.get(0).getName();
-      int index = existingName.lastIndexOf('.');
-      if (index == -1) {
-        name = name + FIRST_REVISION;
-      } else {
-        if (index < existingName.length() - 1) {
-          String revisionString = existingName.substring(index + 1);
-          int revision = -1;
-          try {
-            revision = Integer.parseInt(revisionString);
-          } catch (NumberFormatException ex) {
-          }
-
-          if (revision != -1) {
-            revision++;
-            name = name + "." + revision;
-          } else {
-            name = name + FIRST_REVISION;
-          }
-        } else {
-          name = name + FIRST_REVISION;
-        }
-      }
-
-      infraMapping.setName(name);
-    } else {
-      infraMapping.setName(infraMapping.getDefaultName());
+      name = Util.getNameWithNextRevision(existingName, name);
     }
+
+    infraMapping.setName(name);
   }
 
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {

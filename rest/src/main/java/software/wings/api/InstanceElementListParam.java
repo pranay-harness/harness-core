@@ -48,6 +48,11 @@ public class InstanceElementListParam implements ContextElement {
     this.instanceElements = instanceElements;
   }
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   public static final class InstanceElementListParamBuilder {
     private List<InstanceElement> instanceElements;
 

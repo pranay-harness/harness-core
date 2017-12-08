@@ -6,27 +6,27 @@ package software.wings.metrics;
  */
 public enum MetricType {
   /**
-   * Metrics used for timing a process.
+   * Metrics that represents any observation
    */
-  TIME_MS,
+  VALUE,
+
   /**
-   * Metrics used for timing a process (DEPRECATED).
+   * Metrics that measure time
    */
-  TIME,
+  RESP_TIME,
+
   /**
-   * Metrics that count something.
+   * Metrics that count invocations
    */
-  COUNT,
+  THROUGHPUT,
+
   /**
-   * Metrics that count something as a rate (count per time)
+   * Metrics that count error
    */
-  RATE,
+  ERROR,
+
   /**
-   * Metrics that show the percentage of events that matched.
+   * Metrics that count something
    */
-  PERCENTAGE,
-  /**
-   * Metrics that are either true or false.
-   */
-  BOOLEAN;
+  COUNT
 }

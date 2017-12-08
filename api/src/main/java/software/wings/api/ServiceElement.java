@@ -4,6 +4,8 @@
 
 package software.wings.api;
 
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
+
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -55,6 +57,11 @@ public class ServiceElement implements ContextElement {
    */
   public void setUuid(String uuid) {
     this.uuid = uuid;
+  }
+
+  @Override
+  public ContextElement cloneMin() {
+    return aServiceElement().withUuid(uuid).withName(name).build();
   }
 
   /* (non-Javadoc)

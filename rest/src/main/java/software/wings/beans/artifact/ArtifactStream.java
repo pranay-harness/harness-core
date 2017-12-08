@@ -2,6 +2,7 @@ package software.wings.beans.artifact;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -9,6 +10,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.EnumData;
@@ -29,6 +34,9 @@ import javax.validation.constraints.NotNull;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 @Entity(value = "artifactStream")
+@Indexes(
+    @Index(fields = { @Field("appId")
+                      , @Field("serviceId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public abstract class ArtifactStream extends Base {
   @SchemaIgnore private static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
@@ -38,9 +46,14 @@ public abstract class ArtifactStream extends Base {
   @EnumData(enumDataProvider = ArtifactSourceTypeEnumDataProvider.class)
   private String artifactStreamType;
 
-  @NotEmpty @SchemaIgnore private String sourceName;
+  @SchemaIgnore private String sourceName;
 
   @UIOrder(2) @NotEmpty @Attributes(title = "Source Server") private String settingId;
+
+  @Attributes(title = "Name") private String name;
+
+  // auto populate name
+  @SchemaIgnore private boolean autoPopulate = true;
 
   @UIOrder(3) private String serviceId;
 
@@ -59,15 +72,6 @@ public abstract class ArtifactStream extends Base {
    */
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static abstract class Yaml extends BaseEntityYaml {
-    private String sourceName;
-    private String settingName;
-    private boolean autoApproveForProduction = false;
-    private boolean metadataOnly = false;
   }
 
   /**
@@ -234,6 +238,27 @@ public abstract class ArtifactStream extends Base {
     return super.getUuid();
   }
 
+  @SchemaIgnore
+  public boolean isAutoPopulate() {
+    return autoPopulate;
+  }
+
+  public void setAutoPopulate(boolean autoPopulate) {
+    this.autoPopulate = autoPopulate;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  @JsonIgnore @SchemaIgnore public abstract String generateName();
+
+  @JsonIgnore @SchemaIgnore public abstract String generateSourceName();
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
   /**
    * Sets stream actions.
    *
@@ -304,4 +329,13 @@ public abstract class ArtifactStream extends Base {
   @SchemaIgnore public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
 
   public abstract ArtifactStream clone();
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends BaseEntityYaml {
+    private String sourceName;
+    private String settingName;
+    private boolean autoApproveForProduction = false;
+    private boolean metadataOnly = false;
+  }
 }

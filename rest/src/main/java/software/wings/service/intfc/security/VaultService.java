@@ -27,10 +27,6 @@ public interface VaultService {
 
   VaultConfig getVaultConfig(String accountId, String entityId);
 
-  boolean transitionVault(String accountId, String fromVaultId, String toVaultId);
-
-  void changeVault(String accountId, String entityId, String fromVaultId, String toVaultId);
-
   EncryptedData encryptFile(
       String accountId, String name, BoundedInputStream inputStream, EncryptedData savedEncryptedData);
 

@@ -8,7 +8,7 @@ import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
-import static software.wings.beans.yaml.YamlConstants.ENTITY_YAML;
+import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
@@ -277,7 +277,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       FolderNode appFolder = new FolderNode(
           accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
       applicationsFolder.addChild(appFolder);
-      String yamlFileName = ENTITY_YAML;
+      String yamlFileName = INDEX_YAML;
       appFolder.addChild(new YamlNode(accountId, app.getUuid(), yamlFileName, Application.class,
           appPath.clone().add(yamlFileName), yamlGitSyncService, Type.APP));
 
@@ -343,7 +343,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over services
       for (Service service : services) {
         DirectoryPath servicePath = directoryPath.clone();
-        String yamlFileName = ENTITY_YAML;
+        String yamlFileName = INDEX_YAML;
         FolderNode serviceFolder = new FolderNode(accountId, service.getName(), Service.class,
             servicePath.add(service.getName()), service.getAppId(), yamlGitSyncService);
         servicesFolder.addChild(serviceFolder);
@@ -357,7 +357,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             serviceCommandPath, service.getAppId(), yamlGitSyncService);
         serviceFolder.addChild(serviceCommandsFolder);
 
-        List<ServiceCommand> serviceCommands = service.getServiceCommands();
+        List<ServiceCommand> serviceCommands = serviceResourceService.getServiceCommands(service);
 
         // iterate over service commands
         for (ServiceCommand serviceCommand : serviceCommands) {
@@ -445,7 +445,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       for (Environment environment : environments) {
         DirectoryPath envPath = directoryPath.clone();
 
-        String yamlFileName = ENTITY_YAML;
+        String yamlFileName = INDEX_YAML;
         FolderNode envFolder = new FolderNode(accountId, environment.getName(), Environment.class,
             envPath.add(environment.getName()), environment.getAppId(), yamlGitSyncService);
         environmentsFolder.addChild(envFolder);

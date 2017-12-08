@@ -107,6 +107,11 @@ public class ContainerServiceElement implements ContextElement {
     this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
   }
 
+  @Override
+  public ContextElement cloneMin() {
+    return this;
+  }
+
   public static final class ContainerServiceElementBuilder {
     private ContainerServiceElement containerServiceElement;
 

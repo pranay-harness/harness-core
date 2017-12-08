@@ -27,10 +27,6 @@ public interface KmsService {
 
   Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret);
 
-  boolean transitionKms(String accountId, String fromKmsId, String toKmsId);
-
-  void changeKms(String accountId, String entityId, String fromKmsId, String toKmsId);
-
   EncryptedData encryptFile(String accountId, String name, BoundedInputStream inputStream);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
