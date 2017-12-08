@@ -1,12 +1,20 @@
 package software.wings.utils;
 
-import com.google.api.client.util.Throwables;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
+import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
 
 import com.mongodb.DuplicateKeyException;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
@@ -42,7 +50,7 @@ public class Validator {
    * Checks whether 2 values are equal or not.
    *
    * @param value1 value1
-   * @param value2  value2
+   * @param value2 value2
    */
   public static void equalCheck(Object value1, Object value2) {
     if (!Objects.equals(value1, value2)) {
@@ -62,7 +70,7 @@ public class Validator {
     try {
       runnable.run();
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+      throw prepareWingsException(INVALID_ARGUMENT, "arg", "Duplicate " + field + " " + value);
     }
   }
 
@@ -70,12 +78,61 @@ public class Validator {
     try {
       return runnable.call();
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+      /*List<ResponseMessage> responseMessages = new ArrayList<>();
+      responseMessages.add(prepareResponseMessage(INVALID_ARGUMENT, WARN, "hello"));
+      Map<String, Object> params = new HashMap();
+      params.put("args", "hello");
+      throw new WingsException(responseMessages, "hello", params);*/
+      //      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+      throw prepareWingsException(INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+        throw prepareWingsException(INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
       }
-      throw Throwables.propagate(e);
+      throw prepareWingsException(INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
     }
+  }
+
+  /***
+   * Prepares WingsException
+   * @param errorCode
+   * @param responseType
+   * @param param
+   * @param message
+   * @return
+   */
+  public static WingsException prepareWingsException(
+      ErrorCode errorCode, ResponseTypeEnum responseType, String param, String message) {
+    List<ResponseMessage> responseMessages = new ArrayList<>();
+    responseMessages.add(prepareResponseMessage(errorCode, responseType, message));
+    Map<String, Object> params = new HashMap();
+    params.put(param, message);
+    return new WingsException(responseMessages, message, params);
+  }
+  /**
+   * Prepares and throw exception with WARN error type.
+   *
+   * @param errorCode
+   * @param param
+   * @param message
+   */
+  public static WingsException prepareWingsException(ErrorCode errorCode, String param, String message) {
+    return prepareWingsException(errorCode, WARN, param, message);
+  }
+
+  /**
+   * Prepares Response Message
+   * @param errorCode
+   * @param errorType
+   * @param errorMsg
+   * @return
+   */
+  public static ResponseMessage prepareResponseMessage(
+      ErrorCode errorCode, ResponseTypeEnum errorType, String errorMsg) {
+    final ResponseMessage responseMessage = new ResponseMessage();
+    responseMessage.setCode(errorCode);
+    responseMessage.setErrorType(errorType == null ? ERROR : errorType);
+    responseMessage.setMessage(errorMsg);
+    return responseMessage;
   }
 }
