@@ -68,6 +68,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -114,6 +115,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
@@ -145,6 +148,7 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.ElasticLoadBalancerState.Operation;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -156,6 +160,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1329,7 +1334,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
-    return null;
+    switch (stateType) {
+      case AWS_CODEDEPLOY_STATE: {
+        List<ArtifactStream> artifactStreams = artifactStreamService.getArtifactStreamsForService(appId, serviceId);
+        if (artifactStreams.stream().anyMatch(
+                artifactStream -> ArtifactStreamType.AMAZON_S3.equals(artifactStream.getArtifactStreamType()))) {
+          return AwsCodeDeployState.getStateDefaults();
+        }
+      }
+      default:
+        break;
+    }
+    return Collections.emptyMap();
   }
 
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
