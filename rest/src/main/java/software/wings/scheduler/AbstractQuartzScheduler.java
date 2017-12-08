@@ -115,6 +115,10 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
   public Date scheduleJob(JobDetail jobDetail, Trigger trigger) {
     try {
       return scheduler.scheduleJob(jobDetail, trigger);
+    } catch (org.quartz.ObjectAlreadyExistsException ex) {
+      // We do not need to polute the logs with error logs, just the job already exists.
+      // TODO: add additional check if the aboit to add job properties are the same with the already existing one.
+      //       we should update the job if they differ.
     } catch (SchedulerException ex) {
       logger.error("Couldn't schedule cron for job {} with trigger {}", jobDetail.toString(), trigger.toString(), ex);
     }
