@@ -339,7 +339,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public void pruneByApplication(String appId) {
     List<Environment> environments =
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
-    environments.forEach(environment -> { prune(environment); });
+    environments.forEach(environment -> {
+      wingsPersistence.delete(environment);
+      prune(environment);
+    });
   }
 
   @Override
