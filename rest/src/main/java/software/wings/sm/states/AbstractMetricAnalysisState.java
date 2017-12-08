@@ -14,6 +14,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricAnalysisJob;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -234,7 +235,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .analysisServerConfigId(getAnalysisServerConfigId())
           .correlationId(correlationId)
           .smooth_window(SMOOTH_WINDOW)
-          .tolerance(TOLERANCE)
+          .tolerance(getAnalysisTolerance().tolerance())
           .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
           .comparisonWindow(COMPARISON_WINDOW)
           .parallelProcesses(PARALLEL_PROCESSES)
@@ -243,6 +244,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       throw new RuntimeException(e);
     }
   }
+
+  public abstract AnalysisTolerance getAnalysisTolerance();
 
   protected abstract String getStateBaseUrl();
 }
