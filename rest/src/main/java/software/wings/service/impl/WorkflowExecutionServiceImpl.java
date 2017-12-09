@@ -23,6 +23,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
@@ -514,6 +515,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                   .withLimit(UNLIMITED)
                                                   .addFilter("appId", EQ, workflowExecution.getAppId())
                                                   .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+                                                  .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
                                                   .build();
     return wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
   }
@@ -629,6 +631,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                   .withLimit(PageRequest.UNLIMITED)
                                                   .addFilter("appId", EQ, workflowExecution.getAppId())
                                                   .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+                                                  .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
                                                   .addFieldsExcluded("contextElements", "callback")
                                                   .build();
 
@@ -941,7 +944,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         List<ServiceElement> services = new ArrayList<>();
         artifacts.forEach(artifact -> {
           artifact.getServiceIds().forEach(serviceId -> {
-            Service service = serviceResourceService.get(artifact.getAppId(), serviceId);
+            Service service = serviceResourceService.get(artifact.getAppId(), serviceId, false);
             ServiceElement se = new ServiceElement();
             MapperUtils.mapObject(service, se);
             services.add(se);
@@ -1203,7 +1206,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setTotal(executionArgs.getServiceInstances().size());
-    Service service = serviceResourceService.get(appId, executionArgs.getServiceId());
+    Service service = serviceResourceService.get(appId, executionArgs.getServiceId(), false);
     workflowExecution.setServiceIds(asList(executionArgs.getServiceId()));
     workflowExecution.setName(service.getName() + "/" + executionArgs.getCommandName());
     workflowExecution.setWorkflowId(workflow.getUuid());
@@ -1654,6 +1657,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
                 StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), StateType.PHASE_STEP.name())
             .addFilter("parentInstanceId", Operator.NOT_EXISTS, null)
+            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addOrder("createdAt", OrderType.ASC)
             .build();
 
@@ -1749,6 +1753,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addFieldsIncluded("uuid", "stateName", "contextElement", "parentInstanceId", "status")
             .build();
     PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
