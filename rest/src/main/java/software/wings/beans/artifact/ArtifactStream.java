@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
@@ -55,7 +56,7 @@ public abstract class ArtifactStream extends Base {
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;
 
-  @UIOrder(3) private String serviceId;
+  @UIOrder(3) @Indexed private String serviceId;
 
   @SchemaIgnore private boolean autoDownload = true;
 
