@@ -354,18 +354,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowExecutionId) {
+      String appId, String envId, String templateId, String workflowExecutionId, boolean maskEncryptedFields) {
     ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
     if (serviceTemplate == null) {
       return new ArrayList<>();
     }
 
     List<ServiceVariable> serviceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getServiceId(), false);
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getServiceId(), maskEncryptedFields);
     List<ServiceVariable> allServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, envId, false);
+        serviceVariableService.getServiceVariablesForEntity(appId, envId, maskEncryptedFields);
     List<ServiceVariable> templateServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), false);
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), maskEncryptedFields);
 
     return overrideServiceSettings(
         overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId),

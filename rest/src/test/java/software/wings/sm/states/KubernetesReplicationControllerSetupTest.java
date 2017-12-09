@@ -194,7 +194,8 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null)).thenReturn(emptyList());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, false))
+        .thenReturn(emptyList());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(kubernetesReplicationControllerSetup, "secretManager", secretManager);
     //    when(encryptionService.decrypt(any(), any())).thenR

@@ -316,7 +316,7 @@ public class AwsLambdaState extends State {
     Map<String, String> serviceVariables =
         serviceTemplateService
             .computeServiceVariables(
-                appId, envId, infrastructureMapping.getServiceTemplateId(), context.getWorkflowExecutionId())
+                appId, envId, infrastructureMapping.getServiceTemplateId(), context.getWorkflowExecutionId(), false)
             .stream()
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));
