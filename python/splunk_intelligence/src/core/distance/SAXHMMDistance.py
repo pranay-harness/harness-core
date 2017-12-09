@@ -362,13 +362,13 @@ class SAXHMMDistanceFinder(object):
         n = len(test_cut)
         new_test_cut = []
         for i in range(0, n, w):
-            control_sub_cut = sorted(control_cut[i:i+w])
-            test_sub_cut = sorted(test_cut[i:i+w])
+            control_sub_cut = [(b[0], b[1]) for b in sorted(enumerate(control_cut[i:i+w]), key=lambda i:i[1])]
+            test_sub_cut = [(b[0], b[1]) for b in sorted(enumerate(test_cut[i:i+w]), key=lambda i:i[1])]
 
             dist_vector.extend(np.asarray(
-                [self.get_dist_value_letter(control_data[z + i], test_data[z + i], a, b)
-                 for z, (a, b) in enumerate(zip(control_sub_cut, test_sub_cut))]))
-            new_test_cut.extend(test_sub_cut)
+                [self.get_dist_value_letter(control_data[a[0] + i], test_data[b[0] + i], a[1], b[1])
+                 for (a, b) in zip(control_sub_cut, test_sub_cut)]))
+            new_test_cut.extend([x[1] for x in test_sub_cut])
         return np.asarray(dist_vector), np.asarray(new_test_cut)
 
     def compute_dist(self):
@@ -463,6 +463,8 @@ class SAXHMMDistanceFinder(object):
                     risk[i] = \
                         0 if score[i] <= self.thresholds.get(self.tolerance) \
                             else 1 if score[i] <= self.thresholds.get(self.tolerance + 1) else 2
+                    if risk[i] == 0:
+                        break
 
         return dict(distances=distances, nn=nn, score=score, control_cuts=cuts, test_cuts=self.test_cuts,
                     optimal_test_cuts=optimal_cuts, optimal_test_data=optimal_data, risk=risk,
