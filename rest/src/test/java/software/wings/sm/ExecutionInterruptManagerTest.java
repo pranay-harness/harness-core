@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.WorkflowExecution;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -45,11 +47,13 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    WorkflowExecution workflowExecution =
+        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(UUIDGenerator.getUuid())
+                                                .withExecutionUuid(workflowExecution.getUuid())
                                                 .build();
     try {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
@@ -254,13 +258,14 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    WorkflowExecution workflowExecution =
+        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
 
-    String executionUuid = UUIDGenerator.getUuid();
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(executionUuid)
+                                                .withExecutionUuid(workflowExecution.getUuid())
                                                 .build();
     executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
 
@@ -268,7 +273,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                              .withAppId(app.getUuid())
                              .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
                              .withEnvId(env.getUuid())
-                             .withExecutionUuid(executionUuid)
+                             .withExecutionUuid(workflowExecution.getUuid())
                              .build();
     try {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
@@ -287,13 +292,14 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    WorkflowExecution workflowExecution =
+        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
 
-    String executionUuid = UUIDGenerator.getUuid();
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(executionUuid)
+                                                .withExecutionUuid(workflowExecution.getUuid())
                                                 .build();
     executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
 
@@ -301,7 +307,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                        .withAppId(app.getUuid())
                                        .withExecutionInterruptType(ExecutionInterruptType.RESUME_ALL)
                                        .withEnvId(env.getUuid())
-                                       .withExecutionUuid(executionUuid)
+                                       .withExecutionUuid(workflowExecution.getUuid())
                                        .build();
     resumeAll = executionInterruptManager.registerExecutionInterrupt(resumeAll);
 
@@ -309,7 +315,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                              .withAppId(app.getUuid())
                              .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
                              .withEnvId(env.getUuid())
-                             .withExecutionUuid(executionUuid)
+                             .withExecutionUuid(workflowExecution.getUuid())
                              .build();
     executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
     assertThat(wingsPersistence.get(ExecutionInterrupt.class, resumeAll.getAppId(), resumeAll.getUuid())).isNull();
@@ -349,14 +355,14 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
-    String executionUuid = UUIDGenerator.getUuid();
+    WorkflowExecution workflowExecution =
+        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
 
     ExecutionInterrupt pauseAll = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                       .withAppId(app.getUuid())
                                       .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
                                       .withEnvId(env.getUuid())
-                                      .withExecutionUuid(executionUuid)
+                                      .withExecutionUuid(workflowExecution.getUuid())
                                       .build();
     pauseAll = executionInterruptManager.registerExecutionInterrupt(pauseAll);
 
@@ -364,7 +370,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.RESUME_ALL)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(executionUuid)
+                                                .withExecutionUuid(workflowExecution.getUuid())
                                                 .build();
     executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
 
@@ -380,14 +386,14 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
-    String executionUuid = UUIDGenerator.getUuid();
+    WorkflowExecution workflowExecution =
+        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
 
     ExecutionInterrupt pauseAll = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                       .withAppId(app.getUuid())
                                       .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
                                       .withEnvId(env.getUuid())
-                                      .withExecutionUuid(executionUuid)
+                                      .withExecutionUuid(workflowExecution.getUuid())
                                       .build();
     pauseAll = executionInterruptManager.registerExecutionInterrupt(pauseAll);
 
@@ -395,7 +401,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.RESUME_ALL)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(executionUuid)
+                                                .withExecutionUuid(workflowExecution.getUuid())
                                                 .build();
     executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
 
@@ -403,7 +409,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                              .withAppId(app.getUuid())
                              .withExecutionInterruptType(ExecutionInterruptType.RESUME_ALL)
                              .withEnvId(env.getUuid())
-                             .withExecutionUuid(executionUuid)
+                             .withExecutionUuid(workflowExecution.getUuid())
                              .build();
     try {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
