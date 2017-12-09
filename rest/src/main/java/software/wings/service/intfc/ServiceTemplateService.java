@@ -55,7 +55,7 @@ public interface ServiceTemplateService {
    * @return the map
    */
   List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowExecutionId);
+      String appId, String envId, String templateId, String workflowExecutionId, boolean maskEncryptedFields);
 
   /**
    * Override config files.
