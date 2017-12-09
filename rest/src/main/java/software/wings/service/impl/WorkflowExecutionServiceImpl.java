@@ -1652,6 +1652,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, ElementExecutionSummary> serviceSummaryMap, WorkflowExecution workflowExecution) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withLimit(UNLIMITED)
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
             .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
@@ -1970,6 +1971,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<Artifact> getArtifactsCollected(String appId, String executionUuid) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withLimit(UNLIMITED)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("stateType", EQ, StateType.ARTIFACT_COLLECTION.name())
