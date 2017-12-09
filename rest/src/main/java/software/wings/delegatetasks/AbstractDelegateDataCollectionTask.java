@@ -69,6 +69,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     try {
       DataCollectionTaskResult taskResult = initDataCollection(parameters);
       if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
+        getLogger().error("Data collection task Init failed");
         return taskResult;
       }
 
@@ -100,10 +101,11 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       getLogger().info(" finish data collection for " + parameters[0] + ". result is " + taskResult);
       return taskResult;
     } catch (Exception e) {
+      getLogger().error("Data collection task   failed : ", e);
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskStatus.FAILURE)
           .stateType(getStateType())
-          .errorMessage("Data collection from NewRelic failed : " + e.getMessage())
+          .errorMessage("Data collection task failed : " + e.getMessage())
           .build();
     }
   }

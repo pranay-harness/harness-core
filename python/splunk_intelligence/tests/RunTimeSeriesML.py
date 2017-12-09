@@ -100,13 +100,13 @@ def run_live():
     to_time = datetime.utcnow()
     from_time = to_time - timedelta(minutes=30)
 
-    options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3',
+    options = parser.parse_args(['--analysis_minute', '45', '--tolerance', '1', '--smooth_window', '3',
                                  '--min_rpm', '10', '--comparison_unit_window', '3', '--parallelProcesses', '2'])
     control_data, test_data = source.live_analysis({'ip-172-31-8-144', 'ip-172-31-12-79'},
                                                    {'ip-172-31-13-153'}, from_time,
                                                    to_time)
-    write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json', test_data)
-    write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json',
+    write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live_1.json', test_data)
+    write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live_1.json',
                   control_data)
     anomaly_detector = TSAnomlyDetector(options, metric_template, control_data, test_data)
     result = anomaly_detector.analyze()
