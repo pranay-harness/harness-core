@@ -12,7 +12,6 @@ import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.managerclient.ManagerClient;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -46,9 +45,8 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                              execute(managerClient.batchedSaveLogs(accountId, logs));
                          logger.info("{} log lines dispatched for accountId: {}",
                              restResponse.getResource() != null ? restResponse.getResource().size() : 0, accountId);
-                       } catch (IOException e) {
-                         e.printStackTrace();
-                         logger.error("Dispatch log failed. printing lost logs[{}]", logs.size());
+                       } catch (Exception e) {
+                         logger.error("Dispatch log failed. printing lost logs[{}]", logs.size(), e);
                          logs.forEach(log -> logger.error(log.toString()));
                          logger.error("Finished printing lost logs");
                        }

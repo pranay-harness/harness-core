@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -23,6 +24,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.analysis.MetricAnalysisResource;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
@@ -46,7 +48,7 @@ import javax.ws.rs.QueryParam;
 @Path("/newrelic")
 @Produces("application/json")
 @AuthRule(ResourceType.SETTING)
-public class NewRelicResource {
+public class NewRelicResource implements MetricAnalysisResource {
   @Inject private NewRelicService newRelicService;
 
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
@@ -192,5 +194,15 @@ public class NewRelicResource {
       @QueryParam("metricName") String metricName) throws IOException {
     return new RestResponse<>(metricDataAnalysisService.getToolTip(
         stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName));
+  }
+
+  @POST
+  @Path("/get-metric-template")
+  @Timed
+  @ExceptionMetered
+  @ExternalServiceAuth
+  public RestResponse<Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(StateType.NEW_RELIC));
   }
 }

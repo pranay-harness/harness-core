@@ -181,10 +181,10 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public boolean deleteByApp(String appId) {
+  public void pruneByApplication(String appId) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
     query.field("appId").equal(appId);
-    return wingsPersistence.delete(query);
+    wingsPersistence.delete(query);
   }
 
   @Override

@@ -2,6 +2,7 @@ package software.wings.delegate.service;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -679,43 +680,40 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConnectionResults -> {
       String taskId = delegateTask.getUuid();
       currentlyValidatingTasks.remove(taskId);
-      if (delegateConnectionResults != null) {
-        boolean validated = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
-        if (validated) {
-          logger.info("Validation succeeded for task {}", taskId);
+      List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
+      boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
+      logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
+      try {
+        DelegateTask delegateTask1 = execute(managerClient.reportConnectionResults(
+            delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
+        if (delegateTask1 != null && delegateId.equals(delegateTask1.getDelegateId())) {
+          logger.info("Got the go-ahead to proceed for task {}.", taskId);
+          executeTask(delegateTaskEvent, delegateTask1);
         } else {
-          logger.info("Validation failed for task {}", taskId);
-        }
-        try {
-          DelegateTask delegateTask1 = execute(managerClient.reportConnectionResults(
-              delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, delegateConnectionResults));
-          if (delegateTask1 != null && delegateId.equals(delegateTask1.getDelegateId())) {
-            logger.info("Got the go-ahead to proceed for task {}.", taskId);
-            executeTask(delegateTaskEvent, delegateTask1);
+          logger.info("Did not get the go-ahead to proceed for task {}", taskId);
+          if (validated) {
+            logger.info("Task {} validated but was not assigned", taskId);
           } else {
-            logger.info("Did not get the go-ahead to proceed for task {}", taskId);
-            if (validated) {
-              logger.info("Task {} validated but was assigned to another delegate", taskId);
-            } else {
-              logger.info(
-                  "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
-              Misc.sleep(2, TimeUnit.SECONDS);
-              try {
-                logger.info("Checking whether all delegates failed for task {}", taskId);
-                DelegateTask delegateTask2 = execute(
-                    managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-                if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
-                  logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
-                  executeTask(delegateTaskEvent, delegateTask2);
-                }
-              } catch (IOException e) {
-                logger.error("Unable to check whether to proceed. Task {}", taskId, e);
+            logger.info(
+                "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
+            Misc.sleep(2, TimeUnit.SECONDS);
+            try {
+              logger.info("Checking whether all delegates failed for task {}", taskId);
+              DelegateTask delegateTask2 = execute(
+                  managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+              if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
+                logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
+                executeTask(delegateTaskEvent, delegateTask2);
+              } else {
+                logger.info("Did not get go-ahead for task {}, giving up", taskId);
               }
+            } catch (IOException e) {
+              logger.error("Unable to check whether to proceed. Task {}", taskId, e);
             }
           }
-        } catch (IOException e) {
-          logger.error("Unable to report validation results. Task {}", taskId, e);
         }
+      } catch (IOException e) {
+        logger.error("Unable to report validation results. Task {}", taskId, e);
       }
     };
   }

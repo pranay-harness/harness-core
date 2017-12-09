@@ -1066,7 +1066,8 @@ public class VaultTest extends WingsBaseTest {
       VaultConfig toConfig = getVaultConfig();
       vaultService.saveVaultConfig(accountId, toConfig);
 
-      vaultService.transitionVault(accountId, fromConfig.getUuid(), toConfig.getUuid());
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.VAULT, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       query = wingsPersistence.createQuery(EncryptedData.class);
 
@@ -1152,13 +1153,99 @@ public class VaultTest extends WingsBaseTest {
         // expected
       }
 
-      vaultService.transitionVault(accountId, fromConfig.getUuid(), toConfig.getUuid());
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.VAULT, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       vaultService.deleteVaultConfig(accountId, fromConfig.getUuid());
       assertEquals(1, wingsPersistence.createQuery(VaultConfig.class).asList().size());
 
       query = wingsPersistence.createQuery(EncryptedData.class);
       assertEquals(numOfEncRecords + numOfSettingAttributes, query.asList().size());
+    } finally {
+      stopTransitionListener(listenerThread);
+    }
+  }
+
+  @Test
+  public void transitionFromKmsToVault() throws IOException, InterruptedException {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
+
+    Thread listenerThread = startTransitionListener();
+    try {
+      int numOfSettingAttributes = 5;
+      Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
+      for (int i = 0; i < numOfSettingAttributes; i++) {
+        String password = UUID.randomUUID().toString();
+        final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                        .accountId(accountId)
+                                                        .controllerUrl(UUID.randomUUID().toString())
+                                                        .username(UUID.randomUUID().toString())
+                                                        .password(password.toCharArray())
+                                                        .accountname(UUID.randomUUID().toString())
+                                                        .build();
+
+        SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                                .withAccountId(accountId)
+                                                .withValue(appDynamicsConfig)
+                                                .withAppId(UUID.randomUUID().toString())
+                                                .withCategory(Category.CONNECTOR)
+                                                .withEnvId(UUID.randomUUID().toString())
+                                                .withName(UUID.randomUUID().toString())
+                                                .build();
+
+        wingsPersistence.save(settingAttribute);
+        appDynamicsConfig.setPassword(null);
+        encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
+      }
+
+      Query<EncryptedData> query =
+          wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.APP_DYNAMICS);
+      assertEquals(numOfSettingAttributes, query.asList().size());
+      for (EncryptedData data : query.asList()) {
+        assertEquals(fromConfig.getUuid(), data.getKmsId());
+        assertEquals(accountId, data.getAccountId());
+        assertEquals(EncryptionType.KMS, data.getEncryptionType());
+      }
+
+      VaultConfig toConfig = getVaultConfig();
+      vaultService.saveVaultConfig(accountId, toConfig);
+
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.KMS, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
+      Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+      query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.APP_DYNAMICS);
+
+      assertEquals(numOfSettingAttributes, query.asList().size());
+      for (EncryptedData data : query.asList()) {
+        assertEquals(toConfig.getUuid(), data.getKmsId());
+        assertEquals(accountId, data.getAccountId());
+        assertEquals(EncryptionType.VAULT, data.getEncryptionType());
+      }
+
+      secretManager.transitionSecrets(
+          accountId, EncryptionType.VAULT, toConfig.getUuid(), EncryptionType.KMS, fromConfig.getUuid());
+      Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+      query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.APP_DYNAMICS);
+
+      assertEquals(numOfSettingAttributes, query.asList().size());
+      for (EncryptedData data : query.asList()) {
+        assertEquals(fromConfig.getUuid(), data.getKmsId());
+        assertEquals(accountId, data.getAccountId());
+        assertEquals(EncryptionType.KMS, data.getEncryptionType());
+      }
+
+      // read the values and compare
+      PageResponse<SettingAttribute> attributeQuery =
+          wingsPersistence.query(SettingAttribute.class, Builder.aPageRequest().build());
+      assertEquals(numOfSettingAttributes, attributeQuery.size());
+      for (SettingAttribute settingAttribute : attributeQuery) {
+        assertEquals(encryptedEntities.get(settingAttribute.getUuid()), settingAttribute);
+      }
     } finally {
       stopTransitionListener(listenerThread);
     }
@@ -1398,7 +1485,7 @@ public class VaultTest extends WingsBaseTest {
     transitionEventListener = new KmsTransitionEventListener();
     setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);
-    setInternalState(transitionEventListener, "vaultService", vaultService);
+    setInternalState(transitionEventListener, "secretManager", secretManager);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();

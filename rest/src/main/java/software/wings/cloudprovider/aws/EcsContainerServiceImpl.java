@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static com.google.common.collect.Iterables.isEmpty;
 import static java.util.Collections.emptyList;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -57,6 +58,7 @@ import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.utils.HttpUtil;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
@@ -954,7 +956,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
       waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
           serviceName, desiredCount, executionLogCallback);
-      executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
       waitForTasksToBeInRunningStateButDontThrowException(
           region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
 
@@ -967,7 +969,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                   .listTasks(region, awsConfig, encryptedDataDetails,
                                       new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
                                   .getTaskArns();
-      if (taskArns == null || taskArns.size() == 0) {
+      if (isEmpty(taskArns)) {
+        logger.info("No task arns.");
         return emptyList();
       }
 
@@ -997,49 +1000,59 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 .getInstances()
                 .get(0);
         String ipAddress = ec2Instance.getPrivateIpAddress();
-        try {
-          executionLogCallback.saveExecutionLog("Fetch container meta data.", LogLevel.INFO);
-          executionLogCallback.saveExecutionLog(
-              "requesting data from http://" + ipAddress + ":51678/v1/tasks", LogLevel.INFO);
-          logger.info("requesting data from http://" + ipAddress + ":51678/v1/tasks");
-          TaskMetadata taskMetadata =
-              Request.Get("http://" + ipAddress + ":51678/v1/tasks")
-                  .execute()
-                  .handleResponse(response
-                      -> JsonUtils.asObject(
-                          CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
-                          TaskMetadata.class));
+        String uri = "http://" + ipAddress + ":51678/v1/tasks";
+        if (HttpUtil.connectableHttpUrl(uri)) {
+          try {
+            executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
+            logger.info("requesting data from {}", uri);
+            TaskMetadata taskMetadata = Request.Get(uri).execute().handleResponse(response
+                -> JsonUtils.asObject(CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
+                    TaskMetadata.class));
 
-          taskMetadata.getTasks()
-              .stream()
-              .filter(task -> taskArns.contains(task.getArn()))
-              .findFirst()
-              .ifPresent(task -> {
-                String containerId = StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12);
-                ContainerInfo containerInfo = ContainerInfo.builder()
-                                                  .hostName(containerId)
-                                                  .containerId(containerId)
-                                                  .ec2Instance(ec2Instance)
-                                                  .status(Status.SUCCESS)
-                                                  .build();
-                containerInfos.add(containerInfo);
-                executionLogCallback.saveExecutionLog(
-                    ("Container docker ID: " + containerInfo.getContainerId()), LogLevel.INFO);
-              });
-          logger.info("TaskMetadata = " + taskMetadata);
-        } catch (IOException ex) {
-          executionLogCallback.saveExecutionLog(
-              "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
-          logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
+            taskMetadata.getTasks()
+                .stream()
+                .filter(task -> taskArns.contains(task.getArn()))
+                .findFirst()
+                .ifPresent(task -> {
+                  String containerId = StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12);
+                  ContainerInfo containerInfo = ContainerInfo.builder()
+                                                    .hostName(containerId)
+                                                    .containerId(containerId)
+                                                    .ec2Instance(ec2Instance)
+                                                    .status(Status.SUCCESS)
+                                                    .build();
+                  containerInfos.add(containerInfo);
+                  executionLogCallback.saveExecutionLog(
+                      ("Container docker ID: " + containerInfo.getContainerId()), LogLevel.INFO);
+
+                });
+            logger.info("TaskMetadata = " + taskMetadata);
+          } catch (IOException ex) {
+            executionLogCallback.saveExecutionLog(
+                "Could not fetch container meta data. Verification steps using containerId may not work",
+                LogLevel.WARN);
+            logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
+            containerInfos.add(ContainerInfo.builder()
+                                   .hostName(ipAddress)
+                                   .containerId(ipAddress)
+                                   .ec2Instance(ec2Instance)
+                                   .status(Status.SUCCESS)
+                                   .build());
+          } catch (Exception e) {
+            logger.error("Unknown error fetching meta info ", e);
+            throw new WingsException(INVALID_REQUEST, "message", e.getMessage(), e);
+          }
+        } else {
+          logger.warn("Could not connect to {}", uri);
+          executionLogCallback.saveExecutionLog("Could not reach " + uri
+                  + " to fetch container meta data. Verification steps using containerId may not work",
+              LogLevel.WARN);
           containerInfos.add(ContainerInfo.builder()
                                  .hostName(ipAddress)
                                  .containerId(ipAddress)
                                  .ec2Instance(ec2Instance)
                                  .status(Status.SUCCESS)
                                  .build());
-        } catch (Exception e) {
-          logger.error("Unknown error fetching meta info ", e);
-          throw new WingsException(INVALID_REQUEST, "message", e.getMessage(), e);
         }
       });
       logger.info("Docker container ids = " + containerInfos);

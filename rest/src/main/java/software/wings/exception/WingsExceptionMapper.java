@@ -39,7 +39,8 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
         ex.getResponseMessageList()
             .stream()
             .map(responseMessage
-                -> ResponseCodeCache.getInstance().getResponseMessage(responseMessage.getCode(), ex.getParams()))
+                -> ResponseCodeCache.getInstance().getResponseMessage(
+                    responseMessage.getCode(), responseMessage.getErrorType(), ex.getParams()))
             .collect(toList());
     if (responseMessages.stream().noneMatch(
             responseMessage -> logIgnoredErrorCodes.contains(responseMessage.getCode()))) {

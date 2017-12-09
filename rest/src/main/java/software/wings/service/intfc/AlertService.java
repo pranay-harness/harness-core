@@ -6,7 +6,7 @@ import software.wings.beans.alert.AlertData;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-public interface AlertService {
+public interface AlertService extends OwnedByApplication {
   PageResponse<Alert> list(PageRequest<Alert> pageRequest);
 
   void openAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
@@ -18,8 +18,6 @@ public interface AlertService {
   void deploymentCompleted(String appId, String executionId);
 
   void deleteByAccountId(String accountId);
-
-  void deleteByApp(String appId);
 
   void deleteOldAlerts(long retentionMillis);
 }

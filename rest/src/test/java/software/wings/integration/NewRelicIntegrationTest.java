@@ -759,6 +759,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
+            .smooth_window(1)
             .parallelProcesses(1)
             .build();
     JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);

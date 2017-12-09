@@ -13,7 +13,6 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
-import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -29,11 +28,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -43,10 +42,7 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -71,6 +67,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private ExecutorService executorService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -101,46 +98,14 @@ public class SettingsServiceImpl implements SettingsService {
         Validator.duplicateCheck(()
                                      -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
             "name", settingAttribute.getName());
-    executorService.submit(()
-                               -> queueSettingYamlChange(newSettingAttribute,
-                                   entityUpdateService.getSettingAttributeGitSyncFile(
-                                       settingAttribute.getAccountId(), newSettingAttribute, ChangeType.ADD)));
+    yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, newSettingAttribute, ChangeType.ADD);
     return newSettingAttribute;
-  }
-
-  private void queueSettingYamlChange(SettingAttribute newSettingAttribute, GitFileChange settingAttributeGitSyncFile) {
-    String accountId = newSettingAttribute.getAccountId();
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(settingAttributeGitSyncFile));
-    }
-  }
-
-  private void queueMoveSettingChange(SettingAttribute oldSettingAttribute, SettingAttribute newSettingAttribute) {
-    String accountId = appService.getAccountIdByAppId(newSettingAttribute.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      String oldSettingAttrPath = yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + "/"
-          + oldSettingAttribute.getName() + YAML_EXTENSION;
-      GitFileChange newSettingAttrGitSyncFile =
-          entityUpdateService.getSettingAttributeGitSyncFile(accountId, newSettingAttribute, ChangeType.MODIFY);
-
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(newSettingAttrGitSyncFile.getAccountId())
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newSettingAttrGitSyncFile.getFilePath())
-                        .withOldFilePath(oldSettingAttrPath)
-                        .build());
-      changeSet.add(newSettingAttrGitSyncFile);
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
-    }
   }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#get(java.lang.String, java.lang.String)
    */
+
   @Override
   public SettingAttribute get(String appId, String varId) {
     return get(appId, GLOBAL_ENV_ID, varId);
@@ -161,6 +126,7 @@ public class SettingsServiceImpl implements SettingsService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#get(java.lang.String)
    */
+
   @Override
   public SettingAttribute get(String varId) {
     return wingsPersistence.get(SettingAttribute.class, varId);
@@ -174,6 +140,7 @@ public class SettingsServiceImpl implements SettingsService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#update(software.wings.beans.SettingAttribute)
    */
+
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute) {
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
@@ -197,15 +164,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
 
-    executorService.submit(() -> {
-      if (!updatedSettingAttribute.getName().equals(settingAttribute.getName())) {
-        queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
-      } else {
-        queueSettingYamlChange(updatedSettingAttribute,
-            entityUpdateService.getSettingAttributeGitSyncFile(
-                settingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
-      }
-    });
+    yamlChangeSetHelper.queueSettingUpdateYamlChangeAsync(savedSettingAttributes, updatedSettingAttribute);
     return updatedSettingAttribute;
   }
 
@@ -219,10 +178,7 @@ public class SettingsServiceImpl implements SettingsService {
     ensureSettingAttributeSafeToDelete(settingAttribute);
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted) {
-      executorService.submit(()
-                                 -> queueSettingYamlChange(settingAttribute,
-                                     entityUpdateService.getSettingAttributeGitSyncFile(
-                                         settingAttribute.getAccountId(), settingAttribute, ChangeType.DELETE)));
+      yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, settingAttribute, ChangeType.DELETE);
     }
   }
 

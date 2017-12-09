@@ -160,7 +160,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public void deleteByApp(String appId) {
+  public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Trigger.class)
         .field("appId")
         .equal(appId)

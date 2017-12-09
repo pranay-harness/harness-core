@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -222,7 +223,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   @Repeat(times = 3, successes = 1)
   @Ignore
-  public void shouldTransferGridFSFile() throws IOException {
+  public void shouldTransferGridFSFile() throws IOException, ExecutionException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
 
@@ -250,7 +251,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   @Ignore
   @Repeat(times = 3, successes = 1)
-  public void shouldTransferGridFSFileWithDifferentName() throws IOException {
+  public void shouldTransferGridFSFileWithDifferentName() throws IOException, ExecutionException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
 
