@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -124,6 +125,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return instances.
    */
   @Test
+  @Ignore // Ignoring as instance without any filter is disabled
   public void shouldReturnInstances() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     String appId = app.getUuid();
@@ -381,6 +383,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                     .build();
     List<ServiceInstance> instances = Lists.newArrayList(instance1);
     res.setResponse(instances);
+
+    ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
+    element.setInstanceIds(Lists.newArrayList(instance1.getUuid()));
+    context.pushContextElement(element);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
 
