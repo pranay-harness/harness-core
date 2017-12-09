@@ -1,0 +1,298 @@
+{"transactions":
+    {"9": {
+            "txn_name" : "RestWebService/delegates/{delegateId}/tasks/{taskId} (POST)",
+            "metrics" : {
+                "0" : {
+                    "metric_name" : "requestsPerMinute",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                8.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                11.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "results" : {
+                        "ip-172-31-1-92" : {
+                            "distance" : [
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                0.0,
+                                8.0
+                            ],
+                            "test_data" : [
+                                0.0,
+                                11.0
+                            ],
+                            "control_cuts" : [
+                                "x",
+                                "b"
+                            ],
+                            "test_cuts" : [
+                                "x",
+                                "f"
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "ip-172-31-1-92",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 8.0,
+                    "test_avg" : 11.0,
+                    "max_risk" : 0
+                },
+                "1" : {
+                    "metric_name" : "averageResponseTime",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                25.9,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                8.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                26.9,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                11.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "results" : {
+                        "ip-172-31-1-92" : {
+                            "distance" : [
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                0.0,
+                                25.9
+                            ],
+                            "test_data" : [
+                                0.0,
+                                26.9
+                            ],
+                            "control_cuts" : [
+                                "x",
+                                "b"
+                            ],
+                            "test_cuts" : [
+                                "x",
+                                "f"
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "ip-172-31-1-92",
+                            "risk" : 0,
+                            "score" : 0
+                        }
+                    },
+                    "control_avg" : 25.9,
+                    "test_avg" : 26.9,
+                    "max_risk" : 2
+                },
+                "2" : {
+                    "metric_name" : "apdexScore",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "results" : {
+                        "ip-172-31-1-92" : {
+                            "distance" : [
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                0.0,
+                                1.0
+                            ],
+                            "test_data" : [
+                                0.0,
+                                1.0
+                            ],
+                            "control_cuts" : [
+                                "x",
+                                "q"
+                            ],
+                            "test_cuts" : [
+                                "x",
+                                "q"
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "ip-172-31-1-92",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 1.0,
+                    "test_avg" : 1.0,
+                    "max_risk" : 0
+                },
+                "3" : {
+                    "metric_name" : "error",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                0.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                0.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "ip-172-31-1-92"
+                        ]
+                    },
+                    "results" : {
+                        "ip-172-31-1-92" : {
+                            "distance" : [
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                0.0,
+                                0.0
+                            ],
+                            "test_data" : [
+                                0.0,
+                                0.0
+                            ],
+                            "control_cuts" : [
+                                "x",
+                                "q"
+                            ],
+                            "test_cuts" : [
+                                "x",
+                                "q"
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "ip-172-31-1-92",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 0.0,
+                    "test_avg" : 0.0,
+                    "max_risk" : 0
+                }
+            }
+        }
+    }
+}
