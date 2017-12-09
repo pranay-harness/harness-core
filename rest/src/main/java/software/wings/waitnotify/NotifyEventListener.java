@@ -3,6 +3,9 @@ package software.wings.waitnotify;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Injector;
 
@@ -58,8 +61,8 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       return;
     }
 
-    PageRequest<WaitQueue> req = new PageRequest<>();
-    req.addFilter("waitInstanceId", waitInstanceId, SearchFilter.Operator.EQ);
+    PageRequest<WaitQueue> req =
+        aPageRequest().withLimit(UNLIMITED).addFilter("waitInstanceId", EQ, waitInstanceId).build();
     PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
 
     if (isEmpty(waitQueuesResponse)) {
@@ -92,6 +95,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     searchFilter.setOp(SearchFilter.Operator.IN);
     PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
     notifyResponseReq.addFilter(searchFilter);
+    notifyResponseReq.setLimit(PageRequest.UNLIMITED);
     PageResponse<NotifyResponse> notifyResponses =
         wingsPersistence.query(NotifyResponse.class, notifyResponseReq, ReadPref.CRITICAL);
 
