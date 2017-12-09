@@ -692,7 +692,7 @@ public class DelegateServiceImpl implements DelegateService {
         } else {
           logger.info("Did not get the go-ahead to proceed for task {}", taskId);
           if (validated) {
-            logger.info("Task {} validated but was assigned to another delegate", taskId);
+            logger.info("Task {} validated but was not assigned", taskId);
           } else {
             logger.info(
                 "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
@@ -704,6 +704,8 @@ public class DelegateServiceImpl implements DelegateService {
               if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
                 logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
                 executeTask(delegateTaskEvent, delegateTask2);
+              } else {
+                logger.info("Did not get go-ahead for task {}, giving up", taskId);
               }
             } catch (IOException e) {
               logger.error("Unable to check whether to proceed. Task {}", taskId, e);

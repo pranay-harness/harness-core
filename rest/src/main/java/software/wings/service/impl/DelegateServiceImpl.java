@@ -562,6 +562,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void blacklistDelegateForTask(String delegateId, DelegateTask delegateTask) {
+    logger.info("Blacklisting delegate {} for task {}", delegateId, delegateTask.getUuid());
     List<String> blacklistedDelegates =
         Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new ArrayList<>());
     blacklistedDelegates.add(delegateId);
@@ -588,10 +589,15 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
     // Tell delegate whether to proceed anyway because all eligible delegates failed.
     if (isValidationComplete(taskId)) {
+      logger.info("Validation attempts are complete for task {}", taskId);
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
       if (delegateTask != null) {
         return assignTask(delegateId, taskId, delegateTask);
+      } else {
+        logger.info("Task {} was already assigned", taskId);
       }
+    } else {
+      logger.info("Task {} is still being validated");
     }
     return null;
   }
