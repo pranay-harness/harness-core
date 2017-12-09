@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 import sys
 import logging
 from TimeSeriesML import TSAnomlyDetector, parallelize_processing
+from sources.FileLoader import FileLoader
 from sources.NewRelicSource import NewRelicSource
 
 log_format = "%(asctime)-15s %(levelname)s %(message)s"
@@ -20,6 +21,7 @@ parser.add_argument("--min_rpm", type=int, required=True)
 parser.add_argument("--comparison_unit_window", type=int, required=True)
 parser.add_argument("--parallelProcesses", type=int, required=True)
 
+metric_template = FileLoader.load_data('resources/ts/metric_template.json')
 
 def run_load():
     control_nodes = ['control-' + str(i) for i in range(50)]
@@ -67,9 +69,10 @@ def run_load():
                                              "callCount": 492})
     test_metrics.extend(fake_test_metrics)
 
-    parallelize_processing(options, control_metrics, test_metrics)
+    parallelize_processing(options, metric_template, control_metrics, test_metrics)
     # anomaly_detector = TSAnomlyDetector(options, control_metrics, test_metrics)
     # anomaly_detector.analyze()
+
 
 def run_debug():
     options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3',
@@ -82,8 +85,8 @@ def run_debug():
     with open("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json",
               'r') as read_file:
         test_metrics = json.loads(read_file.read())
-    anomaly_detector = TSAnomlyDetector(options, control_metrics, test_metrics)
-    anomaly_detector.analyze()
+    anomaly_detector = TSAnomlyDetector(options, metric_template, control_metrics, test_metrics)
+    print(json.dumps(anomaly_detector.analyze()))
 
 
 def write_to_file(filename, data):
@@ -105,7 +108,7 @@ def run_live():
     write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json', test_data)
     write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json',
                   control_data)
-    anomaly_detector = TSAnomlyDetector(options, control_data, test_data)
+    anomaly_detector = TSAnomlyDetector(options, metric_template, control_data, test_data)
     result = anomaly_detector.analyze()
     print(json.dumps(result))
 

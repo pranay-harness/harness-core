@@ -1,7 +1,6 @@
 from __future__ import division
 
 import argparse
-import hashlib
 import json
 import logging
 import sys
@@ -12,8 +11,9 @@ import multiprocessing
 import numpy as np
 
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
-from core.util.TimeSeriesUtils import MetricType, get_deviation_type, simple_average, get_deviation_min_threshold
+from core.util.TimeSeriesUtils import MetricType, simple_average, RiskLevel
 from sources.HarnessLoader import HarnessLoader
+from sources.MetricTemplate import MetricTemplate
 
 log_format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
@@ -22,11 +22,12 @@ logger = logging.getLogger(__name__)
 
 class TSAnomlyDetector(object):
 
-    def __init__(self, options, control_txns, test_txns):
+    def __init__(self, options, metric_template, control_txns, test_txns):
         self._options = options
+        self.metric_template = MetricTemplate(metric_template)
+        self.metric_names = self.metric_template.get_metric_names()
         self.raw_control_txns = control_txns
         self.raw_test_txns = test_txns
-        self.metric_names = ['callCount', 'averageResponseTime', 'requestsPerMinute', 'throughput', 'error', 'apdexScore']
         self.min_rpm = options.min_rpm
 
     def group_txns(self, transactions):
@@ -79,6 +80,11 @@ class TSAnomlyDetector(object):
         :return: the grouped dictionary
         """
         result = {}
+        data_len = (self._options.analysis_minute + 1)
+        # pad data so its a multiple of the smooth window
+        if data_len % self._options.smooth_window > 0:
+            pad_len = self._options.smooth_window - (self._options.analysis_minute + 1) % self._options.smooth_window
+            data_len = (self._options.analysis_minute + 1) + pad_len
         for transaction in transactions:
             txn_name = transaction.get('name')
             host = transaction.get('host')
@@ -92,15 +98,15 @@ class TSAnomlyDetector(object):
             for metric_name in self.metric_names:
                 if host not in result[txn_name][metric_name]:
                     result[txn_name][metric_name][host] = OrderedDict({})
-                    result[txn_name][metric_name][host]['data'] = np.asarray([np.nan] * (self._options.analysis_minute + 1))
+                    result[txn_name][metric_name][host]['data'] = np.asarray([np.nan] * data_len)
                 if transaction.get(metric_name) is None or transaction.get(metric_name) == -1:
                     continue
                 result[txn_name][metric_name][host]['data'][data_collection_minute] = transaction.get(metric_name)
 
-        return self.sanitize_data(result, self.min_rpm)
+        return self.sanitize_data(result, self.metric_template, self.min_rpm)
 
     @staticmethod
-    def sanitize_data(txns_dict, min_rpm_threshold):
+    def sanitize_data(txns_dict, metric_template, min_rpm_threshold):
         """
 
         Sanitize applies domain knowledge to embellish the collected data:
@@ -120,11 +126,13 @@ class TSAnomlyDetector(object):
         """
         for txn_data_dict in txns_dict.values():
             for metric_name, metric_data_dict in txn_data_dict.items():
-                if metric_name == 'averageResponseTime':
+                if metric_template.get_metric_type(metric_name) == MetricType.RESP_TIME\
+                         and metric_template.get_metric_name(MetricType.THROUGHPUT) is not None:
+                    throughput_metric_name = metric_template.get_metric_name(MetricType.THROUGHPUT)
                     for host, metric_host_data_dict in metric_data_dict.items():
-                        metric_host_data_dict['data'][np.where(txn_data_dict['callCount'][host]['data'] == 0)[0]] \
+                        metric_host_data_dict['data'][np.where(txn_data_dict[throughput_metric_name][host]['data'] == 0)[0]] \
                             = np.nan
-                if metric_name == 'requestsPerMinute':
+                if metric_template.get_metric_type(metric_name) == MetricType.THROUGHPUT:
                     for host, metric_host_data_dict in metric_data_dict.items():
                         if np.nansum(metric_host_data_dict['data']) < min_rpm_threshold:
                             metric_host_data_dict['skip'] = True
@@ -133,7 +141,7 @@ class TSAnomlyDetector(object):
         return txns_dict
 
     @staticmethod
-    def get_metrics_data(metric_name, txn_data_dict):
+    def get_metrics_data(metric_name, metric_template, txn_data_dict):
 
         """
         extract data for the given metric_name from the transaction data dictionary
@@ -158,6 +166,7 @@ class TSAnomlyDetector(object):
         that the response times are more significant if the call counts are higher.
 
         :param metric_name: the name of the metric
+        :param metric_template containing the metric configurations
         :param txn_data_dict: the transaction data dictionary
         :return: the data dictionary for processing.
         """
@@ -167,22 +176,24 @@ class TSAnomlyDetector(object):
         weights = []
         data = []
         host_names = []
-        if metric_name == 'averageResponseTime':
+        if metric_template.get_metric_type(metric_name) == MetricType.RESP_TIME \
+                and metric_template.get_metric_name(MetricType.THROUGHPUT) is not None:
+            throughput_metric_name = metric_template.get_metric_name(MetricType.THROUGHPUT)
             for (host_name, host_data) in txn_data_dict[metric_name].items():
                 host_names.append(host_name)
                 data.append(host_data['data'])
-                weights.append(txn_data_dict['callCount'][host_name]['data'])
+                weights.append(txn_data_dict[throughput_metric_name][host_name]['data'])
             return dict(host_names=host_names,
                         data=np.array(data, dtype=np.float64),
                         weights=np.array(weights, dtype=np.float64),
-                        data_type=MetricType.HISTOGRAM, weights_type=MetricType.COUNT)
+                        data_type=MetricType.RESP_TIME, weights_type=MetricType.COUNT)
 
         else:
             for (host_name, host_data) in txn_data_dict[metric_name].items():
                 host_names.append(host_name)
                 data.append(host_data['data'])
             return dict(host_names=host_names, data=np.array(data, dtype=np.float64),
-                        data_type=MetricType.HISTOGRAM)
+                        data_type=metric_template.get_metric_type(metric_name))
 
     @staticmethod
     def validate(txn_name, metric_name, control_dict, test_dict):
@@ -222,8 +233,8 @@ class TSAnomlyDetector(object):
 
     def analyze_metric(self, txn_name, metric_name, control_txn_data_dict, test_txn_data_dict):
 
-        control_data_dict = self.get_metrics_data(metric_name, control_txn_data_dict)
-        test_data_dict = self.get_metrics_data(metric_name, test_txn_data_dict)
+        control_data_dict = self.get_metrics_data(metric_name, self.metric_template, control_txn_data_dict)
+        test_data_dict = self.get_metrics_data(metric_name, self.metric_template, test_txn_data_dict)
 
         response = {'results': {}, 'max_risk': -1, 'control_avg': -1, 'test_avg': -1}
 
@@ -235,8 +246,7 @@ class TSAnomlyDetector(object):
                                         tolerance=self._options.tolerance,
                                         control_data_dict=control_data_dict,
                                         test_data_dict=test_data_dict,
-                                        metric_deviation_type=get_deviation_type(metric_name),
-                                        min_metric_threshold=get_deviation_min_threshold(metric_name),
+                                        metric_template=self.metric_template,
                                         comparison_unit_window=self._options.comparison_unit_window)
 
             result = shdf.compute_dist()
@@ -292,7 +302,7 @@ class TSAnomlyDetector(object):
                     "test_avg" : -1.0,
                     "max_risk" : -1
                 
-            }
+            }    
             """
 
             for index, host in enumerate(test_txn_data_dict[metric_name].keys()):
@@ -314,9 +324,9 @@ class TSAnomlyDetector(object):
                                                                                 index])).filled(
                     0).tolist()
                 response['results'][host]['control_cuts'] = result['control_cuts'][index].tolist()
-                if test_txn_data_dict['requestsPerMinute'][host]['skip']:
-                    # TODO -1 implies risk NA. Make this an enum
-                    response['results'][host]['risk'] = -1
+                throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
+                if throughput_metric_name is not None and test_txn_data_dict[throughput_metric_name][host]['skip']:
+                    response['results'][host]['risk'] = RiskLevel.NA.value
                 else:
                     response['results'][host]['risk'] = result['risk'][index]
                     response['max_risk'] = max(response['max_risk'], response['results'][host]['risk'])
@@ -360,18 +370,14 @@ class TSAnomlyDetector(object):
 
                 for metric_ind, metric_name in enumerate(self.metric_names):
 
-                    # Not useful to analyze callCount by itself
-                    if metric_name == 'callCount':
-                        continue
-
                     logger.info("Analyzing txn " + txn_name + " metric " + metric_name)
 
                     response = self.analyze_metric(txn_name, metric_name, control_txn_data_dict, test_txn_data_dict)
 
-                    # The numbers for dictionary keys is to avoid a failure on the Harness manager side
-                    # when saving data to Mongo. Mongo does not allow dot chars in the key names for
-                    # dictionaries, and transactions or metric names can contain the dot char.
-                    # so use numbers for keys and stick the name inside the dictionary.
+                    ''' Use numbers for dictionary keys to avoid a failure on the Harness manager side
+                        when saving data to MongoDB. MongoDB does not allow 'dot' chars in the key names for
+                        dictionaries, and transactions or metric names can contain the dot char.
+                        So use numbers for keys and stick the name inside the dictionary. '''
                     if txn_ind not in result['transactions']:
                         result['transactions'][txn_ind] = dict(txn_name=txn_name, metrics={})
 
@@ -403,6 +409,14 @@ def load_from_harness_server(url, nodes, options):
                                                                     analysisMinute=options.analysis_minute,
                                                                     nodes=nodes))['resource']
     return raw_events
+
+
+def load_metric_template_harness_server(url, options):
+    """
+    load metric template from Harness server
+    """
+    metric_template = HarnessLoader.load_from_harness_raw_new(url, options.auth_token, {})['resource']
+    return metric_template
 
 
 def post_to_wings_server(options, results):
@@ -464,19 +478,19 @@ def parse(cli_args):
     parser.add_argument("--min_rpm", type=int, required=True)
     parser.add_argument("--comparison_unit_window", type=int, required=True)
     parser.add_argument("--parallel_processes", type=int, required=True)
-
+    parser.add_argument("--metric_template_url", type=str, required=True)
     return parser.parse_args(cli_args)
 
 
-def analyze_parallel(queue, options, control_metrics_batch, test_metrics_batch):
+def analyze_parallel(queue, options, metric_template, control_metrics_batch, test_metrics_batch):
     """
     Method will be called in parallel. the result will be placed on 'queue'
     """
-    anomaly_detector = TSAnomlyDetector(options, control_metrics_batch, test_metrics_batch)
+    anomaly_detector = TSAnomlyDetector(options, metric_template, control_metrics_batch, test_metrics_batch)
     queue.put(anomaly_detector.analyze())
 
 
-def parallelize_processing(options, control_metrics, test_metrics):
+def parallelize_processing(options, metric_template, control_metrics, test_metrics):
     """
     Break the work into parallel units. Each transaction and its metrics constitute a unit.
     The transactions will be run in upto 7 parallel processes. Once all processing is complete,
@@ -513,7 +527,7 @@ def parallelize_processing(options, control_metrics, test_metrics):
     job_id = 0
     for i in range(workers):
         p = multiprocessing.Process(target=analyze_parallel,
-                                    args=(queue, options, control_metrics_batch[i], test_metrics_batch[i]))
+                                    args=(queue, options, metric_template, control_metrics_batch[i], test_metrics_batch[i]))
         job_id = job_id + 1
         jobs.append(p)
         p.start()
@@ -530,11 +544,38 @@ def parallelize_processing(options, control_metrics, test_metrics):
 
     return result
 
+def write_to_file(filename, data):
+    file_object = open(filename, "w")
+    file_object.write(json.dumps(data))
+    file_object.close()
 
 def main(args):
     """
     load data from Harness Manager, run the anomaly detector,
     and post the results back to the Harness Manager.
+
+    Sample metric template
+
+    "averageResponseTime": {
+        "metricName": "averageResponseTime",
+        "thresholds": [
+          {
+            "thresholdType": "ALERT_WHEN_HIGHER",
+            "comparisonType": "RATIO",
+            "high": 1.5,
+            "medium": 1.25,
+            "min": 0.5
+          },
+          {
+            "thresholdType": "ALERT_WHEN_HIGHER",
+            "comparisonType": "DELTA",
+            "high": 10,
+            "medium": 5,
+            "min": 50
+          }
+        ],
+        "metricType": "RESP_TIME"
+    }
 
     """
     logger.info(args)
@@ -544,13 +585,20 @@ def main(args):
 
     logger.info("Running Time Series analysis ")
 
+    metric_template = load_metric_template_harness_server(options.metric_template_url, options)
+    logger.info('metric_template = ' + json.dumps(metric_template))
+
     control_metrics = load_from_harness_server(options.control_input_url, options.control_nodes, options)
     logger.info('control events = ' + str(len(control_metrics)))
 
     test_metrics = load_from_harness_server(options.test_input_url, options.test_nodes, options)
     logger.info('test_events = ' + str(len(test_metrics)))
 
-    result = parallelize_processing(options, control_metrics, test_metrics)
+    # Uncomment when you want to save the files for local debugging
+    # write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json', test_metrics)
+    # write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json',control_metrics)
+
+    result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
     post_to_wings_server(options, result)
 
 

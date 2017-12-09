@@ -19,7 +19,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 4/1/16.
  */
-public interface EnvironmentService {
+public interface EnvironmentService extends OwnedByApplication {
   /**
    * List.
    *
@@ -83,13 +83,6 @@ public interface EnvironmentService {
    * @param envId the env id
    */
   void delete(@NotEmpty String appId, @NotEmpty String envId);
-
-  /**
-   * Delete by app id.
-   *
-   * @param application the app id
-   */
-  void deleteByApp(@NotNull Application application);
 
   /**
    * Create default environments.

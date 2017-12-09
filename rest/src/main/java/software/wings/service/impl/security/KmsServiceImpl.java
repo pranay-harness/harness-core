@@ -23,9 +23,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SimpleEncryption;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -49,7 +47,6 @@ import javax.inject.Inject;
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   public static final String SECRET_MASK = "**************";
 
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private FileService fileService;
 
   @Override
@@ -288,29 +285,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       globalConfig.setDefault(true);
     }
     return rv;
-  }
-
-  @Override
-  public boolean transitionKms(String accountId, String fromKmsId, String toKmsId) {
-    return transitionSecretStore(accountId, fromKmsId, toKmsId, EncryptionType.KMS);
-  }
-
-  @Override
-  public void changeKms(String accountId, String entityId, String fromKmsId, String toKmsId) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
-    Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
-    KmsConfig fromConfig = getKmsConfig(accountId, fromKmsId);
-    Preconditions.checkNotNull(fromConfig, "No kms found for account " + accountId + " with id " + entityId);
-    KmsConfig toConfig = getKmsConfig(accountId, toKmsId);
-    Preconditions.checkNotNull(toConfig, "No kms found for account " + accountId + " with id " + entityId);
-
-    char[] decrypted = decrypt(encryptedData, accountId, fromConfig);
-    EncryptedData encrypted = encrypt(decrypted, accountId, toConfig);
-    encryptedData.setKmsId(toKmsId);
-    encryptedData.setEncryptionKey(encrypted.getEncryptionKey());
-    encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
-
-    wingsPersistence.save(encryptedData);
   }
 
   @Override

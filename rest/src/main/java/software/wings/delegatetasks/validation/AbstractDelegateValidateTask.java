@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 
@@ -54,9 +55,13 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    String criteria = getCriteria().get(0);
-    return singletonList(
-        DelegateConnectionResult.builder().criteria(criteria).validated(connectableHttpUrl(criteria)).build());
+    try {
+      String criteria = getCriteria().get(0);
+      return singletonList(
+          DelegateConnectionResult.builder().criteria(criteria).validated(connectableHttpUrl(criteria)).build());
+    } catch (Exception e) {
+      return emptyList();
+    }
   }
 
   public Object[] getParameters() {

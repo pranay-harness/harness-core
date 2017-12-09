@@ -17,6 +17,7 @@ public class Threshold {
   private ThresholdComparisonType comparisonType;
   private double high;
   private double medium;
+  private double min;
 
   public RiskLevel getRiskLevel(double testValue, double controlValue) {
     if (testValue == 0.0 & controlValue == 0.0) {

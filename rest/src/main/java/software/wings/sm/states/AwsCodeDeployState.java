@@ -8,6 +8,8 @@ import static software.wings.api.InstanceElementListParam.InstanceElementListPar
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
+import static software.wings.common.Constants.ARTIFACT__S3_KEY_EXPRESSION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
@@ -18,6 +20,7 @@ import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -437,5 +440,13 @@ public class AwsCodeDeployState extends State {
       return ImmutableMap.of("tar", "A tar archive file (tar)", "tgz", "A compressed tar archive file (tgz)", "zip",
           "A zip archive file (zip)");
     }
+  }
+
+  public static Map<String, String> loadDefaults() {
+    Map<String, String> stateDefaults = new HashMap<>();
+    stateDefaults.put("bucket", ARTIFACT_S3_BUCKET_EXPRESSION);
+    stateDefaults.put("key", ARTIFACT__S3_KEY_EXPRESSION);
+    stateDefaults.put("bundleType", "zip");
+    return stateDefaults;
   }
 }

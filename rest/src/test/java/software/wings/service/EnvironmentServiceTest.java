@@ -356,22 +356,16 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCode.INVALID_REQUEST.name());
   }
 
-  /**
-   * Should delete by app.
-   */
   @Test
-  public void shouldDeleteByApp() {
+  public void shouldPruneByApplication() {
     when(query.asList())
         .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
-    environmentService.deleteByApp(Application.Builder.anApplication().withUuid(APP_ID).build());
+    environmentService.pruneByApplication(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
     inOrder.verify(wingsPersistence).delete(any(Environment.class));
     inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
-    inOrder.verify(notificationService).sendNotificationAsync(any());
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
   }
 
   /**
