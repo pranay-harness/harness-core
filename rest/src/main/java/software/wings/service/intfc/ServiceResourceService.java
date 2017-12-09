@@ -358,4 +358,12 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return
    */
   List<ServiceCommand> getServiceCommands(String appId, String serviceId, boolean withCommandDetails);
+
+  /**
+   * Gets service with service commands with command details
+   * @param appId
+   * @param serviceId
+   * @return
+   */
+  Service getServiceWithServiceCommands(String appId, String serviceId);
 }
