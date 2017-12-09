@@ -20,6 +20,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -30,6 +31,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -244,11 +246,18 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     Environment env = ((ExecutionContextImpl) context).getEnv();
     Builder pageRequest = PageRequest.Builder.aPageRequest();
 
-    pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
     applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
     applyHostNamesFilter(app.getUuid(), pageRequest);
     applyServiceInstanceIdsFilter(app.getUuid(), pageRequest);
-    return pageRequest.build();
+
+    PageRequest<ServiceInstance> req = pageRequest.build();
+    // Just for safety
+    if (req.getFilters() == null || req.getFilters().isEmpty()) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "No Filter attached to filter service instances");
+    }
+    req.addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
+    req.setLimit(PageRequest.UNLIMITED);
+    return req;
   }
 
   private List<InstanceElement> convertToInstanceElements(List<ServiceInstance> instances) {
