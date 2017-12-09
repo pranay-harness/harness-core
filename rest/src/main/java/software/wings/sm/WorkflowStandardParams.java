@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The Class WorkflowStandardParams.
@@ -103,6 +104,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       if (artifact != null) {
         map.put(ARTIFACT, artifact);
       }
+
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
       if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
@@ -121,18 +123,15 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         return map;
       }
 
-      HashMap<Object, Object> serviceVariableMap = new HashMap<>();
-      map.put(SERVICE_VARIABLE, serviceVariableMap);
-      serviceVariables.forEach(
-          serviceVariable -> serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
+      map.put(SERVICE_VARIABLE,
+          serviceVariables.stream().collect(
+              Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
 
-      List<ServiceVariable> safeDisplayServiceVariables = serviceTemplateService.computeServiceVariables(
-          appId, envId, templateId, context.getWorkflowExecutionId(), true);
-
-      HashMap<Object, Object> safeDisplayServiceVariableMap = new HashMap<>();
-      map.put(SAFE_DISPLAY_SERVICE_VARIABLE, safeDisplayServiceVariableMap);
-      safeDisplayServiceVariables.forEach(serviceVariable
-          -> safeDisplayServiceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
+      map.put(SAFE_DISPLAY_SERVICE_VARIABLE,
+          serviceTemplateService
+              .computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId(), true)
+              .stream()
+              .collect(Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
     }
     return map;
   }
