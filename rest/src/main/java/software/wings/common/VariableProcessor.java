@@ -51,7 +51,7 @@ public class VariableProcessor {
 
       InstanceElement instance = (InstanceElement) instanceElement.get();
       List<ServiceVariable> serviceSettingMap = serviceTemplateService.computeServiceVariables(standardParam.getAppId(),
-          standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowExecutionId);
+          standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowExecutionId, false);
       serviceSettingMap.forEach(
           serviceVariable -> variables.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
     }

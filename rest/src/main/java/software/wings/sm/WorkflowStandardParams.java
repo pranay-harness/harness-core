@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 
 import com.google.inject.Inject;
@@ -107,21 +108,31 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
           || templateRefKeysByService.get(0).getId() == null) {
         map.put(SERVICE_VARIABLE, new HashMap<>());
+        map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
         return map;
       }
       String templateId = (String) templateRefKeysByService.get(0).getId();
-      List<ServiceVariable> serviceVariables =
-          serviceTemplateService.computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId());
-      if (serviceVariables == null || serviceVariables.isEmpty()) {
+
+      List<ServiceVariable> serviceVariables = serviceTemplateService.computeServiceVariables(
+          appId, envId, templateId, context.getWorkflowExecutionId(), false);
+      if (isEmpty(serviceVariables)) {
         map.put(SERVICE_VARIABLE, new HashMap<>());
+        map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
         return map;
       }
 
       HashMap<Object, Object> serviceVariableMap = new HashMap<>();
       map.put(SERVICE_VARIABLE, serviceVariableMap);
-      serviceVariables.forEach(serviceVariable -> {
-        serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue()));
-      });
+      serviceVariables.forEach(
+          serviceVariable -> serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
+
+      List<ServiceVariable> safeDisplayServiceVariables = serviceTemplateService.computeServiceVariables(
+          appId, envId, templateId, context.getWorkflowExecutionId(), true);
+
+      HashMap<Object, Object> safeDisplayServiceVariableMap = new HashMap<>();
+      map.put(SAFE_DISPLAY_SERVICE_VARIABLE, safeDisplayServiceVariableMap);
+      safeDisplayServiceVariables.forEach(serviceVariable
+          -> safeDisplayServiceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
     }
     return map;
   }
