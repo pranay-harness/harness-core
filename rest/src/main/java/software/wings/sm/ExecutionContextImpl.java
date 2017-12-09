@@ -2,7 +2,7 @@ package software.wings.sm;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
 import com.google.inject.Inject;
@@ -455,17 +455,19 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Map<String, String> getServiceVariables() {
-    return getServiceVariables(true);
+    return getServiceVariables(false);
   }
 
   @Override
   public Map<String, String> getSafeDisplayServiceVariables() {
-    return getServiceVariables(false);
+    return getServiceVariables(true);
   }
 
-  private Map<String, String> getServiceVariables(boolean withEncryptedValues) {
+  @SuppressWarnings("unchecked")
+  private Map<String, String> getServiceVariables(boolean maskEncryptedFields) {
     if (contextMap != null) {
-      return (Map<String, String>) contextMap.get(SERVICE_VARIABLE);
+      return (Map<String, String>) contextMap.get(
+          maskEncryptedFields ? SAFE_DISPLAY_SERVICE_VARIABLE : SERVICE_VARIABLE);
     }
 
     Map<String, String> variables = new HashMap<>();
@@ -485,12 +487,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
     ServiceTemplate serviceTemplate = serviceTemplateService.get(getAppId(), (String) serviceTemplateKey.get().getId());
     List<ServiceVariable> serviceVariables = serviceTemplateService.computeServiceVariables(
-        getAppId(), envId, serviceTemplate.getUuid(), getWorkflowExecutionId());
+        getAppId(), envId, serviceTemplate.getUuid(), getWorkflowExecutionId(), maskEncryptedFields);
     serviceVariables.forEach(serviceVariable
-        -> variables.put(renderExpression(serviceVariable.getName()),
-            withEncryptedValues || serviceVariable.getType() != ENCRYPTED_TEXT
-                ? renderExpression(new String(serviceVariable.getValue()))
-                : "*****"));
+        -> variables.put(
+            renderExpression(serviceVariable.getName()), renderExpression(new String(serviceVariable.getValue()))));
 
     return variables;
   }
