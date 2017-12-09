@@ -368,8 +368,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), maskEncryptedFields);
 
     return overrideServiceSettings(
-        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId),
-        templateServiceVariables, appId, workflowExecutionId);
+        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId, maskEncryptedFields),
+        templateServiceVariables, appId, workflowExecutionId, maskEncryptedFields);
   }
 
   /* (non-Javadoc)
@@ -392,16 +392,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return mergedConfigFiles;
   }
 
-  /**
-   * Override service settings list.
-   *
-   * @param existingServiceVariables the existing files
-   * @param newServiceVariables      the new files
-   * @param workflowExecutionId
-   * @return the list
-   */
   private List<ServiceVariable> overrideServiceSettings(List<ServiceVariable> existingServiceVariables,
-      List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId) {
+      List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId,
+      boolean maskEncryptedFields) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (existingServiceVariables.size() != 0 || newServiceVariables.size() != 0) {
       logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
@@ -414,12 +407,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
     logger.info("Service variables after overrides [{}]", mergedServiceSettings.toString());
-    mergedServiceSettings.forEach(serviceVariable -> {
-      if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-        encryptionService.decrypt(
-            serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
-      }
-    });
+    if (!maskEncryptedFields) {
+      mergedServiceSettings.forEach(serviceVariable -> {
+        if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+          encryptionService.decrypt(
+              serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
+        }
+      });
+    }
     return mergedServiceSettings;
   }
 }
