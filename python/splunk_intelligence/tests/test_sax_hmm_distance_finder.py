@@ -2,13 +2,12 @@ import sys
 
 import numpy as np
 
-from core.distance.SAXHMMDistance import SAXHMMDistanceFinder, SAXHMMDistance
-from core.util.TimeSeriesUtils import get_deviation_type, get_deviation_min_threshold
+from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
 from sources.FileLoader import FileLoader
 from sources.MetricTemplate import MetricTemplate
 
 
-metric_template = MetricTemplate(FileLoader.load_data('tests/resources/ts/metric_template.json'))
+metric_template = MetricTemplate(FileLoader.load_data('resources/ts/metric_template.json'))
 
 
 def lists_equal(a, b):
@@ -41,7 +40,7 @@ def create_nan(data):
                     data_list[i] = np.nan
 
 
-def run_analysis(filename, make_nan=False):
+def run_analysis(filename, make_nan=False, comparison_unit_window=1):
     txns = FileLoader.load_data(filename)['transactions']
     metric_names = set(metric_template.get_metric_names())
     for txn_id, txn_data in txns.items():
@@ -55,7 +54,7 @@ def run_analysis(filename, make_nan=False):
             shd = SAXHMMDistanceFinder(metric_data['metric_name'], 3, 1,
                                        metric_data['control'],
                                        metric_data['test'],
-                                       metric_template, 1)
+                                       metric_template, comparison_unit_window)
 
             results = shd.compute_dist()
             if 'results' in metric_data:
@@ -75,13 +74,17 @@ def run_analysis(filename, make_nan=False):
                     assert compare(host_data['score'], results['score'][index])
                     assert host_data['nn'] == metric_data['control']['host_names'][results['nn'][index]]
                     assert lists_equal(host_data['distance'], results['distances'][index])
-                    if 'optimal_cuts' in host_data:
+                    if len(results['optimal_test_cuts'][index]) in results:
                         assert str_equal(host_data['optimal_cuts'], results['optimal_test_cuts'][index])
                         assert lists_equal(host_data['optimal_data'], results['optimal_test_data'][index])
 
 
 def test_1():
-    run_analysis('tests/resources/ts/nr_out_live.json', True)
+    run_analysis('resources/ts/nr_out_live_2.json', True, 3)
+
+
+def test_2():
+    run_analysis('resources/ts/nr_out_prod_1.json', True, 3)
 
 
 def main(args):
