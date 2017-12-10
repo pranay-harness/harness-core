@@ -11,7 +11,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
+import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -26,6 +26,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private AlertService alertService;
+
   @Inject @InjectMocks AppService appService;
 
   @Test
@@ -49,16 +50,13 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Application.class, APP_ID)).isNotNull();
 
     // Add alert to the dummy and the target application
-    alertService.openAlert(ACCOUNT_ID, dummyAppID, AlertType.NoActiveDelegates,
-        NoActiveDelegatesAlert.builder().accountId(ACCOUNT_ID).build());
-    alertService.openAlert(
-        ACCOUNT_ID, appId, AlertType.NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(ACCOUNT_ID).build());
+    alertService.openAlert(ACCOUNT_ID, dummyAppID, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build());
+    alertService.openAlert(ACCOUNT_ID, appId, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build());
 
     // Make sure that we added the two alerts
     PageResponse<Alert> alerts = alertService.list(Builder.aPageRequest().build());
 
-    // Brett: The above should only open one alert since NoActiveDelegates is an account level alert, not app level.
-    //    assertThat(alerts.size()).isEqualTo(2);
+    assertThat(alerts.size()).isEqualTo(2);
 
     // TODO: add to the application from all other objects that are owned from application
 
@@ -71,8 +69,6 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     // Make sure that just the alert for the application are deleted
     alerts = alertService.list(Builder.aPageRequest().build());
 
-    // Brett: Test failed for some reason on Jenkins, though seems intermittent. Commenting out for now.
-    // I wouldn't expect deleting an app to affect a NoActiveDelegates alert.
-    //    assertThat(alerts.size()).isEqualTo(1);
+    assertThat(alerts.size()).isEqualTo(1);
   }
 }
