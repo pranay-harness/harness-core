@@ -65,6 +65,7 @@ import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -142,14 +143,7 @@ public class WingsRule implements MethodRule {
     MongoClient mongoClient;
     String dbName = "harness";
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
-      int port = Network.getFreeServerPort();
-      IMongodConfig mongodConfig = new MongodConfigBuilder()
-                                       .version(Main.V3_2)
-                                       .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
-                                       .build();
-      mongodExecutable = starter.prepare(mongodConfig);
-      mongodExecutable.start();
-      mongoClient = new MongoClient("localhost", port);
+      mongoClient = getRandomPortMongoClient();
     } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
       try {
         MongoClientURI clientUri =
@@ -255,6 +249,33 @@ public class WingsRule implements MethodRule {
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
+  }
+
+  private MongoClient getRandomPortMongoClient() throws IOException {
+    IOException persistent = null;
+
+    // FreeServerPort releases the port before it returns it. This creates a race between the moment it is obtain again
+    // and reserved for mongo. In rare cases this can cause the function to fail with port already in use exception.
+    //
+    // There is no good way to eleminate the race, since the port must be free mongo to be able to grab it.
+    //
+    // Lets retry a number of times to reduce the likelihood almost to zero.
+    for (int i = 0; i < 5; i++) {
+      int port = Network.getFreeServerPort();
+      IMongodConfig mongodConfig = new MongodConfigBuilder()
+                                       .version(Main.V3_2)
+                                       .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
+                                       .build();
+      mongodExecutable = starter.prepare(mongodConfig);
+      try {
+        mongodExecutable.start();
+        return new MongoClient("localhost", port);
+      } catch (IOException e) {
+        persistent = e;
+      }
+    }
+
+    throw persistent;
   }
 
   private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
