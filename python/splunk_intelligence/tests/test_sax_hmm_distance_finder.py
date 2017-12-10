@@ -1,10 +1,8 @@
-import json
 import sys
 
 import numpy as np
 
-from core.distance.SAXHMMDistance import SAXHMMDistanceFinder, SAXHMMDistance
-from core.util.TimeSeriesUtils import get_deviation_type, get_deviation_min_threshold
+from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
 from sources.FileLoader import FileLoader
 from sources.MetricTemplate import MetricTemplate
 
@@ -59,8 +57,6 @@ def run_analysis(filename, make_nan=False, comparison_unit_window=1):
                                        metric_template, comparison_unit_window)
 
             results = shd.compute_dist()
-            print(txn_data['txn_name'], metric_data['metric_name'])
-
             if 'results' in metric_data:
                 for index, (host, host_data) in enumerate(metric_data['results'].items()):
                     assert str_equal(host_data['test_cuts'], results['test_cuts'][index])
@@ -84,7 +80,7 @@ def run_analysis(filename, make_nan=False, comparison_unit_window=1):
 
 
 def test_1():
-    run_analysis('resources/ts/nr_out_live.json', True, 3)
+    run_analysis('resources/ts/nr_out_live_2.json', True, 3)
 
 
 def test_2():

@@ -18,9 +18,9 @@ def test_log_ml_cluster_fail():
         corpus = LogCorpus()
 
         corpus.load_prod_file_prev_run(
-            'tests/resources/logs/control_unknown_cluster_fail.json',
+            'resources/logs/control_unknown_cluster_fail.json',
             [control_start, control_start],
-            'tests/resources/logs/test_unknown_cluster_fail.json',
+            'resources/logs/test_unknown_cluster_fail.json',
             [test_start, test_start], prev_out_file)
 
         splunk_intel = SplunkIntelOptimized(corpus, options)
@@ -33,7 +33,7 @@ def test_log_ml_cluster_fail():
 
 # Uses the analysis output to setup a test case
 def test_log_ml_out_1():
-    data = FileLoader.load_data('tests/resources/logs/log_ml_out_1.json')
+    data = FileLoader.load_data('resources/logs/log_ml_out_1.json')
     control = data['control_events']
     test = data['test_events']
     unknown = data['unknown_events']
