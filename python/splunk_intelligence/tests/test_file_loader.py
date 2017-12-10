@@ -2,7 +2,7 @@ from sources.FileLoader import FileLoader
 
 
 def test_load_file():
-    events = FileLoader.load_data('tests/resources/wings15.json')
+    events = FileLoader.load_data('resources/wings15.json')
     assert len(events) == 457
 
     for event in events:

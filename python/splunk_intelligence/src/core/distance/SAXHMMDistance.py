@@ -463,7 +463,7 @@ class SAXHMMDistanceFinder(object):
                     risk[i] = \
                         0 if score[i] <= self.thresholds.get(self.tolerance) \
                             else 1 if score[i] <= self.thresholds.get(self.tolerance + 1) else 2
-                    if risk[i] == 0:
+                    if score[i] == 0:
                         break
 
         return dict(distances=distances, nn=nn, score=score, control_cuts=cuts, test_cuts=self.test_cuts,
