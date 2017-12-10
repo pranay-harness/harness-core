@@ -6,7 +6,7 @@ from sources.MetricTemplate import MetricTemplate
 
 
 def test_load_metric_template():
-    metric_template = MetricTemplate(FileLoader.load_data('tests/resources/ts/metric_template.json'))
+    metric_template = MetricTemplate(FileLoader.load_data('resources/ts/metric_template.json'))
     met_names = set([u'requestsPerMinute', u'averageResponseTime', u'apdexScore', u'error'])
     assert len(met_names & set(metric_template.get_metric_names())) == 4
     assert metric_template.get_deviation_type('averageResponseTime') == MetricToDeviationType.HIGHER
