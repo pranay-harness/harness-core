@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -126,6 +127,7 @@ public class PruneObjectJobMockTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void retryIfServiceThrew() throws Exception {
     when(wingsPersistence.get(Application.class, objectId)).thenReturn(null);
 
