@@ -1,5 +1,6 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -24,6 +25,7 @@ public class ContainerDeploymentInfo extends Base {
   private String stateExecutionInstanceId;
   private InstanceType instanceType;
   private String clusterName;
+  private String kubernetesType;
   @Indexed private long lastVisited;
 
   /**
@@ -47,6 +49,7 @@ public class ContainerDeploymentInfo extends Base {
     private String stateExecutionInstanceId;
     private InstanceType instanceType;
     private String clusterName;
+    private String kubernetesType;
     private long lastVisited;
     private String containerSvcName;
     private String containerSvcNameNoRevision;
@@ -117,6 +120,11 @@ public class ContainerDeploymentInfo extends Base {
       return this;
     }
 
+    public Builder withKubernetesType(String kubernetesType) {
+      this.kubernetesType = kubernetesType;
+      return this;
+    }
+
     public Builder withLastVisited(long lastVisited) {
       this.lastVisited = lastVisited;
       return this;
@@ -177,6 +185,7 @@ public class ContainerDeploymentInfo extends Base {
           .withClusterName(clusterName)
           .withLastVisited(lastVisited)
           .withContainerSvcName(containerSvcName)
+          .withKubernetesType(kubernetesType)
           .withContainerSvcNameNoRevision(containerSvcNameNoRevision)
           .withUuid(uuid)
           .withAppId(appId)
@@ -199,6 +208,7 @@ public class ContainerDeploymentInfo extends Base {
       containerDeploymentInfo.setStateExecutionInstanceId(stateExecutionInstanceId);
       containerDeploymentInfo.setInstanceType(instanceType);
       containerDeploymentInfo.setClusterName(clusterName);
+      containerDeploymentInfo.setKubernetesType(kubernetesType);
       containerDeploymentInfo.setLastVisited(lastVisited);
       containerDeploymentInfo.setContainerSvcName(containerSvcName);
       containerDeploymentInfo.setContainerSvcNameNoRevision(containerSvcNameNoRevision);

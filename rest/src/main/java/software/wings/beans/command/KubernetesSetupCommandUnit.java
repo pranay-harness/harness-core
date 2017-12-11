@@ -5,11 +5,6 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
-import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
-import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
-import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.ContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.common.collect.ImmutableList;
@@ -21,16 +16,28 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.awaitility.core.ConditionTimeoutException;
@@ -38,7 +45,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -49,7 +55,6 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
 
@@ -83,7 +88,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Override
   protected String executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, ContainerSetupParams containerSetupParams,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
 
@@ -92,10 +97,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
     } else {
       kubernetesConfig = gkeClusterService.getCluster(
-          cloudProviderSetting, encryptedDataDetails, clusterName, setupParams.getNamespace());
+          cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), setupParams.getNamespace());
     }
-    String lastReplicationControllerName =
-        lastReplicationController(kubernetesConfig, setupParams.getRcNamePrefix(), encryptedDataDetails);
+    String lastReplicationControllerName = lastReplicationController(
+        kubernetesConfig, setupParams.getRcNamePrefix(), setupParams.getKubernetesType(), encryptedDataDetails);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
 
@@ -122,13 +127,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         createRegistrySecret(
             secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));
 
-    String containerServiceName =
-        fetchContainerServiceName(kubernetesConfig, setupParams.getRcNamePrefix(), encryptedDataDetails);
+    String containerServiceName = fetchContainerServiceName(
+        kubernetesConfig, setupParams.getRcNamePrefix(), setupParams.getKubernetesType(), encryptedDataDetails);
 
-    ReplicationController rcDefinition = createReplicationControllerDefinition(setupParams.getContainerTask(),
+    HasMetadata controllerDefinition = createKubernetesControllerDefinition(setupParams.getContainerTask(),
         containerServiceName, controllerLabels, kubernetesConfig.getNamespace(), setupParams.getImageDetails(),
         secretName, serviceVariables, executionLogCallback);
-    kubernetesContainerService.createController(kubernetesConfig, emptyList(), rcDefinition);
+    kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, controllerDefinition);
 
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
@@ -159,16 +164,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     } else if (service != null) {
       executionLogCallback.saveExecutionLog(
           "Kubernetes service type set to 'None'. Deleting existing service " + kubernetesServiceName, LogLevel.INFO);
-      kubernetesContainerService.deleteService(kubernetesConfig, emptyList(), kubernetesServiceName);
+      kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
     }
 
     executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
-    cleanup(kubernetesConfig, containerServiceName);
+    cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams.getKubernetesType());
 
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
-    executionLogCallback.saveExecutionLog("Cluster Name: " + clusterName, LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Replication Controller Name: " + containerServiceName, LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Controller Name: " + containerServiceName, LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Service Name: " + kubernetesServiceName, LogLevel.INFO);
     if (isNotBlank(serviceClusterIP)) {
       executionLogCallback.saveExecutionLog("Service Cluster IP: " + serviceClusterIP, LogLevel.INFO);
@@ -198,10 +203,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private String fetchContainerServiceName(
-      KubernetesConfig kubernetesConfig, String rcNamePrefix, List<EncryptedDataDetail> encryptedDataDetails) {
+  private String fetchContainerServiceName(KubernetesConfig kubernetesConfig, String rcNamePrefix, String type,
+      List<EncryptedDataDetail> encryptedDataDetails) {
     String lastReplicationControllerName =
-        lastReplicationController(kubernetesConfig, rcNamePrefix, encryptedDataDetails);
+        lastReplicationController(kubernetesConfig, rcNamePrefix, type, encryptedDataDetails);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
     return KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
@@ -264,18 +269,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return loadBalancerEndpoint;
   }
 
-  private String lastReplicationController(
-      KubernetesConfig kubernetesConfig, String controllerNamePrefix, List<EncryptedDataDetail> encryptedDataDetails) {
-    ReplicationControllerList replicationControllers =
-        kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails);
-    if (replicationControllers == null) {
+  private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix, String type,
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    List<? extends HasMetadata> controllers =
+        kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails, type);
+    if (controllers == null) {
       return null;
     }
 
-    ReplicationController lastReplicationController = null;
-    for (ReplicationController controller :
-        replicationControllers.getItems()
-            .stream()
+    HasMetadata lastReplicationController = null;
+    for (HasMetadata controller :
+        controllers.stream()
             .filter(c
                 -> c.getMetadata().getName().equals(controllerNamePrefix)
                     || c.getMetadata().getName().startsWith(controllerNamePrefix + KubernetesConvention.DOT))
@@ -290,9 +294,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   /**
-   * Creates replication controller definition
+   * Creates controller definition
    */
-  private ReplicationController createReplicationControllerDefinition(ContainerTask containerTask,
+  private HasMetadata createKubernetesControllerDefinition(ContainerTask containerTask,
       String replicationControllerName, Map<String, String> controllerLabels, String namespace,
       ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables,
       ExecutionLogCallback executionLogCallback) {
@@ -304,45 +308,69 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
+    String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
 
-    String configTemplate;
-    ContainerTask.AdvancedType type;
-    if (isNotEmpty(kubernetesContainerTask.getAdvancedConfig())) {
-      configTemplate = kubernetesContainerTask.getAdvancedConfig();
-      type = kubernetesContainerTask.getAdvancedType();
-    } else {
-      configTemplate = kubernetesContainerTask.fetchYamlConfig();
-      type = YAML;
+    HasMetadata kubernetesObj = kubernetesContainerTask.createController(containerName, imageNameTag, secretName);
+
+    KubernetesHelper.setName(kubernetesObj, replicationControllerName);
+    KubernetesHelper.setNamespace(kubernetesObj, namespace);
+    KubernetesHelper.getOrCreateLabels(kubernetesObj).putAll(controllerLabels);
+
+    configureTypeSpecificSpecs(controllerLabels, kubernetesObj, serviceVariables);
+
+    return kubernetesObj;
+  }
+
+  private void configureTypeSpecificSpecs(
+      Map<String, String> controllerLabels, HasMetadata kubernetesObj, Map<String, String> serviceVariables) {
+    ObjectMeta objectMeta = null;
+    PodSpec podSpec = null;
+    if (kubernetesObj instanceof ReplicationController) {
+      ReplicationControllerSpec rcSpec = ((ReplicationController) kubernetesObj).getSpec();
+      rcSpec.setSelector(controllerLabels);
+      rcSpec.setReplicas(0);
+      objectMeta = rcSpec.getTemplate().getMetadata();
+      podSpec = rcSpec.getTemplate().getSpec();
+    } else if (kubernetesObj instanceof Deployment) {
+      DeploymentSpec depSpec = ((Deployment) kubernetesObj).getSpec();
+      depSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
+      depSpec.setReplicas(0);
+      objectMeta = depSpec.getTemplate().getMetadata();
+      podSpec = depSpec.getTemplate().getSpec();
+    } else if (kubernetesObj instanceof DaemonSet) {
+      DaemonSetSpec dsSpec = ((DaemonSet) kubernetesObj).getSpec();
+      dsSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
+      objectMeta = dsSpec.getTemplate().getMetadata();
+      podSpec = dsSpec.getTemplate().getSpec();
+    } else if (kubernetesObj instanceof ReplicaSet) {
+      ReplicaSetSpec repSetSpec = ((ReplicaSet) kubernetesObj).getSpec();
+      repSetSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
+      repSetSpec.setReplicas(0);
+      objectMeta = repSetSpec.getTemplate().getMetadata();
+      podSpec = repSetSpec.getTemplate().getSpec();
+    } else if (kubernetesObj instanceof StatefulSet) {
+      StatefulSetSpec stateSetSpec = ((StatefulSet) kubernetesObj).getSpec();
+      stateSetSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
+      stateSetSpec.setReplicas(0);
+      objectMeta = stateSetSpec.getTemplate().getMetadata();
+      podSpec = stateSetSpec.getTemplate().getSpec();
     }
-
-    String config =
-        configTemplate
-            .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageDetails.getName() + ":" + imageDetails.getTag())
-            .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
-            .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
-
-    try {
-      ReplicationController rc =
-          type == JSON ? (ReplicationController) KubernetesHelper.loadJson(config) : KubernetesHelper.loadYaml(config);
-
-      KubernetesHelper.setName(rc, replicationControllerName);
-      KubernetesHelper.setNamespace(rc, namespace);
-      KubernetesHelper.getOrCreateLabels(rc).putAll(controllerLabels);
-      rc.getSpec().setSelector(controllerLabels);
-      Map<String, String> labels = rc.getSpec().getTemplate().getMetadata().getLabels();
+    if (objectMeta != null) {
+      Map<String, String> labels = objectMeta.getLabels();
       if (labels == null) {
         labels = new HashMap<>();
-        rc.getSpec().getTemplate().getMetadata().setLabels(labels);
+        objectMeta.setLabels(labels);
       }
-      rc.getSpec().getTemplate().getMetadata().getLabels().putAll(controllerLabels);
-      rc.getSpec().setReplicas(0);
+      objectMeta.getLabels().putAll(controllerLabels);
+    }
 
+    if (podSpec != null) {
       // Set service variables as environment variables
       if (serviceVariables != null && !serviceVariables.isEmpty()) {
         Map<String, EnvVar> serviceEnvVars =
             serviceVariables.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build()));
-        for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
+        for (Container container : podSpec.getContainers()) {
           Map<String, EnvVar> envVarsMap = new HashMap<>();
           if (container.getEnv() != null) {
             container.getEnv().forEach(envVar -> envVarsMap.put(envVar.getName(), envVar));
@@ -351,11 +379,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           container.setEnv(new ArrayList<>(envVarsMap.values()));
         }
       }
-      return rc;
-
-    } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(e.getMessage(), LogLevel.ERROR);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
   }
 
@@ -388,7 +411,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         spec.withClusterIP(setupParams.getClusterIP());
       }
     } else {
-      // TODO:: fabric8 doesn't seem to support external name yet. Add here when it does.
+      spec.withExternalName(setupParams.getExternalName());
     }
 
     if (isNotEmpty(setupParams.getExternalIPs())) {
@@ -397,7 +420,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     return new ServiceBuilder()
-        .withApiVersion("v1")
         .withNewMetadata()
         .withName(serviceName)
         .withNamespace(namespace)
@@ -407,24 +429,26 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private void cleanup(KubernetesConfig kubernetesConfig, String containerServiceName) {
+  private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String containerServiceName, String type) {
     int revision = getRevisionFromControllerName(containerServiceName);
     if (revision >= KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - KEEP_N_REVISIONS + 1;
-      ReplicationControllerList replicationControllers =
-          kubernetesContainerService.listControllers(kubernetesConfig, emptyList());
-      String controllerNamePrefix =
-          KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(containerServiceName);
-      if (replicationControllers != null) {
-        replicationControllers.getItems()
-            .stream()
-            .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() == 0)
+      List<? extends HasMetadata> controllers =
+          kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails, type);
+      String controllerNamePrefix = KubernetesConvention.getPrefixFromControllerName(containerServiceName);
+      if (controllers != null) {
+        controllers.stream()
+            .filter(c
+                -> c.getMetadata().getName().startsWith(controllerNamePrefix)
+                    && kubernetesContainerService.getControllerPodCount(c) == 0)
             .collect(Collectors.toList())
             .forEach(rc -> {
               String controllerName = rc.getMetadata().getName();
               if (getRevisionFromControllerName(controllerName) < minRevisionToKeep) {
                 logger.info("Deleting old version: " + controllerName);
-                kubernetesContainerService.deleteController(kubernetesConfig, emptyList(), controllerName);
+                kubernetesContainerService.deleteController(
+                    kubernetesConfig, encryptedDataDetails, controllerName, type);
               }
             });
       }

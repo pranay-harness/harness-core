@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.SettingAttribute;
@@ -16,4 +17,5 @@ public class ContainerServiceParams {
   private String clusterName;
   private String namespace;
   private String region;
+  private String kubernetesType;
 }

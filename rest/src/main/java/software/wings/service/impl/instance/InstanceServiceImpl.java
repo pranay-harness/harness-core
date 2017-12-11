@@ -359,9 +359,8 @@ public class InstanceServiceImpl implements InstanceService {
       }
       KubernetesContainerInfo newContainerInfo = (KubernetesContainerInfo) containerInfo;
       // If the replicationControllerName is the same (including the revision), no need to update.
-      // We only need to update if the pod has been re-assigned to a different replication controller.
-      return !newContainerInfo.getReplicationControllerName().equals(
-          existingContainerInfo.getReplicationControllerName());
+      // We only need to update if the pod has been re-assigned to a different controller.
+      return !newContainerInfo.getControllerName().equals(existingContainerInfo.getControllerName());
 
     } else {
       throw new WingsException("Unsupported container type" + containerInfo.getClass());

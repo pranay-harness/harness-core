@@ -45,6 +45,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -67,6 +68,8 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerDefinition;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -136,6 +139,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                                  .withResizeStrategy(RESIZE_NEW_FIRST)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
                                  .withDeploymentType(DeploymentType.KUBERNETES)
+                                 .withKubernetesType(ReplicationController.class.getName())
                                  .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
@@ -171,6 +175,12 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
             .build();
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Setup Replication Controller"))
         .thenReturn(serviceCommand);
+
+    KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
+    ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
+    kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    when(serviceResourceService.getContainerTaskByDeploymentType(APP_ID, SERVICE_ID, DeploymentType.KUBERNETES.name()))
+        .thenReturn(kubernetesContainerTask);
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("artifactService", artifactService);
@@ -198,7 +208,6 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(kubernetesReplicationControllerSetup, "secretManager", secretManager);
-    //    when(encryptionService.decrypt(any(), any())).thenR
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);

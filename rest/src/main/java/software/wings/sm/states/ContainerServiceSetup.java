@@ -137,7 +137,7 @@ public abstract class ContainerServiceSetup extends State {
       logger.info("Setting up container service for account {}, app {}, service {}", app.getAccountId(), app.getUuid(),
           service.getName());
       ContainerTask containerTask =
-          serviceResourceService.getContainerTaskByDeploymentType(app.getAppId(), serviceId, getDeploymentType());
+          serviceResourceService.getContainerTaskByDeploymentType(app.getUuid(), serviceId, getDeploymentType());
 
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
@@ -178,8 +178,13 @@ public abstract class ContainerServiceSetup extends State {
       List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
           (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
-      ContainerSetupParams containerSetupParams = buildContainerSetupParams(
-          context, service.getName(), imageDetails, app, env, containerInfrastructureMapping, containerTask);
+      ContainerSetupParams containerSetupParams = buildContainerSetupParams(context, service.getName(), imageDetails,
+          app, env, containerInfrastructureMapping, containerTask, clusterName);
+
+      String kubernetesType = null;
+      if (containerSetupParams instanceof KubernetesSetupParams) {
+        kubernetesType = ((KubernetesSetupParams) containerSetupParams).getKubernetesType();
+      }
 
       CommandStateExecutionData executionData = aCommandStateExecutionData()
                                                     .withServiceId(service.getUuid())
@@ -188,23 +193,19 @@ public abstract class ContainerServiceSetup extends State {
                                                     .withCommandName(getCommandName())
                                                     .withContainerSetupParams(containerSetupParams)
                                                     .withClusterName(clusterName)
+                                                    .withKubernetesType(kubernetesType)
                                                     .withActivityId(activity.getUuid())
                                                     .build();
 
-      CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withEnvId(env.getUuid())
-              .withContainerSetupParams(containerSetupParams)
-              .withClusterName(clusterName)
-              .withActivityId(activity.getUuid())
-              .withCloudProviderSetting(settingAttribute)
-              .withNamespace(containerSetupParams instanceof KubernetesSetupParams
-                      ? ((KubernetesSetupParams) containerSetupParams).getNamespace()
-                      : "")
-              .withCloudProviderCredentials(encryptedDataDetails)
-              .build();
+      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                            .withAccountId(app.getAccountId())
+                                                            .withAppId(app.getUuid())
+                                                            .withEnvId(env.getUuid())
+                                                            .withContainerSetupParams(containerSetupParams)
+                                                            .withActivityId(activity.getUuid())
+                                                            .withCloudProviderSetting(settingAttribute)
+                                                            .withCloudProviderCredentials(encryptedDataDetails)
+                                                            .build();
 
       String delegateTaskId =
           delegateService.queueTask(aDelegateTask()
@@ -429,7 +430,7 @@ public abstract class ContainerServiceSetup extends State {
 
   protected abstract ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask);
+      ContainerTask containerTask, String clusterName);
 
   protected abstract boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping);
 
