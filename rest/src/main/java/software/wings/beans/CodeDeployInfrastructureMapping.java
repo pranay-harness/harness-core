@@ -5,8 +5,10 @@ import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInf
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
@@ -35,116 +37,23 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static class Yaml extends InfrastructureMapping.Yaml {
     private String region;
     private String applicationName;
     private String deploymentGroup;
     private String deploymentConfig;
 
-    public static final class Builder {
-      private String region;
-      private String applicationName;
-      private String computeProviderType;
-      private String deploymentGroup;
-      private String serviceName;
-      private String deploymentConfig;
-      private String infraMappingType;
-      private String type;
-      private String deploymentType;
-      private String computeProviderName;
-      private String name;
-
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withRegion(String region) {
-        this.region = region;
-        return this;
-      }
-
-      public Builder withApplicationName(String applicationName) {
-        this.applicationName = applicationName;
-        return this;
-      }
-
-      public Builder withComputeProviderType(String computeProviderType) {
-        this.computeProviderType = computeProviderType;
-        return this;
-      }
-
-      public Builder withDeploymentGroup(String deploymentGroup) {
-        this.deploymentGroup = deploymentGroup;
-        return this;
-      }
-
-      public Builder withServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        return this;
-      }
-
-      public Builder withDeploymentConfig(String deploymentConfig) {
-        this.deploymentConfig = deploymentConfig;
-        return this;
-      }
-
-      public Builder withInfraMappingType(String infraMappingType) {
-        this.infraMappingType = infraMappingType;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withDeploymentType(String deploymentType) {
-        this.deploymentType = deploymentType;
-        return this;
-      }
-
-      public Builder withComputeProviderName(String computeProviderName) {
-        this.computeProviderName = computeProviderName;
-        return this;
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml()
-            .withRegion(region)
-            .withApplicationName(applicationName)
-            .withComputeProviderType(computeProviderType)
-            .withDeploymentGroup(deploymentGroup)
-            .withServiceName(serviceName)
-            .withDeploymentConfig(deploymentConfig)
-            .withInfraMappingType(infraMappingType)
-            .withType(type)
-            .withDeploymentType(deploymentType)
-            .withComputeProviderName(computeProviderName)
-            .withName(name);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setRegion(region);
-        yaml.setApplicationName(applicationName);
-        yaml.setComputeProviderType(computeProviderType);
-        yaml.setDeploymentGroup(deploymentGroup);
-        yaml.setServiceName(serviceName);
-        yaml.setDeploymentConfig(deploymentConfig);
-        yaml.setInfraMappingType(infraMappingType);
-        yaml.setType(type);
-        yaml.setDeploymentType(deploymentType);
-        yaml.setComputeProviderName(computeProviderName);
-        yaml.setName(name);
-        return yaml;
-      }
+    @Builder
+    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName, String region,
+        String applicationName, String deploymentGroup, String deploymentConfig) {
+      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+          computeProviderName);
+      this.region = region;
+      this.applicationName = applicationName;
+      this.deploymentGroup = deploymentGroup;
+      this.deploymentConfig = deploymentConfig;
     }
   }
 

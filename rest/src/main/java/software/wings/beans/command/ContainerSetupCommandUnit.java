@@ -64,8 +64,12 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static abstract class Yaml extends AbstractCommandUnit.Yaml {
-    public static abstract class Builder extends AbstractCommandUnit.Yaml.Builder {
-      protected Builder() {}
+    public Yaml(String commandUnitType) {
+      super(commandUnitType);
+    }
+
+    public Yaml(String name, String commandUnitType, String deploymentType) {
+      super(name, commandUnitType, deploymentType);
     }
   }
 }

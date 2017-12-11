@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/17/17
  */
-public interface YamlSyncService<Y extends BaseYaml, B extends Base> {
+public interface YamlService<Y extends BaseYaml, B extends Base> {
   /**
    * Process all the yaml changes, convert to beans and save the changes in mongodb.
    * @param changeList yaml change list

@@ -26,16 +26,10 @@ public class StorageConfigurationYamlHandler extends BaseYamlHandler<Yaml, Stora
   @Override
   public StorageConfiguration upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return setWithYamlValues(changeContext);
+    return toBean(changeContext);
   }
 
-  @Override
-  public StorageConfiguration updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
-  }
-
-  private StorageConfiguration setWithYamlValues(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private StorageConfiguration toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     return StorageConfiguration.builder()
         .containerPath(yaml.getContainerPath())
@@ -47,12 +41,6 @@ public class StorageConfigurationYamlHandler extends BaseYamlHandler<Yaml, Stora
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return true;
-  }
-
-  @Override
-  public StorageConfiguration createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
   }
 
   @Override

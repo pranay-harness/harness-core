@@ -4,6 +4,7 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
 @Data
@@ -15,10 +16,17 @@ public class StorageConfiguration {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @Builder
+  @NoArgsConstructor
   public static final class Yaml extends BaseYaml {
     private String hostSourcePath;
     private String containerPath;
     private boolean readonly = false;
+
+    @Builder
+    public Yaml(String hostSourcePath, String containerPath, boolean readonly) {
+      this.hostSourcePath = hostSourcePath;
+      this.containerPath = containerPath;
+      this.readonly = readonly;
+    }
   }
 }

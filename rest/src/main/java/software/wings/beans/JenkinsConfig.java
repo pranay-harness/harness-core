@@ -9,11 +9,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.jersey.JsonViews;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.ArtifactServerYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
@@ -30,7 +31,6 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
-  @NotEmpty
   @Encrypted
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
@@ -56,25 +56,25 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
-    public Yaml() {}
-
-    public Yaml(String type, String name, String url, String username, String password) {
-      super(type, name, url, username, password);
+    @Builder
+    public Yaml(String type, String url, String username, String password) {
+      super(type, url, username, password);
     }
   }
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class VerificationYaml extends VerificationProviderYaml {
     private String url;
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
 
-    public VerificationYaml() {}
-
-    public VerificationYaml(String type, String name, String url, String username, String password) {
-      super(type, name);
+    @Builder
+    public VerificationYaml(String type, String url, String username, String password) {
+      super(type);
       this.url = url;
       this.username = username;
       this.password = password;

@@ -11,7 +11,7 @@ import software.wings.beans.Environment.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.sync.YamlSyncHelper;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.utils.Validator;
 
@@ -21,15 +21,15 @@ import java.util.List;
  * @author rktummala on 11/07/17
  */
 public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, Environment> {
-  @Inject YamlSyncHelper yamlSyncHelper;
+  @Inject YamlHelper yamlHelper;
   @Inject EnvironmentService environmentService;
 
   @Override
   public Environment.Yaml toYaml(Environment environment, String appId) {
-    return Environment.Yaml.Builder.anYaml()
-        .withType(ENVIRONMENT.name())
-        .withDescription(environment.getDescription())
-        .withEnvironmentType(environment.getEnvironmentType().name())
+    return Environment.Yaml.builder()
+        .type(ENVIRONMENT.name())
+        .description(environment.getDescription())
+        .environmentType(environment.getEnvironmentType().name())
         .build();
   }
 
@@ -38,10 +38,10 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
     String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+        yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
     Yaml yaml = changeContext.getYaml();
-    String environmentName = yamlSyncHelper.getEnvironmentName(changeContext.getChange().getFilePath());
+    String environmentName = yamlHelper.getEnvironmentName(changeContext.getChange().getFilePath());
     Environment current = Builder.anEnvironment()
                               .withAppId(appId)
                               .withName(environmentName)
@@ -49,7 +49,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                               .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
 
-    Environment previous = yamlSyncHelper.getEnvironment(appId, changeContext.getChange().getFilePath());
+    Environment previous = yamlHelper.getEnvironment(appId, changeContext.getChange().getFilePath());
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -71,19 +71,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   @Override
   public Environment get(String accountId, String yamlFilePath) {
-    return yamlSyncHelper.getEnvironment(accountId, yamlFilePath);
-  }
-
-  @Override
-  public Environment createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
-  }
-
-  @Override
-  public Environment updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
+    return yamlHelper.getEnvironment(accountId, yamlFilePath);
   }
 
   @Override
