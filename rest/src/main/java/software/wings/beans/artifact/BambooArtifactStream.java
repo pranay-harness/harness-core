@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
-import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.BambooArtifactStream.Builder.aBambooArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -9,7 +8,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -38,7 +36,7 @@ public class BambooArtifactStream extends ArtifactStream {
    * Instantiates a new Bamboo artifact stream.
    */
   public BambooArtifactStream() {
-    super(BAMBOO.name());
+    super(ArtifactStreamType.BAMBOO.name());
     super.setAutoApproveForProduction(true);
   }
 
@@ -384,17 +382,82 @@ public class BambooArtifactStream extends ArtifactStream {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static class Yaml extends ArtifactStream.Yaml {
     private String planName;
     private List<String> artifactPaths;
 
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String planName,
-        List<String> artifactPaths) {
-      super(BAMBOO.name(), harnessApiVersion, artifactServerName, metadataOnly);
-      this.planName = planName;
-      this.artifactPaths = artifactPaths;
+    public static final class Builder {
+      private String planName;
+      private String sourceName;
+      private List<String> artifactPaths;
+      private String settingName;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withPlanName(String planName) {
+        this.planName = planName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withArtifactPaths(List<String> artifactPaths) {
+        this.artifactPaths = artifactPaths;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withPlanName(planName)
+            .withSourceName(sourceName)
+            .withArtifactPaths(artifactPaths)
+            .withSettingName(settingName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setPlanName(planName);
+        yaml.setSourceName(sourceName);
+        yaml.setArtifactPaths(artifactPaths);
+        yaml.setSettingName(settingName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        return yaml;
+      }
     }
   }
 }

@@ -7,12 +7,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
+import software.wings.annotation.Encrypted;
+import software.wings.annotation.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
@@ -50,11 +49,11 @@ public class ArtifactoryConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
-    @Builder
-    public Yaml(String type, String url, String username, String password) {
-      super(type, url, username, password);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String url, String username, String password) {
+      super(type, name, url, username, password);
     }
   }
 }

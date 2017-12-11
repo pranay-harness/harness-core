@@ -2,9 +2,13 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static software.wings.utils.Util.isEmpty;
 
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream.Builder;
 import software.wings.beans.artifact.JenkinsArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.exception.HarnessException;
 
 import java.util.List;
 
@@ -14,35 +18,78 @@ import java.util.List;
 public class JenkinsArtifactStreamYamlHandler
     extends ArtifactStreamYamlHandler<JenkinsArtifactStream.Yaml, JenkinsArtifactStream> {
   @Override
-  public Yaml toYaml(JenkinsArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-    yaml.setArtifactPaths(bean.getArtifactPaths());
-    yaml.setJobName(bean.getJobname());
-    return yaml;
+  public JenkinsArtifactStream.Yaml toYaml(JenkinsArtifactStream artifactStream, String appId) {
+    return JenkinsArtifactStream.Yaml.Builder.aYaml()
+        .withType(ArtifactStreamType.JENKINS.name())
+        .withSettingName(getSettingName(artifactStream.getSettingId()))
+        .withArtifactPaths(artifactStream.getArtifactPaths())
+        .withAutoApproveForProduction(artifactStream.getAutoApproveForProduction())
+        .withMetadataOnly(artifactStream.isMetadataOnly())
+        .withJobName(artifactStream.getJobname())
+        .withSourceName(artifactStream.getSourceName())
+        .build();
+  }
+
+  @Override
+  public JenkinsArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
+  public JenkinsArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (!validate(changeContext, changeSetContext)) {
+      return null;
+    }
+
+    JenkinsArtifactStream previous =
+        getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Builder builder = previous.deepClone();
+    setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
+    return (JenkinsArtifactStream) artifactStreamService.update(builder.build());
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml artifactStreamYaml = changeContext.getYaml();
+    JenkinsArtifactStream.Yaml artifactStreamYaml = changeContext.getYaml();
     return !(isEmpty(artifactStreamYaml.getArtifactPaths()) || isEmpty(artifactStreamYaml.getJobName())
-        || isEmpty(artifactStreamYaml.getArtifactServerName()));
+        || isEmpty(artifactStreamYaml.getSourceName()) || isEmpty(artifactStreamYaml.getSettingName()));
   }
 
   @Override
-  protected JenkinsArtifactStream getNewArtifactStreamObject() {
-    return new JenkinsArtifactStream();
+  public JenkinsArtifactStream createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (!validate(changeContext, changeSetContext)) {
+      return null;
+    }
+
+    String appId =
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
+
+    Builder builder = Builder.aJenkinsArtifactStream().withServiceId(serviceId).withAppId(appId);
+    setWithYamlValues(builder, changeContext.getYaml(), appId);
+    return (JenkinsArtifactStream) artifactStreamService.create(builder.build());
   }
 
-  protected void toBean(JenkinsArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
-    super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
-    bean.setArtifactPaths(yaml.getArtifactPaths());
-    bean.setJobname(yaml.getJobName());
+  private void setWithYamlValues(
+      JenkinsArtifactStream.Builder builder, JenkinsArtifactStream.Yaml artifactStreamYaml, String appId) {
+    builder.withArtifactPaths(artifactStreamYaml.getArtifactPaths())
+        .withSettingId(getSettingId(appId, artifactStreamYaml.getSettingName()))
+        .withAutoApproveForProduction(artifactStreamYaml.isAutoApproveForProduction())
+        .withJobname(artifactStreamYaml.getJobName())
+        .withMetadataOnly(artifactStreamYaml.isMetadataOnly())
+        .withSourceName(artifactStreamYaml.getSourceName())
+        .build();
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return JenkinsArtifactStream.Yaml.class;
   }
 }

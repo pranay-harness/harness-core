@@ -3,7 +3,6 @@ package software.wings.beans.command;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -42,12 +41,21 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   @JsonTypeName("RESIZE")
   public static class Yaml extends ContainerResizeCommandUnit.Yaml {
     public Yaml() {
-      super(CommandUnitType.RESIZE.name());
+      super();
+      setCommandUnitType(CommandUnitType.RESIZE.name());
     }
 
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.RESIZE.name(), deploymentType);
+    public static final class Builder extends ContainerResizeCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new Yaml();
+      }
     }
   }
 }

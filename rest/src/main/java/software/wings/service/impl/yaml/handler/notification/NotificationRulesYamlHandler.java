@@ -9,6 +9,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.Yaml;
 import software.wings.beans.ObjectType;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -27,8 +28,14 @@ import java.util.stream.Collectors;
 public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRule.Yaml, NotificationRule> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  private NotificationRule toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeContextList)
+  @Override
+  public NotificationRule createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
+    return setWithYamlValues(true, changeContext, changeSetContext);
+  }
+
+  private NotificationRule setWithYamlValues(boolean isCreate, ChangeContext<Yaml> changeContext,
+      List<ChangeContext> changeContextList) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
 
@@ -36,19 +43,19 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
     if (yaml.getNotificationGroups() != null) {
       BaseYamlHandler notificationGroupYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP, ObjectType.NOTIFICATION_GROUP);
-      notificationGroups = yaml.getNotificationGroups()
-                               .stream()
-                               .map(notificationGroup -> {
-                                 try {
-                                   ChangeContext.Builder clonedContext =
-                                       cloneFileChangeContext(changeContext, notificationGroup);
-                                   return (NotificationGroup) notificationGroupYamlHandler.upsertFromYaml(
-                                       clonedContext.build(), changeContextList);
-                                 } catch (HarnessException e) {
-                                   throw new WingsException(e);
-                                 }
-                               })
-                               .collect(Collectors.toList());
+      notificationGroups =
+          yaml.getNotificationGroups()
+              .stream()
+              .map(notificationGroup -> {
+                try {
+                  ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, notificationGroup);
+                  return (NotificationGroup) createOrUpdateFromYaml(
+                      isCreate, notificationGroupYamlHandler, clonedContext.build(), changeContextList);
+                } catch (HarnessException e) {
+                  throw new WingsException(e);
+                }
+              })
+              .collect(Collectors.toList());
     }
 
     List<ExecutionStatus> conditions = yaml.getConditions()
@@ -89,7 +96,17 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
   @Override
   public NotificationRule upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext, changeSetContext);
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
+  public NotificationRule updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(false, changeContext, changeSetContext);
   }
 
   @Override

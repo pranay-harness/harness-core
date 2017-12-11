@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -34,7 +33,6 @@ public class NotificationGroup extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends BaseYaml {
     @NotEmpty private String accountId;
     @NotNull private String name;
@@ -93,7 +91,6 @@ public class NotificationGroup extends Base {
    */
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class AddressYaml extends BaseYaml {
     private String channelType;
     private List<String> addresses;

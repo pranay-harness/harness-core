@@ -34,8 +34,6 @@ public class DirectoryNode {
       this.restName = "settings";
     } else if (this.shortClassName.equals("ServiceCommand")) {
       this.restName = "service-commands";
-    } else if (this.shortClassName.equals("ConfigFile")) {
-      this.restName = "configs";
     } else if (this.shortClassName.equals("ArtifactStream")) {
       this.restName = "artifact-streams";
     } else if (this.shortClassName.equals("ContainerTask")) {

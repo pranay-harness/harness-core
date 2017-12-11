@@ -50,15 +50,34 @@ public class DockerStopCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("DOCKER_STOP")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnit.Yaml {
     public Yaml() {
-      super(CommandUnitType.DOCKER_STOP.name());
+      super();
+      setCommandUnitType(CommandUnitType.DOCKER_STOP.name());
     }
 
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.DOCKER_STOP.name(), deploymentType, workingDirectory, command, filePatternEntryList);
+    public static final class Builder extends ExecCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Yaml.Builder anYaml() {
+        return new Yaml.Builder();
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setWorkingDirectory(workingDirectory);
+        yaml.setCommand(command);
+        yaml.setFilePatternEntryList(filePatternEntryList);
+        yaml.setName(name);
+        yaml.setCommandUnitType(commandUnitType);
+        yaml.setDeploymentType(deploymentType);
+        return yaml;
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new Yaml();
+      }
     }
   }
 }

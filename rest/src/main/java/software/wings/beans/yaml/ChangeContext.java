@@ -1,12 +1,10 @@
 package software.wings.beans.yaml;
 
-import com.google.common.collect.Maps;
+import static software.wings.beans.yaml.ChangeContext.Builder.aChangeContext;
 
 import lombok.Data;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.yaml.BaseYaml;
-
-import java.util.Map;
 
 /**
  * @author rktummala on 10/17/17
@@ -17,23 +15,26 @@ public class ChangeContext<Y extends BaseYaml> {
   private YamlType yamlType;
   private Y yaml;
   private BaseYamlHandler yamlSyncHandler;
-  private Map<String, String> entityIdMap = Maps.newHashMap();
+  private String appId;
+  private String envId;
 
-  public Builder toBuilder() {
-    return ChangeContext.Builder.aChangeContext()
+  public ChangeContext.Builder toBuilder() {
+    return aChangeContext()
         .withChange(getChange())
         .withYamlType(getYamlType())
         .withYaml(getYaml())
         .withYamlSyncHandler(getYamlSyncHandler())
-        .withEntityIdMap(entityIdMap);
+        .withAppId(getAppId())
+        .withEnvId(getEnvId());
   }
 
-  public static final class Builder<Y extends BaseYaml> {
+  public static final class Builder {
     private Change change;
     private YamlType yamlType;
-    private Y yaml;
+    private BaseYaml yaml;
     private BaseYamlHandler yamlSyncHandler;
-    private Map<String, String> entityIdMap = Maps.newHashMap();
+    private String appId;
+    private String envId;
 
     private Builder() {}
 
@@ -51,7 +52,7 @@ public class ChangeContext<Y extends BaseYaml> {
       return this;
     }
 
-    public Builder withYaml(Y yaml) {
+    public Builder withYaml(BaseYaml yaml) {
       this.yaml = yaml;
       return this;
     }
@@ -61,9 +62,24 @@ public class ChangeContext<Y extends BaseYaml> {
       return this;
     }
 
-    public Builder withEntityIdMap(Map<String, String> entityIdMap) {
-      this.entityIdMap = entityIdMap;
+    public Builder withAppId(String appId) {
+      this.appId = appId;
       return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder but() {
+      return aChangeContext()
+          .withChange(change)
+          .withYamlType(yamlType)
+          .withYaml(yaml)
+          .withYamlSyncHandler(yamlSyncHandler)
+          .withAppId(appId)
+          .withEnvId(envId);
     }
 
     public ChangeContext build() {
@@ -72,7 +88,8 @@ public class ChangeContext<Y extends BaseYaml> {
       changeContext.setYamlType(yamlType);
       changeContext.setYaml(yaml);
       changeContext.setYamlSyncHandler(yamlSyncHandler);
-      changeContext.setEntityIdMap(entityIdMap);
+      changeContext.setAppId(appId);
+      changeContext.setEnvId(envId);
       return changeContext;
     }
   }

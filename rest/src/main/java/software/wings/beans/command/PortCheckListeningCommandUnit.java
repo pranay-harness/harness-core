@@ -48,16 +48,34 @@ public class PortCheckListeningCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("PORT_CHECK_LISTENING")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnit.Yaml {
     public Yaml() {
-      super(CommandUnitType.PORT_CHECK_LISTENING.name());
+      super();
+      setCommandUnitType(CommandUnitType.PORT_CHECK_LISTENING.name());
     }
 
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.PORT_CHECK_LISTENING.name(), deploymentType, workingDirectory, command,
-          filePatternEntryList);
+    public static final class Builder extends ExecCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Builder anYaml() {
+        return new Builder();
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setWorkingDirectory(workingDirectory);
+        yaml.setCommand(command);
+        yaml.setFilePatternEntryList(filePatternEntryList);
+        yaml.setName(name);
+        yaml.setCommandUnitType(commandUnitType);
+        yaml.setDeploymentType(deploymentType);
+        return yaml;
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new Yaml();
+      }
     }
   }
 }

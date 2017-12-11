@@ -7,7 +7,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
@@ -31,7 +30,9 @@ public class NexusConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
+
   @Encrypted
+  @NotEmpty
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -57,11 +58,11 @@ public class NexusConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
-    @Builder
-    public Yaml(String type, String url, String username, String password) {
-      super(type, url, username, password);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String url, String username, String password) {
+      super(type, name, url, username, password);
     }
   }
 }

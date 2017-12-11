@@ -8,6 +8,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
@@ -18,6 +19,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -29,7 +31,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
@@ -41,17 +45,20 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.nio.CharBuffer;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -78,7 +85,6 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private SecretManager secretManager;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ActivityService activityService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -131,8 +137,6 @@ public class ConfigServiceImpl implements ConfigService {
     if (configFile.isEncrypted()) {
       updateParentForEncryptedData(configFile);
     }
-
-    //    yamlDirectoryService.pushDirectory(configFile.getAccountId(), false);
     return id;
   }
 
@@ -324,7 +328,6 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
-    //    yamlDirectoryService.pushDirectory(inputConfigFile.getAccountId(), false);
   }
 
   /**
@@ -387,30 +390,6 @@ public class ConfigServiceImpl implements ConfigService {
       if (!configFile.isEncrypted()) {
         executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
       }
-    }
-  }
-
-  @Override
-  public void delete(String appId, String serviceId, String configFileName) {
-    PageRequest<ConfigFile> pageRequest = PageRequest.Builder.aPageRequest()
-                                              .addFilter("appId", Operator.EQ, appId)
-                                              .addFilter("entityType", Operator.EQ, "SERVICE")
-                                              .addFilter("entityId", Operator.EQ, serviceId)
-                                              .addFilter("relativeFilePath", Operator.EQ, configFileName)
-                                              .build();
-
-    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, pageRequest);
-    boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
-    if (deleted) {
-      List<ConfigFile> childConfigFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                              .field("appId")
-                                              .equal(appId)
-                                              .field("parentConfigFileId")
-                                              .equal(configFile.getUuid())
-                                              .asList();
-      childConfigFiles.stream().forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
-
-      executorService.submit(() -> fileService.deleteAllFilesForEntity(configFile.getUuid(), CONFIGS));
     }
   }
 

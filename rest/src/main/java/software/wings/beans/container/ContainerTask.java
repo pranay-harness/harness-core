@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -126,11 +125,12 @@ public abstract class ContainerTask extends DeploymentSpecification {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static abstract class Yaml extends DeploymentSpecification.Yaml {
     private String advancedType;
     private String advancedConfig;
     private ContainerDefinition.Yaml containerDefinition;
+
+    protected Yaml() {}
 
     protected Yaml(String deploymentType, String advancedType, String advancedConfig,
         ContainerDefinition.Yaml containerDefinition) {

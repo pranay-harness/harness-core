@@ -7,13 +7,13 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
@@ -26,26 +26,23 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
     extends BaseYamlHandler<Y, SettingAttribute> {
   private static final Logger logger = LoggerFactory.getLogger(SettingValueYamlHandler.class);
 
-  @Inject protected SecretManager secretManager;
+  @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
-  @Inject protected EncryptionService encryptionService;
 
   @Override
   public SettingAttribute upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     SettingAttribute previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    SettingAttribute settingAttribute = toBean(previous, changeContext, changeSetContext);
-
+    SettingAttribute settingAttribute = setWithYamlValues(previous, changeContext, changeSetContext);
     if (previous != null) {
-      settingAttribute.setUuid(previous.getUuid());
       return settingsService.update(settingAttribute);
     } else {
       return settingsService.save(settingAttribute);
     }
   }
 
-  protected abstract SettingAttribute toBean(SettingAttribute previous, ChangeContext<Y> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException;
+  protected abstract SettingAttribute setWithYamlValues(
+      SettingAttribute previous, ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext);
 
   @Override
   public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
@@ -62,6 +59,18 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
       logger.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
       throw new WingsException(e);
     }
+  }
+
+  @Override
+  public SettingAttribute createFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    throw new HarnessException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
+  }
+
+  @Override
+  public SettingAttribute updateFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    throw new HarnessException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 
   @Override

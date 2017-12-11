@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static software.wings.beans.DirectKubernetesInfrastructureMapping.Yaml.Builder.aYaml;
 import static software.wings.utils.Util.isEmpty;
 
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -15,17 +16,22 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 public class DirectKubernetesInfraMappingYamlHandler
-    extends InfraMappingYamlHandler<Yaml, DirectKubernetesInfrastructureMapping> {
+    extends InfraMappingYamlHandler<DirectKubernetesInfrastructureMapping.Yaml, DirectKubernetesInfrastructureMapping> {
   @Override
-  public Yaml toYaml(DirectKubernetesInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-    yaml.setType(InfrastructureMappingType.DIRECT_KUBERNETES.name());
-    yaml.setMasterUrl(bean.getMasterUrl());
-    yaml.setUsername(bean.getUsername());
-    yaml.setPassword(new String(bean.getPassword()));
-    yaml.setNamespace(bean.getNamespace());
-    return yaml;
+  public DirectKubernetesInfrastructureMapping.Yaml toYaml(
+      DirectKubernetesInfrastructureMapping infraMapping, String appId) {
+    return aYaml()
+        .withType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
+        .withServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()))
+        .withInfraMappingType(infraMapping.getInfraMappingType())
+        .withDeploymentType(infraMapping.getDeploymentType())
+        .withComputeProviderName(infraMapping.getComputeProviderName())
+        .withName(infraMapping.getName())
+        .withMasterUrl(infraMapping.getMasterUrl())
+        .withUsername(infraMapping.getUsername())
+        .withPassword(infraMapping.getPassword())
+        .withNamespace(infraMapping.getNamespace())
+        .build();
   }
 
   @Override
@@ -33,20 +39,25 @@ public class DirectKubernetesInfraMappingYamlHandler
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
 
-    Yaml infraMappingYaml = changeContext.getYaml();
-    String yamlFilePath = changeContext.getChange().getFilePath();
-    String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
-    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
+    DirectKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
-    DirectKubernetesInfrastructureMapping current = new DirectKubernetesInfrastructureMapping();
-    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
+    String appId =
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
+    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
+    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
+    Validator.notNullCheck(
+        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
+    String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
+    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
+
+    DirectKubernetesInfrastructureMapping.Builder builder =
+        DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    DirectKubernetesInfrastructureMapping current = builder.build();
+
     DirectKubernetesInfrastructureMapping previous =
         (DirectKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
             appId, envId, serviceId, computeProviderId);
@@ -59,35 +70,59 @@ public class DirectKubernetesInfraMappingYamlHandler
     }
   }
 
-  private void toBean(DirectKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+  @Override
+  public DirectKubernetesInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
 
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
-    bean.setMasterUrl(infraMappingYaml.getMasterUrl());
-    bean.setUsername(infraMappingYaml.getUsername());
-    bean.setPassword(infraMappingYaml.getPassword().toCharArray());
-    bean.setEncryptedPassword(infraMappingYaml.getPassword());
-    bean.setNamespace(infraMappingYaml.getNamespace());
+  private void setWithYamlValues(DirectKubernetesInfrastructureMapping.Builder builder,
+      DirectKubernetesInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
+      String serviceId) {
+    // common stuff for all infra mapping
+    builder.withAutoPopulate(false)
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
+        .withComputeProviderSettingId(computeProviderId)
+        .withComputeProviderName(infraMappingYaml.getComputeProviderName())
+        .withComputeProviderType(infraMappingYaml.getComputeProviderType())
+        .withEnvId(envId)
+        .withServiceId(serviceId)
+        .withDeploymentType(infraMappingYaml.getDeploymentType())
+        .withName(infraMappingYaml.getName())
+        .withAppId(appId);
+
+    builder.withMasterUrl(infraMappingYaml.getMasterUrl())
+        .withUsername(infraMappingYaml.getUsername())
+        .withPassword(infraMappingYaml.getPassword())
+        .withNamespace(infraMappingYaml.getNamespace())
+        .build();
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+    DirectKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
     return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
-        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
-        || isEmpty(infraMappingYaml.getMasterUrl()) || isEmpty(infraMappingYaml.getUsername())
-        || isEmpty(infraMappingYaml.getPassword().toString()) || isEmpty(infraMappingYaml.getNamespace()));
+        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
+        || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
+        || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getMasterUrl())
+        || isEmpty(infraMappingYaml.getUsername()) || isEmpty(infraMappingYaml.getPassword().toString())
+        || isEmpty(infraMappingYaml.getNamespace()));
+  }
+
+  @Override
+  public DirectKubernetesInfrastructureMapping createFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override
   public DirectKubernetesInfrastructureMapping get(String accountId, String yamlFilePath) {
-    return (DirectKubernetesInfrastructureMapping) yamlHelper.getInfraMapping(accountId, yamlFilePath);
+    return (DirectKubernetesInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return DirectKubernetesInfrastructureMapping.Yaml.class;
   }
 }

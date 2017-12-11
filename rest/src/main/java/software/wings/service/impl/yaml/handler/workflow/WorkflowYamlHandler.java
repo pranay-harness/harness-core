@@ -9,12 +9,12 @@ import com.google.inject.Inject;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.ObjectType;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.TemplateExpression;
@@ -30,7 +30,7 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.Validator;
@@ -45,39 +45,31 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/27/17
  */
-public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYamlHandler<Y, Workflow> {
+public abstract class WorkflowYamlHandler<Y extends WorkflowYaml, B extends WorkflowYaml.Builder>
+    extends BaseYamlHandler<Y, Workflow> {
   @Inject WorkflowService workflowService;
-  @Inject YamlHelper yamlHelper;
+  @Inject YamlSyncHelper yamlSyncHelper;
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EnvironmentService environmentService;
 
-  protected abstract void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflowBuilder);
+  protected abstract B getYamlBuilder();
+
+  protected abstract OrchestrationWorkflow constructOrchestrationWorkflow(WorkflowInfo workflowInfo);
 
   @Override
-  public Workflow upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+  public Workflow createFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
-    String accountId = changeContext.getChange().getAccountId();
-    String yamlFilePath = changeContext.getChange().getFilePath();
-    Workflow previous = get(accountId, yamlFilePath);
-
     WorkflowBuilder workflowBuilder = WorkflowBuilder.aWorkflow();
-    toBean(changeContext, changeSetContext, workflowBuilder);
-
-    if (previous != null) {
-      workflowBuilder.withUuid(previous.getUuid());
-      return workflowService.updateWorkflow(workflowBuilder.build());
-    } else {
-      return workflowService.createWorkflow(workflowBuilder.build());
-    }
+    setWithYamlValues(changeContext, changeSetContext, workflowBuilder, true);
+    return workflowService.createWorkflow(workflowBuilder.build());
   }
 
-  private void toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeContextList, WorkflowBuilder workflow)
-      throws HarnessException {
+  private void setWithYamlValues(ChangeContext<Y> changeContext, List<ChangeContext> changeContextList,
+      WorkflowBuilder workflow, boolean isCreate) throws HarnessException {
     WorkflowYaml yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
 
-    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
+    String appId = yamlSyncHelper.getAppId(change.getAccountId(), change.getFilePath());
     Validator.notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId);
 
     // Environment can be null in cloned workflows
@@ -94,13 +86,11 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                         .stream()
                         .map(workflowPhaseYaml -> {
                           try {
-                            ChangeContext.Builder clonedContextBuilder =
+                            ChangeContext.Builder clonedContext =
                                 cloneFileChangeContext(changeContext, workflowPhaseYaml);
-                            ChangeContext clonedContext = clonedContextBuilder.build();
-                            clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
-
-                            WorkflowPhase workflowPhase =
-                                (WorkflowPhase) phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
+                            clonedContext.withEnvId(envId);
+                            WorkflowPhase workflowPhase = (WorkflowPhase) createOrUpdateFromYaml(
+                                isCreate, phaseYamlHandler, clonedContext.build(), changeContextList);
                             workflowPhase.setRollback(false);
                             return workflowPhase;
                           } catch (HarnessException e) {
@@ -121,13 +111,10 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                 .stream()
                 .map(workflowPhaseYaml -> {
                   try {
-                    ChangeContext.Builder clonedContextBuilder =
-                        cloneFileChangeContext(changeContext, workflowPhaseYaml);
-                    ChangeContext clonedContext = clonedContextBuilder.build();
-                    clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
-
-                    WorkflowPhase workflowPhase =
-                        (WorkflowPhase) phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
+                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, workflowPhaseYaml);
+                    clonedContext.withEnvId(envId);
+                    WorkflowPhase workflowPhase = (WorkflowPhase) createOrUpdateFromYaml(
+                        isCreate, phaseYamlHandler, clonedContext.build(), changeContextList);
                     workflowPhase.setRollback(true);
                     return workflowPhase;
                   } catch (HarnessException e) {
@@ -147,18 +134,19 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       List<Variable> userVariables = Lists.newArrayList();
       if (yaml.getUserVariables() != null) {
         BaseYamlHandler variableYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE, ObjectType.VARIABLE);
-        userVariables =
-            yaml.getUserVariables()
-                .stream()
-                .map(userVariable -> {
-                  try {
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, userVariable);
-                    return (Variable) variableYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
-                  } catch (HarnessException e) {
-                    throw new WingsException(e);
-                  }
-                })
-                .collect(Collectors.toList());
+        userVariables = yaml.getUserVariables()
+                            .stream()
+                            .map(userVariable -> {
+                              try {
+                                ChangeContext.Builder clonedContext =
+                                    cloneFileChangeContext(changeContext, userVariable);
+                                return (Variable) createOrUpdateFromYaml(
+                                    isCreate, variableYamlHandler, clonedContext.build(), changeContextList);
+                              } catch (HarnessException e) {
+                                throw new WingsException(e);
+                              }
+                            })
+                            .collect(Collectors.toList());
       }
 
       // template expressions
@@ -173,8 +161,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                     try {
                                       ChangeContext.Builder clonedContext =
                                           cloneFileChangeContext(changeContext, templateExpr);
-                                      return (TemplateExpression) templateExprYamlHandler.upsertFromYaml(
-                                          clonedContext.build(), changeContextList);
+                                      return (TemplateExpression) createOrUpdateFromYaml(
+                                          isCreate, templateExprYamlHandler, clonedContext.build(), changeContextList);
                                     } catch (HarnessException e) {
                                       throw new WingsException(e);
                                     }
@@ -189,18 +177,19 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
           PhaseStep.PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, PhaseStepType.PRE_DEPLOYMENT.name());
 
       if (yaml.getPreDeploymentSteps() != null) {
-        List<Node> stepList =
-            yaml.getPreDeploymentSteps()
-                .stream()
-                .map(stepYaml -> {
-                  try {
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, stepYaml);
-                    return (Node) stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
-                  } catch (HarnessException e) {
-                    throw new WingsException(e);
-                  }
-                })
-                .collect(Collectors.toList());
+        List<Node> stepList = yaml.getPreDeploymentSteps()
+                                  .stream()
+                                  .map(stepYaml -> {
+                                    try {
+                                      ChangeContext.Builder clonedContext =
+                                          cloneFileChangeContext(changeContext, stepYaml);
+                                      return (Node) createOrUpdateFromYaml(
+                                          isCreate, stepYamlHandler, clonedContext.build(), changeContextList);
+                                    } catch (HarnessException e) {
+                                      throw new WingsException(e);
+                                    }
+                                  })
+                                  .collect(Collectors.toList());
         preDeploymentSteps.addAllSteps(stepList).build();
       }
 
@@ -215,7 +204,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                 .map(stepYaml -> {
                   try {
                     ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, stepYaml);
-                    return (Node) stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                    return (Node) createOrUpdateFromYaml(
+                        isCreate, stepYamlHandler, clonedContext.build(), changeContextList);
                   } catch (HarnessException e) {
                     throw new WingsException(e);
                   }
@@ -235,8 +225,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                   try {
                                     ChangeContext.Builder clonedContext =
                                         cloneFileChangeContext(changeContext, failureStrategy);
-                                    return (FailureStrategy) failureStrategyYamlHandler.upsertFromYaml(
-                                        clonedContext.build(), changeContextList);
+                                    return (FailureStrategy) createOrUpdateFromYaml(
+                                        isCreate, failureStrategyYamlHandler, clonedContext.build(), changeContextList);
                                   } catch (HarnessException e) {
                                     throw new WingsException(e);
                                   }
@@ -249,19 +239,19 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       if (yaml.getNotificationRules() != null) {
         BaseYamlHandler notificationRuleYamlHandler =
             yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE, ObjectType.NOTIFICATION_RULE);
-        notificationRules = yaml.getNotificationRules()
-                                .stream()
-                                .map(notificationRule -> {
-                                  try {
-                                    ChangeContext.Builder clonedContext =
-                                        cloneFileChangeContext(changeContext, notificationRule);
-                                    return (NotificationRule) notificationRuleYamlHandler.upsertFromYaml(
-                                        clonedContext.build(), changeContextList);
-                                  } catch (HarnessException e) {
-                                    throw new WingsException(e);
-                                  }
-                                })
-                                .collect(Collectors.toList());
+        notificationRules =
+            yaml.getNotificationRules()
+                .stream()
+                .map(notificationRule -> {
+                  try {
+                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, notificationRule);
+                    return (NotificationRule) createOrUpdateFromYaml(
+                        isCreate, notificationRuleYamlHandler, clonedContext.build(), changeContextList);
+                  } catch (HarnessException e) {
+                    throw new WingsException(e);
+                  }
+                })
+                .collect(Collectors.toList());
       }
 
       WorkflowInfo workflowInfo = WorkflowInfo.builder()
@@ -274,13 +264,13 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                       .phaseList(phaseList)
                                       .build();
 
-      setOrchestrationWorkflow(workflowInfo, workflow);
+      OrchestrationWorkflow orchestrationWorkflow = constructOrchestrationWorkflow(workflowInfo);
 
-      String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
       workflow.withAppId(appId)
           .withDescription(yaml.getDescription())
           .withEnvId(envId)
-          .withName(name)
+          .withName(yaml.getName())
+          .withOrchestrationWorkflow(orchestrationWorkflow)
           .withTemplateExpressions(templateExpressions)
           .withTemplatized(yaml.isTemplatized())
           .withWorkflowType(WorkflowType.ORCHESTRATION);
@@ -290,7 +280,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     }
   }
 
-  protected void toYaml(Y yaml, Workflow workflow, String appId) {
+  @Override
+  public Y toYaml(Workflow workflow, String appId) {
     // Environment can be null in case of incomplete cloned workflows
     String envName = null;
     if (!isNullOrEmpty(workflow.getEnvId())) {
@@ -371,18 +362,31 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                 notificationRule -> (NotificationRule.Yaml) notificationRuleYamlHandler.toYaml(notificationRule, appId))
             .collect(Collectors.toList());
 
-    yaml.setDescription(workflow.getDescription());
-    yaml.setEnvName(envName);
-    yaml.setTemplateExpressions(templateExprYamlList);
-    yaml.setTemplatized(workflow.isTemplatized());
-    yaml.setType(orchestrationWorkflow.getOrchestrationWorkflowType().name());
-    yaml.setPhases(phaseYamlList);
-    yaml.setRollbackPhases(rollbackPhaseYamlList);
-    yaml.setUserVariables(variableYamlList);
-    yaml.setPreDeploymentSteps(preDeployStepsYamlList);
-    yaml.setPostDeploymentSteps(postDeployStepsYamlList);
-    yaml.setNotificationRules(notificationRuleYamlList);
-    yaml.setFailureStrategies(failureStrategyYamlList);
+    B yamlBuilder = getYamlBuilder();
+    return yamlBuilder.withDescription(workflow.getDescription())
+        .withEnvName(envName)
+        .withName(workflow.getName())
+        .withTemplateExpressions(templateExprYamlList)
+        .withTemplatized(workflow.isTemplatized())
+        .withType(orchestrationWorkflow.getOrchestrationWorkflowType().name())
+        .withPhases(phaseYamlList)
+        .withRollbackPhases(rollbackPhaseYamlList)
+        .withUserVariables(variableYamlList)
+        .withPreDeploymentSteps(preDeployStepsYamlList)
+        .withPostDeploymentSteps(postDeployStepsYamlList)
+        .withNotificationRules(notificationRuleYamlList)
+        .withFailureStrategies(failureStrategyYamlList)
+        .build();
+  }
+
+  @Override
+  public Workflow updateFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    Workflow previous =
+        yamlSyncHelper.getWorkflow(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    WorkflowBuilder workflowBuilder = previous.toBuilder();
+    setWithYamlValues(changeContext, changeSetContext, workflowBuilder, false);
+    return workflowService.updateWorkflow(workflowBuilder.build());
   }
 
   @Override
@@ -397,7 +401,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
   @Override
   public Workflow get(String accountId, String yamlFilePath) {
-    return yamlHelper.getWorkflow(accountId, yamlFilePath);
+    return yamlSyncHelper.getWorkflow(accountId, yamlFilePath);
   }
 
   @Override

@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.service;
+package software.wings.service.impl.yaml.sync;
 
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
@@ -49,9 +49,10 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.service.intfc.yaml.sync.YamlSyncService;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
+import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 
 import java.io.IOException;
@@ -68,11 +69,11 @@ import javax.inject.Inject;
 /**
  * @author rktummala on 10/16/17
  */
-public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements YamlService<Y, B> {
-  private static final Logger logger = LoggerFactory.getLogger(YamlServiceImpl.class);
+public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements YamlSyncService<Y, B> {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-  @Inject private YamlHelper yamlHelper;
+  @Inject private YamlSyncHelper yamlSyncHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlResourceService yamlResourceService;
 
@@ -118,11 +119,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         rr.setResource(base);
 
       } else {
-        software.wings.yaml.YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR,
+        YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR,
             "Unable to update yaml for:" + yamlPayload.getName());
       }
     } catch (HarnessException e) {
-      software.wings.yaml.YamlHelper.addResponseMessage(
+      YamlHelper.addResponseMessage(
           rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml:" + e.getMessage());
     }
 
@@ -139,7 +140,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
       final Class beanClass = yamlType.getBeanClass();
       String entityName =
-          yamlHelper.extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+          yamlSyncHelper.extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
       PageRequest.Builder pageRequest = PageRequest.Builder.aPageRequest();
       String appId;
       String serviceId;
@@ -149,7 +150,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         case APPLICATION:
           pageRequest.addFilter("accountId", Operator.EQ, accountId).addFilter("name", Operator.EQ, entityName);
           entity = getResult(beanClass, pageRequest);
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
+          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
           if (entity != null) {
             BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, null);
             yaml = yamlHandler.toYaml(entity, appId);
@@ -159,7 +160,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         case SERVICE:
         case ENVIRONMENT:
         case PIPELINE:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
+          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, entityName);
           entity = getResult(beanClass, pageRequest);
           if (entity != null) {
@@ -189,7 +190,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           // TODO
           break;
         case WORKFLOW:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
+          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, entityName);
           entity = getResult(beanClass, pageRequest);
           if (entity != null) {
@@ -202,8 +203,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           break;
 
         case ARTIFACT_STREAM:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
-          serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
+          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+          serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId)
               .addFilter("serviceId", Operator.EQ, serviceId)
               .addFilter("sourceName", Operator.EQ, entityName);
@@ -220,8 +221,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           break;
 
         case INFRA_MAPPING:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
-          String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
+          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+          String envId = yamlSyncHelper.getEnvironmentId(appId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId)
               .addFilter("envId", Operator.EQ, envId)
               .addFilter("name", Operator.EQ, entityName);
@@ -239,12 +240,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       if (yaml != null) {
         rr.setResource(yaml);
       } else {
-        software.wings.yaml.YamlHelper.addResponseMessage(
+        YamlHelper.addResponseMessage(
             rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml for:" + yamlFilePath);
       }
 
     } catch (HarnessException e) {
-      software.wings.yaml.YamlHelper.addResponseMessage(
+      YamlHelper.addResponseMessage(
           rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml for:" + yamlFilePath);
     }
     return rr;

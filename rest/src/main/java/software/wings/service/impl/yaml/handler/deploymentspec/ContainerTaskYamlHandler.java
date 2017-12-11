@@ -13,7 +13,7 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
@@ -27,18 +27,27 @@ import java.util.List;
 public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C extends ContainerTask>
     extends DeploymentSpecificationYamlHandler<Y, C> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
-  @Inject YamlHelper yamlHelper;
+  @Inject YamlSyncHelper yamlSyncHelper;
   @Inject ServiceResourceService serviceResourceService;
 
-  protected C toBean(C containerTask, ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+  protected abstract Y getContainerTaskYaml();
+
+  @Override
+  public C createFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    C containerTask = setWithYamlValues(null, changeContext, changeSetContext);
+    return (C) serviceResourceService.createContainerTask(containerTask, false);
+  }
+
+  protected C setWithYamlValues(C containerTask, ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     Y yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
 
-    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
+    String appId = yamlSyncHelper.getAppId(change.getAccountId(), change.getFilePath());
     Validator.notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId);
 
-    String serviceId = yamlHelper.getServiceId(appId, change.getFilePath());
+    String serviceId = yamlSyncHelper.getServiceId(appId, change.getFilePath());
     Validator.notNullCheck("Could not locate service info in file path:" + change.getFilePath(), serviceId);
 
     AdvancedType advancedType = Util.getEnumFromString(AdvancedType.class, yaml.getAdvancedType());
@@ -53,8 +62,8 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
           yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
       try {
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, yaml.getContainerDefinition());
-        ContainerDefinition containerDefinition =
-            (ContainerDefinition) containerDefYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+        ContainerDefinition containerDefinition = (ContainerDefinition) createOrUpdateFromYaml(
+            containerTask == null, containerDefYamlHandler, clonedContext.build(), changeSetContext);
         containerTask.setContainerDefinitions(Arrays.asList(containerDefinition));
       } catch (HarnessException e) {
         throw new WingsException(e);
@@ -64,8 +73,11 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     return containerTask;
   }
 
-  protected void toYaml(Y yaml, C bean) {
+  @Override
+  public Y toYaml(C bean, String appId) {
     String advancedType = Util.getStringFromEnum(bean.getAdvancedType());
+
+    Y yaml = getContainerTaskYaml();
 
     yaml.setAdvancedConfig(bean.getAdvancedConfig());
     yaml.setAdvancedType(advancedType);
@@ -78,9 +90,11 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     if (!Util.isEmpty(containerDefinitions)) {
       ContainerDefinition containerDefinition = containerDefinitions.get(0);
       ContainerDefinition.Yaml containerDefYaml =
-          (ContainerDefinition.Yaml) containerDefYamlHandler.toYaml(containerDefinition, bean.getAppId());
+          (ContainerDefinition.Yaml) containerDefYamlHandler.toYaml(containerDefinition, appId);
       yaml.setContainerDefinition(containerDefYaml);
     }
+
+    return yaml;
   }
 
   @Override
@@ -90,13 +104,22 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
   }
 
   protected C getContainerTask(String accountId, String yamlFilePath, String deploymentType) {
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("Could not locate app info in file path:" + yamlFilePath, appId);
 
-    String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
+    String serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
     Validator.notNullCheck("Could not locate service info in file path:" + yamlFilePath, serviceId);
 
     return (C) serviceResourceService.getContainerTaskByDeploymentType(appId, serviceId, deploymentType);
+  }
+
+  @Override
+  public C updateFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    String accountId = changeContext.getChange().getAccountId();
+    C previous = get(accountId, changeContext.getChange().getFilePath());
+    C containerTask = setWithYamlValues(previous, changeContext, changeSetContext);
+    return (C) serviceResourceService.updateContainerTask(containerTask, false);
   }
 
   @Override
@@ -104,11 +127,19 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
       throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
     C previous = get(accountId, changeContext.getChange().getFilePath());
-    C containerTask = toBean(previous, changeContext, changeSetContext);
+    C containerTask = setWithYamlValues(previous, changeContext, changeSetContext);
     if (previous != null) {
       return (C) serviceResourceService.updateContainerTask(containerTask, false);
     } else {
       return (C) serviceResourceService.createContainerTask(containerTask, false);
     }
   }
+
+  //  @Override
+  //  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+  //    C containerTask = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+  //    if (containerTask != null) {
+  //      serviceResourceService.deleteContainerTask(containerTask.getAppId(), containerTask.getUuid());
+  //    }
+  //  }
 }

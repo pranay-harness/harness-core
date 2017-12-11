@@ -2,12 +2,10 @@ package software.wings.yaml.command;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
 public class TargetEnvYaml extends BaseYaml {
   public String envName;
   public String version;

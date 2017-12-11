@@ -5,6 +5,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureStrategy.Yaml;
 import software.wings.beans.RepairActionCode;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -18,7 +19,13 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/28/17
  */
 public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.Yaml, FailureStrategy> {
-  private FailureStrategy toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  @Override
+  public FailureStrategy createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
+  private FailureStrategy setWithYamlValues(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     RepairActionCode repairActionCode = Util.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCode());
     ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
@@ -54,7 +61,17 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   @Override
   public FailureStrategy upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext);
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
+  public FailureStrategy updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
   }
 
   @Override

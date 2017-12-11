@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ObjectType;
@@ -15,13 +14,14 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.Yaml;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -35,21 +35,27 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/27/17
  */
 public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml, WorkflowPhase> {
-  @Inject YamlHelper yamlHelper;
+  @Inject YamlSyncHelper yamlSyncHelper;
   @Inject ServiceResourceService serviceResourceService;
   @Inject SettingsService settingsService;
   @Inject InfrastructureMappingService infraMappingService;
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  private WorkflowPhase toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext)
+  @Override
+  public WorkflowPhase createFromYaml(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext)
       throws HarnessException {
+    return setWithYamlValues(true, context, changeSetContext);
+  }
+
+  private WorkflowPhase setWithYamlValues(
+      boolean isCreate, ChangeContext<Yaml> context, List<ChangeContext> changeSetContext) throws HarnessException {
     Yaml yaml = context.getYaml();
     Change change = context.getChange();
 
-    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
+    String appId = yamlSyncHelper.getAppId(change.getAccountId(), change.getFilePath());
     Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
 
-    String envId = context.getEntityIdMap().get(EntityType.ENVIRONMENT.name());
+    String envId = context.getEnvId();
     String infraMappingId = null;
     String infraMappingName = null;
     String deploymentTypeString = null;
@@ -70,18 +76,18 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     if (yaml.getPhaseSteps() != null) {
       BaseYamlHandler phaseStepYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP);
-      phaseSteps =
-          yaml.getPhaseSteps()
-              .stream()
-              .map(phaseStep -> {
-                try {
-                  ChangeContext.Builder clonedContext = cloneFileChangeContext(context, phaseStep);
-                  return (PhaseStep) phaseStepYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
-                } catch (HarnessException e) {
-                  throw new WingsException(e);
-                }
-              })
-              .collect(Collectors.toList());
+      phaseSteps = yaml.getPhaseSteps()
+                       .stream()
+                       .map(phaseStep -> {
+                         try {
+                           ChangeContext.Builder clonedContext = cloneFileChangeContext(context, phaseStep);
+                           return (PhaseStep) createOrUpdateFromYaml(
+                               isCreate, phaseStepYamlHandler, clonedContext.build(), changeSetContext);
+                         } catch (HarnessException e) {
+                           throw new WingsException(e);
+                         }
+                       })
+                       .collect(Collectors.toList());
     }
 
     // template expressions
@@ -94,8 +100,8 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                                 .map(templateExpr -> {
                                   try {
                                     ChangeContext.Builder clonedContext = cloneFileChangeContext(context, templateExpr);
-                                    return (TemplateExpression) templateExprYamlHandler.upsertFromYaml(
-                                        clonedContext.build(), changeSetContext);
+                                    return (TemplateExpression) createOrUpdateFromYaml(
+                                        isCreate, templateExprYamlHandler, clonedContext.build(), changeSetContext);
                                   } catch (HarnessException e) {
                                     throw new WingsException(e);
                                   }
@@ -162,23 +168,33 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     Service service = serviceResourceService.get(appId, bean.getServiceId());
     String serviceName = service != null ? service.getName() : null;
     String deploymentType = Util.getStringFromEnum(bean.getDeploymentType());
-    return Yaml.builder()
-        .computeProviderName(computeProviderName)
-        .infraMappingName(bean.getInfraMappingName())
-        .serviceName(serviceName)
-        .name(bean.getName())
-        .phaseNameForRollback(bean.getPhaseNameForRollback())
-        .phaseSteps(phaseStepYamlList)
-        .provisionNodes(bean.isProvisionNodes())
-        .templateExpressions(templateExprYamlList)
-        .type(deploymentType)
+    return Yaml.Builder.anYaml()
+        .withComputeProviderName(computeProviderName)
+        .withInfraMappingName(bean.getInfraMappingName())
+        .withServiceName(serviceName)
+        .withName(bean.getName())
+        .withPhaseNameForRollback(bean.getPhaseNameForRollback())
+        .withPhaseSteps(phaseStepYamlList)
+        .withProvisionNodes(bean.isProvisionNodes())
+        .withTemplateExpressions(templateExprYamlList)
+        .withType(deploymentType)
         .build();
   }
 
   @Override
   public WorkflowPhase upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext, changeSetContext);
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  @Override
+  public WorkflowPhase updateFromYaml(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(false, context, changeSetContext);
   }
 
   @Override

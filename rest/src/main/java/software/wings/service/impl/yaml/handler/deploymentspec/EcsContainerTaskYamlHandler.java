@@ -3,21 +3,23 @@ package software.wings.service.impl.yaml.handler.deploymentspec;
 import software.wings.api.DeploymentType;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsContainerTask.Yaml;
+import software.wings.beans.yaml.ChangeContext;
+import software.wings.exception.HarnessException;
+
+import java.util.List;
 
 /**
  * @author rktummala on 11/15/17
  */
-public class EcsContainerTaskYamlHandler extends ContainerTaskYamlHandler<Yaml, EcsContainerTask> {
+public class EcsContainerTaskYamlHandler extends ContainerTaskYamlHandler<EcsContainerTask.Yaml, EcsContainerTask> {
   @Override
-  public Yaml toYaml(EcsContainerTask bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-    return yaml;
+  protected Yaml getContainerTaskYaml() {
+    return new EcsContainerTask.Yaml();
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return EcsContainerTask.Yaml.class;
   }
 
   @Override

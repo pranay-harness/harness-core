@@ -1,14 +1,12 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
-import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.NexusArtifactStream.Builder.aNexusArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.EmbeddedUser;
 import software.wings.utils.Util;
@@ -31,7 +29,7 @@ public class NexusArtifactStream extends ArtifactStream {
    * Instantiates a new Nexus artifact stream.
    */
   public NexusArtifactStream() {
-    super(NEXUS.name());
+    super(ArtifactStreamType.NEXUS.name());
     super.setAutoApproveForProduction(true);
   }
 
@@ -437,21 +435,99 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static class Yaml extends ArtifactStream.Yaml {
     private String repositoryName;
     private String groupId;
     private List<String> artifactPaths;
     private String imageName;
 
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String repositoryName,
-        String groupId, List<String> artifactPaths, String imageName) {
-      super(NEXUS.name(), harnessApiVersion, artifactServerName, metadataOnly);
-      this.repositoryName = repositoryName;
-      this.groupId = groupId;
-      this.artifactPaths = artifactPaths;
-      this.imageName = imageName;
+    public static final class Builder {
+      private String repositoryName;
+      private String sourceName;
+      private String groupId;
+      private String imageName;
+      private String settingName;
+      private List<String> artifactPaths;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRepositoryName(String repositoryName) {
+        this.repositoryName = repositoryName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withGroupId(String groupId) {
+        this.groupId = groupId;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withArtifactPaths(List<String> artifactPaths) {
+        this.artifactPaths = artifactPaths;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder withImageName(String imageName) {
+        this.imageName = imageName;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRepositoryName(repositoryName)
+            .withSourceName(sourceName)
+            .withGroupId(groupId)
+            .withSettingName(settingName)
+            .withArtifactPaths(artifactPaths)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRepositoryName(repositoryName);
+        yaml.setSourceName(sourceName);
+        yaml.setGroupId(groupId);
+        yaml.setSettingName(settingName);
+        yaml.setArtifactPaths(artifactPaths);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        yaml.setImageName(imageName);
+        return yaml;
+      }
     }
   }
 }

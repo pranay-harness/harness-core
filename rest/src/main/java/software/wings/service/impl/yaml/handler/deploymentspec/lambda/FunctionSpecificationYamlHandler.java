@@ -28,10 +28,16 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
   @Override
   public FunctionSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext);
+    return setWithYamlValues(changeContext);
   }
 
-  private FunctionSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  @Override
+  public FunctionSpecification updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
+  private FunctionSpecification setWithYamlValues(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
     return FunctionSpecification.builder()
@@ -46,6 +52,12 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return true;
+  }
+
+  @Override
+  public FunctionSpecification createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
   }
 
   @Override

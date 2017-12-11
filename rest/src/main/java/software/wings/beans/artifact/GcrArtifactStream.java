@@ -9,7 +9,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.DefaultValue;
@@ -384,17 +383,82 @@ public class GcrArtifactStream extends ArtifactStream {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static class Yaml extends ArtifactStream.Yaml {
     private String registryHostName;
     private String dockerImageName;
 
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String registryHostName,
-        String dockerImageName) {
-      super(GCR.name(), harnessApiVersion, artifactServerName, metadataOnly);
-      this.registryHostName = registryHostName;
-      this.dockerImageName = dockerImageName;
+    public static final class Builder {
+      private String registryHostName;
+      private String dockerImageName;
+      private String sourceName;
+      private String settingName;
+      private boolean autoApproveForProduction = false;
+      private String type;
+      private boolean metadataOnly = false;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRegistryHostName(String registryHostName) {
+        this.registryHostName = registryHostName;
+        return this;
+      }
+
+      public Builder withDockerImageName(String dockerImageName) {
+        this.dockerImageName = dockerImageName;
+        return this;
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRegistryHostName(registryHostName)
+            .withDockerImageName(dockerImageName)
+            .withSourceName(sourceName)
+            .withSettingName(settingName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withType(type)
+            .withMetadataOnly(metadataOnly);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRegistryHostName(registryHostName);
+        yaml.setDockerImageName(dockerImageName);
+        yaml.setSourceName(sourceName);
+        yaml.setSettingName(settingName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setType(type);
+        yaml.setMetadataOnly(metadataOnly);
+        return yaml;
+      }
     }
   }
 }

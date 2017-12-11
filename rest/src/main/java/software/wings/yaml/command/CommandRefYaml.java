@@ -1,11 +1,8 @@
 package software.wings.yaml.command;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.command.AbstractCommandUnit;
-import software.wings.beans.command.CommandUnitType;
 
 /**
  * This yaml is used to represent a command reference. A command could be referred from another command, in that case,
@@ -15,14 +12,17 @@ import software.wings.beans.command.CommandUnitType;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("COMMAND")
 public class CommandRefYaml extends AbstractCommandUnit.Yaml {
-  public CommandRefYaml() {
-    super(CommandUnitType.COMMAND.name());
-  }
+  public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
+    private Builder() {}
 
-  @Builder
-  public CommandRefYaml(String name, String deploymentType) {
-    super(name, CommandUnitType.COMMAND.name(), deploymentType);
+    public static Builder aYaml() {
+      return new Builder();
+    }
+
+    @Override
+    protected CommandRefYaml getCommandUnitYaml() {
+      return new CommandRefYaml();
+    }
   }
 }

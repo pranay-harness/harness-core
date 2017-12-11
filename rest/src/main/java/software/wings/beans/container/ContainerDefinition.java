@@ -5,7 +5,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.stencils.DefaultValue;
 import software.wings.yaml.BaseYaml;
 
@@ -80,7 +79,7 @@ public class ContainerDefinition {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
+  @Builder
   public static final class Yaml extends BaseYaml {
     List<PortMapping.Yaml> portMappings;
     private String name;
@@ -89,17 +88,5 @@ public class ContainerDefinition {
     private Integer memory;
     private LogConfiguration.Yaml logConfiguration;
     private List<StorageConfiguration.Yaml> storageConfigurations;
-
-    @Builder
-    public Yaml(List<PortMapping.Yaml> portMappings, String name, List<String> commands, Integer cpu, Integer memory,
-        LogConfiguration.Yaml logConfiguration, List<StorageConfiguration.Yaml> storageConfigurations) {
-      this.portMappings = portMappings;
-      this.name = name;
-      this.commands = commands;
-      this.cpu = cpu;
-      this.memory = memory;
-      this.logConfiguration = logConfiguration;
-      this.storageConfigurations = storageConfigurations;
-    }
   }
 }

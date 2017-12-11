@@ -4,9 +4,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.LogzConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -16,11 +14,12 @@ public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     LogzConfig config = (LogzConfig) settingAttribute.getValue();
-    return new Yaml(config.getType(), config.getLogzUrl(), getEncryptedValue(config, "token", false));
+    return new Yaml(
+        config.getType(), settingAttribute.getName(), config.getLogzUrl(), getEncryptedValue(config, "token", false));
   }
 
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute setWithYamlValues(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
@@ -28,18 +27,10 @@ public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
     LogzConfig config = new LogzConfig();
     config.setAccountId(accountId);
     config.setEncryptedToken(yaml.getToken());
-
-    char[] decryptedToken;
-    try {
-      decryptedToken = secretManager.decryptYamlRef(yaml.getToken());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the token ref:" + yaml.getToken());
-    }
-
-    config.setToken(decryptedToken);
+    config.setToken(yaml.getToken().toCharArray());
     config.setLogzUrl(yaml.getLogzUrl());
 
-    return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
+    return buildSettingAttribute(accountId, yaml.getName(), uuid, config);
   }
 
   @Override

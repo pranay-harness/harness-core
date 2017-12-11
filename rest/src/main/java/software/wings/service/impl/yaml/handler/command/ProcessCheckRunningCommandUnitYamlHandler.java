@@ -1,23 +1,21 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import software.wings.beans.command.ProcessCheckRunningCommandUnit;
 import software.wings.beans.command.ProcessCheckRunningCommandUnit.Yaml;
+import software.wings.beans.command.ProcessCheckRunningCommandUnit.Yaml.Builder;
+import software.wings.beans.command.ProcessCheckRunningCommandUnit;
 
 /**
  * @author rktummala on 11/13/17
  */
-public class ProcessCheckRunningCommandUnitYamlHandler
-    extends AbstractExecCommandUnitYamlHandler<Yaml, ProcessCheckRunningCommandUnit> {
+public class ProcessCheckRunningCommandUnitYamlHandler extends ExecCommandUnitYamlHandler {
   @Override
   public Class getYamlClass() {
     return Yaml.class;
   }
 
   @Override
-  public Yaml toYaml(ProcessCheckRunningCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-    return yaml;
+  protected Builder getYamlBuilder() {
+    return Builder.anYaml();
   }
 
   @Override

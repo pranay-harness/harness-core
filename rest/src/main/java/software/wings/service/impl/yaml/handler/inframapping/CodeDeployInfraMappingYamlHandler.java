@@ -1,8 +1,10 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static software.wings.beans.CodeDeployInfrastructureMapping.Yaml.Builder.aYaml;
 import static software.wings.utils.Util.isEmpty;
 
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
 import software.wings.beans.CodeDeployInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
@@ -14,17 +16,22 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
-public class CodeDeployInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, CodeDeployInfrastructureMapping> {
+public class CodeDeployInfraMappingYamlHandler
+    extends InfraMappingYamlHandler<CodeDeployInfrastructureMapping.Yaml, CodeDeployInfrastructureMapping> {
   @Override
-  public Yaml toYaml(CodeDeployInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-    yaml.setType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name());
-    yaml.setRegion(bean.getRegion());
-    yaml.setApplicationName(bean.getApplicationName());
-    yaml.setDeploymentGroup(bean.getDeploymentGroup());
-    yaml.setDeploymentConfig(bean.getDeploymentConfig());
-    return yaml;
+  public CodeDeployInfrastructureMapping.Yaml toYaml(CodeDeployInfrastructureMapping infraMapping, String appId) {
+    return aYaml()
+        .withType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name())
+        .withRegion(infraMapping.getRegion())
+        .withServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()))
+        .withInfraMappingType(infraMapping.getInfraMappingType())
+        .withDeploymentType(infraMapping.getDeploymentType())
+        .withComputeProviderName(infraMapping.getComputeProviderName())
+        .withName(infraMapping.getName())
+        .withApplicationName(infraMapping.getApplicationName())
+        .withDeploymentGroup(infraMapping.getDeploymentGroup())
+        .withDeploymentConfig(infraMapping.getDeploymentConfig())
+        .build();
   }
 
   @Override
@@ -32,20 +39,24 @@ public class CodeDeployInfraMappingYamlHandler extends InfraMappingYamlHandler<Y
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
 
-    Yaml infraMappingYaml = changeContext.getYaml();
-    String yamlFilePath = changeContext.getChange().getFilePath();
-    String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
-    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
+    CodeDeployInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
-    CodeDeployInfrastructureMapping current = new CodeDeployInfrastructureMapping();
-    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
+    String appId =
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
+    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
+    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
+    Validator.notNullCheck(
+        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
+    String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
+    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
+
+    CodeDeployInfrastructureMappingBuilder builder =
+        CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    CodeDeployInfrastructureMapping current = builder.build();
 
     CodeDeployInfrastructureMapping previous =
         (CodeDeployInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
@@ -59,34 +70,57 @@ public class CodeDeployInfraMappingYamlHandler extends InfraMappingYamlHandler<Y
     }
   }
 
-  private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<Yaml> context, String appId, String envId,
-      String computeProviderId, String serviceId) {
-    Yaml infraMappingYaml = context.getYaml();
-    super.toBean(context, bean, appId, envId, computeProviderId, serviceId);
+  @Override
+  public CodeDeployInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
 
-    bean.setRegion(infraMappingYaml.getRegion());
-    bean.setApplicationName(infraMappingYaml.getApplicationName());
-    bean.setDeploymentGroup(infraMappingYaml.getDeploymentGroup());
-    bean.setDeploymentConfig(infraMappingYaml.getDeploymentConfig());
+  private void setWithYamlValues(CodeDeployInfrastructureMappingBuilder builder,
+      CodeDeployInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
+      String serviceId) {
+    builder.withAutoPopulate(false)
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
+        .withComputeProviderSettingId(computeProviderId)
+        .withComputeProviderName(infraMappingYaml.getComputeProviderName())
+        .withComputeProviderType(infraMappingYaml.getComputeProviderType())
+        .withEnvId(envId)
+        .withServiceId(serviceId)
+        .withDeploymentType(infraMappingYaml.getDeploymentType())
+        .withName(infraMappingYaml.getName());
+
+    builder.withRegion(infraMappingYaml.getRegion())
+        .withApplicationName(infraMappingYaml.getApplicationName())
+        .withDeploymentGroup(infraMappingYaml.getDeploymentGroup())
+        .withDeploymentConfig(infraMappingYaml.getDeploymentConfig())
+        .build();
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+    CodeDeployInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
     return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
-        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
-        || isEmpty(infraMappingYaml.getRegion()) || isEmpty(infraMappingYaml.getApplicationName())
-        || isEmpty(infraMappingYaml.getDeploymentGroup()) || isEmpty(infraMappingYaml.getDeploymentConfig()));
+        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
+        || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
+        || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getRegion())
+        || isEmpty(infraMappingYaml.getApplicationName()) || isEmpty(infraMappingYaml.getDeploymentGroup())
+        || isEmpty(infraMappingYaml.getDeploymentConfig()));
+  }
+
+  @Override
+  public CodeDeployInfrastructureMapping createFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override
   public CodeDeployInfrastructureMapping get(String accountId, String yamlFilePath) {
-    return (CodeDeployInfrastructureMapping) yamlHelper.getInfraMapping(accountId, yamlFilePath);
+    return (CodeDeployInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return CodeDeployInfrastructureMapping.Yaml.class;
   }
 }

@@ -123,9 +123,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       yaml =
           yamlResourceService.getTrigger(artifactStream.getAppId(), artifactStream.getUuid()).getResource().getYaml();
     }
-
     return createGitFileChange(accountId, yamlDirectoryService.getRootPathByArtifactStream(artifactStream),
-        artifactStream.getName(), yaml, changeType, false);
+        artifactStream.getSourceName(), yaml, changeType, false);
   }
 
   public GitFileChange getSettingAttributeGitSyncFile(

@@ -1,6 +1,5 @@
 package software.wings.service.impl.security;
 
-import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
@@ -99,7 +98,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public EncryptionType getEncryptionType(String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.KMS, accountId)) {
-      return LOCAL;
+      return EncryptionType.LOCAL;
     }
 
     if (vaultService.getSecretConfig(accountId) != null) {
@@ -110,7 +109,7 @@ public class SecretManagerImpl implements SecretManager {
       return EncryptionType.KMS;
     }
 
-    return LOCAL;
+    return EncryptionType.LOCAL;
   }
 
   @Override
@@ -149,7 +148,7 @@ public class SecretManagerImpl implements SecretManager {
         rv = EncryptedData.builder()
                  .encryptionKey(accountId)
                  .encryptedValue(encryptedChars)
-                 .encryptionType(LOCAL)
+                 .encryptionType(EncryptionType.LOCAL)
                  .accountId(accountId)
                  .type(settingType)
                  .enabled(true)
@@ -194,7 +193,7 @@ public class SecretManagerImpl implements SecretManager {
           Preconditions.checkState(
               encryptedRefField.get(object) == null, "both encrypted and non encrypted field set for " + object);
           encryptedDataDetails.add(EncryptedDataDetail.builder()
-                                       .encryptionType(LOCAL)
+                                       .encryptionType(EncryptionType.LOCAL)
                                        .encryptedData(EncryptedData.builder()
                                                           .encryptionKey(object.getAccountId())
                                                           .encryptedValue((char[]) f.get(object))
@@ -555,7 +554,7 @@ public class SecretManagerImpl implements SecretManager {
                                           .name(name)
                                           .encryptionKey(accountId)
                                           .encryptedValue(fileId.toCharArray())
-                                          .encryptionType(LOCAL)
+                                          .encryptionType(EncryptionType.LOCAL)
                                           .kmsId(null)
                                           .type(SettingVariableTypes.CONFIG_FILE)
                                           .fileSize(inputStream.getTotalBytesRead())

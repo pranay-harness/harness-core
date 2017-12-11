@@ -23,7 +23,7 @@ import software.wings.settings.SettingValue;
 public class KubernetesConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Cluster master URL", required = true) @NotEmpty private String masterUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
   private String caCert;
   private String clientCert;
   private String clientKey;

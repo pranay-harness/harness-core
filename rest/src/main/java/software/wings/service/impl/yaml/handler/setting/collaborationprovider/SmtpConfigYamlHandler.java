@@ -1,12 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.helpers.ext.mail.SmtpConfig.Yaml;
+import software.wings.beans.yaml.ChangeContext;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -16,34 +14,27 @@ public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     SmtpConfig smtpConfig = (SmtpConfig) settingAttribute.getValue();
-    return new Yaml(smtpConfig.getType(), smtpConfig.getHost(), smtpConfig.getPort(), smtpConfig.getFromAddress(),
-        smtpConfig.isUseSSL(), smtpConfig.getUsername(), getEncryptedValue(smtpConfig, "password", false));
+    return new Yaml(smtpConfig.getType(), settingAttribute.getName(), smtpConfig.getHost(), smtpConfig.getPort(),
+        smtpConfig.getFromAddress(), smtpConfig.isUseSSL(), smtpConfig.getUsername(),
+        getEncryptedValue(smtpConfig, "password", false));
   }
 
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute setWithYamlValues(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
     SmtpConfig config = SmtpConfig.builder()
                             .accountId(accountId)
                             .host(yaml.getHost())
                             .port(yaml.getPort())
-                            .password(decryptedPassword)
+                            .password(yaml.getPassword().toCharArray())
                             .encryptedPassword(yaml.getPassword())
                             .username(yaml.getUsername())
                             .fromAddress(yaml.getFromAddress())
                             .useSSL(yaml.isUseSSL())
                             .build();
-    return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
+    return buildSettingAttribute(accountId, yaml.getName(), uuid, config);
   }
 
   @Override

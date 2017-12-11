@@ -26,10 +26,16 @@ public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   @Override
   public PortMapping upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext);
+    return setWithYamlValues(changeContext);
   }
 
-  private PortMapping toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  @Override
+  public PortMapping updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
+  private PortMapping setWithYamlValues(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
     return PortMapping.builder()
@@ -42,6 +48,12 @@ public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return true;
+  }
+
+  @Override
+  public PortMapping createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
   }
 
   @Override

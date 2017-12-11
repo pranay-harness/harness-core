@@ -7,7 +7,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -35,7 +34,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @Attributes(title = "AWS account access key", required = true) @NotEmpty private String accessKey;
 
-  @Attributes(title = "AWS account secret key", required = true) @Encrypted private char[] secretKey;
+  @Attributes(title = "AWS account secret key", required = true) @NotEmpty @Encrypted private char[] secretKey;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -61,16 +60,16 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends LoadBalancerProviderYaml {
     private String region;
     private String loadBalancerName;
     private String accessKey;
     private String secretKey;
 
-    @Builder
-    public Yaml(String type, String region, String loadBalancerName, String accessKey, String secretKey) {
-      super(type);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String region, String loadBalancerName, String accessKey, String secretKey) {
+      super(type, name);
       this.region = region;
       this.loadBalancerName = loadBalancerName;
       this.accessKey = accessKey;
