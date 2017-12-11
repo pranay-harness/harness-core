@@ -41,6 +41,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
+import software.wings.scheduler.PruneObjectJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -82,10 +83,10 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class AppServiceImpl implements AppService {
+  private static final Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
+
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
   private static final int INSTANCE_SYNC_POLL_INTERVAL = 600;
-
-  private final static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
   @Inject private AlertService alertService;
   @Inject private ArtifactService artifactService;
@@ -194,6 +195,21 @@ public class AppServiceImpl implements AppService {
                           .build();
 
     jobScheduler.scheduleJob(job, trigger);
+  }
+
+  void addCronForPruningDescendantObjects(String appId) {
+    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
+    jobScheduler.deleteJob(appId, PruneObjectJob.GROUP);
+
+    JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
+                            .withIdentity(appId, PruneObjectJob.GROUP)
+                            .usingJobData(PruneObjectJob.OBJECT_CLASS_KEY, Application.class.getCanonicalName())
+                            .usingJobData(PruneObjectJob.OBJECT_ID_KEY, appId)
+                            .build();
+
+    Trigger trigger = PruneObjectJob.defaultTrigger(appId);
+
+    jobScheduler.scheduleJob(details, trigger);
   }
 
   /* (non-Javadoc)
@@ -320,34 +336,53 @@ public class AppServiceImpl implements AppService {
       throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
     }
 
-    boolean deleted = wingsPersistence.delete(Application.class, appId);
+    // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
+    // may result in deleting object from a new application created after the first one was deleted,
+    // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
     application.setEntityYamlPath(yamlDirectoryService.getRootPathByApp(application));
-    if (deleted) {
-      executorService.submit(() -> {
-        for (Field field : AppServiceImpl.class.getDeclaredFields()) {
-          try {
-            Object obj = field.get(this);
-            if (obj instanceof OwnedByApplication) {
-              OwnedByApplication item = (OwnedByApplication) obj;
-              item.pruneByApplication(appId);
-            }
-          } catch (IllegalAccessException e) {
-            e.printStackTrace();
-          }
-        }
+    yamlChangeSetHelper.applicationYamlChange(application, ChangeType.DELETE);
 
-        notificationService.sendNotificationAsync(
-            anInformationNotification()
-                .withAppId(application.getUuid())
-                .withAccountId(application.getAccountId())
-                .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-                .withNotificationTemplateVariables(
-                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
-                .build());
-      });
+    // First lets make sure that we have persisted a job that will prone the descendant objects
+    addCronForPruningDescendantObjects(appId);
 
-      yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.DELETE);
+    // Do not add too much between these too calls (on top and bottom). We need to persist the job
+    // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
+    // too much though will result in start the job before the object is deleted, this possibility is
+    // handled, but this is still not good.
+
+    // Now we are ready to delete the object.
+    if (wingsPersistence.delete(Application.class, appId)) {
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(application.getUuid())
+              .withAccountId(application.getAccountId())
+              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+              .withNotificationTemplateVariables(
+                  ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
+              .build());
     }
+
+    // Note that if we failed to delete the object we left without the yaml. Likely the users
+    // will not reconsider and start using the object as they never intended to delete it, but
+    // probably they will retry. This is why there is no reason for us to regenerate it at this
+    // point. We should have the necessary APIs elsewhere, if we find the users want it.
+  }
+
+  @Override
+  public void pruneDescendingObjects(String appId) {
+    executorService.submit(() -> {
+      for (Field field : AppServiceImpl.class.getDeclaredFields()) {
+        try {
+          Object obj = field.get(this);
+          if (obj instanceof OwnedByApplication) {
+            OwnedByApplication item = (OwnedByApplication) obj;
+            item.pruneByApplication(appId);
+          }
+        } catch (IllegalAccessException e) {
+          logger.error(e.toString());
+        }
+      }
+    });
   }
 
   @Override

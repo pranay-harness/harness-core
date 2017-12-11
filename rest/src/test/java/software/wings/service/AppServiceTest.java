@@ -274,6 +274,16 @@ public class AppServiceTest extends WingsBaseTest {
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
         alertService, triggerService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
+    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
+    appService.pruneDescendingObjects(APP_ID);
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
+        appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
+        alertService, triggerService);
 
     inOrder.verify(alertService).pruneByApplication(APP_ID);
     inOrder.verify(environmentService).pruneByApplication(APP_ID);
@@ -283,7 +293,5 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(serviceResourceService).pruneByApplication(APP_ID);
     inOrder.verify(triggerService).pruneByApplication(APP_ID);
     inOrder.verify(workflowService).pruneByApplication(APP_ID);
-
-    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 }
