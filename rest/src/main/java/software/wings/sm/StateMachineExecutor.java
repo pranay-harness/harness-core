@@ -1321,14 +1321,15 @@ public class StateMachineExecutor {
   private StateExecutionInstance getStateExecutionInstance(
       String appId, String executionUuid, String stateExecutionInstanceId) {
     // TODO: convert this not to use Query directly after default createdAt sorting is taken off
-    return wingsPersistence.createQuery(StateExecutionInstance.class)
-        .field(ID_KEY)
-        .equal(stateExecutionInstanceId)
-        .field("appId")
-        .equal(appId)
-        .field("executionUuid")
-        .equal(executionUuid)
-        .get();
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .field(ID_KEY)
+                                              .equal(stateExecutionInstanceId)
+                                              .field("appId")
+                                              .equal(appId);
+    if (executionUuid != null) {
+      query.field("executionUuid").equal(executionUuid);
+    }
+    return query.get();
   }
 
   private static class SmExecutionDispatcher implements Runnable {

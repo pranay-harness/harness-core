@@ -94,6 +94,8 @@ public class Base implements UuidAware {
     lastUpdatedBy = embeddedUser;
   }
 
+  @SchemaIgnore
+  @JsonIgnore
   public Map<String, Object> getShardKeys() {
     HashMap shardKeys = new HashMap();
     shardKeys.put("appId", appId);
