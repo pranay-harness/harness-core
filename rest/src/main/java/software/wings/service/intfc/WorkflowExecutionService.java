@@ -105,6 +105,24 @@ public interface WorkflowExecutionService {
    *
    * @param appId               the app id
    * @param workflowExecutionId the workflow execution id
+   * @return the execution details
+   */
+  WorkflowExecution getExecutionWithoutSummary(@NotNull String appId, @NotNull String workflowExecutionId);
+
+  /**
+   * Gets the execution details.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   * @return the execution details
+   */
+  WorkflowExecution getWorkflowExecution(@NotNull String appId, @NotNull String workflowExecutionId);
+
+  /**
+   * Gets the execution details.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
    * @param expandedGroupIds    the expanded group ids
    * @return the execution details
    */

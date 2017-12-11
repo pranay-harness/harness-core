@@ -277,7 +277,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     notNullCheck("executionArgs", executionArgs);
     notNullCheck("notes", executionArgs.getNotes());
 
-    WorkflowExecution workflowExecution = getExecutionDetails(appId, workflowExecutionId);
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("workflowExecution", workflowExecution);
 
     try {
@@ -302,7 +302,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     notNullCheck("ApprovalDetails", approvalDetails);
     String approvalId = approvalDetails.getApprovalId();
 
-    WorkflowExecution workflowExecution = getExecutionDetails(appId, workflowExecutionId);
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("workflowExecution", workflowExecution);
 
     if (!isPipelineWaitingApproval(workflowExecution.getPipelineExecution(), approvalId)) {
@@ -551,9 +551,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId) {
-    logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    WorkflowExecution workflowExecution = getExecutionWithoutSummary(appId, workflowExecutionId);
 
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+    } else {
+      refreshBreakdown(workflowExecution);
+      refreshSummaries(workflowExecution);
+    }
+    return workflowExecution;
+  }
+
+  @Override
+  public WorkflowExecution getExecutionWithoutSummary(String appId, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("WorkflowExecution", workflowExecution);
 
     if (workflowExecution.getExecutionArgs() != null) {
@@ -577,14 +588,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest, false).getResponse());
       }
     }
-
-    if (workflowExecution.getWorkflowType() == PIPELINE) {
-      refreshPipelineExecution(workflowExecution);
-    } else {
-      refreshBreakdown(workflowExecution);
-      refreshSummaries(workflowExecution);
-    }
     return workflowExecution;
+  }
+
+  @Override
+  public WorkflowExecution getWorkflowExecution(String appId, String workflowExecutionId) {
+    logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
+    return wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
   }
 
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus) {
@@ -1292,7 +1302,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
       EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
       WorkflowExecution workflowExecution2 =
-          getExecutionDetails(workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+          getWorkflowExecution(workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
 
       if (workflowExecution2 == null
           || (workflowExecution2.getStatus() != null && workflowExecution2.getStatus().isFinalStatus())) {

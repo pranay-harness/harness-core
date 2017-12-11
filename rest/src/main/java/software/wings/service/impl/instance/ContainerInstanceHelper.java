@@ -260,7 +260,7 @@ public class ContainerInstanceHelper {
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
+        workflowExecutionService.getExecutionWithoutSummary(appId, workflowExecutionId);
     Validator.notNullCheck("WorkflowExecution", workflowExecution);
     StateExecutionInstance stateExecutionInstance =
         workflowExecutionService.getStateExecutionData(appId, stateExecutionInstanceId);
