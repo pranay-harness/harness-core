@@ -23,6 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppService;
 
@@ -128,7 +129,7 @@ public class PruneObjectJobMockTest extends WingsBaseTest {
   public void retryIfServiceThrew() throws Exception {
     when(wingsPersistence.get(Application.class, objectId)).thenReturn(null);
 
-    doThrow(new Exception()).when(appService).pruneDescendingObjects(objectId);
+    doThrow(new WingsException()).when(appService).pruneDescendingObjects(objectId);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
     when(context.getJobDetail()).thenReturn(details(Application.class));
