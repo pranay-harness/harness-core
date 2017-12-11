@@ -41,10 +41,9 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                          return;
                        }
                        try {
-                         RestResponse<List<String>> restResponse =
-                             execute(managerClient.batchedSaveLogs(accountId, logs));
+                         RestResponse restResponse = execute(managerClient.batchedSaveLogs(accountId, logs));
                          logger.info("{} log lines dispatched for accountId: {}",
-                             restResponse.getResource() != null ? restResponse.getResource().size() : 0, accountId);
+                             restResponse.getResource() != null ? logs.size() : 0, accountId);
                        } catch (Exception e) {
                          logger.error("Dispatch log failed. printing lost logs[{}]", logs.size(), e);
                          logs.forEach(log -> logger.error(log.toString()));
