@@ -41,18 +41,21 @@ public class YamlChangeSetHelper {
       if (!savedApp.getName().equals(updatedApp.getName())) {
         moveApplicationYamlChange(savedApp, updatedApp);
       } else {
-        queueApplicationYamlChange(
+        applicationYamlChange(
             updatedApp.getAccountId(), entityUpdateService.getAppGitSyncFile(updatedApp, ChangeType.MODIFY));
       }
     });
   }
 
   public void applicationYamlChangeAsync(Application app, ChangeType changeType) {
-    executorService.submit(
-        () -> queueApplicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, changeType)));
+    executorService.submit(() -> applicationYamlChange(app, changeType));
   }
 
-  private void queueApplicationYamlChange(String accountId, GitFileChange gitFileChange) {
+  public void applicationYamlChange(Application app, ChangeType changeType) {
+    applicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, changeType));
+  }
+
+  private void applicationYamlChange(String accountId, GitFileChange gitFileChange) {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
       yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(gitFileChange));
