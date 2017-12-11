@@ -10,6 +10,9 @@ import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
@@ -29,10 +32,8 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.states.JenkinsState;
 
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
@@ -170,45 +171,66 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public void updateCommandUnitStatus(Map<String, Map<String, Log>> activityCommandUnitLastLogMap) {
-    activityCommandUnitLastLogMap.forEach(this ::updateActivityCommandUnitStatusWithRetry);
+    //    activityCommandUnitLastLogMap.forEach(this::updateActivityCommandUnitStatusWithRetry);
+    activityCommandUnitLastLogMap.forEach(this ::updateActivityCommandUnitStatus);
   }
 
-  private void updateActivityCommandUnitStatusWithRetry(String activityId, Map<String, Log> commandUnitLastLogMap) {
-    boolean isSaved = false;
-    int retry = 0;
-
-    do {
-      try {
-        updateActivityCommandUnitStatus(activityId, commandUnitLastLogMap);
-        isSaved = true;
-      } catch (ConcurrentModificationException ignored) {
-        retry++;
-      }
-    } while (!isSaved && retry < MAX_ACTIVITY_VERSION_RETRY);
-
-    if (!isSaved) {
-      logger.error("Activity:{} commandUnit status couldn't be updated after {} retries", activityId, retry);
-    } else if (retry > 0) {
-      logger.warn("Version conflict encountered. Resolved in {} retry", retry);
-    }
-  }
+  //  private void updateActivityCommandUnitStatusWithRetry(String activityId, Map<String, Log> commandUnitLastLogMap) {
+  //    boolean isSaved = false;
+  //    int retry = 0;
+  //
+  //    do {
+  //      try {
+  //        updateActivityCommandUnitStatus(activityId, commandUnitLastLogMap);
+  //        isSaved = true;
+  //      } catch (ConcurrentModificationException ignored) {
+  //        retry++;
+  //      }
+  //    } while (!isSaved && retry < MAX_ACTIVITY_VERSION_RETRY);
+  //
+  //    if (!isSaved) {
+  //      logger.error("Activity:{} commandUnit status couldn't be updated after {} retries", activityId, retry);
+  //    } else if (retry > 0) {
+  //      logger.warn("Version conflict encountered. Resolved in {} retry", retry);
+  //    }
+  //  }
 
   private void updateActivityCommandUnitStatus(String activityId, Map<String, Log> commandUnitLastLogMap) {
     String appId = commandUnitLastLogMap.values().iterator().next().getAppId();
-    Activity activity = get(activityId, appId);
-    activity.getCommandUnits().forEach(commandUnit -> {
-      Log log = commandUnitLastLogMap.get(commandUnit.getName());
-      if (isCommandUnitStatusUpdatableByLogStatus(commandUnit, log)) {
-        commandUnit.setCommandExecutionStatus(log.getCommandExecutionStatus());
-      }
+
+    commandUnitLastLogMap.forEach((unitName, log) -> {
+      Query<Activity> query = wingsPersistence.createQuery(Activity.class)
+                                  .filter(Mapper.ID_KEY, activityId)
+                                  .filter("appId", appId)
+                                  .disableValidation()
+                                  .filter("commandUnits.name", unitName);
+
+      UpdateOperations<Activity> updateOperations =
+          wingsPersistence.createUpdateOperations(Activity.class)
+              .disableValidation()
+              .set("commandUnits.$.commandExecutionStatus", log.getCommandExecutionStatus());
+      wingsPersistence.update(query, updateOperations);
     });
-    wingsPersistence.update(activity,
-        wingsPersistence.createUpdateOperations(Activity.class).set("commandUnits", activity.getCommandUnits()));
+
+    //    activity.getCommandUnits().forEach(commandUnit -> {
+    //      Log log = commandUnitLastLogMap.get(commandUnit.getName());
+    //      if (isCommandUnitStatusUpdatableByLogStatus(commandUnit, log)) {
+    //        commandUnit.setCommandExecutionStatus(log.getCommandExecutionStatus());
+    //        Query<Activity> query =
+    //            wingsPersistence.createQuery(Activity.class).field(Mapper.ID_KEY).equal(activityId).disableValidation().field("commandUnits.name").equal(
+    //                log.getCommandUnitName());
+    //        UpdateOperations<Activity> updateOperations =
+    //            wingsPersistence.createUpdateOperations(Activity.class).disableValidation().set("commandUnits.$.commandExecutionStatus",
+    //                log.getCommandExecutionStatus());
+    //        wingsPersistence.update(query, updateOperations);
+    //      }
+    //    });
   }
 
   private boolean isCommandUnitStatusUpdatableByLogStatus(CommandUnit commandUnit, Log log) {
     return (log != null
         && (QUEUED.equals(commandUnit.getCommandExecutionStatus())
-               || RUNNING.equals(commandUnit.getCommandExecutionStatus())));
+               || RUNNING.equals(commandUnit.getCommandExecutionStatus()))
+        && !log.getCommandExecutionStatus().equals(commandUnit.getCommandExecutionStatus()));
   }
 }
