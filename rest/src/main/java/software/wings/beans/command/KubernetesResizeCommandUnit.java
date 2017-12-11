@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -30,18 +31,20 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
-      int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+  protected List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params, ContainerServiceData serviceData,
+      ExecutionLogCallback executionLogCallback) {
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) params;
     KubernetesConfig kubernetesConfig;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
     } else {
-      kubernetesConfig =
-          gkeClusterService.getCluster(cloudProviderSetting, encryptedDataDetails, clusterName, namespace);
+      kubernetesConfig = gkeClusterService.getCluster(
+          cloudProviderSetting, encryptedDataDetails, resizeParams.getClusterName(), resizeParams.getNamespace());
     }
-    return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails, clusterName,
-        serviceName, previousCount, desiredCount, executionLogCallback);
+    return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
+        resizeParams.getClusterName(), serviceData.getName(), resizeParams.getKubernetesType(),
+        serviceData.getPreviousCount(), serviceData.getDesiredCount(), executionLogCallback);
   }
 
   @Data

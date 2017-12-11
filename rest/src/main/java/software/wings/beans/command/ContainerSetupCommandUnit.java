@@ -9,6 +9,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -33,26 +34,31 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     List<EncryptedDataDetail> cloudProviderCredentials = context.getCloudProviderCredentials();
-    String clusterName = context.getClusterName();
     ContainerSetupParams setupParams = context.getContainerSetupParams();
-
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
 
     try {
-      String containerServiceName = executeInternal(cloudProviderSetting, cloudProviderCredentials, clusterName,
-          setupParams, context.getServiceVariables(), executionLogCallback);
-      context.setCommandExecutionData(
-          ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build());
+      String containerServiceName = executeInternal(cloudProviderSetting, cloudProviderCredentials, setupParams,
+          context.getServiceVariables(), executionLogCallback);
+      ContainerSetupCommandUnitExecutionDataBuilder executionDataBuilder =
+          ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName);
+      if (setupParams instanceof KubernetesSetupParams) {
+        executionDataBuilder.kubernetesType(((KubernetesSetupParams) setupParams).getKubernetesType());
+      }
+      context.setCommandExecutionData(executionDataBuilder.build());
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
+      if (ex instanceof WingsException) {
+        throw ex;
+      }
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
   }
 
   protected abstract String executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, ContainerSetupParams setupParams,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams setupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback);
 
   @Data

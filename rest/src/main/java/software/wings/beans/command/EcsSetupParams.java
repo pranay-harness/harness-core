@@ -19,14 +19,15 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String taskFamily;
     private String serviceName;
     private boolean useLoadBalancer;
-    private String appName;
+    private String clusterName;
     private String roleArn;
-    private String envName;
+    private String appName;
     private String targetGroupArn;
-    private ImageDetails imageDetails;
+    private String envName;
     private String loadBalancerName;
-    private ContainerTask containerTask;
+    private ImageDetails imageDetails;
     private String region;
+    private ContainerTask containerTask;
     private String infraMappingId;
 
     private EcsSetupParamsBuilder() {}
@@ -50,8 +51,8 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public EcsSetupParamsBuilder withAppName(String appName) {
-      this.appName = appName;
+    public EcsSetupParamsBuilder withClusterName(String clusterName) {
+      this.clusterName = clusterName;
       return this;
     }
 
@@ -60,8 +61,8 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public EcsSetupParamsBuilder withEnvName(String envName) {
-      this.envName = envName;
+    public EcsSetupParamsBuilder withAppName(String appName) {
+      this.appName = appName;
       return this;
     }
 
@@ -70,8 +71,8 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public EcsSetupParamsBuilder withImageDetails(ImageDetails imageDetails) {
-      this.imageDetails = imageDetails;
+    public EcsSetupParamsBuilder withEnvName(String envName) {
+      this.envName = envName;
       return this;
     }
 
@@ -80,13 +81,18 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public EcsSetupParamsBuilder withContainerTask(ContainerTask containerTask) {
-      this.containerTask = containerTask;
+    public EcsSetupParamsBuilder withImageDetails(ImageDetails imageDetails) {
+      this.imageDetails = imageDetails;
       return this;
     }
 
     public EcsSetupParamsBuilder withRegion(String region) {
       this.region = region;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withContainerTask(ContainerTask containerTask) {
+      this.containerTask = containerTask;
       return this;
     }
 
@@ -100,14 +106,15 @@ public class EcsSetupParams extends ContainerSetupParams {
           .withTaskFamily(taskFamily)
           .withServiceName(serviceName)
           .withUseLoadBalancer(useLoadBalancer)
-          .withAppName(appName)
+          .withClusterName(clusterName)
           .withRoleArn(roleArn)
-          .withEnvName(envName)
+          .withAppName(appName)
           .withTargetGroupArn(targetGroupArn)
-          .withImageDetails(imageDetails)
+          .withEnvName(envName)
           .withLoadBalancerName(loadBalancerName)
-          .withContainerTask(containerTask)
+          .withImageDetails(imageDetails)
           .withRegion(region)
+          .withContainerTask(containerTask)
           .withInfraMappingId(infraMappingId);
     }
 
@@ -116,14 +123,15 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setTaskFamily(taskFamily);
       ecsSetupParams.setServiceName(serviceName);
       ecsSetupParams.setUseLoadBalancer(useLoadBalancer);
-      ecsSetupParams.setAppName(appName);
+      ecsSetupParams.setClusterName(clusterName);
       ecsSetupParams.setRoleArn(roleArn);
-      ecsSetupParams.setEnvName(envName);
+      ecsSetupParams.setAppName(appName);
       ecsSetupParams.setTargetGroupArn(targetGroupArn);
-      ecsSetupParams.setImageDetails(imageDetails);
+      ecsSetupParams.setEnvName(envName);
       ecsSetupParams.setLoadBalancerName(loadBalancerName);
-      ecsSetupParams.setContainerTask(containerTask);
+      ecsSetupParams.setImageDetails(imageDetails);
       ecsSetupParams.setRegion(region);
+      ecsSetupParams.setContainerTask(containerTask);
       ecsSetupParams.setInfraMappingId(infraMappingId);
       return ecsSetupParams;
     }

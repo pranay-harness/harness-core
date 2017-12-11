@@ -107,6 +107,7 @@ public class ContainerInstanceHelper {
                 CommandStepExecutionSummary commandStepExecutionSummary =
                     (CommandStepExecutionSummary) stepExecutionSummary;
                 String clusterName = commandStepExecutionSummary.getClusterName();
+                String kubernetesType = commandStepExecutionSummary.getKubernetesType();
                 Set<String> containerSvcNameSet = Sets.newHashSet();
 
                 if (commandStepExecutionSummary.getOldInstanceData() != null) {
@@ -133,7 +134,7 @@ public class ContainerInstanceHelper {
 
                 ContainerDeploymentEvent containerDeploymentEvent =
                     buildContainerDeploymentEvent(stateExecutionInstanceId, workflowExecution, phaseExecutionData,
-                        clusterName, containerSvcNameSet, infrastructureMapping);
+                        clusterName, kubernetesType, containerSvcNameSet, infrastructureMapping);
                 containerDeploymentEventQueue.send(containerDeploymentEvent);
               }
             }
@@ -145,7 +146,7 @@ public class ContainerInstanceHelper {
 
   private ContainerDeploymentEvent buildContainerDeploymentEvent(String stateExecutionInstanceId,
       WorkflowExecution workflowExecution, PhaseExecutionData phaseExecutionData, String clusterName,
-      Set<String> containerSvcNameSet, InfrastructureMapping infrastructureMapping) {
+      String kubernetesType, Set<String> containerSvcNameSet, InfrastructureMapping infrastructureMapping) {
     Validator.notNullCheck("containerSvcNameSet", containerSvcNameSet);
     if (containerSvcNameSet.isEmpty()) {
       String msg = "No container service names processed by the event";
@@ -184,7 +185,8 @@ public class ContainerInstanceHelper {
             .withWorkflowExecutionId(workflowExecution.getUuid())
             .withWorkflowId(workflowExecution.getWorkflowId())
             .withClusterName(clusterName)
-            .withContainerSvcNameNoRevision(containerSvcNameNoRevision);
+            .withContainerSvcNameNoRevision(containerSvcNameNoRevision)
+            .withKubernetesType(kubernetesType);
 
     return containerDeploymentEvent.build();
   }
@@ -214,7 +216,7 @@ public class ContainerInstanceHelper {
 
   private String getContainerSvcName(ContainerInfo containerInfo) {
     if (containerInfo instanceof KubernetesContainerInfo) {
-      return ((KubernetesContainerInfo) containerInfo).getReplicationControllerName();
+      return ((KubernetesContainerInfo) containerInfo).getControllerName();
     } else if (containerInfo instanceof EcsContainerInfo) {
       return ((EcsContainerInfo) containerInfo).getServiceName();
     } else {
@@ -325,6 +327,7 @@ public class ContainerInstanceHelper {
         .withPipelineExecutionId(containerDeploymentEvent.getPipelineExecutionId())
         .withServiceId(containerDeploymentEvent.getServiceId())
         .withStateExecutionInstanceId(containerDeploymentEvent.getStateExecutionInstanceId())
+        .withKubernetesType(containerDeploymentEvent.getKubernetesType())
         .build();
   }
 

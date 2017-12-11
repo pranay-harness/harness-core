@@ -20,7 +20,6 @@ import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -156,7 +155,6 @@ public class AwsCodeDeployState extends State {
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (Encryptable) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
-    String region = infrastructureMapping.getRegion();
 
     Activity act = Activity.builder()
                        .applicationName(app.getName())
@@ -197,7 +195,6 @@ public class AwsCodeDeployState extends State {
                                                           .withAppId(app.getUuid())
                                                           .withEnvId(envId)
                                                           .withServiceName(service.getName())
-                                                          .withRegion(region)
                                                           .withActivityId(activity.getUuid())
                                                           .withCloudProviderSetting(cloudProviderSetting)
                                                           .withCloudProviderCredentials(encryptedDataDetails)

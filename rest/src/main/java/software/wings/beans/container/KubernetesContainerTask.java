@@ -3,6 +3,7 @@ package software.wings.beans.container;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.strip;
+import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -11,6 +12,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
@@ -20,6 +22,7 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
@@ -31,14 +34,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/8/17
  */
 @JsonTypeName("KUBERNETES")
 public class KubernetesContainerTask extends ContainerTask {
-  @Attributes(title = "LABELS") List<Label> labels;
+  @Attributes(title = "LABELS") private List<Label> labels;
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
 
   public KubernetesContainerTask() {
@@ -68,7 +70,14 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public ContainerTask convertToAdvanced() {
-    String preamble = "# Enter your Replication Controller spec below.\n"
+    String preamble = "# Enter your Controller spec below.\n"
+        + "#\n"
+        + "# Supported Controllers:\n"
+        + "#   ReplicationController\n"
+        + "#   Deployment\n"
+        + "#   ReplicaSet\n"
+        + "#   StatefulSet\n"
+        + "#   DaemonSet\n"
         + "#\n"
         + "# Placeholders:\n"
         + "#\n"
@@ -82,8 +91,8 @@ public class KubernetesContainerTask extends ContainerTask {
         + "#   - Replaced with the name of the generated image pull\n"
         + "#     secret when pulling from a private Docker registry\n"
         + "#\n"
-        + "# Harness will set the replication controller name,\n"
-        + "# namespace, selector labels, and number of replicas.\n"
+        + "# Harness will set the controller name, namespace,\n"
+        + "# selector labels, and number of replicas.\n"
         + "#\n"
         + "# Service variables will be merged into environment\n"
         + "# variables for all containers, overriding values if\n"
@@ -93,17 +102,6 @@ public class KubernetesContainerTask extends ContainerTask {
     setAdvancedType(YAML);
     setAdvancedConfig(preamble + fetchYamlConfig());
     return this;
-  }
-
-  public String fetchYamlConfig() {
-    try {
-      return KubernetesHelper.toYaml(createReplicationController())
-          .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
-          .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
-          .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);
-    } catch (IOException e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
-    }
   }
 
   @Override
@@ -137,7 +135,7 @@ public class KubernetesContainerTask extends ContainerTask {
             container -> DUMMY_DOCKER_IMAGE_NAME.equals(container.getImage()));
         if (!containerHasDockerPlaceholder) {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-              "Replication controller spec must have a container definition with "
+              "Controller spec must have a container definition with "
                   + "${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
@@ -145,17 +143,51 @@ public class KubernetesContainerTask extends ContainerTask {
           throw(WingsException) e;
         }
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-            "Cannot create replication controller from " + getAdvancedType().name() + ": " + e.getMessage(), e);
+            "Cannot create controller from " + getAdvancedType().name() + ": " + e.getMessage(), e);
       }
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Configuration is empty.");
     }
   }
 
-  private ReplicationController createReplicationController() {
-    List<Container> containerDefinitions =
-        getContainerDefinitions().stream().map(this ::createContainerDefinition).collect(Collectors.toList());
+  public String kubernetesType() {
+    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME).getClass().getName();
+  }
 
+  public HasMetadata createController(String containerName, String imageNameTag, String secretName) {
+    String configTemplate;
+    AdvancedType type;
+    if (StringUtils.isNotEmpty(getAdvancedConfig())) {
+      configTemplate = getAdvancedConfig();
+      type = getAdvancedType();
+    } else {
+      configTemplate = fetchYamlConfig();
+      type = YAML;
+    }
+
+    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
+                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
+                        .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
+
+    try {
+      return type == JSON ? (HasMetadata) KubernetesHelper.loadJson(config) : KubernetesHelper.loadYaml(config);
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+    }
+  }
+
+  private String fetchYamlConfig() {
+    try {
+      return KubernetesHelper.toYaml(createReplicationController())
+          .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
+          .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
+          .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);
+    } catch (IOException e) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+    }
+  }
+
+  private ReplicationController createReplicationController() {
     Map<String, Volume> volumeMap = new HashMap<>();
     for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
       if (containerDefinition.getStorageConfigurations() != null) {
@@ -173,7 +205,6 @@ public class KubernetesContainerTask extends ContainerTask {
     }
 
     return new ReplicationControllerBuilder()
-        .withApiVersion("v1")
         .withNewMetadata()
         .endMetadata()
         .withNewSpec()
@@ -183,7 +214,8 @@ public class KubernetesContainerTask extends ContainerTask {
         .endMetadata()
         .withNewSpec()
         .addNewImagePullSecret(DUMMY_SECRET_NAME)
-        .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
+        .addToContainers(
+            getContainerDefinitions().stream().map(this ::createContainerDefinition).toArray(Container[] ::new))
         .addToVolumes(volumeMap.values().toArray(new Volume[volumeMap.size()]))
         .endSpec()
         .endTemplate()

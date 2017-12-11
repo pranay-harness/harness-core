@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,4 +13,5 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData {
   private String containerServiceName;
+  private String kubernetesType;
 }
