@@ -200,7 +200,8 @@ public class PipelineServiceImpl implements PipelineService {
       }
       List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
       throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message",
-          String.format("Pipeline associated as a trigger action to triggers %s", Joiner.on(", ").join(triggerNames)));
+          String.format(
+              "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
     }
     throw new WingsException(
         INVALID_REQUEST, "message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
@@ -216,7 +217,6 @@ public class PipelineServiceImpl implements PipelineService {
     if (pipeline == null) {
       return true;
     }
-
     if (!forceDelete) {
       ensurePipelineSafeToDelete(pipeline);
     }

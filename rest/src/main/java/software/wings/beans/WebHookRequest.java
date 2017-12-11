@@ -18,6 +18,6 @@ public class WebHookRequest {
   private String artifactSource;
   private String buildNumber;
   private String dockerImageTag;
+  private List<Map<String, String>> artifacts;
   private Map<String, String> parameters;
-  private List<Map<String, String>> artifacts = new ArrayList();
 }
