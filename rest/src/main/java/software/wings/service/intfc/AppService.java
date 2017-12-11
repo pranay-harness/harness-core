@@ -90,6 +90,13 @@ public interface AppService {
   void delete(@NotEmpty String appId);
 
   /**
+   * Prune owned from the app objects.
+   *
+   * @param appId the app id
+   */
+  void pruneDescendingObjects(@NotEmpty String appId);
+
+  /**
    * Gets apps by account id.
    *
    * @param accountId the account id
