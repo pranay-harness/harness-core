@@ -28,7 +28,6 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;
@@ -70,7 +69,7 @@ public class WorkflowNotificationHelper {
     Application app = ((ExecutionContextImpl) context).getApp();
 
     WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
+        workflowExecutionService.getWorkflowExecution(app.getUuid(), context.getWorkflowExecutionId());
     Map<String, String> placeHolders = new HashMap<>();
     placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
