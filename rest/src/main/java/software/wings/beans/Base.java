@@ -18,6 +18,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -90,5 +92,11 @@ public class Base implements UuidAware {
 
     lastUpdatedAt = currentTimeMillis();
     lastUpdatedBy = embeddedUser;
+  }
+
+  public Map<String, Object> getShardKeys() {
+    HashMap shardKeys = new HashMap();
+    shardKeys.put("appId", appId);
+    return shardKeys;
   }
 }

@@ -7,6 +7,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
+import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -129,6 +130,13 @@ public class Log extends Base {
    */
   public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
     this.commandExecutionStatus = commandExecutionStatus;
+  }
+
+  @Override
+  public Map<String, Object> getShardKeys() {
+    Map<String, Object> shardKeys = super.getShardKeys();
+    shardKeys.put("activityId", activityId);
+    return shardKeys;
   }
 
   @Override
