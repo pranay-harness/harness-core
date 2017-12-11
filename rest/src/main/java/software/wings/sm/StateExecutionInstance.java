@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
@@ -75,6 +76,7 @@ public class StateExecutionInstance extends Base {
   }
 
   @Override
+  @JsonIgnore
   public Map<String, Object> getShardKeys() {
     Map<String, Object> shardKeys = super.getShardKeys();
     shardKeys.put("executionUuid", executionUuid);
