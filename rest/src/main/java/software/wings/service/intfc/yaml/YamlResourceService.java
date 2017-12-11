@@ -1,6 +1,7 @@
 package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
@@ -129,4 +130,17 @@ public interface YamlResourceService {
   RestResponse<YamlPayload> getLambdaSpec(String accountId, String appId, String lambdaSpecId);
 
   RestResponse<YamlPayload> getSettingAttribute(String accountId, String uuid);
+
+  RestResponse<ConfigFile> updateConfigFile(
+      String appId, String configFileId, YamlPayload yamlPayload, boolean deleteEnabled);
+
+  /**
+   * Get config file yaml
+   * @param appId
+   * @param configFileUuid
+   * @return
+   */
+  RestResponse<YamlPayload> getConfigFileYaml(String accountId, String appId, String configFileUuid);
+
+  RestResponse<YamlPayload> getConfigFileYaml(String accountId, String appId, ConfigFile configFile);
 }

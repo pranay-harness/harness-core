@@ -53,34 +53,15 @@ public class DockerStartCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("DOCKER_START")
-  public static class Yaml extends ExecCommandUnit.Yaml {
+  public static class Yaml extends ExecCommandUnit.AbstractYaml {
     public Yaml() {
-      super();
-      setCommandUnitType(CommandUnitType.DOCKER_START.name());
+      super(CommandUnitType.DOCKER_START.name());
     }
 
-    public static final class Builder extends ExecCommandUnit.Yaml.Builder {
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setWorkingDirectory(workingDirectory);
-        yaml.setCommand(command);
-        yaml.setFilePatternEntryList(filePatternEntryList);
-        yaml.setName(name);
-        yaml.setCommandUnitType(commandUnitType);
-        yaml.setDeploymentType(deploymentType);
-        return yaml;
-      }
-
-      @Override
-      protected Yaml getCommandUnitYaml() {
-        return new Yaml();
-      }
+    @lombok.Builder
+    public Yaml(String name, String deploymentType, String workingDirectory, String command,
+        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+      super(name, CommandUnitType.DOCKER_START.name(), deploymentType, workingDirectory, command, filePatternEntryList);
     }
   }
 }

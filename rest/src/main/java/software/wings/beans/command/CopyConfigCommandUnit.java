@@ -181,37 +181,13 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
     private String destinationParentPath;
 
     public Yaml() {
-      super();
-      setCommandUnitType(CommandUnitType.COPY_CONFIGS.name());
+      super(CommandUnitType.COPY_CONFIGS.name());
     }
 
-    public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
-      private String destinationParentPath;
-
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withDestinationParentPath(String destinationParentPath) {
-        this.destinationParentPath = destinationParentPath;
-        return this;
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setName(name);
-        yaml.setCommandUnitType(commandUnitType);
-        yaml.setDeploymentType(deploymentType);
-        yaml.setDestinationParentPath(destinationParentPath);
-        return yaml;
-      }
-
-      @Override
-      protected CopyConfigCommandUnit.Yaml getCommandUnitYaml() {
-        return new CopyConfigCommandUnit.Yaml();
-      }
+    @Builder
+    public Yaml(String name, String deploymentType, String destinationParentPath) {
+      super(name, CommandUnitType.COPY_CONFIGS.name(), deploymentType);
+      this.destinationParentPath = destinationParentPath;
     }
   }
 }

@@ -5,6 +5,7 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -398,47 +399,16 @@ public class Environment extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String environmentType = "NON_PROD";
 
-    public static final class Builder {
-      private String description;
-      private String environmentType = "NON_PROD";
-      private String type;
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withDescription(String description) {
-        this.description = description;
-        return this;
-      }
-
-      public Builder withEnvironmentType(String environmentType) {
-        this.environmentType = environmentType;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder but() {
-        return anYaml().withDescription(description).withEnvironmentType(environmentType).withType(type);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setDescription(description);
-        yaml.setEnvironmentType(environmentType);
-        yaml.setType(type);
-        return yaml;
-      }
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String description, String environmentType) {
+      super(type, harnessApiVersion);
+      this.description = description;
+      this.environmentType = environmentType;
     }
   }
 }

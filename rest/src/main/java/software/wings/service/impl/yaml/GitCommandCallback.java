@@ -18,7 +18,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.HarnessException;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -47,7 +47,7 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient private transient final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Transient @Inject private transient YamlChangeSetService yamlChangeSetService;
-  @Transient @Inject private transient YamlSyncService yamlSyncService;
+  @Transient @Inject private transient YamlService yamlSyncService;
 
   @Transient @Inject private transient YamlGitService yamlGitSyncService;
 

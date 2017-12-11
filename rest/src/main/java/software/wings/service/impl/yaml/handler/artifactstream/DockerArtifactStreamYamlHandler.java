@@ -2,11 +2,9 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static software.wings.utils.Util.isEmpty;
 
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.Builder;
 import software.wings.beans.artifact.DockerArtifactStream.Yaml;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
@@ -17,68 +15,48 @@ import java.util.List;
  */
 public class DockerArtifactStreamYamlHandler
     extends ArtifactStreamYamlHandler<DockerArtifactStream.Yaml, DockerArtifactStream> {
-  public DockerArtifactStream.Yaml toYaml(DockerArtifactStream artifactStream, String appId) {
-    return DockerArtifactStream.Yaml.Builder.aYaml()
-        .withType(ArtifactStreamType.DOCKER.name())
-        .withSettingName(getSettingName(artifactStream.getSettingId()))
-        .withSettingName(getSettingName(artifactStream.getSettingId()))
-        .withAutoApproveForProduction(artifactStream.getAutoApproveForProduction())
-        .withImageName(artifactStream.getImageName())
-        .withSourceName(artifactStream.getSourceName())
-        .build();
+  public DockerArtifactStream.Yaml toYaml(DockerArtifactStream bean, String appId) {
+    Yaml yaml = Yaml.builder().build();
+    super.toYaml(yaml, bean);
+    yaml.setImageName(bean.getImageName());
+    return yaml;
   }
 
   @Override
   public DockerArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
-      return createFromYaml(changeContext, changeSetContext);
+    String accountId = changeContext.getChange().getAccountId();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    DockerArtifactStream previous = get(accountId, yamlFilePath);
+
+    String appId =
+        yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());
+    Builder builder = Builder.aDockerArtifactStream().withServiceId(serviceId).withAppId(appId);
+    toBean(builder, changeContext.getYaml(), appId);
+    if (previous != null) {
+      builder.withUuid(previous.getUuid());
+      return (DockerArtifactStream) artifactStreamService.update(builder.build());
     } else {
-      return updateFromYaml(changeContext, changeSetContext);
+      return (DockerArtifactStream) artifactStreamService.create(builder.build());
     }
-  }
-
-  public DockerArtifactStream updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    DockerArtifactStream previous =
-        getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Builder builder = previous.deepClone();
-    setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
-    return (DockerArtifactStream) artifactStreamService.update(builder.build());
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     DockerArtifactStream.Yaml artifactStreamYaml = changeContext.getYaml();
-    return !(isEmpty(artifactStreamYaml.getImageName()) || isEmpty(artifactStreamYaml.getSourceName())
-        || isEmpty(artifactStreamYaml.getSettingName()));
+    return !(isEmpty(artifactStreamYaml.getImageName()) || isEmpty(artifactStreamYaml.getArtifactServerName()));
   }
 
   @Override
-  public DockerArtifactStream createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
-    Builder builder = Builder.aDockerArtifactStream().withServiceId(serviceId).withAppId(appId);
-    setWithYamlValues(builder, changeContext.getYaml(), appId);
-    return (DockerArtifactStream) artifactStreamService.create(builder.build());
+  protected DockerArtifactStream getNewArtifactStreamObject() {
+    return new DockerArtifactStream();
   }
 
-  private void setWithYamlValues(
+  private void toBean(
       DockerArtifactStream.Builder builder, DockerArtifactStream.Yaml artifactStreamYaml, String appId) {
-    builder.withSettingId(getSettingId(appId, artifactStreamYaml.getSettingName()))
-        .withAutoApproveForProduction(artifactStreamYaml.isAutoApproveForProduction())
+    builder.withSettingId(getSettingId(appId, artifactStreamYaml.getArtifactServerName()))
         .withImageName(artifactStreamYaml.getImageName())
-        .withSourceName(artifactStreamYaml.getSourceName())
         .build();
   }
 

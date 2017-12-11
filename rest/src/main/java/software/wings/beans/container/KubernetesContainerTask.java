@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
@@ -284,8 +285,12 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @Builder
+  @NoArgsConstructor
   public static class Yaml extends ContainerTask.Yaml {
-    public Yaml() {}
+    @Builder
+    public Yaml(String deploymentType, String advancedType, String advancedConfig,
+        ContainerDefinition.Yaml containerDefinition) {
+      super(deploymentType, advancedType, advancedConfig, containerDefinition);
+    }
   }
 }

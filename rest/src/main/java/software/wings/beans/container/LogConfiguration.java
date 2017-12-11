@@ -4,6 +4,7 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.beans.NameValuePair;
 import software.wings.yaml.BaseYaml;
 
@@ -38,9 +39,15 @@ public class LogConfiguration {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @Builder
+  @NoArgsConstructor
   public static final class Yaml extends BaseYaml {
     private String logDriver;
     private List<NameValuePair.Yaml> options;
+
+    @Builder
+    public Yaml(String logDriver, List<NameValuePair.Yaml> options) {
+      this.logDriver = logDriver;
+      this.options = options;
+    }
   }
 }

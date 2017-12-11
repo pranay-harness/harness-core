@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static software.wings.beans.AwsLambdaInfraStructureMapping.Yaml.Builder.aYaml;
 import static software.wings.utils.Util.isEmpty;
 
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -15,23 +14,18 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
-public class AwsLambdaInfraMappingYamlHandler
-    extends InfraMappingYamlHandler<AwsLambdaInfraStructureMapping.Yaml, AwsLambdaInfraStructureMapping> {
+public class AwsLambdaInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, AwsLambdaInfraStructureMapping> {
   @Override
-  public AwsLambdaInfraStructureMapping.Yaml toYaml(AwsLambdaInfraStructureMapping infraMapping, String appId) {
-    return aYaml()
-        .withType(InfrastructureMappingType.AWS_AWS_LAMBDA.name())
-        .withRegion(infraMapping.getRegion())
-        .withServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()))
-        .withInfraMappingType(infraMapping.getInfraMappingType())
-        .withDeploymentType(infraMapping.getDeploymentType())
-        .withComputeProviderName(infraMapping.getComputeProviderName())
-        .withName(infraMapping.getName())
-        .withVpcId(infraMapping.getVpcId())
-        .withSubnetIds(infraMapping.getSubnetIds())
-        .withSecurityGroupIds(infraMapping.getSecurityGroupIds())
-        .withRole(infraMapping.getRole())
-        .build();
+  public Yaml toYaml(AwsLambdaInfraStructureMapping bean, String appId) {
+    Yaml yaml = Yaml.builder().build();
+    super.toYaml(yaml, bean);
+    yaml.setType(InfrastructureMappingType.AWS_AWS_LAMBDA.name());
+    yaml.setRegion(bean.getRegion());
+    yaml.setVpcId(bean.getVpcId());
+    yaml.setSubnetIds(bean.getSubnetIds());
+    yaml.setSecurityGroupIds(bean.getSecurityGroupIds());
+    yaml.setRole(bean.getRole());
+    return yaml;
   }
 
   @Override
@@ -39,24 +33,21 @@ public class AwsLambdaInfraMappingYamlHandler
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
 
-    AwsLambdaInfraStructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
+    Yaml infraMappingYaml = changeContext.getYaml();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
+    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
+    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
     String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
+    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
+    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
+    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
 
-    AwsLambdaInfraStructureMapping.Builder builder =
-        AwsLambdaInfraStructureMapping.Builder.anAwsLambdaInfraStructureMapping().withAccountId(
-            changeContext.getChange().getAccountId());
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    AwsLambdaInfraStructureMapping current = builder.build();
+    AwsLambdaInfraStructureMapping current = new AwsLambdaInfraStructureMapping();
+
+    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
     AwsLambdaInfraStructureMapping previous =
         (AwsLambdaInfraStructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
@@ -70,60 +61,37 @@ public class AwsLambdaInfraMappingYamlHandler
     }
   }
 
-  @Override
-  public AwsLambdaInfraStructureMapping updateFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
-  }
+  private void toBean(AwsLambdaInfraStructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
+      String envId, String computeProviderId, String serviceId) {
+    Yaml infraMappingYaml = changeContext.getYaml();
 
-  private void setWithYamlValues(AwsLambdaInfraStructureMapping.Builder builder,
-      AwsLambdaInfraStructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
-      String serviceId) {
-    builder.withAutoPopulate(false)
-        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
-        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
-        .withComputeProviderSettingId(computeProviderId)
-        .withComputeProviderName(infraMappingYaml.getComputeProviderName())
-        .withComputeProviderType(infraMappingYaml.getComputeProviderType())
-        .withEnvId(envId)
-        .withServiceId(serviceId)
-        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
-        .withDeploymentType(infraMappingYaml.getDeploymentType())
-        .withName(infraMappingYaml.getName())
-        .withAppId(appId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
 
-    builder.withRegion(infraMappingYaml.getRegion())
-        .withVpcId(infraMappingYaml.getVpcId())
-        .withSubnetIds(infraMappingYaml.getSubnetIds())
-        .withSecurityGroupIds(infraMappingYaml.getSecurityGroupIds())
-        .withRole(infraMappingYaml.getRole())
-        .build();
+    bean.setRegion(infraMappingYaml.getRegion());
+    bean.setVpcId(infraMappingYaml.getVpcId());
+    bean.setSubnetIds(infraMappingYaml.getSubnetIds());
+    bean.setSecurityGroupIds(infraMappingYaml.getSecurityGroupIds());
+    bean.setRole(infraMappingYaml.getRole());
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    AwsLambdaInfraStructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
+    Yaml infraMappingYaml = changeContext.getYaml();
     return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
-        || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
-        || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getRegion())
-        || isEmpty(infraMappingYaml.getRole()) || isEmpty(infraMappingYaml.getSecurityGroupIds())
-        || isEmpty(infraMappingYaml.getSubnetIds()) || isEmpty(infraMappingYaml.getVpcId()));
-  }
-
-  @Override
-  public AwsLambdaInfraStructureMapping createFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
+        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
+        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
+        || isEmpty(infraMappingYaml.getRegion()) || isEmpty(infraMappingYaml.getRole())
+        || isEmpty(infraMappingYaml.getSecurityGroupIds()) || isEmpty(infraMappingYaml.getSubnetIds())
+        || isEmpty(infraMappingYaml.getVpcId()));
   }
 
   @Override
   public AwsLambdaInfraStructureMapping get(String accountId, String yamlFilePath) {
-    return (AwsLambdaInfraStructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
+    return (AwsLambdaInfraStructureMapping) yamlHelper.getInfraMapping(accountId, yamlFilePath);
   }
 
   @Override
   public Class getYamlClass() {
-    return AwsLambdaInfraStructureMapping.Yaml.class;
+    return Yaml.class;
   }
 }
