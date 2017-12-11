@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -133,6 +134,7 @@ public class Log extends Base {
   }
 
   @Override
+  @JsonIgnore
   public Map<String, Object> getShardKeys() {
     Map<String, Object> shardKeys = super.getShardKeys();
     shardKeys.put("activityId", activityId);
