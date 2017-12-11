@@ -127,7 +127,6 @@ public class PruneObjectJobMockTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   public void retryIfServiceThrew() throws Exception {
     when(wingsPersistence.get(Application.class, objectId)).thenReturn(null);
 
