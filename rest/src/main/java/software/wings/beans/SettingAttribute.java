@@ -31,7 +31,6 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -206,12 +205,11 @@ public class SettingAttribute extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
+  @lombok.Builder
   public static class Yaml extends BaseYaml {
     private String name;
     private SettingValue.Yaml value;
 
-    @lombok.Builder
     public Yaml(String name, SettingValue.Yaml value) {
       this.name = name;
       this.value = value;

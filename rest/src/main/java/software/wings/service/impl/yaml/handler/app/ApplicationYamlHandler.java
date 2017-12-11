@@ -10,7 +10,7 @@ import software.wings.beans.Application.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.AppService;
 
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Application> {
-  @Inject YamlHelper yamlHelper;
+  @Inject YamlSyncHelper yamlSyncHelper;
   @Inject AppService appService;
 
   @Override
@@ -32,7 +32,10 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
   @Override
   public Application.Yaml toYaml(Application application, String appId) {
-    return Application.Yaml.builder().type(APPLICATION.name()).description(application.getDescription()).build();
+    return Application.Yaml.Builder.anApplicationYaml()
+        .withType(APPLICATION.name())
+        .withDescription(application.getDescription())
+        .build();
   }
 
   @Override
@@ -42,11 +45,10 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
     String accountId = changeContext.getChange().getAccountId();
     Yaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
-    Application previous = get(accountId, yamlFilePath);
-
-    String appName = yamlHelper.getAppName(yamlFilePath);
+    String appName = yamlSyncHelper.getAppName(yamlFilePath);
     Application current =
         anApplication().withAccountId(accountId).withName(appName).withDescription(yaml.getDescription()).build();
+    Application previous = get(accountId, yamlFilePath);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -54,6 +56,18 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
     } else {
       return appService.save(current);
     }
+  }
+
+  @Override
+  public Application updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
+
+  @Override
+  public Application createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override
@@ -68,6 +82,6 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
   @Override
   public Application get(String accountId, String yamlFilePath) {
-    return yamlHelper.getApp(accountId, yamlFilePath);
+    return yamlSyncHelper.getApp(accountId, yamlFilePath);
   }
 }

@@ -5,7 +5,6 @@ import com.google.common.base.MoreObjects;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.stencils.DefaultValue;
 import software.wings.yaml.BaseYaml;
 
@@ -140,7 +139,6 @@ public class TailFilePatternEntry {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static class Yaml extends BaseYaml {
     private String filePath;
     // maps to pattern

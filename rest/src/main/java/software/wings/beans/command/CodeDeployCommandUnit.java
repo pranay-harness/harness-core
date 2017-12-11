@@ -10,7 +10,6 @@ import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -128,12 +127,21 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
   @JsonTypeName("CODE_DEPLOY")
   public static class Yaml extends AbstractCommandUnit.Yaml {
     public Yaml() {
-      super(CommandUnitType.CODE_DEPLOY.name());
+      super();
+      setCommandUnitType(CommandUnitType.CODE_DEPLOY.name());
     }
 
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.CODE_DEPLOY.name(), deploymentType);
+    public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new CodeDeployCommandUnit.Yaml();
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.service;
+package software.wings.service.impl.yaml.sync;
 
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
@@ -12,7 +12,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -30,7 +29,7 @@ import java.util.regex.Pattern;
 /**
  * @author rktummala on 10/17/17
  */
-public class YamlHelper {
+public class YamlSyncHelper {
   @Inject ServiceResourceService serviceResourceService;
   @Inject AppService appService;
   @Inject EnvironmentService environmentService;
@@ -156,13 +155,13 @@ public class YamlHelper {
     return infraMappingService.getInfraMappingByName(appId, envId, infraMappingName);
   }
 
-  private String extractParentEntityName(String regex, String yamlFilePath, String delimiter) {
+  private String extractParentEntityName(String regex, String applyOn, String delimiter) {
     Pattern pattern = Pattern.compile(regex);
-    Matcher matcher = pattern.matcher(yamlFilePath);
+    Matcher matcher = pattern.matcher(applyOn);
 
     // Lets use this example, i want to extract service name from the path
     // regex - Setup/Applications/*/Services/*/
-    // yamlFilePath - Setup/Applications/App1/Services/service1/Commands/command1
+    // applyOn - Setup/Applications/App1/Services/service1/Commands/command1
     if (matcher.find()) {
       // first extract the value that matches the pattern
       // extractedValue - Setup/Applications/App1/Services/service1/
@@ -179,13 +178,13 @@ public class YamlHelper {
     return null;
   }
 
-  public String extractEntityNameFromYamlPath(String regex, String yamlFilePath, String delimiter) {
+  public String extractEntityNameFromYamlPath(String regex, String applyOn, String delimiter) {
     Pattern pattern = Pattern.compile(regex);
-    Matcher matcher = pattern.matcher(yamlFilePath);
+    Matcher matcher = pattern.matcher(applyOn);
 
     // Lets use this example, i want to extract service name from the path
     // regex - Setup/Applications/.[^/]*/Services/.[^/]*/.[^/]*?.yaml
-    // yamlFilePath - Setup/Applications/App1/Services/service1/service1.yaml
+    // applyOn - Setup/Applications/App1/Services/service1/service1.yaml
     if (matcher.find()) {
       // first extract the value that matches the pattern
       // extractedValue = service1.yaml
@@ -197,15 +196,5 @@ public class YamlHelper {
       return stringBuilder.substring(stringBuilder.lastIndexOf(delimiter) + 1, stringBuilder.length() - 5);
     }
     return null;
-  }
-
-  /**
-   * This works for all yaml except App, Service and Environment. The yamls for those entities end with Index.yaml since
-   * those entities are folder entries. In other words, you could use this method to extract name from any leaf entity.
-   * @param yamlFilePath yaml file path
-   * @return
-   */
-  public String getNameFromYamlFilePath(String yamlFilePath) {
-    return extractEntityNameFromYamlPath(YamlConstants.YAML_FILE_NAME_PATTERN, yamlFilePath, PATH_DELIMITER);
   }
 }

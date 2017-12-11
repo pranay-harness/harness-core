@@ -2,9 +2,13 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static software.wings.utils.Util.isEmpty;
 
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryDockerArtifactStream;
+import software.wings.beans.artifact.ArtifactoryDockerArtifactStream.Builder;
 import software.wings.beans.artifact.ArtifactoryDockerArtifactStream.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.exception.HarnessException;
 
 import java.util.List;
 
@@ -12,39 +16,79 @@ import java.util.List;
  * @author rktummala on 10/09/17
  */
 public class ArtifactoryDockerArtifactStreamYamlHandler
-    extends ArtifactStreamYamlHandler<Yaml, ArtifactoryDockerArtifactStream> {
+    extends ArtifactStreamYamlHandler<ArtifactoryDockerArtifactStream.Yaml, ArtifactoryDockerArtifactStream> {
   @Override
-  public Yaml toYaml(ArtifactoryDockerArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-    yaml.setDockerImageName(bean.getGroupId());
-    yaml.setImageName(bean.getImageName());
-    yaml.setMetadataOnly(bean.isMetadataOnly());
-    yaml.setRepositoryName(bean.getJobname());
-    return yaml;
+  public ArtifactoryDockerArtifactStream.Yaml toYaml(ArtifactoryDockerArtifactStream artifactStream, String appId) {
+    return ArtifactoryDockerArtifactStream.Yaml.Builder.aYaml()
+        .withType(ArtifactStreamType.ARTIFACTORYDOCKER.name())
+        .withSettingName(getSettingName(artifactStream.getSettingId()))
+        .withAutoApproveForProduction(artifactStream.getAutoApproveForProduction())
+        .withDockerImageName(artifactStream.getGroupId())
+        .withImageName(artifactStream.getImageName())
+        .withMetadataOnly(artifactStream.isMetadataOnly())
+        .withRepositoryName(artifactStream.getJobname())
+        .withSourceName(artifactStream.getSourceName())
+        .build();
   }
 
-  protected void toBean(ArtifactoryDockerArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
-    super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
-    bean.setImageName(yaml.getImageName());
-    bean.setJobname(yaml.getRepositoryName());
+  @Override
+  public ArtifactoryDockerArtifactStream upsertFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
+  }
+
+  public ArtifactoryDockerArtifactStream updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    if (!validate(changeContext, changeSetContext)) {
+      return null;
+    }
+
+    ArtifactoryDockerArtifactStream previous =
+        getArtifactStream(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Builder builder = previous.deepClone();
+    setWithYamlValues(builder, changeContext.getYaml(), previous.getAppId());
+    return (ArtifactoryDockerArtifactStream) artifactStreamService.update(builder.build());
+  }
+
+  private void setWithYamlValues(
+      Builder builder, ArtifactoryDockerArtifactStream.Yaml artifactStreamYaml, String appId) {
+    builder.withSettingId(getSettingId(appId, artifactStreamYaml.getSettingName()))
+        .withAutoApproveForProduction(artifactStreamYaml.isAutoApproveForProduction())
+        .withImageName(artifactStreamYaml.getImageName())
+        .withMetadataOnly(artifactStreamYaml.isMetadataOnly())
+        .withJobname(artifactStreamYaml.getRepositoryName())
+        .withSourceName(artifactStreamYaml.getSourceName())
+        .build();
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml artifactStreamYaml = changeContext.getYaml();
+    ArtifactoryDockerArtifactStream.Yaml artifactStreamYaml = changeContext.getYaml();
     return !(isEmpty(artifactStreamYaml.getImageName()) || isEmpty(artifactStreamYaml.getRepositoryName())
-        || isEmpty(artifactStreamYaml.getArtifactServerName()));
+        || isEmpty(artifactStreamYaml.getSourceName()) || isEmpty(artifactStreamYaml.getSettingName()));
+  }
+
+  @Override
+  public ArtifactoryDockerArtifactStream createFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    if (!validate(changeContext, changeSetContext)) {
+      return null;
+    }
+
+    String appId =
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
+    Builder builder = Builder.anArtifactoryDockerArtifactStream().withServiceId(serviceId).withAppId(appId);
+    setWithYamlValues(builder, changeContext.getYaml(), appId);
+    return (ArtifactoryDockerArtifactStream) artifactStreamService.create(builder.build());
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
-  }
-
-  @Override
-  protected ArtifactoryDockerArtifactStream getNewArtifactStreamObject() {
-    return new ArtifactoryDockerArtifactStream();
+    return ArtifactoryDockerArtifactStream.Yaml.class;
   }
 }

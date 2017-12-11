@@ -8,11 +8,12 @@ import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationGroup.AddressYaml;
 import software.wings.beans.NotificationGroup.Yaml;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.Util;
 
@@ -25,13 +26,19 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/28/17
  */
 public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, NotificationGroup> {
-  @Inject YamlHelper yamlHelper;
+  @Inject YamlSyncHelper yamlSyncHelper;
   @Inject NotificationSetupService notificationSetupService;
 
-  private NotificationGroup toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  @Override
+  public NotificationGroup createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
+  }
+
+  private NotificationGroup setWithYamlValues(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, changeContext.getChange().getFilePath());
+    String appId = yamlSyncHelper.getAppId(accountId, changeContext.getChange().getFilePath());
 
     Map<NotificationChannelType, List<String>> addressByChannelTypeMap = Maps.newHashMap();
     if (yaml.getAddresses() != null) {
@@ -61,7 +68,11 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   @Override
   public NotificationGroup upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext);
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   private List<AddressYaml> toAddressYamlList(Map<NotificationChannelType, List<String>> addressesByChannelType) {
@@ -79,6 +90,12 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     return addressYamlList.stream().collect(Collectors.toMap(addressYaml
         -> Util.getEnumFromString(NotificationChannelType.class, addressYaml.getChannelType()),
         addressYaml -> addressYaml.getAddresses()));
+  }
+
+  @Override
+  public NotificationGroup updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext);
   }
 
   @Override

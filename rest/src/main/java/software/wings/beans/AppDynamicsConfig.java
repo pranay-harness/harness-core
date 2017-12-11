@@ -7,7 +7,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
@@ -31,7 +30,7 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
-
+  @NotEmpty
   @Encrypted
   private char[] password;
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
@@ -59,16 +58,16 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends VerificationProviderYaml {
     private String username;
     private String password;
     private String accountName;
     private String controllerUrl;
 
-    @Builder
-    public Yaml(String type, String username, String password, String accountName, String controllerUrl) {
-      super(type);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String username, String password, String accountName, String controllerUrl) {
+      super(type, name);
       this.username = username;
       this.password = password;
       this.accountName = accountName;

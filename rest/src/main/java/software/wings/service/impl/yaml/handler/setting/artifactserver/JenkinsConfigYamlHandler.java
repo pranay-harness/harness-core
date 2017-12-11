@@ -4,9 +4,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -16,31 +14,23 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
-    return new Yaml(jenkinsConfig.getType(), jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
-        getEncryptedValue(jenkinsConfig, "password", false));
+    return new Yaml(jenkinsConfig.getType(), settingAttribute.getName(), jenkinsConfig.getJenkinsUrl(),
+        jenkinsConfig.getUsername(), getEncryptedValue(jenkinsConfig, "password", false));
   }
 
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute setWithYamlValues(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
     JenkinsConfig config = JenkinsConfig.builder()
                                .accountId(accountId)
                                .jenkinsUrl(yaml.getUrl())
-                               .password(decryptedPassword)
+                               .password(yaml.getPassword().toCharArray())
                                .encryptedPassword(yaml.getPassword())
                                .username(yaml.getUsername())
                                .build();
-    return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
+    return buildSettingAttribute(accountId, yaml.getName(), uuid, config);
   }
 
   @Override

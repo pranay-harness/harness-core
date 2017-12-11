@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -54,16 +52,16 @@ public class ElkConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends VerificationProviderYaml {
     private String elkUrl;
     private String username;
     private String password;
     private String connectorType;
 
-    @Builder
-    public Yaml(String type, String elkUrl, String username, String password, String connectorType) {
-      super(type);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String elkUrl, String username, String password, String connectorType) {
+      super(type, name);
       this.elkUrl = elkUrl;
       this.username = username;
       this.password = password;

@@ -2,7 +2,6 @@ package software.wings.yaml.setting;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.settings.SettingValue;
 
 /**
@@ -10,9 +9,10 @@ import software.wings.settings.SettingValue;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
 public abstract class LoadBalancerProviderYaml extends SettingValue.Yaml {
-  public LoadBalancerProviderYaml(String type) {
-    super(type);
+  public LoadBalancerProviderYaml() {}
+
+  public LoadBalancerProviderYaml(String type, String name) {
+    super(type, name);
   }
 }

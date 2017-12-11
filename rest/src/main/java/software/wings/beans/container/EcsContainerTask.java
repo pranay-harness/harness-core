@@ -17,7 +17,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentType;
@@ -252,12 +251,8 @@ public class EcsContainerTask extends ContainerTask {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
+  @Builder
   public static class Yaml extends ContainerTask.Yaml {
-    @Builder
-    public Yaml(String deploymentType, String advancedType, String advancedConfig,
-        ContainerDefinition.Yaml containerDefinition) {
-      super(deploymentType, advancedType, advancedConfig, containerDefinition);
-    }
+    public Yaml() {}
   }
 }

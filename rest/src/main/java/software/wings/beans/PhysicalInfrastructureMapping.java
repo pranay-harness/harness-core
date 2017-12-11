@@ -9,7 +9,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.stencils.EnumData;
@@ -45,7 +44,6 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    */
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends InfrastructureMapping.Yaml {
     // maps to hostConnectionAttrs
     // This would either be a username/password / ssh key id
@@ -53,15 +51,182 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     private List<String> hostNames;
     private String loadBalancer;
 
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String name, String connection,
-        List<String> hostNames, String loadBalancer) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
-      this.connection = connection;
-      this.hostNames = hostNames;
-      this.loadBalancer = loadBalancer;
+    /**
+     * The type Builder.
+     */
+    public static final class Builder {
+      private String computeProviderType;
+      // maps to hostConnectionAttrs
+      // This would either be a username/password / ssh key id
+      private String connection;
+      private String serviceName;
+      private List<String> hostNames;
+      private String infraMappingType;
+      private String type;
+      private String loadBalancer;
+      private String deploymentType;
+      private String computeProviderName;
+      private String name;
+
+      private Builder() {}
+
+      /**
+       * A yaml builder.
+       *
+       * @return the builder
+       */
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      /**
+       * With compute provider type builder.
+       *
+       * @param computeProviderType the compute provider type
+       * @return the builder
+       */
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      /**
+       * With connection builder.
+       *
+       * @param connection the connection
+       * @return the builder
+       */
+      public Builder withConnection(String connection) {
+        this.connection = connection;
+        return this;
+      }
+
+      /**
+       * With service name builder.
+       *
+       * @param serviceName the service name
+       * @return the builder
+       */
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      /**
+       * With host names builder.
+       *
+       * @param hostNames the host names
+       * @return the builder
+       */
+      public Builder withHostNames(List<String> hostNames) {
+        this.hostNames = hostNames;
+        return this;
+      }
+
+      /**
+       * With infra mapping type builder.
+       *
+       * @param infraMappingType the infra mapping type
+       * @return the builder
+       */
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      /**
+       * With type builder.
+       *
+       * @param type the type
+       * @return the builder
+       */
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      /**
+       * With load balancer builder.
+       *
+       * @param loadBalancer the load balancer
+       * @return the builder
+       */
+      public Builder withLoadBalancer(String loadBalancer) {
+        this.loadBalancer = loadBalancer;
+        return this;
+      }
+
+      /**
+       * With deployment type builder.
+       *
+       * @param deploymentType the deployment type
+       * @return the builder
+       */
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      /**
+       * With compute provider name builder.
+       *
+       * @param computeProviderName the compute provider name
+       * @return the builder
+       */
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      /**
+       * With name builder.
+       *
+       * @param name the name
+       * @return the builder
+       */
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      /**
+       * But builder.
+       *
+       * @return the builder
+       */
+      public Builder but() {
+        return aYaml()
+            .withComputeProviderType(computeProviderType)
+            .withConnection(connection)
+            .withServiceName(serviceName)
+            .withHostNames(hostNames)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withLoadBalancer(loadBalancer)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withName(name);
+      }
+
+      /**
+       * Build yaml.
+       *
+       * @return the yaml
+       */
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setConnection(connection);
+        yaml.setServiceName(serviceName);
+        yaml.setHostNames(hostNames);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setLoadBalancer(loadBalancer);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setName(name);
+        return yaml;
+      }
     }
   }
 

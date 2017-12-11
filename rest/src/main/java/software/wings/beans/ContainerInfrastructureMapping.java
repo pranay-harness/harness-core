@@ -4,7 +4,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -20,6 +19,12 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
    */
   public ContainerInfrastructureMapping(String infraMappingType) {
     super(infraMappingType);
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static abstract class Yaml extends InfrastructureMapping.Yaml {
+    private String cluster;
   }
 
   /**
@@ -46,19 +51,5 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
     return null;
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
-  public static abstract class Yaml extends InfrastructureMapping.Yaml {
-    private String cluster;
-
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
-      this.cluster = cluster;
-    }
   }
 }

@@ -23,12 +23,21 @@ public class AwsLambdaCommandUnit extends AbstractCommandUnit {
   @JsonTypeName("AWS_LAMBDA")
   public static class Yaml extends AbstractCommandUnit.Yaml {
     public Yaml() {
-      super(CommandUnitType.AWS_LAMBDA.name());
+      super();
+      setCommandUnitType(CommandUnitType.AWS_LAMBDA.name());
     }
 
-    @lombok.Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.AWS_LAMBDA.name(), deploymentType);
+    public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new AwsLambdaCommandUnit.Yaml();
+      }
     }
   }
 }

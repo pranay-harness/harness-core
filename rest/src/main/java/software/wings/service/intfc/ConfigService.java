@@ -88,14 +88,6 @@ public interface ConfigService {
   void delete(@NotEmpty String appId, @NotEmpty String configId);
 
   /**
-   * Delete based on name.
-   * @param appId
-   * @param serviceId
-   * @param configFileName
-   */
-  void delete(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String configFileName);
-
-  /**
    * Gets the config files for entity.
    *
    * @param appId      the app id

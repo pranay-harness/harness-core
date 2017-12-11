@@ -1,14 +1,12 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
-import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
@@ -35,7 +33,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
   @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
   public AmazonS3ArtifactStream() {
-    super(AMAZON_S3.name());
+    super(ArtifactStreamType.AMAZON_S3.name());
   }
 
   @SchemaIgnore
@@ -141,7 +139,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
    * Clone and return builder.
    * @return the builder
    */
-  public AmazonS3ArtifactStream.Builder toBuilder() {
+  public AmazonS3ArtifactStream.Builder deepClone() {
     return AmazonS3ArtifactStream.Builder.anAmazonS3ArtifactStream()
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
@@ -387,17 +385,91 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends ArtifactStream.Yaml {
+    private String awsCloudProviderName;
     private String bucketName;
     private List<String> artifactPaths;
 
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String bucketName,
-        List<String> artifactPaths) {
-      super(AMAZON_S3.name(), harnessApiVersion, artifactServerName, metadataOnly);
-      this.bucketName = bucketName;
-      this.artifactPaths = artifactPaths;
+    public static final class Builder {
+      private String sourceName;
+      private String awsCloudProviderName;
+      private String settingName;
+      private String bucketName;
+      private boolean autoApproveForProduction = false;
+      private List<String> artifactPaths;
+      private boolean metadataOnly = false;
+      private String type;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withSourceName(String sourceName) {
+        this.sourceName = sourceName;
+        return this;
+      }
+
+      public Builder withAwsCloudProviderName(String awsCloudProviderName) {
+        this.awsCloudProviderName = awsCloudProviderName;
+        return this;
+      }
+
+      public Builder withSettingName(String settingName) {
+        this.settingName = settingName;
+        return this;
+      }
+
+      public Builder withBucketName(String bucketName) {
+        this.bucketName = bucketName;
+        return this;
+      }
+
+      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+        this.autoApproveForProduction = autoApproveForProduction;
+        return this;
+      }
+
+      public Builder withArtifactPaths(List<String> artifactPaths) {
+        this.artifactPaths = artifactPaths;
+        return this;
+      }
+
+      public Builder withMetadataOnly(boolean metadataOnly) {
+        this.metadataOnly = metadataOnly;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withSourceName(sourceName)
+            .withAwsCloudProviderName(awsCloudProviderName)
+            .withSettingName(settingName)
+            .withBucketName(bucketName)
+            .withAutoApproveForProduction(autoApproveForProduction)
+            .withArtifactPaths(artifactPaths)
+            .withMetadataOnly(metadataOnly)
+            .withType(type);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setSourceName(sourceName);
+        yaml.setAwsCloudProviderName(awsCloudProviderName);
+        yaml.setSettingName(settingName);
+        yaml.setBucketName(bucketName);
+        yaml.setAutoApproveForProduction(autoApproveForProduction);
+        yaml.setArtifactPaths(artifactPaths);
+        yaml.setMetadataOnly(metadataOnly);
+        yaml.setType(type);
+        return yaml;
+      }
     }
   }
 }

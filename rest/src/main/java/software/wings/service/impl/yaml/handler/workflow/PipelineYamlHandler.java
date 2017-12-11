@@ -10,13 +10,14 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.Builder;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.PipelineService;
 import software.wings.utils.Validator;
 
@@ -27,17 +28,24 @@ import java.util.stream.Collectors;
  * @author rktummala on 11/2/17
  */
 public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
-  @Inject private YamlHelper yamlHelper;
+  @Inject private YamlSyncHelper yamlSyncHelper;
   @Inject private PipelineService pipelineService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
-  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Pipeline.Builder pipeline)
+  @Override
+  public Pipeline createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
+    Pipeline pipeline = setWithYamlValues(changeContext, changeSetContext, Builder.aPipeline(), true);
+    return pipelineService.createPipeline(pipeline);
+  }
+
+  private Pipeline setWithYamlValues(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext,
+      Pipeline.Builder pipeline, boolean isCreate) throws HarnessException {
     try {
       Yaml yaml = context.getYaml();
       Change change = context.getChange();
 
-      String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
+      String appId = yamlSyncHelper.getAppId(change.getAccountId(), change.getFilePath());
       Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
 
       List<PipelineStage> pipelineStages = Lists.newArrayList();
@@ -51,8 +59,8 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
                              .map(stageYaml -> {
                                try {
                                  ChangeContext.Builder clonedContext = cloneFileChangeContext(context, stageYaml);
-                                 return (PipelineStage) pipelineStageYamlHandler.upsertFromYaml(
-                                     clonedContext.build(), changeSetContext);
+                                 return (PipelineStage) createOrUpdateFromYaml(
+                                     isCreate, pipelineStageYamlHandler, clonedContext.build(), changeSetContext);
                                } catch (HarnessException e) {
                                  throw new WingsException(e);
                                }
@@ -60,10 +68,9 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
                              .collect(Collectors.toList());
       }
 
-      String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
       pipeline.withAppId(appId)
           .withDescription(yaml.getDescription())
-          .withName(name)
+          .withName(yaml.getName())
           .withPipelineStages(pipelineStages)
           .build();
       return pipeline.build();
@@ -84,6 +91,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
             .collect(Collectors.toList());
 
     return Yaml.Builder.anYaml()
+        .withName(bean.getName())
         .withDescription(bean.getDescription())
         .withPipelineStages(pipelineStageYamlList)
         .build();
@@ -92,14 +100,20 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Override
   public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    Pipeline previous = getPrevious(changeContext, changeSetContext);
-    Pipeline current = toBean(changeContext, changeSetContext, Builder.aPipeline());
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return pipelineService.updatePipeline(current);
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
     } else {
-      return pipelineService.createPipeline(current);
+      return updateFromYaml(changeContext, changeSetContext);
     }
+  }
+
+  @Override
+  public Pipeline updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    Pipeline previous =
+        yamlSyncHelper.getPipeline(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Pipeline pipeline = setWithYamlValues(changeContext, changeSetContext, previous.toBuilder(), false);
+    return pipelineService.updatePipeline(pipeline);
   }
 
   @Override
@@ -114,7 +128,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
   @Override
   public Pipeline get(String accountId, String yamlFilePath) {
-    return yamlHelper.getPipeline(accountId, yamlFilePath);
+    return yamlSyncHelper.getPipeline(accountId, yamlFilePath);
   }
 
   @Override

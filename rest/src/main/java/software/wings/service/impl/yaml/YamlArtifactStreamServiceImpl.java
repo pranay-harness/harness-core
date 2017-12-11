@@ -16,7 +16,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.service.intfc.yaml.sync.YamlSyncService;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 
@@ -27,7 +27,7 @@ import software.wings.yaml.YamlPayload;
 public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private YamlGitService yamlGitSyncService;
-  @Inject private YamlService yamlSyncService;
+  @Inject private YamlSyncService yamlSyncService;
   @Inject private AppService appService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
@@ -37,7 +37,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
 
     if (artifactStream != null) {
       return YamlHelper.getYamlRestResponse(yamlGitSyncService, artifactStreamId, appService.getAccountIdByAppId(appId),
-          getArtifactStreamYamlObject(artifactStream), artifactStream.getName() + YAML_EXTENSION);
+          getArtifactStreamYamlObject(artifactStream), artifactStream.getSourceName() + YAML_EXTENSION);
     }
 
     RestResponse rr = new RestResponse<>();

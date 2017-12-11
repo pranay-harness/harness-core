@@ -7,7 +7,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
@@ -36,7 +35,11 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
   @DefaultValue("https://api.newrelic.com")
   private String newRelicUrl = "https://api.newrelic.com";
 
-  @Attributes(title = "API key", required = true) @Encrypted @JsonView(JsonViews.Internal.class) private char[] apiKey;
+  @Attributes(title = "API key", required = true)
+  @NotEmpty
+  @Encrypted
+  @JsonView(JsonViews.Internal.class)
+  private char[] apiKey;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -59,13 +62,13 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends VerificationProviderYaml {
     private String apiKey;
 
-    @Builder
-    public Yaml(String type, String apiKey) {
-      super(type);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String apiKey) {
+      super(type, name);
       this.apiKey = apiKey;
     }
   }

@@ -5,10 +5,8 @@ import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 import software.wings.utils.Util;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -18,33 +16,25 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     ElasticLoadBalancerConfig config = (ElasticLoadBalancerConfig) settingAttribute.getValue();
-    return new Yaml(config.getType(), config.getRegion().getName(), config.getLoadBalancerName(), config.getAccessKey(),
-        getEncryptedValue(config, "secretKey", false));
+    return new Yaml(config.getType(), settingAttribute.getName(), config.getRegion().getName(),
+        config.getLoadBalancerName(), config.getAccessKey(), getEncryptedValue(config, "secretKey", false));
   }
 
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute setWithYamlValues(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-
-    char[] decryptedSecretKey;
-    try {
-      decryptedSecretKey = secretManager.decryptYamlRef(yaml.getSecretKey());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the secret key ref:" + yaml.getSecretKey());
-    }
-
     Regions region = Util.getEnumFromString(Regions.class, yaml.getRegion());
     ElasticLoadBalancerConfig config = ElasticLoadBalancerConfig.builder()
                                            .accountId(accountId)
                                            .accessKey(yaml.getAccessKey())
                                            .loadBalancerName(yaml.getLoadBalancerName())
                                            .region(region)
-                                           .secretKey(decryptedSecretKey)
+                                           .secretKey(yaml.getSecretKey().toCharArray())
                                            .encryptedSecretKey(yaml.getSecretKey())
                                            .build();
-    return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
+    return buildSettingAttribute(accountId, yaml.getName(), uuid, config);
   }
 
   @Override

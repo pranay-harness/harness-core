@@ -15,7 +15,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
@@ -30,7 +30,7 @@ import javax.inject.Inject;
  */
 public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlHandler<Yaml, LambdaSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-  @Inject private YamlHelper yamlHelper;
+  @Inject private YamlSyncHelper yamlSyncHelper;
   @Inject private ServiceResourceService serviceResourceService;
 
   @Override
@@ -65,7 +65,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
       throws HarnessException {
     LambdaSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    LambdaSpecification lambdaSpecification = toBean(changeContext, previous, changeSetContext);
+    LambdaSpecification lambdaSpecification = setWithYamlValues(changeContext, previous, changeSetContext);
     if (previous != null) {
       return serviceResourceService.updateLambdaSpecification(lambdaSpecification);
     } else {
@@ -73,7 +73,23 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     }
   }
 
-  private LambdaSpecification toBean(ChangeContext<Yaml> changeContext, LambdaSpecification previous,
+  @Override
+  public LambdaSpecification updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    LambdaSpecification previous =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    LambdaSpecification lambdaSpecification = setWithYamlValues(changeContext, previous, changeSetContext);
+    return serviceResourceService.updateLambdaSpecification(lambdaSpecification);
+  }
+
+  @Override
+  public LambdaSpecification createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    LambdaSpecification lambdaSpecification = setWithYamlValues(changeContext, null, changeSetContext);
+    return serviceResourceService.createLambdaSpecification(lambdaSpecification);
+  }
+
+  private LambdaSpecification setWithYamlValues(ChangeContext<Yaml> changeContext, LambdaSpecification previous,
       List<ChangeContext> changeSetContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     boolean isCreate = previous == null;
@@ -85,8 +101,8 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
       BaseYamlHandler defaultSpecYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION, ObjectType.DEFAULT_SPECIFICATION);
       ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, defaultSpecYaml);
-      defaultSpec =
-          (DefaultSpecification) defaultSpecYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+      defaultSpec = (DefaultSpecification) createOrUpdateFromYaml(
+          isCreate, defaultSpecYamlHandler, clonedContext.build(), changeSetContext);
     }
 
     // function specification
@@ -100,8 +116,8 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
                                try {
                                  ChangeContext.Builder clonedContext =
                                      cloneFileChangeContext(changeContext, functionSpec);
-                                 return (FunctionSpecification) functionSpecYamlHandler.upsertFromYaml(
-                                     clonedContext.build(), changeSetContext);
+                                 return (FunctionSpecification) createOrUpdateFromYaml(
+                                     isCreate, functionSpecYamlHandler, clonedContext.build(), changeSetContext);
                                } catch (HarnessException e) {
                                  throw new WingsException(e);
                                }
@@ -110,10 +126,10 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     }
 
     String appId =
-        yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Validator.notNullCheck("Could not lookup app for the yaml file: " + changeContext.getChange().getFilePath(), appId);
 
-    String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());
+    String serviceId = yamlSyncHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Validator.notNullCheck(
         "Could not lookup service for the yaml file: " + changeContext.getChange().getFilePath(), serviceId);
 
@@ -142,10 +158,10 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
 
   @Override
   public LambdaSpecification get(String accountId, String yamlFilePath) {
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId);
 
-    String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
+    String serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
     Validator.notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId);
 
     return serviceResourceService.getLambdaSpecification(appId, serviceId);

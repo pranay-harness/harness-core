@@ -7,8 +7,8 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.AwsInfrastructureMapping.Builder;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
@@ -51,6 +51,130 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
     return Util.normalize(String.format("%s (AWS_Lambda) %s",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends InfrastructureMapping.Yaml {
+    private String region;
+    private String vpcId;
+    private List<String> subnetIds = new ArrayList<>();
+    private List<String> securityGroupIds = new ArrayList<>();
+    private String role;
+
+    public static final class Builder {
+      private String region;
+      private String computeProviderType;
+      private String vpcId;
+      private String serviceName;
+      private List<String> subnetIds = new ArrayList<>();
+      private String infraMappingType;
+      private String type;
+      private List<String> securityGroupIds = new ArrayList<>();
+      private String deploymentType;
+      private String computeProviderName;
+      private String role;
+      private String name;
+
+      private Builder() {}
+
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      public Builder withRegion(String region) {
+        this.region = region;
+        return this;
+      }
+
+      public Builder withComputeProviderType(String computeProviderType) {
+        this.computeProviderType = computeProviderType;
+        return this;
+      }
+
+      public Builder withVpcId(String vpcId) {
+        this.vpcId = vpcId;
+        return this;
+      }
+
+      public Builder withServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+      }
+
+      public Builder withSubnetIds(List<String> subnetIds) {
+        this.subnetIds = subnetIds;
+        return this;
+      }
+
+      public Builder withInfraMappingType(String infraMappingType) {
+        this.infraMappingType = infraMappingType;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withSecurityGroupIds(List<String> securityGroupIds) {
+        this.securityGroupIds = securityGroupIds;
+        return this;
+      }
+
+      public Builder withDeploymentType(String deploymentType) {
+        this.deploymentType = deploymentType;
+        return this;
+      }
+
+      public Builder withComputeProviderName(String computeProviderName) {
+        this.computeProviderName = computeProviderName;
+        return this;
+      }
+
+      public Builder withRole(String role) {
+        this.role = role;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder but() {
+        return aYaml()
+            .withRegion(region)
+            .withComputeProviderType(computeProviderType)
+            .withVpcId(vpcId)
+            .withServiceName(serviceName)
+            .withSubnetIds(subnetIds)
+            .withInfraMappingType(infraMappingType)
+            .withType(type)
+            .withSecurityGroupIds(securityGroupIds)
+            .withDeploymentType(deploymentType)
+            .withComputeProviderName(computeProviderName)
+            .withRole(role)
+            .withName(name);
+      }
+
+      public Yaml build() {
+        Yaml yaml = new Yaml();
+        yaml.setRegion(region);
+        yaml.setComputeProviderType(computeProviderType);
+        yaml.setVpcId(vpcId);
+        yaml.setServiceName(serviceName);
+        yaml.setSubnetIds(subnetIds);
+        yaml.setInfraMappingType(infraMappingType);
+        yaml.setType(type);
+        yaml.setSecurityGroupIds(securityGroupIds);
+        yaml.setDeploymentType(deploymentType);
+        yaml.setComputeProviderName(computeProviderName);
+        yaml.setRole(role);
+        yaml.setName(name);
+        return yaml;
+      }
+    }
   }
 
   /**
@@ -358,30 +482,6 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       awsLambdaInfraStructureMapping.setAutoPopulate(autoPopulate);
       awsLambdaInfraStructureMapping.setAccountId(accountId);
       return awsLambdaInfraStructureMapping;
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
-  public static final class Yaml extends InfrastructureMapping.Yaml {
-    private String region;
-    private String vpcId;
-    private List<String> subnetIds = new ArrayList<>();
-    private List<String> securityGroupIds = new ArrayList<>();
-    private String role;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String region, String vpcId,
-        List<String> subnetIds, List<String> securityGroupIds, String role) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
-      this.region = region;
-      this.vpcId = vpcId;
-      this.subnetIds = subnetIds;
-      this.securityGroupIds = securityGroupIds;
-      this.role = role;
     }
   }
 }

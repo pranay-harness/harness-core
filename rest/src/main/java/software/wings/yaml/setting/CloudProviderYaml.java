@@ -2,7 +2,6 @@ package software.wings.yaml.setting;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.settings.SettingValue;
 
 /**
@@ -10,9 +9,10 @@ import software.wings.settings.SettingValue;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
 public abstract class CloudProviderYaml extends SettingValue.Yaml {
-  public CloudProviderYaml(String type) {
-    super(type);
+  public CloudProviderYaml() {}
+
+  public CloudProviderYaml(String type, String name) {
+    super(type, name);
   }
 }

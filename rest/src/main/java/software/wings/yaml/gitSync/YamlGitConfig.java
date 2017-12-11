@@ -37,7 +37,7 @@ public class YamlGitConfig extends Base implements Encryptable {
   @NotEmpty private String branchName;
   @NotEmpty private String username;
 
-  @Encrypted @JsonView(JsonViews.Internal.class) private char[] password;
+  @NotNull @Encrypted @JsonView(JsonViews.Internal.class) private char[] password;
 
   @SchemaIgnore @JsonIgnore private String encryptedPassword;
 

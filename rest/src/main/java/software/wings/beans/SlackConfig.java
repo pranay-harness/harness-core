@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.CollaborationProviderYaml;
@@ -92,13 +91,13 @@ public class SlackConfig extends SettingValue {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends CollaborationProviderYaml {
     private String outgoingWebhookUrl;
 
-    @lombok.Builder
-    public Yaml(String type, String outgoingWebhookUrl) {
-      super(type);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String outgoingWebhookUrl) {
+      super(type, name);
       this.outgoingWebhookUrl = outgoingWebhookUrl;
     }
   }

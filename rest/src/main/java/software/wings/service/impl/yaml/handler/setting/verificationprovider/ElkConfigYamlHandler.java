@@ -1,14 +1,12 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.ElkConfig.Yaml;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.utils.Util;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -19,12 +17,12 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     ElkConfig config = (ElkConfig) settingAttribute.getValue();
     String connectorType = Util.getStringFromEnum(config.getElkConnector());
-    return new Yaml(config.getType(), config.getElkUrl(), config.getUsername(),
+    return new Yaml(config.getType(), settingAttribute.getName(), config.getElkUrl(), config.getUsername(),
         getEncryptedValue(config, "password", false), connectorType);
   }
 
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute setWithYamlValues(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
@@ -32,20 +30,12 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
     config.setAccountId(accountId);
     config.setElkUrl(yaml.getElkUrl());
     config.setEncryptedPassword(yaml.getPassword());
-
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
-    config.setPassword(decryptedPassword);
+    config.setPassword(yaml.getPassword().toCharArray());
     config.setUsername(yaml.getUsername());
     ElkConnector elkConnector = Util.getEnumFromString(ElkConnector.class, yaml.getConnectorType());
     config.setElkConnector(elkConnector);
 
-    return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
+    return buildSettingAttribute(accountId, yaml.getName(), uuid, config);
   }
 
   @Override

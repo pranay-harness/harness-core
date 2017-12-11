@@ -68,6 +68,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -155,7 +156,6 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Misc;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -464,15 +464,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-        BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
-        WorkflowPhase workflowPhase;
-        if (Util.isEmpty(basicOrchestrationWorkflow.getWorkflowPhases())) {
-          workflowPhase = aWorkflowPhase()
-                              .withInfraMappingId(workflow.getInfraMappingId())
-                              .withServiceId(workflow.getServiceId())
-                              .build();
-          attachWorkflowPhase(workflow, workflowPhase);
-        }
+        WorkflowPhase workflowPhase = aWorkflowPhase()
+                                          .withInfraMappingId(workflow.getInfraMappingId())
+                                          .withServiceId(workflow.getServiceId())
+                                          .build();
+        attachWorkflowPhase(workflow, workflowPhase);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         MultiServiceOrchestrationWorkflow canaryOrchestrationWorkflow =
             (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
@@ -1359,29 +1355,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
       setCloudProvider(workflow, workflowPhase);
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      // In case of workflow yaml, the phases and phase steps are provided in the payload, we don't need to add default
-      // phases / phase steps.
-      if (Util.isEmpty(workflowPhase.getPhaseSteps())) {
-        boolean serviceRepeat = false;
-        if (canaryOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
-          for (String phaseId : canaryOrchestrationWorkflow.getWorkflowPhaseIds()) {
-            WorkflowPhase existingPhase = canaryOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
-            if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
-                && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-                && (existingPhase.getInfraMappingId() != null
-                       && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
-              serviceRepeat = true;
-              break;
-            }
+      boolean serviceRepeat = false;
+      if (canaryOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
+        for (String phaseId : canaryOrchestrationWorkflow.getWorkflowPhaseIds()) {
+          WorkflowPhase existingPhase = canaryOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+          if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+              && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
+              && (existingPhase.getInfraMappingId() != null
+                     && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
+            serviceRepeat = true;
+            break;
           }
         }
-        generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
-
-        WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
-        canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       }
+      generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
       canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
+      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
+      canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       setCloudProvider(workflow, workflowPhase);
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
@@ -1390,36 +1381,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       setCloudProvider(workflow, workflowPhase);
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-
-      // In case of workflow yaml, the phases and phase steps are provided in the payload, we don't need to add default
-      // phases / phase steps.
-      if (Util.isEmpty(workflowPhase.getPhaseSteps())) {
-        boolean serviceRepeat = false;
-        if (multiServiceOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
-          for (String phaseId : multiServiceOrchestrationWorkflow.getWorkflowPhaseIds()) {
-            WorkflowPhase existingPhase = multiServiceOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
-            if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
-                && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-                && (existingPhase.getInfraMappingId() != null
-                       && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
-              serviceRepeat = true;
-              break;
-            }
+      boolean serviceRepeat = false;
+      if (multiServiceOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
+        for (String phaseId : multiServiceOrchestrationWorkflow.getWorkflowPhaseIds()) {
+          WorkflowPhase existingPhase = multiServiceOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+          if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+              && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
+              && (existingPhase.getInfraMappingId() != null
+                     && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
+            serviceRepeat = true;
+            break;
           }
         }
-        generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
-
-        WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
-        multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
-            workflowPhase.getUuid(), rollbackWorkflowPhase);
       }
+      generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
       multiServiceOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
+      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
+      multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
+          workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
       BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseStepsForArtifactCollection(workflowPhase);

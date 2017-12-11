@@ -6,7 +6,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -24,7 +23,7 @@ import software.wings.yaml.setting.CloudProviderYaml;
 public class AwsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
 
-  @Attributes(title = "Secret Key", required = true) @Encrypted private char[] secretKey;
+  @Attributes(title = "Secret Key", required = true) @NotEmpty @Encrypted private char[] secretKey;
 
   @SchemaIgnore @NotEmpty private String accountId; // internal
 
@@ -46,14 +45,14 @@ public class AwsConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends CloudProviderYaml {
     private String accessKey;
     private String secretKey;
 
-    @Builder
-    public Yaml(String type, String accessKey, String secretKey) {
-      super(type);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String accessKey, String secretKey) {
+      super(type, name);
       this.accessKey = accessKey;
       this.secretKey = secretKey;
     }

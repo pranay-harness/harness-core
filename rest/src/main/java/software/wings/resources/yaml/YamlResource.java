@@ -7,7 +7,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
-import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
@@ -26,7 +25,7 @@ import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.service.intfc.yaml.sync.YamlSyncService;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.DirectoryNode;
@@ -56,7 +55,7 @@ public class YamlResource {
   private YamlResourceService yamlResourceService;
   private AppYamlResourceService appYamlResourceService;
   private YamlArtifactStreamService yamlArtifactStreamService;
-  private YamlService yamlService;
+  private YamlSyncService yamlSyncService;
   private YamlDirectoryService yamlDirectoryService;
   private YamlGitService yamlGitSyncService;
   private AuthService authService;
@@ -68,18 +67,18 @@ public class YamlResource {
    * @param appYamlResourceService     the app yaml resource service
    * @param yamlDirectoryService       the yaml directory service
    * @param yamlArtifactStreamService  the yaml artifact stream service
-   * @param yamlService            the yaml service
+   * @param yamlSyncService            the yaml sync service
    * @param yamlGitSyncService
    */
   @Inject
   public YamlResource(YamlResourceService yamlResourceService, AppYamlResourceService appYamlResourceService,
       YamlDirectoryService yamlDirectoryService, YamlArtifactStreamService yamlArtifactStreamService,
-      YamlService yamlService, YamlGitService yamlGitSyncService, AuthService authService) {
+      YamlSyncService yamlSyncService, YamlGitService yamlGitSyncService, AuthService authService) {
     this.yamlResourceService = yamlResourceService;
     this.appYamlResourceService = appYamlResourceService;
     this.yamlDirectoryService = yamlDirectoryService;
     this.yamlArtifactStreamService = yamlArtifactStreamService;
-    this.yamlService = yamlService;
+    this.yamlSyncService = yamlSyncService;
     this.yamlGitSyncService = yamlGitSyncService;
     this.authService = authService;
   }
@@ -259,7 +258,7 @@ public class YamlResource {
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
       @PathParam("uuid") String uuid, @QueryParam("type") String type, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   /**
@@ -275,15 +274,6 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<YamlPayload> getEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return yamlResourceService.getEnvironment(appId, envId);
-  }
-
-  @GET
-  @Path("/configs/{configId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<YamlPayload> getConfigFile(
-      @QueryParam("appId") String appId, @PathParam("configId") String configId) {
-    return yamlResourceService.getConfigFileYaml(appId, configId);
   }
 
   /**
@@ -334,24 +324,6 @@ public class YamlResource {
   public RestResponse<Service> updateService(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
     return yamlResourceService.updateService(accountId, yamlPayload);
-  }
-
-  /**
-   * Update a config file that is sent as Yaml (in a JSON "wrapper")
-   * @param appId app id
-   * @param configId the config id
-   * @param yamlPayload the yaml version of configFile
-   * @param deleteEnabled
-   * @return
-   */
-  @PUT
-  @Path("/configs/{configId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<ConfigFile> updateConfigFile(@QueryParam("appId") String appId,
-      @PathParam("configId") String configId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlResourceService.updateConfigFile(appId, configId, yamlPayload, deleteEnabled);
   }
 
   /**
@@ -468,7 +440,7 @@ public class YamlResource {
   public RestResponse<Base> updateInfraMapping(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   @GET
@@ -487,7 +459,7 @@ public class YamlResource {
   public RestResponse<Base> updateContainerTask(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   @GET
@@ -506,7 +478,7 @@ public class YamlResource {
   public RestResponse<Base> updateLambdaSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   /**
@@ -520,7 +492,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Base> updateYaml(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlSyncService.update(yamlPayload, accountId);
   }
 
   /**
@@ -535,7 +507,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<BaseYaml> getYaml(
       @QueryParam("accountId") String accountId, @QueryParam("yamlPath") String yamlPath) {
-    return yamlService.getYaml(accountId, yamlPath);
+    return yamlSyncService.getYaml(accountId, yamlPath);
   }
 
   /**

@@ -1,14 +1,12 @@
 package software.wings.service.impl.yaml;
 
 import static software.wings.beans.FeatureName.GIT_SYNC;
-import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
-import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
@@ -49,7 +46,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -105,7 +101,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private ConfigService configService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId) {
@@ -158,10 +153,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           case "ArtifactStream":
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlArtifactStreamService.getArtifactStreamYamlString(appId, entityId);
-            break;
-          case "ConfigFile":
-            appId = ((ServiceLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getConfigFileYaml(appId, entityId).getResource().getYaml();
             break;
           case "Workflow":
             appId = ((AppLevelYamlNode) dn).getAppId();
@@ -430,29 +421,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         List<ArtifactStream> artifactStreamList =
             artifactStreamService.getArtifactStreamsForService(service.getAppId(), service.getUuid());
         artifactStreamList.stream().forEach(artifactStream -> {
-          String artifactYamlFileName = artifactStream.getName() + YAML_EXTENSION;
+          String artifactYamlFileName = artifactStream.getSourceName() + YAML_EXTENSION;
           artifactStreamsFolder.addChild(new ServiceLevelYamlNode(accountId, artifactStream.getUuid(),
               artifactStream.getAppId(), service.getUuid(), artifactYamlFileName, ArtifactStream.class,
               artifactStreamsPath.clone().add(artifactYamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
         });
 
         // ------------------- END ARTIFACT STREAMS SECTION -----------------------
-
-        // ------------------- CONFIG FILES SECTION -----------------------
-        DirectoryPath configFilesPath = servicePath.clone().add("service_config_files");
-        FolderNode configFilesFolder = new FolderNode(
-            accountId, CONFIG_FILES_FOLDER, ConfigFile.class, configFilesPath, service.getAppId(), yamlGitSyncService);
-        serviceFolder.addChild(configFilesFolder);
-
-        List<ConfigFile> configFiles =
-            configService.getConfigFilesForEntity(service.getAppId(), DEFAULT_TEMPLATE_ID, service.getUuid());
-        configFiles.stream().forEach(configFile
-            -> configFilesFolder.addChild(
-                new ServiceLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
-                    configFile.getEntityId(), configFile.getRelativeFilePath() + ".yaml", ConfigFile.class,
-                    configFilesPath.clone().add(configFile.getUuid()), yamlGitSyncService, Type.CONFIG_FILE)));
-
-        // ------------------- END CONFIG FILES SECTION -----------------------
       }
     }
 

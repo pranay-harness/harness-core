@@ -1,23 +1,21 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import software.wings.beans.command.PortCheckListeningCommandUnit;
 import software.wings.beans.command.PortCheckListeningCommandUnit.Yaml;
+import software.wings.beans.command.PortCheckListeningCommandUnit.Yaml.Builder;
+import software.wings.beans.command.PortCheckListeningCommandUnit;
 
 /**
  * @author rktummala on 11/13/17
  */
-public class PortCheckListeningCommandUnitYamlHandler
-    extends AbstractExecCommandUnitYamlHandler<Yaml, PortCheckListeningCommandUnit> {
+public class PortCheckListeningCommandUnitYamlHandler extends ExecCommandUnitYamlHandler {
   @Override
   public Class getYamlClass() {
     return Yaml.class;
   }
 
   @Override
-  public Yaml toYaml(PortCheckListeningCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-    return yaml;
+  protected Builder getYamlBuilder() {
+    return Builder.anYaml();
   }
 
   @Override

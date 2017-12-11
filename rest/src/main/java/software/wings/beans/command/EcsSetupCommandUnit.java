@@ -14,8 +14,6 @@ import com.amazonaws.services.ecs.model.KeyValuePair;
 import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -189,15 +187,18 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("ECS_SETUP")
   public static class Yaml extends ContainerSetupCommandUnit.Yaml {
-    public Yaml() {
-      super(CommandUnitType.ECS_SETUP.name());
-    }
+    public static final class Builder extends ContainerSetupCommandUnit.Yaml.Builder {
+      private Builder() {}
 
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.ECS_SETUP.name(), deploymentType);
+      public static Builder aYaml() {
+        return new Builder();
+      }
+
+      @Override
+      protected Yaml getCommandUnitYaml() {
+        return new Yaml();
+      }
     }
   }
 }

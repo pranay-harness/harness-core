@@ -7,22 +7,26 @@ import com.google.inject.Inject;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.YamlSyncHelper;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.command.CommandRefYaml;
+import software.wings.yaml.command.CommandRefYaml.Builder;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author rktummala on 11/13/17
  */
-public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<CommandRefYaml, Command> {
+public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<CommandRefYaml, Command, Builder> {
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private YamlHelper yamlHelper;
+  @Inject private YamlSyncHelper yamlSyncHelper;
   @Inject private CommandService commandService;
 
   @Override
@@ -31,19 +35,38 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
   }
 
   @Override
+  protected Builder getYamlBuilder() {
+    return Builder.aYaml();
+  }
+
+  @Override
   protected Command getCommandUnit() {
     return new Command();
   }
 
-  protected Command toBean(ChangeContext<CommandRefYaml> changeContext) throws HarnessException {
-    Command commandRef = super.toBean(changeContext);
+  @Override
+  public Command createFromYaml(ChangeContext<CommandRefYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    Command commandRef = super.createFromYaml(changeContext, changeSetContext);
+    return setWithYamlValues(commandRef, changeContext, changeSetContext);
+  }
+
+  @Override
+  public Command updateFromYaml(ChangeContext<CommandRefYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    Command commandRef = super.updateFromYaml(changeContext, changeSetContext);
+    return setWithYamlValues(commandRef, changeContext, changeSetContext);
+  }
+
+  private Command setWithYamlValues(Command commandRef, ChangeContext<CommandRefYaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
     CommandRefYaml yaml = changeContext.getYaml();
     commandRef.setReferenceId(yaml.getName());
     String filePath = changeContext.getChange().getFilePath();
 
-    String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
+    String appId = yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
     Validator.notNullCheck("Couldn't retrieve app from yaml:" + filePath, appId);
-    String serviceId = yamlHelper.getServiceId(appId, filePath);
+    String serviceId = yamlSyncHelper.getServiceId(appId, filePath);
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + filePath, serviceId);
 
     ServiceCommand serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, yaml.getName());
@@ -63,10 +86,22 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
 
   @Override
   public CommandRefYaml toYaml(Command bean, String appId) {
-    CommandRefYaml yaml = CommandRefYaml.builder().build();
-    super.toYaml(yaml, bean);
-    yaml.setName(bean.getReferenceId());
-    return yaml;
+    String commandUnitType = Util.getStringFromEnum(bean.getCommandUnitType());
+    return getYamlBuilder()
+        .withCommandUnitType(commandUnitType)
+        .withDeploymentType(bean.getDeploymentType())
+        .withName(bean.getReferenceId())
+        .build();
+  }
+
+  @Override
+  public Command upsertFromYaml(ChangeContext<CommandRefYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
+      return createFromYaml(changeContext, changeSetContext);
+    } else {
+      return updateFromYaml(changeContext, changeSetContext);
+    }
   }
 
   @Override

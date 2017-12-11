@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -25,7 +23,11 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 public class LogzConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;
 
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Token", required = true) @Encrypted private char[] token;
+  @JsonView(JsonViews.Internal.class)
+  @Attributes(title = "Token", required = true)
+  @NotEmpty
+  @Encrypted
+  private char[] token;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -63,14 +65,14 @@ public class LogzConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
   public static final class Yaml extends VerificationProviderYaml {
     private String logzUrl;
     private String token;
 
-    @Builder
-    public Yaml(String type, String logzUrl, String token) {
-      super(type);
+    public Yaml() {}
+
+    public Yaml(String type, String name, String logzUrl, String token) {
+      super(type, name);
       this.logzUrl = logzUrl;
       this.token = token;
     }

@@ -84,10 +84,16 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   @Override
   public ContainerDefinition upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext, changeSetContext);
+    return setWithYamlValues(changeContext, false, changeSetContext);
   }
 
-  private ContainerDefinition toBean(ChangeContext<ContainerDefinition.Yaml> changeContext,
+  @Override
+  public ContainerDefinition updateFromYaml(ChangeContext<ContainerDefinition.Yaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
+    return setWithYamlValues(changeContext, false, changeSetContext);
+  }
+
+  private ContainerDefinition setWithYamlValues(ChangeContext<ContainerDefinition.Yaml> changeContext, boolean isCreate,
       List<ChangeContext> changeSetContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
@@ -96,18 +102,18 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     if (yaml.getPortMappings() != null) {
       BaseYamlHandler portMappingYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING, ObjectType.PORT_MAPPING);
-      portMappings =
-          yaml.getPortMappings()
-              .stream()
-              .map(portMapping -> {
-                try {
-                  ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, portMapping);
-                  return (PortMapping) portMappingYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
-                } catch (HarnessException e) {
-                  throw new WingsException(e);
-                }
-              })
-              .collect(Collectors.toList());
+      portMappings = yaml.getPortMappings()
+                         .stream()
+                         .map(portMapping -> {
+                           try {
+                             ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, portMapping);
+                             return (PortMapping) createOrUpdateFromYaml(
+                                 isCreate, portMappingYamlHandler, clonedContext.build(), changeSetContext);
+                           } catch (HarnessException e) {
+                             throw new WingsException(e);
+                           }
+                         })
+                         .collect(Collectors.toList());
     }
 
     // storage configurations
@@ -121,8 +127,8 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
                              try {
                                ChangeContext.Builder clonedContext =
                                    cloneFileChangeContext(changeContext, storageConfig);
-                               return (StorageConfiguration) storageConfigYamlHandler.upsertFromYaml(
-                                   clonedContext.build(), changeSetContext);
+                               return (StorageConfiguration) createOrUpdateFromYaml(
+                                   isCreate, storageConfigYamlHandler, clonedContext.build(), changeSetContext);
                              } catch (HarnessException e) {
                                throw new WingsException(e);
                              }
@@ -137,7 +143,8 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
       BaseYamlHandler logConfigYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION, ObjectType.LOG_CONFIGURATION);
       ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, logConfigYaml);
-      logConfig = (LogConfiguration) logConfigYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+      logConfig = (LogConfiguration) createOrUpdateFromYaml(
+          isCreate, logConfigYamlHandler, clonedContext.build(), changeSetContext);
     }
 
     return ContainerDefinition.builder()
@@ -155,6 +162,12 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml applicationYaml = changeContext.getYaml();
     return !(isEmpty(applicationYaml.getName()));
+  }
+
+  @Override
+  public ContainerDefinition createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return setWithYamlValues(changeContext, true, changeSetContext);
   }
 
   @Override

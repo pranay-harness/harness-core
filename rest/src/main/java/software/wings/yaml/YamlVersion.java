@@ -133,7 +133,6 @@ public class YamlVersion extends Base implements YamlHistory {
     APP,
     SERVICE,
     SERVICE_COMMAND,
-    CONFIG_FILE,
     ENVIRONMENT,
     SETTING,
     WORKFLOW,

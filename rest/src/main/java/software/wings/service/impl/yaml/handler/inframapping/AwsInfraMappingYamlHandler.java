@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static software.wings.beans.AwsInfrastructureMapping.Yaml.Builder.aYaml;
 import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;
@@ -10,7 +11,6 @@ import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.NameValuePair;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Validator;
@@ -21,10 +21,11 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/15/17
  */
-public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, AwsInfrastructureMapping> {
+public class AwsInfraMappingYamlHandler
+    extends InfraMappingYamlHandler<AwsInfrastructureMapping.Yaml, AwsInfrastructureMapping> {
   @Override
-  public Yaml toYaml(AwsInfrastructureMapping bean, String appId) {
-    AwsInstanceFilter awsInstanceFilter = bean.getAwsInstanceFilter();
+  public AwsInfrastructureMapping.Yaml toYaml(AwsInfrastructureMapping infraMapping, String appId) {
+    AwsInstanceFilter awsInstanceFilter = infraMapping.getAwsInstanceFilter();
     List<String> vpcIds = Lists.newArrayList();
     List<String> subnetIds = Lists.newArrayList();
     List<String> securityGroupIds = Lists.newArrayList();
@@ -36,30 +37,28 @@ public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Aw
       tagList = awsInstanceFilter.getTags();
     }
 
-    Yaml yaml = Yaml.builder().build();
-    super.toYaml(yaml, bean);
-
-    String hostConnectionAttrsSettingId = bean.getHostConnectionAttrs();
-
-    SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsSettingId);
-    Validator.notNullCheck(
-        "Host connection attributes null for the given id: " + hostConnectionAttrsSettingId, settingAttribute);
-    yaml.setConnectionType(settingAttribute.getName());
-
-    yaml.setType(InfrastructureMappingType.AWS_SSH.name());
-    yaml.setRestrictions(bean.getRestrictionType());
-    yaml.setExpression(bean.getRestrictionExpression());
-    yaml.setRegion(bean.getRegion());
-    yaml.setLoadBalancer(bean.getLoadBalancerName());
-    yaml.setUsePublicDns(bean.isUsePublicDns());
-    yaml.setProvisionInstances(bean.isProvisionInstances());
-    yaml.setAutoScalingGroup(bean.getAutoScalingGroupName());
-    yaml.setDesiredCapacity(bean.getDesiredCapacity());
-    yaml.setVpcs(vpcIds);
-    yaml.setSubnetIds(subnetIds);
-    yaml.setSecurityGroupIds(securityGroupIds);
-    yaml.setTags(getTagsYaml(tagList));
-    return yaml;
+    return aYaml()
+        .withType(InfrastructureMappingType.AWS_SSH.name())
+        .withRestrictions(infraMapping.getRestrictionType())
+        .withComputeProviderType(infraMapping.getComputeProviderType())
+        .withExpression(infraMapping.getRestrictionExpression())
+        .withRegion(infraMapping.getRegion())
+        .withServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()))
+        .withInfraMappingType(infraMapping.getInfraMappingType())
+        .withConnectionType(infraMapping.getHostConnectionAttrs())
+        .withDeploymentType(infraMapping.getDeploymentType())
+        .withLoadBalancer(infraMapping.getLoadBalancerName())
+        .withComputeProviderName(infraMapping.getComputeProviderName())
+        .withName(infraMapping.getName())
+        .withUsePublicDns(infraMapping.isUsePublicDns())
+        .withProvisionInstances(infraMapping.isProvisionInstances())
+        .withAutoScalingGroup(infraMapping.getAutoScalingGroupName())
+        .withDesiredCapacity(infraMapping.getDesiredCapacity())
+        .withVpcs(vpcIds)
+        .withSubnetIds(subnetIds)
+        .withSecurityGroupIds(securityGroupIds)
+        .withTags(getTagsYaml(tagList))
+        .build();
   }
 
   @Override
@@ -67,20 +66,24 @@ public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Aw
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
 
-    Yaml infraMappingYaml = changeContext.getYaml();
-    String yamlFilePath = changeContext.getChange().getFilePath();
-    String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
-    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
-    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
+    AwsInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
 
-    AwsInfrastructureMapping current = new AwsInfrastructureMapping();
-    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
+    String appId =
+        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
+    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
+    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
+    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
+    Validator.notNullCheck(
+        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
+    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
+    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
+
+    AwsInfrastructureMapping.Builder builder =
+        AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withAccountId(
+            changeContext.getChange().getAccountId());
+    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
+    AwsInfrastructureMapping current = builder.build();
 
     AwsInfrastructureMapping previous =
         (AwsInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
@@ -111,54 +114,73 @@ public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Aw
         .collect(Collectors.toList());
   }
 
-  private void toBean(AwsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) {
-    Yaml yaml = changeContext.getYaml();
+  @Override
+  public AwsInfrastructureMapping updateFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
+  }
 
+  private void setWithYamlValues(AwsInfrastructureMapping.Builder builder,
+      AwsInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
+      String serviceId) {
     AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();
-    awsInstanceFilter.setSecurityGroupIds(yaml.getSecurityGroupIds());
-    awsInstanceFilter.setSubnetIds(yaml.getSubnetIds());
-    awsInstanceFilter.setVpcIds(yaml.getVpcs());
-    if (yaml.getTags() != null) {
-      awsInstanceFilter.setTags(getTags(yaml.getTags()));
+    awsInstanceFilter.setSecurityGroupIds(infraMappingYaml.getSecurityGroupIds());
+    awsInstanceFilter.setSubnetIds(infraMappingYaml.getSubnetIds());
+    awsInstanceFilter.setVpcIds(infraMappingYaml.getVpcs());
+    if (infraMappingYaml.getTags() != null) {
+      awsInstanceFilter.setTags(getTags(infraMappingYaml.getTags()));
     }
 
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    builder.withAutoPopulate(false)
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
+        .withComputeProviderSettingId(computeProviderId)
+        .withComputeProviderName(infraMappingYaml.getComputeProviderName())
+        .withComputeProviderType(infraMappingYaml.getComputeProviderType())
+        .withEnvId(envId)
+        .withServiceId(serviceId)
+        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
+        .withDeploymentType(infraMappingYaml.getDeploymentType())
+        .withName(infraMappingYaml.getName())
+        .withAppId(appId);
 
-    String hostConnAttrsName = yaml.getConnectionType();
-    SettingAttribute hostConnAttributes =
-        settingsService.getSettingAttributeByName(changeContext.getChange().getAccountId(), hostConnAttrsName);
-    Validator.notNullCheck("HostConnectionAttrs is null for name:" + hostConnAttrsName, hostConnAttributes);
-    bean.setHostConnectionAttrs(hostConnAttributes.getUuid());
-
-    bean.setRestrictionType(yaml.getRestrictions());
-    bean.setRestrictionExpression(yaml.getExpression());
-    bean.setRegion(yaml.getRegion());
-    bean.setLoadBalancerId(yaml.getLoadBalancer());
-    bean.setLoadBalancerName(yaml.getLoadBalancer());
-    bean.setUsePublicDns(yaml.isUsePublicDns());
-    bean.setProvisionInstances(yaml.isProvisionInstances());
-    bean.setAutoScalingGroupName(yaml.getAutoScalingGroup());
-    bean.setDesiredCapacity(yaml.getDesiredCapacity());
-    bean.setAwsInstanceFilter(awsInstanceFilter);
+    builder.withRestrictionType(infraMappingYaml.getRestrictions())
+        .withRestrictionExpression(infraMappingYaml.getExpression())
+        .withRegion(infraMappingYaml.getRegion())
+        .withHostConnectionAttrs(infraMappingYaml.getConnectionType())
+        .withLoadBalancerId(infraMappingYaml.getLoadBalancer())
+        .withLoadBalancerName(infraMappingYaml.getLoadBalancer())
+        .withName(infraMappingYaml.getName())
+        .withUsePublicDns(infraMappingYaml.isUsePublicDns())
+        .withProvisionInstances(infraMappingYaml.isProvisionInstances())
+        .withAutoScalingGroupName(infraMappingYaml.getAutoScalingGroup())
+        .withDesiredCapacity(infraMappingYaml.getDesiredCapacity())
+        .withAwsInstanceFilter(awsInstanceFilter);
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+    AwsInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
     return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
-        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
-        || isEmpty(infraMappingYaml.getRegion()) || isEmpty(infraMappingYaml.getConnectionType()));
+        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
+        || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
+        || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getRegion())
+        || isEmpty(infraMappingYaml.getConnectionType()));
+  }
+
+  @Override
+  public AwsInfrastructureMapping createFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+    return upsertFromYaml(changeContext, changeSetContext);
   }
 
   @Override
   public AwsInfrastructureMapping get(String accountId, String yamlFilePath) {
-    return (AwsInfrastructureMapping) yamlHelper.getInfraMapping(accountId, yamlFilePath);
+    return (AwsInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsInfrastructureMapping.Yaml.class;
   }
 }

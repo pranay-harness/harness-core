@@ -4,7 +4,6 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
 @Data
@@ -16,17 +15,10 @@ public class PortMapping {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
+  @Builder
   public static final class Yaml extends BaseYaml {
     private Integer containerPort;
     private Integer hostPort;
     private boolean loadBalancerPort;
-
-    @Builder
-    public Yaml(Integer containerPort, Integer hostPort, boolean loadBalancerPort) {
-      this.containerPort = containerPort;
-      this.hostPort = hostPort;
-      this.loadBalancerPort = loadBalancerPort;
-    }
   }
 }
