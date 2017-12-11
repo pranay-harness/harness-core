@@ -33,7 +33,7 @@ public interface LogService {
    * @param log the log
    * @return the log
    */
-  @ValidationGroups(Create.class) String save(@Valid Log log);
+  @ValidationGroups(Create.class) void save(@Valid Log log);
 
   /**
    * Gets unit execution result.
@@ -68,7 +68,7 @@ public interface LogService {
    *
    * @param logs the logs
    */
-  List<String> batchedSave(@Valid List<Log> logs);
+  void batchedSave(@Valid List<Log> logs);
 
   void purgeActivityLogs();
 }
