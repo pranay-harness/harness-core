@@ -16,6 +16,7 @@ public class StateMachineResumeCallback implements NotifyCallback {
   @Inject private StateMachineExecutor stateMachineExecutor;
 
   private String appId;
+  private String executionUuid;
   private String stateExecutionInstanceId;
 
   /**
@@ -29,8 +30,9 @@ public class StateMachineResumeCallback implements NotifyCallback {
    * @param appId                    the app id
    * @param stateExecutionInstanceId the state execution instance id
    */
-  public StateMachineResumeCallback(String appId, String stateExecutionInstanceId) {
+  public StateMachineResumeCallback(String appId, String executionUuid, String stateExecutionInstanceId) {
     this.appId = appId;
+    this.executionUuid = executionUuid;
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }
 
@@ -75,11 +77,11 @@ public class StateMachineResumeCallback implements NotifyCallback {
    */
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    stateMachineExecutor.resume(appId, stateExecutionInstanceId, response, false);
+    stateMachineExecutor.resume(appId, executionUuid, stateExecutionInstanceId, response, false);
   }
 
   @Override
   public void notifyError(Map<String, NotifyResponseData> response) {
-    stateMachineExecutor.resume(appId, stateExecutionInstanceId, response, true);
+    stateMachineExecutor.resume(appId, executionUuid, stateExecutionInstanceId, response, true);
   }
 }

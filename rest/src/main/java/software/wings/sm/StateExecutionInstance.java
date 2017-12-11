@@ -74,6 +74,13 @@ public class StateExecutionInstance extends Base {
     return stateExecutionMap.get(stateName);
   }
 
+  @Override
+  public Map<String, Object> getShardKeys() {
+    Map<String, Object> shardKeys = super.getShardKeys();
+    shardKeys.put("executionUuid", executionUuid);
+    return shardKeys;
+  }
+
   /**
    * The type Builder.
    */
