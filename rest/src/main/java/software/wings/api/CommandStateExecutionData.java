@@ -6,6 +6,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -51,6 +52,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
   private boolean downsize;
   private String clusterName;
+  private String kubernetesType;
 
   private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
@@ -133,6 +135,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     commandStepExecutionSummary.setServiceId(serviceId);
     commandStepExecutionSummary.setCodeDeployParams(codeDeployParams);
     commandStepExecutionSummary.setOldCodeDeployParams(oldCodeDeployParams);
+    commandStepExecutionSummary.setKubernetesType(kubernetesType);
     return commandStepExecutionSummary;
   }
 
@@ -162,6 +165,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
     private boolean downsize;
     private String clusterName;
+    private String kubernetesType;
     private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
     private CodeDeployParams codeDeployParams;
     private CodeDeployParams oldCodeDeployParams;
@@ -299,6 +303,11 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withKubernetesType(String kubernetesType) {
+      this.kubernetesType = kubernetesType;
+      return this;
+    }
+
     public Builder withNewInstanceStatusSummaries(List<InstanceStatusSummary> newInstanceStatusSummaries) {
       this.newInstanceStatusSummaries = newInstanceStatusSummaries;
       return this;
@@ -355,7 +364,8 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withCodeDeployParams(codeDeployParams)
           .withOldCodeDeployParams(oldCodeDeployParams)
           .withContainerSetupParams(containerSetupParams)
-          .withActivityService(activityService);
+          .withActivityService(activityService)
+          .withKubernetesType(kubernetesType);
     }
 
     public CommandStateExecutionData build() {
@@ -385,6 +395,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setOldInstanceData(oldInstanceData);
       commandStateExecutionData.setDownsize(downsize);
       commandStateExecutionData.setClusterName(clusterName);
+      commandStateExecutionData.setKubernetesType(kubernetesType);
       commandStateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);
       commandStateExecutionData.setCodeDeployParams(codeDeployParams);
       commandStateExecutionData.setOldCodeDeployParams(oldCodeDeployParams);

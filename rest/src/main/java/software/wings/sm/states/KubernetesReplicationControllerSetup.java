@@ -22,6 +22,7 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.sm.ExecutionContext;
@@ -57,7 +58,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask) {
+      ContainerTask containerTask, String clusterName) {
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env.getName());
@@ -66,6 +67,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withAppName(app.getName())
         .withEnvName(env.getName())
         .withServiceName(serviceName)
+        .withClusterName(clusterName)
         .withImageDetails(imageDetails)
         .withClusterIP(clusterIP)
         .withContainerTask(containerTask)
@@ -79,6 +81,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withServiceType(serviceType)
         .withTargetPort(targetPort)
         .withRcNamePrefix(rcNamePrefix)
+        .withKubernetesType(((KubernetesContainerTask) containerTask).kubernetesType())
         .build();
   }
 
@@ -97,6 +100,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withNamespace(setupParams.getNamespace())
         .withDeploymentType(DeploymentType.KUBERNETES)
         .withInfraMappingId(setupParams.getInfraMappingId())
+        .withKubernetesType(setupExecutionData.getKubernetesType())
         .build();
   }
 
