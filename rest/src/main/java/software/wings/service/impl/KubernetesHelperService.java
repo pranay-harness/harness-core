@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static java.util.Collections.emptyList;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -10,7 +12,6 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,6 +41,6 @@ public class KubernetesHelperService {
   }
 
   public void validateCredential(KubernetesConfig kubernetesConfig) {
-    getKubernetesClient(kubernetesConfig, Collections.emptyList()).replicationControllers().list();
+    getKubernetesClient(kubernetesConfig, emptyList()).replicationControllers().list();
   }
 }

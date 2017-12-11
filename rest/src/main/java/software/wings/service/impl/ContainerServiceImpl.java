@@ -5,7 +5,7 @@ import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
-import static software.wings.utils.KubernetesConvention.getReplicationControllerNamePrefixFromControllerName;
+import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.inject.Inject;
@@ -16,9 +16,8 @@ import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -57,11 +56,9 @@ public class ContainerServiceImpl implements ContainerService {
       SettingValue value = containerServiceParams.getSettingAttribute().getValue();
       if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
         KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-        ReplicationController replicationController = kubernetesContainerService.getController(kubernetesConfig,
-            containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName());
-        if (replicationController != null) {
-          return Optional.of(replicationController.getSpec().getReplicas());
-        }
+        return kubernetesContainerService.getControllerPodCount(kubernetesConfig,
+            containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName(),
+            containerServiceParams.getKubernetesType());
       } else if (value instanceof AwsConfig) {
         Optional<Service> service =
             awsClusterService
@@ -84,21 +81,19 @@ public class ContainerServiceImpl implements ContainerService {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      ReplicationControllerList replicationControllers =
-          kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
-      if (replicationControllers != null) {
-        String controllerNamePrefix =
-            getReplicationControllerNamePrefixFromControllerName(containerServiceParams.getContainerServiceName());
-        List<ReplicationController> activeOldReplicationControllers =
-            replicationControllers.getItems()
-                .stream()
-                .filter(
-                    c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() > 0)
+      List<? extends HasMetadata> controllers = kubernetesContainerService.listControllers(
+          kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceParams.getKubernetesType());
+      if (controllers != null) {
+        String controllerNamePrefix = getPrefixFromControllerName(containerServiceParams.getContainerServiceName());
+        List<? extends HasMetadata> activeOldControllers =
+            controllers.stream()
+                .filter(ctrl
+                    -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix)
+                        && kubernetesContainerService.getControllerPodCount(ctrl) > 0)
+                .sorted(Comparator.comparingInt(rc -> getRevisionFromControllerName(rc.getMetadata().getName())))
                 .collect(Collectors.toList());
-        activeOldReplicationControllers.sort(
-            Comparator.comparingInt(rc -> getRevisionFromControllerName(rc.getMetadata().getName())));
-        activeOldReplicationControllers.forEach(
-            rc -> result.put(rc.getMetadata().getName(), rc.getSpec().getReplicas()));
+        activeOldControllers.forEach(
+            ctrl -> result.put(ctrl.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(ctrl)));
       }
     } else if (value instanceof AwsConfig) {
       String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceParams.getContainerServiceName());
@@ -109,8 +104,8 @@ public class ContainerServiceImpl implements ContainerService {
               .stream()
               .filter(
                   service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
+              .sorted(Comparator.comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
               .collect(Collectors.toList());
-      activeOldServices.sort(Comparator.comparingInt(service -> getRevisionFromServiceName(service.getServiceName())));
       activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
     }
     return result;
@@ -132,11 +127,12 @@ public class ContainerServiceImpl implements ContainerService {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
 
-      ReplicationController replicationController = kubernetesContainerService.getController(kubernetesConfig,
-          containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName());
+      HasMetadata controller =
+          kubernetesContainerService.getController(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
+              containerServiceParams.getContainerServiceName(), containerServiceParams.getKubernetesType());
 
-      if (replicationController != null) {
-        Map<String, String> labels = replicationController.getMetadata().getLabels();
+      if (controller != null) {
+        Map<String, String> labels = controller.getMetadata().getLabels();
         List<io.fabric8.kubernetes.api.model.Service> services =
             kubernetesContainerService
                 .getServices(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
@@ -146,18 +142,17 @@ public class ContainerServiceImpl implements ContainerService {
             kubernetesContainerService.getPods(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
                 .getItems()) {
           if (pod.getStatus().getPhase().equals("Running")) {
-            List<ReplicationController> rcs =
-                kubernetesContainerService
-                    .getControllers(
-                        kubernetesConfig, containerServiceParams.getEncryptionDetails(), pod.getMetadata().getLabels())
-                    .getItems();
-            String rcName = rcs.size() > 0 ? rcs.get(0).getMetadata().getName() : "None";
-
+            List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(kubernetesConfig,
+                containerServiceParams.getEncryptionDetails(), pod.getMetadata().getLabels(),
+                containerServiceParams.getKubernetesType());
+            String controllerName = controllers.size() > 0 ? controllers.get(0).getMetadata().getName() : "None";
+            String kubernetesType = controllers.size() > 0 ? controllers.get(0).getClass().getName() : null;
             result.add(aKubernetesContainerInfo()
                            .withClusterName(containerServiceParams.getClusterName())
                            .withPodName(pod.getMetadata().getName())
-                           .withReplicationControllerName(rcName)
+                           .withControllerName(controllerName)
                            .withServiceName(serviceName)
+                           .withControllerType(kubernetesType)
                            .build());
           }
         }

@@ -1,8 +1,6 @@
 package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
-import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
@@ -18,7 +16,6 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Log;
@@ -28,7 +25,6 @@ import software.wings.beans.container.PortMapping;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.EcsConvention;
-import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Created by peeyushaggarwal on 2/3/17.
+ * Created by brett on 11/18/17
  */
 public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject @Transient protected transient AwsClusterService awsClusterService;
@@ -50,10 +46,11 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Override
   protected String executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, ContainerSetupParams containerSetupParams,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     EcsSetupParams setupParams = (EcsSetupParams) containerSetupParams;
-    executionLogCallback.saveExecutionLog("Create ECS service in cluster " + clusterName, Log.LogLevel.INFO);
+    executionLogCallback.saveExecutionLog(
+        "Create ECS service in cluster " + setupParams.getClusterName(), Log.LogLevel.INFO);
 
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
     String containerName = EcsConvention.getContainerName(dockerImageName);
@@ -80,7 +77,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
             .withServiceName(containerServiceName)
-            .withCluster(clusterName)
+            .withCluster(setupParams.getClusterName())
             .withDesiredCount(0)
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
@@ -108,15 +105,16 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     executionLogCallback.saveExecutionLog(
-        String.format("Creating ECS service %s in cluster %s", containerServiceName, clusterName), Log.LogLevel.INFO);
+        String.format("Creating ECS service %s in cluster %s", containerServiceName, setupParams.getClusterName()),
+        Log.LogLevel.INFO);
     awsClusterService.createService(
         setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
 
     executionLogCallback.saveExecutionLog("Cleaning up old versions", Log.LogLevel.INFO);
-    cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName, clusterName, encryptedDataDetails,
-        executionLogCallback);
+    cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName, setupParams.getClusterName(),
+        encryptedDataDetails, executionLogCallback);
 
-    executionLogCallback.saveExecutionLog("Cluster Name: " + clusterName, Log.LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), Log.LogLevel.INFO);
     executionLogCallback.saveExecutionLog("ECS Service Name: " + containerServiceName, Log.LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, Log.LogLevel.INFO);
     if (exposePort) {
@@ -133,16 +131,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       String dockerImageName, String taskFamily, String region, SettingAttribute settingAttribute,
       Map<String, String> serviceVariables, List<EncryptedDataDetail> encryptedDataDetails,
       ExecutionLogCallback executionLogCallback) {
-    String configTemplate;
-    if (StringUtils.isNotEmpty(ecsContainerTask.getAdvancedConfig())) {
-      configTemplate = ecsContainerTask.fetchAdvancedConfigNoComments();
-    } else {
-      configTemplate = ecsContainerTask.fetchJsonConfig();
-    }
-
-    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, dockerImageName)
-                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
-    TaskDefinition taskDefinition = JsonUtils.asObject(config, TaskDefinition.class);
+    TaskDefinition taskDefinition = ecsContainerTask.createTaskDefinition(containerName, dockerImageName);
     taskDefinition.setFamily(taskFamily);
 
     // Set service variables as environment variables

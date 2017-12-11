@@ -1,11 +1,20 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
+
 import com.github.reinert.jjschema.Attributes;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
+import software.wings.api.ContainerServiceData;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.command.ContainerResizeParams;
+import software.wings.exception.WingsException;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+
+import java.util.List;
 
 /**
  * Created by brett on 3/1/17
@@ -52,6 +61,21 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
 
   public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
     this.instanceUnitType = instanceUnitType;
+  }
+
+  @Override
+  protected ContainerResizeParams buildContainerResizeParams(
+      ContextData contextData, List<ContainerServiceData> desiredCounts) {
+    if (DaemonSet.class.getName().equals(contextData.containerElement.getKubernetesType())) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
+    }
+    return aKubernetesResizeParams()
+        .withClusterName(contextData.containerElement.getClusterName())
+        .withDesiredCounts(desiredCounts)
+        .withKubernetesType(contextData.containerElement.getKubernetesType())
+        .withNamespace(contextData.containerElement.getNamespace())
+        .build();
   }
 
   public static final class KubernetesReplicationControllerDeployBuilder {

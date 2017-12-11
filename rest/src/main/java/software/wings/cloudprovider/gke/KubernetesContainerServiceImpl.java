@@ -11,6 +11,8 @@ import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -20,24 +22,42 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSetList;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentList;
+import io.fabric8.kubernetes.api.model.extensions.DoneableDaemonSet;
+import io.fabric8.kubernetes.api.model.extensions.DoneableDeployment;
+import io.fabric8.kubernetes.api.model.extensions.DoneableReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.DoneableStatefulSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetList;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSetList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
+import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import org.apache.commons.lang.StringUtils;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -52,51 +72,132 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
 
   @Override
-  public ReplicationController createController(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, ReplicationController definition) {
+  public HasMetadata createController(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition) {
     logger.info("Creating controller {}", definition.getMetadata().getName());
-    return controllersOperation(kubernetesConfig, encryptedDataDetails).createOrReplace(definition);
+
+    HasMetadata controller = null;
+    if (definition instanceof ReplicationController) {
+      controller =
+          rcOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((ReplicationController) definition);
+    } else if (definition instanceof Deployment) {
+      controller =
+          deploymentOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((Deployment) definition);
+    } else if (definition instanceof ReplicaSet) {
+      controller = replicaOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((ReplicaSet) definition);
+    } else if (definition instanceof StatefulSet) {
+      controller = statefulOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((StatefulSet) definition);
+    } else if (definition instanceof DaemonSet) {
+      controller = daemonOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((DaemonSet) definition);
+    }
+    return controller;
   }
 
   @Override
-  public ReplicationController getController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return isNotBlank(name) ? controllersOperation(kubernetesConfig, encryptedDataDetails).withName(name).get() : null;
+  public HasMetadata getController(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type) {
+    Validator.notNullCheck("kubernetes type", type);
+    HasMetadata controller = null;
+    if (isNotBlank(name)) {
+      if (ReplicationController.class.getName().equals(type)) {
+        controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+      } else if (Deployment.class.getName().equals(type)) {
+        controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+      } else if (ReplicaSet.class.getName().equals(type)) {
+        controller = replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+      } else if (StatefulSet.class.getName().equals(type)) {
+        controller = statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+      } else if (DaemonSet.class.getName().equals(type)) {
+        controller = daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+      }
+    }
+    return controller;
   }
 
   @Override
-  public ReplicationControllerList getControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
-    return controllersOperation(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
+  public List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels, String type) {
+    Validator.notNullCheck("kubernetes type", type);
+    KubernetesResourceList list = null;
+    if (ReplicationController.class.getName().equals(type)) {
+      list = rcOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
+    } else if (Deployment.class.getName().equals(type)) {
+      list = deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
+    } else if (ReplicaSet.class.getName().equals(type)) {
+      list = replicaOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
+    } else if (StatefulSet.class.getName().equals(type)) {
+      list = statefulOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
+    } else if (DaemonSet.class.getName().equals(type)) {
+      list = daemonOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
+    }
+    return list != null ? list.getItems() : null;
   }
 
   @Override
-  public ReplicationControllerList listControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return controllersOperation(kubernetesConfig, encryptedDataDetails).list();
+  public List<? extends HasMetadata> listControllers(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String type) {
+    Validator.notNullCheck("kubernetes type", type);
+    KubernetesResourceList list = null;
+    if (ReplicationController.class.getName().equals(type)) {
+      list = rcOperations(kubernetesConfig, encryptedDataDetails).list();
+    } else if (Deployment.class.getName().equals(type)) {
+      list = deploymentOperations(kubernetesConfig, encryptedDataDetails).list();
+    } else if (ReplicaSet.class.getName().equals(type)) {
+      list = replicaOperations(kubernetesConfig, encryptedDataDetails).list();
+    } else if (StatefulSet.class.getName().equals(type)) {
+      list = statefulOperations(kubernetesConfig, encryptedDataDetails).list();
+    } else if (DaemonSet.class.getName().equals(type)) {
+      list = daemonOperations(kubernetesConfig, encryptedDataDetails).list();
+    }
+    return list != null ? list.getItems() : null;
   }
 
   @Override
   public void deleteController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type) {
+    Validator.notNullCheck("kubernetes type", type);
     logger.info("Deleting controller {}", name);
     if (isNotBlank(name)) {
-      controllersOperation(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+      if (ReplicationController.class.getName().equals(type)) {
+        rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+      } else if (Deployment.class.getName().equals(type)) {
+        deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+      } else if (ReplicaSet.class.getName().equals(type)) {
+        replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+      } else if (StatefulSet.class.getName().equals(type)) {
+        statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+      } else if (DaemonSet.class.getName().equals(type)) {
+        daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+      }
     }
   }
 
   @Override
   public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String replicationControllerName,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, String type,
       int previousCount, int count, ExecutionLogCallback executionLogCallback) {
+    Validator.notNullCheck("kubernetes type", type);
     executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
-                                              replicationControllerName, clusterName, previousCount, count),
+                                              controllerName, clusterName, previousCount, count),
         Log.LogLevel.INFO);
-    controllersOperation(kubernetesConfig, encryptedDataDetails).withName(replicationControllerName).scale(count);
-    logger.info("Scaled controller {} in cluster {} from {} to {} instances", replicationControllerName, clusterName,
+
+    if (ReplicationController.class.getName().equals(type)) {
+      rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
+    } else if (Deployment.class.getName().equals(type)) {
+      deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
+    } else if (ReplicaSet.class.getName().equals(type)) {
+      replicaOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
+    } else if (StatefulSet.class.getName().equals(type)) {
+      statefulOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
+    } else if (DaemonSet.class.getName().equals(type)) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
+    }
+
+    logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
         previousCount, count);
     logger.info("Waiting for pods to be ready...");
-    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, replicationControllerName, count);
+    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, type, count);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     for (Pod pod : pods) {
@@ -169,16 +270,73 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public int getControllerPodCount(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return getController(kubernetesConfig, encryptedDataDetails, name).getSpec().getReplicas();
+  public Optional<Integer> getControllerPodCount(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type) {
+    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name, type);
+    if (controller != null) {
+      Integer count = getControllerPodCount(controller);
+      return count == null ? Optional.empty() : Optional.of(count);
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public Integer getControllerPodCount(HasMetadata controller) {
+    if (controller instanceof ReplicationController) {
+      return ((ReplicationController) controller).getSpec().getReplicas();
+    } else if (controller instanceof Deployment) {
+      return ((Deployment) controller).getSpec().getReplicas();
+    } else if (controller instanceof ReplicaSet) {
+      return ((ReplicaSet) controller).getSpec().getReplicas();
+    } else if (controller instanceof StatefulSet) {
+      return ((StatefulSet) controller).getSpec().getReplicas();
+    } else if (controller instanceof DaemonSet) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
+    }
+    return null;
   }
 
   private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
       RollableScalableResource<ReplicationController, DoneableReplicationController>>
-  controllersOperation(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  rcOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .replicationControllers()
+        .inNamespace(kubernetesConfig.getNamespace());
+  }
+
+  private NonNamespaceOperation<Deployment, DeploymentList, DoneableDeployment,
+      ScalableResource<Deployment, DoneableDeployment>>
+  deploymentOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .extensions()
+        .deployments()
+        .inNamespace(kubernetesConfig.getNamespace());
+  }
+
+  private NonNamespaceOperation<ReplicaSet, ReplicaSetList, DoneableReplicaSet,
+      RollableScalableResource<ReplicaSet, DoneableReplicaSet>>
+  replicaOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .extensions()
+        .replicaSets()
+        .inNamespace(kubernetesConfig.getNamespace());
+  }
+
+  private NonNamespaceOperation<DaemonSet, DaemonSetList, DoneableDaemonSet, Resource<DaemonSet, DoneableDaemonSet>>
+  daemonOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .extensions()
+        .daemonSets()
+        .inNamespace(kubernetesConfig.getNamespace());
+  }
+
+  private NonNamespaceOperation<StatefulSet, StatefulSetList, DoneableStatefulSet,
+      RollableScalableResource<StatefulSet, DoneableStatefulSet>>
+  statefulOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .apps()
+        .statefulSets()
         .inNamespace(kubernetesConfig.getNamespace());
   }
 
@@ -284,9 +442,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String replicationControllerName, int number) {
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, String type, int number) {
     Map<String, String> labels =
-        getController(kubernetesConfig, encryptedDataDetails, replicationControllerName).getMetadata().getLabels();
+        getController(kubernetesConfig, encryptedDataDetails, controllerName, type).getMetadata().getLabels();
 
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
@@ -323,9 +481,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         client.replicationControllers().inNamespace(kubernetesConfig.getNamespace()).withName(rcName).get();
     if (rc != null) {
       String rcLink = masterUrl + rc.getMetadata().getSelfLink().substring(1);
-      logger.info("Replication controller {}: {}", rcName, rcLink);
+      logger.info("Controller {}: {}", rcName, rcLink);
     } else {
-      logger.info("Replication controller {} does not exist", rcName);
+      logger.info("Controller {} does not exist", rcName);
     }
     Service service = client.services().inNamespace(kubernetesConfig.getNamespace()).withName(serviceName).get();
     if (service != null) {
@@ -333,18 +491,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       logger.info("Service %s: {}", serviceName, serviceLink);
     } else {
       logger.info("Service {} does not exist", serviceName);
-    }
-  }
-
-  public void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    KubernetesClient client = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
-    if (client.services().inNamespace(kubernetesConfig.getNamespace()).list().getItems() != null) {
-      client.services().inNamespace(kubernetesConfig.getNamespace()).delete();
-      logger.info("Deleted existing services");
-    }
-    if (client.replicationControllers().inNamespace(kubernetesConfig.getNamespace()).list().getItems() != null) {
-      client.replicationControllers().inNamespace(kubernetesConfig.getNamespace()).delete();
-      logger.info("Deleted existing replication controllers");
     }
   }
 }

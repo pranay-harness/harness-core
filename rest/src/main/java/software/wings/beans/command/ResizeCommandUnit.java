@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
@@ -26,11 +27,13 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
-      int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    return awsClusterService.resizeCluster(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceName,
-        previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
+  protected List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params, ContainerServiceData serviceData,
+      ExecutionLogCallback executionLogCallback) {
+    EcsResizeParams resizeParams = (EcsResizeParams) params;
+    return awsClusterService.resizeCluster(resizeParams.getRegion(), cloudProviderSetting, encryptedDataDetails,
+        resizeParams.getClusterName(), serviceData.getName(), serviceData.getPreviousCount(),
+        serviceData.getDesiredCount(), resizeParams.getEcsServiceSteadyStateTimeout(), executionLogCallback);
   }
 
   @Data

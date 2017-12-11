@@ -117,7 +117,7 @@ public class EcsContainerTask extends ContainerTask {
             cd -> DUMMY_DOCKER_IMAGE_NAME.equals(cd.getImage()));
         if (!containerHasDockerPlaceholder) {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-              "Replication controller spec must have a container definition with "
+              "Task definition spec must have a container definition with "
                   + "${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
@@ -132,7 +132,20 @@ public class EcsContainerTask extends ContainerTask {
     }
   }
 
-  public String fetchJsonConfig() {
+  public TaskDefinition createTaskDefinition(String containerName, String imageName) {
+    String configTemplate;
+    if (org.apache.commons.lang.StringUtils.isNotEmpty(getAdvancedConfig())) {
+      configTemplate = fetchAdvancedConfigNoComments();
+    } else {
+      configTemplate = fetchJsonConfig();
+    }
+
+    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName)
+                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
+    return JsonUtils.asObject(config, TaskDefinition.class);
+  }
+
+  private String fetchJsonConfig() {
     try {
       return JsonUtils.asPrettyJson(createTaskDefinition())
           .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)

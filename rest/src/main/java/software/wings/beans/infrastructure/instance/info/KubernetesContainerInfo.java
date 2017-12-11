@@ -1,16 +1,17 @@
 package software.wings.beans.infrastructure.instance.info;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- *
  * @author rktummala on 09/05/17
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesContainerInfo extends ContainerInfo {
-  private String replicationControllerName;
+  private String controllerType;
+  private String controllerName;
   private String serviceName;
   private String podName;
 
@@ -19,10 +20,11 @@ public class KubernetesContainerInfo extends ContainerInfo {
   }
 
   public static final class Builder {
-    private String replicationControllerName;
-    private String podName;
     private String clusterName;
+    private String controllerType;
+    private String controllerName;
     private String serviceName;
+    private String podName;
 
     private Builder() {}
 
@@ -30,18 +32,18 @@ public class KubernetesContainerInfo extends ContainerInfo {
       return new Builder();
     }
 
-    public Builder withReplicationControllerName(String replicationControllerName) {
-      this.replicationControllerName = replicationControllerName;
-      return this;
-    }
-
-    public Builder withPodName(String podName) {
-      this.podName = podName;
-      return this;
-    }
-
     public Builder withClusterName(String clusterName) {
       this.clusterName = clusterName;
+      return this;
+    }
+
+    public Builder withControllerType(String controllerType) {
+      this.controllerType = controllerType;
+      return this;
+    }
+
+    public Builder withControllerName(String controllerName) {
+      this.controllerName = controllerName;
       return this;
     }
 
@@ -50,20 +52,27 @@ public class KubernetesContainerInfo extends ContainerInfo {
       return this;
     }
 
+    public Builder withPodName(String podName) {
+      this.podName = podName;
+      return this;
+    }
+
     public Builder but() {
       return aKubernetesContainerInfo()
-          .withReplicationControllerName(replicationControllerName)
-          .withPodName(podName)
           .withClusterName(clusterName)
-          .withServiceName(serviceName);
+          .withControllerType(controllerType)
+          .withControllerName(controllerName)
+          .withServiceName(serviceName)
+          .withPodName(podName);
     }
 
     public KubernetesContainerInfo build() {
       KubernetesContainerInfo kubernetesContainerInfo = new KubernetesContainerInfo();
-      kubernetesContainerInfo.setReplicationControllerName(replicationControllerName);
-      kubernetesContainerInfo.setPodName(podName);
       kubernetesContainerInfo.setClusterName(clusterName);
+      kubernetesContainerInfo.setControllerType(controllerType);
+      kubernetesContainerInfo.setControllerName(controllerName);
       kubernetesContainerInfo.setServiceName(serviceName);
+      kubernetesContainerInfo.setPodName(podName);
       return kubernetesContainerInfo;
     }
   }

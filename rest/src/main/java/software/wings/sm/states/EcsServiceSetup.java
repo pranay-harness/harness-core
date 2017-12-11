@@ -53,7 +53,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask) {
+      ContainerTask containerTask, String clusterName) {
     String taskFamily = isNotEmpty(ecsServiceName)
         ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
         : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
@@ -62,6 +62,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
         .withAppName(app.getName())
         .withEnvName(env.getName())
         .withServiceName(serviceName)
+        .withClusterName(clusterName)
         .withImageDetails(imageDetails)
         .withContainerTask(containerTask)
         .withLoadBalancerName(loadBalancerName)

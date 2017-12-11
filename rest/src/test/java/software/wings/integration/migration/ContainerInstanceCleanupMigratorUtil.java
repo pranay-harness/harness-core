@@ -73,8 +73,8 @@ public class ContainerInstanceCleanupMigratorUtil extends WingsBaseTest {
       if (InstanceType.KUBERNETES_CONTAINER_INSTANCE.equals(instance.getInstanceType())) {
         KubernetesContainerInfo kubernetesContainerInfo =
             Objects.castIfBelongsToType(instance.getInstanceInfo(), KubernetesContainerInfo.class);
-        if (!containerSvcNameSet.contains(kubernetesContainerInfo.getReplicationControllerName())) {
-          kubeContainerSvcNamesToBeDeleted.add(kubernetesContainerInfo.getReplicationControllerName());
+        if (!containerSvcNameSet.contains(kubernetesContainerInfo.getControllerName())) {
+          kubeContainerSvcNamesToBeDeleted.add(kubernetesContainerInfo.getControllerName());
         }
       } else if (InstanceType.ECS_CONTAINER_INSTANCE.equals(instance.getInstanceType())) {
         EcsContainerInfo ecsContainerInfo =
