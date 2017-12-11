@@ -69,7 +69,7 @@ public class WorkflowNotificationHelper {
     Application app = ((ExecutionContextImpl) context).getApp();
 
     WorkflowExecution executionDetails =
-        workflowExecutionService.getWorkflowExecution(app.getUuid(), context.getWorkflowExecutionId());
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
     Map<String, String> placeHolders = new HashMap<>();
     placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
