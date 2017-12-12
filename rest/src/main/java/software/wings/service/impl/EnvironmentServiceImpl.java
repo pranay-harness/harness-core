@@ -371,34 +371,28 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     // point. We should have the necessary APIs elsewhere, if we find the users want it.
   }
 
-  @Override
-  public void pruneDescendingObjects(String appId, String objectId) {
-    List<ResponseMessage> messages = new ArrayList<>();
+  public List<OwnedByEnvironment> descendingServices() {
+    List<OwnedByEnvironment> descendings = new ArrayList<>();
 
     for (Field field : EnvironmentServiceImpl.class.getDeclaredFields()) {
       Object obj;
       try {
         obj = field.get(this);
-      } catch (IllegalAccessException e) {
-        continue;
-      }
-
-      if (obj instanceof OwnedByEnvironment) {
-        try {
+        if (obj instanceof OwnedByEnvironment) {
           OwnedByEnvironment descending = (OwnedByEnvironment) obj;
-          descending.pruneByEnvironment(appId, objectId);
-        } catch (WingsException e) {
-          messages.addAll(e.getResponseMessageList());
-        } catch (RuntimeException e) {
-          messages.add(aResponseMessage().withCode(UNKNOWN_ERROR).withMessage(e.getMessage()).build());
+          descendings.add(descending);
         }
+      } catch (IllegalAccessException e) {
       }
     }
 
-    if (!messages.isEmpty()) {
-      throw new WingsException(
-          messages, "Fail to prune some of the objects for app: " + appId + ", object: " + objectId, (Throwable) null);
-    }
+    return descendings;
+  }
+
+  @Override
+  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String envId) {
+    PruneObjectJob.pruneDescendingObjects(
+        descendingServices(), appId, envId, (descending) -> { descending.pruneByEnvironment(appId, envId); });
   }
 
   @Override
@@ -407,7 +401,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
     environments.forEach(environment -> {
       wingsPersistence.delete(environment);
-      pruneDescendingObjects(appId, environment.getUuid());
+      PruneObjectJob.pruneDescendingObjects(descendingServices(), appId, environment.getUuid(),
+          (descending) -> { descending.pruneByEnvironment(appId, environment.getUuid()); });
     });
   }
 
