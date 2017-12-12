@@ -386,6 +386,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
+
     environmentService.pruneDescendingObjects(APP_ID, ENV_ID);
 
     InOrder inOrder =
