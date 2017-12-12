@@ -2,9 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
@@ -31,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -374,15 +371,16 @@ public class AppServiceImpl implements AppService {
     // point. We should have the necessary APIs elsewhere, if we find the users want it.
   }
 
-  public List<OwnedByApplication> descendingServices() {
-    List<OwnedByApplication> descendings = new ArrayList<>();
+  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
+  public <T> List<T> descendingServices(Class<T> cls) {
+    List<T> descendings = new ArrayList<>();
 
     for (Field field : AppServiceImpl.class.getDeclaredFields()) {
       Object obj;
       try {
         obj = field.get(this);
-        if (obj instanceof OwnedByApplication) {
-          OwnedByApplication descending = (OwnedByApplication) obj;
+        if (cls.isInstance(obj)) {
+          T descending = (T) obj;
           descendings.add(descending);
         }
       } catch (IllegalAccessException e) {
@@ -394,8 +392,9 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public void pruneDescendingObjects(@NotEmpty String appId) {
+    List<OwnedByApplication> services = descendingServices(OwnedByApplication.class);
     PruneObjectJob.pruneDescendingObjects(
-        descendingServices(), appId, appId, (descending) -> { descending.pruneByApplication(appId); });
+        services, appId, appId, (descending) -> { descending.pruneByApplication(appId); });
   }
 
   @Override
