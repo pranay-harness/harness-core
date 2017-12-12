@@ -276,7 +276,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public void deleteByEnv(String appId, String envId) {
+  public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
                                           .field("appId")
                                           .equal(appId)

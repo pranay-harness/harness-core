@@ -3,7 +3,6 @@ package software.wings.service.intfc;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
-import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -17,7 +16,7 @@ import javax.validation.Valid;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-public interface ActivityService {
+public interface ActivityService extends OwnedByEnvironment {
   /**
    * List.
    *
@@ -87,14 +86,6 @@ public interface ActivityService {
    * @return the boolean
    */
   boolean delete(String appId, String activityId);
-
-  /**
-   * Delete ny environment.
-   *
-   * @param appId the app id
-   * @param envId the env id
-   */
-  void deleteByEnvironment(String appId, String envId);
 
   /**
    * Update command unit status.

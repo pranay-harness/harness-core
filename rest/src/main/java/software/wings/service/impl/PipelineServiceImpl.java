@@ -211,7 +211,7 @@ public class PipelineServiceImpl implements PipelineService {
           List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
           throw new WingsException(INVALID_REQUEST, "message",
               String.format(
-                  "Pipeline associated as a trigger action to triggers %", Joiner.on(", ").join(triggerNames)));
+                  "Pipeline associated as a trigger action to triggers %s", Joiner.on(", ").join(triggerNames)));
         }
       } else {
         String message = String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName());

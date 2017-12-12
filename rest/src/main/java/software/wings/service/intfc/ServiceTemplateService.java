@@ -19,7 +19,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 4/4/16.
  */
-public interface ServiceTemplateService {
+public interface ServiceTemplateService extends OwnedByEnvironment {
   /**
    * List.
    *
@@ -106,14 +106,6 @@ public interface ServiceTemplateService {
    * @return the service template
    */
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceTemplateId);
-
-  /**
-   * Delete by env.
-   *
-   * @param appId the app id
-   * @param envId the env id
-   */
-  void deleteByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Delete by service.
