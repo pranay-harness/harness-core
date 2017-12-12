@@ -387,10 +387,15 @@ public interface Constants {
    * The constant ARTIFACT_PATH.
    */
   String ARTIFACT_PATH = "artifactPath";
+
   /**
    * The constant ARTIFACT_FILE_NAME.
    */
   String ARTIFACT_FILE_NAME = "artifactFileName";
+  /**
+   * Constant to hold the ARTIFACT_FILE_NAME in the context
+   */
+  String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
   String DELEGATE_VALIDATION_CACHE = "delegateValidationCache";
   String DELEGATE_SYNC_CACHE = "delegateSyncCache";
