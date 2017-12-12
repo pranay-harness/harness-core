@@ -177,9 +177,16 @@ public class DelegateQueueTask implements Runnable {
           try {
             DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
             if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
-              logger.info("Re-broadcast queued sync task [{}]", syncDelegateTask.getUuid());
-              broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
-                  .broadcast(syncDelegateTask);
+              // If it's older than a minute, remove it
+              if (clock.millis() - syncDelegateTask.getLastUpdatedAt() > TimeUnit.MINUTES.toMillis(1)) {
+                Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                    .remove(stringDelegateTaskEntry.getKey());
+              } else {
+                logger.info("Re-broadcast queued sync task [{}] {} Account: {} created: ", syncDelegateTask.getUuid(),
+                    syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
+                broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
+                    .broadcast(syncDelegateTask);
+              }
             }
           } catch (Exception ex) {
             logger.error("Could not fetch delegate task from queue ", ex);
