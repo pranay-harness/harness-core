@@ -35,6 +35,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -53,7 +54,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.OwnedByApplication;
-import software.wings.service.intfc.OwnedByEnvironment;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -171,7 +171,7 @@ public class AppServiceImpl implements AppService {
   void addCronForStateMachineExecutionCleanup(Application application) {
     JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
                         .withIdentity(application.getUuid(), StateMachineExecutionCleanupJob.GROUP)
-                        .usingJobData("appId", application.getUuid())
+                        .usingJobData(StateMachineExecutionCleanupJob.APP_ID_KEY, application.getUuid())
                         .build();
 
     Trigger trigger =
@@ -187,7 +187,7 @@ public class AppServiceImpl implements AppService {
   void addCronForContainerSync(Application application) {
     JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
                         .withIdentity(application.getUuid(), ContainerSyncJob.GROUP)
-                        .usingJobData("appId", application.getUuid())
+                        .usingJobData(ContainerSyncJob.APP_ID_KEY, application.getUuid())
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
@@ -242,7 +242,9 @@ public class AppServiceImpl implements AppService {
                   .listExecutions(
                       aPageRequest()
                           .withLimit(Integer.toString(numberOfExecutions))
-                          .addFilter(aSearchFilter().withField("appId", Operator.EQ, application.getUuid()).build())
+                          .addFilter(aSearchFilter()
+                                         .withField(WorkflowExecution.APP_ID_KEY, Operator.EQ, application.getUuid())
+                                         .build())
                           .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
                           .build(),
                       false)
@@ -268,7 +270,7 @@ public class AppServiceImpl implements AppService {
   private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {
     return notificationService
         .list(aPageRequest()
-                  .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+                  .addFilter(aSearchFilter().withField(Notification.APP_ID_KEY, Operator.EQ, appId).build())
                   .addFilter(aSearchFilter().withField("complete", Operator.EQ, false).build())
                   .addFilter(aSearchFilter().withField("actionable", Operator.EQ, true).build())
                   .build())

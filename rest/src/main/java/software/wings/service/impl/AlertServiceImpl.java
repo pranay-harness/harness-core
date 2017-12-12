@@ -134,7 +134,7 @@ public class AlertServiceImpl implements AlertService {
 
   private void deploymentCompletedInternal(String appId, String executionId) {
     wingsPersistence.createQuery(Alert.class)
-        .field("appId")
+        .field(Alert.APP_ID_KEY)
         .equal(appId)
         .field("type")
         .in(asList(ApprovalNeeded, ManualInterventionNeeded))
@@ -160,7 +160,7 @@ public class AlertServiceImpl implements AlertService {
     Query<Alert> query =
         wingsPersistence.createQuery(Alert.class).field("type").equal(alertType).field("status").equal(Open);
     query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.field("accountId").equal(accountId)
-                                                         : query.field("appId").equal(appId);
+                                                         : query.field(Alert.APP_ID_KEY).equal(appId);
     return query.asList()
         .stream()
         .filter(alert -> {
@@ -191,7 +191,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void pruneByApplication(String appId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).field("appId").equal(appId).asList();
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).field(Alert.APP_ID_KEY).equal(appId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }
 
