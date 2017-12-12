@@ -17,6 +17,8 @@ import java.util.Objects;
  */
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
 public class PipelineExecution extends Base {
+  public static final String PIPELINE_ID_KEY = "pipelineId";
+
   @Indexed private String pipelineId;
   @Indexed private String workflowExecutionId;
   private String stateMachineId;
