@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -199,22 +200,6 @@ public class AppServiceImpl implements AppService {
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  void addCronForPruningDescendantObjects(String appId) {
-    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(appId, PruneObjectJob.GROUP);
-
-    JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
-                            .withIdentity(appId, PruneObjectJob.GROUP)
-                            .usingJobData(PruneObjectJob.OBJECT_CLASS_KEY, Application.class.getCanonicalName())
-                            .usingJobData(PruneObjectJob.APP_ID_KEY, appId)
-                            .usingJobData(PruneObjectJob.OBJECT_ID_KEY, appId)
-                            .build();
-
-    Trigger trigger = PruneObjectJob.defaultTrigger(appId);
-
-    jobScheduler.scheduleJob(details, trigger);
-  }
-
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
@@ -346,7 +331,7 @@ public class AppServiceImpl implements AppService {
     yamlChangeSetHelper.applicationYamlChange(application, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    addCronForPruningDescendantObjects(appId);
+    PruneObjectJob.addDefaultJob(jobScheduler, Application.class, appId, appId);
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting

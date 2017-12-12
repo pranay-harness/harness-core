@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
@@ -45,9 +47,11 @@ import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
@@ -63,12 +67,16 @@ import javax.inject.Inject;
  * Created by anubhaw on 11/3/16.
  */
 public class PipelineServiceTest extends WingsBaseTest {
-  @Mock private WorkflowService workflowService;
   @Mock private AppService appService;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private TriggerService triggerService;
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private WorkflowService workflowService;
+
   @Mock private Query<PipelineExecution> query;
   @Mock private FieldEnd end;
-  @Mock private ServiceResourceService serviceResourceService;
+
+  @Mock private JobScheduler jobScheduler;
 
   @Inject @InjectMocks private PipelineService pipelineService;
 
@@ -151,6 +159,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     ;
     verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
   }
+
   @Test
   public void shouldDeletePipeline() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
@@ -180,6 +189,14 @@ public class PipelineServiceTest extends WingsBaseTest {
              aPageRequest().addFilter("appId", EQ, APP_ID).addFilter("pipelineId", EQ, PIPELINE_ID).build()))
         .thenReturn(pageResponse);
     pipelineService.deletePipeline(APP_ID, PIPELINE_ID);
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    pipelineService.pruneDescendingObjects(APP_ID, PIPELINE_ID);
+
+    InOrder inOrder = inOrder(wingsPersistence, workflowService, triggerService);
+    inOrder.verify(triggerService).pruneByPipeline(APP_ID, PIPELINE_ID);
   }
 
   private StateMachine createPipelineStateMachine() {
