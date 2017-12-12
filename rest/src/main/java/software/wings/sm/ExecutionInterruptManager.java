@@ -32,6 +32,7 @@ import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusDat
 import com.google.inject.Injector;
 
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
@@ -216,6 +217,7 @@ public class ExecutionInterruptManager {
             .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
             .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addOrder("createdAt", OrderType.DESC)
+            .withReadPref(ReadPref.CRITICAL)
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
@@ -253,7 +255,8 @@ public class ExecutionInterruptManager {
   }
 
   private PageResponse<ExecutionInterrupt> listExecutionInterrupts(ExecutionInterrupt executionInterrupt) {
-    PageRequest<ExecutionInterrupt> req = PageRequest.Builder.aPageRequest()
+    PageRequest<ExecutionInterrupt> req = aPageRequest()
+                                              .withReadPref(ReadPref.CRITICAL)
                                               .addFilter("appId", EQ, executionInterrupt.getAppId())
                                               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
                                               .addOrder("createdAt", OrderType.DESC)
@@ -270,7 +273,8 @@ public class ExecutionInterruptManager {
    */
   public List<ExecutionInterrupt> checkForExecutionInterrupt(String appId, String executionUuid) {
     PageRequest<ExecutionInterrupt> req =
-        PageRequest.Builder.aPageRequest()
+        aPageRequest()
+            .withReadPref(ReadPref.CRITICAL)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("executionInterruptType", Operator.IN, ABORT_ALL, PAUSE_ALL, ROLLBACK)

@@ -22,6 +22,7 @@ import static software.wings.beans.EntityType.SIMPLE_DEPLOYMENT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
+import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -1662,6 +1663,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, ElementExecutionSummary> serviceSummaryMap, WorkflowExecution workflowExecution) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withReadPref(CRITICAL)
             .withLimit(UNLIMITED)
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
@@ -1761,6 +1763,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> req =
         aPageRequest()
+            .withReadPref(CRITICAL)
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
@@ -1808,6 +1811,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String executionUuid, String parentStateExecutionInstanceId) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withReadPref(CRITICAL)
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
@@ -1902,6 +1906,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withReadPref(CRITICAL)
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
@@ -1939,6 +1944,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     while (parentInstanceIds != null && !parentInstanceIds.isEmpty()) {
       PageRequest<StateExecutionInstance> pageRequest =
           aPageRequest()
+              .withReadPref(CRITICAL)
               .withLimit(PageRequest.UNLIMITED)
               .addFilter("appId", EQ, appId)
               .addFilter("executionUuid", EQ, executionUuid)
@@ -1981,6 +1987,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<Artifact> getArtifactsCollected(String appId, String executionUuid) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withReadPref(CRITICAL)
             .withLimit(UNLIMITED)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
@@ -2004,7 +2011,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public void refreshBuildExecutionSummary(
       String appId, String workflowExecutionId, BuildExecutionSummary buildExecutionSummary) {
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId, CRITICAL);
     if (workflowExecution == null) {
       return;
     }

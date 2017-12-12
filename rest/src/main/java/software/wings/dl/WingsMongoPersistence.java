@@ -119,6 +119,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * {@inheritDoc}
    */
   @Override
+  public <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref) {
+    return createQuery(cls, readPref).field("appId").equal(appId).field(ID_KEY).equal(id).get();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
     T data = datastoreMap.get(readPref).get(cls, id);
     return data;
@@ -218,7 +226,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
-    Query<T> query = createQuery(cls).field(ID_KEY).equal(id);
+    Query<T> query = createQuery(cls, ReadPref.CRITICAL).field(ID_KEY).equal(id);
     if (object.getShardKeys() != null) {
       object.getShardKeys().keySet().forEach(key -> query.field(key).equal(object.getShardKeys().get(key)));
     }
@@ -437,6 +445,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();
+    }
+    if (readPref == ReadPref.NORMAL && req.getReadPref() == ReadPref.CRITICAL) {
+      readPref = ReadPref.CRITICAL;
     }
     PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, false);
     return output;

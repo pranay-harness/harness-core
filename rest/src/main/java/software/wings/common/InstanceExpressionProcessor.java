@@ -21,6 +21,7 @@ import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -217,6 +218,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     PageRequest<ServiceInstance> pageRequest = buildPageRequest();
+    pageRequest.setReadPref(ReadPref.CRITICAL);
     PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest);
     return convertToInstanceElements(instances.getResponse());
   }
