@@ -485,23 +485,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public void deleteStreamActionForWorkflow(String appId, String workflowId) {
-    List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
-                                               .field("appId")
-                                               .equal(appId)
-                                               .field("streamActions.workflowId")
-                                               .equal(workflowId)
-                                               .asList();
-    artifactStreams.forEach(artifactStream
-        -> artifactStream.getStreamActions()
-               .stream()
-               .filter(artifactStreamAction -> artifactStreamAction.getWorkflowId().equals(workflowId))
-               .forEach(artifactStreamAction -> {
-                 deleteStreamAction(appId, artifactStream.getUuid(), artifactStreamAction.getUuid());
-               }));
-  }
-
-  @Override
   public WebHookToken generateWebHookToken(String appId, String streamId) {
     ArtifactStream artifactStream = get(appId, streamId);
     Validator.notNullCheck("Artifact Source", artifactStream);

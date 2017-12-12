@@ -225,7 +225,6 @@ public class PipelineServiceImpl implements PipelineService {
       return false;
     }
 
-    executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, pipelineId));
     executorService.submit(() -> triggerService.deleteTriggersForPipeline(appId, pipelineId));
     executorService.submit(() -> {
       String accountId = appService.getAccountIdByAppId(pipeline.getAppId());

@@ -1064,8 +1064,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
     }
     if (deleted) {
-      executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, workflowId));
-
       executorService.submit(() -> {
         String accountId = appService.getAccountIdByAppId(workflow.getAppId());
         YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
