@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
@@ -68,6 +69,14 @@ public interface PipelineService extends OwnedByApplication {
    * @return the boolean
    */
   boolean deletePipeline(String appId, String pipelineId);
+
+  /**
+   * Prune pipeline descending objects.
+   *
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
+   */
+  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String pipelineId);
 
   /**
    * Clone pipeline pipeline.

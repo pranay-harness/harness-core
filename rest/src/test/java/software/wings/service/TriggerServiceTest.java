@@ -428,7 +428,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(pipelineConditionTrigger)).build());
 
-    triggerService.deleteTriggersForPipeline(APP_ID, PIPELINE_ID);
+    triggerService.pruneByPipeline(APP_ID, PIPELINE_ID);
     verify(wingsPersistence, times(2)).delete(Trigger.class, TRIGGER_ID);
   }
 
