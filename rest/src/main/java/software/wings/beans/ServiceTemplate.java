@@ -24,6 +24,8 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class ServiceTemplate extends Base {
+  public static final String SERVICE_ID_KEY = "serviceId";
+
   @NotEmpty private String envId;
   @NotEmpty private String name;
   private String description;
@@ -46,6 +48,7 @@ public class ServiceTemplate extends Base {
         .withName(getName())
         .build();
   }
+
   /**
    * Gets name.
    *
@@ -240,7 +243,7 @@ public class ServiceTemplate extends Base {
         .add("envId", envId)
         .add("name", name)
         .add("description", description)
-        .add("serviceId", serviceId)
+        .add(SERVICE_ID_KEY, serviceId)
         .add("configFilesOverrides", configFilesOverrides)
         .add("serviceVariablesOverrides", serviceVariablesOverrides)
         .add("defaultServiceTemplate", defaultServiceTemplate)

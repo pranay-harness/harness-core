@@ -20,11 +20,13 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
+import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -45,6 +47,7 @@ public class PruneObjectJob implements Job {
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
   @Inject private PipelineService pipelineService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -113,6 +116,8 @@ public class PruneObjectJob implements Job {
         environmentService.pruneDescendingObjects(appId, objectId);
       } else if (className.equals(Pipeline.class.getCanonicalName())) {
         pipelineService.pruneDescendingObjects(appId, objectId);
+      } else if (className.equals(Service.class.getCanonicalName())) {
+        serviceResourceService.pruneDescendingObjects(appId, objectId);
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
