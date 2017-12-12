@@ -31,8 +31,9 @@ public class TokenGenerator {
     this.accountSecret = accountSecret;
   }
 
-  public String getToken(String scheme, String host, int port) {
+  public String getToken(String scheme, String host, int port, String issuer) {
     JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
+                                 .issuer(issuer)
                                  .subject(accountId)
                                  .audience(scheme + "://" + host + ":" + port)
                                  .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))

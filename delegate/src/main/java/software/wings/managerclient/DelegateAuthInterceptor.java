@@ -3,6 +3,7 @@ package software.wings.managerclient;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
+import software.wings.delegate.service.DelegateServiceImpl;
 import software.wings.security.TokenGenerator;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class DelegateAuthInterceptor implements Interceptor {
     String host = chain.request().url().host();
     int port = chain.request().url().port();
 
-    String token = tokenGenerator.getToken(scheme, host, port);
+    String token = tokenGenerator.getToken(scheme, host, port, DelegateServiceImpl.getHostName());
 
     Request request = chain.request();
     return chain.proceed(request.newBuilder().header("Authorization", "Delegate " + token).build());

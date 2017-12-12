@@ -91,6 +91,7 @@ import java.io.StringReader;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -129,6 +130,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
+  private static String hostName;
+
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -165,12 +168,21 @@ public class DelegateServiceImpl implements DelegateService {
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
 
+  public static String getHostName() {
+    return hostName;
+  }
+
   @Override
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
-      String hostName = InetAddress.getLocalHost().getHostName();
+      try {
+        hostName = InetAddress.getLocalHost().getHostName();
+      } catch (UnknownHostException e) {
+        hostName = "ip-" + ip.replaceAll("\\.", "-");
+      }
+
       accountId = delegateConfiguration.getAccountId();
 
       if (watched) {
@@ -213,7 +225,7 @@ public class DelegateServiceImpl implements DelegateService {
               .method(METHOD.GET)
               .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
               .queryString("delegateId", delegateId)
-              .queryString("token", tokenGenerator.getToken("https", "localhost", 9090))
+              .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
               .header("Version", getVersion())
               .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
                 @Override
