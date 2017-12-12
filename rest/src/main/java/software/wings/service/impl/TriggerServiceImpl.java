@@ -176,7 +176,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public void deleteTriggersForPipeline(String appId, String pipelineId) {
+  public void pruneByPipeline(String appId, String pipelineId) {
     List<Trigger> triggers = wingsPersistence.createQuery(Trigger.class)
                                  .field("appId")
                                  .equal(appId)
