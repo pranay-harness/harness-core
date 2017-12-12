@@ -1,5 +1,8 @@
 package software.wings.scheduler;
 
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
+
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
@@ -13,12 +16,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ResponseMessage;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import javax.inject.Inject;
 
 public class PruneObjectJob implements Job {
@@ -47,6 +53,28 @@ public class PruneObjectJob implements Job {
         .startAt(calendar.getTime())
         .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).withRepeatCount(24))
         .build();
+  }
+
+  public interface PruneService<T> { public void prune(T descending); }
+
+  public static <T> void pruneDescendingObjects(
+      List<T> descendingServices, String appId, String objectId, PruneService<T> lambda) {
+    List<ResponseMessage> messages = new ArrayList<>();
+
+    for (T descending : descendingServices) {
+      try {
+        lambda.prune(descending);
+      } catch (WingsException e) {
+        messages.addAll(e.getResponseMessageList());
+      } catch (RuntimeException e) {
+        messages.add(aResponseMessage().withCode(UNKNOWN_ERROR).withMessage(e.getMessage()).build());
+      }
+    }
+
+    if (!messages.isEmpty()) {
+      throw new WingsException(
+          messages, "Fail to prune some of the objects for app: " + appId + ", object: " + objectId, (Throwable) null);
+    }
   }
 
   private boolean prune(String className, String appId, String objectId) {
