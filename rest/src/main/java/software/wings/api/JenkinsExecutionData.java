@@ -57,5 +57,7 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
       putNotNull(executionDetails, "metadata",
           anExecutionDataValue().withValue(String.valueOf(metadata)).withDisplayName("Meta-Data").build());
     }
+    putNotNull(executionDetails, "activityId",
+        anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
   }
 }
