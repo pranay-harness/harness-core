@@ -34,9 +34,8 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Base implements UuidAware {
-  /**
-   * The constant GLOBAL_APP_ID.
-   */
+  public static final String APP_ID_KEY = "appId";
+
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
