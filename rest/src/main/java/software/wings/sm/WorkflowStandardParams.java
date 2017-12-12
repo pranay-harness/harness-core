@@ -2,10 +2,14 @@ package software.wings.sm;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
+import static software.wings.common.Constants.*;
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
+import static software.wings.common.Constants.PHASE_PARAM;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
@@ -103,6 +107,15 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       Artifact artifact = getArtifactForService(serviceElement.getUuid());
       if (artifact != null) {
         map.put(ARTIFACT, artifact);
+        String artifactFileName = null;
+        if (!isEmpty(artifact.getArtifactFiles())) {
+          artifactFileName = artifact.getArtifactFiles().get(0).getName();
+        } else if (artifact.getMetadata() != null) {
+          artifactFileName = artifact.getArtifactFileName();
+        }
+        if (!StringUtils.isEmpty(artifactFileName)) {
+          map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
+        }
       }
 
       List<Key<ServiceTemplate>> templateRefKeysByService =
@@ -147,7 +160,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return serviceTemplateElement.getServiceElement();
     }
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     if (phaseElement != null) {
       return phaseElement.getServiceElement();
     }

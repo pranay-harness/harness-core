@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
@@ -107,8 +108,16 @@ public class Artifact extends Base {
   }
 
   /**
+   * Gets Key
    *
+   * @return the bucket name
    */
+  public String getArtifactFileName() {
+    if (getMetadata() != null) {
+      return getMetadata().get(ARTIFACT_FILE_NAME);
+    }
+    return null;
+  }
 
   /**
    * The Enum Status.
