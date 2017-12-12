@@ -16,15 +16,6 @@ import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.KeyLengthException;
-import com.nimbusds.jose.crypto.DirectEncrypter;
-import com.nimbusds.jwt.EncryptedJWT;
-import com.nimbusds.jwt.JWTClaimsSet;
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -47,18 +38,15 @@ import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.TokenGenerator;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.utils.CacheHelper;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 
 /**
@@ -200,12 +188,15 @@ public class AuthServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateDelegateToken() {
-    authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken(accountKey));
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
+    authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090));
   }
 
   @Test
   public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
-    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID + "1", getDelegateToken(accountKey)))
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
+    assertThatThrownBy(
+        () -> authService.validateDelegateToken(ACCOUNT_ID + "1", tokenGenerator.getToken("https", "localhost", 9090)))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
   }
@@ -234,42 +225,7 @@ public class AuthServiceTest extends WingsBaseTest {
     keyGen.init(128);
     SecretKey secretKey = keyGen.generateKey();
     byte[] encoded = secretKey.getEncoded();
-    return getDelegateToken(Hex.encodeHexString(encoded));
-  }
-
-  private String getDelegateToken(String accountSecret) {
-    JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
-                                 .issuer("localhost")
-                                 .subject(ACCOUNT_ID)
-                                 .audience("manager")
-                                 .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
-                                 .notBeforeTime(new Date())
-                                 .issueTime(new Date())
-                                 .jwtID(UUID.randomUUID().toString())
-                                 .build();
-
-    JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM);
-    EncryptedJWT jwt = new EncryptedJWT(header, jwtClaims);
-    DirectEncrypter directEncrypter = null;
-    byte[] encodedKey = new byte[0];
-    try {
-      encodedKey = Hex.decodeHex(accountSecret.toCharArray());
-    } catch (DecoderException e) {
-      e.printStackTrace();
-    }
-    try {
-      directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
-    } catch (KeyLengthException e) {
-      e.printStackTrace();
-      return null;
-    }
-
-    try {
-      jwt.encrypt(directEncrypter);
-    } catch (JOSEException e) {
-      e.printStackTrace();
-      return null;
-    }
-    return jwt.serialize();
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, Hex.encodeHexString(encoded));
+    return tokenGenerator.getToken("https", "localhost", 9090);
   }
 }

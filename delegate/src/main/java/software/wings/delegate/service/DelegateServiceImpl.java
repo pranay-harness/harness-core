@@ -76,7 +76,7 @@ import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.exception.WingsException;
 import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
-import software.wings.managerclient.TokenGenerator;
+import software.wings.security.TokenGenerator;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.utils.message.Message;

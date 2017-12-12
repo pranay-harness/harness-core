@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.http.ExponentialBackOff;
+import software.wings.security.TokenGenerator;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
