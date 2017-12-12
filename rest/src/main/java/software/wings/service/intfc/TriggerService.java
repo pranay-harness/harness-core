@@ -18,7 +18,7 @@ import javax.validation.Valid;
 /**
  * Created by sgurubelli on 10/26/17.
  */
-public interface TriggerService extends OwnedByApplication {
+public interface TriggerService extends OwnedByApplication, OwnedByPipeline {
   /**
    * List.
    *
@@ -67,7 +67,7 @@ public interface TriggerService extends OwnedByApplication {
    * @param appId
    * @param pipelineId
    */
-  void deleteTriggersForPipeline(String appId, String pipelineId);
+  void pruneByPipeline(String appId, String pipelineId);
 
   /**
    * Delete triggers for ArtifactStream

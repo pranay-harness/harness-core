@@ -23,9 +23,6 @@ import com.google.inject.name.Named;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -305,22 +302,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     return services;
   }
 
-  void addCronForPruningDescendantObjects(String appId, String envId) {
-    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(appId, PruneObjectJob.GROUP);
-
-    JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
-                            .withIdentity(envId, PruneObjectJob.GROUP)
-                            .usingJobData(PruneObjectJob.OBJECT_CLASS_KEY, Environment.class.getCanonicalName())
-                            .usingJobData(PruneObjectJob.APP_ID_KEY, appId)
-                            .usingJobData(PruneObjectJob.OBJECT_ID_KEY, envId)
-                            .build();
-
-    Trigger trigger = PruneObjectJob.defaultTrigger(envId);
-
-    jobScheduler.scheduleJob(details, trigger);
-  }
-
   private void ensureEnvironmentSafeToDelete(Environment environment) {
     List<Pipeline> pipelines = pipelineService.listPipelines(
         aPageRequest()
@@ -344,7 +325,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     yamlChangeSetHelper.environmentYamlChange(environment, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    addCronForPruningDescendantObjects(environment.getAppId(), environment.getUuid());
+    PruneObjectJob.addDefaultJob(jobScheduler, Environment.class, environment.getAppId(), environment.getUuid());
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting

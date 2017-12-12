@@ -6,7 +6,9 @@ import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
+import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SimpleScheduleBuilder;
@@ -16,11 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.PipelineService;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,6 +44,7 @@ public class PruneObjectJob implements Job {
 
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
+  @Inject private PipelineService pipelineService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -53,6 +58,22 @@ public class PruneObjectJob implements Job {
         .startAt(calendar.getTime())
         .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).withRepeatCount(24))
         .build();
+  }
+
+  public static void addDefaultJob(QuartzScheduler jobScheduler, Class cls, String appId, String objectId) {
+    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
+    jobScheduler.deleteJob(objectId, PruneObjectJob.GROUP);
+
+    JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
+                            .withIdentity(objectId, PruneObjectJob.GROUP)
+                            .usingJobData(PruneObjectJob.OBJECT_CLASS_KEY, cls.getCanonicalName())
+                            .usingJobData(PruneObjectJob.APP_ID_KEY, appId)
+                            .usingJobData(PruneObjectJob.OBJECT_ID_KEY, objectId)
+                            .build();
+
+    org.quartz.Trigger trigger = PruneObjectJob.defaultTrigger(objectId);
+
+    jobScheduler.scheduleJob(details, trigger);
   }
 
   public interface PruneService<T> { public void prune(T descending); }
@@ -90,6 +111,8 @@ public class PruneObjectJob implements Job {
         appService.pruneDescendingObjects(appId);
       } else if (className.equals(Environment.class.getCanonicalName())) {
         environmentService.pruneDescendingObjects(appId, objectId);
+      } else if (className.equals(Pipeline.class.getCanonicalName())) {
+        pipelineService.pruneDescendingObjects(appId, objectId);
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
