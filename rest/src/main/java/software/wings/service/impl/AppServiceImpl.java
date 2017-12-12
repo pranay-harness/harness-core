@@ -207,6 +207,7 @@ public class AppServiceImpl implements AppService {
     JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
                             .withIdentity(appId, PruneObjectJob.GROUP)
                             .usingJobData(PruneObjectJob.OBJECT_CLASS_KEY, Application.class.getCanonicalName())
+                            .usingJobData(PruneObjectJob.APP_ID_KEY, appId)
                             .usingJobData(PruneObjectJob.OBJECT_ID_KEY, appId)
                             .build();
 
@@ -380,14 +381,13 @@ public class AppServiceImpl implements AppService {
       try {
         obj = field.get(this);
       } catch (IllegalAccessException e) {
-        logger.error(e.toString());
         continue;
       }
 
       if (obj instanceof OwnedByApplication) {
-        OwnedByApplication item = (OwnedByApplication) obj;
         try {
-          item.pruneByApplication(appId);
+          OwnedByApplication descending = (OwnedByApplication) obj;
+          descending.pruneByApplication(appId);
         } catch (WingsException e) {
           messages.addAll(e.getResponseMessageList());
         } catch (RuntimeException e) {
@@ -396,7 +396,7 @@ public class AppServiceImpl implements AppService {
       }
     }
 
-    if (messages.size() > 0) {
+    if (!messages.isEmpty()) {
       throw new WingsException(messages, "Fail to prune some of the objects for app: " + appId, (Throwable) null);
     }
   }

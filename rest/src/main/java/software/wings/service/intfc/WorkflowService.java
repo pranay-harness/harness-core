@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
@@ -28,7 +27,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public interface WorkflowService extends OwnedByApplication {
+public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment {
   /**
    * List Workflow.
    *
@@ -152,8 +151,6 @@ public interface WorkflowService extends OwnedByApplication {
    * @return the workflow
    */
   Workflow readLatestSimpleWorkflow(String appId, String envId);
-
-  void deleteWorkflowByEnvironment(String appId, String uuid);
 
   /**
    * Stencil map map.
