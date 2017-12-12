@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.name.Named;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.JobBuilder;
@@ -54,6 +55,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.OwnedByApplication;
+import software.wings.service.intfc.OwnedByEnvironment;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -372,33 +374,28 @@ public class AppServiceImpl implements AppService {
     // point. We should have the necessary APIs elsewhere, if we find the users want it.
   }
 
-  @Override
-  public void pruneDescendingObjects(String appId) {
-    List<ResponseMessage> messages = new ArrayList<>();
+  public List<OwnedByApplication> descendingServices() {
+    List<OwnedByApplication> descendings = new ArrayList<>();
 
     for (Field field : AppServiceImpl.class.getDeclaredFields()) {
       Object obj;
       try {
         obj = field.get(this);
-      } catch (IllegalAccessException e) {
-        continue;
-      }
-
-      if (obj instanceof OwnedByApplication) {
-        try {
+        if (obj instanceof OwnedByApplication) {
           OwnedByApplication descending = (OwnedByApplication) obj;
-          descending.pruneByApplication(appId);
-        } catch (WingsException e) {
-          messages.addAll(e.getResponseMessageList());
-        } catch (RuntimeException e) {
-          messages.add(aResponseMessage().withCode(UNKNOWN_ERROR).withMessage(e.getMessage()).build());
+          descendings.add(descending);
         }
+      } catch (IllegalAccessException e) {
       }
     }
 
-    if (!messages.isEmpty()) {
-      throw new WingsException(messages, "Fail to prune some of the objects for app: " + appId, (Throwable) null);
-    }
+    return descendings;
+  }
+
+  @Override
+  public void pruneDescendingObjects(@NotEmpty String appId) {
+    PruneObjectJob.pruneDescendingObjects(
+        descendingServices(), appId, appId, (descending) -> { descending.pruneByApplication(appId); });
   }
 
   @Override
