@@ -11,6 +11,7 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.beans.Base;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
@@ -68,6 +69,8 @@ public class PageRequest<T> {
   @JsonIgnore @Context private ContainerRequestContext requestContext; // TODO: remove UriInfo
 
   @JsonIgnore private boolean isOr = false;
+
+  @JsonIgnore private ReadPref readPref;
 
   /**
    * Instantiates a new page request.
@@ -233,6 +236,14 @@ public class PageRequest<T> {
    */
   public void addFieldsExcluded(String fieldsExcluded) {
     this.fieldsExcluded.add(fieldsExcluded);
+  }
+
+  public ReadPref getReadPref() {
+    return readPref;
+  }
+
+  public void setReadPref(ReadPref readPref) {
+    this.readPref = readPref;
   }
 
   /**
@@ -465,6 +476,7 @@ public class PageRequest<T> {
     private List<String> fieldsIncluded = new ArrayList<>();
     private List<String> fieldsExcluded = new ArrayList<>();
     private UriInfo uriInfo;
+    private ReadPref readPref;
 
     private Builder() {}
 
@@ -580,6 +592,17 @@ public class PageRequest<T> {
     }
 
     /**
+     * With Read Pref.
+     *
+     * @param readPref the read pref
+     * @return the builder
+     */
+    public Builder withReadPref(ReadPref readPref) {
+      this.readPref = readPref;
+      return this;
+    }
+
+    /**
      * Builds the.
      *
      * @return the page request
@@ -593,6 +616,7 @@ public class PageRequest<T> {
       pageRequest.setFieldsIncluded(fieldsIncluded);
       pageRequest.setFieldsExcluded(fieldsExcluded);
       pageRequest.setUriInfo(uriInfo);
+      pageRequest.setReadPref(readPref);
       return pageRequest;
     }
   }
