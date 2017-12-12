@@ -183,6 +183,29 @@ public class PipelineServiceImpl implements PipelineService {
     return pipeline;
   }
 
+  // TODO: Add unit tests for this function
+  private void ensurePipelineSafeToDelete(Pipeline pipeline) {
+    PageRequest<PipelineExecution> pageRequest =
+        aPageRequest()
+            .addFilter(PipelineExecution.APP_ID_KEY, EQ, pipeline.getAppId())
+            .addFilter(PipelineExecution.PIPELINE_ID_KEY, EQ, pipeline.getUuid())
+            .build();
+    PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
+    if (pageResponse == null || CollectionUtils.isEmpty(pageResponse.getResponse())
+        || pageResponse.getResponse().stream().allMatch(
+               pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
+      List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
+      if (CollectionUtils.isEmpty(triggers)) {
+        return;
+      }
+      List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
+      throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message",
+          String.format("Pipeline associated as a trigger action to triggers %s", Joiner.on(", ").join(triggerNames)));
+    }
+    throw new WingsException(
+        INVALID_REQUEST, "message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
+  }
+
   @Override
   public boolean deletePipeline(String appId, String pipelineId) {
     return deletePipeline(appId, pipelineId, false);
@@ -193,51 +216,34 @@ public class PipelineServiceImpl implements PipelineService {
     if (pipeline == null) {
       return true;
     }
-    boolean deleted;
 
-    if (forceDelete) {
-      deleted = wingsPersistence.delete(pipeline);
-    } else {
-      PageRequest<PipelineExecution> pageRequest =
-          aPageRequest().addFilter("appId", EQ, appId).addFilter("pipelineId", EQ, pipelineId).build();
-      PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
-      if (pageResponse == null || CollectionUtils.isEmpty(pageResponse.getResponse())
-          || pageResponse.getResponse().stream().allMatch(
-                 pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
-        List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(appId, pipelineId);
-        if (CollectionUtils.isEmpty(triggers)) {
-          deleted = wingsPersistence.delete(pipeline);
-        } else {
-          List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
-          throw new WingsException(INVALID_REQUEST, "message",
-              String.format(
-                  "Pipeline associated as a trigger action to triggers %s", Joiner.on(", ").join(triggerNames)));
-        }
-      } else {
-        String message = String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName());
-        throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message", message);
+    if (!forceDelete) {
+      ensurePipelineSafeToDelete(pipeline);
+    }
+
+    if (!wingsPersistence.delete(pipeline)) {
+      return false;
+    }
+
+    executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, pipelineId));
+    executorService.submit(() -> triggerService.deleteTriggersForPipeline(appId, pipelineId));
+    executorService.submit(() -> {
+      String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.DELETE));
+        yamlChangeSetService.queueChangeSet(ygs, changeSet);
       }
-    }
-    if (deleted) {
-      executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, pipelineId));
-      executorService.submit(() -> triggerService.deleteTriggersForPipeline(appId, pipelineId));
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-          changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.DELETE));
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
-        }
-      });
-    }
-    return deleted;
+    });
+
+    return true;
   }
 
   @Override
   public void pruneByApplication(String appId) {
     List<Key<Pipeline>> pipelineKeys =
-        wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList();
+        wingsPersistence.createQuery(Pipeline.class).field(Pipeline.APP_ID_KEY).equal(appId).asKeyList();
     for (Key key : pipelineKeys) {
       deletePipeline(appId, (String) key.getId(), true);
     }

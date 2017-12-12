@@ -11,9 +11,7 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
@@ -36,7 +34,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -371,15 +368,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     // point. We should have the necessary APIs elsewhere, if we find the users want it.
   }
 
-  public List<OwnedByEnvironment> descendingServices() {
-    List<OwnedByEnvironment> descendings = new ArrayList<>();
+  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
+  public <T> List<T> descendingServices(Class<T> cls) {
+    List<T> descendings = new ArrayList<>();
 
     for (Field field : EnvironmentServiceImpl.class.getDeclaredFields()) {
       Object obj;
       try {
         obj = field.get(this);
-        if (obj instanceof OwnedByEnvironment) {
-          OwnedByEnvironment descending = (OwnedByEnvironment) obj;
+        if (cls.isInstance(obj)) {
+          T descending = (T) obj;
           descendings.add(descending);
         }
       } catch (IllegalAccessException e) {
@@ -391,8 +389,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String envId) {
+    List<OwnedByEnvironment> services = descendingServices(OwnedByEnvironment.class);
     PruneObjectJob.pruneDescendingObjects(
-        descendingServices(), appId, envId, (descending) -> { descending.pruneByEnvironment(appId, envId); });
+        services, appId, envId, (descending) -> { descending.pruneByEnvironment(appId, envId); });
   }
 
   @Override
@@ -401,8 +400,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
     environments.forEach(environment -> {
       wingsPersistence.delete(environment);
-      PruneObjectJob.pruneDescendingObjects(descendingServices(), appId, environment.getUuid(),
-          (descending) -> { descending.pruneByEnvironment(appId, environment.getUuid()); });
+      pruneDescendingObjects(appId, environment.getUuid());
     });
   }
 
