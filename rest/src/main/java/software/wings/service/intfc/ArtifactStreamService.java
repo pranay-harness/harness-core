@@ -157,14 +157,6 @@ public interface ArtifactStreamService {
   void deleteByService(String appId, String serviceId);
 
   /**
-   * Delete stream action for workflow.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   */
-  void deleteStreamActionForWorkflow(String appId, String workflowId);
-
-  /**
    * Generate web hook token web hook token.
    *
    * @param appId    the app id
