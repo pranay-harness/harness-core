@@ -297,7 +297,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
         throw new WingsException(INVALID_REQUEST, "message",
             String.format(
-                "Artifact Source associated as a trigger action to triggers %", Joiner.on(", ").join(triggerNames)));
+                "Artifact Source associated as a trigger action to triggers %s", Joiner.on(", ").join(triggerNames)));
       }
     }
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)

@@ -11,7 +11,9 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
@@ -19,9 +21,13 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.name.Named;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -30,6 +36,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -43,6 +50,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -50,6 +59,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.OwnedByEnvironment;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -66,6 +76,7 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -84,25 +95,28 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class EnvironmentServiceImpl implements EnvironmentService, DataProvider {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private ExecutorService executorService;
-  @Inject private WorkflowService workflowService;
-  @Inject private SetupService setupService;
-  @Inject private NotificationService notificationService;
+
   @Inject private ActivityService activityService;
-  @Inject private PipelineService pipelineService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private ServiceVariableService serviceVariableService;
-  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AppService appService;
   @Inject private ConfigService configService;
   @Inject private EntityUpdateService entityUpdateService;
-  @Inject private AppService appService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private ExecutorService executorService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private NotificationService notificationService;
+  @Inject private PipelineService pipelineService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ServiceVariableService serviceVariableService;
+  @Inject private SetupService setupService;
+  @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**
    * {@inheritDoc}
@@ -203,7 +217,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
 
-    yamlChangeSetHelper.environmentYamlChangeAsync(savedEnvironment, ChangeType.DELETE);
+    yamlChangeSetHelper.environmentYamlChangeAsync(savedEnvironment, ChangeType.ADD);
 
     return savedEnvironment;
   }
@@ -294,6 +308,22 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     return services;
   }
 
+  void addCronForPruningDescendantObjects(String appId, String envId) {
+    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
+    jobScheduler.deleteJob(appId, PruneObjectJob.GROUP);
+
+    JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
+                            .withIdentity(envId, PruneObjectJob.GROUP)
+                            .usingJobData(PruneObjectJob.OBJECT_CLASS_KEY, Environment.class.getCanonicalName())
+                            .usingJobData(PruneObjectJob.APP_ID_KEY, appId)
+                            .usingJobData(PruneObjectJob.OBJECT_ID_KEY, envId)
+                            .build();
+
+    Trigger trigger = PruneObjectJob.defaultTrigger(envId);
+
+    jobScheduler.scheduleJob(details, trigger);
+  }
+
   private void ensureEnvironmentSafeToDelete(Environment environment) {
     List<Pipeline> pipelines = pipelineService.listPipelines(
         aPageRequest()
@@ -311,11 +341,21 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   private void delete(Environment environment) {
-    boolean deleted = wingsPersistence.delete(environment);
+    // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
+    // may result in deleting object from a new application created after the first one was deleted,
+    // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
+    yamlChangeSetHelper.environmentYamlChange(environment, ChangeType.DELETE);
 
-    if (deleted) {
-      prune(environment);
+    // First lets make sure that we have persisted a job that will prone the descendant objects
+    addCronForPruningDescendantObjects(environment.getAppId(), environment.getUuid());
 
+    // Do not add too much between these too calls (on top and bottom). We need to persist the job
+    // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
+    // too much though will result in start the job before the object is deleted, this possibility is
+    // handled, but this is still not good.
+
+    // Now we are ready to delete the object.
+    if (wingsPersistence.delete(environment)) {
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(environment.getAppId())
@@ -323,16 +363,42 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
               .withNotificationTemplateVariables(
                   ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
               .build());
-
-      yamlChangeSetHelper.environmentYamlChangeAsync(environment, ChangeType.DELETE);
     }
+
+    // Note that if we failed to delete the object we left without the yaml. Likely the users
+    // will not reconsider and start using the object as they never intended to delete it, but
+    // probably they will retry. This is why there is no reason for us to regenerate it at this
+    // point. We should have the necessary APIs elsewhere, if we find the users want it.
   }
 
-  private void prune(Environment environment) {
-    executorService.submit(() -> serviceTemplateService.deleteByEnv(environment.getAppId(), environment.getUuid()));
-    executorService.submit(
-        () -> workflowService.deleteWorkflowByEnvironment(environment.getAppId(), environment.getUuid()));
-    executorService.submit(() -> activityService.deleteByEnvironment(environment.getAppId(), environment.getUuid()));
+  @Override
+  public void pruneDescendingObjects(String appId, String objectId) {
+    List<ResponseMessage> messages = new ArrayList<>();
+
+    for (Field field : EnvironmentServiceImpl.class.getDeclaredFields()) {
+      Object obj;
+      try {
+        obj = field.get(this);
+      } catch (IllegalAccessException e) {
+        continue;
+      }
+
+      if (obj instanceof OwnedByEnvironment) {
+        try {
+          OwnedByEnvironment descending = (OwnedByEnvironment) obj;
+          descending.pruneByEnvironment(appId, objectId);
+        } catch (WingsException e) {
+          messages.addAll(e.getResponseMessageList());
+        } catch (RuntimeException e) {
+          messages.add(aResponseMessage().withCode(UNKNOWN_ERROR).withMessage(e.getMessage()).build());
+        }
+      }
+    }
+
+    if (!messages.isEmpty()) {
+      throw new WingsException(
+          messages, "Fail to prune some of the objects for app: " + appId + ", object: " + objectId, (Throwable) null);
+    }
   }
 
   @Override
@@ -341,7 +407,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
     environments.forEach(environment -> {
       wingsPersistence.delete(environment);
-      prune(environment);
+      pruneDescendingObjects(appId, environment.getUuid());
     });
   }
 

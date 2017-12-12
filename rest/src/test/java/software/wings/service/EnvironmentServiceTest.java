@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -70,7 +71,10 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -79,6 +83,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
@@ -97,21 +102,26 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * The End.
    */
   @Mock FieldEnd end;
-  @Mock private WingsPersistence wingsPersistence;
-  @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private Application application;
+  @Mock private ActivityService activityService;
+  @Mock private AppService appService;
+  @Mock private ConfigService configService;
+  @Mock private EntityUpdateService entityUpdateService;
   @Mock private NotificationService notificationService;
   @Mock private PipelineService pipelineService;
-  @Mock private AppService appService;
-  @Mock private ServiceVariableService serviceVariableService;
-  @Mock private ConfigService configService;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private Application application;
-  @Mock private EntityUpdateService entityUpdateService;
+  @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private ServiceVariableService serviceVariableService;
+  @Mock private WingsPersistence wingsPersistence;
+  @Mock private WorkflowService workflowService;
+  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
   @Mock private YamlDirectoryService yamlDirectoryService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
+
+  @Mock private JobScheduler jobScheduler;
 
   @Captor private ArgumentCaptor<Environment> environmentArgumentCaptor;
 
@@ -338,7 +348,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
     inOrder.verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
     inOrder.verify(wingsPersistence).delete(any(Environment.class));
-    inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any());
   }
 
@@ -363,9 +372,44 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     environmentService.pruneByApplication(APP_ID);
-    InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
+    InOrder inOrder =
+        inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
     inOrder.verify(wingsPersistence).delete(any(Environment.class));
-    inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
+    inOrder.verify(activityService).pruneByEnvironment(APP_ID, ENV_ID);
+    inOrder.verify(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
+    inOrder.verify(workflowService).pruneByEnvironment(APP_ID, ENV_ID);
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    when(query.asList())
+        .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
+    when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
+    when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    environmentService.pruneDescendingObjects(APP_ID, ENV_ID);
+
+    InOrder inOrder =
+        inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
+    inOrder.verify(activityService).pruneByEnvironment(APP_ID, ENV_ID);
+    inOrder.verify(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
+    inOrder.verify(workflowService).pruneByEnvironment(APP_ID, ENV_ID);
+  }
+
+  @Test
+  public void shouldPruneDescendingObjectsSomeFailed() {
+    when(query.asList())
+        .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
+    when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
+    when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    doThrow(new WingsException("Forced exception")).when(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
+
+    assertThatThrownBy(() -> environmentService.pruneDescendingObjects(APP_ID, ENV_ID));
+
+    InOrder inOrder =
+        inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
+    inOrder.verify(activityService).pruneByEnvironment(APP_ID, ENV_ID);
+    inOrder.verify(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
+    inOrder.verify(workflowService).pruneByEnvironment(APP_ID, ENV_ID);
   }
 
   /**
