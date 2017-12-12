@@ -189,14 +189,15 @@ public class AuthServiceTest extends WingsBaseTest {
   @Test
   public void shouldValidateDelegateToken() {
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090));
+    authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname"));
   }
 
   @Test
   public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    assertThatThrownBy(
-        () -> authService.validateDelegateToken(ACCOUNT_ID + "1", tokenGenerator.getToken("https", "localhost", 9090)))
+    assertThatThrownBy(()
+                           -> authService.validateDelegateToken(
+                               ACCOUNT_ID + "1", tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
   }
@@ -226,6 +227,6 @@ public class AuthServiceTest extends WingsBaseTest {
     SecretKey secretKey = keyGen.generateKey();
     byte[] encoded = secretKey.getEncoded();
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, Hex.encodeHexString(encoded));
-    return tokenGenerator.getToken("https", "localhost", 9090);
+    return tokenGenerator.getToken("https", "localhost", 9090, "hostname");
   }
 }
