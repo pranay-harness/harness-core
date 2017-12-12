@@ -17,6 +17,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
@@ -869,6 +870,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
