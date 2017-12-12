@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -281,6 +282,27 @@ public class AppServiceTest extends WingsBaseTest {
   public void shouldPruneDescendingObjects() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
     appService.pruneDescendingObjects(APP_ID);
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
+        appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
+        alertService, triggerService);
+
+    inOrder.verify(alertService).pruneByApplication(APP_ID);
+    inOrder.verify(environmentService).pruneByApplication(APP_ID);
+    inOrder.verify(instanceService).pruneByApplication(APP_ID);
+    inOrder.verify(notificationService).pruneByApplication(APP_ID);
+    inOrder.verify(pipelineService).pruneByApplication(APP_ID);
+    inOrder.verify(serviceResourceService).pruneByApplication(APP_ID);
+    inOrder.verify(triggerService).pruneByApplication(APP_ID);
+    inOrder.verify(workflowService).pruneByApplication(APP_ID);
+  }
+
+  @Test
+  public void shouldPruneDescendingObjectSomeFailed() {
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
+    doThrow(new WingsException("Forced exception")).when(pipelineService).pruneByApplication(APP_ID);
+
+    assertThatThrownBy(() -> appService.pruneDescendingObjects(APP_ID)).isInstanceOf(WingsException.class);
+
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
         alertService, triggerService);

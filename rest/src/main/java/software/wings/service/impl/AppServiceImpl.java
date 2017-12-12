@@ -2,7 +2,9 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -370,19 +373,32 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public void pruneDescendingObjects(String appId) {
-    executorService.submit(() -> {
-      for (Field field : AppServiceImpl.class.getDeclaredFields()) {
+    List<ResponseMessage> messages = new ArrayList<>();
+
+    for (Field field : AppServiceImpl.class.getDeclaredFields()) {
+      Object obj;
+      try {
+        obj = field.get(this);
+      } catch (IllegalAccessException e) {
+        logger.error(e.toString());
+        continue;
+      }
+
+      if (obj instanceof OwnedByApplication) {
+        OwnedByApplication item = (OwnedByApplication) obj;
         try {
-          Object obj = field.get(this);
-          if (obj instanceof OwnedByApplication) {
-            OwnedByApplication item = (OwnedByApplication) obj;
-            item.pruneByApplication(appId);
-          }
-        } catch (IllegalAccessException e) {
-          logger.error(e.toString());
+          item.pruneByApplication(appId);
+        } catch (WingsException e) {
+          messages.addAll(e.getResponseMessageList());
+        } catch (RuntimeException e) {
+          messages.add(aResponseMessage().withCode(UNKNOWN_ERROR).withMessage(e.getMessage()).build());
         }
       }
-    });
+    }
+
+    if (messages.size() > 0) {
+      throw new WingsException(messages, "Fail to prune some of the objects for app: " + appId, (Throwable) null);
+    }
   }
 
   @Override
