@@ -177,12 +177,12 @@ public class DelegateQueueTask implements Runnable {
           try {
             DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
             if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
-              // If it's older than a minute, remove it
+              // If it's been more than a minute, remove it
               if (clock.millis() - syncDelegateTask.getLastUpdatedAt() > TimeUnit.MINUTES.toMillis(1)) {
                 Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
                     .remove(stringDelegateTaskEntry.getKey());
               } else {
-                logger.info("Re-broadcast queued sync task [{}] {} Account: {} created: ", syncDelegateTask.getUuid(),
+                logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
                     syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
                 broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
                     .broadcast(syncDelegateTask);
