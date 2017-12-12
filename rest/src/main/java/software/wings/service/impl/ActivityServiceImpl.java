@@ -159,7 +159,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public void deleteByEnvironment(String appId, String envId) {
+  public void pruneByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Activity.class)
         .field("appId")
         .equal(appId)

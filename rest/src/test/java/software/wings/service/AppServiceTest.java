@@ -90,23 +90,25 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock UpdateOperations<Application> updateOperations;
 
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private SettingsService settingsService;
-  @Mock private ServiceResourceService serviceResourceService;
-  @Mock private InstanceService instanceService;
-  @Mock private EnvironmentService environmentService;
-  @Mock private AppContainerService appContainerService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
-  @Mock private NotificationService notificationService;
-  @Mock private SetupService setupService;
-  @Mock private JobScheduler jobScheduler;
-  @Mock private ArtifactService artifactService;
-  @Mock private ArtifactStreamService artifactStreamService;
-  @Mock private WorkflowService workflowService;
-  @Mock private PipelineService pipelineService;
-  @Mock private AlertService alertService;
-  @Mock private TriggerService triggerService;
 
   @Inject @InjectMocks AppService appService;
+
+  @Mock private AlertService alertService;
+  @Mock private AppContainerService appContainerService;
+  @Mock private ArtifactService artifactService;
+  @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private InstanceService instanceService;
+  @Mock private NotificationService notificationService;
+  @Mock private PipelineService pipelineService;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private SettingsService settingsService;
+  @Mock private SetupService setupService;
+  @Mock private TriggerService triggerService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private WorkflowService workflowService;
+
+  @Mock private JobScheduler jobScheduler;
 
   /**
    * Sets up.

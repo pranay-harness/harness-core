@@ -19,7 +19,8 @@ public class WingsException extends WingsApiException {
   /**
    * The Response message list.
    */
-  List<ResponseMessage> responseMessageList = new ArrayList<>();
+  private List<ResponseMessage> responseMessageList = new ArrayList<>();
+
   private Map<String, Object> params = new HashMap<>();
 
   /**

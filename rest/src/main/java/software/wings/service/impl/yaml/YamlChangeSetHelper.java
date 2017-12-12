@@ -94,7 +94,11 @@ public class YamlChangeSetHelper {
   }
 
   public void environmentYamlChangeAsync(Environment savedEnvironment, ChangeType changeType) {
-    executorService.submit(() -> environmentYamlChangeSet(savedEnvironment, changeType));
+    executorService.submit(() -> environmentYamlChange(savedEnvironment, changeType));
+  }
+
+  public void environmentYamlChange(Environment savedEnvironment, ChangeType changeType) {
+    environmentYamlChangeSet(savedEnvironment, changeType);
   }
 
   private void moveEnvironmentChange(Environment oldEnv, Environment newEnv) {

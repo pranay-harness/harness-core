@@ -1187,7 +1187,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public void deleteWorkflowByEnvironment(String appId, String envId) {
+  public void pruneByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Workflow.class)
         .field("appId")
         .equal(appId)
