@@ -257,8 +257,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     srs.get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
-    verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
   }
 
   @Test
@@ -271,8 +269,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
-    verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
     verify(setupService).getServiceSetupStatus(serviceBuilder.but().build());
     assertThat(service.getSetup()).isNotNull();
   }
