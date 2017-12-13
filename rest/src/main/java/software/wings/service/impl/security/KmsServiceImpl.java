@@ -59,6 +59,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .encrypt(accountId, value, kmsConfig);
     } catch (Exception e) {
+      logger.error("Error while encrypting: ", e);
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }
   }
@@ -72,6 +73,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     try {
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
+      logger.error("Error while decrypting: ", e);
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }
   }
@@ -124,6 +126,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     try {
       validateKms(accountId, kmsConfig);
     } catch (Exception e) {
+      logger.error("Error while saving kms config: ", e);
       throw new WingsException(
           ErrorCode.KMS_OPERATION_ERROR, "reason", "Validation failed. Please check your credentials");
     }
