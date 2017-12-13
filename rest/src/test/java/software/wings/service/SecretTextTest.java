@@ -82,6 +82,7 @@ import javax.inject.Inject;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
+@Ignore
 public class SecretTextTest extends WingsBaseTest {
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
