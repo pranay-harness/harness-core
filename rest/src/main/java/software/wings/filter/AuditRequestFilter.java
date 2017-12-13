@@ -5,6 +5,7 @@ import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 import com.google.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -54,6 +55,11 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     if (Arrays.asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
             .contains(requestContext.getMethod())) {
       // do not audit idempotent HttpMethod untill we have finer control auditing.
+      return;
+    }
+
+    String requestPath = ((ContainerRequest) requestContext).getPath(false); // temp fix. should be removed
+    if (requestPath.startsWith("delegates") && requestPath.endsWith("acquire")) {
       return;
     }
 
