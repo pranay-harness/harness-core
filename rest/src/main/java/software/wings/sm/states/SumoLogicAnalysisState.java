@@ -132,7 +132,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
                             .withParameters(new Object[] {dataCollectionInfo})
                             .withEnvId(envId)
                             .withInfrastructureMappingId(infrastructureMappingId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 60))
                             .build());
       waitIds[i++] = waitId;
     }
