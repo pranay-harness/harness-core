@@ -203,15 +203,25 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       try {
         int retry = 0;
         while (!completed.get() && retry < RETRIES) {
+          logger.info("Running new relic data collection");
           try {
             if (metrics == null || metrics.isEmpty() || dataCollectionMinute % DURATION_TO_ASK_MINUTES == 0) {
+              logger.info("fetching new relic metrics with data in the last 24 hours");
               metrics = newRelicDelegateService.getMetricsNameToCollect(dataCollectionInfo.getNewRelicConfig(),
                   dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
               metrics = getMetricsWithDataIn24Hrs();
             }
+            if (metrics != null) {
+              logger.info("Found total new relic metrics " + metrics.size());
+            } else {
+              logger.info("Found 0 total new relic metrics ");
+            }
             final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
 
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
+
+            List<Collection<String>> metricBatches = batchMetricsToCollect();
+            logger.info("Found total new relic metric batches " + metricBatches.size());
 
             for (NewRelicApplicationInstance node : instances) {
               if (!dataCollectionInfo.getHosts().contains(node.getHost())) {
@@ -219,8 +229,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                     dataCollectionInfo.getStateExecutionId());
                 continue;
               }
-
-              List<Collection<String>> metricBatches = batchMetricsToCollect();
 
               for (Collection<String> metricNames : metricBatches) {
                 records.putAll(getMetricData(node, metricNames, endTime));
