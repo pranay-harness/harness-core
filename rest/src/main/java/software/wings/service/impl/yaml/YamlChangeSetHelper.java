@@ -143,8 +143,12 @@ public class YamlChangeSetHelper {
     });
   }
 
-  public void serviceYamlChangeAsync(Service finalSavedService, ChangeType add) {
-    executorService.submit(() -> serviceYamlChangeSet(finalSavedService, add));
+  public void serviceYamlChangeAsync(Service finalSavedService, ChangeType change) {
+    executorService.submit(() -> serviceYamlChange(finalSavedService, change));
+  }
+
+  public void serviceYamlChange(Service finalSavedService, ChangeType change) {
+    serviceYamlChangeSet(finalSavedService, change);
   }
 
   private void moveServiceChange(Service oldService, Service newService) {

@@ -22,6 +22,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
@@ -31,7 +32,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -64,6 +64,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -72,6 +74,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.OwnedByService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -93,6 +96,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -117,24 +121,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ConfigService configService;
-  @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private ExecutorService executorService;
-  @Inject private StencilPostProcessor stencilPostProcessor;
-  @Inject private ServiceVariableService serviceVariableService;
+
   @Inject private ActivityService activityService;
-  @Inject private SetupService setupService;
-  @Inject private NotificationService notificationService;
-  @Inject private EntityVersionService entityVersionService;
-  @Inject private CommandService commandService;
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private CommandService commandService;
+  @Inject private ConfigService configService;
   @Inject private EntityUpdateService entityUpdateService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private EntityVersionService entityVersionService;
+  @Inject private ExecutorService executorService;
+  @Inject private NotificationService notificationService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ServiceVariableService serviceVariableService;
+  @Inject private SetupService setupService;
   @Inject private TriggerService triggerService;
+  @Inject private WorkflowService workflowService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
+
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+
+  @Inject private StencilPostProcessor stencilPostProcessor;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**
    * {@inheritDoc}
@@ -220,13 +229,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, false);
     });
 
-    List<ServiceTemplate> serviceTemplates = serviceTemplateService
-                                                 .list(aPageRequest()
-                                                           .addFilter("appId", EQ, originalService.getAppId())
-                                                           .addFilter("serviceId", EQ, originalService.getUuid())
-                                                           .build(),
-                                                     false, false)
-                                                 .getResponse();
+    List<ServiceTemplate> serviceTemplates =
+        serviceTemplateService
+            .list(aPageRequest()
+                      .addFilter(ServiceTemplate.APP_ID_KEY, EQ, originalService.getAppId())
+                      .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
+                      .build(),
+                false, false)
+            .getResponse();
 
     serviceTemplates.forEach(serviceTemplate -> {
       ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
@@ -417,12 +427,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       ensureServiceSafeToDelete(service);
     }
 
+    yamlChangeSetHelper.serviceYamlChange(service, ChangeType.DELETE);
+
+    // First lets make sure that we have persisted a job that will prone the descendant objects
+    PruneObjectJob.addDefaultJob(jobScheduler, Service.class, service.getAppId(), service.getUuid());
+
     // safe to delete
-    String serviceId = service.getUuid();
-    String appId = service.getAppId();
-    boolean deleted = wingsPersistence.delete(Service.class, serviceId);
-    if (deleted) {
-      prune(service);
+    if (wingsPersistence.delete(Service.class, service.getUuid())) {
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(service.getAppId())
@@ -430,20 +441,36 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               .withNotificationTemplateVariables(
                   ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
               .build());
-
-      yamlChangeSetHelper.serviceYamlChangeAsync(service, ChangeType.DELETE);
     }
   }
 
-  private void prune(Service service) {
-    // safe to delete
-    String serviceId = service.getUuid();
-    String appId = service.getAppId();
-    executorService.submit(() -> deleteCommands(service));
-    executorService.submit(() -> serviceTemplateService.deleteByService(appId, serviceId));
-    executorService.submit(() -> artifactStreamService.deleteByService(appId, serviceId));
-    executorService.submit(() -> configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId));
-    executorService.submit(() -> serviceVariableService.deleteByEntityId(appId, serviceId));
+  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
+  public <T> List<T> descendingServices(Class<T> cls) {
+    List<T> descendings = new ArrayList<>();
+
+    for (Field field : ServiceResourceServiceImpl.class.getDeclaredFields()) {
+      Object obj;
+      try {
+        obj = field.get(this);
+        if (cls.isInstance(obj)) {
+          T descending = (T) obj;
+          descendings.add(descending);
+        }
+      } catch (IllegalAccessException e) {
+      }
+    }
+
+    return descendings;
+  }
+
+  @Override
+  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String serviceId) {
+    // TODO: Fix this one into the pattern
+    executorService.submit(() -> deleteCommands(appId, serviceId));
+
+    List<OwnedByService> services = descendingServices(OwnedByService.class);
+    PruneObjectJob.pruneDescendingObjects(
+        services, appId, serviceId, (descending) -> { descending.pruneByService(appId, serviceId); });
   }
 
   private void ensureServiceSafeToDelete(Service service) {
@@ -468,9 +495,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
-  private void deleteCommands(Service service) {
-    getServiceCommands(service.getAppId(), service.getUuid(), false)
-        .forEach(serviceCommand -> deleteCommand(serviceCommand, service));
+  private void deleteCommands(String appId, String serviceId) {
+    getServiceCommands(appId, serviceId, false)
+        .forEach(serviceCommand -> deleteCommand(appId, serviceId, serviceCommand.getUuid()));
   }
 
   /**
@@ -565,7 +592,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void pruneByApplication(String appId) {
     findServicesByApp(appId).forEach(service -> {
       wingsPersistence.delete(Service.class, service.getUuid());
-      prune(service);
+      pruneDescendingObjects(appId, service.getUuid());
     });
   }
 

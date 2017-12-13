@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -420,6 +421,14 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void deleteByEntityId(String appId, String templateId, String entityId) {
     List<ConfigFile> configFiles = getConfigFilesForEntity(appId, templateId, entityId);
+    if (configFiles != null) {
+      configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
+    }
+  }
+
+  @Override
+  public void pruneByService(String appId, String entityId) {
+    List<ConfigFile> configFiles = getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, entityId);
     if (configFiles != null) {
       configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
     }

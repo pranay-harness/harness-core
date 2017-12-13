@@ -177,6 +177,6 @@ public class ServiceVariableResourceTest {
                                 .request()
                                 .delete();
     assertThat(restResponse.getStatus()).isEqualTo(200);
-    verify(VARIABLE_SERVICE).deleteByEntityId(APP_ID, TEMPLATE_ID);
+    verify(VARIABLE_SERVICE).pruneByService(APP_ID, TEMPLATE_ID);
   }
 }

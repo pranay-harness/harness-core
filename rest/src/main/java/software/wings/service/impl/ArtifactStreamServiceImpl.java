@@ -738,7 +738,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public void deleteByService(String appId, String serviceId) {
+  public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ArtifactStream.class)
         .field("appId")
         .equal(appId)
