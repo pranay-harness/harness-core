@@ -18,6 +18,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -95,6 +96,7 @@ import javax.inject.Inject;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
+@Ignore
 public class VaultTest extends WingsBaseTest {
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
