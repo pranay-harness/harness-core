@@ -10,6 +10,10 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Graph;
@@ -35,6 +39,9 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
 @Entity(value = "commands")
+@Indexes(@Index(
+    fields = { @Field("appId")
+               , @Field("originEntityId"), @Field("version") }, options = @IndexOptions(unique = true)))
 public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
