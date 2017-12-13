@@ -10,7 +10,6 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -43,7 +42,6 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 11/3/17.
  */
-@Ignore
 public class KmsAlertTest extends WingsBaseTest {
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
