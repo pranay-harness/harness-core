@@ -594,7 +594,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask != null) {
         return assignTask(delegateId, taskId, delegateTask);
       } else {
-        logger.info("Task {} was already assigned", taskId);
+        logger.info("Task {} not found or was already assigned", taskId);
       }
     } else {
       logger.info("Task {} is still being validated", taskId);
@@ -642,12 +642,13 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateTask delegateTask = cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).get(taskId);
     if (delegateTask != null) {
       // Sync
-      logger.info("Delegate task from cache: {}", delegateTask.getUuid());
+      logger.info("Got delegate task from cache: {}", delegateTask.getUuid());
       if (!isBlank(delegateTask.getDelegateId())) {
         logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
         delegateTask = null;
       }
     } else {
+      logger.info("Delegate task {} not in cache, checking database.", taskId);
       // Async
       delegateTask = wingsPersistence.createQuery(DelegateTask.class)
                          .field("accountId")
@@ -718,7 +719,7 @@ public class DelegateServiceImpl implements DelegateService {
           wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", DelegateTask.Status.STARTED);
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
-      logger.info("Delegate task from cache: {}", delegateTask.getUuid());
+      logger.info("Removing delegate task from cache: {}", delegateTask.getUuid());
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
     }
     return delegateTask;
