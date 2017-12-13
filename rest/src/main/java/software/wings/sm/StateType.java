@@ -3,7 +3,7 @@ package software.wings.sm;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
@@ -22,10 +22,11 @@ import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
-import static software.wings.stencils.StencilCategory.*;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COLLECTIONS;
 import static software.wings.stencils.StencilCategory.COMMANDS;
+import static software.wings.stencils.StencilCategory.CONTROLS;
+import static software.wings.stencils.StencilCategory.ENVIRONMENTS;
 import static software.wings.stencils.StencilCategory.OTHERS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
@@ -76,6 +77,7 @@ import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.RepeatState;
+import software.wings.sm.states.ScriptState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
@@ -87,7 +89,6 @@ import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -125,9 +126,19 @@ public enum StateType implements StateTypeDescriptor {
   PAUSE(PauseState.class, CONTROLS, 4, "Manual Step", asList(), ORCHESTRATION_STENCILS),
 
   /**
+   * Script state type.
+   */
+  SCRIPT(ScriptState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  /**
    * Http state type.
    */
-  HTTP(HttpState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
+  HTTP(HttpState.class, OTHERS, 2, asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  /**
+   * Email state type.
+   */
+  EMAIL(EmailState.class, OTHERS, 3, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * App dynamics state type.
@@ -170,10 +181,6 @@ public enum StateType implements StateTypeDescriptor {
   CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
-  /**
-   * Email state type.
-   */
-  EMAIL(EmailState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Env state state type.
