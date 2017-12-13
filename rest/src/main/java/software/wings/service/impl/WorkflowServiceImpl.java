@@ -68,7 +68,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -1052,44 +1051,44 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return true;
     }
 
-    boolean deleted;
-    if (forceDelete) {
-      deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
-    } else {
+    if (!forceDelete) {
       ensureWorkflowSafeToDelete(workflow);
-      if (workflowExecutionService.workflowExecutionsRunning(workflow.getWorkflowType(), appId, workflowId)) {
-        String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
-        throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
-      }
-      deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
     }
-    if (deleted) {
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-          changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
-        }
-      });
+
+    if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
+      return false;
     }
-    return deleted;
+
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+
+    return true;
   }
 
   private void ensureWorkflowSafeToDelete(Workflow workflow) {
     List<Pipeline> pipelines = pipelineService.listPipelines(
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflow.getAppId())
+            .addFilter(Pipeline.APP_ID_KEY, EQ, workflow.getAppId())
             .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
             .build());
 
-    if (pipelines.size() > 0) {
+    if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       throw new WingsException(INVALID_REQUEST, "message",
           String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
               pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
+    }
+
+    if (workflowExecutionService.workflowExecutionsRunning(
+            workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
+      String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
+      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
     }
   }
 
