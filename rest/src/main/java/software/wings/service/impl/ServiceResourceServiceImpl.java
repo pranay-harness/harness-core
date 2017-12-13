@@ -395,9 +395,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void setServiceDetails(Service service, String appId) {
     service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
     service.setServiceVariables(serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false));
-    service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, service.getUuid()));
-    service.setLastProdDeploymentActivity(
-        activityService.getLastProductionActivityForService(appId, service.getUuid()));
     service.setServiceCommands(getServiceCommands(appId, service.getUuid()));
   }
 

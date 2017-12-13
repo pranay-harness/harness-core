@@ -53,17 +53,29 @@ public class GitChangeSetRunnable implements Runnable {
       } else {
         // nothing already in execution and lock acquired
         waitingAccountIdList.forEach(accountId -> {
-          YamlChangeSet queuedChangeSet = yamlChangeSetService.getQueuedChangeSet(accountId);
-          if (queuedChangeSet != null) {
-            logger.info("Processing ChangeSet {}", queuedChangeSet);
-            yamlGitSyncService.handleChangeSet(queuedChangeSet);
-          } else {
-            logger.info("No change set queued to process for accountId [{}]", accountId);
+          YamlChangeSet queuedChangeSet = null;
+          try {
+            queuedChangeSet = yamlChangeSetService.getQueuedChangeSet(accountId);
+            if (queuedChangeSet != null) {
+              logger.info("Processing ChangeSet {}", queuedChangeSet);
+              yamlGitSyncService.handleChangeSet(queuedChangeSet);
+            } else {
+              logger.info("No change set queued to process for accountId [{}]", accountId);
+            }
+          } catch (Exception ex) {
+            StringBuilder stringBuilder = new StringBuilder()
+                                              .append("Unexpected error while processing commit for accountId: ")
+                                              .append(accountId);
+            if (queuedChangeSet != null) {
+              stringBuilder.append(" and for changeSet: ").append(queuedChangeSet.getUuid());
+            }
+            stringBuilder.append(" Reason: ").append(ex.getMessage());
+            logger.error(stringBuilder.toString(), ex);
           }
         });
       }
     } catch (Exception ex) {
-      logger.error("Unexpected error ", ex);
+      logger.error("Unexpected error", ex);
     }
   }
 }
