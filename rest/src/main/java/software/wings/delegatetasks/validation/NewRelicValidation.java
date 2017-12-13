@@ -3,6 +3,7 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
+import software.wings.beans.NewRelicConfig;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 
 import java.util.Arrays;
@@ -20,10 +21,14 @@ public class NewRelicValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof NewRelicDataCollectionInfo)
-                             .map(info -> ((NewRelicDataCollectionInfo) info).getNewRelicConfig().getNewRelicUrl())
-                             .findFirst()
-                             .orElse(null));
+    return singletonList(
+        Arrays.stream(getParameters())
+            .filter(o -> o instanceof NewRelicDataCollectionInfo || o instanceof NewRelicConfig)
+            .map(obj
+                -> (obj instanceof NewRelicConfig ? (NewRelicConfig) obj
+                                                  : ((NewRelicDataCollectionInfo) obj).getNewRelicConfig())
+                       .getNewRelicUrl())
+            .findFirst()
+            .orElse(null));
   }
 }
