@@ -12,7 +12,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
@@ -60,11 +62,11 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     for (String service : new String[] {"serviceA", "serviceB"}) {
       List<InstanceStatusSummary> instanceStatusSummaryList = new ArrayList<>();
       for (int i = 0; i < 5; ++i) {
-        instanceStatusSummaryList.add(
-            InstanceStatusSummaryBuilder.anInstanceStatusSummary()
-                .withInstanceElement(
-                    InstanceElement.Builder.anInstanceElement().withHostName(service + "-" + i).build())
-                .build());
+        instanceStatusSummaryList.add(InstanceStatusSummaryBuilder.anInstanceStatusSummary()
+                                          .withInstanceElement(InstanceElement.Builder.anInstanceElement()
+                                                                   .withHostName(service + "-" + i + ".harness.com")
+                                                                   .build())
+                                          .build());
       }
       elementExecutionSummary.add(
           ElementExecutionSummaryBuilder.anElementExecutionSummary()
@@ -98,9 +100,48 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
-    for (String host : nodes) {
-      assertTrue(host.startsWith("serviceA-"));
-      assertEquals(nodes.size(), 5);
+    assertEquals(nodes.size(), 10);
+    for (int i = 0; i < 5; ++i) {
+      assertTrue(nodes.contains("serviceA"
+          + "-" + i + ".harness.com"));
+      nodes.remove("serviceA"
+          + "-" + i + ".harness.com");
+      assertTrue(nodes.contains("serviceA"
+          + "-" + i));
+      nodes.remove("serviceA"
+          + "-" + i);
     }
+    assertEquals(nodes.size(), 0);
+  }
+
+  @Test
+  @RealMongo
+  public void getCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException {
+    List<InstanceElement> instanceElements = new ArrayList<>();
+    for (int i = 0; i < 5; ++i) {
+      instanceElements.add(InstanceElement.Builder.anInstanceElement()
+                               .withHostName("serviceA"
+                                   + "-" + i + ".harness.com")
+                               .build());
+    }
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
+    doReturn(instanceElements).when(params).getInstances();
+
+    doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
+    SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
+    Set<String> nodes = splunkV2State.getCanaryNewHostNames(context);
+    assertEquals(nodes.size(), 10);
+    for (int i = 0; i < 5; ++i) {
+      assertTrue(nodes.contains("serviceA"
+          + "-" + i + ".harness.com"));
+      nodes.remove("serviceA"
+          + "-" + i + ".harness.com");
+      assertTrue(nodes.contains("serviceA"
+          + "-" + i));
+      nodes.remove("serviceA"
+          + "-" + i);
+    }
+    assertEquals(nodes.size(), 0);
   }
 }

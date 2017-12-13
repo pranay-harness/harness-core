@@ -82,13 +82,13 @@ public class LogAnalysisManagerJob implements Job {
     private JobExecutionContext jobExecutionContext;
     private String delegateTaskId;
 
-    protected void preProcess(int logAnalysisMinute, String query) {
+    protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
       if (context.getTestNodes() == null) {
         throw new RuntimeException("Test nodes empty! " + JsonUtils.asJson(context));
       }
 
       LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionId(),
-          context.getWorkflowId(), context.getServiceId(), context.getTestNodes(), logAnalysisMinute);
+          context.getWorkflowId(), context.getServiceId(), nodes, logAnalysisMinute);
 
       switch (context.getStateType()) {
         case SUMO:
@@ -147,8 +147,18 @@ public class LogAnalysisManagerJob implements Job {
                 ClusterLevel.L1, logAnalysisMinute);
 
             if (hasTestRecords) {
-              preProcess(logAnalysisMinute, context.getQueries().iterator().next());
+              preProcess(logAnalysisMinute, context.getQueries().iterator().next(), context.getTestNodes());
             }
+
+            if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+              boolean hasControlRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
+                  context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getControlNodes(),
+                  ClusterLevel.L1, logAnalysisMinute);
+              if (hasControlRecords) {
+                preProcess(logAnalysisMinute, context.getQueries().iterator().next(), context.getControlNodes());
+              }
+            }
+
             /*
              * Run even if we don't have test data, since we may have control data for this minute.
              * If not, then the control data for this minute will be lost forever. The analysis job
