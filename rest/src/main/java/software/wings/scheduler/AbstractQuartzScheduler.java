@@ -77,6 +77,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
                                      .connectTimeout(30000)
                                      .serverSelectionTimeout(90000)
                                      .maxConnectionIdleTime(600000)
+                                     .connectionsPerHost(50)
                                      .socketKeepAlive(true);
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     Properties props = new Properties();
