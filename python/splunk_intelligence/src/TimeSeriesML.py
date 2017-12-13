@@ -11,7 +11,8 @@ import multiprocessing
 import numpy as np
 
 from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
-from core.util.TimeSeriesUtils import MetricType, simple_average, RiskLevel
+from core.util.TimeSeriesUtils import MetricType, simple_average, RiskLevel, MetricToDeviationType, \
+    ThresholdComparisonType
 from sources.HarnessLoader import HarnessLoader
 from sources.MetricTemplate import MetricTemplate
 
@@ -81,10 +82,6 @@ class TSAnomlyDetector(object):
         """
         result = {}
         data_len = (self._options.analysis_minute + 1)
-        # pad data so its a multiple of the smooth window
-        if data_len % self._options.smooth_window > 0:
-            pad_len = self._options.smooth_window - (self._options.analysis_minute + 1) % self._options.smooth_window
-            data_len = (self._options.analysis_minute + 1) + pad_len
         for transaction in transactions:
             txn_name = transaction.get('name')
             host = transaction.get('host')
@@ -231,28 +228,81 @@ class TSAnomlyDetector(object):
             txn_data_dict['weights_type'] = txn_data_dict['weights_type'].value
         return txn_data_dict
 
-    def analyze_metric(self, txn_name, metric_name, control_txn_data_dict, test_txn_data_dict):
+    def fast_analysis_metric(self, num_point_per_bucket, metric_name, control_data_dict, test_data_dict):
+            control_data_2d = np.array(control_data_dict['data'])
+            tets_data_2d = np.array(test_data_dict['data'])
+            # when most of the data (70%) in a bucket are Nan, mean and std of the bucket is set to Nan
+            base_array = np.asarray([np.nan] * control_data_2d.shape[1])
+            std_array = np.asarray([np.nan] * control_data_2d.shape[1])
+            for idx in xrange(control_data_2d.shape[1]-num_point_per_bucket):
+                # if enough data (70%) is recorded it calculates mean otherwise mean remains Nan
+                bucket_data = control_data_2d[:, idx:idx+num_point_per_bucket]
+                if np.isnan(bucket_data).sum() < round(0.7*bucket_data.size):
+                    base_array[idx] = np.nanmean(bucket_data)
+                    #if std of bucket is zero, it is set to 1
+                    std_array[idx] = 1 if np.nanstd(bucket_data) == 0 else np.nanstd(bucket_data)
+            base_array[control_data_2d.shape[1]-num_point_per_bucket:] = \
+                base_array[control_data_2d.shape[1]-num_point_per_bucket-1]
+            std_array[control_data_2d.shape[1]-num_point_per_bucket:] = \
+                std_array[control_data_2d.shape[1]-num_point_per_bucket-1]
+            #dist_2d_data = (tets_data_2d - base_array)/std_array
+            dist_2d_data = (tets_data_2d - base_array)
+            # if the difference is less a specified
+            # minimum threshold is set to zero. This information is derived from domain knowledge.
+            # For instance, if the difference in average response time is less than
+            # 50 ms, then it is acceptable regardless of what the distribution tells us.
+            # Also, its low deviation if the % change is within a specified value. For now its at 50%
+            min_delta = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.DELTA)
+            min_ratio = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.RATIO)
+            dist_2d_data[np.logical_or(abs(dist_2d_data) < min_delta,
+                                       abs(dist_2d_data) < min_ratio * np.minimum(tets_data_2d, base_array))] = 0
+            # normalizing distances
+            dist_2d_data = dist_2d_data/std_array
+            # for points where  test is Nan and base either has a value or it is Nan, distance is set to 0.
+            dist_2d_data[np.isnan(tets_data_2d)] = 0
+            # for points where baseline is Nan but test has a value, distance is set to maximum or tolerance + 0.1.
+            dist_2d_data[np.logical_and(~np.isnan(tets_data_2d), np.isnan(base_array))] = self._options.tolerance + 0.1
+            metric_deviation_type = self.metric_template.get_deviation_type(metric_name)
+            adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, dist_2d_data)
+            weights = np.asarray(range(tets_data_2d.shape[1]))
+            w_dist = np.dot(adjusted_dist, weights) / np.sum(weights)
+            risk = [0 if d < self._options.tolerance else 1 if d <= 2*self._options.tolerance else 2 for d in w_dist]
+            return dict(score=w_dist, risk=risk, control_values=base_array,
+                        test_values=test_data_dict['data'])
+
+    def analyze_metric(self, txn_name, metric_name, control_txn_data_dict, test_txn_data_dict, fast_analysis=None):
 
         control_data_dict = self.get_metrics_data(metric_name, self.metric_template, control_txn_data_dict)
         test_data_dict = self.get_metrics_data(metric_name, self.metric_template, test_txn_data_dict)
-
         response = {'results': {}, 'max_risk': -1, 'control_avg': -1, 'test_avg': -1}
-
+        if fast_analysis is None:
+            fast_analysis = True if len(control_data_dict['data']) > 19 else False
         if self.validate(txn_name, metric_name,
                          control_data_dict, test_data_dict):
+            if fast_analysis:
+                analysis_output = self.fast_analysis_metric(self._options.smooth_window, metric_name, control_data_dict,
+                                                            test_data_dict)
+            else:
+                data_len = (self._options.analysis_minute + 1)
+                if data_len % self._options.smooth_window > 0:
+                    pad_len = self._options.smooth_window - (
+                            self._options.analysis_minute + 1) % self._options.smooth_window
+                    control_data_dict['data'] = np.pad(control_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
+                                                       constant_values=np.nan)
+                    test_data_dict['data'] = np.pad(test_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
+                                                    constant_values=np.nan)
+                shdf = SAXHMMDistanceFinder(metric_name=metric_name,
+                                            smooth_window=self._options.smooth_window,
+                                            tolerance=self._options.tolerance,
+                                            control_data_dict=control_data_dict,
+                                            test_data_dict=test_data_dict,
+                                            metric_template=self.metric_template,
+                                            comparison_unit_window=self._options.comparison_unit_window)
 
-            shdf = SAXHMMDistanceFinder(metric_name=metric_name,
-                                        smooth_window=self._options.smooth_window,
-                                        tolerance=self._options.tolerance,
-                                        control_data_dict=control_data_dict,
-                                        test_data_dict=test_data_dict,
-                                        metric_template=self.metric_template,
-                                        comparison_unit_window=self._options.comparison_unit_window)
-
-            result = shdf.compute_dist()
+                analysis_output = shdf.compute_dist()
 
             """
-            Sample output:
+            Sample output , if fast method is  not used. For Fast Analysis some of parameters are not occupied:
             {
                 "control" : {
                         "data" : [ [ host1 data], [ host2 data] ...],
@@ -304,35 +354,48 @@ class TSAnomlyDetector(object):
                 
             }    
             """
-
             for index, host in enumerate(test_txn_data_dict[metric_name].keys()):
                 response['results'][host] = {}
-                response['results'][host]['control_data'] = np.ma.masked_array(result['control_values'][index],
-                                                                            np.isnan(result['control_values'][
-                                                                                         index])).filled(0).tolist()
-                response['results'][host]['test_data'] = np.ma.masked_array(result['test_values'][index],
-                                                                     np.isnan(result['test_values'][index])).filled(
-                    0).tolist()
-                response['results'][host]['distance'] = result['distances'][index].tolist()
-                response['results'][host]['nn'] = control_txn_data_dict[metric_name].keys()[
-                    result['nn'][index]]
-                response['results'][host]['score'] = result['score'][index]
-                response['results'][host]['test_cuts'] = result['test_cuts'][index].tolist()
-                response['results'][host]['optimal_cuts'] = result['optimal_test_cuts'][index]
-                response['results'][host]['optimal_data'] = np.ma.masked_array(result['optimal_test_data'][index],
-                                                                        np.isnan(result['optimal_test_data'][
-                                                                                index])).filled(
-                    0).tolist()
-                response['results'][host]['control_cuts'] = result['control_cuts'][index].tolist()
+                response['results'][host]['control_data'] = np.ma.masked_array(
+                    analysis_output['control_values'][index],
+                    np.isnan(analysis_output['control_values'][
+                                 index])).filled(0).tolist()
+                response['results'][host]['test_data'] = np.ma.masked_array(analysis_output['test_values'][index],
+                                                                     np.isnan(analysis_output['test_values'][index]))\
+                    .filled(0).tolist()
+                response['results'][host]['score'] = analysis_output['score'][index]
+                if fast_analysis:
+                    response['results'][host]['control_data'] = np.ma.masked_array(
+                        analysis_output['control_values'],
+                        np.isnan(analysis_output['control_values'])).filled(0).tolist()
+                    response['results'][host]['distance'] = []
+                    response['results'][host]['nn'] = 'base'
+                    response['results'][host]['control_index'] = []
+                    response['results'][host]['test_cuts'] = []
+                    response['results'][host]['optimal_cuts'] = []
+                    response['results'][host]['optimal_data'] = []
+                    response['results'][host]['control_cuts'] = []
+                    response['results'][host]['optimal_data'] = []
+                else:
+                    response['results'][host]['distance'] = analysis_output['distances'][index].tolist()
+                    response['results'][host]['nn'] = control_txn_data_dict[metric_name].keys()[
+                        analysis_output['nn'][index]]
+                    response['results'][host]['test_cuts'] = analysis_output['test_cuts'][index].tolist()
+                    response['results'][host]['optimal_cuts'] = analysis_output['optimal_test_cuts'][index]
+                    response['results'][host]['optimal_data'] = np.ma.masked_array(
+                        analysis_output['optimal_test_data'][index],
+                        np.isnan(analysis_output['optimal_test_data'][
+                                     index])).filled(
+                        0).tolist()
+                    response['results'][host]['control_cuts'] = analysis_output['control_cuts'][index].tolist()
+                    response['results'][host]['control_index'] = analysis_output['nn'][index]
                 throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
                 if throughput_metric_name is not None and test_txn_data_dict[throughput_metric_name][host]['skip']:
                     response['results'][host]['risk'] = RiskLevel.NA.value
                 else:
-                    response['results'][host]['risk'] = result['risk'][index]
+                    response['results'][host]['risk'] = analysis_output['risk'][index]
                     response['max_risk'] = max(response['max_risk'], response['results'][host]['risk'])
-                response['results'][host]['control_index'] = result['nn'][index]
                 response['results'][host]['test_index'] = index
-
         if 'data' in control_data_dict:
             response['control_avg'] = simple_average(control_data_dict['data'].flatten(), -1)
             response['control'] = self.make_jsonable(control_data_dict)
@@ -345,12 +408,22 @@ class TSAnomlyDetector(object):
 
         return response
 
-    def analyze(self):
+    @staticmethod
+    def adjust_numeric_dist(self, metric_deviation_type, dist_2d_data):
+        adjusted_dist = np.copy(dist_2d_data)
+        if metric_deviation_type == MetricToDeviationType.HIGHER:
+            adjusted_dist[dist_2d_data < 0] = 0
+        elif metric_deviation_type == MetricToDeviationType.LOWER:
+            adjusted_dist[dist_2d_data > 0] = 0
+        return np.abs(adjusted_dist)
+
+    def analyze(self, fast_analysis=None):
         """
          analyze all transaction / metric combinations
         """
         start_time = time.time()
         result = {'transactions': {}}
+
         control_txn_groups = self.group_txns(self.raw_control_txns)
         test_txn_groups = self.group_txns(self.raw_test_txns)
 
@@ -371,9 +444,8 @@ class TSAnomlyDetector(object):
                 for metric_ind, metric_name in enumerate(self.metric_names):
 
                     logger.info("Analyzing txn " + txn_name + " metric " + metric_name)
-
-                    response = self.analyze_metric(txn_name, metric_name, control_txn_data_dict, test_txn_data_dict)
-
+                    response = self.analyze_metric(txn_name, metric_name, control_txn_data_dict,
+                                                          test_txn_data_dict, fast_analysis)
                     ''' Use numbers for dictionary keys to avoid a failure on the Harness manager side
                         when saving data to MongoDB. MongoDB does not allow 'dot' chars in the key names for
                         dictionaries, and transactions or metric names can contain the dot char.
