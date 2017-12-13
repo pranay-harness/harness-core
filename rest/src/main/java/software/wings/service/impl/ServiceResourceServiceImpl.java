@@ -19,6 +19,7 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -171,7 +172,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (withBuildSource && appIdSearchFilter != null) {
       List<ArtifactStream> artifactStreams = new ArrayList<>();
       try {
-        artifactStreams = artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).build()).getResponse();
+        artifactStreams =
+            artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).withLimit(UNLIMITED).build())
+                .getResponse();
       } catch (Exception e) {
         logger.error("Failed to retrieve artifact streams", e);
       }
@@ -476,8 +479,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void ensureServiceSafeToDelete(Service service) {
     List<Workflow> workflows =
         workflowService
-            .listWorkflows(
-                aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
+            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
             .getResponse();
 
     List<Workflow> serviceWorkflows =
@@ -542,8 +544,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void ensureServiceCommandSafeToDelete(Service service, ServiceCommand serviceCommand) {
     List<Workflow> workflows =
         workflowService
-            .listWorkflows(
-                aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
+            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
             .getResponse();
     if (workflows == null) {
       return;
@@ -959,11 +960,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<ServiceCommand> getServiceCommands(String appId, String serviceId, boolean withCommandDetails) {
-    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
-                                                                .withLimit(PageRequest.UNLIMITED)
-                                                                .addFilter("appId", EQ, appId)
-                                                                .addFilter("serviceId", EQ, serviceId)
-                                                                .build();
+    PageRequest<ServiceCommand> serviceCommandPageRequest =
+        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("serviceId", EQ, serviceId).build();
     List<ServiceCommand> serviceCommands =
         wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
     if (withCommandDetails) {
