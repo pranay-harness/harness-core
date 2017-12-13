@@ -114,6 +114,14 @@ public interface ServiceResourceService extends OwnedByApplication {
   void delete(@NotEmpty String appId, @NotEmpty String serviceId);
 
   /**
+   * Prune descending objects.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   */
+  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
    * Adds the command.
    *
    * @param appId            the app id

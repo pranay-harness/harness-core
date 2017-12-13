@@ -289,7 +289,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public void deleteByService(String appId, String serviceId) {
+  public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ServiceTemplate.class)
         .field("appId")
         .equal(appId)

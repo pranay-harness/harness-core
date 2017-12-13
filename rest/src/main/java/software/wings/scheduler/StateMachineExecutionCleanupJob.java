@@ -35,6 +35,8 @@ public class StateMachineExecutionCleanupJob implements Job {
 
   public static final String GROUP = "SM_CLEANUP_CRON_GROUP";
 
+  public static final String APP_ID_KEY = "appId";
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionInterruptManager executionInterruptManager;
 
@@ -48,7 +50,7 @@ public class StateMachineExecutionCleanupJob implements Job {
             .addFilter("status", Operator.IN, RUNNING, NEW, STARTING, PAUSED, WAITING)
             .addFilter("expiryTs", Operator.LT, System.currentTimeMillis())
             .withLimit("1000")
-            .addFilter("appId", Operator.EQ, appId)
+            .addFilter(APP_ID_KEY, Operator.EQ, appId)
             .build());
 
     if (pageResponse == null || pageResponse.isEmpty()) {

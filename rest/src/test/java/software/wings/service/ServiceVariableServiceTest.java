@@ -277,7 +277,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
 
-    serviceVariableService.deleteByEntityId(APP_ID, "ENTITY_ID");
+    serviceVariableService.pruneByService(APP_ID, "ENTITY_ID");
     verify(wingsPersistence).delete(query);
   }
 

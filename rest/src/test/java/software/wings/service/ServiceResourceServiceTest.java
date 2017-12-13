@@ -85,6 +85,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
@@ -154,6 +155,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
   @Mock private ExecutorService executorService;
+
+  @Mock private JobScheduler jobScheduler;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -314,11 +317,18 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     inOrder.verify(workflowService).listWorkflows(any(PageResponse.class));
     inOrder.verify(wingsPersistence).delete(Service.class, SERVICE_ID);
-    inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
-    inOrder.verify(artifactStreamService).deleteByService(APP_ID, SERVICE_ID);
-    inOrder.verify(configService).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    inOrder.verify(serviceVariableService).deleteByEntityId(APP_ID, SERVICE_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    srs.pruneDescendingObjects(APP_ID, SERVICE_ID);
+    InOrder inOrder = inOrder(wingsPersistence, workflowService, notificationService, serviceTemplateService,
+        configService, serviceVariableService, artifactStreamService);
+    inOrder.verify(artifactStreamService).pruneByService(APP_ID, SERVICE_ID);
+    inOrder.verify(configService).pruneByService(APP_ID, SERVICE_ID);
+    inOrder.verify(serviceTemplateService).pruneByService(APP_ID, SERVICE_ID);
+    inOrder.verify(serviceVariableService).pruneByService(APP_ID, SERVICE_ID);
   }
 
   @Test
