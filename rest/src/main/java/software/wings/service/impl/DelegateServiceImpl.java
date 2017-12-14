@@ -557,7 +557,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (delegateTask != null) {
       if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
-      } else {
+      } else if (clock.millis() - delegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(5)) {
         blacklistDelegateForTask(delegateId, delegateTask);
       }
     }
