@@ -13,6 +13,7 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
@@ -283,8 +284,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     originalService.getServiceVariables().forEach(originalServiceVariable -> {
       ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
+      if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
+        clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
+      }
       clonedServiceVariable.setEntityId(savedCloneService.getUuid());
-
       serviceVariableService.save(clonedServiceVariable);
     });
     return savedCloneService;
