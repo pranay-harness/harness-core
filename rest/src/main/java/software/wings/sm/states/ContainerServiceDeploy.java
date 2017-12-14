@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -10,6 +9,7 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -17,14 +17,9 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
-import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
-import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
-import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.inject.Inject;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -40,15 +35,13 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.AwsConfig;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -62,21 +55,19 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
-import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -87,7 +78,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -109,10 +99,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient private transient SecretManager secretManager;
-
-  @Inject @Transient private GkeClusterService gkeClusterService;
-  @Inject @Transient private KubernetesContainerService kubernetesContainerService;
-  @Inject @Transient private AwsClusterService awsClusterService;
+  @Inject @Transient private transient DelegateProxyFactory delegateProxyFactory;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -168,6 +155,8 @@ public abstract class ContainerServiceDeploy extends State {
   }
 
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
     ContainerServiceParams containerServiceParams =
         ContainerServiceParams.builder()
             .settingAttribute(contextData.settingAttribute)
@@ -178,7 +167,8 @@ public abstract class ContainerServiceDeploy extends State {
             .region(contextData.region)
             .kubernetesType(contextData.containerElement.getKubernetesType())
             .build();
-    Optional<Integer> previousDesiredCount = getServiceDesiredCount(containerServiceParams);
+    Optional<Integer> previousDesiredCount = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                                                 .getServiceDesiredCount(containerServiceParams);
 
     if (!previousDesiredCount.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
@@ -202,41 +192,11 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private Optional<Integer> getServiceDesiredCount(ContainerServiceParams containerServiceParams) {
-    if (isNotEmpty(containerServiceParams.getContainerServiceName())) {
-      SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-      if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
-        KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-        return kubernetesContainerService.getControllerPodCount(kubernetesConfig,
-            containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName(),
-            containerServiceParams.getKubernetesType());
-      } else if (value instanceof AwsConfig) {
-        Optional<com.amazonaws.services.ecs.model.Service> service =
-            awsClusterService
-                .getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
-                    containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName())
-                .stream()
-                .filter(svc -> svc.getServiceName().equals(containerServiceParams.getContainerServiceName()))
-                .findFirst();
-        if (service.isPresent()) {
-          return Optional.of(service.get().getDesiredCount());
-        }
-      }
-    }
-    return Optional.empty();
-  }
-
-  private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams) {
-    return containerServiceParams.getSettingAttribute().getValue() instanceof GcpConfig
-        ? gkeClusterService.getCluster(containerServiceParams.getSettingAttribute(),
-              containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName(),
-              containerServiceParams.getNamespace())
-        : (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
-  }
-
   private int getNewInstancesDesiredCount(ContextData contextData) {
     if (getInstanceUnitType() == PERCENTAGE) {
       int percent = Math.min(getInstanceCount(), 100);
+      SyncTaskContext syncTaskContext =
+          aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
       ContainerServiceParams containerServiceParams =
           ContainerServiceParams.builder()
               .settingAttribute(contextData.settingAttribute)
@@ -247,7 +207,9 @@ public abstract class ContainerServiceDeploy extends State {
               .region(contextData.region)
               .kubernetesType(contextData.containerElement.getKubernetesType())
               .build();
-      LinkedHashMap<String, Integer> activeServiceCounts = getActiveServiceCounts(containerServiceParams);
+      LinkedHashMap<String, Integer> activeServiceCounts =
+          delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+              .getActiveServiceCounts(containerServiceParams);
       int totalActiveInstances = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
       int totalInstancesAvailable = Math.max(contextData.containerElement.getMaxInstances(), totalActiveInstances);
       int instanceCount = Long.valueOf(Math.round(percent * totalInstancesAvailable / 100.0)).intValue();
@@ -259,6 +221,8 @@ public abstract class ContainerServiceDeploy extends State {
 
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
     List<ContainerServiceData> desiredCounts = new ArrayList<>();
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
     ContainerServiceParams containerServiceParams =
         ContainerServiceParams.builder()
             .settingAttribute(contextData.settingAttribute)
@@ -269,7 +233,8 @@ public abstract class ContainerServiceDeploy extends State {
             .region(contextData.region)
             .kubernetesType(contextData.containerElement.getKubernetesType())
             .build();
-    LinkedHashMap<String, Integer> previousCounts = getActiveServiceCounts(containerServiceParams);
+    LinkedHashMap<String, Integer> previousCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                                                        .getActiveServiceCounts(containerServiceParams);
     previousCounts.remove(newServiceData.getName());
     int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
     for (String serviceName : previousCounts.keySet()) {
@@ -285,41 +250,6 @@ public abstract class ContainerServiceDeploy extends State {
       downsizeCount -= previousCount - desiredCount;
     }
     return desiredCounts;
-  }
-
-  private LinkedHashMap<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams) {
-    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      List<? extends HasMetadata> controllers = kubernetesContainerService.listControllers(
-          kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceParams.getKubernetesType());
-      if (controllers != null) {
-        String controllerNamePrefix = getPrefixFromControllerName(containerServiceParams.getContainerServiceName());
-        List<? extends HasMetadata> activeOldControllers =
-            controllers.stream()
-                .filter(ctrl
-                    -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix)
-                        && kubernetesContainerService.getControllerPodCount(ctrl) > 0)
-                .sorted(Comparator.comparingInt(rc -> getRevisionFromControllerName(rc.getMetadata().getName())))
-                .collect(Collectors.toList());
-        activeOldControllers.forEach(
-            ctrl -> result.put(ctrl.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(ctrl)));
-      }
-    } else if (value instanceof AwsConfig) {
-      String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceParams.getContainerServiceName());
-      List<com.amazonaws.services.ecs.model.Service> activeOldServices =
-          awsClusterService
-              .getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
-                  containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName())
-              .stream()
-              .filter(
-                  service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
-              .sorted(Comparator.comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
-              .collect(Collectors.toList());
-      activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
-    }
-    return result;
   }
 
   private ExecutionResponse addNewInstances(ContextData contextData, CommandStateExecutionData executionData) {
