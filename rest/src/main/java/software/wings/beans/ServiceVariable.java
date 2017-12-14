@@ -160,6 +160,7 @@ public class ServiceVariable extends Base implements Encryptable {
                                           .name(getName())
                                           .value(getValue())
                                           .type(getType())
+                                          .encryptedValue(getEncryptedValue())
                                           .expression(getExpression())
                                           .overrideType(getOverrideType())
                                           .build();

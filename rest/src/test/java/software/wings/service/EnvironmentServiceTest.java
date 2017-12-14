@@ -508,7 +508,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                                   .withLimit(PageRequest.UNLIMITED)
                                                   .addFilter("appId", EQ, environment.getAppId())
                                                   .addFilter("uuid", IN, asList(SERVICE_ID).toArray())
-                                                  .addFieldsExcluded("serviceCommands")
                                                   .addFieldsExcluded("appContainer")
                                                   .build();
     PageResponse<Service> servicesResponse = aPageResponse().withResponse(asList(service)).build();
