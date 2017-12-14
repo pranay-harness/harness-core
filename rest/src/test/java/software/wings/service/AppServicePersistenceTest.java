@@ -26,6 +26,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.Misc;
 
+import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
 @SetupScheduler
@@ -66,7 +67,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDeleteApplication() throws SchedulerException, InterruptedException {
+  public void shouldDeleteApplication() throws SchedulerException, InterruptedException, ExecutionException {
     assertThat(wingsPersistence.get(Application.class, appId)).isNull();
 
     // Create some other application. We make this to make sure that deleting items that belong to one
@@ -83,8 +84,9 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Application.class, APP_ID)).isNotNull();
 
     // Add alert to the dummy and the target application
-    alertService.openAlert(ACCOUNT_ID, dummyAppID, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build());
-    alertService.openAlert(ACCOUNT_ID, appId, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build());
+    alertService.openAlert(ACCOUNT_ID, dummyAppID, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build())
+        .get();
+    alertService.openAlert(ACCOUNT_ID, appId, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build()).get();
 
     // Make sure that we added the two alerts
     PageResponse<Alert> alerts = alertService.list(Builder.aPageRequest().build());
