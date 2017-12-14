@@ -154,7 +154,7 @@ public class PageRequest<T> {
    * @return the page size
    */
   public int getPageSize() {
-    return Misc.asInt(limit, DEFAULT_PAGE_SIZE);
+    return Misc.asInt(limit, DEFAULT_UNLIMITED);
   }
 
   /**
