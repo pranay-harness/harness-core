@@ -1,11 +1,14 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.QUEUED;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
 import com.google.inject.Inject;
@@ -34,6 +37,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
@@ -106,13 +110,20 @@ public class ActivityServiceImpl implements ActivityService {
     List<CommandUnitDetails> rv = new ArrayList<>();
     if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
       List<CommandUnit> commandUnits = activity.getCommandUnits();
-      for (CommandUnit commandUnit : commandUnits) {
+      CommandExecutionStatus finalExecutionStatus = null;
+      for (int idx = commandUnits.size() - 1; idx >= 0; idx--) {
+        CommandUnit commandUnit = commandUnits.get(idx);
+        if (asList(SUCCESS, FAILURE).contains(commandUnit.getCommandExecutionStatus())) {
+          finalExecutionStatus = commandUnit.getCommandExecutionStatus();
+        }
         rv.add(CommandUnitDetails.builder()
-                   .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
+                   .commandExecutionStatus(
+                       finalExecutionStatus == null ? commandUnit.getCommandExecutionStatus() : finalExecutionStatus)
                    .name(commandUnit.getName())
                    .commandUnitType(activity.getCommandUnitType())
                    .build());
       }
+      Collections.reverse(rv);
     } else if (activity.getCommandUnitType() == CommandUnitType.JENKINS) {
       rv.add(CommandUnitDetails.builder()
                  .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
