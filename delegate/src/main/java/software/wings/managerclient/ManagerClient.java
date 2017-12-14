@@ -61,6 +61,10 @@ public interface ManagerClient {
   @POST("logs/batched")
   Call<RestResponse<List<String>>> batchedSaveLogs(@Query("accountId") String accountId, @Body List<Log> logs);
 
+  @POST("logs/activity/{activityId}/unit/{unitName}/batched")
+  Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
+      @Query("accountId") String accountId, @Body Log log);
+
   @POST("appdynamics/save-metrics")
   Call<RestResponse<Boolean>> saveAppdynamicsMetrics(@Query("accountId") String accountId,
       @Query("applicationId") String applicationId, @Query("stateExecutionId") String stateExecutionId,

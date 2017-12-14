@@ -1,14 +1,11 @@
 package software.wings.service.impl;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.QUEUED;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
 import com.google.inject.Inject;
@@ -22,6 +19,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Log;
+import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
@@ -37,7 +35,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
@@ -110,20 +107,13 @@ public class ActivityServiceImpl implements ActivityService {
     List<CommandUnitDetails> rv = new ArrayList<>();
     if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
       List<CommandUnit> commandUnits = activity.getCommandUnits();
-      CommandExecutionStatus finalExecutionStatus = null;
-      for (int idx = commandUnits.size() - 1; idx >= 0; idx--) {
-        CommandUnit commandUnit = commandUnits.get(idx);
-        if (asList(SUCCESS, FAILURE).contains(commandUnit.getCommandExecutionStatus())) {
-          finalExecutionStatus = commandUnit.getCommandExecutionStatus();
-        }
+      for (CommandUnit commandUnit : commandUnits) {
         rv.add(CommandUnitDetails.builder()
-                   .commandExecutionStatus(
-                       finalExecutionStatus == null ? commandUnit.getCommandExecutionStatus() : finalExecutionStatus)
+                   .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
                    .name(commandUnit.getName())
                    .commandUnitType(activity.getCommandUnitType())
                    .build());
       }
-      Collections.reverse(rv);
     } else if (activity.getCommandUnitType() == CommandUnitType.JENKINS) {
       rv.add(CommandUnitDetails.builder()
                  .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
@@ -136,6 +126,34 @@ public class ActivityServiceImpl implements ActivityService {
 
     return rv;
   }
+
+  //  @Override
+  //  public List<CommandUnitDetails> getCommandUnits(String appId, String activityId) {
+  //    Activity activity = get(activityId, appId);
+  //    List<CommandUnitDetails> rv = new ArrayList<>();
+  //    if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
+  //      List<CommandUnit> commandUnits = activity.getCommandUnits();
+  //      CommandExecutionStatus finalExecutionStatus = null;
+  //      for (int idx = commandUnits.size() - 1; idx >= 0; idx--) {
+  //        CommandUnit commandUnit = commandUnits.get(idx);
+  //        if (asList(SUCCESS, FAILURE).contains(commandUnit.getCommandExecutionStatus())) {
+  //          finalExecutionStatus = commandUnit.getCommandExecutionStatus();
+  //        }
+  //        rv.add(CommandUnitDetails.builder().commandExecutionStatus(
+  //            finalExecutionStatus == null ? commandUnit.getCommandExecutionStatus() :
+  //            finalExecutionStatus).name(commandUnit.getName()).commandUnitType(
+  //            activity.getCommandUnitType()).build());
+  //      }
+  //      Collections.reverse(rv);
+  //    } else if (activity.getCommandUnitType() == CommandUnitType.JENKINS) {
+  //      rv.add(CommandUnitDetails.builder().commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus())).name(
+  //          COMMAND_UNIT_NAME).commandUnitType(CommandUnitType.JENKINS).build());
+  //    } else {
+  //      throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
+  //    }
+  //
+  //    return rv;
+  //  }
 
   @Override
   public Activity getLastActivityForService(String appId, String serviceId) {
@@ -182,29 +200,29 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public void updateCommandUnitStatus(Map<String, Map<String, Log>> activityCommandUnitLastLogMap) {
-    //    activityCommandUnitLastLogMap.forEach(this::updateActivityCommandUnitStatusWithRetry);
     activityCommandUnitLastLogMap.forEach(this ::updateActivityCommandUnitStatus);
   }
 
-  //  private void updateActivityCommandUnitStatusWithRetry(String activityId, Map<String, Log> commandUnitLastLogMap) {
-  //    boolean isSaved = false;
-  //    int retry = 0;
-  //
-  //    do {
-  //      try {
-  //        updateActivityCommandUnitStatus(activityId, commandUnitLastLogMap);
-  //        isSaved = true;
-  //      } catch (ConcurrentModificationException ignored) {
-  //        retry++;
-  //      }
-  //    } while (!isSaved && retry < MAX_ACTIVITY_VERSION_RETRY);
-  //
-  //    if (!isSaved) {
-  //      logger.error("Activity:{} commandUnit status couldn't be updated after {} retries", activityId, retry);
-  //    } else if (retry > 0) {
-  //      logger.warn("Version conflict encountered. Resolved in {} retry", retry);
-  //    }
-  //  }
+  @Override
+  public void updateCommandUnitStatus(
+      String appId, String activityId, String unitName, CommandExecutionStatus commandUnitStatus) {
+    //    Query<Activity> query =
+    //        wingsPersistence.createQuery(Activity.class).filter(Mapper.ID_KEY, activityId).filter("appId",
+    //        appId).disableValidation().filter("commandUnits.name",
+    //            unitName);
+    Query<Activity> query = wingsPersistence.createQuery(Activity.class)
+                                .field(Mapper.ID_KEY)
+                                .equal(activityId)
+                                .field("appId")
+                                .equal(appId)
+                                .field("commandUnits")
+                                .elemMatch(wingsPersistence.createQuery(Command.class).field("name").equal(unitName));
+
+    UpdateOperations<Activity> updateOperations = wingsPersistence.createUpdateOperations(Activity.class)
+                                                      .disableValidation()
+                                                      .set("commandUnits.$.commandExecutionStatus", commandUnitStatus);
+    wingsPersistence.update(query, updateOperations);
+  }
 
   private void updateActivityCommandUnitStatus(String activityId, Map<String, Log> commandUnitLastLogMap) {
     String appId = commandUnitLastLogMap.values().iterator().next().getAppId();
@@ -222,20 +240,6 @@ public class ActivityServiceImpl implements ActivityService {
               .set("commandUnits.$.commandExecutionStatus", log.getCommandExecutionStatus());
       wingsPersistence.update(query, updateOperations);
     });
-
-    //    activity.getCommandUnits().forEach(commandUnit -> {
-    //      Log log = commandUnitLastLogMap.get(commandUnit.getName());
-    //      if (isCommandUnitStatusUpdatableByLogStatus(commandUnit, log)) {
-    //        commandUnit.setCommandExecutionStatus(log.getCommandExecutionStatus());
-    //        Query<Activity> query =
-    //            wingsPersistence.createQuery(Activity.class).field(Mapper.ID_KEY).equal(activityId).disableValidation().field("commandUnits.name").equal(
-    //                log.getCommandUnitName());
-    //        UpdateOperations<Activity> updateOperations =
-    //            wingsPersistence.createUpdateOperations(Activity.class).disableValidation().set("commandUnits.$.commandExecutionStatus",
-    //                log.getCommandExecutionStatus());
-    //        wingsPersistence.update(query, updateOperations);
-    //      }
-    //    });
   }
 
   private boolean isCommandUnitStatusUpdatableByLogStatus(CommandUnit commandUnit, Log log) {
