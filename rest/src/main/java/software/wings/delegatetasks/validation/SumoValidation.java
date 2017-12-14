@@ -3,6 +3,7 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
+import software.wings.beans.SumoConfig;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 
 import java.util.Arrays;
@@ -20,10 +21,13 @@ public class SumoValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof SumoDataCollectionInfo)
-                             .map(info -> ((SumoDataCollectionInfo) info).getSumoConfig().getSumoUrl())
-                             .findFirst()
-                             .orElse(null));
+    return singletonList(
+        Arrays.stream(getParameters())
+            .filter(o -> o instanceof SumoDataCollectionInfo || o instanceof SumoConfig)
+            .map(obj
+                -> (obj instanceof SumoConfig ? (SumoConfig) obj : ((SumoDataCollectionInfo) obj).getSumoConfig())
+                       .getSumoUrl())
+            .findFirst()
+            .orElse(null));
   }
 }

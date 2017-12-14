@@ -13,6 +13,7 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
@@ -154,21 +155,42 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands) {
     PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
 
-    if (withServiceCommands) {
-      pageResponse.getResponse().forEach(service -> {
-        try {
-          service.setServiceCommands(getServiceCommands(service.getAppId(), service.getUuid()));
-        } catch (Exception e) {
-          logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
-              service.getAppId(), e);
-        }
-      });
-    }
     SearchFilter appIdSearchFilter = request.getFilters()
                                          .stream()
                                          .filter(searchFilter -> searchFilter.getFieldName().equals("appId"))
                                          .findFirst()
                                          .orElse(null);
+    if (withServiceCommands) {
+      if (appIdSearchFilter != null) {
+        PageRequest<ServiceCommand> serviceCommandPageRequest =
+            aPageRequest().withLimit(UNLIMITED).addFilter(appIdSearchFilter).build();
+        List<ServiceCommand> appServiceCommands =
+            wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
+        Map<String, List<ServiceCommand>> serviceToServiceCommandMap =
+            appServiceCommands.stream().collect(Collectors.groupingBy(ServiceCommand::getServiceId));
+        pageResponse.getResponse().forEach(service -> {
+          try {
+            //            service.setServiceCommands(getServiceCommands(service.getAppId(), service.getUuid()));
+            if (serviceToServiceCommandMap != null) {
+              List<ServiceCommand> serviceCommands = serviceToServiceCommandMap.get(service.getUuid());
+              if (serviceCommands != null) {
+                serviceCommands.forEach(serviceCommand
+                    -> serviceCommand.setCommand(commandService.getCommand(
+                        serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+                service.setServiceCommands(serviceCommands);
+              } else {
+                service.setServiceCommands(getServiceCommands(service.getAppId(), service.getUuid()));
+              }
+            }
+          } catch (Exception e) {
+            logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
+                service.getAppId(), e);
+          }
+        });
+      } else {
+        throw new WingsException("AppId field is required in Search Filter");
+      }
+    }
     if (withBuildSource && appIdSearchFilter != null) {
       List<ArtifactStream> artifactStreams = new ArrayList<>();
       try {
@@ -262,8 +284,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     originalService.getServiceVariables().forEach(originalServiceVariable -> {
       ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
+      if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
+        clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
+      }
       clonedServiceVariable.setEntityId(savedCloneService.getUuid());
-
       serviceVariableService.save(clonedServiceVariable);
     });
     return savedCloneService;

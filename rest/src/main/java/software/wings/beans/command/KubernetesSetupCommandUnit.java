@@ -130,9 +130,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String containerServiceName = fetchContainerServiceName(
         kubernetesConfig, setupParams.getRcNamePrefix(), setupParams.getKubernetesType(), encryptedDataDetails);
 
-    HasMetadata controllerDefinition = createKubernetesControllerDefinition(setupParams.getContainerTask(),
-        containerServiceName, controllerLabels, kubernetesConfig.getNamespace(), setupParams.getImageDetails(),
-        secretName, serviceVariables, executionLogCallback);
+    HasMetadata controllerDefinition =
+        createKubernetesControllerDefinition(setupParams.getContainerTask(), containerServiceName, controllerLabels,
+            kubernetesConfig.getNamespace(), setupParams.getImageDetails(), secretName, serviceVariables);
     kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, controllerDefinition);
 
     String serviceClusterIP = null;
@@ -298,8 +298,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
    */
   private HasMetadata createKubernetesControllerDefinition(ContainerTask containerTask,
       String replicationControllerName, Map<String, String> controllerLabels, String namespace,
-      ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables,
-      ExecutionLogCallback executionLogCallback) {
+      ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables) {
     KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
     if (kubernetesContainerTask == null) {
       kubernetesContainerTask = new KubernetesContainerTask();

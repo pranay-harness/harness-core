@@ -7,6 +7,7 @@ import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetup
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.fabric8.kubernetes.api.model.ReplicationController;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -63,6 +64,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env.getName());
 
+    String kubernetesType = containerTask != null ? ((KubernetesContainerTask) containerTask).kubernetesType()
+                                                  : ReplicationController.class.getName();
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -81,7 +84,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withServiceType(serviceType)
         .withTargetPort(targetPort)
         .withRcNamePrefix(rcNamePrefix)
-        .withKubernetesType(((KubernetesContainerTask) containerTask).kubernetesType())
+        .withKubernetesType(kubernetesType)
         .build();
   }
 

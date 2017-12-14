@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -61,8 +62,8 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public void openAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    executorService.submit(() -> openInternal(accountId, appId, alertType, alertData));
+  public Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    return executorService.submit(() -> openInternal(accountId, appId, alertType, alertData));
   }
 
   @Override
