@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -12,9 +11,8 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -74,6 +72,9 @@ public class ActivityResource {
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     if (!Strings.isNullOrEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
+    }
+    if (request.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
+      request.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
     }
     return new RestResponse<>(activityService.list(request));
   }
