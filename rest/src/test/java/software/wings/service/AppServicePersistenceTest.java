@@ -6,10 +6,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.quartz.JobListener;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
@@ -22,9 +18,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
 import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.StateMachineExecutionCleanupJob;
+import software.wings.scheduler.TestJobListener;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
-import software.wings.utils.Misc;
 
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
@@ -41,30 +38,6 @@ public class AppServicePersistenceTest extends WingsBaseTest {
 
   private static String appId = APP_ID;
   private static String dummyAppID = "dummy" + appId;
-
-  private class TestJobListener implements JobListener {
-    public Object lock = new Object();
-
-    @Override
-    public String getName() {
-      return TestJobListener.class.getName();
-    }
-
-    @Override
-    public void jobToBeExecuted(JobExecutionContext context) {}
-
-    @Override
-    public void jobExecutionVetoed(JobExecutionContext context) {}
-
-    @Override
-    public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-      if (context.getTrigger().getJobKey().toString().equals(PruneObjectJob.GROUP + "." + APP_ID)) {
-        synchronized (lock) {
-          lock.notifyAll();
-        }
-      }
-    }
-  }
 
   @Test
   public void shouldDeleteApplication() throws SchedulerException, InterruptedException, ExecutionException {
@@ -95,7 +68,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
 
     // TODO: add to the application from all other objects that are owned from application
 
-    TestJobListener listener = new TestJobListener();
+    TestJobListener listener = new TestJobListener(PruneObjectJob.GROUP + "." + APP_ID);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);
 
     // Delete the target application
@@ -104,8 +77,8 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     // Make sure we cannot access the application after it was deleted
     assertThat(wingsPersistence.get(Application.class, APP_ID)).isNull();
 
-    synchronized (listener.lock) {
-      listener.lock.wait(10000);
+    synchronized (listener) {
+      listener.wait(10000);
     }
 
     // Make sure that just the alert for the application are deleted
