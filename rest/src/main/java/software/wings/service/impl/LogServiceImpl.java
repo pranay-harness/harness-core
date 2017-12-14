@@ -196,4 +196,13 @@ public class LogServiceImpl implements LogService {
                                   .hasNoneOf(idsToKeep));
     }
   }
+
+  @Override
+  public String batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
+    logger.info("Batched log: [{}-{}-{}-{}]", log.getActivityId(), log.getCommandUnitName(), log.getLogLevel(),
+        log.getCommandExecutionStatus());
+    String logId = wingsPersistence.save(log);
+    activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
+    return logId;
+  }
 }

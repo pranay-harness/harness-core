@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -93,4 +94,7 @@ public interface ActivityService extends OwnedByEnvironment {
    * @param activityCommandUnitLastLogMap the activity command unit last log map
    */
   void updateCommandUnitStatus(Map<String, Map<String, Log>> activityCommandUnitLastLogMap);
+
+  void updateCommandUnitStatus(
+      String appId, String activityId, String unitName, CommandExecutionStatus commandUnitStatus);
 }
