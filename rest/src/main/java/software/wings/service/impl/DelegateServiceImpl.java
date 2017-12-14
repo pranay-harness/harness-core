@@ -600,7 +600,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Task {} not found or was already assigned", taskId);
       }
     } else {
-      logger.info("Task {} is still being validated", taskId);
+      logger.info("Task {} is still being validated");
     }
     return null;
   }

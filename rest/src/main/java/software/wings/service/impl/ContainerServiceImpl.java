@@ -1,7 +1,12 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
+import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
+import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
+import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
+import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.inject.Inject;
 
@@ -9,6 +14,7 @@ import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -20,6 +26,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
@@ -28,15 +35,81 @@ import software.wings.settings.SettingValue;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ContainerServiceImpl implements ContainerService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private GkeClusterService gkeClusterService;
   @Inject private KubernetesContainerService kubernetesContainerService;
+  @Inject private AwsClusterService awsClusterService;
   @Inject private AwsHelperService awsHelperService;
+
+  @Override
+  public Optional<Integer> getServiceDesiredCount(ContainerServiceParams containerServiceParams) {
+    if (isNotEmpty(containerServiceParams.getContainerServiceName())) {
+      SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+      if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
+        KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+        return kubernetesContainerService.getControllerPodCount(kubernetesConfig,
+            containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName(),
+            containerServiceParams.getKubernetesType());
+      } else if (value instanceof AwsConfig) {
+        Optional<Service> service =
+            awsClusterService
+                .getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
+                    containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName())
+                .stream()
+                .filter(svc -> svc.getServiceName().equals(containerServiceParams.getContainerServiceName()))
+                .findFirst();
+        if (service.isPresent()) {
+          return Optional.of(service.get().getDesiredCount());
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public LinkedHashMap<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams) {
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      List<? extends HasMetadata> controllers = kubernetesContainerService.listControllers(
+          kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceParams.getKubernetesType());
+      if (controllers != null) {
+        String controllerNamePrefix = getPrefixFromControllerName(containerServiceParams.getContainerServiceName());
+        List<? extends HasMetadata> activeOldControllers =
+            controllers.stream()
+                .filter(ctrl
+                    -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix)
+                        && kubernetesContainerService.getControllerPodCount(ctrl) > 0)
+                .sorted(Comparator.comparingInt(rc -> getRevisionFromControllerName(rc.getMetadata().getName())))
+                .collect(Collectors.toList());
+        activeOldControllers.forEach(
+            ctrl -> result.put(ctrl.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(ctrl)));
+      }
+    } else if (value instanceof AwsConfig) {
+      String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceParams.getContainerServiceName());
+      List<Service> activeOldServices =
+          awsClusterService
+              .getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
+                  containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName())
+              .stream()
+              .filter(
+                  service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
+              .sorted(Comparator.comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
+              .collect(Collectors.toList());
+      activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
+    }
+    return result;
+  }
 
   private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams) {
     return containerServiceParams.getSettingAttribute().getValue() instanceof GcpConfig
