@@ -1,7 +1,9 @@
 package software.wings.delegatetasks;
 
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricNames;
 
 import java.util.List;
 
@@ -14,4 +16,6 @@ public interface MetricDataStoreService {
 
   boolean saveNewRelicMetrics(String accountId, String applicationId, String stateExecutionId, String delegateTaskID,
       List<NewRelicMetricDataRecord> metricData);
+
+  boolean saveNewRelicMetricNames(String accountId, NewRelicMetricNames metricData);
 }

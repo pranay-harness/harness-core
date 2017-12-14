@@ -24,7 +24,9 @@ import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -75,6 +77,14 @@ public interface ManagerClient {
   Call<RestResponse<Boolean>> saveNewRelicMetrics(@Query("accountId") String accountId,
       @Query("applicationId") String applicationId, @Query("stateExecutionId") String stateExecutionId,
       @Query("delegateTaskId") String delegateTaskId, @Body List<NewRelicMetricDataRecord> metricData);
+
+  @POST("newrelic/save-metric-names")
+  Call<RestResponse<Boolean>> saveNewRelicMetricNames(
+      @Query("accountId") String accountId, @Body NewRelicMetricNames metricData);
+
+  @POST("newrelic/get-metric-names")
+  Call<RestResponse<NewRelicMetricNames>> getNewRelicMetricNames(
+      @Query("accountId") String accountId, @Body NewRelicMetricNames metricNames);
 
   @POST(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveSplunkLogs(@Query("accountId") String accountId, @Query("appId") String appId,

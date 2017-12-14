@@ -32,4 +32,5 @@ public class NewRelicDataCollectionInfo {
   private int dataCollectionMinute;
   List<EncryptedDataDetail> encryptedDataDetails;
   private Set<String> hosts;
+  private String settingAttributeId;
 }
