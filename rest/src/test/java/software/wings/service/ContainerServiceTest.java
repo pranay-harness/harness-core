@@ -42,6 +42,7 @@ import software.wings.service.intfc.ContainerService;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -169,6 +170,51 @@ public class ContainerServiceTest extends WingsBaseTest {
     when(awsHelperService.listTasks(eq("us-east-1"), eq(awsConfig), anyObject(), anyObject()))
         .thenReturn(listTasksResult);
     when(listTasksResult.getTaskArns()).thenReturn(emptyList());
+  }
+
+  @Test
+  public void shouldGetServiceDesiredCount_Gcp() {
+    Optional<Integer> result = containerService.getServiceDesiredCount(gcpParams);
+
+    assertThat(result.isPresent()).isTrue();
+    assertThat(result.get()).isEqualTo(2);
+  }
+  @Test
+  public void shouldGetServiceDesiredCount_Aws() {
+    Optional<Integer> result = containerService.getServiceDesiredCount(awsParams);
+
+    assertThat(result.isPresent()).isTrue();
+    assertThat(result.get()).isEqualTo(2);
+  }
+  @Test
+  public void shouldGetServiceDesiredCount_DirectKube() {
+    Optional<Integer> result = containerService.getServiceDesiredCount(kubernetesConfigParams);
+
+    assertThat(result.isPresent()).isTrue();
+    assertThat(result.get()).isEqualTo(2);
+  }
+
+  @Test
+  public void shouldGetActiveServiceCounts_Gcp() {
+    LinkedHashMap<String, Integer> result = containerService.getActiveServiceCounts(gcpParams);
+
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.get(KUBERNETES_REPLICATION_CONTROLLER_NAME)).isEqualTo(2);
+  }
+
+  @Test
+  public void shouldGetActiveServiceCounts_Aws() {
+    LinkedHashMap<String, Integer> result = containerService.getActiveServiceCounts(awsParams);
+
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.get(ECS_SERVICE_NAME)).isEqualTo(2);
+  }
+  @Test
+  public void shouldGetActiveServiceCounts_DirectKube() {
+    LinkedHashMap<String, Integer> result = containerService.getActiveServiceCounts(kubernetesConfigParams);
+
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.get(KUBERNETES_REPLICATION_CONTROLLER_NAME)).isEqualTo(2);
   }
 
   @Test
