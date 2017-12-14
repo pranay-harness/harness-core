@@ -15,6 +15,7 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -294,7 +295,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                              .withLimit(PageRequest.UNLIMITED)
                                              .addFilter("appId", EQ, environment.getAppId())
                                              .addFilter("uuid", IN, serviceIds.toArray())
-                                             .addFieldsExcluded("serviceCommands")
                                              .addFieldsExcluded("appContainer")
                                              .build();
       services = serviceResourceService.list(pageRequest, false, false);
@@ -578,6 +578,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (serviceVariables != null) {
       for (ServiceVariable serviceVariable : serviceVariables) {
         ServiceVariable clonedServiceVariable = serviceVariable.clone();
+        if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
+          clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
+        }
         if (targetAppId != null) {
           clonedServiceVariable.setAppId(targetAppId);
         }
