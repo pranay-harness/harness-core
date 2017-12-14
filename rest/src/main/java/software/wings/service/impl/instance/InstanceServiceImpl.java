@@ -317,7 +317,7 @@ public class InstanceServiceImpl implements InstanceService {
 
     String fieldName;
     if (InstanceType.KUBERNETES_CONTAINER_INSTANCE.equals(instanceType)) {
-      fieldName = "instanceInfo.replicationControllerName";
+      fieldName = "instanceInfo.controllerName";
     } else if (InstanceType.ECS_CONTAINER_INSTANCE.equals(instanceType)) {
       fieldName = "instanceInfo.serviceName";
     } else {
@@ -372,7 +372,7 @@ public class InstanceServiceImpl implements InstanceService {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     Map<InstanceKey, Instance> instanceMap;
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      query.field("instanceInfo.replicationControllerName").startsWith(containerSvcNameNoRevision);
+      query.field("instanceInfo.controllerName").startsWith(containerSvcNameNoRevision);
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
       query.field("instanceInfo.serviceName").startsWith(containerSvcNameNoRevision);
     } else {

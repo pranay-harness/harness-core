@@ -3,6 +3,7 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
+import software.wings.beans.ElkConfig;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 
 import java.util.Arrays;
@@ -20,10 +21,13 @@ public class ElkValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof ElkDataCollectionInfo)
-                             .map(info -> ((ElkDataCollectionInfo) info).getElkConfig().getElkUrl())
-                             .findFirst()
-                             .orElse(null));
+    return singletonList(
+        Arrays.stream(getParameters())
+            .filter(o -> o instanceof ElkDataCollectionInfo || o instanceof ElkConfig)
+            .map(obj
+                -> (obj instanceof ElkConfig ? (ElkConfig) obj : ((ElkDataCollectionInfo) obj).getElkConfig())
+                       .getElkUrl())
+            .findFirst()
+            .orElse(null));
   }
 }

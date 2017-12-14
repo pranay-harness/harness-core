@@ -2,6 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 
@@ -22,8 +23,11 @@ public class AppdynamicsValidation extends AbstractDelegateValidateTask {
   public List<String> getCriteria() {
     return singletonList(
         Arrays.stream(getParameters())
-            .filter(o -> o instanceof AppdynamicsDataCollectionInfo)
-            .map(info -> ((AppdynamicsDataCollectionInfo) info).getAppDynamicsConfig().getControllerUrl())
+            .filter(o -> o instanceof AppdynamicsDataCollectionInfo || o instanceof AppDynamicsConfig)
+            .map(obj
+                -> (obj instanceof AppDynamicsConfig ? (AppDynamicsConfig) obj
+                                                     : ((AppdynamicsDataCollectionInfo) obj).getAppDynamicsConfig())
+                       .getControllerUrl())
             .findFirst()
             .orElse(null));
   }
