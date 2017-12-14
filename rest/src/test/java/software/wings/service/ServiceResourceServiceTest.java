@@ -29,6 +29,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
@@ -213,6 +214,18 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     PageRequest<Service> request = new PageRequest<>();
     request.addFilter("appId", APP_ID, EQ);
     when(wingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<Service>());
+    PageRequest<ServiceCommand> serviceCommandPageRequest =
+        aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, APP_ID).build();
+    when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
+        .thenReturn(PageResponse.Builder.aPageResponse()
+                        .withResponse(asList(aServiceCommand()
+                                                 .withUuid(SERVICE_COMMAND_ID)
+                                                 .withServiceId(SERVICE_ID)
+                                                 .withTargetToAllEnv(true)
+                                                 .withName("START")
+                                                 .withCommand(commandBuilder.build())
+                                                 .build()))
+                        .build());
     srs.list(request, false, true);
     ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
     verify(wingsPersistence).query(eq(Service.class), argument.capture());

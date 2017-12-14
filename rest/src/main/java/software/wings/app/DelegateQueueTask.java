@@ -178,9 +178,10 @@ public class DelegateQueueTask implements Runnable {
             DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
             if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
               // If it's been more than a minute, remove it
-              if (clock.millis() - syncDelegateTask.getLastUpdatedAt() > TimeUnit.MINUTES.toMillis(1)) {
+              if (clock.millis() - syncDelegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(10)) {
+                logger.warn("Evicting old delegate sync task {}", syncDelegateTask.getUuid());
                 Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
-                    .remove(stringDelegateTaskEntry.getKey());
+                    .remove(syncDelegateTask.getUuid());
               } else {
                 logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
                     syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());

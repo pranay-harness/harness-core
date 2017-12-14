@@ -14,6 +14,7 @@ import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
+import static software.wings.beans.FeatureName.SHELL_SCRIPT_AS_A_STEP;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
@@ -131,6 +132,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -149,6 +151,7 @@ import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.ElasticLoadBalancerState.Operation;
+import software.wings.sm.states.ScriptState;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
@@ -204,20 +207,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private PluginManager pluginManager;
   @Inject private StaticConfiguration staticConfiguration;
-  @Inject private WorkflowExecutionService workflowExecutionService;
+
+  @Inject private AccountService accountService;
+  @Inject private AppService appService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private EntityUpdateService entityUpdateService;
   @Inject private EntityVersionService entityVersionService;
+  @Inject private ExecutorService executorService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private NotificationSetupService notificationSetupService;
+  @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
-  @Inject private NotificationSetupService notificationSetupService;
-  @Inject private AppService appService;
-  @Inject private AccountService accountService;
-  @Inject private ExecutorService executorService;
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private PipelineService pipelineService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -245,7 +250,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes();
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes(appService.getAccountIdByAppId(appId));
 
     Map<StateTypeScope, List<Stencil>> mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
         stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
@@ -300,13 +305,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return maps;
   }
 
-  private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes() {
+  private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes(String accountId) {
     if (cachedStencils != null) {
       return cachedStencils;
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
-    stencils.addAll(Arrays.asList(values()));
+    Arrays.stream(values())
+        .filter(state
+            -> state.getTypeClass() != ScriptState.class
+                || featureFlagService.isEnabled(SHELL_SCRIPT_AS_A_STEP, accountId))
+        .forEach(state -> stencils.add(state));
 
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);

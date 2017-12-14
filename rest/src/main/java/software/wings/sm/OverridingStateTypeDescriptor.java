@@ -16,6 +16,10 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor, Overr
   @JsonIgnore private Optional<String> overridingName = Optional.empty();
   @JsonIgnore private Optional<JsonNode> overridingJsonSchema = Optional.empty();
 
+  public boolean isActive(String accountId) {
+    return true;
+  }
+
   /**
    * Instantiates a new Overriding state type descriptor.
    *
