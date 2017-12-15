@@ -16,12 +16,12 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 5/27/16.
  */
 @Entity(value = "commandLogs", noClassnameStored = true)
-//@Indexes(@Index(fields = {@Field("activityId"), @Field("hostName")})) //TODO: uncomment
 public class Log extends Base {
   @NotEmpty @Indexed private String activityId;
   private String hostName;
   @NotEmpty @Indexed private String commandUnitName;
   private String logLine;
+  private Integer linesCount;
   @NotNull private LogLevel logLevel;
   @NotNull private CommandExecutionStatus commandExecutionStatus;
 
@@ -175,6 +175,14 @@ public class Log extends Base {
         .add("logLevel", logLevel)
         .add("commandExecutionStatus", commandExecutionStatus)
         .toString();
+  }
+
+  public Integer getLinesCount() {
+    return linesCount;
+  }
+
+  public void setLinesCount(Integer linesCount) {
+    this.linesCount = linesCount;
   }
 
   /**
