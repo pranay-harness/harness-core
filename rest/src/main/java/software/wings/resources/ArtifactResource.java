@@ -67,9 +67,6 @@ public class ArtifactResource {
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    if (pageRequest.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
-      pageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
-    }
     return new RestResponse<>(artifactService.list(pageRequest, false));
   }
 
