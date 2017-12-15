@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -46,7 +45,6 @@ public class AuditServiceImpl implements AuditService {
 
   @Inject private FileService fileService;
   private WingsPersistence wingsPersistence;
-  @Inject private ExecutorService executorService;
 
   /**
    * Instantiates a new audit service impl.
