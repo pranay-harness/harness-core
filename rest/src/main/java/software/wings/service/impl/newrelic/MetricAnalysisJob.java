@@ -1,7 +1,6 @@
 package software.wings.service.impl.newrelic;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
@@ -28,8 +27,8 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -89,6 +88,7 @@ public class MetricAnalysisJob implements Job {
     public static final int PYTHON_JOB_RETRIES = 3;
     public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
     protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
+    private static final int APM_BUFFER_MINUTES = 2;
     private final String pythonScriptRoot;
 
     private final AnalysisContext context;
@@ -99,6 +99,7 @@ public class MetricAnalysisJob implements Job {
     private MetricDataAnalysisService analysisService;
     private final WaitNotifyEngine waitNotifyEngine;
     private final DelegateService delegateService;
+    private final int analysisDuration;
 
     public MetricAnalysisGenerator(MetricDataAnalysisService service, WaitNotifyEngine waitNotifyEngine,
         DelegateService delegateService, AnalysisContext context, JobExecutionContext jobExecutionContext,
@@ -116,6 +117,7 @@ public class MetricAnalysisJob implements Job {
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         this.controlNodes.removeAll(this.testNodes);
       }
+      this.analysisDuration = context.getTimeDuration() - APM_BUFFER_MINUTES - 1;
     }
 
     private Map<String, List<Threshold>> getThresholdsMap(
@@ -280,14 +282,14 @@ public class MetricAnalysisJob implements Job {
             attempt += PYTHON_JOB_RETRIES;
             break;
           default:
-            logger.warn("Log analysis failed for " + context.getStateExecutionId() + " for minute " + analysisMinute
-                + " trial: " + (attempt + 1));
+            logger.warn("time series analysis failed for " + context.getStateExecutionId() + " for minute "
+                + analysisMinute + " trial: " + (attempt + 1));
             Misc.sleep(2, TimeUnit.SECONDS);
         }
       }
 
       if (attempt == PYTHON_JOB_RETRIES) {
-        throw new RuntimeException("Error running ML analysis. Finished all retries.");
+        throw new RuntimeException("Error running time series analysis. Finished all retries.");
       }
     }
 
@@ -309,16 +311,30 @@ public class MetricAnalysisJob implements Job {
           return;
         }
 
-        final int analysisMinute = analysisService.getCollectionMinuteToProcess(context.getStateType(),
+        final NewRelicMetricDataRecord heartBeatRecord = analysisService.getLastHeartBeat(context.getStateType(),
             context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
 
-        logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
+        if (heartBeatRecord == null) {
+          logger.info("skipping time series analysis for " + context.getStateExecutionId() + ". analysisMinute is -1 ");
+          return;
+        }
 
-        if (analysisMinute > context.getTimeDuration() - 1) {
-          logger.info("time series analysis finished after running for {} minutes", analysisMinute);
+        if (heartBeatRecord.getLevel() == ClusterLevel.HF
+            && heartBeatRecord.getDataCollectionMinute() >= analysisDuration) {
+          logger.info(
+              "time series analysis finished after running for {} minutes", heartBeatRecord.getDataCollectionMinute());
           completeCron = true;
           return;
         }
+
+        if (heartBeatRecord.getLevel() == ClusterLevel.HF) {
+          logger.info("Skipping time series analysis. No new data.");
+          return;
+        }
+
+        int analysisMinute = heartBeatRecord.getDataCollectionMinute();
+
+        logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
 
         boolean runTimeSeriesML = true;
 
@@ -368,11 +384,17 @@ public class MetricAnalysisJob implements Job {
         analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
             context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
 
-        int nextAnalysisMinute = analysisService.getCollectionMinuteToProcess(context.getStateType(),
+        if (analysisMinute >= analysisDuration) {
+          logger.info("time series analysis finished after running for {} minutes", analysisMinute);
+          completeCron = true;
+          return;
+        }
+
+        NewRelicMetricDataRecord nextHeartBeatRecord = analysisService.getLastHeartBeat(context.getStateType(),
             context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
 
         logger.info("Finish analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute
-            + ". Next minute is " + nextAnalysisMinute);
+            + ". Next minute is " + nextHeartBeatRecord.getDataCollectionMinute());
       } catch (Exception ex) {
         completeCron = true;
         error = true;
