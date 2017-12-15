@@ -1510,6 +1510,17 @@ public class AwsHelperService {
     return false;
   }
 
+  public DescribeImagesResult describeImagesResult(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, DescribeImagesRequest describeImagesRequest) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      return getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .describeImages(describeImagesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new DescribeImagesResult();
+  }
   private String getBucketRegion(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
