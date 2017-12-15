@@ -2027,12 +2027,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
                                    .build());
 
+    workflowPhase.addPhaseStep(
+        aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
+
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
-
-    workflowPhase.addPhaseStep(
-        aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
 
     // Not needed for non-DC
     // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
