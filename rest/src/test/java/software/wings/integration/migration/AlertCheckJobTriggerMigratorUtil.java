@@ -9,11 +9,6 @@ import com.google.inject.name.Named;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.dl.PageRequest;
@@ -29,9 +24,6 @@ import software.wings.scheduler.QuartzScheduler;
 @Integration
 @Ignore
 public class AlertCheckJobTriggerMigratorUtil extends WingsBaseTest {
-  private static final String ALERT_CHECK_CRON_GROUP = "ALERT_CHECK_CRON_GROUP";
-  private static final int ALERT_CHECK_POLL_INTERVAL = 300;
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -51,24 +43,7 @@ public class AlertCheckJobTriggerMigratorUtil extends WingsBaseTest {
     pageResponse.getResponse().forEach(account -> {
       System.out.println("Creating alert check scheduler for account " + account.getUuid());
       // deleting the old
-      jobScheduler.deleteJob(account.getUuid(), ALERT_CHECK_CRON_GROUP);
-      addCronForAlertCheck(account);
+      AlertCheckJob.add(jobScheduler, account);
     });
-  }
-
-  private void addCronForAlertCheck(Account account) {
-    JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
-                        .withIdentity(account.getUuid(), ALERT_CHECK_CRON_GROUP)
-                        .usingJobData("accountId", account.getUuid())
-                        .build();
-
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(account.getUuid(), ALERT_CHECK_CRON_GROUP)
-            .withSchedule(
-                SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(ALERT_CHECK_POLL_INTERVAL).repeatForever())
-            .build();
-
-    jobScheduler.scheduleJob(job, trigger);
   }
 }
