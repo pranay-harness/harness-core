@@ -64,7 +64,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -99,10 +101,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       kubernetesConfig = gkeClusterService.getCluster(
           cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), setupParams.getNamespace());
     }
-    String lastReplicationControllerName = lastReplicationController(
-        kubernetesConfig, setupParams.getRcNamePrefix(), setupParams.getKubernetesType(), encryptedDataDetails);
 
-    int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
+    int revision = KubernetesConvention
+                       .getRevisionFromControllerName(lastReplicationController(
+                           kubernetesConfig, encryptedDataDetails, setupParams.getRcNamePrefix()))
+                       .orElse(-1)
+        + 1;
 
     Map<String, String> serviceLabels =
         ImmutableMap.<String, String>builder()
@@ -127,8 +131,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         createRegistrySecret(
             secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));
 
-    String containerServiceName = fetchContainerServiceName(
-        kubernetesConfig, setupParams.getRcNamePrefix(), setupParams.getKubernetesType(), encryptedDataDetails);
+    String containerServiceName =
+        KubernetesConvention.getReplicationControllerName(setupParams.getRcNamePrefix(), revision);
 
     HasMetadata controllerDefinition =
         createKubernetesControllerDefinition(setupParams.getContainerTask(), containerServiceName, controllerLabels,
@@ -168,7 +172,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
-    cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams.getKubernetesType());
+    cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
 
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
@@ -201,15 +205,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         return new KubernetesSetupCommandUnit.Yaml();
       }
     }
-  }
-
-  private String fetchContainerServiceName(KubernetesConfig kubernetesConfig, String rcNamePrefix, String type,
-      List<EncryptedDataDetail> encryptedDataDetails) {
-    String lastReplicationControllerName =
-        lastReplicationController(kubernetesConfig, rcNamePrefix, type, encryptedDataDetails);
-
-    int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
-    return KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
   }
 
   private Secret createRegistrySecret(
@@ -269,28 +264,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return loadBalancerEndpoint;
   }
 
-  private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix, String type,
-      List<EncryptedDataDetail> encryptedDataDetails) {
-    List<? extends HasMetadata> controllers =
-        kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails, type);
-    if (controllers == null) {
-      return null;
-    }
-
-    HasMetadata lastReplicationController = null;
-    for (HasMetadata controller :
-        controllers.stream()
-            .filter(c
-                -> c.getMetadata().getName().equals(controllerNamePrefix)
-                    || c.getMetadata().getName().startsWith(controllerNamePrefix + KubernetesConvention.DOT))
-            .collect(Collectors.toList())) {
-      int revision = getRevisionFromControllerName(controller.getMetadata().getName());
-      if (lastReplicationController == null
-          || revision > getRevisionFromControllerName(lastReplicationController.getMetadata().getName())) {
-        lastReplicationController = controller;
-      }
-    }
-    return lastReplicationController != null ? lastReplicationController.getMetadata().getName() : null;
+  private String lastReplicationController(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
+    final HasMetadata[] lastReplicationController = {null};
+    final AtomicInteger lastRevision = new AtomicInteger();
+    kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
+        .stream()
+        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix + KubernetesConvention.DOT))
+        .forEach(ctrl -> {
+          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName());
+          if (revision.isPresent() && (lastReplicationController[0] == null || revision.get() > lastRevision.get())) {
+            lastReplicationController[0] = ctrl;
+            lastRevision.set(revision.get());
+          }
+        });
+    return lastReplicationController[0] != null ? lastReplicationController[0].getMetadata().getName() : null;
   }
 
   /**
@@ -428,29 +416,24 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String containerServiceName, String type) {
-    int revision = getRevisionFromControllerName(containerServiceName);
-    if (revision >= KEEP_N_REVISIONS) {
-      int minRevisionToKeep = revision - KEEP_N_REVISIONS + 1;
-      List<? extends HasMetadata> controllers =
-          kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails, type);
+  private void cleanup(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    Optional<Integer> revision = getRevisionFromControllerName(containerServiceName);
+    if (revision.isPresent() && revision.get() >= KEEP_N_REVISIONS) {
+      int minRevisionToKeep = revision.get() - KEEP_N_REVISIONS + 1;
       String controllerNamePrefix = KubernetesConvention.getPrefixFromControllerName(containerServiceName);
-      if (controllers != null) {
-        controllers.stream()
-            .filter(c
-                -> c.getMetadata().getName().startsWith(controllerNamePrefix)
-                    && kubernetesContainerService.getControllerPodCount(c) == 0)
-            .collect(Collectors.toList())
-            .forEach(rc -> {
-              String controllerName = rc.getMetadata().getName();
-              if (getRevisionFromControllerName(controllerName) < minRevisionToKeep) {
-                logger.info("Deleting old version: " + controllerName);
-                kubernetesContainerService.deleteController(
-                    kubernetesConfig, encryptedDataDetails, controllerName, type);
-              }
-            });
-      }
+      kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
+          .stream()
+          .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+          .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) == 0)
+          .forEach(ctrl -> {
+            String controllerName = ctrl.getMetadata().getName();
+            Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName);
+            if (ctrlRevision.isPresent() && ctrlRevision.get() < minRevisionToKeep) {
+              logger.info("Deleting old version: " + controllerName);
+              kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
+            }
+          });
     }
   }
 }

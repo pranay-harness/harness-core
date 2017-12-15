@@ -6,6 +6,7 @@ package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
@@ -69,6 +70,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import com.amazonaws.transform.MapEntry;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -97,6 +99,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -128,12 +131,15 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.newrelic.NewRelicMetricNames;
+import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -223,6 +229,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -506,6 +513,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
 
+    Workflow finalWorkflow1 = newWorkflow;
+    executorService.submit(() -> notifyNewRelicMetricCollection(finalWorkflow1));
+
     executorService.submit(() -> {
       String accountId = appService.getAccountIdByAppId(workflow.getAppId());
       YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
@@ -517,6 +527,82 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     });
 
     return newWorkflow;
+  }
+
+  private void notifyNewRelicMetricCollection(Workflow workflow) {
+    try {
+      if (workflow.getOrchestrationWorkflow() == null
+          || !(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
+        return;
+      }
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      if (canaryOrchestrationWorkflow.getWorkflowPhases() == null
+          || canaryOrchestrationWorkflow.getWorkflowPhases().isEmpty()) {
+        return;
+      }
+
+      Map<String, NewRelicMetricNames> newRelicMetricNamesMap = new HashMap();
+      String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+      for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+        if (workflowPhase.getPhaseSteps() == null) {
+          continue;
+        }
+
+        for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+          if (phaseStep.getSteps() == null) {
+            continue;
+          }
+          for (Node node : phaseStep.getSteps()) {
+            if (StateType.NEW_RELIC.name().equals(node.getType())) {
+              String newRelicAppId = (String) node.getProperties().get("applicationId");
+              String newRelicServerConfigId = (String) node.getProperties().get("analysisServerConfigId");
+              if (!newRelicMetricNamesMap.containsKey(newRelicAppId + "-" + newRelicServerConfigId)) {
+                NewRelicMetricNames newRelicMetricNames =
+                    NewRelicMetricNames.builder()
+                        .newRelicAppId(newRelicAppId)
+                        .newRelicConfigId(newRelicServerConfigId)
+                        .registeredWorkflows(Collections.singletonList(WorkflowInfo.builder()
+                                                                           .accountId(accountId)
+                                                                           .appId(workflow.getAppId())
+                                                                           .workflowId(workflow.getUuid())
+                                                                           .envId(workflow.getEnvId())
+                                                                           .infraMappingId(workflow.getInfraMappingId())
+                                                                           .build()))
+                        .build();
+                newRelicMetricNamesMap.put(newRelicAppId + "-" + newRelicServerConfigId, newRelicMetricNames);
+              }
+            }
+          }
+        }
+      }
+
+      if (newRelicMetricNamesMap.isEmpty()) {
+        return;
+      }
+
+      for (NewRelicMetricNames newRelicMetricNames : newRelicMetricNamesMap.values()) {
+        NewRelicMetricNames metricNames = metricDataAnalysisService.getMetricNames(
+            newRelicMetricNames.getNewRelicAppId(), newRelicMetricNames.getNewRelicConfigId());
+        if (metricNames == null) {
+          metricDataAnalysisService.saveMetricNames(accountId, newRelicMetricNames);
+        } else {
+          boolean foundWorkflowInfo = false;
+          for (WorkflowInfo workflowInfo : metricNames.getRegisteredWorkflows()) {
+            if (workflowInfo.getWorkflowId().equals(
+                    newRelicMetricNames.getRegisteredWorkflows().get(0).getWorkflowId())) {
+              foundWorkflowInfo = true;
+              break;
+            }
+          }
+          if (!foundWorkflowInfo) {
+            metricDataAnalysisService.addMetricNamesWorkflowInfo(accountId, newRelicMetricNames);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      logger.error("Unable to register workflow with NewRelicMetricNames collection", ex);
+    }
   }
 
   /**
@@ -598,6 +684,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ops);
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
+
+    Workflow finalWorkflow1 = workflow;
+    executorService.submit(() -> notifyNewRelicMetricCollection(finalWorkflow1));
 
     Workflow finalWorkflow = workflow;
     executorService.submit(() -> {
@@ -1076,6 +1165,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       yamlChangeSetService.queueChangeSet(ygs, changeSet);
     }
 
+    //
     return true;
   }
 

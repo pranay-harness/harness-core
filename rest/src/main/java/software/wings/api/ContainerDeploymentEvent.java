@@ -1,6 +1,8 @@
 package software.wings.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.core.queue.Queuable;
@@ -14,8 +16,10 @@ import java.util.Set;
  * @author rktummala on 08/24/17
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "containerDeploymentQueue", noClassnameStored = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentEvent extends Queuable {
   private String appId;
   private String accountId;
@@ -28,7 +32,6 @@ public class ContainerDeploymentEvent extends Queuable {
   private String pipelineExecutionId;
   private String stateExecutionInstanceId;
   private String clusterName;
-  private String kubernetesType;
   private InstanceType instanceType;
   private String containerSvcNameNoRevision;
 
@@ -54,7 +57,6 @@ public class ContainerDeploymentEvent extends Queuable {
     private String stateExecutionInstanceId;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
     private String clusterName;
-    private String kubernetesType;
     private Date earliestGet = new Date();
     private InstanceType instanceType;
     private double priority = 0.0;
@@ -139,11 +141,6 @@ public class ContainerDeploymentEvent extends Queuable {
       return this;
     }
 
-    public Builder withKubernetesType(String kubernetesType) {
-      this.kubernetesType = kubernetesType;
-      return this;
-    }
-
     public Builder withEarliestGet(Date earliestGet) {
       this.earliestGet = earliestGet;
       return this;
@@ -200,7 +197,6 @@ public class ContainerDeploymentEvent extends Queuable {
           .withPriority(priority)
           .withContainerSvcNameNoRevision(containerSvcNameNoRevision)
           .withCreated(created)
-          .withKubernetesType(kubernetesType)
           .withRetries(retries)
           .withContainerSvcNameSet(containerSvcNameSet);
     }
@@ -221,7 +217,6 @@ public class ContainerDeploymentEvent extends Queuable {
       containerDeploymentEvent.setStateExecutionInstanceId(stateExecutionInstanceId);
       containerDeploymentEvent.setResetTimestamp(resetTimestamp);
       containerDeploymentEvent.setClusterName(clusterName);
-      containerDeploymentEvent.setKubernetesType(kubernetesType);
       containerDeploymentEvent.setEarliestGet(earliestGet);
       containerDeploymentEvent.setInstanceType(instanceType);
       containerDeploymentEvent.setPriority(priority);

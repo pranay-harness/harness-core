@@ -2,6 +2,7 @@ package software.wings.api;
 
 import static software.wings.sm.ContextElementType.CONTAINER_SERVICE;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import software.wings.beans.ResizeStrategy;
 import software.wings.sm.ContextElement;
@@ -13,6 +14,7 @@ import java.util.Map;
 /**
  * Created by rishi on 4/11/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class ContainerServiceElement implements ContextElement {
   private String uuid;
@@ -24,7 +26,6 @@ public class ContainerServiceElement implements ContextElement {
   private String namespace;
   private DeploymentType deploymentType;
   private String infraMappingId;
-  private String kubernetesType;
 
   @Override
   public ContextElementType getElementType() {
@@ -51,7 +52,6 @@ public class ContainerServiceElement implements ContextElement {
     private String namespace;
     private DeploymentType deploymentType;
     private String infraMappingId;
-    private String kubernetesType;
 
     private ContainerServiceElementBuilder() {}
 
@@ -104,11 +104,6 @@ public class ContainerServiceElement implements ContextElement {
       return this;
     }
 
-    public ContainerServiceElementBuilder withKubernetesType(String kubernetesType) {
-      this.kubernetesType = kubernetesType;
-      return this;
-    }
-
     public ContainerServiceElementBuilder but() {
       return aContainerServiceElement()
           .withUuid(uuid)
@@ -119,8 +114,7 @@ public class ContainerServiceElement implements ContextElement {
           .withClusterName(clusterName)
           .withNamespace(namespace)
           .withDeploymentType(deploymentType)
-          .withInfraMappingId(infraMappingId)
-          .withKubernetesType(kubernetesType);
+          .withInfraMappingId(infraMappingId);
     }
 
     public ContainerServiceElement build() {
@@ -134,7 +128,6 @@ public class ContainerServiceElement implements ContextElement {
       containerServiceElement.setNamespace(namespace);
       containerServiceElement.setDeploymentType(deploymentType);
       containerServiceElement.setInfraMappingId(infraMappingId);
-      containerServiceElement.setKubernetesType(kubernetesType);
       return containerServiceElement;
     }
   }

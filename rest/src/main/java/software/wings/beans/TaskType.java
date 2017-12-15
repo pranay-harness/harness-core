@@ -11,6 +11,7 @@ import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
+import software.wings.delegatetasks.NewRelicMetricNameCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
@@ -107,6 +108,7 @@ public enum TaskType {
   NEWRELIC_GET_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_APP_INSTANCES_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_COLLECT_METRIC_DATA(TaskGroup.NEWRELIC, NewRelicDataCollectionTask.class, NewRelicValidation.class),
+  NEWRELIC_COLLECT_METRIC_NAMES(TaskGroup.NEWRELIC, NewRelicMetricNameCollectionTask.class, NewRelicValidation.class),
   NEWRELIC_GET_METRICES_DATA(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),

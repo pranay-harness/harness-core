@@ -15,6 +15,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 /**
@@ -40,5 +41,15 @@ public class LogResource {
   public RestResponse<List<String>> batchSave(List<Log> logs) {
     logService.batchedSave(logs);
     return new RestResponse<>(new ArrayList<>());
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("activity/{activityId}/unit/{unitName}/batched")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> batchSave(
+      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName, Log log) {
+    return new RestResponse<>(logService.batchedSaveCommandUnitLogs(activityId, unitName, log));
   }
 }

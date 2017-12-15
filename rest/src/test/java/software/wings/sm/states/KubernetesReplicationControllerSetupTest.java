@@ -45,7 +45,6 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -139,7 +138,6 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                                  .withResizeStrategy(RESIZE_NEW_FIRST)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
                                  .withDeploymentType(DeploymentType.KUBERNETES)
-                                 .withKubernetesType(ReplicationController.class.getName())
                                  .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();

@@ -22,23 +22,22 @@ public interface KubernetesContainerService {
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition);
 
   HasMetadata getController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type);
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels, String type);
+  List<? extends HasMetadata> getControllers(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
 
   List<? extends HasMetadata> listControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String type);
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
-  void deleteController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type);
+  void deleteController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, String type,
-      int previousCount, int count, ExecutionLogCallback executionLogCallback);
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
+      int count, ExecutionLogCallback executionLogCallback);
 
   Optional<Integer> getControllerPodCount(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type);
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   Integer getControllerPodCount(HasMetadata controller);
 

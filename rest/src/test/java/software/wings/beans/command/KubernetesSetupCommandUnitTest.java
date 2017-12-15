@@ -158,9 +158,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     when(kubernetesContainerService.createController(
              eq(kubernetesConfig), eq(emptyList()), any(ReplicationController.class)))
         .thenReturn(replicationController);
-    when(kubernetesContainerService.listControllers(
-             kubernetesConfig, emptyList(), ReplicationController.class.getName()))
-        .thenReturn(null);
+    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList())).thenReturn(null);
     when(kubernetesContainerService.createOrReplaceService(
              eq(kubernetesConfig), eq(emptyList()), any(io.fabric8.kubernetes.api.model.Service.class)))
         .thenReturn(kubernetesService);
@@ -179,8 +177,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
             .endMetadata()
             .build();
 
-    when(kubernetesContainerService.listControllers(
-             kubernetesConfig, emptyList(), ReplicationController.class.getName()))
+    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
         .thenReturn((List) singletonList(kubernetesReplicationController));
 
     CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
