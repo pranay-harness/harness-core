@@ -69,7 +69,7 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
                               .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP_TRIGGER",
                                   "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP_TRIGGER")
                               .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                                .withIntervalInSeconds((int) TimeUnit.DAYS.toSeconds(1))
+                                                .withIntervalInSeconds((int) TimeUnit.MINUTES.toSeconds(60))
                                                 .withMisfireHandlingInstructionNowWithExistingCount()
                                                 .repeatForever())
                               .startAt(startDate)
