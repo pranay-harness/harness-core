@@ -92,7 +92,7 @@ public class ContainerInstanceCleanupMigratorUtil extends WingsBaseTest {
   public void deleteOrphanContainerInstances(Set<String> containerSvcNameSetToBeDeleted, InstanceType instanceType) {
     String fieldName = null;
     if (InstanceType.KUBERNETES_CONTAINER_INSTANCE.equals(instanceType)) {
-      fieldName = "instanceInfo.replicationControllerName";
+      fieldName = "instanceInfo.controllerName";
     } else if (InstanceType.ECS_CONTAINER_INSTANCE.equals(instanceType)) {
       fieldName = "instanceInfo.serviceName";
     }
