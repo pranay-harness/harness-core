@@ -12,7 +12,6 @@ import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -52,7 +51,6 @@ import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.KubernetesHelperService;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,19 +93,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public HasMetadata getController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type) {
-    Validator.notNullCheck("kubernetes type", type);
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     HasMetadata controller = null;
     if (isNotBlank(name)) {
-      if (ReplicationController.class.getName().equals(type)) {
-        controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      } else if (Deployment.class.getName().equals(type)) {
+      controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+      if (controller == null) {
         controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      } else if (ReplicaSet.class.getName().equals(type)) {
+      }
+      if (controller == null) {
         controller = replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      } else if (StatefulSet.class.getName().equals(type)) {
+      }
+      if (controller == null) {
         controller = statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      } else if (DaemonSet.class.getName().equals(type)) {
+      }
+      if (controller == null) {
         controller = daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
       }
     }
@@ -115,58 +114,51 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels, String type) {
-    Validator.notNullCheck("kubernetes type", type);
-    KubernetesResourceList list = null;
-    if (ReplicationController.class.getName().equals(type)) {
-      list = rcOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
-    } else if (Deployment.class.getName().equals(type)) {
-      list = deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
-    } else if (ReplicaSet.class.getName().equals(type)) {
-      list = replicaOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
-    } else if (StatefulSet.class.getName().equals(type)) {
-      list = statefulOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
-    } else if (DaemonSet.class.getName().equals(type)) {
-      list = daemonOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list();
-    }
-    return list != null ? list.getItems() : null;
+  @SuppressWarnings("unchecked")
+  public List<? extends HasMetadata> getControllers(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
+    List<? extends HasMetadata> controllers = new ArrayList<>();
+    controllers.addAll(
+        (List) rcOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+    controllers.addAll(
+        (List) deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+    controllers.addAll(
+        (List) replicaOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+    controllers.addAll(
+        (List) statefulOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+    controllers.addAll(
+        (List) daemonOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+    return controllers;
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public List<? extends HasMetadata> listControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String type) {
-    Validator.notNullCheck("kubernetes type", type);
-    KubernetesResourceList list = null;
-    if (ReplicationController.class.getName().equals(type)) {
-      list = rcOperations(kubernetesConfig, encryptedDataDetails).list();
-    } else if (Deployment.class.getName().equals(type)) {
-      list = deploymentOperations(kubernetesConfig, encryptedDataDetails).list();
-    } else if (ReplicaSet.class.getName().equals(type)) {
-      list = replicaOperations(kubernetesConfig, encryptedDataDetails).list();
-    } else if (StatefulSet.class.getName().equals(type)) {
-      list = statefulOperations(kubernetesConfig, encryptedDataDetails).list();
-    } else if (DaemonSet.class.getName().equals(type)) {
-      list = daemonOperations(kubernetesConfig, encryptedDataDetails).list();
-    }
-    return list != null ? list.getItems() : null;
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    List<? extends HasMetadata> controllers = new ArrayList<>();
+    controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+    controllers.addAll((List) deploymentOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+    controllers.addAll((List) replicaOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+    controllers.addAll((List) statefulOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+    controllers.addAll((List) daemonOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+    return controllers;
   }
 
   @Override
   public void deleteController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type) {
-    Validator.notNullCheck("kubernetes type", type);
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     logger.info("Deleting controller {}", name);
     if (isNotBlank(name)) {
-      if (ReplicationController.class.getName().equals(type)) {
+      HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name);
+      if (controller instanceof ReplicationController) {
         rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
-      } else if (Deployment.class.getName().equals(type)) {
+      } else if (controller instanceof Deployment) {
         deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
-      } else if (ReplicaSet.class.getName().equals(type)) {
+      } else if (controller instanceof ReplicaSet) {
         replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
-      } else if (StatefulSet.class.getName().equals(type)) {
+      } else if (controller instanceof StatefulSet) {
         statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
-      } else if (DaemonSet.class.getName().equals(type)) {
+      } else if (controller instanceof DaemonSet) {
         daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
       }
     }
@@ -174,22 +166,22 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, String type,
-      int previousCount, int count, ExecutionLogCallback executionLogCallback) {
-    Validator.notNullCheck("kubernetes type", type);
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
+      int count, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
                                               controllerName, clusterName, previousCount, count),
         Log.LogLevel.INFO);
 
-    if (ReplicationController.class.getName().equals(type)) {
+    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    if (controller instanceof ReplicationController) {
       rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (Deployment.class.getName().equals(type)) {
+    } else if (controller instanceof Deployment) {
       deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (ReplicaSet.class.getName().equals(type)) {
+    } else if (controller instanceof ReplicaSet) {
       replicaOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (StatefulSet.class.getName().equals(type)) {
+    } else if (controller instanceof StatefulSet) {
       statefulOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (DaemonSet.class.getName().equals(type)) {
+    } else if (controller instanceof DaemonSet) {
       throw new WingsException(
           ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
     }
@@ -197,7 +189,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
         previousCount, count);
     logger.info("Waiting for pods to be ready...");
-    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, type, count);
+    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, count);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     for (Pod pod : pods) {
@@ -271,8 +263,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Optional<Integer> getControllerPodCount(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String type) {
-    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name, type);
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name);
     if (controller != null) {
       Integer count = getControllerPodCount(controller);
       return count == null ? Optional.empty() : Optional.of(count);
@@ -442,9 +434,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, String type, int number) {
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int number) {
     Map<String, String> labels =
-        getController(kubernetesConfig, encryptedDataDetails, controllerName, type).getMetadata().getLabels();
+        getController(kubernetesConfig, encryptedDataDetails, controllerName).getMetadata().getLabels();
 
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);

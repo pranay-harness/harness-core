@@ -57,7 +57,6 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupParams;
-import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.ContainerTask;
@@ -181,11 +180,6 @@ public abstract class ContainerServiceSetup extends State {
       ContainerSetupParams containerSetupParams = buildContainerSetupParams(context, service.getName(), imageDetails,
           app, env, containerInfrastructureMapping, containerTask, clusterName);
 
-      String kubernetesType = null;
-      if (containerSetupParams instanceof KubernetesSetupParams) {
-        kubernetesType = ((KubernetesSetupParams) containerSetupParams).getKubernetesType();
-      }
-
       CommandStateExecutionData executionData = aCommandStateExecutionData()
                                                     .withServiceId(service.getUuid())
                                                     .withServiceName(service.getName())
@@ -193,7 +187,6 @@ public abstract class ContainerServiceSetup extends State {
                                                     .withCommandName(getCommandName())
                                                     .withContainerSetupParams(containerSetupParams)
                                                     .withClusterName(clusterName)
-                                                    .withKubernetesType(kubernetesType)
                                                     .withActivityId(activity.getUuid())
                                                     .build();
 

@@ -135,7 +135,6 @@ public abstract class ContainerServiceDeploy extends State {
             .withAppId(contextData.app.getUuid())
             .withCommandName(getCommandName())
             .withClusterName(contextData.containerElement.getClusterName())
-            .withKubernetesType(contextData.containerElement.getKubernetesType())
             .withActivityId(activityId);
 
     if (!isRollback()) {
@@ -157,16 +156,14 @@ public abstract class ContainerServiceDeploy extends State {
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-    ContainerServiceParams containerServiceParams =
-        ContainerServiceParams.builder()
-            .settingAttribute(contextData.settingAttribute)
-            .containerServiceName(contextData.containerElement.getName())
-            .encryptionDetails(contextData.encryptedDataDetails)
-            .clusterName(contextData.containerElement.getClusterName())
-            .namespace(contextData.containerElement.getNamespace())
-            .region(contextData.region)
-            .kubernetesType(contextData.containerElement.getKubernetesType())
-            .build();
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(contextData.settingAttribute)
+                                                        .containerServiceName(contextData.containerElement.getName())
+                                                        .encryptionDetails(contextData.encryptedDataDetails)
+                                                        .clusterName(contextData.containerElement.getClusterName())
+                                                        .namespace(contextData.containerElement.getNamespace())
+                                                        .region(contextData.region)
+                                                        .build();
     Optional<Integer> previousDesiredCount = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                                                  .getServiceDesiredCount(containerServiceParams);
 
@@ -197,16 +194,14 @@ public abstract class ContainerServiceDeploy extends State {
       int percent = Math.min(getInstanceCount(), 100);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-      ContainerServiceParams containerServiceParams =
-          ContainerServiceParams.builder()
-              .settingAttribute(contextData.settingAttribute)
-              .containerServiceName(contextData.containerElement.getName())
-              .encryptionDetails(contextData.encryptedDataDetails)
-              .clusterName(contextData.containerElement.getClusterName())
-              .namespace(contextData.containerElement.getNamespace())
-              .region(contextData.region)
-              .kubernetesType(contextData.containerElement.getKubernetesType())
-              .build();
+      ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                          .settingAttribute(contextData.settingAttribute)
+                                                          .containerServiceName(contextData.containerElement.getName())
+                                                          .encryptionDetails(contextData.encryptedDataDetails)
+                                                          .clusterName(contextData.containerElement.getClusterName())
+                                                          .namespace(contextData.containerElement.getNamespace())
+                                                          .region(contextData.region)
+                                                          .build();
       LinkedHashMap<String, Integer> activeServiceCounts =
           delegateProxyFactory.get(ContainerService.class, syncTaskContext)
               .getActiveServiceCounts(containerServiceParams);
@@ -223,16 +218,14 @@ public abstract class ContainerServiceDeploy extends State {
     List<ContainerServiceData> desiredCounts = new ArrayList<>();
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-    ContainerServiceParams containerServiceParams =
-        ContainerServiceParams.builder()
-            .settingAttribute(contextData.settingAttribute)
-            .containerServiceName(contextData.containerElement.getName())
-            .encryptionDetails(contextData.encryptedDataDetails)
-            .clusterName(contextData.containerElement.getClusterName())
-            .namespace(contextData.containerElement.getNamespace())
-            .region(contextData.region)
-            .kubernetesType(contextData.containerElement.getKubernetesType())
-            .build();
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(contextData.settingAttribute)
+                                                        .containerServiceName(contextData.containerElement.getName())
+                                                        .encryptionDetails(contextData.encryptedDataDetails)
+                                                        .clusterName(contextData.containerElement.getClusterName())
+                                                        .namespace(contextData.containerElement.getNamespace())
+                                                        .region(contextData.region)
+                                                        .build();
     LinkedHashMap<String, Integer> previousCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                                                         .getActiveServiceCounts(containerServiceParams);
     previousCounts.remove(newServiceData.getName());

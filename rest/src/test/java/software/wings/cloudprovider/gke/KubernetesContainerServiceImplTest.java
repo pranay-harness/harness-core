@@ -3,6 +3,7 @@ package software.wings.cloudprovider.gke;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -125,11 +126,10 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteController() {
-    kubernetesContainerService.deleteController(
-        KUBERNETES_CONFIG, Collections.emptyList(), "ctrl", ReplicationController.class.getName());
+    kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedControllers).withName(args.capture());
+    verify(namespacedControllers, times(2)).withName(args.capture());
     assertThat(args.getValue().equals("ctrl"));
     verify(scalableReplicationController).delete();
   }
@@ -152,8 +152,8 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldSetControllerPodCount() {
-    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(KUBERNETES_CONFIG,
-        Collections.emptyList(), "foo", "bar", ReplicationController.class.getName(), 0, 3, new ExecutionLogCallback());
+    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
+        KUBERNETES_CONFIG, Collections.emptyList(), "foo", "bar", 0, 3, new ExecutionLogCallback());
 
     ArgumentCaptor<Integer> args = ArgumentCaptor.forClass(Integer.class);
     verify(scalableReplicationController).scale(args.capture());
@@ -167,8 +167,8 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     when(scalableReplicationController.get())
         .thenReturn(new ReplicationControllerBuilder().withNewSpec().withReplicas(8).endSpec().build());
 
-    Optional<Integer> count = kubernetesContainerService.getControllerPodCount(
-        KUBERNETES_CONFIG, Collections.emptyList(), "foo", ReplicationController.class.getName());
+    Optional<Integer> count =
+        kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, Collections.emptyList(), "foo");
 
     assertThat(count.isPresent()).isTrue();
     assertThat(count.get()).isEqualTo(8);

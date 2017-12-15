@@ -12,6 +12,7 @@ import com.amazonaws.services.ecs.model.MountPoint;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.amazonaws.services.ecs.model.Volume;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
@@ -37,6 +38,7 @@ import java.util.regex.Pattern;
 /**
  * Created by anubhaw on 2/6/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ECS")
 public class EcsContainerTask extends ContainerTask {
   private static final Pattern commentPattern = Pattern.compile("^#.*$");
