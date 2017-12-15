@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -14,15 +15,22 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
@@ -38,8 +46,11 @@ import java.util.Map;
 /**
  * Created by brett on 3/8/17
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("KUBERNETES")
 public class KubernetesContainerTask extends ContainerTask {
+  private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerTask.class);
+
   @Attributes(title = "LABELS") private List<Label> labels;
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
 
@@ -119,20 +130,38 @@ public class KubernetesContainerTask extends ContainerTask {
                                     .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
                                     .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
                                     .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME);
-        ReplicationController rc;
+        HasMetadata controller;
         if (getAdvancedType() == YAML) {
-          rc = KubernetesHelper.loadYaml(advancedConfig);
+          controller = KubernetesHelper.loadYaml(advancedConfig);
         } else {
-          rc = (ReplicationController) KubernetesHelper.loadJson(advancedConfig);
+          controller = (HasMetadata) KubernetesHelper.loadJson(advancedConfig);
         }
 
-        boolean hasTemplateMetadata = rc.getSpec().getTemplate().getMetadata() != null;
-        if (!hasTemplateMetadata) {
+        PodTemplateSpec podTemplateSpec = null;
+
+        if (controller instanceof ReplicationController) {
+          podTemplateSpec = ((ReplicationController) controller).getSpec().getTemplate();
+        } else if (controller instanceof Deployment) {
+          podTemplateSpec = ((Deployment) controller).getSpec().getTemplate();
+        } else if (controller instanceof ReplicaSet) {
+          podTemplateSpec = ((ReplicaSet) controller).getSpec().getTemplate();
+        } else if (controller instanceof StatefulSet) {
+          podTemplateSpec = ((StatefulSet) controller).getSpec().getTemplate();
+        } else if (controller instanceof DaemonSet) {
+          podTemplateSpec = ((DaemonSet) controller).getSpec().getTemplate();
+        }
+
+        if (podTemplateSpec == null || podTemplateSpec.getMetadata() == null) {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing valid pod template.");
         }
 
-        boolean containerHasDockerPlaceholder = rc.getSpec().getTemplate().getSpec().getContainers().stream().anyMatch(
-            container -> DUMMY_DOCKER_IMAGE_NAME.equals(container.getImage()));
+        boolean containerHasDockerPlaceholder = false;
+        try {
+          containerHasDockerPlaceholder = podTemplateSpec.getSpec().getContainers().stream().anyMatch(
+              container -> DUMMY_DOCKER_IMAGE_NAME.equals(container.getImage()));
+        } catch (Exception e) {
+          logger.error("Controller spec must have a container definition with ${DOCKER_IMAGE_NAME} placeholder.", e);
+        }
         if (!containerHasDockerPlaceholder) {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
               "Controller spec must have a container definition with "

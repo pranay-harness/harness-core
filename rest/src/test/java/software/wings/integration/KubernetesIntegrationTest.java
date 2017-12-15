@@ -23,7 +23,6 @@ import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.common.collect.ImmutableMap;
 
 import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import org.junit.Ignore;
@@ -229,13 +228,13 @@ public class KubernetesIntegrationTest {
             .endSpec()
             .build());
 
-    kubernetesService.setControllerPodCount(config, Collections.emptyList(), ZONE_CLUSTER, "frontend-ctrl",
-        ReplicationController.class.getName(), 0, 2, new ExecutionLogCallback());
+    kubernetesService.setControllerPodCount(
+        config, Collections.emptyList(), ZONE_CLUSTER, "frontend-ctrl", 0, 2, new ExecutionLogCallback());
 
-    Optional<Integer> backendCount = kubernetesService.getControllerPodCount(
-        config, Collections.emptyList(), "backend-ctrl", ReplicationController.class.getName());
-    Optional<Integer> frontendCount = kubernetesService.getControllerPodCount(
-        config, Collections.emptyList(), "frontend-ctrl", ReplicationController.class.getName());
+    Optional<Integer> backendCount =
+        kubernetesService.getControllerPodCount(config, Collections.emptyList(), "backend-ctrl");
+    Optional<Integer> frontendCount =
+        kubernetesService.getControllerPodCount(config, Collections.emptyList(), "frontend-ctrl");
     logger.info("Controller backend-ctrl has {} instances", backendCount.get());
     logger.info("Controller frontend-ctrl has {} instances", frontendCount.get());
 
@@ -245,10 +244,8 @@ public class KubernetesIntegrationTest {
     kubernetesService.deleteService(config, Collections.emptyList(), "frontend-service");
     kubernetesService.deleteService(config, Collections.emptyList(), "backend-service");
 
-    kubernetesService.deleteController(
-        config, Collections.emptyList(), "frontend-ctrl", ReplicationController.class.getName());
-    kubernetesService.deleteController(
-        config, Collections.emptyList(), "backend-ctrl", ReplicationController.class.getName());
+    kubernetesService.deleteController(config, Collections.emptyList(), "frontend-ctrl");
+    kubernetesService.deleteController(config, Collections.emptyList(), "backend-ctrl");
 
     kubernetesService.checkStatus(config, Collections.emptyList(), "backend-ctrl", "backend-service");
     kubernetesService.checkStatus(config, Collections.emptyList(), "frontend-ctrl", "frontend-service");
