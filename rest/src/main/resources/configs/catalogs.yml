@@ -313,6 +313,8 @@ TASK_TYPES:
       value: GIT
     - name: Container
       value: CONTAINER
+    - name: Amazon Machine Image
+      value: AMI
 
 EXECUTION_STATUS:
     - name: Aborted
