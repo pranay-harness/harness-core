@@ -128,6 +128,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
+            .settingAttributeId(analysisServerConfigId)
             .build();
 
     String waitId = UUIDGenerator.getUuid();
@@ -141,7 +142,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 60))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
     return delegateService.queueTask(delegateTask);

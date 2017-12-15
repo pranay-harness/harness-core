@@ -25,7 +25,7 @@ import javax.inject.Named;
  */
 public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegateRunnableTask {
   public static final String HARNESS_HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
-
+  protected static final int COLLECTION_PERIOD_MINS = 1;
   protected static final int RETRIES = 3;
   protected final AtomicBoolean completed = new AtomicBoolean(false);
   protected final Object lockObject = new Object();
@@ -95,7 +95,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
           }
           pendingTask = true;
         }
-      }, SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
+      }, getInitialDelayMinutes(), getPeriodMinutes(), TimeUnit.MINUTES);
       getLogger().info("going to collect data for " + parameters[0]);
       waitForCompletion();
       getLogger().info(" finish data collection for " + parameters[0] + ". result is " + taskResult);
@@ -117,4 +117,12 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   protected abstract Logger getLogger();
 
   protected abstract Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException;
+
+  protected int getInitialDelayMinutes() {
+    return SplunkDataCollectionTask.DELAY_MINUTES;
+  }
+
+  protected int getPeriodMinutes() {
+    return COLLECTION_PERIOD_MINS;
+  }
 }

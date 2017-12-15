@@ -20,9 +20,11 @@ import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.MetricAnalysisResource;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -73,6 +75,27 @@ public class NewRelicResource implements MetricAnalysisResource {
       throws IOException {
     return new RestResponse<>(metricDataAnalysisService.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
+  }
+
+  @POST
+  @Path("/save-metric-names")
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<Boolean> saveMetricNames(
+      @QueryParam("accountId") final String accountId, NewRelicMetricNames metricNames) throws IOException {
+    return new RestResponse<>(metricDataAnalysisService.updateMetricNames(accountId, metricNames));
+  }
+
+  @POST
+  @Path("/get-metric-names")
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<NewRelicMetricNames> getMetricNames(
+      @QueryParam("accountId") final String accountId, NewRelicMetricNames metricNames) throws IOException {
+    return new RestResponse<>(
+        metricDataAnalysisService.getMetricNames(metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId()));
   }
 
   @POST

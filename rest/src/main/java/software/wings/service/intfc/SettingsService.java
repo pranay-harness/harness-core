@@ -140,6 +140,8 @@ public interface SettingsService {
    */
   List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
 
+  SettingAttribute getGlobalSettingAttributesById(String accountId, String id);
+
   /**
    * Delete by account id.
    *
