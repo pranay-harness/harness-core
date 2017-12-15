@@ -342,11 +342,11 @@ public abstract class ContainerServiceSetup extends State {
       encryptionService.decrypt(artifactoryConfig,
           secretManager.getEncryptionDetails(artifactoryConfig, context.getAppId(), context.getWorkflowExecutionId()));
       String url = artifactoryConfig.getArtifactoryUrl();
-      String jobName = artifactoryArtifactStream.getJobname();
       int firstDotIndex = url.indexOf(".");
-      String registryUrl = url.substring(0, firstDotIndex) + "-" + jobName + url.substring(firstDotIndex);
-      int beginIndex = registryUrl.indexOf("://") + 3;
-      String namePrefix = registryUrl.substring(beginIndex, registryUrl.indexOf("/", beginIndex));
+      int slashAfterDomain = url.indexOf("/", firstDotIndex);
+      String registryUrl = url.substring(0, firstDotIndex) + "-" + artifactoryArtifactStream.getJobname()
+          + url.substring(firstDotIndex, slashAfterDomain > 0 ? slashAfterDomain : url.length());
+      String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
       imageDetails.name(namePrefix + "/" + artifactoryArtifactStream.getImageName())
           .sourceName(artifactoryArtifactStream.getSourceName())
           .registryUrl(registryUrl)
