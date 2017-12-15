@@ -51,7 +51,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       if (artifactStreamAttributes.isMetadataOnly()) {
         return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
             artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-            artifactStreamAttributes.getRepositoryType(), 50);
+            artifactStreamAttributes.getRepositoryType(), 25);
       } else {
         return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
             artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),

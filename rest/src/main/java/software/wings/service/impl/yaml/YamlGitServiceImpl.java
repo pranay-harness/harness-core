@@ -83,7 +83,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     validateGit(gitConfig);
     gitConfig.setDecrypted(false);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
-    executorService.submit(() -> pushDirectory(ygs.getAccountId()));
+    executorService.submit(() -> fullSync(ygs.getAccountId()));
     return yamlGitSync;
   }
 
@@ -100,7 +100,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     validateGit(gitConfig);
     gitConfig.setDecrypted(false);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
-    executorService.submit(() -> pushDirectory(ygs.getAccountId()));
+    executorService.submit(() -> fullSync(ygs.getAccountId()));
     return yamlGitSync;
   }
 
@@ -132,7 +132,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public void pushDirectory(String accountId) {
+  public void fullSync(String accountId) {
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (yamlGitConfig != null) {
       try {
