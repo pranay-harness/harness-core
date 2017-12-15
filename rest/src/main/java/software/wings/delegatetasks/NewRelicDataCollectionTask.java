@@ -69,6 +69,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
+    metricNameCollectionTask.setService(newRelicDelegateService, metricStoreService);
     logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
