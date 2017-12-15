@@ -2,11 +2,14 @@ package software.wings.service.impl.analysis;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
+import com.google.common.collect.Lists;
+
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
@@ -16,11 +19,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -63,6 +68,60 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     wingsPersistence.saveIgnoringDuplicateKeys(metricData);
     logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
     return true;
+  }
+
+  @Override
+  public boolean saveMetricNames(String accountId, NewRelicMetricNames metricNames) throws IOException {
+    wingsPersistence.save(metricNames);
+    return true;
+  }
+
+  @Override
+  public boolean addMetricNamesWorkflowInfo(String accountId, NewRelicMetricNames metricNames) throws IOException {
+    Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
+                                           .field("newRelicAppId")
+                                           .equal(metricNames.getNewRelicAppId())
+                                           .field("newRelicConfigId")
+                                           .equal(metricNames.getNewRelicConfigId());
+    wingsPersistence.update(query,
+        wingsPersistence.createUpdateOperations(NewRelicMetricNames.class)
+            .addToSet("registeredWorkflows", metricNames.getRegisteredWorkflows()));
+    return true;
+  }
+
+  @Override
+  public boolean updateMetricNames(String accountId, NewRelicMetricNames metricNames) throws IOException {
+    logger.debug("updating " + metricNames.getMetrics().size() + " pieces of new relic metric names for {}, {}",
+        metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId());
+    Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
+                                           .field("newRelicAppId")
+                                           .equal(metricNames.getNewRelicAppId())
+                                           .field("newRelicConfigId")
+                                           .equal(metricNames.getNewRelicConfigId());
+    wingsPersistence.update(query,
+        wingsPersistence.createUpdateOperations(NewRelicMetricNames.class)
+            .set("metrics", metricNames.getMetrics())
+            .set("lastUpdatedTime", System.currentTimeMillis()));
+    return true;
+  }
+
+  @Override
+  public NewRelicMetricNames getMetricNames(String newRelicAppId, String newRelicServerConfigId) throws IOException {
+    return wingsPersistence.createQuery(NewRelicMetricNames.class)
+        .field("newRelicAppId")
+        .equal(newRelicAppId)
+        .field("newRelicConfigId")
+        .equal(newRelicServerConfigId)
+        .get();
+  }
+
+  @Override
+  public List<NewRelicMetricNames> listMetricNamesWithWorkflows() {
+    return wingsPersistence.createQuery(NewRelicMetricNames.class)
+        .field("registeredWorkflows")
+        .exists()
+        .retrievedFields(false, "metrics")
+        .asList();
   }
 
   @Override
@@ -478,7 +537,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public int getCollectionMinuteToProcess(
+  public NewRelicMetricDataRecord getLastHeartBeat(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId) {
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .field("stateType")
@@ -490,7 +549,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("serviceId")
                                                             .equal(serviceId)
                                                             .field("level")
-                                                            .equal(ClusterLevel.HF)
+                                                            .in(Lists.newArrayList(ClusterLevel.HF, ClusterLevel.H0))
                                                             .order("-dataCollectionMinute")
                                                             .get(new FindOptions().limit(1));
 
@@ -498,10 +557,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       logger.info(
           "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}. Will be running analysis for minute 0",
           ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
-      return 0;
+      return null;
     }
 
-    return newRelicMetricDataRecord.getDataCollectionMinute() + 1;
+    return newRelicMetricDataRecord;
   }
 
   @Override
