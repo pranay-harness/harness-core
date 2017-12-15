@@ -33,6 +33,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
@@ -130,7 +131,7 @@ public class ActivityResourceTest {
     PageRequest<Activity> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("environmentId", ENV_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
-    expectedPageRequest.setLimit("50");
+    expectedPageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
 
     verify(ACTIVITY_SERVICE).list(expectedPageRequest);
   }
