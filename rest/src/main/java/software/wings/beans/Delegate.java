@@ -17,6 +17,8 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Delegate extends Base {
+  public static final String ACCOUNT_ID_KEY = "accountId";
+
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
   private boolean connected;
