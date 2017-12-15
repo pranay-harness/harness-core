@@ -18,4 +18,6 @@ public interface MetricDataStoreService {
       List<NewRelicMetricDataRecord> metricData);
 
   boolean saveNewRelicMetricNames(String accountId, NewRelicMetricNames metricData);
+
+  NewRelicMetricNames getNewRelicMetricNames(String accountId, String newRelicAppId, String newRelicServerConfigId);
 }
