@@ -5,7 +5,6 @@ import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 import com.google.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -14,6 +13,7 @@ import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.BoundedInputStream;
@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceContext;
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
@@ -42,6 +43,7 @@ import javax.ws.rs.ext.Provider;
 public class AuditRequestFilter implements ContainerRequestFilter {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Context private ResourceContext resourceContext;
+  @Context private ResourceInfo resourceInfo;
 
   @Inject private AuditHelper auditHelper;
   @Inject private FileService fileService;
@@ -52,14 +54,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    if (Arrays.asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
-            .contains(requestContext.getMethod())) {
+    if (isAuditExemptedHttpMethod(requestContext) || isAuditExemptedResource()) {
       // do not audit idempotent HttpMethod untill we have finer control auditing.
-      return;
-    }
-
-    String requestPath = ((ContainerRequest) requestContext).getPath(false); // temp fix. should be removed
-    if (requestPath.startsWith("delegates") && requestPath.endsWith("acquire")) {
       return;
     }
 
@@ -101,6 +97,15 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     } catch (Exception exception) {
       throw new WingsException(exception);
     }
+  }
+
+  private boolean isAuditExemptedResource() {
+    return resourceInfo.getResourceMethod().getAnnotation(DelegateAuth.class) != null;
+  }
+
+  private boolean isAuditExemptedHttpMethod(ContainerRequestContext requestContext) {
+    return Arrays.asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
+        .contains(requestContext.getMethod());
   }
 
   private String getHeaderString(MultivaluedMap<String, String> headers) {
