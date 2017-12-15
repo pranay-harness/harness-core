@@ -345,7 +345,9 @@ public abstract class ContainerServiceSetup extends State {
       String jobName = artifactoryArtifactStream.getJobname();
       int firstDotIndex = url.indexOf(".");
       String registryUrl = url.substring(0, firstDotIndex) + "-" + jobName + url.substring(firstDotIndex);
-      imageDetails.name(artifactoryArtifactStream.getImageName())
+      int beginIndex = registryUrl.indexOf("://") + 3;
+      String namePrefix = registryUrl.substring(beginIndex, registryUrl.indexOf("/", beginIndex));
+      imageDetails.name(namePrefix + "/" + artifactoryArtifactStream.getImageName())
           .sourceName(artifactoryArtifactStream.getSourceName())
           .registryUrl(registryUrl)
           .username(artifactoryConfig.getUsername())
