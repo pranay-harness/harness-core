@@ -81,7 +81,6 @@ public class ContainerServiceTest extends WingsBaseTest {
           .clusterName(CLUSTER_NAME)
           .namespace("default")
           .containerServiceName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-          .kubernetesType(ReplicationController.class.getName())
           .build();
 
   private ContainerServiceParams awsParams =
@@ -106,7 +105,6 @@ public class ContainerServiceTest extends WingsBaseTest {
           .clusterName(CLUSTER_NAME)
           .namespace("default")
           .containerServiceName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-          .kubernetesType(ReplicationController.class.getName())
           .build();
 
   @Before
@@ -137,22 +135,18 @@ public class ContainerServiceTest extends WingsBaseTest {
                   .build();
     when(gkeClusterService.getCluster(gcpParams.getSettingAttribute(), emptyList(), CLUSTER_NAME, "default"))
         .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.listControllers(
-             kubernetesConfig, emptyList(), ReplicationController.class.getName()))
+    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
         .thenReturn((List) singletonList(replicationController));
-    when(kubernetesContainerService.getController(
-             eq(kubernetesConfig), anyObject(), anyString(), eq(ReplicationController.class.getName())))
+    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
         .thenReturn(replicationController);
     when(kubernetesContainerService.getServices(eq(kubernetesConfig), anyObject(), anyObject()))
         .thenReturn(serviceList);
     when(serviceList.getItems()).thenReturn(singletonList(kubernetesService));
     when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyObject(), anyObject())).thenReturn(podList);
     when(podList.getItems()).thenReturn(singletonList(pod));
-    when(kubernetesContainerService.getControllers(
-             eq(kubernetesConfig), anyObject(), anyObject(), eq(ReplicationController.class.getName())))
+    when(kubernetesContainerService.getControllers(eq(kubernetesConfig), anyObject(), anyObject()))
         .thenReturn((List) singletonList(replicationController));
-    when(kubernetesContainerService.getControllerPodCount(
-             eq(kubernetesConfig), anyObject(), anyString(), eq(ReplicationController.class.getName())))
+    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyObject(), anyString()))
         .thenReturn(Optional.of(2));
     when(kubernetesContainerService.getControllerPodCount(any(ReplicationController.class))).thenReturn(2);
 

@@ -20,7 +20,6 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
   private String clusterName;
-  private String kubernetesType;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
 }

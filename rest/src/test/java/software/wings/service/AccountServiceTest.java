@@ -50,7 +50,6 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
     verify(appService).deleteByAccountId(accountId);
     verify(settingsService).deleteByAccountId(accountId);
-    verify(jobScheduler).deleteJob(eq(accountId), anyString());
   }
 
   @Test

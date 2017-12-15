@@ -7,7 +7,7 @@ import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetup
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.fabric8.kubernetes.api.model.ReplicationController;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -29,6 +29,8 @@ import software.wings.beans.container.KubernetesServiceType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
+
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/1/17
@@ -64,8 +66,15 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env.getName());
 
-    String kubernetesType = containerTask != null ? ((KubernetesContainerTask) containerTask).kubernetesType()
-                                                  : ReplicationController.class.getName();
+    if (containerTask != null) {
+      KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
+      kubernetesContainerTask.getContainerDefinitions()
+          .stream()
+          .filter(cd -> CollectionUtils.isNotEmpty(cd.getCommands()))
+          .forEach(cd
+              -> cd.setCommands(cd.getCommands().stream().map(context::renderExpression).collect(Collectors.toList())));
+    }
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -84,7 +93,6 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withServiceType(serviceType)
         .withTargetPort(targetPort)
         .withRcNamePrefix(rcNamePrefix)
-        .withKubernetesType(kubernetesType)
         .build();
   }
 
@@ -103,7 +111,6 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withNamespace(setupParams.getNamespace())
         .withDeploymentType(DeploymentType.KUBERNETES)
         .withInfraMappingId(setupParams.getInfraMappingId())
-        .withKubernetesType(setupExecutionData.getKubernetesType())
         .build();
   }
 

@@ -48,7 +48,7 @@ public interface YamlGitService {
    *
    * @param accountId the account id
    */
-  void pushDirectory(@NotEmpty String accountId);
+  void fullSync(@NotEmpty String accountId);
 
   List<GitFileChange> performFullSyncDryRun(String accountId);
 

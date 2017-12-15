@@ -6,7 +6,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -90,9 +89,6 @@ public class ContainerSyncImpl implements ContainerSync {
         Application app = appService.get(infrastructureMapping.getAppId());
 
         SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
-        String kubernetesType = containerDeploymentInfo.getKubernetesType() != null
-            ? containerDeploymentInfo.getKubernetesType()
-            : ReplicationController.class.getName();
         ContainerServiceParams containerServiceParams =
             ContainerServiceParams.builder()
                 .settingAttribute(settingAttribute)
@@ -101,7 +97,6 @@ public class ContainerSyncImpl implements ContainerSync {
                 .clusterName(clusterName)
                 .namespace(namespace)
                 .region(region)
-                .kubernetesType(kubernetesType)
                 .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)

@@ -1,11 +1,17 @@
 package software.wings.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
  * Created by brett on 3/8/17
  */
 public class KubernetesConvention {
+  private static Logger logger = LoggerFactory.getLogger(KubernetesConvention.class);
+
   public static final String DOT = ".";
   private static final String DASH = "-";
   private static final String VOLUME_PREFIX = "vol-";
@@ -32,18 +38,19 @@ public class KubernetesConvention {
     return normalize(serviceName + DASH + noDot(imageSource));
   }
 
-  public static int getRevisionFromControllerName(String name) {
+  public static Optional<Integer> getRevisionFromControllerName(String name) {
     if (name != null) {
       int index = name.lastIndexOf(DOT);
       if (index >= 0) {
         try {
-          return Integer.parseInt(name.substring(index + DOT.length()));
+          String version = name.substring(index + DOT.length());
+          return version.contains(DASH) ? Optional.empty() : Optional.of(Integer.parseInt(version));
         } catch (NumberFormatException e) {
-          // Ignore
+          logger.error("Couldn't get version from controller name {}", name, e);
         }
       }
     }
-    return -1;
+    return Optional.empty();
   }
 
   public static String getContainerName(String imageName) {

@@ -9,7 +9,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -39,21 +38,18 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
     executionLogCallback.setLogService(logService);
 
     try {
-      String containerServiceName = executeInternal(cloudProviderSetting, cloudProviderCredentials, setupParams,
-          context.getServiceVariables(), executionLogCallback);
-      ContainerSetupCommandUnitExecutionDataBuilder executionDataBuilder =
-          ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName);
-      if (setupParams instanceof KubernetesSetupParams) {
-        executionDataBuilder.kubernetesType(((KubernetesSetupParams) setupParams).getKubernetesType());
-      }
-      context.setCommandExecutionData(executionDataBuilder.build());
+      context.setCommandExecutionData(
+          ContainerSetupCommandUnitExecutionData.builder()
+              .containerServiceName(executeInternal(cloudProviderSetting, cloudProviderCredentials, setupParams,
+                  context.getServiceVariables(), executionLogCallback))
+              .build());
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
       if (ex instanceof WingsException) {
         throw ex;
       }
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage());
     }
   }
 

@@ -1,5 +1,6 @@
 package software.wings.beans.container;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
@@ -18,6 +19,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 2/6/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "deploymentType")
 @Indexes(@Index(fields = { @Field("serviceId")
                            , @Field("deploymentType") }, options = @IndexOptions(unique = true)))

@@ -43,8 +43,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
           cloudProviderSetting, encryptedDataDetails, resizeParams.getClusterName(), resizeParams.getNamespace());
     }
     return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-        resizeParams.getClusterName(), serviceData.getName(), resizeParams.getKubernetesType(),
-        serviceData.getPreviousCount(), serviceData.getDesiredCount(), executionLogCallback);
+        resizeParams.getClusterName(), serviceData.getName(), serviceData.getPreviousCount(),
+        serviceData.getDesiredCount(), executionLogCallback);
   }
 
   @Data

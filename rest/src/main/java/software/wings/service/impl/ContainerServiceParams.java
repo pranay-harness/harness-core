@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.SettingAttribute;
@@ -8,6 +8,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 public class ContainerServiceParams {
@@ -17,5 +18,4 @@ public class ContainerServiceParams {
   private String clusterName;
   private String namespace;
   private String region;
-  private String kubernetesType;
 }
