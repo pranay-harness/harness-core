@@ -341,9 +341,13 @@ public abstract class ContainerServiceSetup extends State {
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
       encryptionService.decrypt(artifactoryConfig,
           secretManager.getEncryptionDetails(artifactoryConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      String url = artifactoryConfig.getArtifactoryUrl();
+      String jobName = artifactoryArtifactStream.getJobname();
+      int firstDotIndex = url.indexOf(".");
+      String registryUrl = url.substring(0, firstDotIndex) + "-" + jobName + url.substring(firstDotIndex);
       imageDetails.name(artifactoryArtifactStream.getImageName())
           .sourceName(artifactoryArtifactStream.getSourceName())
-          .registryUrl(artifactoryConfig.getArtifactoryUrl())
+          .registryUrl(registryUrl)
           .username(artifactoryConfig.getUsername())
           .password(new String(artifactoryConfig.getPassword()));
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
