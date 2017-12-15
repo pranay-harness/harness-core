@@ -64,9 +64,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class AccountServiceImpl implements AccountService {
-  private static final String ALERT_CHECK_CRON_GROUP = "ALERT_CHECK_CRON_GROUP";
-  private static final int ALERT_CHECK_POLL_INTERVAL = 600;
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private WingsPersistence wingsPersistence;
@@ -87,7 +84,7 @@ public class AccountServiceImpl implements AccountService {
     //    licenseManager.setLicense(account);
     wingsPersistence.save(account);
     createDefaultAccountEntites(account);
-    addCronForAlertChecks(account);
+    AlertCheckJob.add(jobScheduler, account);
     return account;
   }
 
@@ -131,23 +128,6 @@ public class AccountServiceImpl implements AccountService {
                              .build()));
   }
 
-  void addCronForAlertChecks(Account account) {
-    jobScheduler.deleteJob(account.getUuid(), ALERT_CHECK_CRON_GROUP);
-    JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
-                        .withIdentity(account.getUuid(), ALERT_CHECK_CRON_GROUP)
-                        .usingJobData("accountId", account.getUuid())
-                        .build();
-
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(account.getUuid(), ALERT_CHECK_CRON_GROUP)
-            .withSchedule(
-                SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(ALERT_CHECK_POLL_INTERVAL).repeatForever())
-            .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
   @Override
   public Account get(String accountId) {
     return wingsPersistence.get(Account.class, accountId);
@@ -162,21 +142,8 @@ public class AccountServiceImpl implements AccountService {
         appService.deleteByAccountId(accountId);
         alertService.deleteByAccountId(accountId);
       });
-      deleteCronForAlertChecks(accountId);
     }
   }
-
-  void deleteCronForAlertChecks(String accountId) {
-    jobScheduler.deleteJob(accountId, ALERT_CHECK_CRON_GROUP);
-  }
-
-  //  @Override
-  //  public Account findOrCreate(String companyName) {
-  //    return
-  //    wingsPersistence.upsert(wingsPersistence.createQuery(Account.class).field("companyName").equal(companyName),
-  //        wingsPersistence.createUpdateOperations(Account.class).setOnInsert("companyName",
-  //        companyName).setOnInsert("accountKey", generateAccountKey()));
-  //  }
 
   @Override
   public String suggestAccountName(String accountName) {
@@ -217,6 +184,7 @@ public class AccountServiceImpl implements AccountService {
   public List<Account> list(PageRequest<Account> pageRequest) {
     return wingsPersistence.query(Account.class, pageRequest).getResponse();
   }
+
   private void createDefaultNotificationGroup(Account account, Role role) {
     String name = role.getRoleType().getDisplayName();
     // check if the notification group name exists
