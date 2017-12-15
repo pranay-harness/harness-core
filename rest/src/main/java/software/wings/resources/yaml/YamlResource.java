@@ -377,15 +377,12 @@ public class YamlResource {
    * @param accountId the account id
    * @return the rest response
    */
-  //-------------------------------------
-  // TODO - I need an endpoint, at least temporarily, that will allow me to kick off pushing the full setup directory
-  // "tree" to a synced git repo
-  @GET
-  @Path("push-directory")
+  @POST
+  @Path("full-sync")
   @Timed
   @ExceptionMetered
   public RestResponse pushDirectory(@QueryParam("accountId") String accountId) {
-    yamlGitSyncService.pushDirectory(accountId);
+    yamlGitSyncService.fullSync(accountId);
     return new RestResponse<>();
   }
 
