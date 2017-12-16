@@ -5,6 +5,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
@@ -28,6 +29,7 @@ import javax.inject.Inject;
 
 @SetupScheduler
 @RealMongo
+@Ignore
 public class AppServicePersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 

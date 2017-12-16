@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -18,6 +19,7 @@ import software.wings.utils.Misc;
 
 @RealMongo
 @SetupScheduler
+@Ignore
 public class ContainerSyncJobTest extends WingsBaseTest {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
