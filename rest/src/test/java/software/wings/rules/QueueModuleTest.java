@@ -4,6 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
 import org.mongodb.morphia.AdvancedDatastore;
+import software.wings.api.ContainerDeploymentEvent;
+import software.wings.api.InstanceChangeEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
@@ -42,6 +44,10 @@ public class QueueModuleTest extends AbstractModule {
         .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
         .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30));
+    bind(new TypeLiteral<Queue<ContainerDeploymentEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(ContainerDeploymentEvent.class, datastore, 60));
+    bind(new TypeLiteral<Queue<InstanceChangeEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(InstanceChangeEvent.class, datastore, 60));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
