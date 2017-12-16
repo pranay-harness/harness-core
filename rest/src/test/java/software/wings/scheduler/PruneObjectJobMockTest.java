@@ -27,14 +27,14 @@ import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.rules.Integration;
+import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.Date;
 import javax.inject.Inject;
 
-@Integration
+@RealMongo
 public class PruneObjectJobMockTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(PruneObjectJob.class);
 
