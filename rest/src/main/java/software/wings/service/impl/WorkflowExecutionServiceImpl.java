@@ -600,7 +600,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus) {
     if (includeStatus || includeGraph) {
-      List<StateExecutionInstance> allInstances = queryAllInstances(workflowExecution);
+      PageRequest<StateExecutionInstance> req = aPageRequest()
+                                                    .withLimit(PageRequest.UNLIMITED)
+                                                    .addFilter("appId", EQ, workflowExecution.getAppId())
+                                                    .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+                                                    .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+                                                    .addFieldsExcluded("contextElements", "callback")
+                                                    .build();
+      List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
       if (allInstances == null || allInstances.isEmpty()) {
         return;
       }
@@ -634,19 +641,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateNodeHierarchyWithGraph(WorkflowExecution workflowExecution) {
     populateNodeHierarchy(workflowExecution, true, false);
-  }
-
-  private List<StateExecutionInstance> queryAllInstances(WorkflowExecution workflowExecution) {
-    logger.debug("Querying all state execution instance for Workflow execution {} ", workflowExecution.getUuid());
-    PageRequest<StateExecutionInstance> req = aPageRequest()
-                                                  .withLimit(PageRequest.UNLIMITED)
-                                                  .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                  .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-                                                  .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
-                                                  .addFieldsExcluded("contextElements", "callback")
-                                                  .build();
-
-    return wingsPersistence.query(StateExecutionInstance.class, req);
   }
 
   /**
@@ -1761,7 +1755,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         && workflowExecution.getBreakdown() != null) {
       return;
     }
-
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> req =
@@ -1773,9 +1766,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addFieldsIncluded("uuid", "stateName", "contextElement", "parentInstanceId", "status")
             .build();
-    PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
+
+    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
+
     CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
-        workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, res.getResponse());
+        workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, allStateExecutionInstances);
     int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
 
     workflowExecution.setBreakdown(breakdown);
@@ -1809,6 +1804,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
+  private List<StateExecutionInstance> getAllStateExecutionInstances(PageRequest<StateExecutionInstance> req) {
+    PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
+    long total = res.getTotal();
+    List<StateExecutionInstance> ret = res.getResponse();
+    while (total > ret.size()) {
+      req.setOffset(String.valueOf(ret.size()));
+      ret.addAll(wingsPersistence.query(StateExecutionInstance.class, req));
+    }
+    return ret;
+  }
+
   @Override
   public List<ElementExecutionSummary> getElementsSummary(
       String appId, String executionUuid, String parentStateExecutionInstanceId) {
@@ -1823,19 +1829,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFieldsExcluded("contextElements")
             .build();
 
-    PageResponse<StateExecutionInstance> pageResponse =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (pageResponse == null || pageResponse.isEmpty()) {
+    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
       return null;
     }
 
-    List<StateExecutionInstance> contextTransitionInstances = pageResponse.getResponse()
-                                                                  .stream()
+    List<StateExecutionInstance> contextTransitionInstances = allStateExecutionInstances.stream()
                                                                   .filter(instance -> instance.isContextTransition())
                                                                   .collect(Collectors.toList());
     Map<String, StateExecutionInstance> prevInstanceIdMap =
-        pageResponse.getResponse()
-            .stream()
+        allStateExecutionInstances.stream()
             .filter(instance -> instance.getPrevInstanceId() != null)
             .collect(Collectors.toMap(instance -> instance.getPrevInstanceId(), Function.identity()));
 
@@ -1919,13 +1922,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
             .build();
 
-    PageResponse<StateExecutionInstance> pageResponse =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (pageResponse == null || pageResponse.getResponse() == null || pageResponse.getResponse().isEmpty()) {
-      return phaseExecutionSummary;
+    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+      return null;
     }
 
-    pageResponse.getResponse().forEach(instance -> {
+    allStateExecutionInstances.forEach(instance -> {
       StateExecutionData stateExecutionData = instance.getStateExecutionData();
       if (stateExecutionData instanceof PhaseStepExecutionData) {
         PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) stateExecutionData;
@@ -1956,22 +1958,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                   "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
               .build();
 
-      PageResponse<StateExecutionInstance> pageResponse =
-          wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-      if (pageResponse == null || pageResponse.getResponse() == null || pageResponse.getResponse().isEmpty()) {
-        break;
+      List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+      if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+        return null;
       }
 
-      pageResponse.getResponse()
-          .stream()
+      allStateExecutionInstances.stream()
           .filter(instance
               -> !StateType.REPEAT.name().equals(instance.getStateType())
                   && !StateType.FORK.name().equals(instance.getStateType()))
           .forEach(
               instance -> stepExecutionSummaryList.add(instance.getStateExecutionData().getStepExecutionSummary()));
 
-      parentInstanceIds = pageResponse.getResponse()
-                              .stream()
+      parentInstanceIds = allStateExecutionInstances.stream()
                               .filter(instance
                                   -> StateType.REPEAT.name().equals(instance.getStateType())
                                       || StateType.FORK.name().equals(instance.getStateType()))
@@ -1997,13 +1996,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("stateType", EQ, StateType.ARTIFACT_COLLECTION.name())
             .build();
 
-    PageResponse<StateExecutionInstance> pageResponse =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (pageResponse == null || pageResponse.isEmpty()) {
+    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
       return null;
     }
+
     List<Artifact> artifacts = new ArrayList<>();
-    pageResponse.forEach(stateExecutionInstance -> {
+    allStateExecutionInstances.forEach(stateExecutionInstance -> {
       ArtifactCollectionExecutionData artifactCollectionExecutionData =
           (ArtifactCollectionExecutionData) stateExecutionInstance.getStateExecutionData();
       artifacts.add(artifactService.get(appId, artifactCollectionExecutionData.getArtifactId()));
