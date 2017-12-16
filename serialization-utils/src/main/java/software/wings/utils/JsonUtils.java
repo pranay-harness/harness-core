@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -333,7 +332,7 @@ public class JsonUtils {
       return schemaNode;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      throw Throwables.propagate(e);
+      throw e;
     }
   }
 
@@ -359,7 +358,7 @@ public class JsonUtils {
       return objectMapper.valueToTree(object);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      throw Throwables.propagate(e);
+      throw e;
     }
   }
 
@@ -386,7 +385,7 @@ public class JsonUtils {
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
