@@ -191,6 +191,9 @@ public class WingsRule implements MethodRule {
     configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getSchedulerConfig().setAutoStart("true");
+      if (fakeMongo) {
+        configuration.getSchedulerConfig().setJobstoreclass(org.quartz.simpl.RAMJobStore.class.getCanonicalName());
+      }
     }
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()

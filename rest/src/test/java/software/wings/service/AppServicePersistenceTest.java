@@ -28,8 +28,6 @@ import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
 @SetupScheduler
-@RealMongo
-@Ignore
 public class AppServicePersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
