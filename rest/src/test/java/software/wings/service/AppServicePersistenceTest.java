@@ -5,6 +5,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
@@ -15,10 +16,10 @@ import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.RealMongo;
 import software.wings.rules.SetupScheduler;
 import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.PruneObjectJob;
-import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.scheduler.TestJobListener;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -27,6 +28,8 @@ import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
 @SetupScheduler
+@RealMongo
+@Ignore
 public class AppServicePersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
