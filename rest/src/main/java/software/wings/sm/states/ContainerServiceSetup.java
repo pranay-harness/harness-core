@@ -357,9 +357,16 @@ public abstract class ContainerServiceSetup extends State {
       NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
       encryptionService.decrypt(nexusConfig,
           secretManager.getEncryptionDetails(nexusConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      imageDetails.name(nexusArtifactStream.getImageName())
+
+      String url = nexusConfig.getNexusUrl();
+      int firstDotIndex = url.indexOf(".");
+      int colonIndex = url.indexOf(":", firstDotIndex);
+      String registryUrl = url.substring(0, colonIndex) + ":8083";
+      String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
+
+      imageDetails.name(namePrefix + "/" + nexusArtifactStream.getImageName())
           .sourceName(nexusArtifactStream.getSourceName())
-          .registryUrl(nexusConfig.getNexusUrl())
+          .registryUrl(registryUrl)
           .username(nexusConfig.getUsername())
           .password(new String(nexusConfig.getPassword()));
     } else {
