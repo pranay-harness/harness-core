@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 public class VerificationJobScheduler extends AbstractQuartzScheduler {
   private static final Logger logger = LoggerFactory.getLogger(VerificationJobScheduler.class);
+  private static final int DEFAULT_NEWRELIC_COLLECTION_MINS = 60;
 
   /**
    * Instantiates a new Cron scheduler.
@@ -69,7 +70,8 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
                               .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP_TRIGGER",
                                   "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP_TRIGGER")
                               .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                                .withIntervalInSeconds((int) TimeUnit.DAYS.toSeconds(1))
+                                                .withIntervalInSeconds(
+                                                    (int) TimeUnit.MINUTES.toSeconds(DEFAULT_NEWRELIC_COLLECTION_MINS))
                                                 .withMisfireHandlingInstructionNowWithExistingCount()
                                                 .repeatForever())
                               .startAt(startDate)
