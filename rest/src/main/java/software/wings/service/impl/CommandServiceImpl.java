@@ -42,41 +42,29 @@ public class CommandServiceImpl implements CommandService {
 
   @Override
   public Command getCommand(String appId, String originEntityId, int version) {
-    return wingsPersistence.get(Command.class,
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", EQ, appId).build())
-            .addFilter(aSearchFilter().withField("originEntityId", EQ, originEntityId).build())
-            .addFilter(aSearchFilter().withField("version", EQ, version).build())
-            .build());
-  }
-
-  @Override
-  public List<Command> getCommandList(String appId, String originEntityId) {
-    PageRequest<Command> pageRequest =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-            .addFilter(aSearchFilter().withField("originEntityId", Operator.EQ, originEntityId).build())
-            .build();
-    return wingsPersistence.query(Command.class, pageRequest).getResponse();
+    return wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Command.class)
+                                                   .field("appId")
+                                                   .equal(appId)
+                                                   .field("originEntityId")
+                                                   .equal(originEntityId)
+                                                   .field("version")
+                                                   .equal(version));
   }
 
   @Override
   public ServiceCommand getServiceCommand(String appId, String serviceCommandId) {
-    return wingsPersistence.get(ServiceCommand.class,
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", EQ, appId).build())
-            .addFilter(aSearchFilter().withField("uuid", EQ, serviceCommandId).build())
-            .build());
+    return wingsPersistence.get(ServiceCommand.class, appId, serviceCommandId);
   }
 
   @Override
   public ServiceCommand getServiceCommandByName(String appId, String serviceId, String serviceCommandName) {
-    return wingsPersistence.get(ServiceCommand.class,
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", EQ, appId).build())
-            .addFilter(aSearchFilter().withField("serviceId", EQ, serviceId).build())
-            .addFilter(aSearchFilter().withField("name", EQ, serviceCommandName).build())
-            .build());
+    return wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(ServiceCommand.class)
+                                                   .field("appId")
+                                                   .equal(appId)
+                                                   .field("serviceId")
+                                                   .equal(serviceId)
+                                                   .field("name")
+                                                   .equal(serviceCommandName));
   }
 
   @Override
