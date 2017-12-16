@@ -12,7 +12,6 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.sm.TransitionType.SUCCESS;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -186,7 +185,7 @@ public class Graph {
     try {
       linkMap = getLinks().stream().collect(toMap(Link::getFrom, identity()));
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw e;
     }
 
     Map<String, Link> finalLinkMap = linkMap;
