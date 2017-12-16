@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @DisallowConcurrentExecution
 public class NewRelicMetricNameCollectionJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(NewRelicMetricNameCollectionJob.class);
-
+  private static final int DEFAULT_NEWRELIC_COLLECTION_TIMEOUT_MINS = 60;
   @Inject private SettingsService settingsService;
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
@@ -73,15 +73,17 @@ public class NewRelicMetricNameCollectionJob implements Job {
                       .build();
               String waitId = UUIDGenerator.getUuid();
               logger.info("Scheduling new relic metric name collection task {}", dataCollectionInfo);
-              DelegateTask delegateTask = aDelegateTask()
-                                              .withTaskType(TaskType.NEWRELIC_COLLECT_METRIC_NAMES)
-                                              .withAccountId(newRelicConfig.getAccountId())
-                                              .withAppId(workflowInfo.getAppId())
-                                              .withParameters(new Object[] {dataCollectionInfo})
-                                              .withWaitId(waitId)
-                                              .withEnvId(workflowInfo.getEnvId())
-                                              .withInfrastructureMappingId(workflowInfo.getInfraMappingId())
-                                              .build();
+              DelegateTask delegateTask =
+                  aDelegateTask()
+                      .withTaskType(TaskType.NEWRELIC_COLLECT_METRIC_NAMES)
+                      .withAccountId(newRelicConfig.getAccountId())
+                      .withAppId(workflowInfo.getAppId())
+                      .withParameters(new Object[] {dataCollectionInfo})
+                      .withWaitId(waitId)
+                      .withEnvId(workflowInfo.getEnvId())
+                      .withInfrastructureMappingId(workflowInfo.getInfraMappingId())
+                      .withTimeout(TimeUnit.MINUTES.toMillis(DEFAULT_NEWRELIC_COLLECTION_TIMEOUT_MINS))
+                      .build();
               delegateService.queueTask(delegateTask);
             }
           } catch (Exception ex) {

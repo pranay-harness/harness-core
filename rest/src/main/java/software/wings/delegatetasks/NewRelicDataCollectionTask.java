@@ -300,8 +300,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 taskResult.setErrorMessage("Cannot save new relic metric records to Harness. Server returned error");
                 throw new RuntimeException("Cannot save new relic metric records to Harness. Server returned error");
               }
-              logger.info("Sending " + records.cellSet().size()
-                  + " new relic metric records to the server for : from minute " + dataCollectionMinute + ", to minute "
+              logger.info("Sending " + records.cellSet().size() + " new relic metric records for " + node.getHost()
+                  + " to the server for : from minute " + dataCollectionMinute + ", to minute "
                   + dataCollectionMinuteEnd);
               records.clear();
             }
