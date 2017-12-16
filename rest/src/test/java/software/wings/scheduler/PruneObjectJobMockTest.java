@@ -34,7 +34,6 @@ import software.wings.service.intfc.EnvironmentService;
 import java.util.Date;
 import javax.inject.Inject;
 
-@RealMongo
 public class PruneObjectJobMockTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(PruneObjectJob.class);
 

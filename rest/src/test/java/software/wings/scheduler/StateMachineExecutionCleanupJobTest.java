@@ -16,7 +16,6 @@ import software.wings.WingsBaseTest;
 import software.wings.rules.RealMongo;
 import software.wings.rules.SetupScheduler;
 
-@RealMongo
 @SetupScheduler
 @Ignore
 public class StateMachineExecutionCleanupJobTest extends WingsBaseTest {
@@ -27,11 +26,12 @@ public class StateMachineExecutionCleanupJobTest extends WingsBaseTest {
   public void scheduleJob() {
     JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
                         .withIdentity(appId, StateMachineExecutionCleanupJob.GROUP)
-                        .usingJobData("appId", appId)
+                        .usingJobData(StateMachineExecutionCleanupJob.APP_ID_KEY, appId)
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(appId, StateMachineExecutionCleanupJob.GROUP)
+                          .startNow()
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(1).repeatForever())
                           .build();
 
