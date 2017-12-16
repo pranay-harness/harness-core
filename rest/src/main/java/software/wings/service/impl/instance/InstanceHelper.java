@@ -141,12 +141,15 @@ public class InstanceHelper {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
     Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
 
-    String hostUuid = host.getUuid();
-    Host hostInfo = hostService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), hostUuid);
-    Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
     Instance.Builder builder = buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMappingType);
-    setInstanceInfoAndKey(builder, hostInfo, infraMappingType, phaseExecutionData.getInfraMappingId());
-
+    String hostUuid = host.getUuid();
+    if (hostUuid == null) {
+      setInstanceInfoAndKey(builder, host.getEc2Instance(), infraMappingType, phaseExecutionData.getInfraMappingId());
+    } else {
+      Host hostInfo = hostService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), hostUuid);
+      Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
+      setInstanceInfoAndKey(builder, hostInfo, infraMappingType, phaseExecutionData.getInfraMappingId());
+    }
     return builder.build();
   }
 
@@ -212,6 +215,27 @@ public class InstanceHelper {
                          .withHostPublicDns(host.getPublicDns())
                          .withHostId(host.getUuid())
                          .withHostName(host.getHostName())
+                         .build();
+    }
+
+    builder.withInstanceInfo(instanceInfo);
+  }
+
+  private void setInstanceInfoAndKey(Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance,
+      String infraMappingType, String infraMappingId) {
+    InstanceInfo instanceInfo = null;
+    String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
+    String privateDnsName =
+        privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.lastIndexOf(".ec2.internal"));
+    HostInstanceKey hostInstanceKey =
+        HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
+    builder.withHostInstanceKey(hostInstanceKey);
+
+    if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName().equals(infraMappingType)) {
+      instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
+                         .withEc2Instance(ec2Instance)
+                         .withHostName(privateDnsName)
+                         .withHostPublicDns(ec2Instance.getPublicDnsName())
                          .build();
     }
 
