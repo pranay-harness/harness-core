@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -17,6 +18,7 @@ import software.wings.rules.SetupScheduler;
 
 @RealMongo
 @SetupScheduler
+@Ignore
 public class StateMachineExecutionCleanupJobTest extends WingsBaseTest {
   @Inject private JobScheduler jobScheduler;
 
