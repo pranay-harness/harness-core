@@ -16,7 +16,7 @@ public class KubernetesConvention {
   private static final String DASH = "-";
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
-  private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
+  private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"':]");
 
   public static String getReplicationControllerName(String prefix, int revision) {
     return normalize(prefix) + DOT + revision;
@@ -35,7 +35,8 @@ public class KubernetesConvention {
   }
 
   public static String getKubernetesSecretName(String serviceName, String imageSource) {
-    return normalize(serviceName + DASH + noDot(imageSource));
+    String name = normalize(serviceName + DASH + noDot(imageSource));
+    return name.substring(0, Math.min(name.length(), 63);
   }
 
   public static Optional<Integer> getRevisionFromControllerName(String name) {
