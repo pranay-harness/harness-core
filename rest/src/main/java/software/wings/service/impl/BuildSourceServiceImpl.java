@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
@@ -115,7 +117,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue value = settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((Encryptable) value, null, null);
-    if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
+    if (AMAZON_S3.getName().equals(artifactStreamType) || AMI.getName().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, value, encryptedDataDetails);
     } else {
@@ -137,7 +139,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue value = settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((Encryptable) value, null, null);
-    if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
+    if (AMAZON_S3.getName().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getLastSuccessfulBuild(appId, artifactStreamAttributes, value, encryptedDataDetails);
     } else {
