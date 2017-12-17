@@ -31,7 +31,7 @@ import javax.inject.Inject;
  */
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
-  private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
+  public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
 
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDelgateServiceImpl.class);
   @Inject private EncryptionService encryptionService;

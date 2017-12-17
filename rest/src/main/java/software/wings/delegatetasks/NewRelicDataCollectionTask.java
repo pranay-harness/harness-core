@@ -128,6 +128,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       this.lastCollectionTime = analysisStartTimeDelegate;
       this.dataCollectionMinute = 0;
       this.taskResult = taskResult;
+
+      logger.info("NewRelic collector initialized : managerAnalysisStartTime - {}, windowStartTimeManager {}",
+          managerAnalysisStartTime, windowStartTimeManager);
     }
 
     private TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricData(
@@ -140,6 +143,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
         for (NewRelicMetricSlice metric : metricData.getMetrics()) {
           for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
+            // set from time to the timestamp
+            long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
+            if (timeStamp < managerAnalysisStartTime) {
+              logger.warn("New relic sending us data in the past. request start time {}, received time {}",
+                  managerAnalysisStartTime, timeStamp);
+            }
             final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
             metricDataRecord.setName(metric.getName());
             metricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
@@ -149,8 +158,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
             metricDataRecord.setStateType(getStateType());
 
-            // set from time to the timestamp
-            long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
             metricDataRecord.setTimeStamp(timeStamp);
             metricDataRecord.setHost(node.getHost());
 
