@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.ResourceType;
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -46,7 +45,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   }
 
   @Override
-  public Set<String> listTags(String appId, @NotEmpty String computeProviderId, String region, String resourceTypeStr) {
+  public Set<String> listTags(String appId, String computeProviderId, String region, String resourceTypeStr) {
     ResourceType resourceType = (resourceTypeStr == null ? ResourceType.Image : ResourceType.valueOf(resourceTypeStr));
     SettingAttribute computeProviderSetting = settingService.get(computeProviderId);
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
