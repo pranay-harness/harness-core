@@ -25,8 +25,8 @@ ARTIFACT_TYPE:
       value: AWS_LAMBDA
     - name: AWS Code Deploy
       value: AWS_CODEDEPLOY
-    - name: AWS AMI
-      value: AWS_AMI
+    - name: AMI
+      value: AMI
 
 ARTIFACT_SOURCE_TYPE:
     - name: Jenkins Server
