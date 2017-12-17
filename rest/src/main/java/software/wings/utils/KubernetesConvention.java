@@ -18,6 +18,8 @@ public class KubernetesConvention {
   private static final String VOLUME_SUFFIX = "-vol";
   private static final String SECRET_PREFIX = "hs-";
   private static final String SECRET_SUFFIX = "-hs";
+  private static final String CONTAINER_PREFIX = "hs-";
+  private static final String CONTAINER_SUFFIX = "-hs";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"':]");
 
   public static String getReplicationControllerName(String prefix, int revision) {
@@ -65,7 +67,12 @@ public class KubernetesConvention {
   }
 
   public static String getContainerName(String imageName) {
-    return normalize(noDot(imageName));
+    String name = normalize(noDot(imageName));
+    int maxLength = 63 - (CONTAINER_PREFIX.length() + CONTAINER_SUFFIX.length());
+    if (name.length() > maxLength) {
+      name = name.substring(0, maxLength);
+    }
+    return CONTAINER_PREFIX + name + CONTAINER_SUFFIX;
   }
 
   public static String getVolumeName(String path) {
