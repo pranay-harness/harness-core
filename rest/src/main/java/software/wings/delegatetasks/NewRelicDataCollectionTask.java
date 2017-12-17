@@ -175,6 +175,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
           }
         }
+        logger.info("Step 1: Get NewRelic records finished");
+
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
         throw(e);
@@ -199,6 +201,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           }
         }
 
+        logger.info("Step 2: Get NewRelic error records finished");
+
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
         throw(e);
@@ -222,6 +226,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
           }
         }
+
+        logger.info("Step 3: Get NewRelic apdex records finished");
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
