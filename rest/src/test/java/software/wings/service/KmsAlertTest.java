@@ -37,6 +37,7 @@ import software.wings.service.intfc.security.VaultService;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -140,7 +141,7 @@ public class KmsAlertTest extends WingsBaseTest {
       System.out.println("reading vault token from environment variable");
     } else {
       System.out.println("reading vault token from file");
-      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()));
+      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()), Charset.defaultCharset());
     }
     if (VAULT_TOKEN.endsWith("\n")) {
       VAULT_TOKEN = VAULT_TOKEN.replaceAll("\n", "");

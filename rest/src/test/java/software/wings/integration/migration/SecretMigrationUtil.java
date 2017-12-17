@@ -23,9 +23,8 @@ import software.wings.WingsBaseTest;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.EntityType;
-import software.wings.beans.Service;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
@@ -48,12 +47,11 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.UUID;
 
@@ -311,7 +309,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       fileService.download(configFile.getFileUuid(), file, CONFIGS);
       System.out.println("processing " + configFile);
       EncryptionUtils.decrypt(file, configFile.getAccountId());
-      System.out.println("going to save: " + FileUtils.readFileToString(file));
+      System.out.println("going to save: " + FileUtils.readFileToString(file, Charset.defaultCharset()));
 
       //      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
       changedObject++;
