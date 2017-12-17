@@ -36,7 +36,10 @@ public class KubernetesConvention {
 
   public static String getKubernetesSecretName(String serviceName, String imageSource) {
     String name = normalize(serviceName + DASH + noDot(imageSource));
-    return name.substring(0, Math.min(name.length(), 63));
+    if (name.length() > 63) {
+      name = name.substring(0, 62) + "z";
+    }
+    return name;
   }
 
   public static Optional<Integer> getRevisionFromControllerName(String name) {
