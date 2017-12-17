@@ -69,6 +69,7 @@ import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
+import com.amazonaws.services.ec2.model.ResourceType;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.ec2.model.TagDescription;
@@ -803,6 +804,11 @@ public class AwsHelperService {
   }
 
   public Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    return listTags(awsConfig, encryptionDetails, region, ResourceType.Instance);
+  }
+
+  public Set<String> listTags(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, ResourceType resourceType) {
     String nextToken = null;
     Set<String> tags = new LinkedHashSet<>();
     try {
@@ -810,11 +816,11 @@ public class AwsHelperService {
         encryptionService.decrypt(awsConfig, encryptionDetails);
         AmazonEC2Client amazonEC2Client =
             getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-        DescribeTagsResult describeTagsResult =
-            amazonEC2Client.describeTags(new DescribeTagsRequest()
-                                             .withNextToken(nextToken)
-                                             .withFilters(new Filter("resource-type").withValues("instance"))
-                                             .withMaxResults(1000));
+        DescribeTagsResult describeTagsResult = amazonEC2Client.describeTags(
+            new DescribeTagsRequest()
+                .withNextToken(nextToken)
+                .withFilters(new Filter("resource-type").withValues(resourceType.toString()))
+                .withMaxResults(1000));
         tags.addAll(describeTagsResult.getTags().stream().map(TagDescription::getKey).collect(Collectors.toSet()));
         nextToken = describeTagsResult.getNextToken();
       } while (nextToken != null);
@@ -1510,17 +1516,6 @@ public class AwsHelperService {
     return false;
   }
 
-  public DescribeImagesResult describeImagesResult(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, DescribeImagesRequest describeImagesRequest) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
-      return getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-          .describeImages(describeImagesRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new DescribeImagesResult();
-  }
   private String getBucketRegion(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);

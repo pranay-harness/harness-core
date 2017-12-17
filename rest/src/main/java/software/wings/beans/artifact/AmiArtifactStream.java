@@ -1,11 +1,22 @@
 package software.wings.beans.artifact;
 
+import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.SchemaIgnore;
+
+import java.util.List;
+
 /**
  * Created by sgurubelli on 12/14/17.
  */
+@JsonTypeName("AMI")
 public class AmiArtifactStream extends ArtifactStream {
   private String region;
-  private String tagName;
+  private List<Tag> tags;
 
   /**
    * AmiArtifactStream
@@ -33,8 +44,17 @@ public class AmiArtifactStream extends ArtifactStream {
   }
 
   @Override
+  @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
-    return null;
+    Multimap<String, String> multiTags = ArrayListMultimap.create();
+    if (tags != null) {
+      tags.forEach(tag -> multiTags.put(tag.getKey(), tag.getValue()));
+    }
+    return anArtifactStreamAttributes()
+        .withArtifactStreamType(getArtifactStreamType())
+        .withRegion(region)
+        .withTags(multiTags)
+        .build();
   }
 
   @Override
@@ -50,11 +70,32 @@ public class AmiArtifactStream extends ArtifactStream {
     this.region = region;
   }
 
-  public String getTagName() {
-    return tagName;
+  public List<Tag> getTags() {
+    return tags;
   }
 
-  public void setTagName(String tagName) {
-    this.tagName = tagName;
+  public void setTags(List<Tag> tags) {
+    this.tags = tags;
+  }
+
+  public static class Tag {
+    private String key;
+    private String value;
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
   }
 }

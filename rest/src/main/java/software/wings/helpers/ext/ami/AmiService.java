@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.ami;
 
+import com.google.common.collect.Multimap;
+
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -11,16 +13,16 @@ import java.util.List;
  */
 public interface AmiService {
   /**
-   * Get Image details
+   * Get AMI Images
    * @param awsConfig
    * @param encryptionDetails
    * @param region
-   * @param tag
+   * @param tags
    * @param maxNumberOfBuilds
    * @return
    */
   List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      String tag, int maxNumberOfBuilds);
+      Multimap<String, String> tags, int maxNumberOfBuilds);
 
   /**
    * Lists aws regions
