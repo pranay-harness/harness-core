@@ -57,7 +57,7 @@ public class AmiArtifactStream extends ArtifactStream {
       return region;
     }
     Set<String> tagNames = tags.stream().map(Tag::getKey).collect(Collectors.toSet());
-    return Joiner.on("_").join(tagNames);
+    return region + ":" + Joiner.on("_").join(tagNames);
   }
 
   @Override

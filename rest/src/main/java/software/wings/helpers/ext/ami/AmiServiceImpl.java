@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.ami;
 
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.utils.Misc.isNullOrEmpty;
+
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,9 +14,9 @@ import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,11 +40,13 @@ public class AmiServiceImpl implements AmiService {
     DescribeImagesResult describeImagesResult;
     describeImagesResult =
         awsHelperService.decribeEc2Images(awsConfig, encryptionDetails, region, describeImagesRequest);
+    Collections.sort(
+        describeImagesResult.getImages(), (o1, o2) -> o2.getCreationDate().compareTo(o1.getCreationDate()));
     describeImagesResult.getImages()
         .stream()
-        .filter(imageIdentifier -> imageIdentifier != null && !Misc.isNullOrEmpty(imageIdentifier.getName()))
-        .forEach(imageIdentifier
-            -> buildDetails.add(BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getName()).build()));
+        .filter(image -> image != null && !isNullOrEmpty(image.getName()))
+        .forEach(image
+            -> buildDetails.add(aBuildDetails().withNumber(image.getName()).withRevision(image.getImageId()).build()));
     return buildDetails;
   }
 
