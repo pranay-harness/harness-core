@@ -55,7 +55,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT, "args", "No cloud provider exist or not of type Aws");
     }
 
     return (AwsConfig) computeProviderSetting.getValue();
