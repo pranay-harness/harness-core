@@ -16,6 +16,8 @@ public class KubernetesConvention {
   private static final String DASH = "-";
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
+  private static final String SECRET_PREFIX = "hs-";
+  private static final String SECRET_SUFFIX = "-hs";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"':]");
 
   public static String getReplicationControllerName(String prefix, int revision) {
@@ -34,12 +36,17 @@ public class KubernetesConvention {
     return noDot(normalize(rcNamePrefix));
   }
 
-  public static String getKubernetesSecretName(String serviceName, String imageSource) {
-    String name = normalize(serviceName + DASH + noDot(imageSource));
-    if (name.length() > 63) {
-      name = name.substring(0, 62) + "z";
+  public static String getKubernetesSecretName(String registryUrl) {
+    String regName = registryUrl.substring(registryUrl.indexOf("://") + 3);
+    if (regName.endsWith("/")) {
+      regName = regName.substring(0, regName.length() - 1);
     }
-    return name;
+    String name = normalize(noDot(regName));
+    int maxLength = 63 - (SECRET_PREFIX.length() + SECRET_SUFFIX.length());
+    if (name.length() > maxLength) {
+      name = name.substring(0, maxLength);
+    }
+    return SECRET_PREFIX + name + SECRET_SUFFIX;
   }
 
   public static Optional<Integer> getRevisionFromControllerName(String name) {
