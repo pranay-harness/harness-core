@@ -77,6 +77,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -345,6 +346,7 @@ public class VaultTest extends WingsBaseTest {
     assertFalse(savedKmsConfig.isDefault());
     assertEquals(Base.GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
   }
+
   @Test
   public void saveConfigDefault() throws IOException {
     VaultConfig vaultConfig = getVaultConfig();
@@ -1304,7 +1306,8 @@ public class VaultTest extends WingsBaseTest {
 
     String configFileId = configService.save(configFile, null);
     File download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     List<EncryptedData> encryptedFileData =
@@ -1318,7 +1321,8 @@ public class VaultTest extends WingsBaseTest {
         accountId, newSecretName, encryptedUuid, new BoundedInputStream(new FileInputStream(fileToUpdate)));
 
     download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE).asList();
@@ -1452,7 +1456,7 @@ public class VaultTest extends WingsBaseTest {
       System.out.println("reading vault token from environment variable");
     } else {
       System.out.println("reading vault token from file");
-      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()));
+      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()), Charset.defaultCharset());
     }
     if (VAULT_TOKEN.endsWith("\n")) {
       VAULT_TOKEN = VAULT_TOKEN.replaceAll("\n", "");

@@ -66,6 +66,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -744,7 +745,8 @@ public class SecretTextTest extends WingsBaseTest {
     String encryptedUuid = encryptedData.getUuid();
 
     File download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
 
     List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(secretFileId, CONFIG_FILE);
     assertEquals(1, changeLogs.size());
@@ -775,7 +777,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertTrue(encryptedData.getParentIds().contains(configFileId));
 
     download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
 
     changeLogs = secretManager.getChangeLogs(secretFileId, SECRET_TEXT);
     assertEquals(2, changeLogs.size());
@@ -802,7 +805,8 @@ public class SecretTextTest extends WingsBaseTest {
     configService.update(configFile, null);
 
     download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(newFileToSave), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(newFileToSave, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
   }
 
   @Test
