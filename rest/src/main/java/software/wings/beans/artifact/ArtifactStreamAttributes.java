@@ -1,5 +1,7 @@
 package software.wings.beans.artifact;
 
+import com.google.common.collect.Multimap;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.utils.ArtifactType;
 
@@ -20,6 +22,7 @@ public class ArtifactStreamAttributes {
   private String region;
   private String repositoryType;
   private boolean metadataOnly;
+  private Multimap<String, String> tags;
 
   /**
    * Gets job name.
@@ -197,6 +200,14 @@ public class ArtifactStreamAttributes {
     return metadataOnly;
   }
 
+  public Multimap<String, String> getTags() {
+    return tags;
+  }
+
+  public void setTags(Multimap<String, String> tags) {
+    this.tags = tags;
+  }
+
   /**
    * The type Builder.
    */
@@ -213,6 +224,7 @@ public class ArtifactStreamAttributes {
     private String region;
     private String repositoryType;
     private boolean metadataOnly;
+    private Multimap<String, String> tags;
 
     private Builder() {}
 
@@ -330,6 +342,11 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withTags(Multimap<String, String> tags) {
+      this.tags = tags;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -348,7 +365,8 @@ public class ArtifactStreamAttributes {
           .withArtifactPattern(artifactPattern)
           .withRegion(region)
           .withRepositoryType(repositoryType)
-          .withMetadataOnly(metadataOnly);
+          .withMetadataOnly(metadataOnly)
+          .withTags(tags);
     }
 
     /**
@@ -370,6 +388,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setRegion(region);
       artifactStreamAttributes.setRepositoryType(repositoryType);
       artifactStreamAttributes.setMedatadataOnly(metadataOnly);
+      artifactStreamAttributes.setTags(tags);
       return artifactStreamAttributes;
     }
   }

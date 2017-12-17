@@ -4,7 +4,6 @@ import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.AwsConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
@@ -19,10 +18,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by sgurubelli on 12/15/17.
  */
+@Singleton
 public class AmiBuildServiceImpl implements AmiBuildService {
   @Inject private AmiService amiService;
 

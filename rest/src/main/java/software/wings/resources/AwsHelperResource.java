@@ -13,6 +13,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AwsHelperResourceService;
 
 import java.util.Map;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -42,5 +43,14 @@ public class AwsHelperResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> list(@QueryParam("accountId") String accountId) {
     return new RestResponse(awsHelperResourceService.getRegions());
+  }
+
+  @GET
+  @Path("tags")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> listTags(@QueryParam("appId") String appId, @QueryParam("region") String region,
+      @QueryParam("computeProviderId") String computeProviderId, @QueryParam("resourceType") String resourceType) {
+    return new RestResponse<>(awsHelperResourceService.listTags(appId, computeProviderId, region, resourceType));
   }
 }
