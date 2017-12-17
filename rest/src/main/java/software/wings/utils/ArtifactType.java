@@ -735,6 +735,39 @@ public enum ArtifactType {
   },
 
   /**
+   * The constant AWS_CODEDEPLOY.
+   */
+  AWS_AMI {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getCodeDeployCommand());
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getCodeDeployCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Amazon AMI")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName("Amazon AMI")
+                                       .withType(CODE_DEPLOY.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
    * Other artifact type.
    */
   OTHER {

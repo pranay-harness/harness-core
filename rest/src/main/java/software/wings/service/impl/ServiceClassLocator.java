@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AmazonS3BuildService;
+import software.wings.service.intfc.AmiBuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildService;
@@ -40,6 +41,8 @@ public class ServiceClassLocator {
         return JenkinsBuildService.class;
       case NEXUS:
         return NexusBuildService.class;
+      case AMI:
+        return AmiBuildService.class;
       default:
         throw new WingsException("Unsupported artifact stream type: " + artifactStreamType);
     }

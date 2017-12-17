@@ -25,6 +25,8 @@ ARTIFACT_TYPE:
       value: AWS_LAMBDA
     - name: AWS Code Deploy
       value: AWS_CODEDEPLOY
+    - name: AWS AMI
+      value: AWS_AMI
 
 ARTIFACT_SOURCE_TYPE:
     - name: Jenkins Server
@@ -55,6 +57,8 @@ ARTIFACT_STREAM_TYPE:
       value: ECR
     - name: GCR
       value: GCR
+    - name: AMI
+      value: AMI
 
 DEPLOYMENT_STRATEGY:
     - name: Serial
