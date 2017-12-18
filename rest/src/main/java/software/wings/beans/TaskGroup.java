@@ -25,5 +25,7 @@ public enum TaskGroup {
   HOST_VALIDATION,
   KMS,
   GIT,
-  CONTAINER
+  CONTAINER,
+  AMI
+
 }

@@ -5,6 +5,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -115,10 +116,52 @@ public class ArtifactCollectionJob implements Job {
       collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
     } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
       collectS3Artifacts(appId, artifactStream, newArtifacts, artifactStreamId);
+    } else if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
+      collectAmiImages(appId, artifactStream, newArtifacts);
     } else {
       collectJenkinsBambooArtifacts(appId, artifactStream, newArtifacts);
     }
     return newArtifacts;
+  }
+
+  private void collectAmiImages(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+    String artifactStreamId = artifactStream.getUuid();
+    logger.info("Collecting images for artifact stream id {} type {} and source name {} ", artifactStreamId,
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+    List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
+    try {
+      boolean lockAcquired = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId);
+      if (lockAcquired) {
+        List<Artifact> artifacts = artifactService
+                                       .list(aPageRequest()
+                                                 .addFilter("appId", EQ, appId)
+                                                 .addFilter("artifactStreamId", EQ, artifactStreamId)
+                                                 .withLimit(UNLIMITED)
+                                                 .build(),
+                                           false)
+                                       .getResponse();
+        Map<String, String> existingBuilds =
+            artifacts.stream().collect(Collectors.toMap(Artifact::getBuildNo, Artifact::getUuid, (s, s2) -> s));
+        builds.forEach(buildDetails -> {
+          if (!existingBuilds.containsKey(buildDetails.getNumber())) {
+            logger.info(
+                "New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. Add entry in Artifact collection",
+                buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+            Artifact artifact = anArtifact()
+                                    .withAppId(appId)
+                                    .withArtifactStreamId(artifactStreamId)
+                                    .withArtifactSourceName(artifactStream.getSourceName())
+                                    .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
+                                    .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
+                                    .withRevision(buildDetails.getRevision())
+                                    .build();
+            newArtifacts.add(artifactService.create(artifact));
+          }
+        });
+      }
+    } finally {
+      persistentLocker.releaseLock(ArtifactStream.class, artifactStreamId);
+    }
   }
 
   private void collectJenkinsBambooArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
