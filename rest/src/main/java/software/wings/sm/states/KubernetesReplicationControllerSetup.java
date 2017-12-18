@@ -64,7 +64,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
       ContainerTask containerTask, String clusterName) {
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env.getName());
+        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
 
     if (containerTask != null) {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;

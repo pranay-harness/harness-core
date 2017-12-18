@@ -180,8 +180,8 @@ public class KubernetesContainerTask extends ContainerTask {
     }
   }
 
-  public String kubernetesType() {
-    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME).getClass().getName();
+  public Class<? extends HasMetadata> kubernetesType() {
+    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME).getClass();
   }
 
   public HasMetadata createController(String containerName, String imageNameTag, String secretName) {

@@ -6,7 +6,6 @@ package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
@@ -70,7 +69,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
-import com.amazonaws.transform.MapEntry;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -99,7 +98,6 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -123,6 +121,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -2059,14 +2058,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .build());
     }
 
-    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
-                                                .withName("Upgrade Containers")
-                                                .build())
-                                   .build());
-
+    KubernetesContainerTask containerTask =
+        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+            appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
+    if (containerTask == null || containerTask.kubernetesType() != DaemonSet.class) {
+      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                     .addStep(aNode()
+                                                  .withId(getUuid())
+                                                  .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
+                                                  .withName("Upgrade Containers")
+                                                  .build())
+                                     .build());
+    }
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
