@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+import com.google.api.client.repackaged.com.google.common.base.Throwables;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureFlag;
@@ -39,7 +41,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
     if (isEmpty(accountId)) {
       // we don't want to throw an exception - we just want to log the error
-      logger.error("FeatureFlag isEnabled check without accountId");
+      logger.error(
+          "FeatureFlag isEnabled check without accountId\n{}", Throwables.getStackTraceAsString(new Exception()));
       return false;
     }
 
