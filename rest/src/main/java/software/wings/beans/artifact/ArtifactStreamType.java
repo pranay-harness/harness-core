@@ -54,7 +54,11 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   /**
    * Amazon S3 source type.
    */
-  AMAZON_S3(AmazonS3ArtifactStream.class);
+  AMAZON_S3(AmazonS3ArtifactStream.class),
+  /**
+   * Amazon AMI Source type
+   */
+  AMI(AmiArtifactStream.class);
 
   private static final String stencilsPath = "/templates/artifactstreams/";
   private static final String uiSchemaSuffix = "-ArtifactStreamUISchema.json";
@@ -66,16 +70,11 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
 
   ArtifactStreamType(Class<? extends ArtifactStream> artifactStreamClass) {
     this.artifactStreamClass = artifactStreamClass;
-    /* try {
-      uiSchema = UISchemaProcessor.generate(artifactStreamClass);
-
-    } catch (Exception e) {*/
     try {
       uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception ex) {
       uiSchema = new HashMap<String, String>();
     }
-    /*}*/
     jsonSchema = JsonUtils.jsonSchema(artifactStreamClass);
   }
 

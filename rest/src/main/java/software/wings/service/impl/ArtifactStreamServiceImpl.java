@@ -10,6 +10,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -117,6 +118,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   private static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
   private static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
@@ -133,8 +135,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private AppService appService;
   @Inject private TriggerService triggerService;
   @Inject private YamlChangeSetService yamlChangeSetService;
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -729,12 +729,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           ARTIFACTORY.name(), ARTIFACTORY.name(), NEXUS.name(), NEXUS.name());
     } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
       return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());
-    } else {
-      return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
-          ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
-          ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name(),
-          AMAZON_S3.name(), AMAZON_S3.name());
+    } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
+      return ImmutableMap.of(AMI.name(), AMI.name());
     }
+    return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
+        ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
+        ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name(),
+        AMAZON_S3.name(), AMAZON_S3.name());
   }
 
   @Override
