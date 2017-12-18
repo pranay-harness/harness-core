@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.eclipse.jetty.util.StringUtil.isNotBlank;
+import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
@@ -21,7 +22,8 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
-import static software.wings.utils.Validator.*;
+import static software.wings.utils.Validator.duplicateCheck;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -89,7 +91,6 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -1007,6 +1008,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AWS_LAMBDA) {
       infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
+    } else if (artifactType == ArtifactType.AMI) {
+      infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
     } else {
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }
