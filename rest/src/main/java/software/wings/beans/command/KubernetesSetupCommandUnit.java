@@ -47,16 +47,18 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.ContainerDefinition;
-import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesServiceType;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
 
@@ -110,18 +112,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                        .orElse(-1)
         + 1;
 
-    Map<String, String> serviceLabels =
-        ImmutableMap.<String, String>builder()
-            .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
-            .put("service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
-            .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
-            .build();
-
-    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
-                                               .putAll(serviceLabels)
-                                               .put("revision", Integer.toString(revision))
-                                               .build();
-
     String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(setupParams.getRcNamePrefix());
 
     kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, emptyList());
@@ -131,11 +121,32 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         createRegistrySecret(
             secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));
 
-    String containerServiceName =
-        KubernetesConvention.getReplicationControllerName(setupParams.getRcNamePrefix(), revision);
+    KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
+    if (kubernetesContainerTask == null) {
+      kubernetesContainerTask = new KubernetesContainerTask();
+      ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
+      kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    }
+
+    boolean isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
+    String containerServiceName = isDaemonSet
+        ? setupParams.getRcNamePrefix()
+        : KubernetesConvention.getControllerName(setupParams.getRcNamePrefix(), revision);
+
+    Map<String, String> serviceLabels =
+        ImmutableMap.<String, String>builder()
+            .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
+            .put("service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+            .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+            .build();
+
+    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
+                                               .putAll(serviceLabels)
+                                               .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
+                                               .build();
 
     HasMetadata controllerDefinition =
-        createKubernetesControllerDefinition(setupParams.getContainerTask(), containerServiceName, controllerLabels,
+        createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
             kubernetesConfig.getNamespace(), setupParams.getImageDetails(), secretName, serviceVariables);
     kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, controllerDefinition);
 
@@ -187,6 +198,37 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
 
+    if (isDaemonSet) {
+      int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
+      List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(
+          kubernetesConfig, encryptedDataDetails, containerServiceName, desiredCount, executionLogCallback);
+
+      boolean allContainersSuccess =
+          containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+      if (containerInfos.size() != desiredCount || !allContainersSuccess) {
+        StringBuilder msg = new StringBuilder();
+        if (containerInfos.size() != desiredCount) {
+          String message = String.format("Expected data for %d container%s but got %d", desiredCount,
+              containerInfos.size() == 1 ? "" : "s", containerInfos.size());
+          executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+          msg.append(message);
+        }
+        if (!allContainersSuccess) {
+          List<ContainerInfo> failed = containerInfos.stream()
+                                           .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
+                                           .collect(Collectors.toList());
+          String message =
+              String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
+                  failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList()));
+          executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+          msg.append(message);
+        }
+        throw new WingsException(
+            ErrorCode.DEFAULT_ERROR_CODE, "message", "DaemonSet pods failed to reach desired count. " + msg.toString());
+      }
+      containerInfos.forEach(info
+          -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
+    }
     return containerServiceName;
   }
 
@@ -267,16 +309,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   /**
    * Creates controller definition
    */
-  private HasMetadata createKubernetesControllerDefinition(ContainerTask containerTask,
+  private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
       String replicationControllerName, Map<String, String> controllerLabels, String namespace,
       ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables) {
-    KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
-    if (kubernetesContainerTask == null) {
-      kubernetesContainerTask = new KubernetesContainerTask();
-      ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
-      kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-    }
-
     String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
     String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
 

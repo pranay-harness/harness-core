@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.gke;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
@@ -36,6 +37,10 @@ public interface KubernetesContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
       int count, ExecutionLogCallback executionLogCallback);
 
+  List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int count,
+      ExecutionLogCallback executionLogCallback);
+
   Optional<Integer> getControllerPodCount(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
@@ -63,4 +68,6 @@ public interface KubernetesContainerService {
 
   PodList getPods(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
+
+  NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 }

@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 
@@ -14,6 +15,7 @@ import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.NamespaceList;
+import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
@@ -57,7 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 2/9/17
@@ -188,6 +189,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
     logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
         previousCount, count);
+    return getContainerInfosWhenReady(
+        kubernetesConfig, encryptedDataDetails, controllerName, count, executionLogCallback);
+  }
+
+  public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int count,
+      ExecutionLogCallback executionLogCallback) {
     logger.info("Waiting for pods to be ready...");
     List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, count);
     List<ContainerInfo> containerInfos = new ArrayList<>();
@@ -227,7 +235,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                          }
                                          return msg;
                                        })
-                                       .collect(Collectors.toList()));
+                                       .collect(toList()));
         String conditionMessage = Joiner.on("], [").join(pod.getStatus()
                                                              .getConditions()
                                                              .stream()
@@ -241,7 +249,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                                }
                                                                return msg;
                                                              })
-                                                             .collect(Collectors.toList()));
+                                                             .collect(toList()));
         logger.error("Pod {} failed to start. Current status: {}. Container status: [{}]. Condition: [{}].", podName,
             phase, containerMessage, conditionMessage);
         executionLogCallback.saveExecutionLog(
@@ -252,11 +260,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       containerInfos.add(containerInfo);
     }
     if (hasErrors) {
-      logger.error("Completed resize operation with errors");
-      executionLogCallback.saveExecutionLog("Completed resize operation with errors.", Log.LogLevel.ERROR);
+      logger.error("Completed operation with errors");
+      executionLogCallback.saveExecutionLog("Completed operation with errors.", Log.LogLevel.ERROR);
     } else {
-      logger.info("Successfully completed resize operation");
-      executionLogCallback.saveExecutionLog("Successfully completed resize operation.", Log.LogLevel.INFO);
+      logger.info("Successfully completed operation");
+      executionLogCallback.saveExecutionLog("Successfully completed operation.", Log.LogLevel.INFO);
     }
     return containerInfos;
   }
@@ -431,6 +439,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
         .list();
+  }
+
+  @Override
+  public NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).nodes().list();
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
