@@ -27,7 +27,6 @@ import software.wings.api.HttpStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
@@ -324,6 +323,7 @@ public class HttpState extends State {
     }
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+
     String delegateTaksId = delegateService.queueTask(
         aDelegateTask()
             .withTaskType(getTaskType())
@@ -440,7 +440,7 @@ public class HttpState extends State {
         Activity.builder()
             .applicationName(app.getName())
             .commandName(getName())
-            .type(Type.Verification)
+            .type(Activity.Type.Verification)
             .workflowType(executionContext.getWorkflowType())
             .workflowExecutionName(executionContext.getWorkflowExecutionName())
             .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())

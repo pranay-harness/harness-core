@@ -12,6 +12,7 @@ import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicMetricNameCollectionTask;
+import software.wings.delegatetasks.ScriptTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
@@ -25,6 +26,7 @@ import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
 import software.wings.delegatetasks.validation.CommandValidation;
+import software.wings.delegatetasks.validation.ContainerValidation;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.delegatetasks.validation.DockerValidation;
@@ -34,7 +36,6 @@ import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
-import software.wings.delegatetasks.validation.ContainerValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
@@ -48,6 +49,7 @@ import java.util.function.Supplier;
 
 public enum TaskType {
   COMMAND(TaskGroup.COMMAND, CommandTask.class, CommandValidation.class),
+  SCRIPT(TaskGroup.SCRIPT, ScriptTask.class, HostValidationValidation.class),
   HTTP(TaskGroup.HTTP, HttpTask.class, HttpValidation.class),
   JENKINS(TaskGroup.JENKINS, JenkinsTask.class, JenkinsValidation.class),
   JENKINS_COLLECTION(TaskGroup.JENKINS, JenkinsCollectionTask.class, JenkinsValidation.class),
