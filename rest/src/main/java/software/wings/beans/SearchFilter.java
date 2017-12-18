@@ -124,33 +124,42 @@ public class SearchFilter {
     /**
      * Eq operator.
      */
-    EQ, /**
-         * Not eq operator.
-         */
-    NOT_EQ, /**
-             * Lt operator.
-             */
-    LT, /**
-         * Gt operator.
-         */
-    GT, /**
-         * Contains operator.
-         */
-    CONTAINS, /**
-               * Starts with operator.
-               */
-    STARTS_WITH, /**
-                  * Has element operator.
-                  */
-    HAS, /**
-          * In operator.
-          */
-    IN, /**
-         * Not in operator.
-         */
-    NOT_IN, /**
-             * Exists operator.
-             */
+    EQ,
+    /**
+     * Not eq operator.
+     */
+    NOT_EQ,
+    /**
+     * Lt operator.
+     */
+    LT,
+    /**
+     * Gt operator.
+     */
+    GT,
+    /**
+     * Contains operator.
+     */
+    CONTAINS,
+    /**
+     * Starts with operator.
+     */
+    STARTS_WITH,
+    /**
+     * Has element operator.
+     */
+    HAS,
+    /**
+     * In operator.
+     */
+    IN,
+    /**
+     * Not in operator.
+     */
+    NOT_IN,
+    /**
+     * Exists operator.
+     */
     EXISTS,
 
     NOT_EXISTS,

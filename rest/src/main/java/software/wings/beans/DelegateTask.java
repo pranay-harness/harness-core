@@ -461,18 +461,22 @@ public class DelegateTask extends Base {
     /**
      * Queued status.
      */
-    QUEUED, /**
-             * Started status.
-             */
-    STARTED, /**
-              * Finished status.
-              */
-    FINISHED, /**
-               * Error status.
-               */
-    ERROR, /**
-            * Aborted status.
-            */
+    QUEUED,
+    /**
+     * Started status.
+     */
+    STARTED,
+    /**
+     * Finished status.
+     */
+    FINISHED,
+    /**
+     * Error status.
+     */
+    ERROR,
+    /**
+     * Aborted status.
+     */
     ABORTED
   }
 

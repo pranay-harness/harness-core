@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Entity(value = "userInvites", noClassnameStored = true)
 //@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
-//handle update with insert and then uncomment
+// handle update with insert and then uncomment
 public class UserInvite extends Base {
   @NotEmpty private String accountId;
   @NotEmpty(groups = {Update.class}) private String email;

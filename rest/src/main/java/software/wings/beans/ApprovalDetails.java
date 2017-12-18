@@ -89,7 +89,8 @@ public class ApprovalDetails {
     /**
      * Approve action
      */
-    APPROVE, /** Reject Action */
+    APPROVE,
+    /** Reject Action */
     REJECT
   }
   public static final class Builder {

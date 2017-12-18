@@ -435,9 +435,10 @@ public class AuditHeader extends Base {
     /**
      * Request request type.
      */
-    REQUEST, /**
-              * Response request type.
-              */
+    REQUEST,
+    /**
+     * Response request type.
+     */
     RESPONSE
   }
 
@@ -448,9 +449,10 @@ public class AuditHeader extends Base {
     /**
      * Success response type.
      */
-    SUCCESS, /**
-              * Failed response type.
-              */
+    SUCCESS,
+    /**
+     * Failed response type.
+     */
     FAILED
   }
 

@@ -9,20 +9,25 @@ public enum TransitionType {
   /**
    * Success transition type.
    */
-  SUCCESS, /**
-            * Failure transition type.
-            */
-  FAILURE, /**
-            * Abort transition type.
-            */
-  ABORT, /**
-          * Repeat transition type.
-          */
-  REPEAT, /**
-           * Fork transition type.
-           */
-  FORK, /**
-         * Conditional transition type.
-         */
+  SUCCESS,
+  /**
+   * Failure transition type.
+   */
+  FAILURE,
+  /**
+   * Abort transition type.
+   */
+  ABORT,
+  /**
+   * Repeat transition type.
+   */
+  REPEAT,
+  /**
+   * Fork transition type.
+   */
+  FORK,
+  /**
+   * Conditional transition type.
+   */
   CONDITIONAL;
 }

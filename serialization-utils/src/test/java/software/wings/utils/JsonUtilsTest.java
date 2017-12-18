@@ -202,12 +202,14 @@ public class JsonUtilsTest {
       /**
        * A base type.
        */
-      A, /**
-          * B base type.
-          */
-      B, /**
-          * C base type.
-          */
+      A,
+      /**
+       * B base type.
+       */
+      B,
+      /**
+       * C base type.
+       */
       C
     }
   }

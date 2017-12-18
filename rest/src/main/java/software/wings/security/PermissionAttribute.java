@@ -108,51 +108,66 @@ public class PermissionAttribute {
     /**
      * App resource.
      */
-    APPLICATION(APP), /**
-                       * Service resource.
-                       */
-    SERVICE(APP), /**
-                   * Config resource.
-                   */
-    CONFIGURATION(APP), /**
-                         * Configuration Override resource.
-                         */
-    CONFIGURATION_OVERRIDE(ENV), /**
-                                  * Configuration Override resource.
-                                  */
-    WORKFLOW(ENV), /**
-                    * Env resource.
-                    */
-    ENVIRONMENT(APP, ENV, ENV, APP), /**
-                                      * Role resource.
-                                      */
-    ROLE(ACCOUNT), /**
-                    * Deployment resource.
-                    */
-    DEPLOYMENT(ENV), /**
-                      * Artifacts resource.
-                      */
-    ARTIFACT(APP), /**
-                    * User resource.
-                    */
-    CLOUD(ACCOUNT), /**
-                     * User resource.
-                     */
-    USER(ACCOUNT), /**
-                    * CD resource.
-                    */
-    CD(APP), /**
-              * Pipeline resource.
-              */
-    PIPELINE(APP), /**
-                    * Setting resource.
-                    */
-    SETTING(ACCOUNT), /**
-                       * App stack resource type.
-                       */
-    APP_STACK(ACCOUNT), /**
-                         * Notificaion Group.
-                         */
+    APPLICATION(APP),
+    /**
+     * Service resource.
+     */
+    SERVICE(APP),
+    /**
+     * Config resource.
+     */
+    CONFIGURATION(APP),
+    /**
+     * Configuration Override resource.
+     */
+    CONFIGURATION_OVERRIDE(ENV),
+    /**
+     * Configuration Override resource.
+     */
+    WORKFLOW(ENV),
+    /**
+     * Env resource.
+     */
+    ENVIRONMENT(APP, ENV, ENV, APP),
+    /**
+     * Role resource.
+     */
+    ROLE(ACCOUNT),
+    /**
+     * Deployment resource.
+     */
+    DEPLOYMENT(ENV),
+    /**
+     * Artifacts resource.
+     */
+    ARTIFACT(APP),
+    /**
+     * User resource.
+     */
+    CLOUD(ACCOUNT),
+    /**
+     * User resource.
+     */
+    USER(ACCOUNT),
+    /**
+     * CD resource.
+     */
+    CD(APP),
+    /**
+     * Pipeline resource.
+     */
+    PIPELINE(APP),
+    /**
+     * Setting resource.
+     */
+    SETTING(ACCOUNT),
+    /**
+     * App stack resource type.
+     */
+    APP_STACK(ACCOUNT),
+    /**
+     * Notificaion Group.
+     */
     NOTIFICATION_GROUP(ACCOUNT),
 
     /**
@@ -197,18 +212,22 @@ public class PermissionAttribute {
     /**
      * All action.
      */
-    ALL, /**
-          * Create action.
-          */
-    CREATE, /**
-             * Read action.
-             */
-    READ, /**
-           * Update action.
-           */
-    UPDATE, /**
-             * Delete action.
-             */
+    ALL,
+    /**
+     * Create action.
+     */
+    CREATE,
+    /**
+     * Read action.
+     */
+    READ,
+    /**
+     * Update action.
+     */
+    UPDATE,
+    /**
+     * Delete action.
+     */
     DELETE
   }
 
@@ -219,18 +238,22 @@ public class PermissionAttribute {
     /**
      * Account permission type.
      */
-    ACCOUNT, /**
-              * Multiple App permission type.
-              */
-    APP, /**
-          * Env permission type.
-          */
-    ENV, /**
-          * Logged In permission type.
-          */
-    LOGGED_IN, /**
-                * Delegate In permission type.
-                */
+    ACCOUNT,
+    /**
+     * Multiple App permission type.
+     */
+    APP,
+    /**
+     * Env permission type.
+     */
+    ENV,
+    /**
+     * Logged In permission type.
+     */
+    LOGGED_IN,
+    /**
+     * Delegate In permission type.
+     */
     DELEGATE,
 
     /**
