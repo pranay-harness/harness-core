@@ -388,12 +388,14 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     /**
      * None restriction type.
      */
-    NONE("None"), /**
-                   * Instance restriction type.
-                   */
-    INSTANCE("By specific instances"), /**
-                                        * Custom restriction type.
-                                        */
+    NONE("None"),
+    /**
+     * Instance restriction type.
+     */
+    INSTANCE("By specific instances"),
+    /**
+     * Custom restriction type.
+     */
     CUSTOM("By zone/tags etc");
 
     private String displayName;

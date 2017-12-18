@@ -9,8 +9,9 @@ public enum ReadPref {
   /**
    * Normal read pref.
    */
-  NORMAL, /**
-           * Critical read pref.
-           */
+  NORMAL,
+  /**
+   * Critical read pref.
+   */
   CRITICAL;
 }

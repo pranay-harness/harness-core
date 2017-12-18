@@ -78,9 +78,10 @@ public class Setup {
     /**
      * Complete setup status.
      */
-    COMPLETE, /**
-               * Incomplete setup status.
-               */
+    COMPLETE,
+    /**
+     * Incomplete setup status.
+     */
     INCOMPLETE
   }
 

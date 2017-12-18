@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 
 import com.google.common.base.Joiner;
 
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.beans.EmbeddedUser;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
@@ -215,93 +217,22 @@ public class AmiArtifactStream extends ArtifactStream {
     public AmiArtifactStream build() {
       return amiArtifactStream;
     }
-  }
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
-    private String awsCloudProviderName;
-    private String region;
-    private List<String> tags;
 
-    public static final class Builder {
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @NoArgsConstructor
+    public static class Yaml extends ArtifactStream.Yaml {
       private String awsCloudProviderName;
-      private List<String> tags;
-      private String sourceName;
+      private List<Tag> tags;
       private String region;
-      private String settingName;
-      private boolean autoApproveForProduction = false;
-      private String type;
-      private boolean metadataOnly = false;
 
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withAwsCloudProviderName(String awsCloudProviderName) {
+      @lombok.Builder
+      public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly,
+          String awsCloudProviderName, List<Tag> tags, String region) {
+        super(AMI.name(), harnessApiVersion, artifactServerName, metadataOnly);
         this.awsCloudProviderName = awsCloudProviderName;
-        return this;
-      }
-
-      public Builder withTags(List<String> tags) {
         this.tags = tags;
-        return this;
-      }
-
-      public Builder withSourceName(String sourceName) {
-        this.sourceName = sourceName;
-        return this;
-      }
-
-      public Builder withRegion(String region) {
         this.region = region;
-        return this;
-      }
-
-      public Builder withSettingName(String settingName) {
-        this.settingName = settingName;
-        return this;
-      }
-
-      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-        this.autoApproveForProduction = autoApproveForProduction;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withMetadataOnly(boolean metadataOnly) {
-        this.metadataOnly = metadataOnly;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml()
-            .withAwsCloudProviderName(awsCloudProviderName)
-            .withTags(tags)
-            .withSourceName(sourceName)
-            .withRegion(region)
-            .withSettingName(settingName)
-            .withAutoApproveForProduction(autoApproveForProduction)
-            .withType(type)
-            .withMetadataOnly(metadataOnly);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setAwsCloudProviderName(awsCloudProviderName);
-        yaml.setSourceName(sourceName);
-        yaml.setRegion(region);
-        yaml.setTags(tags);
-        yaml.setSettingName(settingName);
-        yaml.setAutoApproveForProduction(autoApproveForProduction);
-        yaml.setType(type);
-        yaml.setMetadataOnly(metadataOnly);
-        return yaml;
       }
     }
   }

@@ -74,12 +74,14 @@ public interface SshExecutor {
     /**
      * Password auth executor type.
      */
-    PASSWORD_AUTH, /**
-                    * Key auth executor type.
-                    */
-    KEY_AUTH, /**
-               * Bastion host executor type.
-               */
+    PASSWORD_AUTH,
+    /**
+     * Key auth executor type.
+     */
+    KEY_AUTH,
+    /**
+     * Bastion host executor type.
+     */
     BASTION_HOST
   }
 }

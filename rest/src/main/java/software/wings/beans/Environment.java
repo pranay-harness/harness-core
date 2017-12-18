@@ -213,12 +213,14 @@ public class Environment extends Base {
     /**
      * Prod environment type.
      */
-    PROD, /**
-           * Non prod environment type.
-           */
-    NON_PROD, /**
-               * All environment type.
-               */
+    PROD,
+    /**
+     * Non prod environment type.
+     */
+    NON_PROD,
+    /**
+     * All environment type.
+     */
     ALL,
   }
 
