@@ -14,16 +14,15 @@ public class PhysicalDataCenterConfigYamlHandler extends CloudProviderYamlHandle
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     PhysicalDataCenterConfig physicalDataCenterConfig = (PhysicalDataCenterConfig) settingAttribute.getValue();
-    return new Yaml(physicalDataCenterConfig.getType(), settingAttribute.getName());
+    return new Yaml(physicalDataCenterConfig.getType());
   }
 
-  protected SettingAttribute setWithYamlValues(
+  protected SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     PhysicalDataCenterConfig config = new PhysicalDataCenterConfig();
-    return buildSettingAttribute(accountId, yaml.getName(), uuid, config);
+    return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }
 
   @Override

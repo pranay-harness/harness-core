@@ -164,6 +164,7 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Misc;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -479,11 +480,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-        WorkflowPhase workflowPhase = aWorkflowPhase()
-                                          .withInfraMappingId(workflow.getInfraMappingId())
-                                          .withServiceId(workflow.getServiceId())
-                                          .build();
-        attachWorkflowPhase(workflow, workflowPhase);
+        BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
+        WorkflowPhase workflowPhase;
+        if (Util.isEmpty(basicOrchestrationWorkflow.getWorkflowPhases())) {
+          workflowPhase = aWorkflowPhase()
+                              .withInfraMappingId(workflow.getInfraMappingId())
+                              .withServiceId(workflow.getServiceId())
+                              .build();
+          attachWorkflowPhase(workflow, workflowPhase);
+        }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         MultiServiceOrchestrationWorkflow canaryOrchestrationWorkflow =
             (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;

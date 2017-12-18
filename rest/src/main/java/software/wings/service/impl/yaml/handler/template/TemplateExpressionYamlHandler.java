@@ -8,7 +8,6 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ObjectType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
@@ -27,13 +26,7 @@ import java.util.stream.Collectors;
 public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpression.Yaml, TemplateExpression> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  @Override
-  public TemplateExpression createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
-  }
-
-  private TemplateExpression setWithYamlValues(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private TemplateExpression toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
     Map<String, Object> properties = Maps.newHashMap();
@@ -80,17 +73,7 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   @Override
   public TemplateExpression upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
-      return createFromYaml(changeContext, changeSetContext);
-    } else {
-      return updateFromYaml(changeContext, changeSetContext);
-    }
-  }
-
-  @Override
-  public TemplateExpression updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
+    return toBean(changeContext);
   }
 
   @Override

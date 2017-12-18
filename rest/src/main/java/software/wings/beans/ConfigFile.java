@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -20,14 +21,16 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
+import software.wings.beans.yaml.YamlType;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
+import software.wings.yaml.BaseEntityYaml;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
@@ -177,5 +180,65 @@ public class ConfigFile extends BaseFile implements Encryptable {
   @Override
   public void setDecrypted(boolean decrypted) {
     //
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static class Yaml extends BaseEntityYaml {
+    private String targetFilePath;
+    private boolean encrypted = false;
+    private String fileName;
+    private String description;
+    private String checksum;
+    private String checksumType;
+    private boolean targetToAllEnv;
+    private List<String> targetEnvs = new ArrayList<>();
+
+    public Yaml(String harnessApiVersion) {
+      super(YamlType.CONFIG_FILE.name(), harnessApiVersion);
+    }
+
+    @Builder
+    public Yaml(String harnessApiVersion, String targetFilePath, boolean encrypted, String fileName, String description,
+        String checksum, String checksumType, boolean targetToAllEnv, List<String> targetEnvs) {
+      super(YamlType.CONFIG_FILE.name(), harnessApiVersion);
+      this.targetFilePath = targetFilePath;
+      this.encrypted = encrypted;
+      this.fileName = fileName;
+      this.description = description;
+      this.checksum = checksum;
+      this.checksumType = checksumType;
+      this.targetToAllEnv = targetToAllEnv;
+      this.targetEnvs = targetEnvs;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static class OverrideYaml extends BaseEntityYaml {
+    private String serviceName;
+    private String targetFilePath;
+    private String fileName;
+    private String checksum;
+    private String checksumType;
+    private boolean encrypted = false;
+
+    public OverrideYaml(String harnessApiVersion) {
+      super(YamlType.CONFIG_FILE_OVERRIDE.name(), harnessApiVersion);
+    }
+
+    @Builder
+    public OverrideYaml(String type, String harnessApiVersion, String serviceName, String targetFilePath,
+        String fileName, String checksum, String checksumType, boolean encrypted) {
+      super(type, harnessApiVersion);
+      this.serviceName = serviceName;
+      this.targetFilePath = targetFilePath;
+      this.fileName = fileName;
+      this.checksum = checksum;
+      this.checksumType = checksumType;
+      this.encrypted = encrypted;
+    }
   }
 }

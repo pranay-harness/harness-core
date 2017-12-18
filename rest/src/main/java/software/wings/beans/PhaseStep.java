@@ -11,6 +11,7 @@ import static software.wings.sm.StateType.FORK;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
@@ -403,6 +404,14 @@ public class PhaseStep {
       return phaseStepBuilder;
     }
 
+    public static PhaseStepBuilder aPhaseStep(PhaseStepType phaseStepType, String name, String uuid) {
+      PhaseStepBuilder phaseStepBuilder = new PhaseStepBuilder();
+      phaseStepBuilder.phaseStepType = phaseStepType;
+      phaseStepBuilder.name = name;
+      phaseStepBuilder.uuid = uuid;
+      return phaseStepBuilder;
+    }
+
     public PhaseStepBuilder withPhaseStepType(PhaseStepType phaseStepType) {
       this.phaseStepType = phaseStepType;
       return this;
@@ -485,6 +494,7 @@ public class PhaseStep {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseEntityYaml {
     private String name;
     private String statusForRollback;
@@ -495,94 +505,19 @@ public class PhaseStep {
     private String phaseStepNameForRollback;
     private Integer waitInterval;
 
-    public static final class Builder {
-      private String name;
-      private String statusForRollback;
-      private List<StepYaml> steps = new ArrayList<>();
-      private boolean stepsInParallel;
-      private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
-      private boolean rollback;
-      private String type;
-      private String phaseStepNameForRollback;
-      private Integer waitInterval;
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder withStatusForRollback(String statusForRollback) {
-        this.statusForRollback = statusForRollback;
-        return this;
-      }
-
-      public Builder withSteps(List<StepYaml> steps) {
-        this.steps = steps;
-        return this;
-      }
-
-      public Builder withStepsInParallel(boolean stepsInParallel) {
-        this.stepsInParallel = stepsInParallel;
-        return this;
-      }
-
-      public Builder withFailureStrategies(List<FailureStrategy.Yaml> failureStrategies) {
-        this.failureStrategies = failureStrategies;
-        return this;
-      }
-
-      public Builder withRollback(boolean rollback) {
-        this.rollback = rollback;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withPhaseStepNameForRollback(String phaseStepNameForRollback) {
-        this.phaseStepNameForRollback = phaseStepNameForRollback;
-        return this;
-      }
-
-      public Builder withWaitInterval(Integer waitInterval) {
-        this.waitInterval = waitInterval;
-        return this;
-      }
-
-      public Builder but() {
-        return anYaml()
-            .withName(name)
-            .withStatusForRollback(statusForRollback)
-            .withSteps(steps)
-            .withStepsInParallel(stepsInParallel)
-            .withFailureStrategies(failureStrategies)
-            .withRollback(rollback)
-            .withType(type)
-            .withPhaseStepNameForRollback(phaseStepNameForRollback)
-            .withWaitInterval(waitInterval);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setName(name);
-        yaml.setStatusForRollback(statusForRollback);
-        yaml.setSteps(steps);
-        yaml.setStepsInParallel(stepsInParallel);
-        yaml.setFailureStrategies(failureStrategies);
-        yaml.setRollback(rollback);
-        yaml.setType(type);
-        yaml.setPhaseStepNameForRollback(phaseStepNameForRollback);
-        yaml.setWaitInterval(waitInterval);
-        return yaml;
-      }
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String name, String statusForRollback, boolean stepsInParallel,
+        List<StepYaml> steps, List<FailureStrategy.Yaml> failureStrategies, boolean rollback,
+        String phaseStepNameForRollback, Integer waitInterval) {
+      super(type, harnessApiVersion);
+      this.name = name;
+      this.statusForRollback = statusForRollback;
+      this.stepsInParallel = stepsInParallel;
+      this.steps = steps;
+      this.failureStrategies = failureStrategies;
+      this.rollback = rollback;
+      this.phaseStepNameForRollback = phaseStepNameForRollback;
+      this.waitInterval = waitInterval;
     }
   }
 }

@@ -11,9 +11,9 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStep.Yaml;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
+import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -31,16 +31,13 @@ import java.util.stream.Collectors;
 public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseStep> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  @Override
-  public PhaseStep createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+  private PhaseStep toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return setWithYamlValues(changeContext, changeSetContext, true);
-  }
-
-  private PhaseStep setWithYamlValues(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext,
-      boolean isCreate) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     PhaseStepType phaseStepType = Util.getEnumFromString(PhaseStepType.class, yaml.getType());
+    String phaseStepUuid = UUIDGenerator.getUuid();
+    PhaseStepBuilder phaseStepBuilder = PhaseStepBuilder.aPhaseStep(phaseStepType, yaml.getName(), phaseStepUuid);
+
     ExecutionStatus statusForRollback = Util.getEnumFromString(ExecutionStatus.class, yaml.getStatusForRollback());
 
     List<Node> stepList = Lists.newArrayList();
@@ -52,9 +49,11 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                      .stream()
                      .map(stepYaml -> {
                        try {
-                         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, stepYaml);
-                         return (Node) createOrUpdateFromYaml(
-                             isCreate, stepYamlHandler, clonedContext.build(), changeSetContext);
+                         ChangeContext.Builder clonedContextBuilder = cloneFileChangeContext(changeContext, stepYaml);
+                         ChangeContext clonedContext = clonedContextBuilder.build();
+
+                         clonedContext.getEntityIdMap().put("PHASE_STEP", phaseStepUuid);
+                         return (Node) stepYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
                        } catch (HarnessException e) {
                          throw new WingsException(e);
                        }
@@ -73,8 +72,8 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                                 try {
                                   ChangeContext.Builder clonedContext =
                                       cloneFileChangeContext(changeContext, failureStrategy);
-                                  return (FailureStrategy) createOrUpdateFromYaml(
-                                      isCreate, failureStrategyYamlHandler, clonedContext.build(), changeSetContext);
+                                  return (FailureStrategy) failureStrategyYamlHandler.upsertFromYaml(
+                                      clonedContext.build(), changeSetContext);
                                 } catch (HarnessException e) {
                                   throw new WingsException(e);
                                 }
@@ -82,8 +81,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                               .collect(Collectors.toList());
     }
 
-    return PhaseStepBuilder.aPhaseStep(phaseStepType, yaml.getName())
-        .addAllSteps(stepList)
+    return phaseStepBuilder.addAllSteps(stepList)
         .withFailureStrategies(failureStrategies)
         .withPhaseStepNameForRollback(yaml.getPhaseStepNameForRollback())
         .withRollback(yaml.isRollback())
@@ -111,33 +109,23 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                                        .map(step -> (StepYaml) stepYamlHandler.toYaml(step, appId))
                                        .collect(Collectors.toList());
 
-    return Yaml.Builder.anYaml()
-        .withFailureStrategies(failureStrategyYamlList)
-        .withName(bean.getName())
-        .withPhaseStepNameForRollback(bean.getPhaseStepNameForRollback())
-        .withRollback(bean.isRollback())
-        .withStatusForRollback(bean.getStatusForRollback() != null ? bean.getStatusForRollback().name() : null)
-        .withStepsInParallel(bean.isStepsInParallel())
-        .withSteps(stepsYamlList)
-        .withType(bean.getPhaseStepType().name())
-        .withWaitInterval(bean.getWaitInterval())
+    return Yaml.builder()
+        .failureStrategies(failureStrategyYamlList)
+        .name(bean.getName())
+        .phaseStepNameForRollback(bean.getPhaseStepNameForRollback())
+        .rollback(bean.isRollback())
+        .statusForRollback(bean.getStatusForRollback() != null ? bean.getStatusForRollback().name() : null)
+        .stepsInParallel(bean.isStepsInParallel())
+        .steps(stepsYamlList)
+        .type(bean.getPhaseStepType().name())
+        .waitInterval(bean.getWaitInterval())
         .build();
   }
 
   @Override
   public PhaseStep upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
-      return createFromYaml(changeContext, changeSetContext);
-    } else {
-      return updateFromYaml(changeContext, changeSetContext);
-    }
-  }
-
-  @Override
-  public PhaseStep updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext, changeSetContext, false);
+    return toBean(changeContext, changeSetContext);
   }
 
   @Override

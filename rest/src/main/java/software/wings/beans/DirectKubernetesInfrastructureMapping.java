@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
@@ -25,7 +26,10 @@ import software.wings.utils.Util;
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping implements Encryptable {
   @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
+  @Attributes(title = "Password", required = true)
+
+  @Encrypted
+  private char[] password;
   @Attributes(title = "Namespace") private String namespace;
 
   @SchemaIgnore private String encryptedPassword;
@@ -44,129 +48,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
    */
   public DirectKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.DIRECT_KUBERNETES.name());
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ContainerInfrastructureMapping.Yaml {
-    private String masterUrl;
-    private String username;
-    private char[] password;
-    private String namespace;
-
-    public static final class Builder {
-      private String cluster;
-      private String masterUrl;
-      private String username;
-      private String computeProviderType;
-      private char[] password;
-      private String serviceName;
-      private String namespace;
-      private String infraMappingType;
-      private String type;
-      private String deploymentType;
-      private String computeProviderName;
-      private String name;
-
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withCluster(String cluster) {
-        this.cluster = cluster;
-        return this;
-      }
-
-      public Builder withMasterUrl(String masterUrl) {
-        this.masterUrl = masterUrl;
-        return this;
-      }
-
-      public Builder withUsername(String username) {
-        this.username = username;
-        return this;
-      }
-
-      public Builder withComputeProviderType(String computeProviderType) {
-        this.computeProviderType = computeProviderType;
-        return this;
-      }
-
-      public Builder withPassword(char[] password) {
-        this.password = password;
-        return this;
-      }
-
-      public Builder withServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        return this;
-      }
-
-      public Builder withNamespace(String namespace) {
-        this.namespace = namespace;
-        return this;
-      }
-
-      public Builder withInfraMappingType(String infraMappingType) {
-        this.infraMappingType = infraMappingType;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withDeploymentType(String deploymentType) {
-        this.deploymentType = deploymentType;
-        return this;
-      }
-
-      public Builder withComputeProviderName(String computeProviderName) {
-        this.computeProviderName = computeProviderName;
-        return this;
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml()
-            .withCluster(cluster)
-            .withMasterUrl(masterUrl)
-            .withUsername(username)
-            .withComputeProviderType(computeProviderType)
-            .withPassword(password)
-            .withServiceName(serviceName)
-            .withNamespace(namespace)
-            .withInfraMappingType(infraMappingType)
-            .withType(type)
-            .withDeploymentType(deploymentType)
-            .withComputeProviderName(computeProviderName)
-            .withName(name);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setCluster(cluster);
-        yaml.setMasterUrl(masterUrl);
-        yaml.setUsername(username);
-        yaml.setComputeProviderType(computeProviderType);
-        yaml.setPassword(password);
-        yaml.setServiceName(serviceName);
-        yaml.setNamespace(namespace);
-        yaml.setInfraMappingType(infraMappingType);
-        yaml.setType(type);
-        yaml.setDeploymentType(deploymentType);
-        yaml.setComputeProviderName(computeProviderName);
-        yaml.setName(name);
-        return yaml;
-      }
-    }
   }
 
   @SchemaIgnore
@@ -424,6 +305,28 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
       directKubernetesInfrastructureMapping.setAccountId(accountId);
       return directKubernetesInfrastructureMapping;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static class Yaml extends ContainerInfrastructureMapping.Yaml {
+    private String masterUrl;
+    private String username;
+    private String password;
+    private String namespace;
+
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
+        String username, String password, String namespace) {
+      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+          computeProviderName, cluster);
+      this.masterUrl = masterUrl;
+      this.username = username;
+      this.password = password;
+      this.namespace = namespace;
     }
   }
 }
