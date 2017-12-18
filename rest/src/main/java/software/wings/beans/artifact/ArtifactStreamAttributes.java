@@ -1,9 +1,10 @@
 package software.wings.beans.artifact;
 
-import com.google.common.collect.Multimap;
-
 import software.wings.beans.SettingAttribute;
 import software.wings.utils.ArtifactType;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 1/27/17.
@@ -22,7 +23,7 @@ public class ArtifactStreamAttributes {
   private String region;
   private String repositoryType;
   private boolean metadataOnly;
-  private Multimap<String, String> tags;
+  private Map<String, List<String>> tags;
 
   /**
    * Gets job name.
@@ -200,11 +201,11 @@ public class ArtifactStreamAttributes {
     return metadataOnly;
   }
 
-  public Multimap<String, String> getTags() {
+  public Map<String, List<String>> getTags() {
     return tags;
   }
 
-  public void setTags(Multimap<String, String> tags) {
+  public void setTags(Map<String, List<String>> tags) {
     this.tags = tags;
   }
 
@@ -224,7 +225,7 @@ public class ArtifactStreamAttributes {
     private String region;
     private String repositoryType;
     private boolean metadataOnly;
-    private Multimap<String, String> tags;
+    private Map<String, List<String>> tags;
 
     private Builder() {}
 
@@ -342,7 +343,7 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
-    public Builder withTags(Multimap<String, String> tags) {
+    public Builder withTags(Map<String, List<String>> tags) {
       this.tags = tags;
       return this;
     }
