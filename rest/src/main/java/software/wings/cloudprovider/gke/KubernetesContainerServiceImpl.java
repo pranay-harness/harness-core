@@ -441,7 +441,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     try {
-      with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
+      with().pollInterval(1, TimeUnit.SECONDS).await().atMost(10, TimeUnit.MINUTES).until(() -> {
         List<Pod> pods =
             kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
         if (pods.size() != number) {
