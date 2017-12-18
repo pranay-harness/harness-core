@@ -126,33 +126,42 @@ public class Artifact extends Base {
     /**
      * New status.
      */
-    NEW, /**
-          * Running status.
-          */
-    RUNNING, /**
-              * Queued status.
-              */
-    QUEUED, /**
-             * Waiting status.
-             */
-    WAITING, /**
-              * Ready status.
-              */
-    READY(true), /**
-                  * Aborted status.
-                  */
-    APPROVED(true), /**
-                     * Rejected status.
-                     */
-    REJECTED(true), /**
-                     * Aborted status.
-                     */
-    ABORTED(true), /**
-                    * Failed status.
-                    */
-    FAILED(true), /**
-                   * Error status.
-                   */
+    NEW,
+    /**
+     * Running status.
+     */
+    RUNNING,
+    /**
+     * Queued status.
+     */
+    QUEUED,
+    /**
+     * Waiting status.
+     */
+    WAITING,
+    /**
+     * Ready status.
+     */
+    READY(true),
+    /**
+     * Aborted status.
+     */
+    APPROVED(true),
+    /**
+     * Rejected status.
+     */
+    REJECTED(true),
+    /**
+     * Aborted status.
+     */
+    ABORTED(true),
+    /**
+     * Failed status.
+     */
+    FAILED(true),
+    /**
+     * Error status.
+     */
     ERROR(true);
 
     Status() {}

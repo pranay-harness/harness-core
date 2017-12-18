@@ -69,12 +69,14 @@ public class NotificationAction {
     /**
      * Accept notification action type.
      */
-    APPROVE, /**
-              * Reject notification action type.
-              */
-    REJECT, /**
-             * Resume notification action type.
-             */
+    APPROVE,
+    /**
+     * Reject notification action type.
+     */
+    REJECT,
+    /**
+     * Resume notification action type.
+     */
     RESUME
   }
 

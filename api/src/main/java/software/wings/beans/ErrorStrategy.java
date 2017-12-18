@@ -13,15 +13,18 @@ public enum ErrorStrategy {
   /**
    * Continue error strategy.
    */
-  CONTINUE("Continue"), /**
-                         * Abort error strategy.
-                         */
-  FAIL("Fail"), /**
-                 * Pause error strategy.
-                 */
-  PAUSE("Pause"), /**
-                   * Retry error strategy.
-                   */
+  CONTINUE("Continue"),
+  /**
+   * Abort error strategy.
+   */
+  FAIL("Fail"),
+  /**
+   * Pause error strategy.
+   */
+  PAUSE("Pause"),
+  /**
+   * Retry error strategy.
+   */
   RETRY("Retry");
 
   private String displayName;

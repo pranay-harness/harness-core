@@ -54,9 +54,10 @@ public class EventEmitter {
     /**
      * Artifacts channel.
      */
-    ARTIFACTS("artifacts", "ui", ResourceType.ARTIFACT), /**
-                                                          * Activities channel.
-                                                          */
+    ARTIFACTS("artifacts", "ui", ResourceType.ARTIFACT),
+    /**
+     * Activities channel.
+     */
     ACTIVITIES("activities", "ui", ResourceType.ENVIRONMENT),
 
     DELEGATES("delegates", "ui", null);

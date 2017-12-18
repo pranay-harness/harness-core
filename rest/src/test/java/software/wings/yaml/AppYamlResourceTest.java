@@ -41,8 +41,8 @@ public class AppYamlResourceTest {
    * The constant resources.
    */
   //@ClassRule public static final ResourceTestRule resources = ResourceTestRule.builder().addResource(new
-  //AppYamlResource(appService, serviceResourceService, environmentService, yamlHistoryService,
-  //yamlGitSyncService)).build();
+  // AppYamlResource(appService, serviceResourceService, environmentService, yamlHistoryService,
+  // yamlGitSyncService)).build();
 
   private final long TIME_IN_MS = System.currentTimeMillis();
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID" + TIME_IN_MS;

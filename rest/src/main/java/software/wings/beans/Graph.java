@@ -268,9 +268,10 @@ public class Graph {
     /**
      * Expand node ops.
      */
-    EXPAND, /**
-             * Collapse node ops.
-             */
+    EXPAND,
+    /**
+     * Collapse node ops.
+     */
     COLLAPSE
   }
 
