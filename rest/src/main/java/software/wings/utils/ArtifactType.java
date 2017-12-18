@@ -737,7 +737,7 @@ public enum ArtifactType {
   /**
    * The constant AWS_CODEDEPLOY.
    */
-  AWS_AMI {
+  AMI {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
