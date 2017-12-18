@@ -14,7 +14,6 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,9 +40,9 @@ public class AmiArtifactStream extends ArtifactStream {
   @Override
   public String getArtifactDisplayName(String amiName) {
     if (Misc.isNullOrEmpty(tags)) {
-      return String.format("%s_%s_%s", getRegion(), amiName, getDateFormat().format(new Date()));
+      return String.format("%s_%s", getRegion(), amiName);
     }
-    return String.format("%s_%s_%s", getSourceName(), amiName);
+    return String.format("%s_%s", getSourceName(), amiName);
   }
 
   @Override
