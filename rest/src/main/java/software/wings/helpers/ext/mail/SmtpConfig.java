@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
@@ -56,6 +57,7 @@ public class SmtpConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends CollaborationProviderYaml {
     private String host;
     private int port;
@@ -64,11 +66,10 @@ public class SmtpConfig extends SettingValue implements Encryptable {
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
 
-    public Yaml() {}
-
-    public Yaml(String type, String name, String host, int port, String fromAddress, boolean useSSL, String username,
-        String password) {
-      super(type, name);
+    @Builder
+    public Yaml(
+        String type, String host, int port, String fromAddress, boolean useSSL, String username, String password) {
+      super(type);
       this.host = host;
       this.port = port;
       this.fromAddress = fromAddress;

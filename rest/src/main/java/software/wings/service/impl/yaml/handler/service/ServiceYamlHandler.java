@@ -19,7 +19,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.sync.YamlSyncHelper;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  */
 public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   private static final Logger logger = LoggerFactory.getLogger(ServiceYamlHandler.class);
-  @Inject YamlSyncHelper yamlSyncHelper;
+  @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
   @Inject ServiceVariableService serviceVariableService;
   @Inject SecretManager secretManager;
@@ -45,11 +45,11 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   @Override
   public Service.Yaml toYaml(Service service, String appId) {
     List<NameValuePair.Yaml> nameValuePairList = convertToNameValuePair(service.getServiceVariables());
-    return Service.Yaml.Builder.anYaml()
-        .withType(SERVICE.name())
-        .withDescription(service.getDescription())
-        .withArtifactType(service.getArtifactType().name())
-        .withConfigVariables(nameValuePairList)
+    return Service.Yaml.builder()
+        .type(SERVICE.name())
+        .description(service.getDescription())
+        .artifactType(service.getArtifactType().name())
+        .configVariables(nameValuePairList)
         .build();
   }
 
@@ -90,14 +90,14 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
 
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("appId null for given yaml file:" + yamlFilePath, appId);
 
-    String serviceName = yamlSyncHelper.getServiceName(yamlFilePath);
+    String serviceName = yamlHelper.getServiceName(yamlFilePath);
     Service.Yaml yaml = changeContext.getYaml();
     Service current = aService().withAppId(appId).withName(serviceName).withDescription(yaml.getDescription()).build();
 
-    Service previous = yamlSyncHelper.getService(appId, yamlFilePath);
+    Service previous = get(accountId, yamlFilePath);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -126,20 +126,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
 
   @Override
   public Service get(String accountId, String yamlFilePath) {
-    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
-    return yamlSyncHelper.getService(appId, yamlFilePath);
-  }
-
-  @Override
-  public Service createFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
-  }
-
-  @Override
-  public Service updateFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    return yamlHelper.getService(appId, yamlFilePath);
   }
 
   private void saveOrUpdateServiceVariables(Service.Yaml previousYaml, Service.Yaml updatedYaml,

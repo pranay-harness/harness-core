@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -31,6 +32,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -42,7 +44,7 @@ import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
@@ -61,6 +63,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private AppService appService;
   @Inject private YamlHistoryService yamlHistoryService;
   @Inject private CommandService commandService;
+  @Inject private ConfigService configService;
   @Inject private EnvironmentService environmentService;
   @Inject private PipelineService pipelineService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -71,7 +74,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private SettingsService settingsService;
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-  @Inject private YamlSyncService yamlSyncService;
+  @Inject private YamlService yamlService;
   @Inject private SecretManager secretManager;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -118,7 +121,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the application
    */
   public RestResponse<ServiceCommand> updateServiceCommand(String accountId, YamlPayload yamlPayload) {
-    return yamlSyncService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -148,7 +151,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<Pipeline> updatePipeline(String accountId, YamlPayload yamlPayload) {
-    return yamlSyncService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -264,7 +267,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   }
 
   public RestResponse<Workflow> updateWorkflow(String accountId, YamlPayload yamlPayload) {
-    return yamlSyncService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -440,10 +443,39 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<Environment> updateEnvironment(String accountId, YamlPayload yamlPayload) {
-    return yamlSyncService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   public RestResponse<Service> updateService(String accountId, YamlPayload yamlPayload) {
-    return yamlSyncService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  @Override
+  public RestResponse<ConfigFile> updateConfigFile(String accountId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getConfigFileYaml(String accountId, String appId, String configFileUuid) {
+    ConfigFile configFile = configService.get(appId, configFileUuid);
+    if (configFile.getConfigOverrideType() != null) {
+      return getConfigFileOverrideYaml(accountId, appId, configFile);
+    } else {
+      return getConfigFileYaml(accountId, appId, configFile);
+    }
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getConfigFileYaml(String accountId, String appId, ConfigFile configFile) {
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE, null).toYaml(configFile, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, configFile.getUuid(), accountId, yaml, configFile.getRelativeFilePath() + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile) {
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE, null).toYaml(configFile, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, configFile.getUuid(), accountId, yaml, configFile.getRelativeFilePath() + YAML_EXTENSION);
   }
 }

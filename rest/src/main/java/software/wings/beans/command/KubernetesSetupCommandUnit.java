@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -38,6 +39,7 @@ import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.awaitility.core.ConditionTimeoutException;
@@ -186,23 +188,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
 
     return containerServiceName;
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ContainerSetupCommandUnit.Yaml {
-    public static final class Builder extends ContainerSetupCommandUnit.Yaml.Builder {
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      @Override
-      protected Yaml getCommandUnitYaml() {
-        return new KubernetesSetupCommandUnit.Yaml();
-      }
-    }
   }
 
   private Secret createRegistrySecret(
@@ -432,6 +417,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
             }
           });
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("KUBERNETES_SETUP")
+  public static class Yaml extends ContainerSetupCommandUnit.Yaml {
+    public Yaml() {
+      super(CommandUnitType.KUBERNETES_SETUP.name());
+    }
+
+    @Builder
+    public Yaml(String name, String deploymentType) {
+      super(name, CommandUnitType.KUBERNETES_SETUP.name(), deploymentType);
     }
   }
 }

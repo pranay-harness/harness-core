@@ -11,12 +11,11 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.sync.YamlSyncHelper;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.utils.Util;
@@ -29,20 +28,14 @@ import java.util.Map;
  * @author rktummala on 11/2/17
  */
 public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
-  @Inject YamlSyncHelper yamlSyncHelper;
+  @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
 
-  @Override
-  public PipelineStage createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
-  }
-
-  private PipelineStage setWithYamlValues(ChangeContext<Yaml> context) throws HarnessException {
+  private PipelineStage toBean(ChangeContext<Yaml> context) throws HarnessException {
     Yaml yaml = context.getYaml();
     Change change = context.getChange();
 
-    String appId = yamlSyncHelper.getAppId(change.getAccountId(), change.getFilePath());
+    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
     Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
 
     PipelineStage stage = new PipelineStage();
@@ -99,28 +92,18 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       workflowName = workflow.getName();
     }
 
-    return Yaml.Builder.anYaml()
-        .withName(stageElement.getName())
-        .withParallel(bean.isParallel())
-        .withType(stageElement.getType())
-        .withWorkflowName(workflowName)
+    return Yaml.builder()
+        .name(stageElement.getName())
+        .parallel(bean.isParallel())
+        .type(stageElement.getType())
+        .workflowName(workflowName)
         .build();
   }
 
   @Override
   public PipelineStage upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
-      return createFromYaml(changeContext, changeSetContext);
-    } else {
-      return updateFromYaml(changeContext, changeSetContext);
-    }
-  }
-
-  @Override
-  public PipelineStage updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
+    return toBean(changeContext);
   }
 
   @Override

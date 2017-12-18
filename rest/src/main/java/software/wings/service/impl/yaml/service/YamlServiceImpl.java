@@ -1,6 +1,7 @@
-package software.wings.service.impl.yaml.sync;
+package software.wings.service.impl.yaml.service;
 
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
@@ -8,7 +9,9 @@ import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
 import static software.wings.beans.yaml.YamlType.COLLABORATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.COMMAND;
 import static software.wings.beans.yaml.YamlType.CONFIG_FILE;
+import static software.wings.beans.yaml.YamlType.CONFIG_FILE_CONTENT;
 import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE_CONTENT;
 import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
@@ -49,10 +52,9 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
-import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 
 import java.io.IOException;
@@ -69,11 +71,11 @@ import javax.inject.Inject;
 /**
  * @author rktummala on 10/16/17
  */
-public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements YamlSyncService<Y, B> {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements YamlService<Y, B> {
+  private static final Logger logger = LoggerFactory.getLogger(YamlServiceImpl.class);
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-  @Inject private YamlSyncHelper yamlSyncHelper;
+  @Inject private YamlHelper yamlHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlResourceService yamlResourceService;
 
@@ -81,8 +83,9 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
   private List<YamlType> getEntityProcessingOrder() {
     return Lists.newArrayList(CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER,
-        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE,
-        ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
+        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION,
+        CONFIG_FILE_CONTENT, CONFIG_FILE, ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE_CONTENT,
+        CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
   @Override
@@ -119,11 +122,11 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
         rr.setResource(base);
 
       } else {
-        YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR,
+        software.wings.yaml.YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR,
             "Unable to update yaml for:" + yamlPayload.getName());
       }
     } catch (HarnessException e) {
-      YamlHelper.addResponseMessage(
+      software.wings.yaml.YamlHelper.addResponseMessage(
           rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml:" + e.getMessage());
     }
 
@@ -140,7 +143,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
 
       final Class beanClass = yamlType.getBeanClass();
       String entityName =
-          yamlSyncHelper.extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+          yamlHelper.extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
       PageRequest.Builder pageRequest = PageRequest.Builder.aPageRequest();
       String appId;
       String serviceId;
@@ -150,7 +153,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
         case APPLICATION:
           pageRequest.addFilter("accountId", Operator.EQ, accountId).addFilter("name", Operator.EQ, entityName);
           entity = getResult(beanClass, pageRequest);
-          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+          appId = yamlHelper.getAppId(accountId, yamlFilePath);
           if (entity != null) {
             BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, null);
             yaml = yamlHandler.toYaml(entity, appId);
@@ -160,7 +163,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
         case SERVICE:
         case ENVIRONMENT:
         case PIPELINE:
-          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+          appId = yamlHelper.getAppId(accountId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, entityName);
           entity = getResult(beanClass, pageRequest);
           if (entity != null) {
@@ -190,7 +193,7 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
           // TODO
           break;
         case WORKFLOW:
-          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+          appId = yamlHelper.getAppId(accountId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, entityName);
           entity = getResult(beanClass, pageRequest);
           if (entity != null) {
@@ -203,8 +206,8 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
           break;
 
         case ARTIFACT_STREAM:
-          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
-          serviceId = yamlSyncHelper.getServiceId(appId, yamlFilePath);
+          appId = yamlHelper.getAppId(accountId, yamlFilePath);
+          serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId)
               .addFilter("serviceId", Operator.EQ, serviceId)
               .addFilter("sourceName", Operator.EQ, entityName);
@@ -221,8 +224,8 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
           break;
 
         case INFRA_MAPPING:
-          appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
-          String envId = yamlSyncHelper.getEnvironmentId(appId, yamlFilePath);
+          appId = yamlHelper.getAppId(accountId, yamlFilePath);
+          String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
           pageRequest.addFilter("appId", Operator.EQ, appId)
               .addFilter("envId", Operator.EQ, envId)
               .addFilter("name", Operator.EQ, entityName);
@@ -240,12 +243,12 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
       if (yaml != null) {
         rr.setResource(yaml);
       } else {
-        YamlHelper.addResponseMessage(
+        software.wings.yaml.YamlHelper.addResponseMessage(
             rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml for:" + yamlFilePath);
       }
 
     } catch (HarnessException e) {
-      YamlHelper.addResponseMessage(
+      software.wings.yaml.YamlHelper.addResponseMessage(
           rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml for:" + yamlFilePath);
     }
     return rr;
@@ -275,29 +278,61 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
     try {
       changeList.forEach(change -> {
         try {
-          validateYaml(change.getFileContent());
-          YamlType yamlType = findYamlType(change.getFilePath());
-          String yamlSubType = getYamlSubType(change.getFileContent());
+          if (change.getFilePath().endsWith(YAML_EXTENSION)) {
+            validateYaml(change.getFileContent());
+            YamlType yamlType = findYamlType(change.getFilePath());
+            String yamlSubType = getYamlSubType(change.getFileContent());
 
-          BaseYamlHandler yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
-          if (yamlSyncHandler != null) {
-            Class yamlClass = yamlSyncHandler.getYamlClass();
-            BaseYaml yaml = getYaml(change.getFileContent(), yamlClass, false);
-            Validator.notNullCheck("Could not get yaml object for :" + change.getFilePath(), yaml);
+            BaseYamlHandler yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
+            if (yamlSyncHandler != null) {
+              Class yamlClass = yamlSyncHandler.getYamlClass();
+              BaseYaml yaml = getYaml(change.getFileContent(), yamlClass, false);
+              Validator.notNullCheck("Could not get yaml object for :" + change.getFilePath(), yaml);
 
-            ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
-                                                             .withChange(change)
-                                                             .withYaml(yaml)
-                                                             .withYamlType(yamlType)
-                                                             .withYamlSyncHandler(yamlSyncHandler);
-            ChangeContext changeContext = changeContextBuilder.build();
-            changeContextList.add(changeContext);
-            yamlSyncHandler.validate(changeContext, changeContextList);
+              ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
+                                                               .withChange(change)
+                                                               .withYaml(yaml)
+                                                               .withYamlType(yamlType)
+                                                               .withYamlSyncHandler(yamlSyncHandler);
+              ChangeContext changeContext = changeContextBuilder.build();
+              changeContextList.add(changeContext);
+              yamlSyncHandler.validate(changeContext, changeContextList);
+            } else {
+              throw new HarnessException(
+                  "Can't find yaml handler for type: " + yamlType + " and subType: " + yamlSubType);
+            }
           } else {
-            throw new HarnessException(
-                "Can't find yaml handler for type: " + yamlType + " and subType: " + yamlSubType);
-          }
+            // Special handling for config files
+            YamlType yamlType = findYamlType(change.getFilePath());
+            if (YamlType.CONFIG_FILE_CONTENT == yamlType || YamlType.CONFIG_FILE_OVERRIDE_CONTENT == yamlType) {
+              /*              String fileContent = change.getFileContent();
+                            InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
+                            Map<String, Object> properties = Maps.newHashMap();
+                            String filePath = change.getFilePath();
+                            int index = filePath.lastIndexOf('/');
+                            String fileName = filePath;
+                            if (index != -1) {
+                              fileName = filePath.substring(index + 1);
+                            }
+                            properties.put(fileName, inputStream);
+                            ChangeContext.Builder changeContextBuilder =
+                 ChangeContext.Builder.aChangeContext().withChange(change).
+                                withYamlType(yamlType).withProperties(properties);
+                            changeContextList.add(changeContextBuilder.build());
+              */
 
+              ChangeContext.Builder changeContextBuilder =
+                  ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
+              changeContextList.add(changeContextBuilder.build());
+
+              //              FileOutputStream outputStream = new FileOutputStream(change.getFilePath());
+              //              outputStream.write(fileContent.getBytes());
+              //              outputStream.close();
+
+            } else {
+              throw new HarnessException("Can't find yaml handler for type: " + yamlType);
+            }
+          }
         } catch (IOException | HarnessException ex) {
           logger.error("Unable to de-serialize yaml from string", ex);
           Throwables.propagate(ex);
@@ -347,6 +382,11 @@ public class YamlSyncServiceImpl<Y extends BaseYaml, B extends Base> implements 
     Change change = changeContext.getChange();
     Validator.notNullCheck("FileChange is null", change);
     Validator.notNullCheck("ChangeType is null for change:" + change.getFilePath(), change.getChangeType());
+
+    // If its not a yaml file, we don't have a handler for that file
+    if (!change.getFilePath().endsWith(YAML_EXTENSION)) {
+      return;
+    }
 
     BaseYamlHandler yamlSyncHandler = changeContext.getYamlSyncHandler();
 

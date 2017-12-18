@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -333,10 +334,15 @@ public abstract class ArtifactStream extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static abstract class Yaml extends BaseEntityYaml {
-    private String sourceName;
-    private String settingName;
-    private boolean autoApproveForProduction = false;
+    private String artifactServerName;
     private boolean metadataOnly = false;
+
+    public Yaml(String type, String harnessApiVersion, String artifactServerName, boolean metadataOnly) {
+      super(type, harnessApiVersion);
+      this.artifactServerName = artifactServerName;
+      this.metadataOnly = metadataOnly;
+    }
   }
 }

@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -147,6 +146,8 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setFileName(FILE_NAME);
     configFile.setUuid(FILE_ID);
     BoundedInputStream inputStream = new BoundedInputStream(this.inputStream);
+    when(wingsPersistence.save(configFile)).thenReturn(FILE_ID);
+    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     configService.save(configFile, inputStream);
     verify(fileService).saveFile(configFile, inputStream, FileBucket.CONFIGS);
     assertThat(configFile.getRelativeFilePath()).isEqualTo("PATH/" + FILE_NAME);

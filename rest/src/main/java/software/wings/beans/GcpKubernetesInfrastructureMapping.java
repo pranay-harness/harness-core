@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.utils.Util;
 
 import java.util.Optional;
@@ -25,177 +26,6 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
    */
   public GcpKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.GCP_KUBERNETES.name());
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
-    private String namespace;
-
-    /**
-     * The type Builder.
-     */
-    public static final class Builder {
-      private String namespace;
-      private String cluster;
-      private String computeProviderType;
-      private String serviceName;
-      private String infraMappingType;
-      private String type;
-      private String deploymentType;
-      private String computeProviderName;
-      private String name;
-
-      private Builder() {}
-
-      /**
-       * A yaml builder.
-       *
-       * @return the builder
-       */
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      /**
-       * With namespace builder.
-       *
-       * @param namespace the namespace
-       * @return the builder
-       */
-      public Builder withNamespace(String namespace) {
-        this.namespace = namespace;
-        return this;
-      }
-
-      /**
-       * With cluster builder.
-       *
-       * @param cluster the cluster
-       * @return the builder
-       */
-      public Builder withCluster(String cluster) {
-        this.cluster = cluster;
-        return this;
-      }
-
-      /**
-       * With compute provider type builder.
-       *
-       * @param computeProviderType the compute provider type
-       * @return the builder
-       */
-      public Builder withComputeProviderType(String computeProviderType) {
-        this.computeProviderType = computeProviderType;
-        return this;
-      }
-
-      /**
-       * With service name builder.
-       *
-       * @param serviceName the service name
-       * @return the builder
-       */
-      public Builder withServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        return this;
-      }
-
-      /**
-       * With infra mapping type builder.
-       *
-       * @param infraMappingType the infra mapping type
-       * @return the builder
-       */
-      public Builder withInfraMappingType(String infraMappingType) {
-        this.infraMappingType = infraMappingType;
-        return this;
-      }
-
-      /**
-       * With type builder.
-       *
-       * @param type the type
-       * @return the builder
-       */
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      /**
-       * With deployment type builder.
-       *
-       * @param deploymentType the deployment type
-       * @return the builder
-       */
-      public Builder withDeploymentType(String deploymentType) {
-        this.deploymentType = deploymentType;
-        return this;
-      }
-
-      /**
-       * With compute provider name builder.
-       *
-       * @param computeProviderName the compute provider name
-       * @return the builder
-       */
-      public Builder withComputeProviderName(String computeProviderName) {
-        this.computeProviderName = computeProviderName;
-        return this;
-      }
-
-      /**
-       * With name builder.
-       *
-       * @param name the name
-       * @return the builder
-       */
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      /**
-       * But builder.
-       *
-       * @return the builder
-       */
-      public Builder but() {
-        return aYaml()
-            .withNamespace(namespace)
-            .withCluster(cluster)
-            .withComputeProviderType(computeProviderType)
-            .withServiceName(serviceName)
-            .withInfraMappingType(infraMappingType)
-            .withType(type)
-            .withDeploymentType(deploymentType)
-            .withComputeProviderName(computeProviderName)
-            .withName(name);
-      }
-
-      /**
-       * Build yaml.
-       *
-       * @return the yaml
-       */
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setNamespace(namespace);
-        yaml.setCluster(cluster);
-        yaml.setComputeProviderType(computeProviderType);
-        yaml.setServiceName(serviceName);
-        yaml.setInfraMappingType(infraMappingType);
-        yaml.setType(type);
-        yaml.setDeploymentType(deploymentType);
-        yaml.setComputeProviderName(computeProviderName);
-        yaml.setName(name);
-        return yaml;
-      }
-    }
   }
 
   @SchemaIgnore
@@ -545,6 +375,24 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
       gcpKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
       gcpKubernetesInfrastructureMapping.setAccountId(accountId);
       return gcpKubernetesInfrastructureMapping;
+    }
+  }
+
+  /**
+   * The type Yaml.
+   */
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
+    private String namespace;
+
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String namespace) {
+      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+          computeProviderName, cluster);
+      this.namespace = namespace;
     }
   }
 }

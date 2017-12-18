@@ -3,6 +3,7 @@ package software.wings.beans;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -24,18 +25,12 @@ public class LambdaSpecification extends DeploymentSpecification {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @Builder
+  @NoArgsConstructor
   public static final class Yaml extends DeploymentSpecification.Yaml {
     private DefaultSpecification.Yaml defaults;
     private List<FunctionSpecification.Yaml> functions;
 
-    public Yaml() {}
-
-    public Yaml(DefaultSpecification.Yaml defaults, List<FunctionSpecification.Yaml> functions) {
-      this.defaults = defaults;
-      this.functions = functions;
-    }
-
+    @Builder
     public Yaml(String type, DefaultSpecification.Yaml defaults, List<FunctionSpecification.Yaml> functions) {
       super(type);
       this.defaults = defaults;
@@ -55,11 +50,18 @@ public class LambdaSpecification extends DeploymentSpecification {
 
     @Data
     @EqualsAndHashCode(callSuper = true)
-    @Builder
+    @NoArgsConstructor
     public static final class Yaml extends BaseYaml {
       private String runtime;
       private Integer memorySize = 128;
       private Integer timeout = 3;
+
+      @Builder
+      public Yaml(String runtime, Integer memorySize, Integer timeout) {
+        this.runtime = runtime;
+        this.memorySize = memorySize;
+        this.timeout = timeout;
+      }
     }
   }
 
@@ -84,13 +86,22 @@ public class LambdaSpecification extends DeploymentSpecification {
 
     @Data
     @EqualsAndHashCode(callSuper = true)
-    @Builder
+    @NoArgsConstructor
     public static final class Yaml extends BaseYaml {
       private String runtime;
       private Integer memorySize = 128;
       private Integer timeout = 3;
       private String functionName;
       private String handler;
+
+      @Builder
+      public Yaml(String runtime, Integer memorySize, Integer timeout, String functionName, String handler) {
+        this.runtime = runtime;
+        this.memorySize = memorySize;
+        this.timeout = timeout;
+        this.functionName = functionName;
+        this.handler = handler;
+      }
     }
   }
 }

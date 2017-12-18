@@ -18,7 +18,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.HarnessException;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -26,7 +26,6 @@ import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 10/27/17.
@@ -47,7 +46,7 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient private transient final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Transient @Inject private transient YamlChangeSetService yamlChangeSetService;
-  @Transient @Inject private transient YamlSyncService yamlSyncService;
+  @Transient @Inject private transient YamlService yamlSyncService;
 
   @Transient @Inject private transient YamlGitService yamlGitSyncService;
 
@@ -89,11 +88,10 @@ public class GitCommandCallback implements NotifyCallback {
         }
       } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
-        List<GitFileChange> filterChanges = gitDiffResult.getGitFileChanges()
-                                                .stream()
-                                                .filter(gitFileChange -> gitFileChange.getFilePath().endsWith(".yaml"))
-                                                .collect(Collectors.toList());
-
+        //        List<GitFileChange> filterChanges =
+        //            gitDiffResult.getGitFileChanges().stream().filter(gitFileChange ->
+        //            gitFileChange.getFilePath().endsWith(".yaml")).collect(Collectors.toList());
+        List<GitFileChange> filterChanges = gitDiffResult.getGitFileChanges();
         try {
           List<ChangeContext> fileChangeContexts = yamlSyncService.syncChangeSet(filterChanges);
           logger.info("Processed ChangeSet: [{}]", fileChangeContexts);
