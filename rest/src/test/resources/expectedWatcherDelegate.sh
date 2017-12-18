@@ -89,6 +89,7 @@ then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
   echo "doUpgrade: true" >> config-delegate.yml
   echo "localDiskPath: /tmp" >> config-delegate.yml
+  echo "maxCachedArtifacts: 2" >> config-delegate.yml
 fi
 
 export HOSTNAME
