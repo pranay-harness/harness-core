@@ -3,7 +3,6 @@ package software.wings.helpers.ext.ami;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.Misc.isNullOrEmpty;
 
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -18,6 +17,7 @@ import software.wings.service.impl.AwsHelperService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by sgurubelli on 12/14/17.
@@ -28,7 +28,7 @@ public class AmiServiceImpl implements AmiService {
 
   @Override
   public List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      Multimap<String, String> tags, int maxNumberOfBuilds) {
+      Map<String, List<String>> tags, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetails = new ArrayList<>();
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("is-public").withValues("false"));
