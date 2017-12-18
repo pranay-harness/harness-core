@@ -100,7 +100,9 @@ public class InstanceHelper {
             if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
               Instance instance = buildInstanceUsingHostInfo(workflowExecution, artifact, instanceStatusSummary,
                   phaseExecutionData, infrastructureMapping.getInfraMappingType());
-              instanceList.add(instance);
+              if (instance != null) {
+                instanceList.add(instance);
+              }
             }
           }
         }
@@ -144,7 +146,14 @@ public class InstanceHelper {
     Instance.Builder builder = buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMappingType);
     String hostUuid = host.getUuid();
     if (hostUuid == null) {
-      setInstanceInfoAndKey(builder, host.getEc2Instance(), infraMappingType, phaseExecutionData.getInfraMappingId());
+      if (host.getEc2Instance() != null) {
+        setInstanceInfoAndKey(builder, host.getEc2Instance(), infraMappingType, phaseExecutionData.getInfraMappingId());
+      } else {
+        logger.warn(
+            "Cannot build host based instance info since both hostId and ec2Instance are null for workflow execution {}",
+            workflowExecution.getUuid());
+        return null;
+      }
     } else {
       Host hostInfo = hostService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), hostUuid);
       Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
