@@ -146,7 +146,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             // set from time to the timestamp
             long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
             if (timeStamp < managerAnalysisStartTime) {
-              logger.warn("New relic sending us data in the past. request start time {}, received time {}",
+              logger.debug("New relic sending us data in the past. request start time {}, received time {}",
                   managerAnalysisStartTime, timeStamp);
             }
             final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
@@ -175,6 +175,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
           }
         }
+        logger.info("Step 1: Get NewRelic records finished");
+
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
         throw(e);
@@ -199,6 +201,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           }
         }
 
+        logger.info("Step 2: Get NewRelic error records finished");
+
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
         throw(e);
@@ -222,6 +226,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
           }
         }
+
+        logger.info("Step 3: Get NewRelic apdex records finished");
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
@@ -301,7 +307,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 records.putAll(getMetricData(node, metricNames, windowEndTimeManager));
               }
 
+              logger.info("Got NewRelic metric records {}", records.size());
               List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
+              logger.info("Saving {} NewRelic metric records to harness manager", metricRecords.size());
               if (!saveMetrics(metricRecords)) {
                 retry = RETRIES;
                 taskResult.setErrorMessage("Cannot save new relic metric records to Harness. Server returned error");
