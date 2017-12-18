@@ -265,47 +265,59 @@ public enum ErrorCode {
   /**
    * Duplicate host names error codes.
    */
-  DUPLICATE_HOST_NAMES("DUPLICATE_HOST_NAMES"), /**
-                                                 * State not for resume error codes.
-                                                 */
-  STATE_NOT_FOR_RESUME("STATE_NOT_FOR_RESUME"), /**
-                                                 * State not for abort error codes.
-                                                 */
-  STATE_NOT_FOR_ABORT("STATE_NOT_FOR_ABORT"), /**
-                                               * State abort failed error codes.
-                                               */
-  STATE_ABORT_FAILED("STATE_ABORT_FAILED"), /**
-                                             * State pause failed error codes.
-                                             */
-  STATE_PAUSE_FAILED("STATE_PAUSE_FAILED"), /**
-                                             * State not for pause error codes.
-                                             */
-  STATE_NOT_FOR_PAUSE("STATE_NOT_FOR_PAUSE"), /**
-                                               * State not for retry error codes.
-                                               */
-  STATE_NOT_FOR_RETRY("STATE_NOT_FOR_RETRY"), /**
-                                               * Pause all already error codes.
-                                               */
-  PAUSE_ALL_ALREADY("PAUSE_ALL_ALREADY"), /**
-                                           * Resume all already error codes.
-                                           */
-  RESUME_ALL_ALREADY("RESUME_ALL_ALREADY"), /**
-                                             * Rollback already error codes.
-                                             */
-  ROLLBACK_ALREADY("ROLLBACK_ALREADY"), /**
-                                         * Abort all already error codes.
-                                         */
+  DUPLICATE_HOST_NAMES("DUPLICATE_HOST_NAMES"),
+  /**
+   * State not for resume error codes.
+   */
+  STATE_NOT_FOR_RESUME("STATE_NOT_FOR_RESUME"),
+  /**
+   * State not for abort error codes.
+   */
+  STATE_NOT_FOR_ABORT("STATE_NOT_FOR_ABORT"),
+  /**
+   * State abort failed error codes.
+   */
+  STATE_ABORT_FAILED("STATE_ABORT_FAILED"),
+  /**
+   * State pause failed error codes.
+   */
+  STATE_PAUSE_FAILED("STATE_PAUSE_FAILED"),
+  /**
+   * State not for pause error codes.
+   */
+  STATE_NOT_FOR_PAUSE("STATE_NOT_FOR_PAUSE"),
+  /**
+   * State not for retry error codes.
+   */
+  STATE_NOT_FOR_RETRY("STATE_NOT_FOR_RETRY"),
+  /**
+   * Pause all already error codes.
+   */
+  PAUSE_ALL_ALREADY("PAUSE_ALL_ALREADY"),
+  /**
+   * Resume all already error codes.
+   */
+  RESUME_ALL_ALREADY("RESUME_ALL_ALREADY"),
+  /**
+   * Rollback already error codes.
+   */
+  ROLLBACK_ALREADY("ROLLBACK_ALREADY"),
+  /**
+   * Abort all already error codes.
+   */
   ABORT_ALL_ALREADY("ABORT_ALL_ALREADY"),
 
   /**
    * Retry failed error codes.
    */
-  RETRY_FAILED("RETRY_FAILED"), /**
-                                 * Unknown artifact type error codes.
-                                 */
-  UNKNOWN_ARTIFACT_TYPE("UNKNOWN_ARTIFACT_TYPE"), /**
-                                                   * Timeout error codes.
-                                                   */
+  RETRY_FAILED("RETRY_FAILED"),
+  /**
+   * Unknown artifact type error codes.
+   */
+  UNKNOWN_ARTIFACT_TYPE("UNKNOWN_ARTIFACT_TYPE"),
+  /**
+   * Timeout error codes.
+   */
   INIT_TIMEOUT("INIT_TIMEOUT"),
 
   /**
@@ -316,9 +328,10 @@ public enum ErrorCode {
   /**
    * Not licensed error code.
    */
-  NOT_LICENSED("NOT_LICENSED"), /**
-                                 * Request timeout error code.
-                                 */
+  NOT_LICENSED("NOT_LICENSED"),
+  /**
+   * Request timeout error code.
+   */
   REQUEST_TIMEOUT("REQUEST_TIMEOUT", GATEWAY_TIMEOUT, GATEWAY_TIMEOUT.getReasonPhrase()),
 
   /**
@@ -399,18 +412,22 @@ public enum ErrorCode {
   /**
    * Problem with encryption, most likely that the JCE Unlimited Strength jars aren't installed.
    */
-  ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED"), /**
-                                                           * Unavailable delegates error code.
-                                                           */
-  UNAVAILABLE_DELEGATES("UNAVAILABLE_DELEGATES", SERVICE_UNAVAILABLE), /**
-                                                                        * Workflow execution in progress
-                                                                        */
-  WORKFLOW_EXECUTION_IN_PROGRESS("WORKFLOW_EXECUTION_IN_PROGRESS"), /**
-                                                                     * Workflow execution in progress
-                                                                     */
-  PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS"), /**
-                                                                     * Aws access denied error code.
-                                                                     */
+  ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED"),
+  /**
+   * Unavailable delegates error code.
+   */
+  UNAVAILABLE_DELEGATES("UNAVAILABLE_DELEGATES", SERVICE_UNAVAILABLE),
+  /**
+   * Workflow execution in progress
+   */
+  WORKFLOW_EXECUTION_IN_PROGRESS("WORKFLOW_EXECUTION_IN_PROGRESS"),
+  /**
+   * Workflow execution in progress
+   */
+  PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS"),
+  /**
+   * Aws access denied error code.
+   */
 
   AWS_ACCESS_DENIED("AWS_ACCESS_DENIED"),
 

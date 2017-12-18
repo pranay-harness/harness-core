@@ -52,9 +52,10 @@ public class SortOrder {
     /**
      * Asc order type.
      */
-    ASC, /**
-          * Desc order type.
-          */
+    ASC,
+    /**
+     * Desc order type.
+     */
     DESC
   }
 

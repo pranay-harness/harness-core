@@ -13,8 +13,9 @@ public enum ExecutionStrategy {
   /**
    * Serial execution strategy.
    */
-  SERIAL, /**
-           * Parallel execution strategy.
-           */
+  SERIAL,
+  /**
+   * Parallel execution strategy.
+   */
   PARALLEL;
 }

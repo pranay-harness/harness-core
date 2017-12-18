@@ -13,11 +13,13 @@ public enum WorkflowType {
   /**
    * Pipeline workflow type.
    */
-  PIPELINE, /**
-             * Orchestration workflow type.
-             */
-  ORCHESTRATION, /**
-                  * Simple workflow type.
-                  */
+  PIPELINE,
+  /**
+   * Orchestration workflow type.
+   */
+  ORCHESTRATION,
+  /**
+   * Simple workflow type.
+   */
   SIMPLE
 }

@@ -72,8 +72,8 @@ public class ResponseMessage implements Serializable {
   /**
    * {@inheritDoc}
    */ /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
+       * @see java.lang.Object#toString()
+       */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -108,12 +108,14 @@ public class ResponseMessage implements Serializable {
     /**
      * Info response type enum.
      */
-    INFO, /**
-           * Warn response type enum.
-           */
-    WARN, /**
-           * Error response type enum.
-           */
+    INFO,
+    /**
+     * Warn response type enum.
+     */
+    WARN,
+    /**
+     * Error response type enum.
+     */
     ERROR
   }
 

@@ -975,8 +975,8 @@ public class StateMachine extends Base {
   /**
    * {@inheritDoc}
    */ /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
-   */
+       * @see software.wings.beans.Base#toString()
+       */
   @Override
   public String toString() {
     return "StateMachine [initialStateName=" + initialStateName + ", states=" + states + ", transitions=" + transitions

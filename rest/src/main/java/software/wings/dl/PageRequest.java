@@ -456,12 +456,14 @@ public class PageRequest<T> {
     /**
      * List without app id page request type.
      */
-    LIST_WITHOUT_APP_ID, /**
-                          * List without env id page request type.
-                          */
-    LIST_WITHOUT_ENV_ID, /**
-                          * Other page request type.
-                          */
+    LIST_WITHOUT_APP_ID,
+    /**
+     * List without env id page request type.
+     */
+    LIST_WITHOUT_ENV_ID,
+    /**
+     * Other page request type.
+     */
     OTHER
   }
 

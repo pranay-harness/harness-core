@@ -110,12 +110,14 @@ public class ServiceVariable extends Base implements Encryptable {
     /**
      * Text type.
      */
-    TEXT, /**
-           * Lb type.
-           */
-    LB(true), /**
-               * Encrypted text type.
-               */
+    TEXT,
+    /**
+     * Lb type.
+     */
+    LB(true),
+    /**
+     * Encrypted text type.
+     */
     ENCRYPTED_TEXT;
 
     private boolean settingAttribute;
@@ -140,12 +142,14 @@ public class ServiceVariable extends Base implements Encryptable {
     /**
      * All  override type.
      */
-    ALL, /**
-          * Instances override type.
-          */
-    INSTANCES, /**
-                * Custom override type.
-                */
+    ALL,
+    /**
+     * Instances override type.
+     */
+    INSTANCES,
+    /**
+     * Custom override type.
+     */
     CUSTOM
   }
 

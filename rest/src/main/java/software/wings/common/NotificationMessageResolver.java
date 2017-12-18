@@ -34,39 +34,50 @@ public class NotificationMessageResolver {
     /**
      * Entity create notification notification message type.
      */
-    ENTITY_CREATE_NOTIFICATION, /**
-                                 * Entity delete notification notification message type.
-                                 */
-    ENTITY_DELETE_NOTIFICATION, /**
-                                 * Artifact approval notification notification message type.
-                                 */
-    ARTIFACT_APPROVAL_NOTIFICATION, /**
-                                     * Artifact approval notification status notification message type.
-                                     */
-    ARTIFACT_APPROVAL_NOTIFICATION_STATUS, /**
-                                            * Workflow successful notification notification message type.
-                                            */
-    WORKFLOW_SUCCESSFUL_NOTIFICATION, /**
-                                       * Workflow paused notification notification message type.
-                                       */
-    WORKFLOW_PAUSED_NOTIFICATION, /**
-                                   * Workflow failed notification notification message type.
-                                   */
-    WORKFLOW_FAILED_NOTIFICATION, /**
-                                   * Workflow resumed notification notification message type.
-                                   */
-    WORKFLOW_RESUMED_NOTIFICATION, /**
-                                    * Workflow aborted notification notification message type.
-                                    */
-    WORKFLOW_ABORTED_NOTIFICATION, /**
-                                    * Workflow phase successful notification notification message type.
-                                    */
-    WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION, /**
-                                             * Workflow phase paused notification notification message type.
-                                             */
-    WORKFLOW_PHASE_PAUSED_NOTIFICATION, /**
-                                         * Workflow phase failed notification notification message type.
-                                         */
+    ENTITY_CREATE_NOTIFICATION,
+    /**
+     * Entity delete notification notification message type.
+     */
+    ENTITY_DELETE_NOTIFICATION,
+    /**
+     * Artifact approval notification notification message type.
+     */
+    ARTIFACT_APPROVAL_NOTIFICATION,
+    /**
+     * Artifact approval notification status notification message type.
+     */
+    ARTIFACT_APPROVAL_NOTIFICATION_STATUS,
+    /**
+     * Workflow successful notification notification message type.
+     */
+    WORKFLOW_SUCCESSFUL_NOTIFICATION,
+    /**
+     * Workflow paused notification notification message type.
+     */
+    WORKFLOW_PAUSED_NOTIFICATION,
+    /**
+     * Workflow failed notification notification message type.
+     */
+    WORKFLOW_FAILED_NOTIFICATION,
+    /**
+     * Workflow resumed notification notification message type.
+     */
+    WORKFLOW_RESUMED_NOTIFICATION,
+    /**
+     * Workflow aborted notification notification message type.
+     */
+    WORKFLOW_ABORTED_NOTIFICATION,
+    /**
+     * Workflow phase successful notification notification message type.
+     */
+    WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION,
+    /**
+     * Workflow phase paused notification notification message type.
+     */
+    WORKFLOW_PHASE_PAUSED_NOTIFICATION,
+    /**
+     * Workflow phase failed notification notification message type.
+     */
     WORKFLOW_PHASE_FAILED_NOTIFICATION
   }
 

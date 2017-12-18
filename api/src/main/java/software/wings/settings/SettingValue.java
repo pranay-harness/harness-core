@@ -221,9 +221,10 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Git setting variable types.
      */
-    GIT("GIT"), /**
-                 * Ssh session config setting variable types.
-                 */
+    GIT("GIT"),
+    /**
+     * Ssh session config setting variable types.
+     */
     SSH_SESSION_CONFIG,
 
     /**
