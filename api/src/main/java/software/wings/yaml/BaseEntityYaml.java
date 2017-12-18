@@ -2,6 +2,7 @@ package software.wings.yaml;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * Base class for all the yaml classes which are exposed as a .yaml file.
@@ -11,6 +12,12 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 public abstract class BaseEntityYaml extends BaseYamlWithType {
-  private String harnessApiVersion;
+  private String harnessApiVersion = "1.0";
+
+  public BaseEntityYaml(String type, String harnessApiVersion) {
+    super(type);
+    this.harnessApiVersion = harnessApiVersion;
+  }
 }

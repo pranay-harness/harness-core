@@ -3,11 +3,12 @@ package software.wings.beans;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
 /**
  * Generic Name Value pair
- * @author rktummala on 10/27/18
+ * @author rktummala on 10/27/17
  */
 @Data
 @Builder
@@ -25,6 +26,7 @@ public class NameValuePair {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static class Yaml extends BaseYaml {
     private String name;
     private String value;

@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class FailureStrategy {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseYaml {
     private List<String> failureTypes = new ArrayList<>();
     private String executionScope;

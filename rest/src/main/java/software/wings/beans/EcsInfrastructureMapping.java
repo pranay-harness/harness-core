@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -47,102 +48,6 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
    */
   public EcsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_ECS.name());
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
-    private String region = "us-east-1";
-
-    public static final class Builder {
-      private String region = "us-east-1";
-      private String cluster;
-      private String computeProviderType;
-      private String serviceName;
-      private String infraMappingType;
-      private String type;
-      private String deploymentType;
-      private String computeProviderName;
-      private String name;
-
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withRegion(String region) {
-        this.region = region;
-        return this;
-      }
-
-      public Builder withCluster(String cluster) {
-        this.cluster = cluster;
-        return this;
-      }
-
-      public Builder withComputeProviderType(String computeProviderType) {
-        this.computeProviderType = computeProviderType;
-        return this;
-      }
-
-      public Builder withServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        return this;
-      }
-
-      public Builder withInfraMappingType(String infraMappingType) {
-        this.infraMappingType = infraMappingType;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withDeploymentType(String deploymentType) {
-        this.deploymentType = deploymentType;
-        return this;
-      }
-
-      public Builder withComputeProviderName(String computeProviderName) {
-        this.computeProviderName = computeProviderName;
-        return this;
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml()
-            .withRegion(region)
-            .withCluster(cluster)
-            .withComputeProviderType(computeProviderType)
-            .withServiceName(serviceName)
-            .withInfraMappingType(infraMappingType)
-            .withType(type)
-            .withDeploymentType(deploymentType)
-            .withComputeProviderName(computeProviderName)
-            .withName(name);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setRegion(region);
-        yaml.setCluster(cluster);
-        yaml.setComputeProviderType(computeProviderType);
-        yaml.setServiceName(serviceName);
-        yaml.setInfraMappingType(infraMappingType);
-        yaml.setType(type);
-        yaml.setDeploymentType(deploymentType);
-        yaml.setComputeProviderName(computeProviderName);
-        yaml.setName(name);
-        return yaml;
-      }
-    }
   }
 
   @SchemaIgnore
@@ -586,6 +491,21 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       ecsInfrastructureMapping.setAutoPopulate(autoPopulate);
       ecsInfrastructureMapping.setAccountId(accountId);
       return ecsInfrastructureMapping;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
+    private String region = "us-east-1";
+
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String region) {
+      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+          computeProviderName, cluster);
+      this.region = region;
     }
   }
 }

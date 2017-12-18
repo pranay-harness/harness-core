@@ -10,6 +10,7 @@ import com.google.common.base.MoreObjects;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.BaseYaml;
@@ -410,13 +411,12 @@ public class Pipeline extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseYaml {
-    private String name;
     private String description;
     private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
 
     public static final class Builder {
-      private String name;
       private String description;
       private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
 
@@ -424,11 +424,6 @@ public class Pipeline extends Base {
 
       public static Builder anYaml() {
         return new Builder();
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
       }
 
       public Builder withDescription(String description) {
@@ -442,12 +437,11 @@ public class Pipeline extends Base {
       }
 
       public Builder but() {
-        return anYaml().withName(name).withDescription(description).withPipelineStages(pipelineStages);
+        return anYaml().withDescription(description).withPipelineStages(pipelineStages);
       }
 
       public Yaml build() {
         Yaml yaml = new Yaml();
-        yaml.setName(name);
         yaml.setDescription(description);
         yaml.setPipelineStages(pipelineStages);
         return yaml;

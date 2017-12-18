@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -418,37 +419,14 @@ public class Application extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseEntityYaml {
     private String description;
 
-    public static final class Builder {
-      private Yaml yaml;
-
-      private Builder() {
-        yaml = new Yaml();
-      }
-
-      public static Builder anApplicationYaml() {
-        return new Builder();
-      }
-
-      public Builder withDescription(String description) {
-        yaml.setDescription(description);
-        return this;
-      }
-
-      public Builder withType(String type) {
-        yaml.setType(type);
-        return this;
-      }
-
-      public Builder but() {
-        return anApplicationYaml().withDescription(yaml.getDescription()).withType(yaml.getType());
-      }
-
-      public Yaml build() {
-        return yaml;
-      }
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String description) {
+      super(type, harnessApiVersion);
+      this.description = description;
     }
   }
 }

@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static software.wings.beans.GcpKubernetesInfrastructureMapping.Yaml.Builder.aYaml;
 import static software.wings.utils.Util.isEmpty;
 
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -16,18 +15,15 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 public class GcpKubernetesInfraMappingYamlHandler
-    extends InfraMappingYamlHandler<GcpKubernetesInfrastructureMapping.Yaml, GcpKubernetesInfrastructureMapping> {
+    extends InfraMappingYamlHandler<Yaml, GcpKubernetesInfrastructureMapping> {
   @Override
-  public GcpKubernetesInfrastructureMapping.Yaml toYaml(GcpKubernetesInfrastructureMapping infraMapping, String appId) {
-    return aYaml()
-        .withType(InfrastructureMappingType.GCP_KUBERNETES.name())
-        .withServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()))
-        .withInfraMappingType(infraMapping.getInfraMappingType())
-        .withDeploymentType(infraMapping.getDeploymentType())
-        .withComputeProviderName(infraMapping.getComputeProviderName())
-        .withName(infraMapping.getName())
-        .withNamespace(infraMapping.getNamespace())
-        .build();
+  public Yaml toYaml(GcpKubernetesInfrastructureMapping bean, String appId) {
+    Yaml yaml = Yaml.builder().build();
+    super.toYaml(yaml, bean);
+    yaml.setType(InfrastructureMappingType.GCP_KUBERNETES.name());
+    yaml.setNamespace(bean.getNamespace());
+    yaml.setCluster(bean.getClusterName());
+    return yaml;
   }
 
   @Override
@@ -35,24 +31,21 @@ public class GcpKubernetesInfraMappingYamlHandler
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
 
-    GcpKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
-
-    String appId =
-        yamlSyncHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + changeContext.getChange().getFilePath(), appId);
-    String envId = yamlSyncHelper.getEnvironmentId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + changeContext.getChange().getFilePath(), envId);
+    Yaml infraMappingYaml = changeContext.getYaml();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
+    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
+    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
     String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck(
-        "Couldn't retrieve compute provider from yaml:" + changeContext.getChange().getFilePath(), computeProviderId);
-    String serviceId = yamlSyncHelper.getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + changeContext.getChange().getFilePath(), serviceId);
+    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
+    String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
+    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
 
-    GcpKubernetesInfrastructureMapping.Builder builder =
-        GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping().withAccountId(
-            changeContext.getChange().getAccountId());
-    setWithYamlValues(builder, infraMappingYaml, appId, envId, computeProviderId, serviceId);
-    GcpKubernetesInfrastructureMapping current = builder.build();
+    GcpKubernetesInfrastructureMapping current = new GcpKubernetesInfrastructureMapping();
+    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
+
     GcpKubernetesInfrastructureMapping previous =
         (GcpKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
             appId, envId, serviceId, computeProviderId);
@@ -65,53 +58,30 @@ public class GcpKubernetesInfraMappingYamlHandler
     }
   }
 
-  @Override
-  public GcpKubernetesInfrastructureMapping updateFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
-  }
-
-  private void setWithYamlValues(GcpKubernetesInfrastructureMapping.Builder builder,
-      GcpKubernetesInfrastructureMapping.Yaml infraMappingYaml, String appId, String envId, String computeProviderId,
-      String serviceId) {
-    // common stuff for all infra mapping
-    builder.withAutoPopulate(false)
-        .withInfraMappingType(infraMappingYaml.getInfraMappingType())
-        .withServiceTemplateId(getServiceTemplateId(appId, serviceId))
-        .withComputeProviderSettingId(computeProviderId)
-        .withComputeProviderName(infraMappingYaml.getComputeProviderName())
-        .withComputeProviderType(infraMappingYaml.getComputeProviderType())
-        .withEnvId(envId)
-        .withServiceId(serviceId)
-        .withDeploymentType(infraMappingYaml.getDeploymentType())
-        .withName(infraMappingYaml.getName())
-        .withAppId(appId);
-
-    builder.withNamespace(infraMappingYaml.getNamespace()).build();
+  private void toBean(GcpKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
+      String envId, String computeProviderId, String serviceId) {
+    Yaml yaml = changeContext.getYaml();
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    bean.setNamespace(yaml.getNamespace());
+    bean.setClusterName(yaml.getCluster());
   }
 
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    GcpKubernetesInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
+    Yaml infraMappingYaml = changeContext.getYaml();
     return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getName())
-        || isEmpty(infraMappingYaml.getInfraMappingType()) || isEmpty(infraMappingYaml.getServiceName())
-        || isEmpty(infraMappingYaml.getType()) || isEmpty(infraMappingYaml.getNamespace()));
-  }
-
-  @Override
-  public GcpKubernetesInfrastructureMapping createFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return upsertFromYaml(changeContext, changeSetContext);
+        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
+        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
+        || isEmpty(infraMappingYaml.getNamespace()));
   }
 
   @Override
   public GcpKubernetesInfrastructureMapping get(String accountId, String yamlFilePath) {
-    return (GcpKubernetesInfrastructureMapping) yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
+    return (GcpKubernetesInfrastructureMapping) yamlHelper.getInfraMapping(accountId, yamlFilePath);
   }
 
   @Override
   public Class getYamlClass() {
-    return GcpKubernetesInfrastructureMapping.Yaml.class;
+    return Yaml.class;
   }
 }

@@ -30,7 +30,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   @Override
   public LogConfiguration upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return setWithYamlValues(changeContext);
+    return toBean(changeContext);
   }
 
   private List<NameValuePair.Yaml> getLogOptionsYaml(List<LogOption> logOptionList) {
@@ -58,13 +58,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
         .collect(Collectors.toList());
   }
 
-  @Override
-  public LogConfiguration updateFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
-  }
-
-  private LogConfiguration setWithYamlValues(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private LogConfiguration toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
     return LogConfiguration.builder().logDriver(yaml.getLogDriver()).options(getLogOptions(yaml.getOptions())).build();
@@ -73,12 +67,6 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return true;
-  }
-
-  @Override
-  public LogConfiguration createFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
   }
 
   @Override

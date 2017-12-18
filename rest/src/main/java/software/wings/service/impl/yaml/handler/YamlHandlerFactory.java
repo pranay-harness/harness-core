@@ -7,6 +7,8 @@ import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CommandYamlHandler;
+import software.wings.service.impl.yaml.handler.configfile.ConfigFileOverrideYamlHandler;
+import software.wings.service.impl.yaml.handler.configfile.ConfigFileYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.ContainerDefinitionYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.LogConfigurationYamlHandler;
@@ -53,6 +55,8 @@ public class YamlHandlerFactory {
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private EnvironmentYamlHandler environmentYamlHandler;
   @Inject private ServiceYamlHandler serviceYamlHandler;
+  @Inject private ConfigFileYamlHandler configFileYamlHandler;
+  @Inject private ConfigFileOverrideYamlHandler configFileOverrideYamlHandler;
   @Inject private CommandYamlHandler commandYamlHandler;
   @Inject private NameValuePairYamlHandler nameValuePairYamlHandler;
   @Inject private PhaseStepYamlHandler phaseStepYamlHandler;
@@ -97,11 +101,11 @@ public class YamlHandlerFactory {
       case COMMAND_UNIT:
         return commandUnitYamlHandlerMap.get(subType);
       case CONFIG_FILE:
-        break;
+        return configFileYamlHandler;
       case ENVIRONMENT:
         return environmentYamlHandler;
       case CONFIG_FILE_OVERRIDE:
-        break;
+        return configFileOverrideYamlHandler;
       case INFRA_MAPPING:
         return infraMappingHelperMap.get(subType);
       case PIPELINE:

@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
 import software.wings.yaml.BaseYaml;
@@ -30,6 +31,7 @@ public class NotificationRule {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseYaml {
     private List<String> conditions = new ArrayList<>();
     private String executionScope;

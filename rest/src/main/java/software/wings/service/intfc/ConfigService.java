@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -53,6 +54,17 @@ public interface ConfigService extends OwnedByService {
   ConfigFile get(@NotEmpty String appId, @NotEmpty String configId);
 
   /**
+   * Gets the.
+   *
+   * @param appId            the app id
+   * @param entityId         the entity id
+   * @param entityType         the entity type
+   * @return the config file
+   */
+  ConfigFile get(
+      @NotEmpty String appId, @NotEmpty String entityId, EntityType entityType, @NotEmpty String relativeFilePath);
+
+  /**
    * Download file.
    *
    * @param appId    the app id
@@ -88,6 +100,16 @@ public interface ConfigService extends OwnedByService {
   void delete(@NotEmpty String appId, @NotEmpty String configId);
 
   /**
+   * Delete based on name.
+   * @param appId
+   * @param entityId
+   * @param entityType
+   * @param configFileName
+   */
+  void delete(@NotEmpty String appId, @NotEmpty String entityId, @NotEmpty EntityType entityType,
+      @NotEmpty String configFileName);
+
+  /**
    * Gets the config files for entity.
    *
    * @param appId      the app id
@@ -96,6 +118,16 @@ public interface ConfigService extends OwnedByService {
    * @return the config files for entity
    */
   List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId, String envId);
+
+  /**
+   * Gets the config files for entity.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @param entityId   the entity id
+   * @return the config files for entity
+   */
+  List<ConfigFile> getConfigFileOverridesForEnv(String appId, String envId);
 
   /**
    * Gets the config files for entity.

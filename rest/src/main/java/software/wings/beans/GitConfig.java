@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -21,7 +22,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @ToString(exclude = "password")
 public class GitConfig extends SettingValue implements Encryptable {
   @NotEmpty @Attributes(title = "Username", required = true) private String username;
-  @NotEmpty
+
   @Attributes(title = "Password", required = true)
   @Encrypted
   @JsonView(JsonViews.Internal.class)
@@ -53,13 +54,13 @@ public class GitConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
     private String branch;
 
-    public Yaml() {}
-
-    public Yaml(String type, String name, String url, String username, String password, String branch) {
-      super(type, name, url, username, password);
+    @Builder
+    public Yaml(String type, String url, String username, String password, String branch) {
+      super(type, url, username, password);
       this.branch = branch;
     }
   }
