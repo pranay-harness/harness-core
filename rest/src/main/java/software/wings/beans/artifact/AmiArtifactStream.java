@@ -3,8 +3,6 @@ package software.wings.beans.artifact;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -14,7 +12,9 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,14 +62,18 @@ public class AmiArtifactStream extends ArtifactStream {
   @Override
   @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
-    Multimap<String, String> multiTags = ArrayListMultimap.create();
+    Map<String, List<String>> tagMap = new HashMap<>();
     if (tags != null) {
-      tags.forEach(tag -> multiTags.put(tag.getKey(), tag.getValue()));
+      Map<String, List<Tag>> collect = tags.stream().collect(Collectors.groupingBy(Tag::getKey));
+      tags.stream()
+          .collect(Collectors.groupingBy(Tag::getKey))
+          .keySet()
+          .forEach(s -> tagMap.put(s, collect.get(s).stream().map(tag -> tag.value).collect(Collectors.toList())));
     }
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
         .withRegion(region)
-        .withTags(multiTags)
+        .withTags(tagMap)
         .build();
   }
 
