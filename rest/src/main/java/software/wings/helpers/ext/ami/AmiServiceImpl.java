@@ -33,7 +33,7 @@ public class AmiServiceImpl implements AmiService {
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("is-public").withValues("false"));
     filters.add(new Filter("state").withValues("available"));
-    if (tags != null) {
+    if (tags != null && tags.size() != 0) {
       tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
     }
     DescribeImagesRequest describeImagesRequest = new DescribeImagesRequest().withFilters(filters);
