@@ -146,6 +146,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       Integer maxCachedArtifacts = delegateConfiguration.getMaxCachedArtifacts() != null
           ? delegateConfiguration.getMaxCachedArtifacts()
           : DEFAULT_MAX_CACHED_ARTIFACT;
+      maxCachedArtifacts += 1; // adjustment for internal 'temp' directory
       if (files != null && files.length > maxCachedArtifacts) {
         Arrays.sort(files, Comparator.comparingLong(File::lastModified));
         for (int idx = 0; idx < files.length - maxCachedArtifacts; idx++) {
