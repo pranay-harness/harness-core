@@ -1,6 +1,7 @@
 package software.wings.service.intfc.yaml;
 
 import software.wings.beans.Application;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -11,6 +12,8 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
+
+import java.util.List;
 
 /**
  * Entity Update Service.
@@ -24,6 +27,9 @@ public interface EntityUpdateService {
 
   GitFileChange getCommandGitSyncFile(
       String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType);
+
+  List<GitFileChange> getConfigFileGitSyncFileSet(
+      String accountId, Service service, ConfigFile configFile, ChangeType changeType, String fileContent);
 
   GitFileChange getEnvironmentGitSyncFile(String accountId, Environment environment, ChangeType changeType);
 

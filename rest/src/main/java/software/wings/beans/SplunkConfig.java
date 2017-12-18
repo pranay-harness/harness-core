@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -29,7 +30,6 @@ public class SplunkConfig extends SettingValue implements Encryptable {
 
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
-  @NotEmpty
   @Encrypted
   private char[] password;
 
@@ -55,15 +55,15 @@ public class SplunkConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends VerificationProviderYaml {
     private String splunkUrl;
     private String username;
     private String password;
 
-    public Yaml() {}
-
-    public Yaml(String type, String name, String splunkUrl, String username, String password) {
-      super(type, name);
+    @Builder
+    public Yaml(String type, String splunkUrl, String username, String password) {
+      super(type);
       this.splunkUrl = splunkUrl;
       this.username = username;
       this.password = password;

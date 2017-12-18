@@ -33,6 +33,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.User;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
@@ -596,8 +597,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (authFilters(query)) {
       return query;
     } else {
-      throw new WingsException(
-          "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account");
+      throw new WingsException(getExceptionMsgWithUserContext());
     }
   }
 
@@ -610,9 +610,23 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (authFilters(query)) {
       return query;
     } else {
-      throw new WingsException(
-          "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account");
+      throw new WingsException(getExceptionMsgWithUserContext());
     }
+  }
+
+  private String getExceptionMsgWithUserContext() throws WingsException {
+    User user = UserThreadLocal.get();
+    String msg =
+        "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account.";
+    if (user != null) {
+      msg = new StringBuffer(msg)
+                .append(" User Name: ")
+                .append(user.getName())
+                .append(" Email id: ")
+                .append(user.getEmail())
+                .toString();
+    }
+    return msg;
   }
 
   /**

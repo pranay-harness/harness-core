@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYamlWithType;
 
 /**
@@ -11,9 +12,8 @@ import software.wings.yaml.BaseYamlWithType;
 public abstract class DeploymentSpecification extends Base {
   @Data
   @EqualsAndHashCode(callSuper = false)
+  @NoArgsConstructor
   public static abstract class Yaml extends BaseYamlWithType {
-    public Yaml() {}
-
     public Yaml(String type) {
       super(type);
     }

@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class TemplateExpression {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseYaml {
     private String fieldName;
     private String expression;

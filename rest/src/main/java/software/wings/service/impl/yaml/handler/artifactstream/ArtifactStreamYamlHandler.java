@@ -1,25 +1,30 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static software.wings.utils.Util.isEmpty;
+
 import com.google.inject.Inject;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.sync.YamlSyncHelper;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Validator;
 
+import java.util.List;
+
 /**
  * @author rktummala on 10/09/17
  */
-public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStream.Yaml, B extends ArtifactStream>
+public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends ArtifactStream>
     extends BaseYamlHandler<Y, B> {
   @Inject SettingsService settingsService;
   @Inject ArtifactStreamService artifactStreamService;
-  @Inject YamlSyncHelper yamlSyncHelper;
+  @Inject YamlHelper yamlHelper;
 
   protected String getSettingId(String appId, String settingName) {
     SettingAttribute settingAttribute = settingsService.getByName(appId, settingName);
@@ -35,7 +40,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStream.Yaml, B
 
   protected B getArtifactStream(String accountId, String yamlFilePath) {
     Validator.notNullCheck("Yaml file path is null", yamlFilePath);
-    return (B) yamlSyncHelper.getArtifactStream(accountId, yamlFilePath);
+    return (B) yamlHelper.getArtifactStream(accountId, yamlFilePath);
   }
 
   @Override
@@ -47,11 +52,58 @@ public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStream.Yaml, B
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId);
-    ArtifactStream artifactStream = yamlSyncHelper.getArtifactStream(accountId, yamlFilePath);
+    ArtifactStream artifactStream = yamlHelper.getArtifactStream(accountId, yamlFilePath);
     if (artifactStream != null) {
       artifactStreamService.delete(appId, artifactStream.getUuid());
     }
   }
+
+  protected void toYaml(Y yaml, B bean) {
+    yaml.setArtifactServerName(getSettingName(bean.getSettingId()));
+    yaml.setMetadataOnly(bean.isMetadataOnly());
+  }
+
+  @Override
+  public B upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    if (!validate(changeContext, changeSetContext)) {
+      return null;
+    }
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    B previous = get(changeContext.getChange().getAccountId(), yamlFilePath);
+    if (previous != null) {
+      toBean(previous, changeContext, previous.getAppId());
+      return (B) artifactStreamService.update(previous);
+
+    } else {
+      String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
+      String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
+
+      B artifactStream = getNewArtifactStreamObject();
+      artifactStream.setServiceId(serviceId);
+      artifactStream.setAppId(appId);
+      toBean(artifactStream, changeContext, appId);
+      return (B) artifactStreamService.create(artifactStream);
+    }
+  }
+
+  protected void toBean(B bean, ChangeContext<Y> changeContext, String appId) {
+    Y yaml = changeContext.getYaml();
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
+    bean.setName(name);
+    bean.setAutoPopulate(false);
+    bean.setSettingId(getSettingId(appId, yaml.getArtifactServerName()));
+    bean.setAutoApproveForProduction(true);
+    bean.setMetadataOnly(yaml.isMetadataOnly());
+  }
+
+  @Override
+  public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
+    Yaml artifactStreamYaml = changeContext.getYaml();
+    return !(isEmpty(artifactStreamYaml.getArtifactServerName()));
+  }
+
+  protected abstract B getNewArtifactStreamObject();
 }

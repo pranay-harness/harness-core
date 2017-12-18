@@ -1,46 +1,43 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder;
-import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Workflow;
-import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
+import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.WorkflowPhase;
+import software.wings.utils.Util;
 import software.wings.yaml.workflow.BasicWorkflowYaml;
-import software.wings.yaml.workflow.BasicWorkflowYaml.Builder;
 
 import java.util.List;
 
 /**
  * @author rktummala on 11/1/17
  */
-public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowYaml, BasicWorkflowYaml.Builder> {
+public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowYaml> {
   @Override
-  protected OrchestrationWorkflow constructOrchestrationWorkflow(WorkflowInfo workflowInfo) {
+  protected void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflow) {
     BasicOrchestrationWorkflowBuilder basicOrchestrationWorkflowBuilder =
         BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow();
+
+    List<WorkflowPhase> phaseList = workflowInfo.getPhaseList();
+    if (!Util.isEmpty(phaseList)) {
+      WorkflowPhase workflowPhase = phaseList.get(0);
+      workflow.withInfraMappingId(workflowPhase.getInfraMappingId()).withServiceId(workflowPhase.getServiceId());
+    }
+
     basicOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
         .withNotificationRules(workflowInfo.getNotificationRules())
         .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
         .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
         .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
         .withUserVariables(workflowInfo.getUserVariables())
-        .withWorkflowPhases(workflowInfo.getPhaseList());
-    return basicOrchestrationWorkflowBuilder.build();
+        .withWorkflowPhases(phaseList);
+    workflow.withOrchestrationWorkflow(basicOrchestrationWorkflowBuilder.build());
   }
 
   @Override
-  protected Builder getYamlBuilder() {
-    return BasicWorkflowYaml.Builder.aYaml();
-  }
-
-  @Override
-  public Workflow upsertFromYaml(ChangeContext<BasicWorkflowYaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    if (changeContext.getChange().getChangeType().equals(ChangeType.ADD)) {
-      return createFromYaml(changeContext, changeSetContext);
-    } else {
-      return updateFromYaml(changeContext, changeSetContext);
-    }
+  public BasicWorkflowYaml toYaml(Workflow bean, String appId) {
+    BasicWorkflowYaml basicWorkflowYaml = BasicWorkflowYaml.builder().build();
+    toYaml(basicWorkflowYaml, bean, appId);
+    return basicWorkflowYaml;
   }
 }

@@ -15,6 +15,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -331,14 +332,22 @@ public abstract class InfrastructureMapping extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static abstract class Yaml extends BaseEntityYaml {
     private String computeProviderType;
     private String serviceName;
-
     private String infraMappingType;
-
     private String deploymentType;
     private String computeProviderName;
-    private String name;
+
+    protected Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName) {
+      super(type, harnessApiVersion);
+      this.computeProviderType = computeProviderType;
+      this.serviceName = serviceName;
+      this.infraMappingType = infraMappingType;
+      this.deploymentType = deploymentType;
+      this.computeProviderName = computeProviderName;
+    }
   }
 }

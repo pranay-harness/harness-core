@@ -7,11 +7,13 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.regions.Regions;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
@@ -74,6 +76,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    */
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonPropertyOrder({"type", "harnessApiVersion", "connectionType"})
+  @NoArgsConstructor
   public static final class Yaml extends InfrastructureMapping.Yaml {
     // maps to restrictionType
     private String restrictions;
@@ -94,324 +98,27 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private List<String> securityGroupIds = new ArrayList<>();
     private List<NameValuePair.Yaml> tags = new ArrayList<>();
 
-    /**
-     * The type Builder.
-     */
-    public static final class Builder {
-      private String computeProviderType;
-      // maps to restrictionType
-      private String restrictions;
-      private String serviceName;
-      // maps to restrictionExpression
-      private String expression;
-      private String infraMappingType;
-      private String type;
-      private String region = "us-east-1";
-      private String deploymentType;
-      private String computeProviderName;
-      // maps to hostConnectionAttrs
-      private String connectionType;
-      private String name;
-      private String loadBalancer;
-      private boolean usePublicDns;
-      private boolean provisionInstances;
-      private String autoScalingGroup;
-      private int desiredCapacity;
-      // These four fields map to AwsInstanceFilter
-      private List<String> vpcs = new ArrayList<>();
-      private List<String> subnetIds = new ArrayList<>();
-      private List<String> securityGroupIds = new ArrayList<>();
-      private List<NameValuePair.Yaml> tags = new ArrayList<>();
-
-      private Builder() {}
-
-      /**
-       * A yaml builder.
-       *
-       * @return the builder
-       */
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      /**
-       * With compute provider type builder.
-       *
-       * @param computeProviderType the compute provider type
-       * @return the builder
-       */
-      public Builder withComputeProviderType(String computeProviderType) {
-        this.computeProviderType = computeProviderType;
-        return this;
-      }
-
-      /**
-       * With restrictions builder.
-       *
-       * @param restrictions the restrictions
-       * @return the builder
-       */
-      public Builder withRestrictions(String restrictions) {
-        this.restrictions = restrictions;
-        return this;
-      }
-
-      /**
-       * With service name builder.
-       *
-       * @param serviceName the service name
-       * @return the builder
-       */
-      public Builder withServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        return this;
-      }
-
-      /**
-       * With expression builder.
-       *
-       * @param expression the expression
-       * @return the builder
-       */
-      public Builder withExpression(String expression) {
-        this.expression = expression;
-        return this;
-      }
-
-      /**
-       * With infra mapping type builder.
-       *
-       * @param infraMappingType the infra mapping type
-       * @return the builder
-       */
-      public Builder withInfraMappingType(String infraMappingType) {
-        this.infraMappingType = infraMappingType;
-        return this;
-      }
-
-      /**
-       * With type builder.
-       *
-       * @param type the type
-       * @return the builder
-       */
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      /**
-       * With region builder.
-       *
-       * @param region the region
-       * @return the builder
-       */
-      public Builder withRegion(String region) {
-        this.region = region;
-        return this;
-      }
-
-      /**
-       * With deployment type builder.
-       *
-       * @param deploymentType the deployment type
-       * @return the builder
-       */
-      public Builder withDeploymentType(String deploymentType) {
-        this.deploymentType = deploymentType;
-        return this;
-      }
-
-      /**
-       * With compute provider name builder.
-       *
-       * @param computeProviderName the compute provider name
-       * @return the builder
-       */
-      public Builder withComputeProviderName(String computeProviderName) {
-        this.computeProviderName = computeProviderName;
-        return this;
-      }
-
-      /**
-       * With connection type builder.
-       *
-       * @param connectionType the connection type
-       * @return the builder
-       */
-      public Builder withConnectionType(String connectionType) {
-        this.connectionType = connectionType;
-        return this;
-      }
-
-      /**
-       * With name builder.
-       *
-       * @param name the name
-       * @return the builder
-       */
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      /**
-       * With load balancer builder.
-       *
-       * @param loadBalancer the load balancer
-       * @return the builder
-       */
-      public Builder withLoadBalancer(String loadBalancer) {
-        this.loadBalancer = loadBalancer;
-        return this;
-      }
-
-      /**
-       * With use public dns builder.
-       *
-       * @param usePublicDns the use public dns
-       * @return the builder
-       */
-      public Builder withUsePublicDns(boolean usePublicDns) {
-        this.usePublicDns = usePublicDns;
-        return this;
-      }
-
-      /**
-       * With provision instances builder.
-       *
-       * @param provisionInstances the provision instances
-       * @return the builder
-       */
-      public Builder withProvisionInstances(boolean provisionInstances) {
-        this.provisionInstances = provisionInstances;
-        return this;
-      }
-
-      /**
-       * With auto scaling group builder.
-       *
-       * @param autoScalingGroup the auto scaling group
-       * @return the builder
-       */
-      public Builder withAutoScalingGroup(String autoScalingGroup) {
-        this.autoScalingGroup = autoScalingGroup;
-        return this;
-      }
-
-      /**
-       * With desired capacity builder.
-       *
-       * @param desiredCapacity the desired capacity
-       * @return the builder
-       */
-      public Builder withDesiredCapacity(int desiredCapacity) {
-        this.desiredCapacity = desiredCapacity;
-        return this;
-      }
-
-      /**
-       * With vpcs builder.
-       *
-       * @param vpcs the vpcs
-       * @return the builder
-       */
-      public Builder withVpcs(List<String> vpcs) {
-        this.vpcs = vpcs;
-        return this;
-      }
-
-      /**
-       * With subnet ids builder.
-       *
-       * @param subnetIds the subnet ids
-       * @return the builder
-       */
-      public Builder withSubnetIds(List<String> subnetIds) {
-        this.subnetIds = subnetIds;
-        return this;
-      }
-
-      /**
-       * With security group ids builder.
-       *
-       * @param securityGroupIds the security group ids
-       * @return the builder
-       */
-      public Builder withSecurityGroupIds(List<String> securityGroupIds) {
-        this.securityGroupIds = securityGroupIds;
-        return this;
-      }
-
-      /**
-       * With tags builder.
-       *
-       * @param tags the tags
-       * @return the builder
-       */
-      public Builder withTags(List<NameValuePair.Yaml> tags) {
-        this.tags = tags;
-        return this;
-      }
-
-      /**
-       * But builder.
-       *
-       * @return the builder
-       */
-      public Builder but() {
-        return aYaml()
-            .withComputeProviderType(computeProviderType)
-            .withRestrictions(restrictions)
-            .withServiceName(serviceName)
-            .withExpression(expression)
-            .withInfraMappingType(infraMappingType)
-            .withType(type)
-            .withRegion(region)
-            .withDeploymentType(deploymentType)
-            .withComputeProviderName(computeProviderName)
-            .withConnectionType(connectionType)
-            .withName(name)
-            .withLoadBalancer(loadBalancer)
-            .withUsePublicDns(usePublicDns)
-            .withProvisionInstances(provisionInstances)
-            .withAutoScalingGroup(autoScalingGroup)
-            .withDesiredCapacity(desiredCapacity)
-            .withVpcs(vpcs)
-            .withSubnetIds(subnetIds)
-            .withSecurityGroupIds(securityGroupIds)
-            .withTags(tags);
-      }
-
-      /**
-       * Build yaml.
-       *
-       * @return the yaml
-       */
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setComputeProviderType(computeProviderType);
-        yaml.setRestrictions(restrictions);
-        yaml.setServiceName(serviceName);
-        yaml.setExpression(expression);
-        yaml.setInfraMappingType(infraMappingType);
-        yaml.setType(type);
-        yaml.setRegion(region);
-        yaml.setDeploymentType(deploymentType);
-        yaml.setComputeProviderName(computeProviderName);
-        yaml.setConnectionType(connectionType);
-        yaml.setName(name);
-        yaml.setLoadBalancer(loadBalancer);
-        yaml.setUsePublicDns(usePublicDns);
-        yaml.setProvisionInstances(provisionInstances);
-        yaml.setAutoScalingGroup(autoScalingGroup);
-        yaml.setDesiredCapacity(desiredCapacity);
-        yaml.setVpcs(vpcs);
-        yaml.setSubnetIds(subnetIds);
-        yaml.setSecurityGroupIds(securityGroupIds);
-        yaml.setTags(tags);
-        return yaml;
-      }
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
+        String expression, String region, String connectionType, String loadBalancer, boolean usePublicDns,
+        boolean provisionInstances, String autoScalingGroup, int desiredCapacity, List<String> vpcs,
+        List<String> subnetIds, List<String> securityGroupIds, List<NameValuePair.Yaml> tags) {
+      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+          computeProviderName);
+      this.restrictions = restrictions;
+      this.expression = expression;
+      this.region = region;
+      this.connectionType = connectionType;
+      this.loadBalancer = loadBalancer;
+      this.usePublicDns = usePublicDns;
+      this.provisionInstances = provisionInstances;
+      this.autoScalingGroup = autoScalingGroup;
+      this.desiredCapacity = desiredCapacity;
+      this.vpcs = vpcs;
+      this.subnetIds = subnetIds;
+      this.securityGroupIds = securityGroupIds;
+      this.tags = tags;
     }
   }
 

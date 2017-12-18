@@ -33,7 +33,6 @@ public class EcrConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Secret Key", required = true)
-  @NotEmpty
   @Encrypted
   private char[] secretKey;
   @Attributes(title = "Region", required = true)

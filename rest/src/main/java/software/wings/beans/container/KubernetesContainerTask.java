@@ -31,6 +31,7 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import lombok.NoArgsConstructor;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
@@ -313,8 +314,12 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @Builder
+  @NoArgsConstructor
   public static class Yaml extends ContainerTask.Yaml {
-    public Yaml() {}
+    @Builder
+    public Yaml(String deploymentType, String advancedType, String advancedConfig,
+        ContainerDefinition.Yaml containerDefinition) {
+      super(deploymentType, advancedType, advancedConfig, containerDefinition);
+    }
   }
 }
