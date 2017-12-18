@@ -32,7 +32,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -43,8 +46,9 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class DelegateFileManagerImpl implements DelegateFileManager {
-  @Inject private ManagerClient managerClient;
-  @Inject private DelegateConfiguration delegateConfiguration;
+  private static final int DEFAULT_MAX_CACHED_ARTIFACT = 2;
+  private ManagerClient managerClient;
+  private DelegateConfiguration delegateConfiguration;
 
   private static final LoadingCache<String, Object> fileIdLocks =
       CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).build(CacheLoader.from(Object::new));
@@ -52,6 +56,14 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final String ARTIFACT_REPO_BASE_DIR = "./repository/artifacts/";
   private static final String ARTIFACT_REPO_TMP_DIR = "./repository/artifacts/tmp/";
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Inject
+  public DelegateFileManagerImpl(ManagerClient managerClient, DelegateConfiguration delegateConfiguration) {
+    this.managerClient = managerClient;
+    this.delegateConfiguration = delegateConfiguration;
+    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this ::deleteCachedArtifacts, 1000, 5 * 60 * 1000,
+        TimeUnit.MILLISECONDS); // periodic cleanup for cached artifacts
+  }
 
   @Override
   public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
@@ -125,6 +137,32 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Override
   public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
     return execute(managerClient.getMetaInfo(fileId, fileBucket, accountId)).getResource();
+  }
+
+  @Override
+  public void deleteCachedArtifacts() {
+    try {
+      File[] files = new File(ARTIFACT_REPO_BASE_DIR).listFiles();
+      Integer maxCachedArtifacts = delegateConfiguration.getMaxCachedArtifacts() != null
+          ? delegateConfiguration.getMaxCachedArtifacts()
+          : DEFAULT_MAX_CACHED_ARTIFACT;
+      if (files != null && files.length > maxCachedArtifacts) {
+        Arrays.sort(files, Comparator.comparingLong(File::lastModified));
+        for (int idx = 0; idx < files.length - maxCachedArtifacts; idx++) {
+          File file = files[idx];
+          synchronized (file.getName()) {
+            if (file.exists() && !file.isDirectory()) {
+              boolean deleted = file.delete();
+              if (deleted) {
+                logger.info("Successfully deleted Artifact file: [{}]", file.getName());
+              }
+            }
+          }
+        }
+      }
+    } catch (Exception ex) {
+      logger.error("Error in deleting cached artifact file", ex);
+    }
   }
 
   private void upload(DelegateFile delegateFile, File content) throws IOException {
