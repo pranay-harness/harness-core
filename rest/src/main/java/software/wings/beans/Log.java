@@ -192,18 +192,22 @@ public class Log extends Base {
     /**
      * Debug log level.
      */
-    DEBUG, /**
-            * Info log level.
-            */
-    INFO, /**
-           * Warn log level.
-           */
-    WARN, /**
-           * Error log level.
-           */
-    ERROR, /**
-            * Fatal log level.
-            */
+    DEBUG,
+    /**
+     * Info log level.
+     */
+    INFO,
+    /**
+     * Warn log level.
+     */
+    WARN,
+    /**
+     * Error log level.
+     */
+    ERROR,
+    /**
+     * Fatal log level.
+     */
     FATAL
   }
 

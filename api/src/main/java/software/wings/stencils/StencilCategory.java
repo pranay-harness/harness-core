@@ -18,21 +18,26 @@ public enum StencilCategory {
   /**
    * Commons stencil category.
    */
-  COMMONS, /**
-            * Commands stencil category.
-            */
-  COMMANDS(1), /**
-                * Controls stencil category.
-                */
-  CONTROLS(0), /**
-                * Environments stencil category.
-                */
-  ENVIRONMENTS(1), /**
-                    * Build stencil category.
-                    */
-  BUILD(0), /**
-             * Scripts stencil category.
-             */
+  COMMONS,
+  /**
+   * Commands stencil category.
+   */
+  COMMANDS(1),
+  /**
+   * Controls stencil category.
+   */
+  CONTROLS(0),
+  /**
+   * Environments stencil category.
+   */
+  ENVIRONMENTS(1),
+  /**
+   * Build stencil category.
+   */
+  BUILD(0),
+  /**
+   * Scripts stencil category.
+   */
   SCRIPTS,
   /**
    * Containers stencil category.
@@ -41,21 +46,26 @@ public enum StencilCategory {
   /**
    * Verifications stencil category.
    */
-  VERIFICATIONS(2), /**
-                     * Copy stencil category.
-                     */
-  COPY, /**
-         * Cloud stencil category.
-         */
-  CLOUD(3), /**
-             * Subworkflow stencil category.
-             */
-  SUB_WORKFLOW(100), /**
-                      * Others stencil category.
-                      */
-  OTHERS(10), /**
-               * Configurations stencil category.
-               */
+  VERIFICATIONS(2),
+  /**
+   * Copy stencil category.
+   */
+  COPY,
+  /**
+   * Cloud stencil category.
+   */
+  CLOUD(3),
+  /**
+   * Subworkflow stencil category.
+   */
+  SUB_WORKFLOW(100),
+  /**
+   * Others stencil category.
+   */
+  OTHERS(10),
+  /**
+   * Configurations stencil category.
+   */
   CONFIGURATIONS,
   /**
    * Collections stencil category.

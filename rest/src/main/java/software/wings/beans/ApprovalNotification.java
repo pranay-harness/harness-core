@@ -116,12 +116,14 @@ public class ApprovalNotification extends ActionableNotification {
     /**
      * Pending approval stage.
      */
-    PENDING, /**
-              * Accepted approval stage.
-              */
-    APPROVED, /**
-               * Rejected approval stage.
-               */
+    PENDING,
+    /**
+     * Accepted approval stage.
+     */
+    APPROVED,
+    /**
+     * Rejected approval stage.
+     */
     REJECTED
   }
 

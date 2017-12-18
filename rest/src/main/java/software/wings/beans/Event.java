@@ -161,12 +161,14 @@ public class Event {
     /**
      * Create type.
      */
-    CREATE, /**
-             * Update type.
-             */
-    UPDATE, /**
-             * Delete type.
-             */
+    CREATE,
+    /**
+     * Update type.
+     */
+    UPDATE,
+    /**
+     * Delete type.
+     */
     DELETE
   }
 
