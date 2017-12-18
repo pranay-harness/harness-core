@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.quartz.JobBuilder;
@@ -19,7 +18,6 @@ import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.instance.ContainerInstanceHelper;
 
 @SetupScheduler
-@Ignore
 public class ContainerSyncJobTest extends WingsBaseTest {
   @Inject private JobScheduler jobScheduler;
 
