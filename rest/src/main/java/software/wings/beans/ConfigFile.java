@@ -128,12 +128,14 @@ public class ConfigFile extends BaseFile implements Encryptable {
     /**
      * All config override type.
      */
-    ALL, /**
-          * Instances config override type.
-          */
-    INSTANCES, /**
-                * Custom config override type.
-                */
+    ALL,
+    /**
+     * Instances config override type.
+     */
+    INSTANCES,
+    /**
+     * Custom config override type.
+     */
     CUSTOM
   }
 

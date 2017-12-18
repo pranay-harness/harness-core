@@ -141,9 +141,10 @@ public class ScpCommandUnit extends SshCommandUnit {
     /**
      * Artifacts scp file category.
      */
-    ARTIFACTS("Application Artifacts"), /**
-                                         * The Application stack.
-                                         */
+    ARTIFACTS("Application Artifacts"),
+    /**
+     * The Application stack.
+     */
     APPLICATION_STACK("Application Stack");
 
     private String name;

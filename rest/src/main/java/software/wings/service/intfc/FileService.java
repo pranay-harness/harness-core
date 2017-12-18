@@ -136,21 +136,26 @@ public interface FileService {
     /**
      * Lob file bucket.
      */
-    LOB("lob"), /**
-                 * Artifacts file bucket.
-                 */
-    ARTIFACTS("artifacts"), /**
-                             * Audits file bucket.
-                             */
-    AUDITS("audits"), /**
-                       * Configs file bucket.
-                       */
-    CONFIGS("configs"), /**
-                         * Logs file bucket.
-                         */
-    LOGS("logs"), /**
-                   * Platforms file bucket.
-                   */
+    LOB("lob"),
+    /**
+     * Artifacts file bucket.
+     */
+    ARTIFACTS("artifacts"),
+    /**
+     * Audits file bucket.
+     */
+    AUDITS("audits"),
+    /**
+     * Configs file bucket.
+     */
+    CONFIGS("configs"),
+    /**
+     * Logs file bucket.
+     */
+    LOGS("logs"),
+    /**
+     * Platforms file bucket.
+     */
     PLATFORMS("platforms");
 
     private String bucketName;

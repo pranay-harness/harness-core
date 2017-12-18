@@ -244,9 +244,10 @@ public enum ContainerFamily {
       return aCommand().withCommandType(CommandType.INSTALL).withGraph(graph).build();
     }
 
-  }, /**
-      * The constant JBOSS.
-      */
+  },
+  /**
+   * The constant JBOSS.
+   */
   JBOSS {
     private static final long serialVersionUID = 2932493038229748527L;
 

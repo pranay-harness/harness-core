@@ -153,9 +153,10 @@ public abstract class AbstractCommandUnit implements CommandUnit {
     /**
      * Stop command unit execution status.
      */
-    STOP, /**
-           * Continue command unit execution status.
-           */
+    STOP,
+    /**
+     * Continue command unit execution status.
+     */
     CONTINUE;
 
     private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;

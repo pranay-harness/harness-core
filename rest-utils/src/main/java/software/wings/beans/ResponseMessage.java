@@ -108,12 +108,14 @@ public class ResponseMessage implements Serializable {
     /**
      * Info response type enum.
      */
-    INFO, /**
-           * Warn response type enum.
-           */
-    WARN, /**
-           * Error response type enum.
-           */
+    INFO,
+    /**
+     * Warn response type enum.
+     */
+    WARN,
+    /**
+     * Error response type enum.
+     */
     ERROR
   }
 
