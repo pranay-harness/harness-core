@@ -16,6 +16,8 @@ public class DelegateConfiguration {
 
   private boolean doUpgrade;
 
+  private Integer maxCachedArtifacts;
+
   /**
    * Getter for property 'managerUrl'.
    *
@@ -72,5 +74,13 @@ public class DelegateConfiguration {
 
   public void setDoUpgrade(boolean doUpgrade) {
     this.doUpgrade = doUpgrade;
+  }
+
+  public Integer getMaxCachedArtifacts() {
+    return maxCachedArtifacts;
+  }
+
+  public void setMaxCachedArtifacts(Integer maxCachedArtifacts) {
+    this.maxCachedArtifacts = maxCachedArtifacts;
   }
 }
