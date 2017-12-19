@@ -5,6 +5,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
+import static software.wings.utils.KubernetesConvention.getKubernetesSecretName;
+import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.common.collect.ImmutableList;
@@ -98,25 +100,26 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
 
-    KubernetesConfig kubernetesConfig;
-    if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
-    } else {
-      kubernetesConfig = gkeClusterService.getCluster(
-          cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), setupParams.getNamespace());
+    KubernetesConfig kubernetesConfig = cloudProviderSetting.getValue() instanceof KubernetesConfig
+        ? (KubernetesConfig) cloudProviderSetting.getValue()
+        : gkeClusterService.getCluster(
+              cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), setupParams.getNamespace());
+
+    String lastCtrlName = lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
+    int revision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
+
+    String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
+
+    if (setupParams.isRollbackDaemonSet()) {
+      String daemonSetName = setupParams.getControllerNamePrefix();
+      executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName, LogLevel.INFO);
+      kubernetesContainerService.rollbackDaemonSet(kubernetesConfig, encryptedDataDetails, daemonSetName);
+      return daemonSetName;
     }
-
-    int revision = KubernetesConvention
-                       .getRevisionFromControllerName(lastReplicationController(
-                           kubernetesConfig, encryptedDataDetails, setupParams.getRcNamePrefix()))
-                       .orElse(-1)
-        + 1;
-
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(setupParams.getRcNamePrefix());
 
     kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, emptyList());
 
-    String secretName = KubernetesConvention.getKubernetesSecretName(setupParams.getImageDetails().getRegistryUrl());
+    String secretName = getKubernetesSecretName(setupParams.getImageDetails().getRegistryUrl());
     kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, emptyList(),
         createRegistrySecret(
             secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));
@@ -130,8 +133,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     boolean isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
     String containerServiceName = isDaemonSet
-        ? setupParams.getRcNamePrefix()
-        : KubernetesConvention.getControllerName(setupParams.getRcNamePrefix(), revision);
+        ? setupParams.getControllerNamePrefix()
+        : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
 
     Map<String, String> serviceLabels =
         ImmutableMap.<String, String>builder()
@@ -289,7 +292,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return loadBalancerEndpoint;
   }
 
-  private String lastReplicationController(
+  private String lastController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
     final HasMetadata[] lastReplicationController = {null};
     final AtomicInteger lastRevision = new AtomicInteger();

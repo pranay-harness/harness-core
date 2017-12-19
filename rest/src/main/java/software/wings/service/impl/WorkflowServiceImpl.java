@@ -60,6 +60,7 @@ import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
+import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
@@ -2150,8 +2151,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (deploymentType == DeploymentType.ECS) {
       return generateRollbackWorkflowPhaseForContainerService(workflowPhase, ECS_SERVICE_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.KUBERNETES) {
-      return generateRollbackWorkflowPhaseForContainerService(
-          workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
+      KubernetesContainerTask containerTask =
+          (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+              appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
+      if (containerTask != null && containerTask.kubernetesType() == DaemonSet.class) {
+        return generateRollbackWorkflowPhaseForDaemonSets(workflowPhase);
+      } else {
+        return generateRollbackWorkflowPhaseForContainerService(
+            workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
+      }
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
       return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
@@ -2325,6 +2333,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return rollbackWorkflowPhase;
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForDaemonSets(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                          .addStep(aNode()
+                                       .withId(getUuid())
+                                       .withType(KUBERNETES_DAEMON_SET_ROLLBACK.name())
+                                       .withName(Constants.ROLLBACK_CONTAINERS)
+                                       .addProperty("rollback", true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .build();
   }
 
   private Map<CommandType, List<Command>> getCommandTypeListMap(Service service) {

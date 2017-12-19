@@ -11,12 +11,14 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
@@ -217,39 +219,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       } else {
         containerInfo.setStatus(Status.FAILURE);
         hasErrors = true;
-        String containerMessage =
-            Joiner.on("], [").join(pod.getStatus()
-                                       .getContainerStatuses()
-                                       .stream()
-                                       .map(status -> {
-                                         ContainerStateWaiting waiting = status.getState().getWaiting();
-                                         ContainerStateTerminated terminated = status.getState().getTerminated();
-                                         ContainerStateRunning running = status.getState().getRunning();
-                                         String msg = status.getName();
-                                         if (running != null) {
-                                           msg += ": Started at " + running.getStartedAt();
-                                         } else if (terminated != null) {
-                                           msg += ": " + terminated.getReason() + " - " + terminated.getMessage();
-                                         } else if (waiting != null) {
-                                           msg += ": " + waiting.getReason() + " - " + waiting.getMessage();
-                                         }
-                                         return msg;
-                                       })
-                                       .collect(toList()));
-        String conditionMessage = Joiner.on("], [").join(pod.getStatus()
-                                                             .getConditions()
-                                                             .stream()
-                                                             .map(cond -> {
-                                                               String msg = cond.getType() + ": " + cond.getStatus();
-                                                               if (cond.getReason() != null) {
-                                                                 msg += " - " + cond.getReason();
-                                                               }
-                                                               if (cond.getMessage() != null) {
-                                                                 msg += " - " + cond.getMessage();
-                                                               }
-                                                               return msg;
-                                                             })
-                                                             .collect(toList()));
+        String containerMessage = Joiner.on("], [").join(
+            pod.getStatus().getContainerStatuses().stream().map(this ::getContainerStatusMessage).collect(toList()));
+        String conditionMessage = Joiner.on("], [").join(
+            pod.getStatus().getConditions().stream().map(this ::getPodConditionMessage).collect(toList()));
         logger.error("Pod {} failed to start. Current status: {}. Container status: [{}]. Condition: [{}].", podName,
             phase, containerMessage, conditionMessage);
         executionLogCallback.saveExecutionLog(
@@ -267,6 +240,32 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       executionLogCallback.saveExecutionLog("Successfully completed operation.", Log.LogLevel.INFO);
     }
     return containerInfos;
+  }
+
+  private String getContainerStatusMessage(ContainerStatus status) {
+    ContainerStateWaiting waiting = status.getState().getWaiting();
+    ContainerStateTerminated terminated = status.getState().getTerminated();
+    ContainerStateRunning running = status.getState().getRunning();
+    String msg = status.getName();
+    if (running != null) {
+      msg += ": Started at " + running.getStartedAt();
+    } else if (terminated != null) {
+      msg += ": " + terminated.getReason() + " - " + terminated.getMessage();
+    } else if (waiting != null) {
+      msg += ": " + waiting.getReason() + " - " + waiting.getMessage();
+    }
+    return msg;
+  }
+
+  private String getPodConditionMessage(PodCondition cond) {
+    String msg = cond.getType() + ": " + cond.getStatus();
+    if (cond.getReason() != null) {
+      msg += " - " + cond.getReason();
+    }
+    if (cond.getMessage() != null) {
+      msg += " - " + cond.getMessage();
+    }
+    return msg;
   }
 
   @Override
@@ -444,6 +443,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).nodes().list();
+  }
+
+  @Override
+  public void rollbackDaemonSet(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    // TODO(brett) - Implement
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,

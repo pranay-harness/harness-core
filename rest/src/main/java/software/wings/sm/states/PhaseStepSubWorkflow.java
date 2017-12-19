@@ -6,6 +6,7 @@ import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilde
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
@@ -189,6 +190,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .build();
       return singletonList(deployRequestElement);
     } else if (phaseStepType == DEPLOY_AWS_LAMBDA) {
+      return new ArrayList<>();
+    } else if (phaseStepType == CONTAINER_SETUP) {
       return new ArrayList<>();
     }
     return null;

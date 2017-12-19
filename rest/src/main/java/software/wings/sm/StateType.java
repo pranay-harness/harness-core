@@ -68,6 +68,7 @@ import software.wings.sm.states.ForkState;
 import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
+import software.wings.sm.states.KubernetesDaemonSetRollback;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
 import software.wings.sm.states.KubernetesReplicationControllerRollback;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
@@ -285,6 +286,10 @@ public enum StateType implements StateTypeDescriptor {
   KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK(KubernetesReplicationControllerRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+
+  KUBERNETES_DAEMON_SET_ROLLBACK(KubernetesDaemonSetRollback.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
