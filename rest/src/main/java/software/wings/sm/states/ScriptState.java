@@ -55,22 +55,10 @@ import javax.inject.Inject;
 
 public class ScriptState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ScriptState.class);
-
   @Inject @Transient private transient ActivityService activityService;
   @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient SecretManager secretManager;
-
-  /**
-   * Create a new Script State with given name.
-   *
-   * @param name name of the state.
-   */
-  public ScriptState(String name) {
-    super(name, StateType.SCRIPT.name());
-  }
-
-  @NotEmpty @Getter @Setter @Attributes(title = "Working Directory") String commandPath;
 
   @NotEmpty @Getter @Setter @Attributes(title = "Script") private String scriptString;
 
@@ -82,6 +70,17 @@ public class ScriptState extends State {
   @Attributes(title = "SSH Key")
   @EnumData(enumDataProvider = SSHKeyDataProvider.class)
   private String sshKeyRef;
+
+  @NotEmpty @Getter @Setter @Attributes(title = "Working Directory") private String commandPath;
+
+  /**
+   * Create a new Script State with given name.
+   *
+   * @param name name of the state.
+   */
+  public ScriptState(String name) {
+    super(name, StateType.SCRIPT.name());
+  }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
