@@ -14,6 +14,7 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -328,5 +329,40 @@ public class ServiceResource {
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("serviceId", serviceId, EQ);
     return new RestResponse<>(serviceResourceService.listLambdaSpecification(pageRequest));
+  }
+
+  @POST
+  @Path("{serviceId}/user-data-specifications")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserDataSpecification> createUserDataSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, UserDataSpecification userDataSpecification) {
+    userDataSpecification.setAppId(appId);
+    userDataSpecification.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.createUserDataSpecification(userDataSpecification));
+  }
+
+  @PUT
+  @Path("{serviceId}/user-data-specifications/{userDataSpecificationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserDataSpecification> updateUserDataSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("userDataSpecificationId") String userDataSpecificationId,
+      UserDataSpecification userDataSpecification) {
+    userDataSpecification.setAppId(appId);
+    userDataSpecification.setServiceId(serviceId);
+    userDataSpecification.setUuid(userDataSpecificationId);
+    return new RestResponse<>(serviceResourceService.updateUserDataSpecification(userDataSpecification));
+  }
+
+  @GET
+  @Path("{serviceId}/user-data-specifications")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<UserDataSpecification>> listUserDataSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<UserDataSpecification> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("serviceId", serviceId, EQ);
+    return new RestResponse<>(serviceResourceService.listUserDataSpecification(pageRequest));
   }
 }

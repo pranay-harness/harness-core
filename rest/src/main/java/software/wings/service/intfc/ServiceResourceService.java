@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Application;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -10,6 +9,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.stencils.Stencil;
@@ -352,6 +352,7 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   /**
    * Gets the list of service commands with the commands
+   *
    * @param appId
    * @param serviceId
    * @return
@@ -360,6 +361,7 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   /**
    * Returns the service commands with the Command details
+   *
    * @param appId
    * @param serviceId
    * @param withCommandDetails
@@ -369,9 +371,18 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   /**
    * Gets service with service commands with command details
+   *
    * @param appId
    * @param serviceId
    * @return
    */
   Service getServiceWithServiceCommands(String appId, String serviceId);
+
+  @ValidationGroups(Create.class)
+  UserDataSpecification createUserDataSpecification(@Valid UserDataSpecification userDataSpecification);
+
+  @ValidationGroups(Update.class)
+  UserDataSpecification updateUserDataSpecification(@Valid UserDataSpecification userDataSpecification);
+
+  PageResponse<UserDataSpecification> listUserDataSpecification(PageRequest<UserDataSpecification> pageRequest);
 }
