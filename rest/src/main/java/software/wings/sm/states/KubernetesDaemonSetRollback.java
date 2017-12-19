@@ -4,7 +4,7 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
+import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.collections.CollectionUtils;
@@ -33,10 +33,10 @@ import software.wings.utils.KubernetesConvention;
 import java.util.stream.Collectors;
 
 /**
- * Created by brett on 3/1/17
+ * Created by brett on 12/18/17
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesReplicationControllerSetup extends ContainerServiceSetup {
+public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
   private String replicationControllerName;
@@ -54,15 +54,15 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   /**
    * Instantiates a new state.
    */
-  public KubernetesReplicationControllerSetup(String name) {
-    super(name, KUBERNETES_REPLICATION_CONTROLLER_SETUP.name());
+  public KubernetesDaemonSetRollback(String name) {
+    super(name, KUBERNETES_DAEMON_SET_ROLLBACK.name());
   }
 
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
       ContainerTask containerTask, String clusterName) {
-    String controllerNamePrefix = isNotEmpty(replicationControllerName)
+    String controllerName = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
 
@@ -92,7 +92,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withProtocol(protocol)
         .withServiceType(serviceType)
         .withTargetPort(targetPort)
-        .withControllerNamePrefix(controllerNamePrefix)
+        .withControllerNamePrefix(controllerName)
+        .withRollbackDaemonSet(true)
         .build();
   }
 
