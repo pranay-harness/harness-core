@@ -229,45 +229,63 @@ class TSAnomlyDetector(object):
         return txn_data_dict
 
     def fast_analysis_metric(self, num_point_per_bucket, metric_name, control_data_dict, test_data_dict):
+            num_points = len(control_data_dict['data'][0])
             control_data_2d = np.array(control_data_dict['data'])
-            tets_data_2d = np.array(test_data_dict['data'])
+            test_data_2d = np.array(test_data_dict['data'])
             # when most of the data (70%) in a bucket are Nan, mean and std of the bucket is set to Nan
-            base_array = np.asarray([np.nan] * control_data_2d.shape[1])
-            std_array = np.asarray([np.nan] * control_data_2d.shape[1])
-            for idx in xrange(control_data_2d.shape[1]-num_point_per_bucket):
-                # if enough data (70%) is recorded it calculates mean otherwise mean remains Nan
-                bucket_data = control_data_2d[:, idx:idx+num_point_per_bucket]
+            base_array = np.asarray([np.nan] * num_points)
+            std_array = np.asarray([np.nan] * num_points)
+            if num_point_per_bucket >= num_points:
+                bucket_data = control_data_2d
                 if np.isnan(bucket_data).sum() < round(0.7*bucket_data.size):
-                    base_array[idx] = np.nanmean(bucket_data)
+                    base_array[:] = np.nanmean(bucket_data)
                     #if std of bucket is zero, it is set to 1
-                    std_array[idx] = 1 if np.nanstd(bucket_data) == 0 else np.nanstd(bucket_data)
-            base_array[control_data_2d.shape[1]-num_point_per_bucket:] = \
-                base_array[control_data_2d.shape[1]-num_point_per_bucket-1]
-            std_array[control_data_2d.shape[1]-num_point_per_bucket:] = \
-                std_array[control_data_2d.shape[1]-num_point_per_bucket-1]
-            #dist_2d_data = (tets_data_2d - base_array)/std_array
-            dist_2d_data = (tets_data_2d - base_array)
-            # if the difference is less a specified
-            # minimum threshold is set to zero. This information is derived from domain knowledge.
-            # For instance, if the difference in average response time is less than
+                    std_array[:] = 1 if np.nanstd(bucket_data) == 0 else np.nanstd(bucket_data)
+            else:
+                num_point_diff = num_points-num_point_per_bucket
+
+                for idx in xrange(num_point_diff):
+                    # if enough data (70%) is recorded it calculates mean otherwise mean remains Nan
+                    bucket_data = control_data_2d[:, idx:idx+num_point_per_bucket]
+                    if np.isnan(bucket_data).sum() < round(0.7*bucket_data.size):
+                        base_array[idx] = np.nanmean(bucket_data)
+                        #if std of bucket is zero, it is set to 1
+                        std_array[idx] = 1 if np.nanstd(bucket_data) == 0 else np.nanstd(bucket_data)
+                base_array[num_point_diff:] = \
+                    base_array[num_point_diff-1]
+                std_array[num_point_diff:] = \
+                    std_array[num_point_diff-1]
+            dist_2d_data = (test_data_2d - base_array)
+            # if the difference is less than a specified minimum threshold, it is set to zero. This information is
+            #  derived from domain knowledge. For instance, if the difference in average response time is less than
             # 50 ms, then it is acceptable regardless of what the distribution tells us.
             # Also, its low deviation if the % change is within a specified value. For now its at 50%
             min_delta = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.DELTA)
             min_ratio = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.RATIO)
             dist_2d_data[np.logical_or(abs(dist_2d_data) < min_delta,
-                                       abs(dist_2d_data) < min_ratio * np.minimum(tets_data_2d, base_array))] = 0
+                                       abs(dist_2d_data) < min_ratio * np.minimum(test_data_2d, base_array))] = 0
             # normalizing distances
             dist_2d_data = dist_2d_data/std_array
-            # for points where  test is Nan and base either has a value or it is Nan, distance is set to 0.
-            dist_2d_data[np.isnan(tets_data_2d)] = 0
-            # for points where baseline is Nan but test has a value, distance is set to maximum or tolerance + 0.1.
-            dist_2d_data[np.logical_and(~np.isnan(tets_data_2d), np.isnan(base_array))] = self._options.tolerance + 0.1
+            # clipping distances at threshold
+            dist_2d_data[dist_2d_data > 3 * self._options.tolerance] = 3 * self._options.tolerance
+            # for points where baseline is Nan but test has a value, distance is set to maximum.
+            dist_2d_data[np.logical_and(~np.isnan(test_data_2d), np.isnan(base_array))] = \
+                3 * self._options.tolerance + 0.1
             metric_deviation_type = self.metric_template.get_deviation_type(metric_name)
             adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, dist_2d_data)
-            weights = np.asarray(range(tets_data_2d.shape[1]))
-            w_dist = np.dot(adjusted_dist, weights) / np.sum(weights)
-            risk = [0 if d < self._options.tolerance else 1 if d <= 2*self._options.tolerance else 2 for d in w_dist]
-            return dict(score=w_dist, risk=risk, control_values=base_array,
+            w_dist = []
+            # weights has value just at points that test has a value
+            cum_weight = np.sum(~np.isnan(test_data_2d), 1)
+            cum_weight[cum_weight == 0] = 1
+            for test_ind in xrange(len(adjusted_dist)):
+                w_dist.append(np.sum(
+                    [((p + 1) * v) for (p, v) in enumerate(adjusted_dist[test_ind]
+                                                           [~ np.isnan(test_data_2d[test_ind, :])])]))
+            w_dist /= ((cum_weight * (cum_weight+1))/2) * 1.
+            risk = [0 if d < self._options.tolerance else 1 if d <= 2 * self._options.tolerance else 2 for d in w_dist]
+            ## replacing all Nans coming from Nans of test data with 0
+            adjusted_dist[np.isnan(test_data_2d)] = 0
+            return dict(score=w_dist, risk=risk, control_values=base_array, distances=adjusted_dist,
                         test_values=test_data_dict['data'])
 
     def analyze_metric(self, txn_name, metric_name, control_txn_data_dict, test_txn_data_dict, fast_analysis=None):
@@ -276,7 +294,7 @@ class TSAnomlyDetector(object):
         test_data_dict = self.get_metrics_data(metric_name, self.metric_template, test_txn_data_dict)
         response = {'results': {}, 'max_risk': -1, 'control_avg': -1, 'test_avg': -1}
         if fast_analysis is None:
-            fast_analysis = True if len(control_data_dict['data']) > 19 else False
+            fast_analysis = True if len(control_data_dict['data']) > 4 else False
         if self.validate(txn_name, metric_name,
                          control_data_dict, test_data_dict):
             if fast_analysis:
@@ -356,28 +374,29 @@ class TSAnomlyDetector(object):
             """
             for index, host in enumerate(test_txn_data_dict[metric_name].keys()):
                 response['results'][host] = {}
-                response['results'][host]['control_data'] = np.ma.masked_array(
-                    analysis_output['control_values'][index],
-                    np.isnan(analysis_output['control_values'][
-                                 index])).filled(0).tolist()
+
                 response['results'][host]['test_data'] = np.ma.masked_array(analysis_output['test_values'][index],
                                                                      np.isnan(analysis_output['test_values'][index]))\
                     .filled(0).tolist()
                 response['results'][host]['score'] = analysis_output['score'][index]
+                response['results'][host]['distance'] = analysis_output['distances'][index].tolist()
                 if fast_analysis:
                     response['results'][host]['control_data'] = np.ma.masked_array(
                         analysis_output['control_values'],
                         np.isnan(analysis_output['control_values'])).filled(0).tolist()
-                    response['results'][host]['distance'] = []
                     response['results'][host]['nn'] = 'base'
-                    response['results'][host]['control_index'] = []
-                    response['results'][host]['test_cuts'] = []
-                    response['results'][host]['optimal_cuts'] = []
-                    response['results'][host]['optimal_data'] = []
-                    response['results'][host]['control_cuts'] = []
-                    response['results'][host]['optimal_data'] = []
+                    response['results'][host]['control_index'] = 0 # []
+                    # response['results'][host]['test_cuts'] = []
+                    # response['results'][host]['optimal_cuts'] = []
+                    # response['results'][host]['optimal_data'] = []
+                    # response['results'][host]['control_cuts'] = []
+
                 else:
-                    response['results'][host]['distance'] = analysis_output['distances'][index].tolist()
+                    response['results'][host]['control_data'] = np.ma.masked_array(
+                        analysis_output['control_values'][index],
+                        np.isnan(analysis_output['control_values'][
+                                     index])).filled(0).tolist()
+
                     response['results'][host]['nn'] = control_txn_data_dict[metric_name].keys()[
                         analysis_output['nn'][index]]
                     response['results'][host]['test_cuts'] = analysis_output['test_cuts'][index].tolist()
@@ -408,8 +427,9 @@ class TSAnomlyDetector(object):
 
         return response
 
+
     @staticmethod
-    def adjust_numeric_dist(self, metric_deviation_type, dist_2d_data):
+    def adjust_numeric_dist(metric_deviation_type, dist_2d_data):
         adjusted_dist = np.copy(dist_2d_data)
         if metric_deviation_type == MetricToDeviationType.HIGHER:
             adjusted_dist[dist_2d_data < 0] = 0
@@ -667,10 +687,13 @@ def main(args):
     logger.info('test_events = ' + str(len(test_metrics)))
 
     # Uncomment when you want to save the files for local debugging
-    # write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json', test_metrics)
-    # write_to_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json',control_metrics)
+    write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/test_live_new.json', test_metrics)
+
+    write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/control_live_new.json',control_metrics)
 
     result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
+    write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/result_new_test.json',
+                  result)
     post_to_wings_server(options, result)
 
 
