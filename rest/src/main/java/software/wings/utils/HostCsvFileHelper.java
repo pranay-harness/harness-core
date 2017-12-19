@@ -42,9 +42,7 @@ public class HostCsvFileHelper {
 
   public List<Host> parseHosts(String infraId, String appId, String envId, BoundedInputStream inputStream) {
     List<Host> hosts = new ArrayList<>();
-    CSVParser csvParser = null;
-    try {
-      csvParser = new CSVParser(new InputStreamReader(inputStream, UTF_8), DEFAULT.withHeader());
+    try (CSVParser csvParser = new CSVParser(new InputStreamReader(inputStream, UTF_8), DEFAULT.withHeader())) {
       List<CSVRecord> records = csvParser.getRecords();
       for (CSVRecord record : records) {
         String hostName = record.get("HOST_NAME");
@@ -64,46 +62,7 @@ public class HostCsvFileHelper {
       }
     } catch (IOException ex) {
       throw new WingsException(INVALID_CSV_FILE);
-    } finally {
-      IOUtils.closeQuietly(csvParser);
     }
     return hosts;
-  }
-
-  /**
-   * Creates the hosts file.
-   *
-   * @param hosts the hosts
-   * @return the file
-   */
-  public File createHostsFile(List<Host> hosts) {
-    File tempDir = Files.createTempDir();
-    File file =
-        new File(tempDir, String.format("Hosts_%s.csv", dateFormatter.format(new Date(System.currentTimeMillis()))));
-    OutputStreamWriter fileWriter = null;
-    try {
-      fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8);
-      final CSVPrinter csvPrinter = new CSVPrinter(fileWriter, DEFAULT);
-      csvPrinter.printRecord(CSVHeader);
-      hosts.forEach(host -> {
-        List row = new ArrayList();
-        row.add(host.getHostName());
-        /*row.add(host.getHostConnAttr() != null ? host.getHostConnAttr().getName() : null);
-        row.add(host.getBastionConnAttr() != null ? host.getBastionConnAttr().getName() : null);*/
-        try {
-          csvPrinter.printRecord(row);
-        } catch (IOException e) {
-          throw new WingsException(UNKNOWN_ERROR);
-        } finally {
-          IOUtils.closeQuietly(csvPrinter);
-        }
-      });
-      fileWriter.flush();
-      csvPrinter.close();
-      fileWriter.close();
-    } catch (Exception ex) {
-      throw new WingsException(UNKNOWN_ERROR);
-    }
-    return file;
   }
 }
