@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -61,8 +62,8 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public void openAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    executorService.submit(() -> openInternal(accountId, appId, alertType, alertData));
+  public Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    return executorService.submit(() -> openInternal(accountId, appId, alertType, alertData));
   }
 
   @Override
@@ -134,7 +135,7 @@ public class AlertServiceImpl implements AlertService {
 
   private void deploymentCompletedInternal(String appId, String executionId) {
     wingsPersistence.createQuery(Alert.class)
-        .field("appId")
+        .field(Alert.APP_ID_KEY)
         .equal(appId)
         .field("type")
         .in(asList(ApprovalNeeded, ManualInterventionNeeded))
@@ -160,7 +161,7 @@ public class AlertServiceImpl implements AlertService {
     Query<Alert> query =
         wingsPersistence.createQuery(Alert.class).field("type").equal(alertType).field("status").equal(Open);
     query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.field("accountId").equal(accountId)
-                                                         : query.field("appId").equal(appId);
+                                                         : query.field(Alert.APP_ID_KEY).equal(appId);
     return query.asList()
         .stream()
         .filter(alert -> {
@@ -190,8 +191,8 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public void deleteByApp(String appId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).field("appId").equal(appId).asList();
+  public void pruneByApplication(String appId) {
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).field(Alert.APP_ID_KEY).equal(appId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }
 

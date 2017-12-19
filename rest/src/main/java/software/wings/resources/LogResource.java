@@ -10,10 +10,12 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.LogService;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 /**
@@ -33,18 +35,21 @@ public class LogResource {
 
   @DelegateAuth
   @POST
-  @Timed
-  @ExceptionMetered
-  public RestResponse<String> save(Log log) {
-    return new RestResponse<>(logService.save(log));
-  }
-
-  @DelegateAuth
-  @POST
   @Path("batched")
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> batchSave(List<Log> logs) {
-    return new RestResponse<>(logService.batchedSave(logs));
+    logService.batchedSave(logs);
+    return new RestResponse<>(new ArrayList<>());
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("activity/{activityId}/unit/{unitName}/batched")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> batchSave(
+      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName, Log log) {
+    return new RestResponse<>(logService.batchedSaveCommandUnitLogs(activityId, unitName, log));
   }
 }

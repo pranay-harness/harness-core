@@ -33,33 +33,39 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     List<EncryptedDataDetail> cloudProviderCredentials = context.getCloudProviderCredentials();
-    String clusterName = context.getClusterName();
     ContainerSetupParams setupParams = context.getContainerSetupParams();
-
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
 
     try {
-      String containerServiceName = executeInternal(cloudProviderSetting, cloudProviderCredentials, clusterName,
-          setupParams, context.getServiceVariables(), executionLogCallback);
       context.setCommandExecutionData(
-          ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build());
+          ContainerSetupCommandUnitExecutionData.builder()
+              .containerServiceName(executeInternal(cloudProviderSetting, cloudProviderCredentials, setupParams,
+                  context.getServiceVariables(), executionLogCallback))
+              .build());
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
+      if (ex instanceof WingsException) {
+        throw ex;
+      }
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage());
     }
   }
 
   protected abstract String executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, ContainerSetupParams setupParams,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams setupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback);
 
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static abstract class Yaml extends AbstractCommandUnit.Yaml {
-    public static abstract class Builder extends AbstractCommandUnit.Yaml.Builder {
-      protected Builder() {}
+    public Yaml(String commandUnitType) {
+      super(commandUnitType);
+    }
+
+    public Yaml(String name, String commandUnitType, String deploymentType) {
+      super(name, commandUnitType, deploymentType);
     }
   }
 }

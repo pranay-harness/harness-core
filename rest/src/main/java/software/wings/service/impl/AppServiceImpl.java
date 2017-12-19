@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.name.Named;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.JobBuilder;
@@ -28,11 +29,13 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -41,6 +44,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
+import software.wings.scheduler.PruneObjectJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -49,6 +53,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.OwnedByApplication;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -62,6 +67,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -80,29 +86,29 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class AppServiceImpl implements AppService {
+  private static final Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
+
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
   private static final int INSTANCE_SYNC_POLL_INTERVAL = 600;
 
-  private final static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
-
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private SettingsService settingsService;
-  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AlertService alertService;
+  @Inject private ArtifactService artifactService;
   @Inject private EnvironmentService environmentService;
   @Inject private ExecutorService executorService;
-  @Inject private SetupService setupService;
-  @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private NotificationService notificationService;
-  @Inject private WorkflowService workflowService;
-  @Inject private ArtifactService artifactService;
-  @Inject private StatisticsService statisticsService;
-  @Inject private RoleService roleService;
-  @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private AlertService alertService;
+  @Inject private NotificationService notificationService;
+  @Inject private PipelineService pipelineService;
+  @Inject private RoleService roleService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private SettingsService settingsService;
+  @Inject private SetupService setupService;
+  @Inject private StatisticsService statisticsService;
   @Inject private TriggerService triggerService;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -165,7 +171,7 @@ public class AppServiceImpl implements AppService {
   void addCronForStateMachineExecutionCleanup(Application application) {
     JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
                         .withIdentity(application.getUuid(), StateMachineExecutionCleanupJob.GROUP)
-                        .usingJobData("appId", application.getUuid())
+                        .usingJobData(StateMachineExecutionCleanupJob.APP_ID_KEY, application.getUuid())
                         .build();
 
     Trigger trigger =
@@ -181,7 +187,7 @@ public class AppServiceImpl implements AppService {
   void addCronForContainerSync(Application application) {
     JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
                         .withIdentity(application.getUuid(), ContainerSyncJob.GROUP)
-                        .usingJobData("appId", application.getUuid())
+                        .usingJobData(ContainerSyncJob.APP_ID_KEY, application.getUuid())
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
@@ -236,7 +242,9 @@ public class AppServiceImpl implements AppService {
                   .listExecutions(
                       aPageRequest()
                           .withLimit(Integer.toString(numberOfExecutions))
-                          .addFilter(aSearchFilter().withField("appId", Operator.EQ, application.getUuid()).build())
+                          .addFilter(aSearchFilter()
+                                         .withField(WorkflowExecution.APP_ID_KEY, Operator.EQ, application.getUuid())
+                                         .build())
                           .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
                           .build(),
                       false)
@@ -262,7 +270,7 @@ public class AppServiceImpl implements AppService {
   private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {
     return notificationService
         .list(aPageRequest()
-                  .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+                  .addFilter(aSearchFilter().withField(Notification.APP_ID_KEY, Operator.EQ, appId).build())
                   .addFilter(aSearchFilter().withField("complete", Operator.EQ, false).build())
                   .addFilter(aSearchFilter().withField("actionable", Operator.EQ, true).build())
                   .build())
@@ -318,32 +326,62 @@ public class AppServiceImpl implements AppService {
       throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
     }
 
-    boolean deleted = wingsPersistence.delete(Application.class, appId);
+    // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
+    // may result in deleting object from a new application created after the first one was deleted,
+    // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
     application.setEntityYamlPath(yamlDirectoryService.getRootPathByApp(application));
-    if (deleted) {
-      executorService.submit(() -> {
-        notificationService.deleteByApplication(appId);
-        environmentService.deleteByApp(application);
-        artifactService.deleteByApplication(appId);
-        workflowService.deleteWorkflowByApplication(appId);
-        workflowService.deleteStateMachinesByApplication(appId);
-        pipelineService.deletePipelineByApplication(appId);
-        serviceResourceService.deleteByApp(application);
-        instanceService.deleteByApp(appId);
-        alertService.deleteByApp(appId);
-        triggerService.deleteByApp(appId);
-        notificationService.sendNotificationAsync(
-            anInformationNotification()
-                .withAppId(application.getUuid())
-                .withAccountId(application.getAccountId())
-                .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-                .withNotificationTemplateVariables(
-                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
-                .build());
-      });
+    yamlChangeSetHelper.applicationYamlChange(application, ChangeType.DELETE);
 
-      yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.DELETE);
+    // First lets make sure that we have persisted a job that will prone the descendant objects
+    PruneObjectJob.addDefaultJob(jobScheduler, Application.class, appId, appId);
+
+    // Do not add too much between these too calls (on top and bottom). We need to persist the job
+    // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
+    // too much though will result in start the job before the object is deleted, this possibility is
+    // handled, but this is still not good.
+
+    // Now we are ready to delete the object.
+    if (wingsPersistence.delete(Application.class, appId)) {
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(application.getUuid())
+              .withAccountId(application.getAccountId())
+              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+              .withNotificationTemplateVariables(
+                  ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
+              .build());
     }
+
+    // Note that if we failed to delete the object we left without the yaml. Likely the users
+    // will not reconsider and start using the object as they never intended to delete it, but
+    // probably they will retry. This is why there is no reason for us to regenerate it at this
+    // point. We should have the necessary APIs elsewhere, if we find the users want it.
+  }
+
+  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
+  public <T> List<T> descendingServices(Class<T> cls) {
+    List<T> descendings = new ArrayList<>();
+
+    for (Field field : AppServiceImpl.class.getDeclaredFields()) {
+      Object obj;
+      try {
+        obj = field.get(this);
+        if (cls.isInstance(obj)) {
+          T descending = (T) obj;
+          descendings.add(descending);
+        }
+      } catch (IllegalAccessException e) {
+      }
+    }
+
+    return descendings;
+  }
+
+  @Override
+  public void pruneDescendingObjects(@NotEmpty String appId) {
+    List<OwnedByApplication> services = descendingServices(OwnedByApplication.class);
+    PruneObjectJob.pruneDescendingObjects(
+        services, appId, appId, (descending) -> { descending.pruneByApplication(appId); });
   }
 
   @Override

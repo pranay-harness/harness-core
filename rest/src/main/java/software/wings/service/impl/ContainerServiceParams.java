@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.SettingAttribute;
@@ -7,6 +8,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 public class ContainerServiceParams {

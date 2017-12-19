@@ -18,6 +18,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -32,9 +34,8 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Base implements UuidAware {
-  /**
-   * The constant GLOBAL_APP_ID.
-   */
+  public static final String APP_ID_KEY = "appId";
+
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
@@ -90,5 +91,13 @@ public class Base implements UuidAware {
 
     lastUpdatedAt = currentTimeMillis();
     lastUpdatedBy = embeddedUser;
+  }
+
+  @SchemaIgnore
+  @JsonIgnore
+  public Map<String, Object> getShardKeys() {
+    HashMap shardKeys = new HashMap();
+    shardKeys.put("appId", appId);
+    return shardKeys;
   }
 }

@@ -19,6 +19,7 @@ import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +41,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private CacheHelper cacheHelper;
+  @Inject private Clock clock;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
@@ -70,7 +72,6 @@ public class DelegateQueueTask implements Runnable {
 
       wingsPersistence.update(
           releaseLongQueuedTasks, wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId"));
-
       // Find tasks which are timed out and update their status to FAILED.
       List<DelegateTask> longRunningTimedOutTasks = new ArrayList<>();
       try {
@@ -119,6 +120,55 @@ public class DelegateQueueTask implements Runnable {
           }
         });
       }
+
+      // Find tasks which have been queued for too long and update their status to FAILED.
+      List<DelegateTask> queuedTimedOutTasks = new ArrayList<>();
+      try {
+        queuedTimedOutTasks =
+            wingsPersistence.createQuery(DelegateTask.class)
+                .field("status")
+                .equal(Status.QUEUED)
+                .asList()
+                .stream()
+                .filter(delegateTask -> clock.millis() - delegateTask.getLastUpdatedAt() > TimeUnit.HOURS.toMillis(1))
+                .collect(Collectors.toList());
+      } catch (com.esotericsoftware.kryo.KryoException kryo) {
+        logger.warn("Delegate task schema backwards incompatibility", kryo);
+        for (Key<DelegateTask> key :
+            wingsPersistence.createQuery(DelegateTask.class).field("status").equal(Status.QUEUED).asKeyList()) {
+          try {
+            wingsPersistence.get(DelegateTask.class, key.getId().toString());
+          } catch (com.esotericsoftware.kryo.KryoException ex) {
+            wingsPersistence.delete(DelegateTask.class, key.getId().toString());
+          }
+        }
+      }
+
+      if (queuedTimedOutTasks.size() > 0) {
+        logger.info("Found {} long queued tasks, to be killed", queuedTimedOutTasks.size());
+        queuedTimedOutTasks.forEach(delegateTask -> {
+          Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                                .field("status")
+                                                .equal(Status.QUEUED)
+                                                .field(Mapper.ID_KEY)
+                                                .equal(delegateTask.getUuid());
+          UpdateOperations<DelegateTask> updateOperations =
+              wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", Status.ERROR);
+
+          DelegateTask updatedDelegateTask =
+              wingsPersistence.getDatastore().findAndModify(updateQuery, updateOperations);
+
+          if (updatedDelegateTask != null) {
+            logger.info("Long queued delegate task [{}] is terminated", updatedDelegateTask.getUuid());
+            waitNotifyEngine.notify(
+                updatedDelegateTask.getWaitId(), anErrorNotifyResponseData().withErrorMessage("Task timeout.").build());
+          } else {
+            logger.error("Delegate task [{}] could not be updated", delegateTask.getUuid());
+            // more error handling here.
+          }
+        });
+      }
+
       // Re-broadcast queued sync tasks not picked up by any Delegate
       Cache<String, DelegateTask> delegateSyncCache =
           cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
@@ -127,9 +177,17 @@ public class DelegateQueueTask implements Runnable {
           try {
             DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
             if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
-              logger.info("Re-broadcast queued sync task [{}]", syncDelegateTask.getUuid());
-              broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
-                  .broadcast(syncDelegateTask);
+              // If it's been more than a minute, remove it
+              if (clock.millis() - syncDelegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(10)) {
+                logger.warn("Evicting old delegate sync task {}", syncDelegateTask.getUuid());
+                Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                    .remove(syncDelegateTask.getUuid());
+              } else {
+                logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
+                    syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
+                broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
+                    .broadcast(syncDelegateTask);
+              }
             }
           } catch (Exception ex) {
             logger.error("Could not fetch delegate task from queue ", ex);
@@ -142,6 +200,7 @@ public class DelegateQueueTask implements Runnable {
         delegateSyncCache.clear();
       }
 
+      // Re-broadcast queued async tasks not picked up by any Delegate
       List<DelegateTask> unassignedTasks = null;
       try {
         unassignedTasks = wingsPersistence.createQuery(DelegateTask.class)

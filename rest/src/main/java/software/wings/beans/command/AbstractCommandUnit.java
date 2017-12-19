@@ -1,11 +1,5 @@
 package software.wings.beans.command;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -159,9 +153,10 @@ public abstract class AbstractCommandUnit implements CommandUnit {
     /**
      * Stop command unit execution status.
      */
-    STOP, /**
-           * Continue command unit execution status.
-           */
+    STOP,
+    /**
+     * Continue command unit execution status.
+     */
     CONTINUE;
 
     private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
@@ -202,44 +197,23 @@ public abstract class AbstractCommandUnit implements CommandUnit {
         @Type(value = ResizeCommandUnit.Yaml.class, name = "RESIZE"),
         @Type(value = CodeDeployCommandUnit.Yaml.class, name = "CODE_DEPLOY"),
         @Type(value = AwsLambdaCommandUnit.Yaml.class, name = "AWS_LAMBDA"),
-        @Type(value = KubernetesResizeCommandUnit.Yaml.class, name = "RESIZE_KUBERNETES")
+        @Type(value = KubernetesResizeCommandUnit.Yaml.class, name = "RESIZE_KUBERNETES"),
+        @Type(value = KubernetesSetupCommandUnit.Yaml.class, name = "KUBERNETES_SETUP"),
+        @Type(value = EcsSetupCommandUnit.Yaml.class, name = "ECS_SETUP")
   })
   public static abstract class Yaml extends BaseYaml {
     private String name;
     private String commandUnitType;
     private String deploymentType;
 
-    public static abstract class Builder {
-      protected String name;
-      protected String commandUnitType;
-      protected String deploymentType;
+    public Yaml(String commandUnitType) {
+      this.commandUnitType = commandUnitType;
+    }
 
-      protected Builder() {}
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder withCommandUnitType(String commandUnitType) {
-        this.commandUnitType = commandUnitType;
-        return this;
-      }
-
-      public Builder withDeploymentType(String deploymentType) {
-        this.deploymentType = deploymentType;
-        return this;
-      }
-
-      public <T extends AbstractCommandUnit.Yaml> T build() {
-        T yaml = getCommandUnitYaml();
-        yaml.setName(name);
-        yaml.setCommandUnitType(commandUnitType);
-        yaml.setDeploymentType(deploymentType);
-        return yaml;
-      }
-
-      protected abstract <T extends AbstractCommandUnit.Yaml> T getCommandUnitYaml();
+    public Yaml(String name, String commandUnitType, String deploymentType) {
+      this.name = name;
+      this.commandUnitType = commandUnitType;
+      this.deploymentType = deploymentType;
     }
   }
 }

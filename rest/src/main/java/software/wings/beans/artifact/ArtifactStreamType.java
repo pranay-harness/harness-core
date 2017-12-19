@@ -22,27 +22,34 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   /**
    * Jenkins source type.
    */
-  JENKINS(JenkinsArtifactStream.class), /**
-                                         * BambooService source type.
-                                         */
-  BAMBOO(BambooArtifactStream.class), /**
-                                       * Docker source type.
-                                       */
-  DOCKER(DockerArtifactStream.class), /**
-                                       * ECR source type.
-                                       */
-  ECR(EcrArtifactStream.class), /**
-                                 * Google Container Registry source type.
-                                 */
-  GCR(GcrArtifactStream.class), /**
-                                 * Nexus Artifact source type.
-                                 */
-  NEXUS(NexusArtifactStream.class), /**
-                                     * Artifactory Artifact source type.
-                                     */
-  ARTIFACTORY(ArtifactoryArtifactStream.class), /**
-
+  JENKINS(JenkinsArtifactStream.class),
+  /**
+   * BambooService source type.
    */
+  BAMBOO(BambooArtifactStream.class),
+  /**
+   * Docker source type.
+   */
+  DOCKER(DockerArtifactStream.class),
+  /**
+   * ECR source type.
+   */
+  ECR(EcrArtifactStream.class),
+  /**
+   * Google Container Registry source type.
+   */
+  GCR(GcrArtifactStream.class),
+  /**
+   * Nexus Artifact source type.
+   */
+  NEXUS(NexusArtifactStream.class),
+  /**
+   * Artifactory Artifact source type.
+   */
+  ARTIFACTORY(ArtifactoryArtifactStream.class),
+  /**
+
+     */
   ARTIFACTORYDOCKER(ArtifactoryDockerArtifactStream.class),
   /**
    * Amazon S3 source type.

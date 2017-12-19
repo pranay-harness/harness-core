@@ -79,6 +79,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -115,6 +116,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CacheHelper cacheHelper;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
+  @Inject private Clock clock;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -452,6 +454,7 @@ public class DelegateServiceImpl implements DelegateService {
     String taskId = UUIDGenerator.getUuid();
     task.setQueueName(taskId);
     task.setUuid(taskId);
+    task.setCreatedAt(clock.millis());
     IQueue<T> topic = hazelcastInstance.getQueue(taskId);
     cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
@@ -554,7 +557,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (delegateTask != null) {
       if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
-      } else {
+      } else if (clock.millis() - delegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(5)) {
         blacklistDelegateForTask(delegateId, delegateTask);
       }
     }
@@ -562,6 +565,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void blacklistDelegateForTask(String delegateId, DelegateTask delegateTask) {
+    logger.info("Blacklisting delegate {} for task {}", delegateId, delegateTask.getUuid());
     List<String> blacklistedDelegates =
         Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new ArrayList<>());
     blacklistedDelegates.add(delegateId);
@@ -588,10 +592,15 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
     // Tell delegate whether to proceed anyway because all eligible delegates failed.
     if (isValidationComplete(taskId)) {
+      logger.info("Validation attempts are complete for task {}", taskId);
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
       if (delegateTask != null) {
         return assignTask(delegateId, taskId, delegateTask);
+      } else {
+        logger.info("Task {} not found or was already assigned", taskId);
       }
+    } else {
+      logger.info("Task {} is still being validated");
     }
     return null;
   }
@@ -636,12 +645,13 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateTask delegateTask = cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).get(taskId);
     if (delegateTask != null) {
       // Sync
-      logger.info("Delegate task from cache: {}", delegateTask.getUuid());
+      logger.info("Got delegate task from cache: {}", delegateTask.getUuid());
       if (!isBlank(delegateTask.getDelegateId())) {
         logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
         delegateTask = null;
       }
     } else {
+      logger.info("Delegate task {} not in cache, checking database.", taskId);
       // Async
       delegateTask = wingsPersistence.createQuery(DelegateTask.class)
                          .field("accountId")
@@ -712,7 +722,7 @@ public class DelegateServiceImpl implements DelegateService {
           wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", DelegateTask.Status.STARTED);
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
-      logger.info("Delegate task from cache: {}", delegateTask.getUuid());
+      logger.info("Removing delegate task from cache: {}", delegateTask.getUuid());
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
     }
     return delegateTask;

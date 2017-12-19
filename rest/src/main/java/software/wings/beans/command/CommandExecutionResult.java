@@ -177,12 +177,14 @@ public class CommandExecutionResult implements NotifyResponseData {
     /**
      * Success execution status.
      */
-    SUCCESS, /**
-              * Failure execution status.
-              */
-    FAILURE, /**
-              * Running execution status.
-              */
+    SUCCESS,
+    /**
+     * Failure execution status.
+     */
+    FAILURE,
+    /**
+     * Running execution status.
+     */
     RUNNING,
 
     /**

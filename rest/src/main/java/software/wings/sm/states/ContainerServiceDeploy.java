@@ -52,6 +52,7 @@ import software.wings.beans.command.CommandExecutionData;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.Constants;
@@ -118,6 +119,7 @@ public abstract class ContainerServiceDeploy extends State {
         return downsizeOldInstances(contextData, executionData);
       }
     } catch (WingsException e) {
+      logger.warn(e.getMessage(), e);
       throw e;
     } catch (Exception e) {
       logger.warn(e.getMessage(), e);
@@ -360,6 +362,9 @@ public abstract class ContainerServiceDeploy extends State {
 
   public abstract String getCommandName();
 
+  protected abstract ContainerResizeParams buildContainerResizeParams(
+      ContextData contextData, List<ContainerServiceData> desiredCounts);
+
   private Activity buildActivity(ExecutionContext context, ContextData contextData) {
     Activity activity = Activity.builder()
                             .applicationName(contextData.app.getName())
@@ -447,18 +452,15 @@ public abstract class ContainerServiceDeploy extends State {
 
   private CommandExecutionContext buildCommandExecutionContext(
       ContextData contextData, List<ContainerServiceData> desiredCounts, String activityId) {
+    ContainerResizeParams params = buildContainerResizeParams(contextData, desiredCounts);
     return aCommandExecutionContext()
         .withAccountId(contextData.app.getAccountId())
         .withAppId(contextData.app.getUuid())
         .withEnvId(contextData.env.getUuid())
-        .withClusterName(contextData.containerElement.getClusterName())
-        .withNamespace(contextData.containerElement.getNamespace())
-        .withRegion(contextData.region)
         .withActivityId(activityId)
         .withCloudProviderSetting(contextData.settingAttribute)
         .withCloudProviderCredentials(contextData.encryptedDataDetails)
-        .withDesiredCounts(desiredCounts)
-        .withEcsServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
+        .withContainerResizeParams(params)
         .build();
   }
 
@@ -466,7 +468,7 @@ public abstract class ContainerServiceDeploy extends State {
     return new ContextData(context, this);
   }
 
-  private static class ContextData {
+  protected static class ContextData {
     final Application app;
     final Environment env;
     final Service service;

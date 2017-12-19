@@ -1,6 +1,8 @@
 package software.wings.beans.infrastructure.instance;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -10,8 +12,10 @@ import software.wings.beans.EmbeddedUser;
  *
  * @author rktummala on 09/13/17
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "containerDeploymentInfo", noClassnameStored = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentInfo extends Base {
   private String accountId;
   private String serviceId;

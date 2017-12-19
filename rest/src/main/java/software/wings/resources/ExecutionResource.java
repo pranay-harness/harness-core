@@ -17,6 +17,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -101,6 +102,10 @@ public class ExecutionResource {
     filter.setFieldValues(authorizedAppIds.toArray());
     filter.setOp(Operator.IN);
     pageRequest.addFilter(filter);
+
+    if (pageRequest.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
+      pageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
+    }
 
     if (workflowTypes != null && !workflowTypes.isEmpty()) {
       pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.IN, workflowTypes.toArray()).build());

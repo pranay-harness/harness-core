@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -17,8 +16,8 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -61,13 +60,13 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -84,6 +83,7 @@ import javax.inject.Inject;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
+@Ignore
 public class SecretTextTest extends WingsBaseTest {
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
@@ -745,7 +745,8 @@ public class SecretTextTest extends WingsBaseTest {
     String encryptedUuid = encryptedData.getUuid();
 
     File download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
 
     List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(secretFileId, CONFIG_FILE);
     assertEquals(1, changeLogs.size());
@@ -776,7 +777,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertTrue(encryptedData.getParentIds().contains(configFileId));
 
     download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
 
     changeLogs = secretManager.getChangeLogs(secretFileId, SECRET_TEXT);
     assertEquals(2, changeLogs.size());
@@ -803,7 +805,8 @@ public class SecretTextTest extends WingsBaseTest {
     configService.update(configFile, null);
 
     download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(newFileToSave), FileUtils.readFileToString(download));
+    assertEquals(FileUtils.readFileToString(newFileToSave, Charset.defaultCharset()),
+        FileUtils.readFileToString(download, Charset.defaultCharset()));
   }
 
   @Test

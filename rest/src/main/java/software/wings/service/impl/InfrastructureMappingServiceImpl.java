@@ -21,6 +21,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.utils.Validator.*;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -178,7 +179,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
-    Validator.notNullCheck("Service Template", serviceTemplate);
+    notNullCheck("Service Template", serviceTemplate);
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
     if (computeProviderSetting != null) {
@@ -215,7 +216,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validatePyInfraMapping((PhysicalInfrastructureMapping) infraMapping);
     }
 
-    InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
+    InfrastructureMapping savedInfraMapping = duplicateCheck(
+        () -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping), "name", infraMapping.getName());
     executorService.submit(() -> queueYamlChangeSet(savedInfraMapping, ChangeType.ADD));
     return savedInfraMapping;
   }
@@ -485,7 +487,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public List<ServiceInstance> selectServiceInstances(
       String appId, String infraMappingId, String workflowExecutionId, ServiceInstanceSelectionParams selectionParams) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    notNullCheck("Infra Mapping", infrastructureMapping);
 
     List<Host> hosts;
     if (infrastructureMapping instanceof AwsInfrastructureMapping
@@ -525,7 +527,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       SettingAttribute computeProviderSetting = settingsService.get(awsInfraMapping.getComputeProviderSettingId());
-      Validator.notNullCheck("Compute Provider", computeProviderSetting);
+      notNullCheck("Compute Provider", computeProviderSetting);
       return infrastructureProvider
           .listHosts(awsInfraMapping, computeProviderSetting,
               secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
@@ -561,7 +563,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listClusters(String appId, String deploymentType, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     String type = computeProviderSetting.getValue().getType();
     if (AWS.name().equals(type)) {
@@ -580,7 +582,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listImages(String appId, String deploymentType, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -593,7 +595,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listRegions(String appId, String deploymentType, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -606,7 +608,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listInstanceTypes(String appId, String deploymentType, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -619,7 +621,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listInstanceRoles(String appId, String deploymentType, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -632,14 +634,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public Map<String, String> listAwsIamRoles(String appId, String infraMappingId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Service Infrastructure", infrastructureMapping);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
     return listAllRoles(appId, infrastructureMapping.getComputeProviderSettingId());
   }
 
   @Override
   public Set<String> listTags(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -652,7 +654,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listAutoScalingGroups(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -665,7 +667,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public Map<String, String> listAllRoles(String appId, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -678,7 +680,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listVPC(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -691,7 +693,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listSecurityGroups(String appId, String computeProviderId, String region, List<String> vpcIds) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -704,7 +706,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -717,7 +719,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public Map<String, String> listLoadBalancers(String appId, String deploymentType, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -737,10 +739,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public Map<String, String> listLoadBalancers(String appId, String infraMappingId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Service Infrastructure", infrastructureMapping);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (infrastructureMapping instanceof AwsInfrastructureMapping
         || infrastructureMapping instanceof EcsInfrastructureMapping) {
@@ -764,7 +766,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listClassicLoadBalancers(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -778,7 +780,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public Map<String, String> listTargetGroups(
       String appId, String deploymentType, String computeProviderId, String loadBalancerName) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
@@ -792,10 +794,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public Map<String, String> listTargetGroups(String appId, String infraMappingId, String loadbalancerName) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Service Infrastructure", infrastructureMapping);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (infrastructureMapping instanceof AwsInfrastructureMapping
         || infrastructureMapping instanceof EcsInfrastructureMapping) {
@@ -812,7 +814,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<HostValidationResponse> validateHost(@Valid HostValidationRequest validationRequest) {
     SettingAttribute computeProviderSetting = settingsService.get(validationRequest.getComputeProviderSettingId());
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (!PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
       throw new WingsException(INVALID_REQUEST, "message", "Invalid infrastructure provider");
@@ -838,7 +840,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listCodeDeployApplicationNames(String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listApplications(region, computeProviderSetting,
@@ -850,7 +852,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting,
@@ -862,7 +864,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting,
@@ -874,7 +876,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    notNullCheck("Infra Mapping", infrastructureMapping);
     return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, workflowExecutionId);
   }
 
@@ -893,7 +895,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .field("computeProviderSettingId")
                                                       .equal(computeProviderId)
                                                       .get();
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    notNullCheck("Infra Mapping", infrastructureMapping);
 
     return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, null);
   }
@@ -908,7 +910,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
-      Validator.notNullCheck("Compute Provider", computeProviderSetting);
+      notNullCheck("Compute Provider", computeProviderSetting);
       List<Host> hosts = infrastructureProvider
                              .listHosts(awsInfrastructureMapping, computeProviderSetting,
                                  secretManager.getEncryptionDetails(
@@ -970,12 +972,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    notNullCheck("Infra Mapping", infrastructureMapping);
 
     if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       SettingAttribute computeProviderSetting =
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      Validator.notNullCheck("Compute Provider", computeProviderSetting);
+      notNullCheck("Compute Provider", computeProviderSetting);
 
       AwsInfrastructureProvider awsInfrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(

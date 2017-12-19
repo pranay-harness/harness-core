@@ -76,7 +76,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     State state = executionEvent.getState();
     PhaseSubWorkflow phaseSubWorkflow = null;
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
+        workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
     if (state.getStateType().equals(StateType.PHASE.name()) && state instanceof PhaseSubWorkflow) {
       phaseSubWorkflow = (PhaseSubWorkflow) state;
 

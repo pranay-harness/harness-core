@@ -3,6 +3,7 @@ package software.wings.cloudprovider.gke;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -45,6 +46,7 @@ import software.wings.service.impl.KubernetesHelperService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import javax.inject.Inject;
 
 /**
@@ -127,7 +129,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedControllers).withName(args.capture());
+    verify(namespacedControllers, times(2)).withName(args.capture());
     assertThat(args.getValue().equals("ctrl"));
     verify(scalableReplicationController).delete();
   }
@@ -165,8 +167,10 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     when(scalableReplicationController.get())
         .thenReturn(new ReplicationControllerBuilder().withNewSpec().withReplicas(8).endSpec().build());
 
-    int count = kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, Collections.emptyList(), "foo");
+    Optional<Integer> count =
+        kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, Collections.emptyList(), "foo");
 
-    assertThat(count).isEqualTo(8);
+    assertThat(count.isPresent()).isTrue();
+    assertThat(count.get()).isEqualTo(8);
   }
 }

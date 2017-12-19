@@ -74,12 +74,43 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 
 `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar delegate/config-delegate.yml &`
 
+### Editing setup
 
-### IDE Setup
+1) Install clang-format - https://clang.llvm.org/docs/ClangFormat.html
+
+`brew install clang-format`
+
+helper shell scripts:
+
+`git clang-format` - makes sure all staged in git files are reformatted
+
+`find . -iname *.java | xargs clang-format -i` - formats all java files from the current directory down
+
+
+
+### IntelliJ Setup
 
 1) Install IntelliJ community edition
 2) Import wings portal as maven project
-3) Import Code Style tools/src/main/resources/do-not-use/intellij-java-google-style.xml (Preferences->Editor->CodeStyle)
+3) Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
+   (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
+
+   **NOTE:** The original version does not allow for reformatting the whole file without selecting it first.
+         Since we are planning to commit to the new format fully, such feature make a lot more sence.
+         If you would like to have it, please use install from disk feature to install the version that
+         I modified that is in: `toolset/code_style/ClangFormatJ`
+
+   **WARNING:** For unclear reason in some environments the plugin causes IntelliJ to hang. If you are unlucky
+         to be one of those cases there is alternative. Please use the external 3rd-party tool integration as
+         described here: https://www.jetbrains.com/help/idea/configuring-third-party-tools.html.
+         Configure the tool to look like shown on the image:
+
+   ![config image](img/clang-format-config.png).
+
+   Then follow these instructions https://www.jetbrains.com/help/idea/configuring-keyboard-shortcuts.html to
+   assign whatever key combination you would like it to be triggered on.
+
+
 4) Install Lombok Plugin: https://projectlombok.org/setup/intellij
 5) Change settings to mark injected fields as assigned. (Settings->Editor ->Inspections ->Java ->Declaration Redundancy->Unused Declarations->Entry Points->
 Annotations->Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.

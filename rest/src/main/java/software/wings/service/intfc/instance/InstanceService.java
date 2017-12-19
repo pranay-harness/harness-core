@@ -4,6 +4,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
+import software.wings.service.intfc.OwnedByApplication;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -15,7 +16,7 @@ import javax.validation.Valid;
 /**
  * @author rktummala on 08/17/17
  */
-public interface InstanceService {
+public interface InstanceService extends OwnedByApplication {
   /**
    * Save instance information.
    *
@@ -61,14 +62,6 @@ public interface InstanceService {
    * @param instanceId the instance id
    */
   boolean delete(String instanceId);
-
-  /**
-   * Deletes all the instances of an app
-   *
-   * @param appId application id
-   * @return
-   */
-  boolean deleteByApp(String appId);
 
   /**
    * Deletes the instances with the given ids

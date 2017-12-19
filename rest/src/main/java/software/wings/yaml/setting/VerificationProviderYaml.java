@@ -2,14 +2,14 @@ package software.wings.yaml.setting;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.settings.SettingValue;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 public abstract class VerificationProviderYaml extends SettingValue.Yaml {
-  public VerificationProviderYaml() {}
-
-  public VerificationProviderYaml(String type, String name) {
-    super(type, name);
+  public VerificationProviderYaml(String type) {
+    super(type);
   }
 }

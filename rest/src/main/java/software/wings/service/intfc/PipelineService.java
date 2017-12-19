@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
@@ -14,7 +15,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 10/26/16.
  */
-public interface PipelineService {
+public interface PipelineService extends OwnedByApplication {
   /**
    * List pipelines page response.
    *
@@ -70,12 +71,12 @@ public interface PipelineService {
   boolean deletePipeline(String appId, String pipelineId);
 
   /**
-   * Delete pipeline by application
+   * Prune pipeline descending objects.
    *
-   * @param appId
-   * @return
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
    */
-  boolean deletePipelineByApplication(String appId);
+  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String pipelineId);
 
   /**
    * Clone pipeline pipeline.

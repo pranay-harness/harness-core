@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SchedulerConfig {
   @JsonProperty(defaultValue = "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")
   private String jobstoreclass = "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore";
+
   @JsonProperty(defaultValue = "1") private String threadCount = "1";
   @JsonProperty(defaultValue = "10000") private String idleWaitTime = "10000";
   @JsonProperty(defaultValue = "true") private String autoStart = "true";

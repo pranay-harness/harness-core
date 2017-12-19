@@ -1,7 +1,6 @@
 package software.wings.beans.command;
 
 import static software.wings.beans.command.CodeDeployCommandExecutionData.Builder.aCodeDeployCommandExecutionData;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -11,6 +10,7 @@ import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -46,7 +46,6 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     CodeDeployParams codeDeployParams = context.getCodeDeployParams();
-    String region = context.getRegion();
     String deploymentGroupName = codeDeployParams.getDeploymentGroupName();
     String applicationName = codeDeployParams.getApplicationName();
     String deploymentConfigurationName = codeDeployParams.getDeploymentConfigurationName();
@@ -66,13 +65,14 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
-    CommandExecutionStatus commandExecutionStatus = FAILURE;
+    CommandExecutionStatus commandExecutionStatus;
 
     try {
       executionLogCallback.saveExecutionLog(
           String.format("Deploying application [%s] with following configuration.", applicationName), LogLevel.INFO);
       executionLogCallback.saveExecutionLog(String.format("Application Name: [%s]", applicationName), LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(String.format("Aws Region: [%s]", region), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(
+          String.format("Aws Region: [%s]", codeDeployParams.getRegion()), LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
           String.format("Deployment Group: [%s]", deploymentGroupName), LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
@@ -107,15 +107,16 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
                                                  .withEvents(autoRollbackConfigurations))
               .withFileExistsBehavior(fileExistsBehavior);
 
-      CodeDeployDeploymentInfo codeDeployDeploymentInfo = awsCodeDeployService.deployApplication(region,
-          cloudProviderSetting, context.getCloudProviderCredentials(), createDeploymentRequest, executionLogCallback);
+      CodeDeployDeploymentInfo codeDeployDeploymentInfo =
+          awsCodeDeployService.deployApplication(codeDeployParams.getRegion(), cloudProviderSetting,
+              context.getCloudProviderCredentials(), createDeploymentRequest, executionLogCallback);
       commandExecutionStatus = codeDeployDeploymentInfo.getStatus();
       // go over instance data in command execution data and prepare execution data
       context.setCommandExecutionData(
           aCodeDeployCommandExecutionData().withInstances(codeDeployDeploymentInfo.getInstances()).build());
     } catch (Exception ex) {
-      ex.printStackTrace();
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", ex);
+      executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
     executionLogCallback.saveExecutionLog(
         String.format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);
@@ -127,21 +128,12 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
   @JsonTypeName("CODE_DEPLOY")
   public static class Yaml extends AbstractCommandUnit.Yaml {
     public Yaml() {
-      super();
-      setCommandUnitType(CommandUnitType.CODE_DEPLOY.name());
+      super(CommandUnitType.CODE_DEPLOY.name());
     }
 
-    public static final class Builder extends AbstractCommandUnit.Yaml.Builder {
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      @Override
-      protected Yaml getCommandUnitYaml() {
-        return new CodeDeployCommandUnit.Yaml();
-      }
+    @Builder
+    public Yaml(String name, String deploymentType) {
+      super(name, CommandUnitType.CODE_DEPLOY.name(), deploymentType);
     }
   }
 }

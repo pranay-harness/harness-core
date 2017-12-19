@@ -19,11 +19,11 @@ public interface LogService {
   /**
    * List.
    *
-   *
-   * @param appId
-   * @param activityId
-   *@param unitName
+   * @param appId       the app id
+   * @param activityId  the activity id
+   * @param unitName    the unit name
    * @param pageRequest the page request  @return the page response
+   * @return the page response
    */
   PageResponse<Log> list(String appId, String activityId, String unitName, PageRequest<Log> pageRequest);
 
@@ -33,7 +33,7 @@ public interface LogService {
    * @param log the log
    * @return the log
    */
-  @ValidationGroups(Create.class) String save(@Valid Log log);
+  @ValidationGroups(Create.class) void save(@Valid Log log);
 
   /**
    * Gets unit execution result.
@@ -68,7 +68,18 @@ public interface LogService {
    *
    * @param logs the logs
    */
-  List<String> batchedSave(@Valid List<Log> logs);
+  void batchedSave(@Valid List<Log> logs);
 
+  /**
+   * Purge activity logs.
+   */
   void purgeActivityLogs();
+
+  /**
+   * Batched save command unit logs.
+   *  @param activityId the activity id
+   * @param unitName   the unit name
+   * @param logs       the logs
+   */
+  String batchedSaveCommandUnitLogs(@NotEmpty String activityId, @NotEmpty String unitName, @Valid Log logs);
 }

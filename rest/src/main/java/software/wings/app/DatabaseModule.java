@@ -55,7 +55,8 @@ public class DatabaseModule extends AbstractModule {
                                      .connectTimeout(30000)
                                      .serverSelectionTimeout(90000)
                                      .maxConnectionIdleTime(600000)
-                                     .socketKeepAlive(true);
+                                     .socketKeepAlive(true)
+                                     .connectionsPerHost(300);
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     MongoClient mongoClient = new MongoClient(uri);
 

@@ -56,12 +56,12 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
           .withTargetGroupArn("targetGroupArn")
           .withTaskFamily(TASK_FAMILY)
           .withUseLoadBalancer(false)
+          .withClusterName("cluster")
           .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
   private CommandExecutionContext context = aCommandExecutionContext()
                                                 .withCloudProviderSetting(computeProvider)
                                                 .withContainerSetupParams(setupParams)
-                                                .withClusterName("cluster")
                                                 .withCloudProviderCredentials(emptyList())
                                                 .build();
   private TaskDefinition taskDefinition;

@@ -14,6 +14,7 @@ import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
+import static software.wings.beans.FeatureName.SHELL_SCRIPT_AS_A_STEP;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
@@ -68,6 +69,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -114,9 +116,12 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -125,11 +130,15 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.newrelic.NewRelicMetricNames;
+import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -145,17 +154,22 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.ElasticLoadBalancerState.Operation;
+import software.wings.sm.states.ScriptState;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
+import software.wings.utils.Misc;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -199,20 +213,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private PluginManager pluginManager;
   @Inject private StaticConfiguration staticConfiguration;
-  @Inject private WorkflowExecutionService workflowExecutionService;
+
+  @Inject private AccountService accountService;
+  @Inject private AppService appService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private EntityUpdateService entityUpdateService;
   @Inject private EntityVersionService entityVersionService;
+  @Inject private ExecutorService executorService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private NotificationSetupService notificationSetupService;
+  @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
-  @Inject private NotificationSetupService notificationSetupService;
-  @Inject private AppService appService;
-  @Inject private AccountService accountService;
-  @Inject private ExecutorService executorService;
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private PipelineService pipelineService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -240,7 +257,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes();
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes(appService.getAccountIdByAppId(appId));
 
     Map<StateTypeScope, List<Stencil>> mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
         stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
@@ -295,13 +312,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return maps;
   }
 
-  private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes() {
+  private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes(String accountId) {
     if (cachedStencils != null) {
       return cachedStencils;
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
-    stencils.addAll(Arrays.asList(values()));
+    Arrays.stream(values())
+        .filter(state
+            -> state.getTypeClass() != ScriptState.class
+                || featureFlagService.isEnabled(SHELL_SCRIPT_AS_A_STEP, accountId))
+        .forEach(state -> stencils.add(state));
 
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);
@@ -458,11 +479,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-        WorkflowPhase workflowPhase = aWorkflowPhase()
-                                          .withInfraMappingId(workflow.getInfraMappingId())
-                                          .withServiceId(workflow.getServiceId())
-                                          .build();
-        attachWorkflowPhase(workflow, workflowPhase);
+        BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
+        WorkflowPhase workflowPhase;
+        if (Util.isEmpty(basicOrchestrationWorkflow.getWorkflowPhases())) {
+          workflowPhase = aWorkflowPhase()
+                              .withInfraMappingId(workflow.getInfraMappingId())
+                              .withServiceId(workflow.getServiceId())
+                              .build();
+          attachWorkflowPhase(workflow, workflowPhase);
+        }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         MultiServiceOrchestrationWorkflow canaryOrchestrationWorkflow =
             (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
@@ -492,6 +517,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
 
+    Workflow finalWorkflow1 = newWorkflow;
+    executorService.submit(() -> notifyNewRelicMetricCollection(finalWorkflow1));
+
     executorService.submit(() -> {
       String accountId = appService.getAccountIdByAppId(workflow.getAppId());
       YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
@@ -503,6 +531,82 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     });
 
     return newWorkflow;
+  }
+
+  private void notifyNewRelicMetricCollection(Workflow workflow) {
+    try {
+      if (workflow.getOrchestrationWorkflow() == null
+          || !(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
+        return;
+      }
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      if (canaryOrchestrationWorkflow.getWorkflowPhases() == null
+          || canaryOrchestrationWorkflow.getWorkflowPhases().isEmpty()) {
+        return;
+      }
+
+      Map<String, NewRelicMetricNames> newRelicMetricNamesMap = new HashMap();
+      String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+      for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+        if (workflowPhase.getPhaseSteps() == null) {
+          continue;
+        }
+
+        for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+          if (phaseStep.getSteps() == null) {
+            continue;
+          }
+          for (Node node : phaseStep.getSteps()) {
+            if (StateType.NEW_RELIC.name().equals(node.getType())) {
+              String newRelicAppId = (String) node.getProperties().get("applicationId");
+              String newRelicServerConfigId = (String) node.getProperties().get("analysisServerConfigId");
+              if (!newRelicMetricNamesMap.containsKey(newRelicAppId + "-" + newRelicServerConfigId)) {
+                NewRelicMetricNames newRelicMetricNames =
+                    NewRelicMetricNames.builder()
+                        .newRelicAppId(newRelicAppId)
+                        .newRelicConfigId(newRelicServerConfigId)
+                        .registeredWorkflows(Collections.singletonList(WorkflowInfo.builder()
+                                                                           .accountId(accountId)
+                                                                           .appId(workflow.getAppId())
+                                                                           .workflowId(workflow.getUuid())
+                                                                           .envId(workflow.getEnvId())
+                                                                           .infraMappingId(workflow.getInfraMappingId())
+                                                                           .build()))
+                        .build();
+                newRelicMetricNamesMap.put(newRelicAppId + "-" + newRelicServerConfigId, newRelicMetricNames);
+              }
+            }
+          }
+        }
+      }
+
+      if (newRelicMetricNamesMap.isEmpty()) {
+        return;
+      }
+
+      for (NewRelicMetricNames newRelicMetricNames : newRelicMetricNamesMap.values()) {
+        NewRelicMetricNames metricNames = metricDataAnalysisService.getMetricNames(
+            newRelicMetricNames.getNewRelicAppId(), newRelicMetricNames.getNewRelicConfigId());
+        if (metricNames == null) {
+          metricDataAnalysisService.saveMetricNames(accountId, newRelicMetricNames);
+        } else {
+          boolean foundWorkflowInfo = false;
+          for (WorkflowInfo workflowInfo : metricNames.getRegisteredWorkflows()) {
+            if (workflowInfo.getWorkflowId().equals(
+                    newRelicMetricNames.getRegisteredWorkflows().get(0).getWorkflowId())) {
+              foundWorkflowInfo = true;
+              break;
+            }
+          }
+          if (!foundWorkflowInfo) {
+            metricDataAnalysisService.addMetricNamesWorkflowInfo(accountId, newRelicMetricNames);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      logger.error("Unable to register workflow with NewRelicMetricNames collection", ex);
+    }
   }
 
   /**
@@ -584,6 +688,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ops);
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
+
+    Workflow finalWorkflow1 = workflow;
+    executorService.submit(() -> notifyNewRelicMetricCollection(finalWorkflow1));
 
     Workflow finalWorkflow = workflow;
     executorService.submit(() -> {
@@ -1046,46 +1153,45 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return true;
     }
 
-    boolean deleted;
-    if (forceDelete) {
-      deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
-    } else {
+    if (!forceDelete) {
       ensureWorkflowSafeToDelete(workflow);
-      if (workflowExecutionService.workflowExecutionsRunning(workflow.getWorkflowType(), appId, workflowId)) {
-        String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
-        throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
-      }
-      deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
     }
-    if (deleted) {
-      executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, workflowId));
 
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-          changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
-        }
-      });
+    if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
+      return false;
     }
-    return deleted;
+
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
+      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+    }
+
+    //
+    return true;
   }
 
   private void ensureWorkflowSafeToDelete(Workflow workflow) {
     List<Pipeline> pipelines = pipelineService.listPipelines(
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflow.getAppId())
+            .addFilter(Pipeline.APP_ID_KEY, EQ, workflow.getAppId())
             .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
             .build());
 
-    if (pipelines.size() > 0) {
+    if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       throw new WingsException(INVALID_REQUEST, "message",
           String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
               pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
+    }
+
+    if (workflowExecutionService.workflowExecutionsRunning(
+            workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
+      String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
+      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
     }
   }
 
@@ -1167,21 +1273,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public void deleteWorkflowByApplication(String appId) {
+  public void pruneByApplication(String appId) {
+    // prune workflows
     List<Key<Workflow>> workflowKeys =
         wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asKeyList();
     for (Key key : workflowKeys) {
+      // TODO: just prune the object
       deleteWorkflow(appId, (String) key.getId(), true);
     }
-  }
 
-  @Override
-  public void deleteStateMachinesByApplication(String appId) {
+    // prune state machines
     wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).field("appId").equal(appId));
   }
 
   @Override
-  public void deleteWorkflowByEnvironment(String appId, String envId) {
+  public void pruneByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Workflow.class)
         .field("appId")
         .equal(appId)
@@ -1326,6 +1432,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     logger.info("Cloning workflow phase for appId {}, workflowId {} workflowPhase {} success", appId, workflowId,
         workflowPhase.getUuid());
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(clonedWorkflowPhase.getUuid());
+  }
+
+  @Override
+  public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
+    switch (stateType) {
+      case AWS_CODEDEPLOY_STATE: {
+        List<ArtifactStream> artifactStreams = artifactStreamService.getArtifactStreamsForService(appId, serviceId);
+        if (artifactStreams.stream().anyMatch(
+                artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
+          return AwsCodeDeployState.loadDefaults();
+        }
+      }
+      default:
+        break;
+    }
+    return Collections.emptyMap();
   }
 
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
@@ -1850,14 +1972,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(AWS_CODEDEPLOY_STATE.name())
-                                                .withName(Constants.AWS_CODE_DEPLOY)
-                                                //.addProperty()
-                                                .build())
-                                   .build());
+    Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
+    Graph.Node.Builder node =
+        aNode().withId(getUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
+    if (stateDefaults != null && stateDefaults.size() != 0) {
+      if (!Misc.isNullOrEmpty(stateDefaults.get("bucket"))) {
+        node.addProperty("bucket", stateDefaults.get("bucket"));
+      }
+      if (!Misc.isNullOrEmpty(stateDefaults.get("key"))) {
+        node.addProperty("key", stateDefaults.get("key"));
+      }
+      if (!Misc.isNullOrEmpty(stateDefaults.get("bundleType"))) {
+        node.addProperty("bundleType", stateDefaults.get("bundleType"));
+      }
+    }
+    workflowPhase.addPhaseStep(
+        aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE).addStep(node.build()).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
@@ -1928,14 +2058,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .build());
     }
 
-    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
-                                                .withName("Upgrade Containers")
-                                                .build())
-                                   .build());
-
+    KubernetesContainerTask containerTask =
+        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+            appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
+    if (containerTask == null || containerTask.kubernetesType() != DaemonSet.class) {
+      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                     .addStep(aNode()
+                                                  .withId(getUuid())
+                                                  .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
+                                                  .withName("Upgrade Containers")
+                                                  .build())
+                                     .build());
+    }
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
@@ -1991,12 +2125,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
                                    .build());
 
+    workflowPhase.addPhaseStep(
+        aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
+
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
-
-    workflowPhase.addPhaseStep(
-        aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
 
     // Not needed for non-DC
     // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
@@ -2195,7 +2329,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<CommandType, List<Command>> getCommandTypeListMap(Service service) {
     Map<CommandType, List<Command>> commandMap = new HashMap<>();
-    List<ServiceCommand> serviceCommands = serviceResourceService.getServiceCommands(service);
+    List<ServiceCommand> serviceCommands = service.getServiceCommands();
     if (serviceCommands == null) {
       return commandMap;
     }

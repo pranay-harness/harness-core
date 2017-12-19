@@ -15,6 +15,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.EcsResizeParams;
+import software.wings.beans.command.EcsSetupParams;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -65,7 +67,15 @@ public class CommandValidation extends AbstractDelegateValidateTask {
           connectableHttpUrl(((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl()));
     } else if (DeploymentType.ECS.name().equals(deploymentType)
         || DeploymentType.AWS_CODEDEPLOY.name().equals(deploymentType)) {
-      resultBuilder.validated(AwsHelperService.isInAwsRegion(context.getRegion()));
+      String region = null;
+      if (context.getContainerSetupParams() != null) {
+        region = ((EcsSetupParams) context.getContainerSetupParams()).getRegion();
+      } else if (context.getContainerResizeParams() != null) {
+        region = ((EcsResizeParams) context.getContainerResizeParams()).getRegion();
+      } else if (context.getCodeDeployParams() != null) {
+        region = context.getCodeDeployParams().getRegion();
+      }
+      resultBuilder.validated(region == null || AwsHelperService.isInAwsRegion(region));
     } else {
       resultBuilder.validated(true);
     }
@@ -113,7 +123,15 @@ public class CommandValidation extends AbstractDelegateValidateTask {
       return ((KubernetesConfig) context.getCloudProviderSetting().getValue()).getMasterUrl();
     } else if (DeploymentType.ECS.name().equals(deploymentType)
         || DeploymentType.AWS_CODEDEPLOY.name().equals(deploymentType)) {
-      return "AWS:" + context.getRegion();
+      String region = null;
+      if (context.getContainerSetupParams() != null) {
+        region = ((EcsSetupParams) context.getContainerSetupParams()).getRegion();
+      } else if (context.getContainerResizeParams() != null) {
+        region = ((EcsResizeParams) context.getContainerResizeParams()).getRegion();
+      } else if (context.getCodeDeployParams() != null) {
+        region = context.getCodeDeployParams().getRegion();
+      }
+      return region == null ? NON_SSH_COMMAND_ALWAYS_TRUE : "AWS:" + region;
     } else {
       return NON_SSH_COMMAND_ALWAYS_TRUE;
     }

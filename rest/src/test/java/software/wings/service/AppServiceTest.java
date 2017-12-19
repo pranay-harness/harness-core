@@ -8,8 +8,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -50,6 +50,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -60,8 +61,10 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.inject.Inject;
@@ -87,20 +90,25 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock UpdateOperations<Application> updateOperations;
 
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private SettingsService settingsService;
-  @Mock private ServiceResourceService serviceResourceService;
-  @Mock private EnvironmentService environmentService;
-  @Mock private AppContainerService appContainerService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
-  @Mock private NotificationService notificationService;
-  @Mock private SetupService setupService;
-  @Mock private JobScheduler jobScheduler;
-  @Mock private ArtifactService artifactService;
-  @Mock private ArtifactStreamService artifactStreamService;
-  @Mock private WorkflowService workflowService;
-  @Mock private PipelineService pipelineService;
 
   @Inject @InjectMocks AppService appService;
+
+  @Mock private AlertService alertService;
+  @Mock private AppContainerService appContainerService;
+  @Mock private ArtifactService artifactService;
+  @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private InstanceService instanceService;
+  @Mock private NotificationService notificationService;
+  @Mock private PipelineService pipelineService;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private SettingsService settingsService;
+  @Mock private SetupService setupService;
+  @Mock private TriggerService triggerService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private WorkflowService workflowService;
+
+  @Mock private JobScheduler jobScheduler;
 
   /**
    * Sets up.
@@ -266,13 +274,48 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
     appService.delete(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
-        appContainerService, artifactService, artifactStreamService, workflowService, pipelineService);
+        appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
+        alertService, triggerService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
-    inOrder.verify(environmentService).deleteByApp(application);
-    inOrder.verify(workflowService).deleteWorkflowByApplication(APP_ID);
-    inOrder.verify(workflowService).deleteStateMachinesByApplication(APP_ID);
-    inOrder.verify(pipelineService).deletePipelineByApplication(APP_ID);
-    inOrder.verify(serviceResourceService).deleteByApp(application);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
+    appService.pruneDescendingObjects(APP_ID);
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
+        appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
+        alertService, triggerService);
+
+    inOrder.verify(alertService).pruneByApplication(APP_ID);
+    inOrder.verify(environmentService).pruneByApplication(APP_ID);
+    inOrder.verify(instanceService).pruneByApplication(APP_ID);
+    inOrder.verify(notificationService).pruneByApplication(APP_ID);
+    inOrder.verify(pipelineService).pruneByApplication(APP_ID);
+    inOrder.verify(serviceResourceService).pruneByApplication(APP_ID);
+    inOrder.verify(triggerService).pruneByApplication(APP_ID);
+    inOrder.verify(workflowService).pruneByApplication(APP_ID);
+  }
+
+  @Test
+  public void shouldPruneDescendingObjectSomeFailed() {
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
+    doThrow(new WingsException("Forced exception")).when(pipelineService).pruneByApplication(APP_ID);
+
+    assertThatThrownBy(() -> appService.pruneDescendingObjects(APP_ID)).isInstanceOf(WingsException.class);
+
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
+        appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
+        alertService, triggerService);
+
+    inOrder.verify(alertService).pruneByApplication(APP_ID);
+    inOrder.verify(environmentService).pruneByApplication(APP_ID);
+    inOrder.verify(instanceService).pruneByApplication(APP_ID);
+    inOrder.verify(notificationService).pruneByApplication(APP_ID);
+    inOrder.verify(pipelineService).pruneByApplication(APP_ID);
+    inOrder.verify(serviceResourceService).pruneByApplication(APP_ID);
+    inOrder.verify(triggerService).pruneByApplication(APP_ID);
+    inOrder.verify(workflowService).pruneByApplication(APP_ID);
   }
 }

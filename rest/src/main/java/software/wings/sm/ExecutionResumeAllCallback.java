@@ -16,6 +16,7 @@ public class ExecutionResumeAllCallback implements NotifyCallback {
   @Inject private StateMachineExecutor stateMachineExecutor;
 
   private String appId;
+  private String executionUuid;
   private String stateExecutionInstanceId;
 
   /**
@@ -29,8 +30,9 @@ public class ExecutionResumeAllCallback implements NotifyCallback {
    * @param appId                    the app id
    * @param stateExecutionInstanceId the state execution instance id
    */
-  public ExecutionResumeAllCallback(String appId, String stateExecutionInstanceId) {
+  public ExecutionResumeAllCallback(String appId, String executionUuid, String stateExecutionInstanceId) {
     this.appId = appId;
+    this.executionUuid = executionUuid;
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }
 
@@ -75,7 +77,7 @@ public class ExecutionResumeAllCallback implements NotifyCallback {
    */
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    stateMachineExecutor.startExecution(appId, stateExecutionInstanceId);
+    stateMachineExecutor.startExecution(appId, executionUuid, stateExecutionInstanceId);
   }
 
   @Override

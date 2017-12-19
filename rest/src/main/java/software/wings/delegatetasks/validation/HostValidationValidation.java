@@ -37,11 +37,11 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
   @Override
   public List<DelegateConnectionResult> validate() {
     Object[] parameters = getParameters();
-    return validateHost((List<String>) parameters[2], (SettingAttribute) parameters[3],
+    return validateHosts((List<String>) parameters[2], (SettingAttribute) parameters[3],
         (List<EncryptedDataDetail>) parameters[4], (ExecutionCredential) parameters[5]);
   }
 
-  private List<DelegateConnectionResult> validateHost(List<String> hostNames, SettingAttribute connectionSetting,
+  private List<DelegateConnectionResult> validateHosts(List<String> hostNames, SettingAttribute connectionSetting,
       List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
     List<DelegateConnectionResult> results = new ArrayList<>();
     encryptionService.decrypt((Encryptable) connectionSetting.getValue(), encryptionDetails);

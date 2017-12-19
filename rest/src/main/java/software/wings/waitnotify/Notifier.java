@@ -4,8 +4,9 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import org.slf4j.Logger;
@@ -48,8 +49,8 @@ public class Notifier implements Runnable {
         return;
       }
 
-      PageResponse<NotifyResponse> notifyPageResponses =
-          wingsPersistence.query(NotifyResponse.class, aPageRequest().addFieldsIncluded(ID_KEY).build());
+      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
+          NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build());
 
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to process");
@@ -61,6 +62,7 @@ public class Notifier implements Runnable {
       // Get wait queue entries
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
           aPageRequest()
+              .withLimit(UNLIMITED)
               .addFilter(aSearchFilter().withField("correlationId", Operator.IN, correlationIds.toArray()).build())
               .build());
 

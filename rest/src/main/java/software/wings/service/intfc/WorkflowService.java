@@ -12,6 +12,7 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
+import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
@@ -26,7 +27,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public interface WorkflowService {
+public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment {
   /**
    * List Workflow.
    *
@@ -152,22 +153,6 @@ public interface WorkflowService {
   Workflow readLatestSimpleWorkflow(String appId, String envId);
 
   /**
-   * Delete workflow by environment.
-   *
-   * @param appId the app id
-   */
-  void deleteWorkflowByApplication(String appId);
-
-  /**
-   * Delete state machines my application.
-   *
-   * @param appId the app id
-   */
-  void deleteStateMachinesByApplication(String appId);
-
-  void deleteWorkflowByEnvironment(String appId, String uuid);
-
-  /**
    * Stencil map map.
    *
    * @return the map
@@ -204,4 +189,6 @@ public interface WorkflowService {
   Workflow cloneWorkflow(String appId, String workflowId, CloneMetadata cloneMetadata);
 
   WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
+
+  Map<String, String> getStateDefaults(@NotNull String appId, @NotNull String serviceId, @NotNull StateType stateType);
 }

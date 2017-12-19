@@ -24,9 +24,8 @@ import java.util.Map;
 /**
  *  @author rktummala on 11/13/17
  */
-public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml, C extends CommandUnit,
-                                             B extends AbstractCommandUnit.Yaml.Builder> extends BaseYamlHandler<Y, C> {
-  protected abstract B getYamlBuilder();
+public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml, C extends CommandUnit>
+    extends BaseYamlHandler<Y, C> {
   protected abstract C getCommandUnit();
 
   protected Node getGraphNode(ChangeContext<Y> changeContext, Node previousNode) {
@@ -56,13 +55,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     return Maps.newHashMap();
   }
 
-  @Override
-  public C createFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
-  }
-
-  private C setWithYamlValues(ChangeContext<Y> changeContext) throws HarnessException {
+  protected C toBean(ChangeContext<Y> changeContext) throws HarnessException {
     Y yaml = changeContext.getYaml();
     CommandUnitType commandUnitType = Util.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType());
     C commandUnit = getCommandUnit();
@@ -72,20 +65,11 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     return commandUnit;
   }
 
-  @Override
-  public Y toYaml(C bean, String appId) {
+  protected void toYaml(Y yaml, C bean) {
     String commandUnitType = Util.getStringFromEnum(bean.getCommandUnitType());
-    return getYamlBuilder()
-        .withCommandUnitType(commandUnitType)
-        .withDeploymentType(bean.getDeploymentType())
-        .withName(bean.getName())
-        .build();
-  }
-
-  @Override
-  public C updateFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    return setWithYamlValues(changeContext);
+    yaml.setCommandUnitType(commandUnitType);
+    yaml.setDeploymentType(bean.getDeploymentType());
+    yaml.setName(bean.getName());
   }
 
   @Override
@@ -103,5 +87,11 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   @Override
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {
     // do nothing
+  }
+
+  @Override
+  public C upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
+    return toBean(changeContext);
   }
 }

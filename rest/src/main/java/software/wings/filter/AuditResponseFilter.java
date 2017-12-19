@@ -32,7 +32,7 @@ public class AuditResponseFilter implements Filter {
    * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
    */
   @Override
-  public void init(FilterConfig arg0) throws ServletException {}
+  public void init(FilterConfig arg0) {}
 
   /* (non-Javadoc)
    * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse,
@@ -41,26 +41,27 @@ public class AuditResponseFilter implements Filter {
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws ServletException, IOException {
-    String path = ((HttpServletRequest) request).getPathInfo();
-    logger.debug("path :" + path);
-    if (response.getCharacterEncoding() == null) {
-      response.setCharacterEncoding("UTF-8");
-    }
+    AuditHeader header = auditHelper.get();
+    if (header != null) {
+      String path = ((HttpServletRequest) request).getPathInfo();
+      logger.debug("path :" + path);
+      if (response.getCharacterEncoding() == null) {
+        response.setCharacterEncoding("UTF-8");
+      }
 
-    HttpServletResponseCopier responseCopier = new HttpServletResponseCopier((HttpServletResponse) response);
+      HttpServletResponseCopier responseCopier = new HttpServletResponseCopier((HttpServletResponse) response);
 
-    try {
-      chain.doFilter(request, responseCopier);
-      responseCopier.flushBuffer();
-    } finally {
-      byte[] copy = responseCopier.getCopy();
-
-      AuditHeader header = auditHelper.get();
-      if (header != null) {
+      try {
+        chain.doFilter(request, responseCopier);
+        responseCopier.flushBuffer();
+      } finally {
+        byte[] copy = responseCopier.getCopy();
         header.setResponseTime(System.currentTimeMillis());
         header.setResponseStatusCode(((HttpServletResponse) response).getStatus());
         auditHelper.finalizeAudit(header, copy);
       }
+    } else {
+      chain.doFilter(request, response);
     }
   }
 

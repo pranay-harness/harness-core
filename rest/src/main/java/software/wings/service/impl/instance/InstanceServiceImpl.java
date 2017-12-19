@@ -181,10 +181,10 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public boolean deleteByApp(String appId) {
+  public void pruneByApplication(String appId) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
     query.field("appId").equal(appId);
-    return wingsPersistence.delete(query);
+    wingsPersistence.delete(query);
   }
 
   @Override
@@ -317,7 +317,7 @@ public class InstanceServiceImpl implements InstanceService {
 
     String fieldName;
     if (InstanceType.KUBERNETES_CONTAINER_INSTANCE.equals(instanceType)) {
-      fieldName = "instanceInfo.replicationControllerName";
+      fieldName = "instanceInfo.controllerName";
     } else if (InstanceType.ECS_CONTAINER_INSTANCE.equals(instanceType)) {
       fieldName = "instanceInfo.serviceName";
     } else {
@@ -359,9 +359,8 @@ public class InstanceServiceImpl implements InstanceService {
       }
       KubernetesContainerInfo newContainerInfo = (KubernetesContainerInfo) containerInfo;
       // If the replicationControllerName is the same (including the revision), no need to update.
-      // We only need to update if the pod has been re-assigned to a different replication controller.
-      return !newContainerInfo.getReplicationControllerName().equals(
-          existingContainerInfo.getReplicationControllerName());
+      // We only need to update if the pod has been re-assigned to a different controller.
+      return !newContainerInfo.getControllerName().equals(existingContainerInfo.getControllerName());
 
     } else {
       throw new WingsException("Unsupported container type" + containerInfo.getClass());
@@ -373,7 +372,7 @@ public class InstanceServiceImpl implements InstanceService {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     Map<InstanceKey, Instance> instanceMap;
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      query.field("instanceInfo.replicationControllerName").startsWith(containerSvcNameNoRevision);
+      query.field("instanceInfo.controllerName").startsWith(containerSvcNameNoRevision);
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
       query.field("instanceInfo.serviceName").startsWith(containerSvcNameNoRevision);
     } else {

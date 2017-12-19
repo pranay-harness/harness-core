@@ -72,17 +72,23 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
 
   private Properties getDefaultProperties() {
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
-    MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
-    Builder mongoClientOptions = MongoClientOptions.builder()
-                                     .connectTimeout(30000)
-                                     .serverSelectionTimeout(90000)
-                                     .maxConnectionIdleTime(600000)
-                                     .socketKeepAlive(true);
-    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
+
     Properties props = new Properties();
-    props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobstoreclass());
-    props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
-    props.setProperty("org.quartz.jobStore.dbName", uri.getDatabase());
+    if (schedulerConfig.getJobstoreclass() == "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore") {
+      MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
+      Builder mongoClientOptions = MongoClientOptions.builder()
+                                       .connectTimeout(30000)
+                                       .serverSelectionTimeout(90000)
+                                       .maxConnectionIdleTime(600000)
+                                       .connectionsPerHost(50)
+                                       .socketKeepAlive(true);
+      MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
+      props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobstoreclass());
+      props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
+      props.setProperty("org.quartz.jobStore.dbName", uri.getDatabase());
+      props.setProperty("org.quartz.jobStore.collectionPrefix", schedulerConfig.getTablePrefix());
+    }
+
     props.setProperty("org.quartz.scheduler.idleWaitTime", schedulerConfig.getIdleWaitTime());
     props.setProperty("org.quartz.threadPool.threadCount", schedulerConfig.getThreadCount());
     props.setProperty("org.quartz.scheduler.skipUpdateCheck", "true");
@@ -90,7 +96,6 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
     props.setProperty("org.quartz.plugin.jobHistory.class", "org.quartz.plugins.history.LoggingJobHistoryPlugin");
     props.setProperty("org.quartz.scheduler.instanceName", schedulerConfig.getSchedulerName());
     props.setProperty("org.quartz.scheduler.instanceId", schedulerConfig.getInstanceId());
-    props.setProperty("org.quartz.jobStore.collectionPrefix", schedulerConfig.getTablePrefix());
 
     return props;
   }
@@ -115,6 +120,10 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
   public Date scheduleJob(JobDetail jobDetail, Trigger trigger) {
     try {
       return scheduler.scheduleJob(jobDetail, trigger);
+    } catch (org.quartz.ObjectAlreadyExistsException ex) {
+      // We do not need to polute the logs with error logs, just the job already exists.
+      // TODO: add additional check if the aboit to add job properties are the same with the already existing one.
+      //       we should update the job if they differ.
     } catch (SchedulerException ex) {
       logger.error("Couldn't schedule cron for job {} with trigger {}", jobDetail.toString(), trigger.toString(), ex);
     }

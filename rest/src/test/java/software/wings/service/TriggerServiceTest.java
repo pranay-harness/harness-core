@@ -428,7 +428,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(pipelineConditionTrigger)).build());
 
-    triggerService.deleteTriggersForPipeline(APP_ID, PIPELINE_ID);
+    triggerService.pruneByPipeline(APP_ID, PIPELINE_ID);
     verify(wingsPersistence, times(2)).delete(Trigger.class, TRIGGER_ID);
   }
 
@@ -464,7 +464,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(scheduledConditionTrigger);
     when(wingsPersistence.delete(Trigger.class, TRIGGER_ID)).thenReturn(true);
 
-    triggerService.deleteByApp(APP_ID);
+    triggerService.pruneByApplication(APP_ID);
     verify(wingsPersistence).delete(Trigger.class, TRIGGER_ID);
     verify(jobScheduler).deleteJob(TRIGGER_ID, "SCHEDULED_TRIGGER_CRON_GROUP");
   }

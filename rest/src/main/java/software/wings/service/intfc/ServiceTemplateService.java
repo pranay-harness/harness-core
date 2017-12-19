@@ -19,7 +19,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 4/4/16.
  */
-public interface ServiceTemplateService {
+public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByService {
   /**
    * List.
    *
@@ -55,7 +55,7 @@ public interface ServiceTemplateService {
    * @return the map
    */
   List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowExecutionId);
+      String appId, String envId, String templateId, String workflowExecutionId, boolean maskEncryptedFields);
 
   /**
    * Override config files.
@@ -106,22 +106,6 @@ public interface ServiceTemplateService {
    * @return the service template
    */
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceTemplateId);
-
-  /**
-   * Delete by env.
-   *
-   * @param appId the app id
-   * @param envId the env id
-   */
-  void deleteByEnv(@NotEmpty String appId, @NotEmpty String envId);
-
-  /**
-   * Delete by service.
-   *
-   * @param appId     the app id
-   * @param serviceId the service id
-   */
-  void deleteByService(@NotEmpty String appId, @NotEmpty String serviceId);
 
   /**
    * Create default templates by env.

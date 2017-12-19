@@ -2,11 +2,13 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
+import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -14,12 +16,12 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 5/27/16.
  */
 @Entity(value = "commandLogs", noClassnameStored = true)
-//@Indexes(@Index(fields = {@Field("activityId"), @Field("hostName")})) //TODO: uncomment
 public class Log extends Base {
   @NotEmpty @Indexed private String activityId;
   private String hostName;
   @NotEmpty @Indexed private String commandUnitName;
   private String logLine;
+  private Integer linesCount;
   @NotNull private LogLevel logLevel;
   @NotNull private CommandExecutionStatus commandExecutionStatus;
 
@@ -132,6 +134,14 @@ public class Log extends Base {
   }
 
   @Override
+  @JsonIgnore
+  public Map<String, Object> getShardKeys() {
+    Map<String, Object> shardKeys = super.getShardKeys();
+    shardKeys.put("activityId", activityId);
+    return shardKeys;
+  }
+
+  @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(activityId, hostName, commandUnitName, logLine, logLevel, commandExecutionStatus);
@@ -167,6 +177,14 @@ public class Log extends Base {
         .toString();
   }
 
+  public Integer getLinesCount() {
+    return linesCount;
+  }
+
+  public void setLinesCount(Integer linesCount) {
+    this.linesCount = linesCount;
+  }
+
   /**
    * The enum Log level.
    */
@@ -174,18 +192,22 @@ public class Log extends Base {
     /**
      * Debug log level.
      */
-    DEBUG, /**
-            * Info log level.
-            */
-    INFO, /**
-           * Warn log level.
-           */
-    WARN, /**
-           * Error log level.
-           */
-    ERROR, /**
-            * Fatal log level.
-            */
+    DEBUG,
+    /**
+     * Info log level.
+     */
+    INFO,
+    /**
+     * Warn log level.
+     */
+    WARN,
+    /**
+     * Error log level.
+     */
+    ERROR,
+    /**
+     * Fatal log level.
+     */
     FATAL
   }
 

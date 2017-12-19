@@ -19,4 +19,5 @@ public interface DelegateFileManager {
   InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
       throws IOException;
   DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException;
+  void deleteCachedArtifacts();
 }

@@ -15,15 +15,14 @@ import static org.jfrog.artifactory.client.model.PackageType.rpm;
 import static org.jfrog.artifactory.client.model.PackageType.yum;
 import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.*;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.utils.Validator.*;
 
 import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -39,8 +38,6 @@ import org.jfrog.artifactory.client.model.Repository;
 import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
@@ -50,6 +47,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
+import software.wings.utils.Validator;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
@@ -812,9 +810,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         BuildDetails buildDetails =
             getLatestVersion(artifactoryConfig, encryptionDetails, repoType, groupId, artifactId);
         logger.info("Validation success. Version {}", buildDetails.getNumber());
-        if (buildDetails == null) {
-          prepareAndThrowException("No version found or not defined");
-        }
       } catch (Exception e) {
         prepareAndThrowException("Invalid artifact path. Please verify that artifact published as maven standard");
       }
@@ -823,11 +818,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   private void prepareAndThrowException(String message) {
-    List<ResponseMessage> responseMessages = new ArrayList<>();
-    responseMessages.add(prepareResponseMessage(INVALID_ARTIFACT_SERVER, WARN, message));
-    Map<String, Object> params = new HashedMap();
-    params.put("message", message);
-    throw new WingsException(responseMessages, message, params);
+    throw prepareWingsException(INVALID_ARTIFACT_SERVER, "message", message);
   }
 
   private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
@@ -918,16 +909,5 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
     }
     throw new WingsException(ARTIFACT_SERVER_ERROR, "message", e.getMessage(), e);
-  }
-  /**
-   * prepareResponseMessage
-   */
-  public static ResponseMessage prepareResponseMessage(
-      ErrorCode errorCode, ResponseMessage.ResponseTypeEnum errorType, String errorMsg) {
-    final ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setErrorType(errorType);
-    responseMessage.setMessage(errorMsg);
-    return responseMessage;
   }
 }

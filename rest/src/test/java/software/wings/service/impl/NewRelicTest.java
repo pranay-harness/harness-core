@@ -10,8 +10,10 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
+import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
+import software.wings.time.WingsTimeUtils;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -19,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
+import java.util.Date;
 
 /**
  * Created by rsingh on 10/10/17.
@@ -77,5 +80,11 @@ public class NewRelicTest extends WingsBaseTest {
     }
 
     throw new IllegalStateException("Could not find application rsingh-demo-app");
+  }
+
+  @Test
+  public void testTimeStampCreations() {
+    NewRelicDelgateServiceImpl.dateFormatter.format(new Date(WingsTimeUtils.getMinuteBoundary(1513463100000L)))
+        .equals("2017-12-16T14:25:00-0800");
   }
 }

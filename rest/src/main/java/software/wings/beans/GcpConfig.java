@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
@@ -21,7 +22,7 @@ import software.wings.yaml.setting.CloudProviderYaml;
 @Data
 @Builder
 public class GcpConfig extends SettingValue implements Encryptable {
-  @JsonIgnore @NotEmpty @Encrypted private char[] serviceAccountKeyFileContent;
+  @JsonIgnore @Encrypted private char[] serviceAccountKeyFileContent;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -41,13 +42,13 @@ public class GcpConfig extends SettingValue implements Encryptable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends CloudProviderYaml {
     private String serviceAccountKeyFileContent;
 
-    public Yaml() {}
-
-    public Yaml(String type, String name, String serviceAccountKeyFileContent) {
-      super(type, name);
+    @Builder
+    public Yaml(String type, String serviceAccountKeyFileContent) {
+      super(type);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
     }
   }

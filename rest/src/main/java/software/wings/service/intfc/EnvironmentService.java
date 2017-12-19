@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -19,7 +18,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 4/1/16.
  */
-public interface EnvironmentService {
+public interface EnvironmentService extends OwnedByApplication {
   /**
    * List.
    *
@@ -85,11 +84,12 @@ public interface EnvironmentService {
   void delete(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
-   * Delete by app id.
+   * Prune descending objects.
    *
-   * @param application the app id
+   * @param appId the app id
+   * @param envId the env id
    */
-  void deleteByApp(@NotNull Application application);
+  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Create default environments.

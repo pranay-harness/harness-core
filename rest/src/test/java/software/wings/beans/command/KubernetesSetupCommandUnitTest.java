@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -16,12 +17,10 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -42,6 +41,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.Date;
+import java.util.List;
 
 public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   @Mock private GkeClusterService gkeClusterService;
@@ -71,12 +71,12 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                                   .withServiceType(KubernetesServiceType.ClusterIP)
                                                   .withTargetPort(8080)
                                                   .withRcNamePrefix(APP_NAME + "." + ENV_NAME + "." + SERVICE_NAME)
+                                                  .withClusterName("cluster")
                                                   .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
   private CommandExecutionContext context = aCommandExecutionContext()
                                                 .withCloudProviderSetting(computeProvider)
                                                 .withContainerSetupParams(setupParams)
-                                                .withClusterName("cluster")
                                                 .withCloudProviderCredentials(emptyList())
                                                 .build();
 
@@ -171,16 +171,14 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     ReplicationController kubernetesReplicationController =
         new ReplicationControllerBuilder()
             .withNewMetadata()
-            .withName(KubernetesConvention.getReplicationControllerName(
-                KubernetesConvention.getReplicationControllerNamePrefix("app", "service", "env"), 1))
+            .withName(KubernetesConvention.getControllerName(
+                KubernetesConvention.getControllerNamePrefix("app", "service", "env"), 1))
             .withCreationTimestamp(new Date().toString())
             .endMetadata()
             .build();
 
     when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
-        .thenReturn(new ReplicationControllerListBuilder()
-                        .withItems(Lists.newArrayList(kubernetesReplicationController))
-                        .build());
+        .thenReturn((List) singletonList(kubernetesReplicationController));
 
     CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);

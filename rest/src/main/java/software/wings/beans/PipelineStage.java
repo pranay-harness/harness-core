@@ -2,8 +2,10 @@ package software.wings.beans;
 
 import com.google.common.collect.Lists;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -219,68 +221,21 @@ public class PipelineStage {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends BaseEntityYaml {
     private String name;
     private boolean parallel;
     private String workflowName;
     private List<NameValuePair.Yaml> workflowVariables = Lists.newArrayList();
 
-    public static final class Builder {
-      private String name;
-      private boolean parallel;
-      private String workflowName;
-      private String type;
-      private List<NameValuePair.Yaml> workflowVariables = Lists.newArrayList();
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder withParallel(boolean parallel) {
-        this.parallel = parallel;
-        return this;
-      }
-
-      public Builder withWorkflowName(String workflowName) {
-        this.workflowName = workflowName;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withWorkflowVariables(List<NameValuePair.Yaml> workflowVariables) {
-        this.workflowVariables = workflowVariables;
-        return this;
-      }
-
-      public Builder but() {
-        return anYaml()
-            .withName(name)
-            .withParallel(parallel)
-            .withWorkflowName(workflowName)
-            .withType(type)
-            .withWorkflowVariables(workflowVariables);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setName(name);
-        yaml.setParallel(parallel);
-        yaml.setWorkflowName(workflowName);
-        yaml.setWorkflowVariables(workflowVariables);
-        yaml.setType(type);
-        return yaml;
-      }
+    @Builder
+    public Yaml(String type, String harnessApiVersion, String name, boolean parallel, String workflowName,
+        List<NameValuePair.Yaml> workflowVariables) {
+      super(type, harnessApiVersion);
+      this.name = name;
+      this.parallel = parallel;
+      this.workflowName = workflowName;
+      this.workflowVariables = workflowVariables;
     }
   }
 }

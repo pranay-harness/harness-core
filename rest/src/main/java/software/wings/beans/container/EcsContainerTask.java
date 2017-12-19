@@ -12,11 +12,13 @@ import com.amazonaws.services.ecs.model.MountPoint;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.amazonaws.services.ecs.model.Volume;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentType;
@@ -37,6 +39,7 @@ import java.util.regex.Pattern;
 /**
  * Created by anubhaw on 2/6/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ECS")
 public class EcsContainerTask extends ContainerTask {
   private static final Pattern commentPattern = Pattern.compile("^#.*$");
@@ -117,7 +120,7 @@ public class EcsContainerTask extends ContainerTask {
             cd -> DUMMY_DOCKER_IMAGE_NAME.equals(cd.getImage()));
         if (!containerHasDockerPlaceholder) {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-              "Replication controller spec must have a container definition with "
+              "Task definition spec must have a container definition with "
                   + "${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
@@ -132,7 +135,20 @@ public class EcsContainerTask extends ContainerTask {
     }
   }
 
-  public String fetchJsonConfig() {
+  public TaskDefinition createTaskDefinition(String containerName, String imageName) {
+    String configTemplate;
+    if (org.apache.commons.lang.StringUtils.isNotEmpty(getAdvancedConfig())) {
+      configTemplate = fetchAdvancedConfigNoComments();
+    } else {
+      configTemplate = fetchJsonConfig();
+    }
+
+    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName)
+                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
+    return JsonUtils.asObject(config, TaskDefinition.class);
+  }
+
+  private String fetchJsonConfig() {
     try {
       return JsonUtils.asPrettyJson(createTaskDefinition())
           .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
@@ -238,8 +254,12 @@ public class EcsContainerTask extends ContainerTask {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @Builder
+  @NoArgsConstructor
   public static class Yaml extends ContainerTask.Yaml {
-    public Yaml() {}
+    @Builder
+    public Yaml(String deploymentType, String advancedType, String advancedConfig,
+        ContainerDefinition.Yaml containerDefinition) {
+      super(deploymentType, advancedType, advancedConfig, containerDefinition);
+    }
   }
 }

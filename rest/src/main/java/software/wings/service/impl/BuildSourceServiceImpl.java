@@ -81,7 +81,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       String appId, String settingId, String serviceId, String artifactStreamType, String repositoryType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId, false);
     notNullCheck("Service", service);
     SettingValue value = settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails =
@@ -109,7 +109,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("Artifact Stream", artifactStream);
-    Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
+    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     String artifactStreamType = artifactStream.getArtifactStreamType();

@@ -2,13 +2,13 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
@@ -19,22 +19,22 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.yaml.Change;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
-import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -48,17 +48,13 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.nio.CharBuffer;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -85,6 +81,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private SecretManager secretManager;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ActivityService activityService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -137,6 +134,9 @@ public class ConfigServiceImpl implements ConfigService {
     if (configFile.isEncrypted()) {
       updateParentForEncryptedData(configFile);
     }
+
+    ConfigFile configFileFromDB = get(configFile.getAppId(), id);
+    yamlChangeSetHelper.configFileYamlChangeAsync(configFileFromDB, Change.ChangeType.ADD);
     return id;
   }
 
@@ -189,6 +189,26 @@ public class ConfigServiceImpl implements ConfigService {
       throw new WingsException(INVALID_ARGUMENT, "args", "ConfigFile not found");
     }
     return configFile;
+  }
+
+  @Override
+  public ConfigFile get(String appId, String entityId, EntityType entityType, String relativeFilePath) {
+    Builder builder = Builder.aPageRequest();
+    String columnName = null;
+    if (EntityType.SERVICE.equals(entityType)) {
+      columnName = "entityId";
+      builder.addFilter("entityType", Operator.EQ, entityType.name());
+    } else if (EntityType.ENVIRONMENT.equals(entityType)) {
+      columnName = "envId";
+    } else {
+      return null;
+    }
+
+    builder.addFilter(columnName, Operator.EQ, entityId);
+    builder.addFilter("appId", Operator.EQ, appId);
+    builder.addFilter("relativeFilePath", Operator.EQ, relativeFilePath);
+
+    return wingsPersistence.get(ConfigFile.class, builder.build());
   }
 
   @Override
@@ -328,6 +348,18 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
+
+    //    ConfigFile configFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
+    //
+    //    if (inputConfigFile.getEntityType() == SERVICE) {
+    //      String fileContent = null;
+    //      if (!configFile.isEncrypted()) {
+    //        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    //        fileService.downloadToStream(inputConfigFile.getUuid(), outputStream, FileBucket.CONFIGS);
+    //        fileContent = outputStream.toString();
+    //      }
+    //      yamlChangeSetHelper.configFileYamlChangeAsync(configFile, Change.ChangeType.MODIFY);
+    //    }
   }
 
   /**
@@ -394,6 +426,30 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
+  public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
+    PageRequest<ConfigFile> pageRequest = PageRequest.Builder.aPageRequest()
+                                              .addFilter("appId", Operator.EQ, appId)
+                                              .addFilter("entityType", Operator.EQ, entityType.name())
+                                              .addFilter("entityId", Operator.EQ, entityId)
+                                              .addFilter("relativeFilePath", Operator.EQ, configFileName)
+                                              .build();
+
+    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, pageRequest);
+    boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
+    if (deleted) {
+      List<ConfigFile> childConfigFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                              .field("appId")
+                                              .equal(appId)
+                                              .field("parentConfigFileId")
+                                              .equal(configFile.getUuid())
+                                              .asList();
+      childConfigFiles.stream().forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
+
+      executorService.submit(() -> fileService.deleteAllFilesForEntity(configFile.getUuid(), CONFIGS));
+    }
+  }
+
+  @Override
   public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
     return list(aPageRequest()
                     .addFilter("appId", Operator.EQ, appId)
@@ -418,8 +474,40 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
+  public List<ConfigFile> getConfigFileOverridesForEnv(String appId, String envId) {
+    // All service overrides
+    List allServiceOverrideList = list(aPageRequest()
+                                           .addFilter("appId", Operator.EQ, appId)
+                                           .addFilter("entityType", Operator.EQ, EntityType.ENVIRONMENT)
+                                           .addFilter("entityId", Operator.EQ, envId)
+                                           .addFilter(aSearchFilter().build())
+                                           .build())
+                                      .getResponse();
+
+    // service override
+    List overrideList = list(aPageRequest()
+                                 .addFilter("appId", Operator.EQ, appId)
+                                 .addFilter("entityType", Operator.EQ, EntityType.SERVICE_TEMPLATE)
+                                 .addFilter("envId", Operator.EQ, envId)
+                                 .addFilter(aSearchFilter().build())
+                                 .build())
+                            .getResponse();
+
+    overrideList.addAll(allServiceOverrideList);
+    return overrideList;
+  }
+
+  @Override
   public void deleteByEntityId(String appId, String templateId, String entityId) {
     List<ConfigFile> configFiles = getConfigFilesForEntity(appId, templateId, entityId);
+    if (configFiles != null) {
+      configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
+    }
+  }
+
+  @Override
+  public void pruneByService(String appId, String entityId) {
+    List<ConfigFile> configFiles = getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, entityId);
     if (configFiles != null) {
       configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
     }

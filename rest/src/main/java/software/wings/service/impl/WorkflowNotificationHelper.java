@@ -28,7 +28,6 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;

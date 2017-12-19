@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.ContainerTask;
@@ -7,6 +8,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesSetupParams extends ContainerSetupParams {
@@ -24,12 +26,13 @@ public class KubernetesSetupParams extends ContainerSetupParams {
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
+    private String clusterName;
     private String appName;
     private String envName;
     private ImageDetails imageDetails;
     private ContainerTask containerTask;
-    private String infraMappingId;
     private KubernetesServiceType serviceType;
+    private String infraMappingId;
     private Integer port;
     private Integer targetPort;
     private KubernetesPortProtocol protocol;
@@ -49,6 +52,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
 
     public KubernetesSetupParamsBuilder withServiceName(String serviceName) {
       this.serviceName = serviceName;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withClusterName(String clusterName) {
+      this.clusterName = clusterName;
       return this;
     }
 
@@ -72,13 +80,13 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withInfraMappingId(String infraMappingId) {
-      this.infraMappingId = infraMappingId;
+    public KubernetesSetupParamsBuilder withServiceType(KubernetesServiceType serviceType) {
+      this.serviceType = serviceType;
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withServiceType(KubernetesServiceType serviceType) {
-      this.serviceType = serviceType;
+    public KubernetesSetupParamsBuilder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
       return this;
     }
 
@@ -135,12 +143,13 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
+          .withClusterName(clusterName)
           .withAppName(appName)
           .withEnvName(envName)
           .withImageDetails(imageDetails)
           .withContainerTask(containerTask)
-          .withInfraMappingId(infraMappingId)
           .withServiceType(serviceType)
+          .withInfraMappingId(infraMappingId)
           .withPort(port)
           .withTargetPort(targetPort)
           .withProtocol(protocol)
@@ -156,12 +165,13 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     public KubernetesSetupParams build() {
       KubernetesSetupParams kubernetesSetupParams = new KubernetesSetupParams();
       kubernetesSetupParams.setServiceName(serviceName);
+      kubernetesSetupParams.setClusterName(clusterName);
       kubernetesSetupParams.setAppName(appName);
       kubernetesSetupParams.setEnvName(envName);
       kubernetesSetupParams.setImageDetails(imageDetails);
       kubernetesSetupParams.setContainerTask(containerTask);
-      kubernetesSetupParams.setInfraMappingId(infraMappingId);
       kubernetesSetupParams.setServiceType(serviceType);
+      kubernetesSetupParams.setInfraMappingId(infraMappingId);
       kubernetesSetupParams.setPort(port);
       kubernetesSetupParams.setTargetPort(targetPort);
       kubernetesSetupParams.setProtocol(protocol);

@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.CloudProviderYaml;
 
@@ -69,11 +70,11 @@ public class PhysicalDataCenterConfig extends SettingValue {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends CloudProviderYaml {
-    public Yaml() {}
-
-    public Yaml(String type, String name) {
-      super(type, name);
+    @lombok.Builder
+    public Yaml(String type) {
+      super(type);
     }
   }
 }

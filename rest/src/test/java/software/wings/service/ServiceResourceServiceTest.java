@@ -29,6 +29,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
@@ -85,6 +86,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
@@ -155,6 +157,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
   @Mock private ExecutorService executorService;
 
+  @Mock private JobScheduler jobScheduler;
+
   @Inject @InjectMocks private ServiceResourceService srs;
 
   @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();
@@ -210,6 +214,18 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     PageRequest<Service> request = new PageRequest<>();
     request.addFilter("appId", APP_ID, EQ);
     when(wingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<Service>());
+    PageRequest<ServiceCommand> serviceCommandPageRequest =
+        aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, APP_ID).build();
+    when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
+        .thenReturn(PageResponse.Builder.aPageResponse()
+                        .withResponse(asList(aServiceCommand()
+                                                 .withUuid(SERVICE_COMMAND_ID)
+                                                 .withServiceId(SERVICE_ID)
+                                                 .withTargetToAllEnv(true)
+                                                 .withName("START")
+                                                 .withCommand(commandBuilder.build())
+                                                 .build()))
+                        .build());
     srs.list(request, false, true);
     ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
     verify(wingsPersistence).query(eq(Service.class), argument.capture());
@@ -254,8 +270,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     srs.get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
-    verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
   }
 
   @Test
@@ -268,8 +282,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
-    verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
     verify(setupService).getServiceSetupStatus(serviceBuilder.but().build());
     assertThat(service.getSetup()).isNotNull();
   }
@@ -314,11 +326,18 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     inOrder.verify(workflowService).listWorkflows(any(PageResponse.class));
     inOrder.verify(wingsPersistence).delete(Service.class, SERVICE_ID);
-    inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
-    inOrder.verify(artifactStreamService).deleteByService(APP_ID, SERVICE_ID);
-    inOrder.verify(configService).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    inOrder.verify(serviceVariableService).deleteByEntityId(APP_ID, SERVICE_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    srs.pruneDescendingObjects(APP_ID, SERVICE_ID);
+    InOrder inOrder = inOrder(wingsPersistence, workflowService, notificationService, serviceTemplateService,
+        configService, serviceVariableService, artifactStreamService);
+    inOrder.verify(artifactStreamService).pruneByService(APP_ID, SERVICE_ID);
+    inOrder.verify(configService).pruneByService(APP_ID, SERVICE_ID);
+    inOrder.verify(serviceTemplateService).pruneByService(APP_ID, SERVICE_ID);
+    inOrder.verify(serviceVariableService).pruneByService(APP_ID, SERVICE_ID);
   }
 
   @Test

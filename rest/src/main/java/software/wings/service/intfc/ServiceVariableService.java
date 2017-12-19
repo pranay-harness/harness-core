@@ -15,7 +15,7 @@ import javax.validation.Valid;
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
-public interface ServiceVariableService {
+public interface ServiceVariableService extends OwnedByService {
   /**
    * List page response.
    *
@@ -104,12 +104,4 @@ public interface ServiceVariableService {
    * @param serviceTemplateId the service template id
    */
   void deleteByTemplateId(String appId, String serviceTemplateId);
-
-  /**
-   * Delete by entity id.
-   *
-   * @param appId    the app id
-   * @param entityId the entity id
-   */
-  void deleteByEntityId(String appId, String entityId);
 }

@@ -5,6 +5,7 @@
 package software.wings.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -28,6 +29,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.PartitionElement;
+import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -43,6 +45,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 
 import java.util.List;
@@ -151,6 +154,11 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
         Lists.newArrayList(instance1, instance2, instance3, instance4, instance5, instance6, instance7);
     res.setResponse(instances);
 
+    ServiceInstanceIdsParam serviceInstanceIdsParam = new ServiceInstanceIdsParam();
+    serviceInstanceIdsParam.setInstanceIds(Lists.newArrayList(instance1.getUuid(), instance2.getUuid(),
+        instance3.getUuid(), instance4.getUuid(), instance5.getUuid(), instance6.getUuid(), instance7.getUuid()));
+
+    when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(asList(serviceInstanceIdsParam));
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
     when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(new PageResponse<>());
 

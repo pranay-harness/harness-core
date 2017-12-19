@@ -297,7 +297,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
         throw new WingsException(INVALID_REQUEST, "message",
             String.format(
-                "Artifact Source associated as a trigger action to triggers %", Joiner.on(", ").join(triggerNames)));
+                "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
       }
     }
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
@@ -482,23 +482,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     return get(appId, streamId);
-  }
-
-  @Override
-  public void deleteStreamActionForWorkflow(String appId, String workflowId) {
-    List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
-                                               .field("appId")
-                                               .equal(appId)
-                                               .field("streamActions.workflowId")
-                                               .equal(workflowId)
-                                               .asList();
-    artifactStreams.forEach(artifactStream
-        -> artifactStream.getStreamActions()
-               .stream()
-               .filter(artifactStreamAction -> artifactStreamAction.getWorkflowId().equals(workflowId))
-               .forEach(artifactStreamAction -> {
-                 deleteStreamAction(appId, artifactStream.getUuid(), artifactStreamAction.getUuid());
-               }));
   }
 
   @Override
@@ -755,7 +738,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public void deleteByService(String appId, String serviceId) {
+  public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ArtifactStream.class)
         .field("appId")
         .equal(appId)
