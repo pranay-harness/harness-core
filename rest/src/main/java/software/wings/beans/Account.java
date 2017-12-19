@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.EncryptionInterface;
@@ -17,7 +18,7 @@ import javax.validation.constraints.NotNull;
 public class Account extends Base {
   @Indexed @NotNull private String companyName;
 
-  @Indexed(unique = true) @NotNull private String accountName;
+  @Indexed(options = @IndexOptions(unique = true)) @NotNull private String accountName;
 
   @NotNull(groups = Create.class) @Encrypted private String accountKey;
 

@@ -47,6 +47,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.app.DatabaseModule;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.License;
@@ -212,10 +213,12 @@ protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
       List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
       if (indexesAnnotations != null) {
         indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+          DatabaseModule.reportDeprecatedUnique(index);
+
           BasicDBObject keys = new BasicDBObject();
           Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
           primaryDatastore.getCollection(mc.getClazz())
-              .createIndex(keys, index.options().name(), index.unique() || index.options().unique());
+              .createIndex(keys, index.options().name(), index.options().unique());
         });
       }
 
@@ -223,10 +226,11 @@ protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
       for (final MappedField mf : mc.getPersistenceFields()) {
         if (mf.hasAnnotation(Indexed.class)) {
           final Indexed indexed = mf.getAnnotation(Indexed.class);
+          DatabaseModule.reportDeprecatedUnique(indexed);
+
           try {
             primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
-                    indexed.unique() || indexed.options().unique());
+                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
           } catch (MongoCommandException mex) {
             logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
             throw mex;
