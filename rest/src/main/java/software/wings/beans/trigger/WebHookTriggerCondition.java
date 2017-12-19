@@ -18,15 +18,20 @@ public class WebHookTriggerCondition extends TriggerCondition {
   private WebHookToken webHookToken;
   private String artifactStreamId;
   private Map<String, String> parameters = new HashMap<>();
+  private WebhookType webhookType;
+  private WebhookEventType webhookEventType;
 
   public WebHookTriggerCondition() {
     super(WEBHOOK);
   }
 
-  public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters) {
+  public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters,
+      WebhookType webhookType, WebhookEventType webhookEventType) {
     this();
     this.webHookToken = webHookToken;
     this.artifactStreamId = artifactStreamId;
     this.parameters = parameters;
+    this.webhookType = webhookType;
+    this.webhookEventType = webhookEventType;
   }
 }
