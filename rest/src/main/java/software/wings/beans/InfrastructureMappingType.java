@@ -23,27 +23,35 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   /**
    * Physical data center ssh infra mapping type.
    */
-  PHYSICAL_DATA_CENTER_SSH(PhysicalInfrastructureMapping.class, "PHYSICAL_DATA_CENTER_SSH", StencilCategory.OTHERS, 1),
-  /**
-   * Aws ssh infra mapping type.
-   */
+  PHYSICAL_DATA_CENTER_SSH(PhysicalInfrastructureMapping.class, "PHYSICAL_DATA_CENTER_SSH", StencilCategory.OTHERS,
+      1), /**
+           * Aws ssh infra mapping type.
+           */
   AWS_SSH(AwsInfrastructureMapping.class, "AWS_SSH", StencilCategory.OTHERS, 2),
+
   /**
-   * Aws CodeDeploy infra mapping type.
+   * Aws ami infrastructure mapping type.
    */
-  AWS_AWS_CODEDEPLOY(CodeDeployInfrastructureMapping.class, "AWS_AWS_CODEDEPLOY", StencilCategory.OTHERS, 3),
-  /**
-   * Aws ecs infra mapping type.
-   */
-  AWS_ECS(EcsInfrastructureMapping.class, "AWS_ECS", StencilCategory.OTHERS, 4),
-  /**
-   * Direct connection to kubernetes infra mapping type.
-   */
-  DIRECT_KUBERNETES(DirectKubernetesInfrastructureMapping.class, "DIRECT_KUBERNETES", StencilCategory.OTHERS, 5),
-  /**
-   * Gcp kubernetes infra mapping type.
-   */
-  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS, 6),
+  AWS_AMI(
+      AwsAmiInfrastructureMapping.class, "AWS_AMI", StencilCategory.OTHERS, 2), /**
+                                                                                 * Aws CodeDeploy infra mapping type.
+                                                                                 */
+  AWS_AWS_CODEDEPLOY(CodeDeployInfrastructureMapping.class, "AWS_AWS_CODEDEPLOY", StencilCategory.OTHERS,
+      3), /**
+           * Aws ecs infra mapping type.
+           */
+  AWS_ECS(EcsInfrastructureMapping.class, "AWS_ECS", StencilCategory.OTHERS,
+      4), /**
+           * Direct connection to kubernetes infra mapping type.
+           */
+  DIRECT_KUBERNETES(DirectKubernetesInfrastructureMapping.class, "DIRECT_KUBERNETES", StencilCategory.OTHERS,
+      5), /**
+           * Gcp kubernetes infra mapping type.
+           */
+  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS,
+      6), /**
+           * Aws aws lambda infrastructure mapping type.
+           */
   AWS_AWS_LAMBDA(AwsLambdaInfraStructureMapping.class, "AWS_AWS_LAMBDA", StencilCategory.OTHERS, 7);
 
   private static final String stencilsPath = "/templates/inframapping/";

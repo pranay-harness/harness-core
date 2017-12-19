@@ -59,6 +59,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -860,6 +861,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         -> serviceCommand.setCommand(
             commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     return service;
+  }
+
+  @Override
+  public UserDataSpecification createUserDataSpecification(UserDataSpecification userDataSpecification) {
+    return wingsPersistence.saveAndGet(UserDataSpecification.class, userDataSpecification);
+  }
+
+  @Override
+  public UserDataSpecification updateUserDataSpecification(UserDataSpecification userDataSpecification) {
+    return createUserDataSpecification(userDataSpecification);
+  }
+
+  @Override
+  public PageResponse<UserDataSpecification> listUserDataSpecification(PageRequest<UserDataSpecification> pageRequest) {
+    return wingsPersistence.query(UserDataSpecification.class, pageRequest);
   }
 
   /**
