@@ -24,6 +24,7 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -336,7 +337,7 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<UserDataSpecification> createUserDataSpecification(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, UserDataSpecification userDataSpecification) {
+      @PathParam("serviceId") String serviceId, @NotNull UserDataSpecification userDataSpecification) {
     userDataSpecification.setAppId(appId);
     userDataSpecification.setServiceId(serviceId);
     return new RestResponse<>(serviceResourceService.createUserDataSpecification(userDataSpecification));
@@ -348,7 +349,7 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<UserDataSpecification> updateUserDataSpecification(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("userDataSpecificationId") String userDataSpecificationId,
-      UserDataSpecification userDataSpecification) {
+      @NotNull UserDataSpecification userDataSpecification) {
     userDataSpecification.setAppId(appId);
     userDataSpecification.setServiceId(serviceId);
     userDataSpecification.setUuid(userDataSpecificationId);
