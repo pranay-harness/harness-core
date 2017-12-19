@@ -8,7 +8,8 @@ public enum DeploymentType {
   AWS_CODEDEPLOY("AWS CodeDeploy"),
   ECS("Amazon EC2 Container Services (ECS)"),
   KUBERNETES("Kubernetes"),
-  AWS_LAMBDA("AWS Lambda");
+  AWS_LAMBDA("AWS Lambda"),
+  AMI("AMI");
 
   private String displayName;
 
