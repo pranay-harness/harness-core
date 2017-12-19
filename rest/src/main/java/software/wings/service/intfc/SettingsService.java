@@ -13,7 +13,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 5/17/16.
  */
-public interface SettingsService {
+public interface SettingsService extends OwnedByAccount {
   /**
    * List.
    *
@@ -141,11 +141,4 @@ public interface SettingsService {
   List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
 
   SettingAttribute getGlobalSettingAttributesById(String accountId, String id);
-
-  /**
-   * Delete by account id.
-   *
-   * @param accountId the account id
-   */
-  void deleteByAccountId(String accountId);
 }
