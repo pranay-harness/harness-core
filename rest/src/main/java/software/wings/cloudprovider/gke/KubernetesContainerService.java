@@ -70,4 +70,7 @@ public interface KubernetesContainerService {
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
 
   NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+
+  void rollbackDaemonSet(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 }
