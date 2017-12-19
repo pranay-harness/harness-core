@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
@@ -28,7 +29,7 @@ import javax.security.auth.Subject;
 public class User extends Base implements Principal {
   @NotEmpty private String name;
 
-  @Indexed(unique = true) @Email private String email;
+  @Indexed(options = @IndexOptions(unique = true)) @Email private String email;
 
   @JsonIgnore private String passwordHash;
 
