@@ -77,7 +77,7 @@ import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.RepeatState;
-import software.wings.sm.states.ScriptState;
+import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
@@ -128,7 +128,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Script state type.
    */
-  SCRIPT(ScriptState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
+  SHELL_SCRIPT(ShellScriptState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Http state type.
@@ -295,12 +295,12 @@ public enum StateType implements StateTypeDescriptor {
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private Class<? extends State> stateClass;
-  private Object jsonSchema;
+  private final Class<? extends State> stateClass;
+  private final Object jsonSchema;
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();
   private List<String> phaseStepTypes = new ArrayList<>();
-  private StencilCategory stencilCategory;
+  private final StencilCategory stencilCategory;
   private Integer displayOrder = DEFAULT_DISPLAY_ORDER;
   private String displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
   private List<InfrastructureMappingType> supportedInfrastructureMappingTypes = emptyList();
@@ -360,23 +360,23 @@ public enum StateType implements StateTypeDescriptor {
     this.scopes = asList(scopes);
     this.phaseStepTypes =
         phaseStepTypes.stream().map(phaseStepType -> phaseStepType.name()).collect(Collectors.toList());
-    this.jsonSchema = loadJsonSchema();
+    jsonSchema = loadJsonSchema();
     this.stencilCategory = stencilCategory;
     this.displayOrder = displayOrder;
     if (isNotBlank(displayName)) {
       this.displayName = displayName;
     }
     try {
-      this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+      uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception e) {
-      this.uiSchema = new HashMap<String, Object>();
+      uiSchema = new HashMap<String, Object>();
     }
     this.supportedInfrastructureMappingTypes = supportedInfrastructureMappingTypes;
   }
 
   private Object readResource(String file) {
     try {
-      URL url = this.getClass().getResource(file);
+      URL url = getClass().getResource(file);
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
