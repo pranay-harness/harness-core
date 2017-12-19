@@ -419,8 +419,8 @@ class SAXHMMDistanceFinder(object):
                     a_optimal_test_cut, a_optimal_test_indices = list(self.ld.find_optimal_alignment(a_control_cut,
                                                                                                      a_test_cut,
                                                                                                      ))
-                    a_optimal_test_data = [np.nan if a_optimal_test_indices[z] == -1 else
-                                           test_data_smoothed[i][a_optimal_test_indices[z]] for z in
+                    a_optimal_test_data = [np.nan if z == -1 else
+                                           test_data_smoothed[i][z] for z in
                                            a_optimal_test_indices]
 
                     dist_vector, new_test_cut = self.get_distance(a_control_cut, a_optimal_test_cut, control_data_smoothed[j],
