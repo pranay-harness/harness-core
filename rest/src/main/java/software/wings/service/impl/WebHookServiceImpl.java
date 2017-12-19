@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static software.wings.utils.Misc.isNullOrEmpty;
 
+import com.jayway.jsonpath.DocumentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -10,11 +11,14 @@ import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
+import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -74,6 +78,42 @@ public class WebHookServiceImpl implements WebHookService {
         workflowExecution =
             triggerService.triggerExecutionByWebHook(appId, token, serviceBuildNumbers, webHookRequest.getParameters());
       }
+      return WebHookResponse.builder()
+          .requestId(workflowExecution.getUuid())
+          .status(workflowExecution.getStatus().name())
+          .build();
+    } catch (Exception ex) {
+      logger.error("WebHook call failed [%s]", token, ex);
+      return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
+    }
+  }
+
+  @Override
+  public WebHookResponse executeByEvent(String token, String webhookEventPayload) {
+    try {
+      Trigger trigger = triggerService.getTriggerByWebhookToken(token);
+      if (trigger == null) {
+        return WebHookResponse.builder().error("Trigger not associated to the given token").build();
+      }
+      WebHookTriggerCondition webhookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      Map<String, String> webhookParameters = webhookTriggerCondition.getParameters();
+      Map<String, String> resolvedParameters = new HashMap<>();
+      DocumentContext ctx = JsonUtils.parseJson(webhookEventPayload);
+      if (webhookParameters != null) {
+        webhookParameters.keySet().forEach(s -> {
+          String param = webhookParameters.get(s);
+          String paramValue = null;
+          try {
+            paramValue = JsonUtils.jsonPath(ctx, param);
+          } catch (Exception e) {
+            logger.warn("Failed to resolve the param {} in Json {}", param, webhookEventPayload);
+            if (!isNullOrEmpty(paramValue)) {
+              resolvedParameters.put(param, paramValue);
+            }
+          }
+        });
+      }
+      WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(trigger, resolvedParameters);
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
