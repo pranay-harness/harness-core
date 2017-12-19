@@ -317,6 +317,15 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("compute-providers/{computeProviderId}/target-groups")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getAlbTargetGroups(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listAlbTargetGroups(appId, computeProviderId, region));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/codedeploy/application-names")
   @Timed
   @ExceptionMetered

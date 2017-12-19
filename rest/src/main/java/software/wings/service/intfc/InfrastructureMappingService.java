@@ -12,7 +12,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.sm.ExecutionContext;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -26,8 +25,21 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 1/10/17.
  */
 public interface InfrastructureMappingService {
+  /**
+   * List page response.
+   *
+   * @param pageRequest the page request
+   * @return the page response
+   */
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest);
 
+  /**
+   * List page response.
+   *
+   * @param pageRequest       the page request
+   * @param disableValidation the disable validation
+   * @return the page response
+   */
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest, boolean disableValidation);
 
   /**
@@ -91,6 +103,14 @@ public interface InfrastructureMappingService {
   List<String> listComputeProviderHostDisplayNames(
       String appId, String envId, String serviceId, String computeProviderId);
 
+  /**
+   * Gets infra mapping by name.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param name  the name
+   * @return the infra mapping by name
+   */
   InfrastructureMapping getInfraMappingByName(String appId, String envId, String name);
 
   /**
@@ -108,9 +128,9 @@ public interface InfrastructureMappingService {
   /**
    * Provision nodes list.
    *
-   * @param appId              the app id
-   * @param infraMappingId     the infra mapping id
-   * @param workflowId
+   * @param appId               the app id
+   * @param infraMappingId      the infra mapping id
+   * @param workflowExecutionId the workflow execution id
    * @return the list
    */
   List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowExecutionId);
@@ -128,9 +148,11 @@ public interface InfrastructureMappingService {
   /**
    * Select service instances list.
    *
-   * @param appId                          the app id
-   * @param infraMappingId                 the infra mapping id
-   *@param selectionParams the service instance selection params  @return the list
+   * @param appId               the app id
+   * @param infraMappingId      the infra mapping id
+   * @param workflowExecutionId the workflow execution id
+   * @param selectionParams     the service instance selection params  @return the list
+   * @return the list
    */
   List<ServiceInstance> selectServiceInstances(
       String appId, String infraMappingId, String workflowExecutionId, ServiceInstanceSelectionParams selectionParams);
@@ -330,8 +352,9 @@ public interface InfrastructureMappingService {
   /**
    * List hosts list.
    *
-   * @param appId          the app id
-   * @param infraMappingId the infra mapping id
+   * @param appId               the app id
+   * @param infraMappingId      the infra mapping id
+   * @param workflowExecutionId the workflow execution id
    * @return the list
    */
   List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId);
@@ -364,4 +387,14 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listAutoScalingGroups(String appId, String computeProviderId, String region);
+
+  /**
+   * List alb target groups map.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the map
+   */
+  Map<String, String> listAlbTargetGroups(String appId, String computeProviderId, String region);
 }

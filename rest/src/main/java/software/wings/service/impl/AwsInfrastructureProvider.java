@@ -42,7 +42,6 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
@@ -290,7 +289,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       SettingAttribute computeProviderSetting, String region, String loadBalancerName) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     try {
-      List<TargetGroup> targetGroups = awsHelperService.listTargetGroupsForElb(
+      List<TargetGroup> targetGroups = awsHelperService.listTargetGroupsForAlb(
           region, awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), loadBalancerName);
       return targetGroups.stream().collect(
           Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
