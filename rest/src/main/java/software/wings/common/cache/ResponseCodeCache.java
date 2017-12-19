@@ -1,5 +1,7 @@
 package software.wings.common.cache;
 
+import static software.wings.beans.ResponseMessage.ResponseTypeEnum.*;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import software.wings.beans.ErrorCode;
@@ -55,15 +57,7 @@ public class ResponseCodeCache {
     if (message == null) {
       return null;
     }
-    return getResponseMessage(errorCode, message);
-  }
-
-  private ResponseMessage getResponseMessage(ErrorCode errorCode, String message) {
-    ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setMessage(message);
-    responseMessage.setErrorType(ResponseTypeEnum.ERROR);
-    return responseMessage;
+    return getResponseMessage(errorCode, ERROR, message);
   }
 
   /**
@@ -74,11 +68,38 @@ public class ResponseCodeCache {
    * @return ResponseMessage object.
    */
   public ResponseMessage getResponseMessage(ErrorCode errorCode, Map<String, Object> params) {
+    String message = getMessage(errorCode, params);
+    return getResponseMessage(errorCode, ERROR, message);
+  }
+
+  /**
+   * Converts error code and map of key value pairs for substitution into ResponseMessage object .
+   * @param errorCode
+   * @param responseTypeEnum
+   * @param params
+   * @return
+   */
+  public ResponseMessage getResponseMessage(
+      ErrorCode errorCode, ResponseTypeEnum responseTypeEnum, Map<String, Object> params) {
+    String message = getMessage(errorCode, params);
+    return getResponseMessage(errorCode, responseTypeEnum, message);
+  }
+
+  private String getMessage(ErrorCode errorCode, Map<String, Object> params) {
     String message = messages.getProperty(errorCode.getCode());
     if (message == null) {
       message = errorCode.name();
     }
     message = StrSubstitutor.replace(message, params);
-    return getResponseMessage(errorCode, message);
+    return message;
+  }
+
+  private ResponseMessage getResponseMessage(ErrorCode errorCode, ResponseTypeEnum responseTypeEnum, String message) {
+    ResponseMessage responseMessage = new ResponseMessage();
+    responseMessage.setCode(errorCode);
+    responseMessage.setMessage(message);
+    responseMessage.setErrorType(responseTypeEnum == null ? ResponseTypeEnum.ERROR : responseTypeEnum);
+
+    return responseMessage;
   }
 }

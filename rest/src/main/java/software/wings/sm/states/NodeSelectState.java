@@ -34,7 +34,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,16 +108,15 @@ public abstract class NodeSelectState extends State {
       }
 
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
-      // TODO:
-      List<ServiceInstance> prunedServiceInstances = new ArrayList<>();
-      serviceInstances.forEach(serviceInstance
-          -> prunedServiceInstances.add(aServiceInstance()
-                                            .withUuid(serviceInstance.getUuid())
-                                            .withHostId(serviceInstance.getHostId())
-                                            .withHostName(serviceInstance.getHostName())
-                                            .withPublicDns(serviceInstance.getPublicDns())
-                                            .build()));
-      selectedNodeExecutionData.setServiceInstanceList(prunedServiceInstances);
+      selectedNodeExecutionData.setServiceInstanceList(serviceInstances.stream()
+                                                           .map(serviceInstance
+                                                               -> aServiceInstance()
+                                                                      .withUuid(serviceInstance.getUuid())
+                                                                      .withHostId(serviceInstance.getHostId())
+                                                                      .withHostName(serviceInstance.getHostName())
+                                                                      .withPublicDns(serviceInstance.getPublicDns())
+                                                                      .build())
+                                                           .collect(toList()));
       selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =

@@ -19,23 +19,17 @@ public class WingsException extends WingsApiException {
   /**
    * The Response message list.
    */
-  List<ResponseMessage> responseMessageList = new ArrayList<ResponseMessage>();
-  private Map<String, Object> params = new HashMap<String, Object>();
+  private List<ResponseMessage> responseMessageList = new ArrayList<>();
+
+  private Map<String, Object> params = new HashMap<>();
 
   /**
-   * Instantiates a new wings exception.
-   */
-  public WingsException() {
-    super();
-  }
-
-  /*
    * Instantiates a new Wings exception.
    *
    * @param message the message
    */
   public WingsException(String message) {
-    super(message);
+    this(ErrorCode.UNKNOWN_ERROR, message);
   }
 
   /**
@@ -45,7 +39,7 @@ public class WingsException extends WingsApiException {
    * @param cause   the cause
    */
   public WingsException(String message, Throwable cause) {
-    super(message, cause);
+    this(ErrorCode.UNKNOWN_ERROR, message, cause);
   }
 
   /**
@@ -54,7 +48,16 @@ public class WingsException extends WingsApiException {
    * @param cause the cause
    */
   public WingsException(Throwable cause) {
-    super(cause);
+    this(ErrorCode.UNKNOWN_ERROR, cause);
+  }
+
+  /**
+   * Instantiates a new Wings exception.
+   *
+   * @param message the message
+   */
+  public WingsException(ErrorCode errorCode, String message) {
+    this(errorCode, message, (Throwable) null);
   }
 
   /**
@@ -135,17 +138,16 @@ public class WingsException extends WingsApiException {
    */
   public WingsException(List<ResponseMessage> messageList, String message, Throwable cause) {
     super(message, cause);
-    this.responseMessageList = messageList;
+    responseMessageList = messageList;
   }
 
   /**
-   *
    * @param messageList
    * @param params
    */
   public WingsException(List<ResponseMessage> messageList, String message, Map<String, Object> params) {
     super(message, null);
-    this.responseMessageList = messageList;
+    responseMessageList = messageList;
     this.params = params;
   }
 
@@ -174,7 +176,7 @@ public class WingsException extends WingsApiException {
    * @param value the value
    */
   public void addParam(String key, Object value) {
-    this.params.put(key, value);
+    params.put(key, value);
   }
 
   /**
@@ -192,6 +194,6 @@ public class WingsException extends WingsApiException {
    * @param messageList the message list
    */
   public void setResponseMessageList(List<ResponseMessage> messageList) {
-    this.responseMessageList = messageList;
+    responseMessageList = messageList;
   }
 }

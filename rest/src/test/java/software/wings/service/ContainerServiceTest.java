@@ -3,6 +3,7 @@ package software.wings.service;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -20,8 +21,6 @@ import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ReplicationControllerList;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +57,6 @@ public class ContainerServiceTest extends WingsBaseTest {
 
   @InjectMocks private ContainerService containerService = new ContainerServiceImpl();
 
-  @Mock private ReplicationControllerList rcList;
   @Mock private ServiceList serviceList;
   @Mock private PodList podList;
   @Mock private ListTasksResult listTasksResult;
@@ -138,7 +136,7 @@ public class ContainerServiceTest extends WingsBaseTest {
     when(gkeClusterService.getCluster(gcpParams.getSettingAttribute(), emptyList(), CLUSTER_NAME, "default"))
         .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
-        .thenReturn(new ReplicationControllerListBuilder().addToItems(replicationController).build());
+        .thenReturn((List) singletonList(replicationController));
     when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
         .thenReturn(replicationController);
     when(kubernetesContainerService.getServices(eq(kubernetesConfig), anyObject(), anyObject()))
@@ -146,8 +144,11 @@ public class ContainerServiceTest extends WingsBaseTest {
     when(serviceList.getItems()).thenReturn(singletonList(kubernetesService));
     when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyObject(), anyObject())).thenReturn(podList);
     when(podList.getItems()).thenReturn(singletonList(pod));
-    when(kubernetesContainerService.getControllers(eq(kubernetesConfig), anyObject(), anyObject())).thenReturn(rcList);
-    when(rcList.getItems()).thenReturn(singletonList(replicationController));
+    when(kubernetesContainerService.getControllers(eq(kubernetesConfig), anyObject(), anyObject()))
+        .thenReturn((List) singletonList(replicationController));
+    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyObject(), anyString()))
+        .thenReturn(Optional.of(2));
+    when(kubernetesContainerService.getControllerPodCount(any(ReplicationController.class))).thenReturn(2);
 
     Service ecsService = new Service();
     ecsService.setServiceName(ECS_SERVICE_NAME);

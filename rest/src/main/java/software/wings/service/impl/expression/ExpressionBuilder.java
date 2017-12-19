@@ -167,7 +167,7 @@ public abstract class ExpressionBuilder {
     }
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                   .withLimit(PageRequest.UNLIMITED)
-                                                                  .addFilter("appId", EQ, appId)
+                                                                  .addFilter(ServiceVariable.APP_ID_KEY, EQ, appId)
                                                                   .addFilter("entityId", IN, entityIds.toArray())
                                                                   .build();
     if (entityType != null) {

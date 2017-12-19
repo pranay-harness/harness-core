@@ -1,12 +1,14 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORYDOCKER;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -396,91 +398,19 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends ArtifactStream.Yaml {
     private String repositoryName;
     private String dockerImageName;
     private String imageName;
 
-    public static final class Builder {
-      private String repositoryName;
-      private String dockerImageName;
-      private String sourceName;
-      private String imageName;
-      private String settingName;
-      private boolean autoApproveForProduction = false;
-      private String type;
-      private boolean metadataOnly = false;
-
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withRepositoryName(String repositoryName) {
-        this.repositoryName = repositoryName;
-        return this;
-      }
-
-      public Builder withDockerImageName(String dockerImageName) {
-        this.dockerImageName = dockerImageName;
-        return this;
-      }
-
-      public Builder withSourceName(String sourceName) {
-        this.sourceName = sourceName;
-        return this;
-      }
-
-      public Builder withImageName(String imageName) {
-        this.imageName = imageName;
-        return this;
-      }
-
-      public Builder withSettingName(String settingName) {
-        this.settingName = settingName;
-        return this;
-      }
-
-      public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-        this.autoApproveForProduction = autoApproveForProduction;
-        return this;
-      }
-
-      public Builder withType(String type) {
-        this.type = type;
-        return this;
-      }
-
-      public Builder withMetadataOnly(boolean metadataOnly) {
-        this.metadataOnly = metadataOnly;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml()
-            .withRepositoryName(repositoryName)
-            .withDockerImageName(dockerImageName)
-            .withSourceName(sourceName)
-            .withImageName(imageName)
-            .withSettingName(settingName)
-            .withAutoApproveForProduction(autoApproveForProduction)
-            .withType(type)
-            .withMetadataOnly(metadataOnly);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setRepositoryName(repositoryName);
-        yaml.setDockerImageName(dockerImageName);
-        yaml.setSourceName(sourceName);
-        yaml.setImageName(imageName);
-        yaml.setSettingName(settingName);
-        yaml.setAutoApproveForProduction(autoApproveForProduction);
-        yaml.setType(type);
-        yaml.setMetadataOnly(metadataOnly);
-        return yaml;
-      }
+    @lombok.Builder
+    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String repositoryName,
+        String dockerImageName, String imageName) {
+      super(ARTIFACTORYDOCKER.name(), harnessApiVersion, artifactServerName, metadataOnly);
+      this.repositoryName = repositoryName;
+      this.dockerImageName = dockerImageName;
+      this.imageName = imageName;
     }
   }
 }

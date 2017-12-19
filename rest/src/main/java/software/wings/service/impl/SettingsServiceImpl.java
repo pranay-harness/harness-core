@@ -383,6 +383,13 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public SettingAttribute getGlobalSettingAttributesById(String accountId, String id) {
+    PageRequest<SettingAttribute> pageRequest =
+        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("_id", EQ, id).build();
+    return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse().get(0);
+  }
+
+  @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).field("accountId").equal(accountId));
   }

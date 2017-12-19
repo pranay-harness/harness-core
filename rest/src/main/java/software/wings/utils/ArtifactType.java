@@ -195,9 +195,10 @@ public enum ArtifactType {
                          .buildPipeline())
           .build();
     }
-  }, /**
-      * War artifact type.
-      */
+  },
+  /**
+   * War artifact type.
+   */
   WAR {
     public static final long serialVersionUID = 2932493038229748527L;
 
@@ -237,9 +238,10 @@ public enum ArtifactType {
                              .buildPipeline())
               .build());
     }
-  }, /**
-      * Tar artifact type.
-      */
+  },
+  /**
+   * Tar artifact type.
+   */
   TAR {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -361,9 +363,10 @@ public enum ArtifactType {
                          .buildPipeline())
           .build();
     }
-  }, /**
-      * Zip artifact type.
-      */
+  },
+  /**
+   * Zip artifact type.
+   */
   ZIP {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -485,9 +488,10 @@ public enum ArtifactType {
                          .buildPipeline())
           .build();
     }
-  }, /**
-      * Docker artifact type.
-      */
+  },
+  /**
+   * Docker artifact type.
+   */
   DOCKER {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -550,9 +554,10 @@ public enum ArtifactType {
                              .buildPipeline())
               .build());
     }
-  }, /**
-      * RPM artifact type
-      */
+  },
+  /**
+   * RPM artifact type
+   */
   RPM {
     private static final long serialVersionUID = 2932493038229748527L;
 

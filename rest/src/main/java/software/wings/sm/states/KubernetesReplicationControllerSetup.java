@@ -7,6 +7,7 @@ import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetup
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -22,11 +23,14 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
+
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/1/17
@@ -57,15 +61,25 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask) {
+      ContainerTask containerTask, String clusterName) {
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env.getName());
+        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
+
+    if (containerTask != null) {
+      KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
+      kubernetesContainerTask.getContainerDefinitions()
+          .stream()
+          .filter(cd -> CollectionUtils.isNotEmpty(cd.getCommands()))
+          .forEach(cd
+              -> cd.setCommands(cd.getCommands().stream().map(context::renderExpression).collect(Collectors.toList())));
+    }
 
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
         .withServiceName(serviceName)
+        .withClusterName(clusterName)
         .withImageDetails(imageDetails)
         .withClusterIP(clusterIP)
         .withContainerTask(containerTask)

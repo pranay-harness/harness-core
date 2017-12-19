@@ -1,10 +1,16 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
+
 import com.github.reinert.jjschema.Attributes;
+import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+
+import java.util.List;
 
 /**
  * Created by brett on 4/24/17
@@ -36,5 +42,15 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
   @Override
   public InstanceUnitType getInstanceUnitType() {
     return null;
+  }
+
+  @Override
+  protected ContainerResizeParams buildContainerResizeParams(
+      ContextData contextData, List<ContainerServiceData> desiredCounts) {
+    return aKubernetesResizeParams()
+        .withClusterName(contextData.containerElement.getClusterName())
+        .withDesiredCounts(desiredCounts)
+        .withNamespace(contextData.containerElement.getNamespace())
+        .build();
   }
 }

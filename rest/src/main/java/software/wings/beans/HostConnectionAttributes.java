@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
@@ -53,21 +54,26 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     /**
      * User password access type.
      */
-    USER_PASSWORD, /**
-                    * User password su app user access type.
-                    */
-    USER_PASSWORD_SU_APP_USER, /**
-                                * User password sudo app user access type.
-                                */
-    USER_PASSWORD_SUDO_APP_USER, /**
-                                  * Key access type.
-                                  */
-    KEY, /**
-          * Key su app user access type.
-          */
-    KEY_SU_APP_USER, /**
-                      * Key sudo app user access type.
-                      */
+    USER_PASSWORD,
+    /**
+     * User password su app user access type.
+     */
+    USER_PASSWORD_SU_APP_USER,
+    /**
+     * User password sudo app user access type.
+     */
+    USER_PASSWORD_SUDO_APP_USER,
+    /**
+     * Key access type.
+     */
+    KEY,
+    /**
+     * Key su app user access type.
+     */
+    KEY_SU_APP_USER,
+    /**
+     * Key sudo app user access type.
+     */
     KEY_SUDO_APP_USER
   }
 
@@ -197,16 +203,15 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static final class Yaml extends SettingValue.Yaml {
     private String connectionType;
     private String accessType;
     private String userName;
     private String key;
 
-    public Yaml() {}
-
-    public Yaml(String type, String name, String connectionType, String accessType, String userName, String key) {
-      super(type, name);
+    public Yaml(String type, String connectionType, String accessType, String userName, String key) {
+      super(type);
       this.connectionType = connectionType;
       this.accessType = accessType;
       this.userName = userName;

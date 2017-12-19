@@ -71,9 +71,10 @@ public class Activity extends Base {
     /**
      * Command type.
      */
-    Command, /**
-              * Verification type.
-              */
+    Command,
+    /**
+     * Verification type.
+     */
     Verification
   }
 }

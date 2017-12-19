@@ -11,7 +11,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.sync.YamlSyncHelper;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -24,12 +24,12 @@ import java.util.List;
 /**
  * @author rktummala on 10/15/17
  */
-public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Yaml, A extends InfrastructureMapping>
-    extends BaseYamlHandler<Y, A> {
+public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Yaml, B extends InfrastructureMapping>
+    extends BaseYamlHandler<Y, B> {
   @Inject SettingsService settingsService;
   @Inject EnvironmentService environmentService;
   @Inject ServiceResourceService serviceResourceService;
-  @Inject YamlSyncHelper yamlSyncHelper;
+  @Inject YamlHelper yamlHelper;
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ServiceTemplateService serviceTemplateService;
 
@@ -37,12 +37,6 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     SettingAttribute settingAttribute = settingsService.getByName(appId, settingName);
     Validator.notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute);
     return settingAttribute.getUuid();
-  }
-
-  protected String getSettingName(String settingId) {
-    SettingAttribute settingAttribute = settingsService.get(settingId);
-    Validator.notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute);
-    return settingAttribute.getName();
   }
 
   protected String getEnvironmentId(String appId, String envName) {
@@ -70,15 +64,48 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     return service.getName();
   }
 
+  protected String getSettingName(String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    Validator.notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute);
+    return settingAttribute.getName();
+  }
+
   @Override
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlSyncHelper.getAppId(accountId, yamlFilePath);
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId);
-    InfrastructureMapping infraMapping = yamlSyncHelper.getInfraMapping(accountId, yamlFilePath);
+    InfrastructureMapping infraMapping = yamlHelper.getInfraMapping(accountId, yamlFilePath);
     if (infraMapping != null) {
       infraMappingService.delete(appId, infraMapping.getUuid());
     }
+  }
+
+  protected void toYaml(Y yaml, B infraMapping) {
+    yaml.setComputeProviderType(infraMapping.getComputeProviderType());
+    yaml.setServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()));
+    yaml.setInfraMappingType(infraMapping.getInfraMappingType());
+    yaml.setDeploymentType(infraMapping.getDeploymentType());
+    yaml.setComputeProviderName(getSettingName(infraMapping.getComputeProviderSettingId()));
+    yaml.setHarnessApiVersion("1.0");
+  }
+
+  protected void toBean(
+      ChangeContext<Y> context, B bean, String appId, String envId, String computeProviderId, String serviceId) {
+    Y yaml = context.getYaml();
+    bean.setAutoPopulate(false);
+    bean.setInfraMappingType(yaml.getInfraMappingType());
+    bean.setServiceTemplateId(getServiceTemplateId(appId, serviceId));
+    bean.setComputeProviderSettingId(computeProviderId);
+    bean.setComputeProviderName(yaml.getComputeProviderName());
+    bean.setComputeProviderType(yaml.getComputeProviderType());
+    bean.setEnvId(envId);
+    bean.setServiceId(serviceId);
+    bean.setDeploymentType(yaml.getDeploymentType());
+    bean.setAppId(appId);
+    bean.setAccountId(context.getChange().getAccountId());
+    String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
+    bean.setName(name);
   }
 }

@@ -27,17 +27,10 @@ public class DefaultSpecificationYamlHandler extends BaseYamlHandler<Yaml, Lambd
   @Override
   public DefaultSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return setWithYamlValues(changeContext);
+    return toBean(changeContext);
   }
 
-  @Override
-  public LambdaSpecification.DefaultSpecification updateFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return setWithYamlValues(changeContext);
-  }
-
-  private LambdaSpecification.DefaultSpecification setWithYamlValues(ChangeContext<Yaml> changeContext)
-      throws HarnessException {
+  private LambdaSpecification.DefaultSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     return LambdaSpecification.DefaultSpecification.builder()
         .memorySize(yaml.getMemorySize())
@@ -49,12 +42,6 @@ public class DefaultSpecificationYamlHandler extends BaseYamlHandler<Yaml, Lambd
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return true;
-  }
-
-  @Override
-  public LambdaSpecification.DefaultSpecification createFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    return setWithYamlValues(changeContext);
   }
 
   @Override

@@ -57,7 +57,6 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupParams;
-import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.ContainerTask;
@@ -137,7 +136,7 @@ public abstract class ContainerServiceSetup extends State {
       logger.info("Setting up container service for account {}, app {}, service {}", app.getAccountId(), app.getUuid(),
           service.getName());
       ContainerTask containerTask =
-          serviceResourceService.getContainerTaskByDeploymentType(app.getAppId(), serviceId, getDeploymentType());
+          serviceResourceService.getContainerTaskByDeploymentType(app.getUuid(), serviceId, getDeploymentType());
 
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
@@ -178,8 +177,8 @@ public abstract class ContainerServiceSetup extends State {
       List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
           (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
-      ContainerSetupParams containerSetupParams = buildContainerSetupParams(
-          context, service.getName(), imageDetails, app, env, containerInfrastructureMapping, containerTask);
+      ContainerSetupParams containerSetupParams = buildContainerSetupParams(context, service.getName(), imageDetails,
+          app, env, containerInfrastructureMapping, containerTask, clusterName);
 
       CommandStateExecutionData executionData = aCommandStateExecutionData()
                                                     .withServiceId(service.getUuid())
@@ -191,20 +190,15 @@ public abstract class ContainerServiceSetup extends State {
                                                     .withActivityId(activity.getUuid())
                                                     .build();
 
-      CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withEnvId(env.getUuid())
-              .withContainerSetupParams(containerSetupParams)
-              .withClusterName(clusterName)
-              .withActivityId(activity.getUuid())
-              .withCloudProviderSetting(settingAttribute)
-              .withNamespace(containerSetupParams instanceof KubernetesSetupParams
-                      ? ((KubernetesSetupParams) containerSetupParams).getNamespace()
-                      : "")
-              .withCloudProviderCredentials(encryptedDataDetails)
-              .build();
+      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                            .withAccountId(app.getAccountId())
+                                                            .withAppId(app.getUuid())
+                                                            .withEnvId(env.getUuid())
+                                                            .withContainerSetupParams(containerSetupParams)
+                                                            .withActivityId(activity.getUuid())
+                                                            .withCloudProviderSetting(settingAttribute)
+                                                            .withCloudProviderCredentials(encryptedDataDetails)
+                                                            .build();
 
       String delegateTaskId =
           delegateService.queueTask(aDelegateTask()
@@ -347,9 +341,15 @@ public abstract class ContainerServiceSetup extends State {
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
       encryptionService.decrypt(artifactoryConfig,
           secretManager.getEncryptionDetails(artifactoryConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      imageDetails.name(artifactoryArtifactStream.getImageName())
+      String url = artifactoryConfig.getArtifactoryUrl();
+      int firstDotIndex = url.indexOf(".");
+      int slashAfterDomain = url.indexOf("/", firstDotIndex);
+      String registryUrl = url.substring(0, firstDotIndex) + "-" + artifactoryArtifactStream.getJobname()
+          + url.substring(firstDotIndex, slashAfterDomain > 0 ? slashAfterDomain : url.length());
+      String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
+      imageDetails.name(namePrefix + "/" + artifactoryArtifactStream.getImageName())
           .sourceName(artifactoryArtifactStream.getSourceName())
-          .registryUrl(artifactoryConfig.getArtifactoryUrl())
+          .registryUrl(registryUrl)
           .username(artifactoryConfig.getUsername())
           .password(new String(artifactoryConfig.getPassword()));
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
@@ -357,9 +357,16 @@ public abstract class ContainerServiceSetup extends State {
       NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
       encryptionService.decrypt(nexusConfig,
           secretManager.getEncryptionDetails(nexusConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      imageDetails.name(nexusArtifactStream.getImageName())
+
+      String url = nexusConfig.getNexusUrl();
+      int firstDotIndex = url.indexOf(".");
+      int colonIndex = url.indexOf(":", firstDotIndex);
+      String registryUrl = url.substring(0, colonIndex) + ":8083";
+      String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
+
+      imageDetails.name(namePrefix + "/" + nexusArtifactStream.getImageName())
           .sourceName(nexusArtifactStream.getSourceName())
-          .registryUrl(nexusConfig.getNexusUrl())
+          .registryUrl(registryUrl)
           .username(nexusConfig.getUsername())
           .password(new String(nexusConfig.getPassword()));
     } else {
@@ -429,7 +436,7 @@ public abstract class ContainerServiceSetup extends State {
 
   protected abstract ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask);
+      ContainerTask containerTask, String clusterName);
 
   protected abstract boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping);
 

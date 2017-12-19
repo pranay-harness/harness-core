@@ -8,11 +8,13 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
@@ -55,7 +57,7 @@ public abstract class ArtifactStream extends Base {
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;
 
-  @UIOrder(3) private String serviceId;
+  @UIOrder(3) @Indexed private String serviceId;
 
   @SchemaIgnore private boolean autoDownload = true;
 
@@ -332,10 +334,15 @@ public abstract class ArtifactStream extends Base {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static abstract class Yaml extends BaseEntityYaml {
-    private String sourceName;
-    private String settingName;
-    private boolean autoApproveForProduction = false;
+    private String artifactServerName;
     private boolean metadataOnly = false;
+
+    public Yaml(String type, String harnessApiVersion, String artifactServerName, boolean metadataOnly) {
+      super(type, harnessApiVersion);
+      this.artifactServerName = artifactServerName;
+      this.metadataOnly = metadataOnly;
+    }
   }
 }

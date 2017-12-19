@@ -31,6 +31,9 @@ import javax.inject.Inject;
  */
 public class ContainerSyncJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(ContainerSyncJob.class);
+
+  public static final String APP_ID_KEY = "appId";
+
   // we don't have to process the instances that we have processed less than one hour
   private int INTERVAL = 3600000;
 
@@ -44,7 +47,7 @@ public class ContainerSyncJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
+    String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
     logger.info("Executing container sync job for appId:" + appId);
 
     Set<String> containerSvcNameNoRevisionSet =
@@ -66,7 +69,7 @@ public class ContainerSyncJob implements Job {
       final Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap = Maps.newHashMap();
       List<ContainerDeploymentInfo> containerDeploymentInfoList =
           instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, appId);
-      containerDeploymentInfoList.stream().forEach(containerDeploymentInfo
+      containerDeploymentInfoList.forEach(containerDeploymentInfo
           -> containerSvcNameDeploymentInfoMap.put(
               containerDeploymentInfo.getContainerSvcName(), containerDeploymentInfo));
 

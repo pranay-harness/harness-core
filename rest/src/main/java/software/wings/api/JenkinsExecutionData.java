@@ -23,38 +23,41 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
   private List<FilePathAssertionEntry> filePathAssertionMap;
   private Map<String, String> jobParameters;
   private String activityId;
+  private Map<String, String> metadata;
+  private String buildNumber;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(
-        executionDetails, "jobName", anExecutionDataValue().withValue(jobName).withDisplayName("Job Name").build());
-    putNotNull(executionDetails, "build", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build").build());
-    putNotNull(executionDetails, "jobParameters",
-        anExecutionDataValue().withValue(jobParameters).withDisplayName("Job Parameters").build());
-    putNotNull(executionDetails, "jobStatus",
-        anExecutionDataValue().withValue(jobStatus).withDisplayName("Job Status").build());
-    putNotNull(executionDetails, "fileAssertionData",
-        anExecutionDataValue().withValue(filePathAssertionMap).withDisplayName("Assertion Data").build());
-    putNotNull(executionDetails, "activityId",
-        anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
+    setExecutionData(executionDetails);
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    setExecutionData(executionDetails);
+    return executionDetails;
+  }
+
+  private void setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(
         executionDetails, "jobName", anExecutionDataValue().withValue(jobName).withDisplayName("Job Name").build());
-    putNotNull(executionDetails, "build", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build").build());
     putNotNull(executionDetails, "jobParameters",
         anExecutionDataValue().withValue(jobParameters).withDisplayName("Job Parameters").build());
-    putNotNull(executionDetails, "jobStatus",
-        anExecutionDataValue().withValue(jobStatus).withDisplayName("Job Status").build());
     putNotNull(executionDetails, "fileAssertionData",
         anExecutionDataValue().withValue(filePathAssertionMap).withDisplayName("Assertion Data").build());
+    putNotNull(executionDetails, "jobStatus",
+        anExecutionDataValue().withValue(jobStatus).withDisplayName("Job Status").build());
+    putNotNull(executionDetails, "buildNumber",
+        anExecutionDataValue().withValue(buildNumber).withDisplayName("Build Number").build());
+    putNotNull(
+        executionDetails, "build", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build Url").build());
+    if (metadata != null) {
+      putNotNull(executionDetails, "metadata",
+          anExecutionDataValue().withValue(String.valueOf(metadata)).withDisplayName("Meta-Data").build());
+    }
     putNotNull(executionDetails, "activityId",
         anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
-    return executionDetails;
   }
 }

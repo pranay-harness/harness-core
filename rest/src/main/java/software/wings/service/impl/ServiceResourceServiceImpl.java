@@ -13,15 +13,18 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
@@ -31,7 +34,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -64,6 +66,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -72,6 +76,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.OwnedByService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -93,6 +98,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -117,24 +123,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ConfigService configService;
-  @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private ExecutorService executorService;
-  @Inject private StencilPostProcessor stencilPostProcessor;
-  @Inject private ServiceVariableService serviceVariableService;
+
   @Inject private ActivityService activityService;
-  @Inject private SetupService setupService;
-  @Inject private NotificationService notificationService;
-  @Inject private EntityVersionService entityVersionService;
-  @Inject private CommandService commandService;
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private CommandService commandService;
+  @Inject private ConfigService configService;
   @Inject private EntityUpdateService entityUpdateService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private EntityVersionService entityVersionService;
+  @Inject private ExecutorService executorService;
+  @Inject private NotificationService notificationService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ServiceVariableService serviceVariableService;
+  @Inject private SetupService setupService;
   @Inject private TriggerService triggerService;
+  @Inject private WorkflowService workflowService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
+
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+
+  @Inject private StencilPostProcessor stencilPostProcessor;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**
    * {@inheritDoc}
@@ -144,28 +155,48 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands) {
     PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
 
-    if (withServiceCommands) {
-      pageResponse.getResponse().forEach(service -> {
-        try {
-          service.setServiceCommands(getServiceCommands(service));
-          service.getServiceCommands().forEach(serviceCommand
-              -> serviceCommand.setCommand(commandService.getCommand(
-                  serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
-        } catch (Exception e) {
-          logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
-              service.getAppId(), e);
-        }
-      });
-    }
     SearchFilter appIdSearchFilter = request.getFilters()
                                          .stream()
                                          .filter(searchFilter -> searchFilter.getFieldName().equals("appId"))
                                          .findFirst()
                                          .orElse(null);
+    if (withServiceCommands) {
+      if (appIdSearchFilter != null) {
+        PageRequest<ServiceCommand> serviceCommandPageRequest =
+            aPageRequest().withLimit(UNLIMITED).addFilter(appIdSearchFilter).build();
+        List<ServiceCommand> appServiceCommands =
+            wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
+        Map<String, List<ServiceCommand>> serviceToServiceCommandMap =
+            appServiceCommands.stream().collect(Collectors.groupingBy(ServiceCommand::getServiceId));
+        pageResponse.getResponse().forEach(service -> {
+          try {
+            //            service.setServiceCommands(getServiceCommands(service.getAppId(), service.getUuid()));
+            if (serviceToServiceCommandMap != null) {
+              List<ServiceCommand> serviceCommands = serviceToServiceCommandMap.get(service.getUuid());
+              if (serviceCommands != null) {
+                serviceCommands.forEach(serviceCommand
+                    -> serviceCommand.setCommand(commandService.getCommand(
+                        serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+                service.setServiceCommands(serviceCommands);
+              } else {
+                service.setServiceCommands(getServiceCommands(service.getAppId(), service.getUuid()));
+              }
+            }
+          } catch (Exception e) {
+            logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
+                service.getAppId(), e);
+          }
+        });
+      } else {
+        throw new WingsException("AppId field is required in Search Filter");
+      }
+    }
     if (withBuildSource && appIdSearchFilter != null) {
       List<ArtifactStream> artifactStreams = new ArrayList<>();
       try {
-        artifactStreams = artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).build()).getResponse();
+        artifactStreams =
+            artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).withLimit(UNLIMITED).build())
+                .getResponse();
       } catch (Exception e) {
         logger.error("Failed to retrieve artifact streams", e);
       }
@@ -210,7 +241,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service clone(String appId, String originalServiceId, Service service) {
-    Service originalService = get(appId, originalServiceId, true);
+    Service originalService = get(appId, originalServiceId);
     Service clonedService = originalService.clone();
     clonedService.setName(service.getName());
     clonedService.setDescription(service.getDescription());
@@ -223,13 +254,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, false);
     });
 
-    List<ServiceTemplate> serviceTemplates = serviceTemplateService
-                                                 .list(aPageRequest()
-                                                           .addFilter("appId", EQ, originalService.getAppId())
-                                                           .addFilter("serviceId", EQ, originalService.getUuid())
-                                                           .build(),
-                                                     false, false)
-                                                 .getResponse();
+    List<ServiceTemplate> serviceTemplates =
+        serviceTemplateService
+            .list(aPageRequest()
+                      .addFilter(ServiceTemplate.APP_ID_KEY, EQ, originalService.getAppId())
+                      .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
+                      .build(),
+                false, false)
+            .getResponse();
 
     serviceTemplates.forEach(serviceTemplate -> {
       ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
@@ -252,8 +284,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     originalService.getServiceVariables().forEach(originalServiceVariable -> {
       ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
+      if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
+        clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
+      }
       clonedServiceVariable.setEntityId(savedCloneService.getUuid());
-
       serviceVariableService.save(clonedServiceVariable);
     });
     return savedCloneService;
@@ -262,7 +296,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service cloneCommand(String appId, String serviceId, String commandName, ServiceCommand command) {
     // don't allow cloning of Docker commands
-    Service service = get(appId, serviceId);
+    Service service = getServiceWithServiceCommands(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       throw new WingsException(INVALID_REQUEST, "message", "Docker commands can not be cloned");
     }
@@ -279,7 +313,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName) {
     Map<String, Integer> commandNameVersionMap =
-        getServiceCommands(get(appId, serviceId))
+        getServiceCommands(appId, serviceId, false)
             .stream()
             .filter(serviceCommand -> serviceCommand.getVersionForEnv(envId) != 0)
             .collect(toMap(ServiceCommand::getName, serviceCommand -> serviceCommand.getVersionForEnv(envId)));
@@ -385,13 +419,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void setServiceDetails(Service service, String appId) {
     service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
     service.setServiceVariables(serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false));
-    service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, service.getUuid()));
-    service.setLastProdDeploymentActivity(
-        activityService.getLastProductionActivityForService(appId, service.getUuid()));
-    service.setServiceCommands(getServiceCommands(service));
-    service.getServiceCommands().forEach(serviceCommand
-        -> serviceCommand.setCommand(
-            commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+    service.setServiceCommands(getServiceCommands(appId, service.getUuid()));
   }
 
   @Override
@@ -423,16 +451,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       ensureServiceSafeToDelete(service);
     }
 
+    yamlChangeSetHelper.serviceYamlChange(service, ChangeType.DELETE);
+
+    // First lets make sure that we have persisted a job that will prone the descendant objects
+    PruneObjectJob.addDefaultJob(jobScheduler, Service.class, service.getAppId(), service.getUuid());
+
     // safe to delete
-    String serviceId = service.getUuid();
-    String appId = service.getAppId();
-    boolean deleted = wingsPersistence.delete(Service.class, serviceId);
-    if (deleted) {
-      executorService.submit(() -> deleteCommands(service));
-      executorService.submit(() -> serviceTemplateService.deleteByService(appId, serviceId));
-      executorService.submit(() -> artifactStreamService.deleteByService(appId, serviceId));
-      executorService.submit(() -> configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId));
-      executorService.submit(() -> serviceVariableService.deleteByEntityId(appId, serviceId));
+    if (wingsPersistence.delete(Service.class, service.getUuid())) {
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(service.getAppId())
@@ -440,16 +465,42 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               .withNotificationTemplateVariables(
                   ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
               .build());
-
-      yamlChangeSetHelper.serviceYamlChangeAsync(service, ChangeType.DELETE);
     }
+  }
+
+  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
+  public <T> List<T> descendingServices(Class<T> cls) {
+    List<T> descendings = new ArrayList<>();
+
+    for (Field field : ServiceResourceServiceImpl.class.getDeclaredFields()) {
+      Object obj;
+      try {
+        obj = field.get(this);
+        if (cls.isInstance(obj)) {
+          T descending = (T) obj;
+          descendings.add(descending);
+        }
+      } catch (IllegalAccessException e) {
+      }
+    }
+
+    return descendings;
+  }
+
+  @Override
+  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String serviceId) {
+    // TODO: Fix this one into the pattern
+    executorService.submit(() -> deleteCommands(appId, serviceId));
+
+    List<OwnedByService> services = descendingServices(OwnedByService.class);
+    PruneObjectJob.pruneDescendingObjects(
+        services, appId, serviceId, (descending) -> { descending.pruneByService(appId, serviceId); });
   }
 
   private void ensureServiceSafeToDelete(Service service) {
     List<Workflow> workflows =
         workflowService
-            .listWorkflows(
-                aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
+            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
             .getResponse();
 
     List<Workflow> serviceWorkflows =
@@ -467,8 +518,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
-  private void deleteCommands(Service service) {
-    getServiceCommands(service).forEach(serviceCommand -> deleteCommand(serviceCommand, service));
+  private void deleteCommands(String appId, String serviceId) {
+    getServiceCommands(appId, serviceId, false)
+        .forEach(serviceCommand -> deleteCommand(appId, serviceId, serviceCommand.getUuid()));
   }
 
   /**
@@ -513,8 +565,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void ensureServiceCommandSafeToDelete(Service service, ServiceCommand serviceCommand) {
     List<Workflow> workflows =
         workflowService
-            .listWorkflows(
-                aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
+            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
             .getResponse();
     if (workflows == null) {
       return;
@@ -560,15 +611,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void deleteByApp(Application application) {
-    wingsPersistence.createQuery(Service.class)
-        .field("appId")
-        .equal(application.getUuid())
-        .asList()
-        .forEach(service -> {
-          service.setEntityYamlPath(yamlDirectoryService.getRootPathByService(service, application.entityYamlPath));
-          delete(service, true);
-        });
+  public void pruneByApplication(String appId) {
+    findServicesByApp(appId).forEach(service -> {
+      wingsPersistence.delete(Service.class, service.getUuid());
+      pruneDescendingObjects(appId, service.getUuid());
+    });
   }
 
   @Override
@@ -796,9 +843,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ServiceCommand getCommandByNameAndVersion(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, int version) {
-    Service service = getServiceWithServiceCommands(appId, serviceId);
-
-    ServiceCommand command = getServiceCommands(service)
+    ServiceCommand command = getServiceCommands(appId, serviceId, false)
                                  .stream()
                                  .filter(serviceCommand -> equalsIgnoreCase(commandName, serviceCommand.getName()))
                                  .findFirst()
@@ -807,9 +852,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return command;
   }
 
-  private Service getServiceWithServiceCommands(@NotEmpty String appId, @NotEmpty String serviceId) {
+  @Override
+  public Service getServiceWithServiceCommands(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    service.setServiceCommands(getServiceCommands(service));
+    service.setServiceCommands(getServiceCommands(appId, serviceId));
     service.getServiceCommands().forEach(serviceCommand
         -> serviceCommand.setCommand(
             commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
@@ -854,12 +900,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Map<String, String> getData(String appId, String... params) {
     Service service = wingsPersistence.get(Service.class, appId, params[0]);
-    if (isEmpty(getServiceCommands(service))) {
+    List<ServiceCommand> serviceCommands = getServiceCommands(service.getAppId(), service.getUuid(), false);
+    if (isEmpty(serviceCommands)) {
       return emptyMap();
     } else {
-      return getServiceCommands(service)
-          .stream()
-          .filter(command -> !StringUtils.equals(command.getName(), params[1]))
+      return serviceCommands.stream()
+          .filter(serviceCommand -> !StringUtils.equals(serviceCommand.getName(), params[1]))
           .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
     }
   }
@@ -920,18 +966,30 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public boolean isArtifactNeeded(Service service) {
-    return getServiceCommands(service).stream().anyMatch(serviceCommand
-        -> commandService.getCommand(service.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())
-               .isArtifactNeeded());
+    return getServiceCommands(service.getAppId(), service.getUuid(), false)
+        .stream()
+        .anyMatch(serviceCommand
+            -> commandService
+                   .getCommand(service.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())
+                   .isArtifactNeeded());
   }
 
   @Override
-  public List<ServiceCommand> getServiceCommands(Service service) {
-    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
-                                                                .withLimit(PageRequest.UNLIMITED)
-                                                                .addFilter("appId", EQ, service.getAppId())
-                                                                .addFilter("serviceId", EQ, service.getUuid())
-                                                                .build();
-    return wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
+  public List<ServiceCommand> getServiceCommands(String appId, String serviceId) {
+    return getServiceCommands(appId, serviceId, true);
+  }
+
+  @Override
+  public List<ServiceCommand> getServiceCommands(String appId, String serviceId, boolean withCommandDetails) {
+    PageRequest<ServiceCommand> serviceCommandPageRequest =
+        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("serviceId", EQ, serviceId).build();
+    List<ServiceCommand> serviceCommands =
+        wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
+    if (withCommandDetails) {
+      serviceCommands.forEach(serviceCommand
+          -> serviceCommand.setCommand(
+              commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+    }
+    return serviceCommands;
   }
 }

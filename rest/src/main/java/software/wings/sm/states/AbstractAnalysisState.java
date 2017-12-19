@@ -166,7 +166,7 @@ public abstract class AbstractAnalysisState extends State {
 
   protected String getWorkflowId(ExecutionContext context) {
     final WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
+        workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
     return executionDetails.getWorkflowId();
   }
 

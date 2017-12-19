@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
@@ -107,8 +108,16 @@ public class Artifact extends Base {
   }
 
   /**
+   * Gets Key
    *
+   * @return the bucket name
    */
+  public String getArtifactFileName() {
+    if (getMetadata() != null) {
+      return getMetadata().get(ARTIFACT_FILE_NAME);
+    }
+    return null;
+  }
 
   /**
    * The Enum Status.
@@ -117,33 +126,42 @@ public class Artifact extends Base {
     /**
      * New status.
      */
-    NEW, /**
-          * Running status.
-          */
-    RUNNING, /**
-              * Queued status.
-              */
-    QUEUED, /**
-             * Waiting status.
-             */
-    WAITING, /**
-              * Ready status.
-              */
-    READY(true), /**
-                  * Aborted status.
-                  */
-    APPROVED(true), /**
-                     * Rejected status.
-                     */
-    REJECTED(true), /**
-                     * Aborted status.
-                     */
-    ABORTED(true), /**
-                    * Failed status.
-                    */
-    FAILED(true), /**
-                   * Error status.
-                   */
+    NEW,
+    /**
+     * Running status.
+     */
+    RUNNING,
+    /**
+     * Queued status.
+     */
+    QUEUED,
+    /**
+     * Waiting status.
+     */
+    WAITING,
+    /**
+     * Ready status.
+     */
+    READY(true),
+    /**
+     * Aborted status.
+     */
+    APPROVED(true),
+    /**
+     * Rejected status.
+     */
+    REJECTED(true),
+    /**
+     * Aborted status.
+     */
+    ABORTED(true),
+    /**
+     * Failed status.
+     */
+    FAILED(true),
+    /**
+     * Error status.
+     */
     ERROR(true);
 
     Status() {}

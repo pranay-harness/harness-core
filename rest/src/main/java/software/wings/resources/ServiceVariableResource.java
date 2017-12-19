@@ -147,7 +147,7 @@ public class ServiceVariableResource {
   @Timed
   @ExceptionMetered
   public RestResponse deleteByEntity(@QueryParam("appId") String appId, @PathParam("entityId") String entityId) {
-    serviceVariablesService.deleteByEntityId(appId, entityId);
+    serviceVariablesService.pruneByService(appId, entityId);
     return new RestResponse();
   }
 }

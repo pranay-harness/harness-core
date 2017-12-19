@@ -4,6 +4,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
 import software.wings.waitnotify.NotifyResponseData;
@@ -53,6 +54,7 @@ public abstract class State {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static abstract class Yaml extends BaseYaml {
     private String contextElementType;
     private String stateType;

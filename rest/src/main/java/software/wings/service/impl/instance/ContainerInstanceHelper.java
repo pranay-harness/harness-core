@@ -214,7 +214,7 @@ public class ContainerInstanceHelper {
 
   private String getContainerSvcName(ContainerInfo containerInfo) {
     if (containerInfo instanceof KubernetesContainerInfo) {
-      return ((KubernetesContainerInfo) containerInfo).getReplicationControllerName();
+      return ((KubernetesContainerInfo) containerInfo).getControllerName();
     } else if (containerInfo instanceof EcsContainerInfo) {
       return ((EcsContainerInfo) containerInfo).getServiceName();
     } else {
@@ -260,7 +260,7 @@ public class ContainerInstanceHelper {
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
+        workflowExecutionService.getExecutionWithoutSummary(appId, workflowExecutionId);
     Validator.notNullCheck("WorkflowExecution", workflowExecution);
     StateExecutionInstance stateExecutionInstance =
         workflowExecutionService.getStateExecutionData(appId, stateExecutionInstanceId);

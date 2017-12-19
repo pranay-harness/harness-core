@@ -99,18 +99,22 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public boolean isWhitelisted(DelegateTask task, String delegateId) {
-    for (String criteria : task.getTaskType().getCriteria(task)) {
-      if (isNotBlank(criteria)) {
-        DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                              .field("delegateId")
-                                              .equal(delegateId)
-                                              .field("criteria")
-                                              .equal(criteria)
-                                              .get();
-        if (result != null && result.isValidated()) {
-          return true;
+    try {
+      for (String criteria : task.getTaskType().getCriteria(task)) {
+        if (isNotBlank(criteria)) {
+          DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                .field("delegateId")
+                                                .equal(delegateId)
+                                                .field("criteria")
+                                                .equal(criteria)
+                                                .get();
+          if (result != null && result.isValidated()) {
+            return true;
+          }
         }
       }
+    } catch (Exception e) {
+      logger.error("Error checking whether delegate is whitelisted for task", e);
     }
     return false;
   }

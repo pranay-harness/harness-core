@@ -205,10 +205,10 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should delete by env.
+   * Should prune by environment.
    */
   @Test
-  public void shouldDeleteByEnv() {
+  public void shouldPruneByEnvironment() {
     when(query.asList())
         .thenReturn(asList(aServiceTemplate()
                                .withUuid(TEMPLATE_ID)
@@ -217,7 +217,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                .withName(TEMPLATE_NAME)
                                .build()));
     doNothing().when(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
-    spyTemplateService.deleteByEnv(APP_ID, ENV_ID);
+    spyTemplateService.pruneByEnvironment(APP_ID, ENV_ID);
     verify(query).field("appId");
     verify(end).equal(APP_ID);
     verify(query).field("envId");
@@ -228,7 +228,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should delete by service.
    */
   @Test
-  public void shouldDeleteByService() {
+  public void shouldPruneByService() {
     doNothing().when(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
     when(query.asList())
         .thenReturn(asList(aServiceTemplate()
@@ -237,7 +237,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                .withEnvId(ENV_ID)
                                .withName(TEMPLATE_NAME)
                                .build()));
-    spyTemplateService.deleteByService(APP_ID, SERVICE_ID);
+    spyTemplateService.pruneByService(APP_ID, SERVICE_ID);
     verify(query).field("appId");
     verify(end).equal(APP_ID);
     verify(query).field("serviceId");

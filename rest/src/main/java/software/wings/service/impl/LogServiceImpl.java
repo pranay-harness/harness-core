@@ -3,9 +3,9 @@ package software.wings.service.impl;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -15,6 +15,9 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
+import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +43,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -78,8 +82,8 @@ public class LogServiceImpl implements LogService {
    * @see software.wings.service.intfc.LogService#save(software.wings.beans.Log)
    */
   @Override
-  public String save(Log log) {
-    return batchedSave(singletonList(log)).get(0);
+  public void save(Log log) {
+    batchedSave(singletonList(log));
   }
 
   @Override
@@ -128,16 +132,37 @@ public class LogServiceImpl implements LogService {
   }
 
   @Override
-  public List<String> batchedSave(List<Log> logs) {
-    if (isEmpty(logs)) {
-      return emptyList();
+  public void batchedSave(List<Log> logs) {
+    if (!isEmpty(logs)) {
+      logs = logs.stream().filter(Objects::nonNull).collect(toList());
+      //    List<String> savedLogIds = wingsPersistence.save(logs);
+
+      List<DBObject> dbObjects = new ArrayList<>(logs.size());
+      for (Log log : logs) {
+        try {
+          DBObject dbObject = ((DatastoreImpl) wingsPersistence.getDatastore()).getMapper().toDBObject(log);
+          dbObjects.add(dbObject);
+        } catch (Exception e) {
+          logger.error("Exception in saving log [{}]", log, e);
+        }
+      }
+      WriteResult writeResult = wingsPersistence.getCollection("commandLogs").insert(dbObjects);
+
+      // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
+
+      Map<String, Map<String, Log>> activityCommandUnitLastLogMap = logs.stream().collect(groupingBy(Log::getActivityId,
+          toMap(Log::getCommandUnitName, Function.identity(),
+              (l1, l2)
+                  -> (l1.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)
+                              || l1.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)
+                          ? l1
+                          : l2))));
+
+      //      Map<String, Map<String, Log>> activityCommandUnitLastLogMap =
+      //          logs.stream().collect(groupingBy(Log::getActivityId, toMap(Log::getCommandUnitName,
+      //          Function.identity(), (l1, l2) -> l2)));
+      activityService.updateCommandUnitStatus(activityCommandUnitLastLogMap);
     }
-    List<String> savedLogIds = wingsPersistence.save(logs);
-    // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
-    Map<String, Map<String, Log>> activityCommandUnitLastLogMap = logs.stream().collect(
-        groupingBy(Log::getActivityId, toMap(Log::getCommandUnitName, Function.identity(), (l1, l2) -> l2)));
-    activityService.updateCommandUnitStatus(activityCommandUnitLastLogMap);
-    return savedLogIds;
   }
 
   @Override
@@ -170,5 +195,14 @@ public class LogServiceImpl implements LogService {
                                   .field("_id")
                                   .hasNoneOf(idsToKeep));
     }
+  }
+
+  @Override
+  public String batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
+    logger.info("Batched log: [{}-{}-{}-{}]", log.getActivityId(), log.getCommandUnitName(), log.getLogLevel(),
+        log.getCommandExecutionStatus());
+    String logId = wingsPersistence.save(log);
+    activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
+    return logId;
   }
 }

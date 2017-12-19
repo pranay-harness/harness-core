@@ -19,7 +19,7 @@ import javax.validation.Valid;
  *
  * @author Rishi
  */
-public interface ArtifactStreamService {
+public interface ArtifactStreamService extends OwnedByService {
   /**
    * List.
    *
@@ -147,22 +147,6 @@ public interface ArtifactStreamService {
    * @return the build source
    */
   Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId);
-
-  /**
-   * Delete by service.
-   *
-   * @param appId     the app id
-   * @param serviceId the service id
-   */
-  void deleteByService(String appId, String serviceId);
-
-  /**
-   * Delete stream action for workflow.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   */
-  void deleteStreamActionForWorkflow(String appId, String workflowId);
 
   /**
    * Generate web hook token web hook token.

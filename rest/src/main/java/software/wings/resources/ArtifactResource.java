@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.Artifact;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;

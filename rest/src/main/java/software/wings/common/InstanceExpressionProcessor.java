@@ -8,6 +8,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.Lists;
 
@@ -20,6 +22,8 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -30,6 +34,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -215,6 +220,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     PageRequest<ServiceInstance> pageRequest = buildPageRequest();
+    pageRequest.setReadPref(ReadPref.CRITICAL);
     PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest);
     return convertToInstanceElements(instances.getResponse());
   }
@@ -242,13 +248,19 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   PageRequest<ServiceInstance> buildPageRequest() {
     Application app = ((ExecutionContextImpl) context).getApp();
     Environment env = ((ExecutionContextImpl) context).getEnv();
-    Builder pageRequest = PageRequest.Builder.aPageRequest();
+    Builder pageRequest = aPageRequest().withLimit(UNLIMITED);
 
-    pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
     applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
     applyHostNamesFilter(app.getUuid(), pageRequest);
     applyServiceInstanceIdsFilter(app.getUuid(), pageRequest);
-    return pageRequest.build();
+
+    PageRequest<ServiceInstance> req = pageRequest.build();
+    // Just for safety
+    if (req.getFilters() == null || req.getFilters().isEmpty()) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "No Filter attached to filter service instances");
+    }
+    req.addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
+    return req;
   }
 
   private List<InstanceElement> convertToInstanceElements(List<ServiceInstance> instances) {
@@ -323,10 +335,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     if (serviceTemplates != null && !serviceTemplates.isEmpty()) {
-      pageRequest.addFilter(aSearchFilter()
-                                .withField("serviceTemplate", Operator.IN,
-                                    serviceTemplates.stream().map(ServiceTemplate::getUuid).toArray())
-                                .build());
+      pageRequest.withLimit(UNLIMITED).addFilter(
+          aSearchFilter()
+              .withField(
+                  "serviceTemplate", Operator.IN, serviceTemplates.stream().map(ServiceTemplate::getUuid).toArray())
+              .build());
     }
   }
 
@@ -362,7 +375,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   private List<ServiceTemplate> getServiceTemplates(String envId, List<Service> services, String... names) {
     Builder pageRequestBuilder =
-        PageRequest.Builder.aPageRequest()
+        aPageRequest()
+            .withLimit(UNLIMITED)
             .addFilter(aSearchFilter().withField("envId", Operator.EQ, envId).build())
             .addOrder(SortOrder.Builder.aSortOrder().withField("createdAt", OrderType.ASC).build());
     if (services != null && !services.isEmpty()) {
@@ -406,7 +420,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   private List<Service> getServices(String appId) {
     if (!StringUtils.isBlank(serviceName)) {
       PageRequest<Service> svcPageRequest =
-          PageRequest.Builder.aPageRequest()
+          aPageRequest()
+              .withLimit(UNLIMITED)
               .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
               .addFilter(aSearchFilter().withField("name", Operator.EQ, serviceName).build())
               .addFieldsIncluded(ID_KEY)

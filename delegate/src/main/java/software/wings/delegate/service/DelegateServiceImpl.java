@@ -2,6 +2,7 @@ package software.wings.delegate.service;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -75,7 +76,7 @@ import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.exception.WingsException;
 import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
-import software.wings.managerclient.TokenGenerator;
+import software.wings.security.TokenGenerator;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.utils.message.Message;
@@ -90,6 +91,7 @@ import java.io.StringReader;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -128,6 +130,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
+  private static String hostName;
+
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -164,12 +168,21 @@ public class DelegateServiceImpl implements DelegateService {
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
 
+  public static String getHostName() {
+    return hostName;
+  }
+
   @Override
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
-      String hostName = InetAddress.getLocalHost().getHostName();
+      try {
+        hostName = InetAddress.getLocalHost().getHostName();
+      } catch (UnknownHostException e) {
+        hostName = "ip-" + ip.replaceAll("\\.", "-");
+      }
+
       accountId = delegateConfiguration.getAccountId();
 
       if (watched) {
@@ -212,7 +225,7 @@ public class DelegateServiceImpl implements DelegateService {
               .method(METHOD.GET)
               .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
               .queryString("delegateId", delegateId)
-              .queryString("token", tokenGenerator.getToken("https", "localhost", 9090))
+              .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
               .header("Version", getVersion())
               .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
                 @Override
@@ -679,43 +692,40 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConnectionResults -> {
       String taskId = delegateTask.getUuid();
       currentlyValidatingTasks.remove(taskId);
-      if (delegateConnectionResults != null) {
-        boolean validated = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
-        if (validated) {
-          logger.info("Validation succeeded for task {}", taskId);
+      List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
+      boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
+      logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
+      try {
+        DelegateTask delegateTask1 = execute(managerClient.reportConnectionResults(
+            delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
+        if (delegateTask1 != null && delegateId.equals(delegateTask1.getDelegateId())) {
+          logger.info("Got the go-ahead to proceed for task {}.", taskId);
+          executeTask(delegateTaskEvent, delegateTask1);
         } else {
-          logger.info("Validation failed for task {}", taskId);
-        }
-        try {
-          DelegateTask delegateTask1 = execute(managerClient.reportConnectionResults(
-              delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, delegateConnectionResults));
-          if (delegateTask1 != null && delegateId.equals(delegateTask1.getDelegateId())) {
-            logger.info("Got the go-ahead to proceed for task {}.", taskId);
-            executeTask(delegateTaskEvent, delegateTask1);
+          logger.info("Did not get the go-ahead to proceed for task {}", taskId);
+          if (validated) {
+            logger.info("Task {} validated but was not assigned", taskId);
           } else {
-            logger.info("Did not get the go-ahead to proceed for task {}", taskId);
-            if (validated) {
-              logger.info("Task {} validated but was assigned to another delegate", taskId);
-            } else {
-              logger.info(
-                  "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
-              Misc.sleep(2, TimeUnit.SECONDS);
-              try {
-                logger.info("Checking whether all delegates failed for task {}", taskId);
-                DelegateTask delegateTask2 = execute(
-                    managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-                if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
-                  logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
-                  executeTask(delegateTaskEvent, delegateTask2);
-                }
-              } catch (IOException e) {
-                logger.error("Unable to check whether to proceed. Task {}", taskId, e);
+            logger.info(
+                "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
+            Misc.sleep(2, TimeUnit.SECONDS);
+            try {
+              logger.info("Checking whether all delegates failed for task {}", taskId);
+              DelegateTask delegateTask2 = execute(
+                  managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+              if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
+                logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
+                executeTask(delegateTaskEvent, delegateTask2);
+              } else {
+                logger.info("Did not get go-ahead for task {}, giving up", taskId);
               }
+            } catch (IOException e) {
+              logger.error("Unable to check whether to proceed. Task {}", taskId, e);
             }
           }
-        } catch (IOException e) {
-          logger.error("Unable to report validation results. Task {}", taskId, e);
         }
+      } catch (IOException e) {
+        logger.error("Unable to report validation results. Task {}", taskId, e);
       }
     };
   }

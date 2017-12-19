@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import ro.fortsoft.pf4j.ExtensionPoint;
 import software.wings.utils.WingsReflectionUtils;
 import software.wings.yaml.BaseYamlWithType;
@@ -221,9 +221,10 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Git setting variable types.
      */
-    GIT("GIT"), /**
-                 * Ssh session config setting variable types.
-                 */
+    GIT("GIT"),
+    /**
+     * Ssh session config setting variable types.
+     */
     SSH_SESSION_CONFIG,
 
     /**
@@ -268,15 +269,10 @@ public abstract class SettingValue implements ExtensionPoint {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  @AllArgsConstructor
+  @NoArgsConstructor
   public static abstract class Yaml extends BaseYamlWithType {
-    protected String name;
-
-    public Yaml() {}
-
-    public Yaml(String type, String name) {
+    public Yaml(String type) {
       super(type);
-      this.name = name;
     }
   }
 }

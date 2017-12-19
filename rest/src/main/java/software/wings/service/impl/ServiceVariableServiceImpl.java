@@ -226,7 +226,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   }
 
   @Override
-  public void deleteByEntityId(String appId, String entityId) {
+  public void pruneByService(String appId, String entityId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
                                 .field("appId")
                                 .equal(appId)

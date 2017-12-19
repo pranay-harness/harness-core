@@ -3,9 +3,11 @@ package software.wings.beans.command;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -30,18 +32,20 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
-      int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+  protected List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params, ContainerServiceData serviceData,
+      ExecutionLogCallback executionLogCallback) {
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) params;
     KubernetesConfig kubernetesConfig;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
     } else {
-      kubernetesConfig =
-          gkeClusterService.getCluster(cloudProviderSetting, encryptedDataDetails, clusterName, namespace);
+      kubernetesConfig = gkeClusterService.getCluster(
+          cloudProviderSetting, encryptedDataDetails, resizeParams.getClusterName(), resizeParams.getNamespace());
     }
-    return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails, clusterName,
-        serviceName, previousCount, desiredCount, executionLogCallback);
+    return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
+        resizeParams.getClusterName(), serviceData.getName(), serviceData.getPreviousCount(),
+        serviceData.getDesiredCount(), executionLogCallback);
   }
 
   @Data
@@ -49,21 +53,12 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   @JsonTypeName("RESIZE_KUBERNETES")
   public static class Yaml extends ContainerResizeCommandUnit.Yaml {
     public Yaml() {
-      super();
-      setCommandUnitType(CommandUnitType.RESIZE_KUBERNETES.name());
+      super(CommandUnitType.RESIZE_KUBERNETES.name());
     }
 
-    public static final class Builder extends ContainerResizeCommandUnit.Yaml.Builder {
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      @Override
-      protected Yaml getCommandUnitYaml() {
-        return new KubernetesResizeCommandUnit.Yaml();
-      }
+    @Builder
+    public Yaml(String name, String deploymentType) {
+      super(name, CommandUnitType.RESIZE_KUBERNETES.name(), deploymentType);
     }
   }
 }

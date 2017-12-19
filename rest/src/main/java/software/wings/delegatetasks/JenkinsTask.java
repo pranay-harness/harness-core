@@ -80,6 +80,16 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
       BuildResult buildResult = jenkinsBuildWithDetails.getResult();
       jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
+      jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuildWithDetails.getNumber()));
+      try {
+        if (jenkinsBuildWithDetails.getParameters() != null) {
+          jenkinsExecutionResponse.setMetadata(jenkinsBuildWithDetails.getParameters());
+        }
+      } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
+        // unexpected exception
+        logger.warn("Error occurred while retrieving build parameters for build number {} ",
+            jenkinsBuildWithDetails.getNumber(), e.getMessage());
+      }
 
       if (buildResult == BuildResult.SUCCESS || buildResult == BuildResult.UNSTABLE) {
         if (isNotEmpty(evaluatedFilePathsForAssertion)) {

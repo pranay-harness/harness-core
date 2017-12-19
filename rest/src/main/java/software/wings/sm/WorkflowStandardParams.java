@@ -1,10 +1,15 @@
 package software.wings.sm;
 
+import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
+import static software.wings.common.Constants.*;
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
+import static software.wings.common.Constants.PHASE_PARAM;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
@@ -32,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The Class WorkflowStandardParams.
@@ -74,7 +80,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @Transient @JsonIgnore private transient ExecutionContext context;
 
-  private Map<String, Object> workflowVariables;
+  private Map<String, String> workflowVariables;
 
   @JsonIgnore private EmbeddedUser currentUser;
 
@@ -98,33 +104,48 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
     ServiceElement serviceElement = fetchServiceElement(context);
     if (serviceElement != null) {
+      Artifact artifact = getArtifactForService(serviceElement.getUuid());
+      if (artifact != null) {
+        map.put(ARTIFACT, artifact);
+        String artifactFileName = null;
+        if (!isEmpty(artifact.getArtifactFiles())) {
+          artifactFileName = artifact.getArtifactFiles().get(0).getName();
+        } else if (artifact.getMetadata() != null) {
+          artifactFileName = artifact.getArtifactFileName();
+        }
+        if (!StringUtils.isEmpty(artifactFileName)) {
+          map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
+        }
+      }
+
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
       if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
           || templateRefKeysByService.get(0).getId() == null) {
         map.put(SERVICE_VARIABLE, new HashMap<>());
+        map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
         return map;
       }
       String templateId = (String) templateRefKeysByService.get(0).getId();
-      List<ServiceVariable> serviceVariables =
-          serviceTemplateService.computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId());
-      if (serviceVariables == null || serviceVariables.isEmpty()) {
+
+      List<ServiceVariable> serviceVariables = serviceTemplateService.computeServiceVariables(
+          appId, envId, templateId, context.getWorkflowExecutionId(), false);
+      if (isEmpty(serviceVariables)) {
         map.put(SERVICE_VARIABLE, new HashMap<>());
+        map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
         return map;
       }
 
-      HashMap<Object, Object> serviceVariableMap = new HashMap<>();
-      map.put(SERVICE_VARIABLE, serviceVariableMap);
-      serviceVariables.forEach(serviceVariable -> {
-        serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue()));
-      });
+      map.put(SERVICE_VARIABLE,
+          serviceVariables.stream().collect(
+              Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
 
-      Artifact artifact = getArtifactForService(serviceElement.getUuid());
-      if (artifact != null) {
-        map.put(ARTIFACT, artifact);
-      }
+      map.put(SAFE_DISPLAY_SERVICE_VARIABLE,
+          serviceTemplateService
+              .computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId(), true)
+              .stream()
+              .collect(Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
     }
-
     return map;
   }
 
@@ -139,7 +160,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return serviceTemplateElement.getServiceElement();
     }
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     if (phaseElement != null) {
       return phaseElement.getServiceElement();
     }
@@ -341,11 +362,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     this.workflowElement = workflowElement;
   }
 
-  public Map<String, Object> getWorkflowVariables() {
+  public Map<String, String> getWorkflowVariables() {
     return workflowVariables;
   }
 
-  public void setWorkflowVariables(Map<String, Object> workflowVariables) {
+  public void setWorkflowVariables(Map<String, String> workflowVariables) {
     this.workflowVariables = workflowVariables;
   }
 

@@ -1,0 +1,6 @@
+{
+  "scriptString": {
+    "ui:widget": "textarea"
+  },
+  "ui:order": [ "scriptString", "host", "sshKeyRef", "commandPath" ]
+}

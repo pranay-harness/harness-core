@@ -11,7 +11,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
-import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 
@@ -20,7 +20,7 @@ import javax.inject.Inject;
 public class AppYamlResourceServiceImpl implements AppYamlResourceService {
   @Inject private AppService appService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-  @Inject private YamlSyncService yamlSyncService;
+  @Inject private YamlService yamlSyncService;
   @Inject private YamlHistoryService yamlHistoryService;
   @Inject private YamlGitService yamlGitSyncService;
 

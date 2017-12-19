@@ -141,9 +141,10 @@ public class ScpCommandUnit extends SshCommandUnit {
     /**
      * Artifacts scp file category.
      */
-    ARTIFACTS("Application Artifacts"), /**
-                                         * The Application stack.
-                                         */
+    ARTIFACTS("Application Artifacts"),
+    /**
+     * The Application stack.
+     */
     APPLICATION_STACK("Application Stack");
 
     private String name;
@@ -311,45 +312,14 @@ public class ScpCommandUnit extends SshCommandUnit {
     private String destinationDirectoryPath;
 
     public Yaml() {
-      super();
-      setCommandUnitType(CommandUnitType.SCP.name());
+      super(CommandUnitType.SCP.name());
     }
 
-    public static final class Builder extends SshCommandUnit.Yaml.Builder {
-      // maps to fileCategory
-      private String source;
-      private String destinationDirectoryPath;
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withSource(String source) {
-        this.source = source;
-        return this;
-      }
-
-      public Builder withDestinationDirectoryPath(String destinationDirectoryPath) {
-        this.destinationDirectoryPath = destinationDirectoryPath;
-        return this;
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setSource(source);
-        yaml.setDestinationDirectoryPath(destinationDirectoryPath);
-        yaml.setName(name);
-        yaml.setCommandUnitType(commandUnitType);
-        yaml.setDeploymentType(deploymentType);
-        return yaml;
-      }
-
-      @Override
-      protected Yaml getCommandUnitYaml() {
-        return new Yaml();
-      }
+    @lombok.Builder
+    public Yaml(String name, String deploymentType, String source, String destinationDirectoryPath) {
+      super(name, CommandUnitType.SCP.name(), deploymentType);
+      this.source = source;
+      this.destinationDirectoryPath = destinationDirectoryPath;
     }
   }
 }

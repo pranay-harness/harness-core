@@ -42,26 +42,20 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     List<EncryptedDataDetail> cloudProviderCredentials = context.getCloudProviderCredentials();
-    String clusterName = context.getClusterName();
-    String namespace = context.getNamespace();
-    List<ContainerServiceData> desiredCounts = context.getDesiredCounts();
-    String region = context.getRegion();
-    int serviceSteadyStateTimeout = context.getEcsServiceSteadyStateTimeout();
-
+    ContainerResizeParams params = context.getContainerResizeParams();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
       List<ContainerInfo> containerInfos = new ArrayList<>();
-      desiredCounts.forEach(dc
-          -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, cloudProviderCredentials, clusterName,
-              namespace, dc.getName(), dc.getPreviousCount(), dc.getDesiredCount(), serviceSteadyStateTimeout,
-              executionLogCallback)));
+      params.getDesiredCounts().forEach(dc
+          -> containerInfos.addAll(
+              executeInternal(cloudProviderSetting, cloudProviderCredentials, params, dc, executionLogCallback)));
       context.setCommandExecutionData(ResizeCommandUnitExecutionData.builder().containerInfos(containerInfos).build());
       boolean allContainersSuccess =
           containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-      int totalDesiredCount = desiredCounts.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
+      int totalDesiredCount = params.getDesiredCounts().stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
       if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
         commandExecutionStatus = SUCCESS;
       } else {
@@ -88,15 +82,19 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     return commandExecutionStatus;
   }
 
-  protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
-      int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+  protected abstract List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params, ContainerServiceData serviceData,
+      ExecutionLogCallback executionLogCallback);
 
   @Data
   @EqualsAndHashCode(callSuper = true)
   public static abstract class Yaml extends AbstractCommandUnit.Yaml {
-    public static abstract class Builder extends AbstractCommandUnit.Yaml.Builder {
-      protected Builder() {}
+    public Yaml(String commandUnitType) {
+      super(commandUnitType);
+    }
+
+    public Yaml(String name, String commandUnitType, String deploymentType) {
+      super(name, commandUnitType, deploymentType);
     }
   }
 }

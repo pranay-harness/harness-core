@@ -18,6 +18,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
+import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicSettingProvider;
@@ -65,6 +67,16 @@ public class NewRelicState extends AbstractMetricAnalysisState {
       return String.valueOf(15);
     }
     return timeDuration;
+  }
+
+  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
+  @Attributes(required = true, title = "Failure Criteria")
+  @DefaultValue("LOW")
+  public AnalysisTolerance getAnalysisTolerance() {
+    if (StringUtils.isBlank(tolerance)) {
+      return AnalysisTolerance.LOW;
+    }
+    return AnalysisTolerance.valueOf(tolerance);
   }
 
   @Override
@@ -116,6 +128,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
+            .settingAttributeId(analysisServerConfigId)
             .build();
 
     String waitId = UUIDGenerator.getUuid();
@@ -129,7 +142,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
     return delegateService.queueTask(delegateTask);

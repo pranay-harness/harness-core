@@ -4,7 +4,6 @@
 
 package software.wings.sm;
 
-import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
@@ -14,6 +13,8 @@ import static software.wings.beans.ErrorCode.STATE_NOT_FOR_PAUSE;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RESUME;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RETRY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.GT;
+import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
@@ -31,8 +32,10 @@ import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusDat
 import com.google.inject.Injector;
 
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -205,12 +208,16 @@ public class ExecutionInterruptManager {
   }
 
   private void sendNotification(ExecutionInterrupt executionInterrupt, ExecutionStatus status) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(
+        WorkflowExecution.class, executionInterrupt.getAppId(), executionInterrupt.getExecutionUuid());
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
             .withLimit("1")
             .addFilter("appId", EQ, executionInterrupt.getAppId())
             .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
+            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addOrder("createdAt", OrderType.DESC)
+            .withReadPref(ReadPref.CRITICAL)
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
@@ -248,7 +255,8 @@ public class ExecutionInterruptManager {
   }
 
   private PageResponse<ExecutionInterrupt> listExecutionInterrupts(ExecutionInterrupt executionInterrupt) {
-    PageRequest<ExecutionInterrupt> req = PageRequest.Builder.aPageRequest()
+    PageRequest<ExecutionInterrupt> req = aPageRequest()
+                                              .withReadPref(ReadPref.CRITICAL)
                                               .addFilter("appId", EQ, executionInterrupt.getAppId())
                                               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
                                               .addOrder("createdAt", OrderType.DESC)
@@ -265,7 +273,8 @@ public class ExecutionInterruptManager {
    */
   public List<ExecutionInterrupt> checkForExecutionInterrupt(String appId, String executionUuid) {
     PageRequest<ExecutionInterrupt> req =
-        PageRequest.Builder.aPageRequest()
+        aPageRequest()
+            .withReadPref(ReadPref.CRITICAL)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("executionInterruptType", Operator.IN, ABORT_ALL, PAUSE_ALL, ROLLBACK)

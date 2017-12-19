@@ -7,7 +7,6 @@ import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedF
 import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
@@ -34,6 +33,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.User;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
@@ -41,7 +41,6 @@ import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
-import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -115,6 +114,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
     return createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(id).get();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref) {
+    return createQuery(cls, readPref).field("appId").equal(appId).field(ID_KEY).equal(id).get();
   }
 
   /**
@@ -220,7 +227,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
-    T data = createQuery(cls).field("appId").equal(object.getAppId()).field(ID_KEY).equal(id).get();
+    Query<T> query = createQuery(cls, ReadPref.CRITICAL).field(ID_KEY).equal(id);
+    if (object.getShardKeys() != null) {
+      object.getShardKeys().keySet().forEach(key -> query.field(key).equal(object.getShardKeys().get(key)));
+    }
+    T data = query.get();
     return data;
   }
 
@@ -436,6 +447,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();
     }
+    if (readPref == ReadPref.NORMAL && req.getReadPref() == ReadPref.CRITICAL) {
+      readPref = ReadPref.CRITICAL;
+    }
     PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, false);
     return output;
   }
@@ -583,8 +597,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (authFilters(query)) {
       return query;
     } else {
-      throw new WingsException(
-          "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account");
+      throw new WingsException(getExceptionMsgWithUserContext());
     }
   }
 
@@ -597,9 +610,23 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (authFilters(query)) {
       return query;
     } else {
-      throw new WingsException(
-          "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account");
+      throw new WingsException(getExceptionMsgWithUserContext());
     }
+  }
+
+  private String getExceptionMsgWithUserContext() throws WingsException {
+    User user = UserThreadLocal.get();
+    String msg =
+        "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account.";
+    if (user != null) {
+      msg = new StringBuffer(msg)
+                .append(" User Name: ")
+                .append(user.getName())
+                .append(" Email id: ")
+                .append(user.getEmail())
+                .toString();
+    }
+    return msg;
   }
 
   /**

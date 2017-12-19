@@ -395,9 +395,13 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @SuppressWarnings({"unchecked"})
-  private Map<String, Object> getDataMap(File file) throws IOException {
+  private Map<String, Object> getDataMap(File file) {
     if (file.exists()) {
-      return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
+      try {
+        return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
+      } catch (Exception e) {
+        logger.error("Couldn't read map from {}. Returning empty data map", file.getName());
+      }
     }
     return new HashMap<>();
   }

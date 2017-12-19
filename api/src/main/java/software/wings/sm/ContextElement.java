@@ -50,9 +50,18 @@ public interface ContextElement {
    */
   String SERVICE_VARIABLE = "serviceVariable";
   /**
+   * The constant SAFE_DISPLAY_SERVICE_VARIABLE.
+   */
+  String SAFE_DISPLAY_SERVICE_VARIABLE = "safeDisplayServiceVariable";
+  /**
    * The constant TIMESTAMP_ID.
    */
   String TIMESTAMP_ID = "timestampId";
+
+  /**
+   * The constant WORKFLOW
+   */
+  String PIPELINE = "pipeline";
 
   /**
    * Gets element type.

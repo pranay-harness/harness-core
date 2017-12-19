@@ -50,6 +50,8 @@ import java.util.Map;
  * Created by sgurubelli on 11/13/17.
  */
 public class ArtifactCollectionState extends State {
+  @Transient private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
+
   private static final String LATEST = "LATEST";
   @EnumData(enumDataProvider = ArtifactSourceProvider.class)
   @Attributes(title = "Artifact Source")
@@ -76,14 +78,6 @@ public class ArtifactCollectionState extends State {
         .withCorrelationIds(asList(scheduleWaitNotify()))
         .withStateExecutionData(artifactCollectionExecutionData)
         .build();
-  }
-
-  private Artifact getLastCollectedArtifact(ExecutionContext context, String artifactStreamId, String sourceName) {
-    if (Misc.isNullOrEmpty(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
-      return artifactService.fetchLatestArtifactForArtifactStream(context.getAppId(), artifactStreamId, sourceName);
-    } else {
-      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, buildNo);
-    }
   }
 
   @Override
@@ -172,6 +166,20 @@ public class ArtifactCollectionState extends State {
   @Override
   public Integer getTimeoutMillis() {
     return DEFAULT_STATE_TIMEOUT_MILLIS;
+  }
+
+  private Artifact getLastCollectedArtifact(ExecutionContext context, String artifactStreamId, String sourceName) {
+    if (Misc.isNullOrEmpty(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
+      return artifactService.fetchLatestArtifactForArtifactStream(context.getAppId(), artifactStreamId, sourceName);
+    } else {
+      String evaluatedBuildNo = buildNo;
+      try {
+        evaluatedBuildNo = context.renderExpression(buildNo);
+      } catch (Exception e) {
+        logger.warn("Failed to evaluate Build Number expresson {}", e);
+      }
+      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, evaluatedBuildNo);
+    }
   }
 
   public String getArtifactStreamId() {

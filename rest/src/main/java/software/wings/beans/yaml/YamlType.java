@@ -1,6 +1,7 @@
 package software.wings.beans.yaml;
 
 import static software.wings.beans.yaml.YamlConstants.ANY;
+import static software.wings.beans.yaml.YamlConstants.ANY_EXCEPT_YAML;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SERVERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
@@ -97,6 +98,12 @@ public enum YamlType {
       generatePath(
           PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, COMMANDS_FOLDER, ANY),
       ServiceCommand.class),
+  CONFIG_FILE_CONTENT(YamlConstants.CONFIG_FILE_CONTENT,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          CONFIG_FILES_FOLDER, ANY_EXCEPT_YAML),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, CONFIG_FILES_FOLDER, ANY),
+      ConfigFile.class),
   CONFIG_FILE(EntityType.CONFIG.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
           CONFIG_FILES_FOLDER, YAML_EXPRESSION),
@@ -107,6 +114,12 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY),
       Environment.class),
+  CONFIG_FILE_OVERRIDE_CONTENT(YamlConstants.CONFIG_FILE_OVERRIDE_CONTENT,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          CONFIG_FILES_FOLDER, ANY_EXCEPT_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          CONFIG_FILES_FOLDER, ANY),
+      ConfigFile.class),
   CONFIG_FILE_OVERRIDE(EntityType.CONFIG.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           CONFIG_FILES_FOLDER, YAML_EXPRESSION),

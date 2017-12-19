@@ -26,18 +26,18 @@ public class JenkinsExecutionDataTest {
   @Test
   public void shouldGetExecutionSummary() throws Exception {
     assertThat(jenkinsExecutionData.getExecutionSummary())
-        .containsAllEntriesOf(
-            ImmutableMap.of("jobName", anExecutionDataValue().withValue("testjob").withDisplayName("Job Name").build(),
-                "build", anExecutionDataValue().withValue("http://jenkins/testjob/11").withDisplayName("Build").build(),
-                "jobStatus", anExecutionDataValue().withValue("ERROR").withDisplayName("Job Status").build()));
+        .containsAllEntriesOf(ImmutableMap.of("jobName",
+            anExecutionDataValue().withValue("testjob").withDisplayName("Job Name").build(), "build",
+            anExecutionDataValue().withValue("http://jenkins/testjob/11").withDisplayName("Build Url").build(),
+            "jobStatus", anExecutionDataValue().withValue("ERROR").withDisplayName("Job Status").build()));
   }
 
   @Test
   public void shouldGetExecutionDetails() throws Exception {
     assertThat(jenkinsExecutionData.getExecutionDetails())
-        .containsAllEntriesOf(
-            ImmutableMap.of("jobName", anExecutionDataValue().withValue("testjob").withDisplayName("Job Name").build(),
-                "build", anExecutionDataValue().withValue("http://jenkins/testjob/11").withDisplayName("Build").build(),
-                "jobStatus", anExecutionDataValue().withValue("ERROR").withDisplayName("Job Status").build()));
+        .containsAllEntriesOf(ImmutableMap.of("jobName",
+            anExecutionDataValue().withValue("testjob").withDisplayName("Job Name").build(), "build",
+            anExecutionDataValue().withValue("http://jenkins/testjob/11").withDisplayName("Build Url").build(),
+            "jobStatus", anExecutionDataValue().withValue("ERROR").withDisplayName("Job Status").build()));
   }
 }

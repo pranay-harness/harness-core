@@ -387,10 +387,15 @@ public interface Constants {
    * The constant ARTIFACT_PATH.
    */
   String ARTIFACT_PATH = "artifactPath";
+
   /**
    * The constant ARTIFACT_FILE_NAME.
    */
   String ARTIFACT_FILE_NAME = "artifactFileName";
+  /**
+   * Constant to hold the ARTIFACT_FILE_NAME in the context
+   */
+  String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
   String DELEGATE_VALIDATION_CACHE = "delegateValidationCache";
   String DELEGATE_SYNC_CACHE = "delegateSyncCache";
@@ -438,6 +443,15 @@ public interface Constants {
   String XPATH = "xpath('//status/text()')";
   String JSONPATH = "jsonpath('health.status')";
 
+  /**
+   * Constants for expression
+   */
+  String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
+  String ARTIFACT__S3_KEY_EXPRESSION = "${artifact.key}";
+
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
   int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
+
+  int DEFAULT_RUNTIME_ENTITY_PAGESIZE = 20;
+  String DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR = "20";
 }

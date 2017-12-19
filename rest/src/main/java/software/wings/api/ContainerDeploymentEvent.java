@@ -1,6 +1,8 @@
 package software.wings.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.core.queue.Queuable;
@@ -14,8 +16,10 @@ import java.util.Set;
  * @author rktummala on 08/24/17
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "containerDeploymentQueue", noClassnameStored = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentEvent extends Queuable {
   private String appId;
   private String accountId;

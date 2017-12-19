@@ -113,14 +113,14 @@ import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandle
 import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.MultiServiceWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
-import software.wings.service.impl.yaml.sync.YamlSyncServiceImpl;
+import software.wings.service.impl.yaml.service.YamlServiceImpl;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.service.intfc.yaml.sync.YamlSyncService;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 /**
@@ -140,7 +140,7 @@ public class YamlModule extends AbstractModule {
     bind(AppYamlResourceService.class).to(AppYamlResourceServiceImpl.class);
     bind(YamlGitService.class).to(YamlGitServiceImpl.class);
     bind(YamlArtifactStreamService.class).to(YamlArtifactStreamServiceImpl.class);
-    bind(YamlSyncService.class).to(YamlSyncServiceImpl.class);
+    bind(YamlService.class).to(YamlServiceImpl.class);
 
     MapBinder<String, ArtifactStreamYamlHandler> artifactStreamYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactStreamYamlHandler.class);

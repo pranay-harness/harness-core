@@ -77,6 +77,8 @@ public interface WingsPersistence {
    */
   <T extends Base> T get(Class<T> cls, String appId, String id);
 
+  <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref);
+
   /**
    * Gets the.
    *

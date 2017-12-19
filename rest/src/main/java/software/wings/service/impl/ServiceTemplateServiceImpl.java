@@ -276,7 +276,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public void deleteByEnv(String appId, String envId) {
+  public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
                                           .field("appId")
                                           .equal(appId)
@@ -289,7 +289,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public void deleteByService(String appId, String serviceId) {
+  public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ServiceTemplate.class)
         .field("appId")
         .equal(appId)
@@ -354,22 +354,22 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowExecutionId) {
+      String appId, String envId, String templateId, String workflowExecutionId, boolean maskEncryptedFields) {
     ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
     if (serviceTemplate == null) {
       return new ArrayList<>();
     }
 
     List<ServiceVariable> serviceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getServiceId(), false);
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getServiceId(), maskEncryptedFields);
     List<ServiceVariable> allServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, envId, false);
+        serviceVariableService.getServiceVariablesForEntity(appId, envId, maskEncryptedFields);
     List<ServiceVariable> templateServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), false);
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), maskEncryptedFields);
 
     return overrideServiceSettings(
-        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId),
-        templateServiceVariables, appId, workflowExecutionId);
+        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId, maskEncryptedFields),
+        templateServiceVariables, appId, workflowExecutionId, maskEncryptedFields);
   }
 
   /* (non-Javadoc)
@@ -392,16 +392,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return mergedConfigFiles;
   }
 
-  /**
-   * Override service settings list.
-   *
-   * @param existingServiceVariables the existing files
-   * @param newServiceVariables      the new files
-   * @param workflowExecutionId
-   * @return the list
-   */
   private List<ServiceVariable> overrideServiceSettings(List<ServiceVariable> existingServiceVariables,
-      List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId) {
+      List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId,
+      boolean maskEncryptedFields) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (existingServiceVariables.size() != 0 || newServiceVariables.size() != 0) {
       logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
@@ -414,12 +407,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
     logger.info("Service variables after overrides [{}]", mergedServiceSettings.toString());
-    mergedServiceSettings.forEach(serviceVariable -> {
-      if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-        encryptionService.decrypt(
-            serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
-      }
-    });
+    if (!maskEncryptedFields) {
+      mergedServiceSettings.forEach(serviceVariable -> {
+        if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+          encryptionService.decrypt(
+              serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
+        }
+      });
+    }
     return mergedServiceSettings;
   }
 }

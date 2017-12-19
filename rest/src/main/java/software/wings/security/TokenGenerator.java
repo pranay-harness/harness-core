@@ -1,4 +1,4 @@
-package software.wings.managerclient;
+package software.wings.security;
 
 import com.google.inject.Singleton;
 
@@ -13,8 +13,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -33,9 +31,9 @@ public class TokenGenerator {
     this.accountSecret = accountSecret;
   }
 
-  public String getToken(String scheme, String host, int port) throws UnknownHostException {
+  public String getToken(String scheme, String host, int port, String issuer) {
     JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
-                                 .issuer(InetAddress.getLocalHost().getHostName())
+                                 .issuer(issuer)
                                  .subject(accountId)
                                  .audience(scheme + "://" + host + ":" + port)
                                  .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))

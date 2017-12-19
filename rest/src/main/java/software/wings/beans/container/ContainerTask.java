@@ -1,9 +1,11 @@
 package software.wings.beans.container;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -18,18 +20,20 @@ import java.util.List;
 /**
  * Created by anubhaw on 2/6/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "deploymentType")
 @Indexes(@Index(fields = { @Field("serviceId")
                            , @Field("deploymentType") }, options = @IndexOptions(unique = true)))
 @Entity("containerTasks")
 public abstract class ContainerTask extends DeploymentSpecification {
-  public static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
-  public static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
-  public static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
+  static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
+  static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
+  static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
 
   static final String DUMMY_DOCKER_IMAGE_NAME = "hv--docker-image-name--hv";
   static final String DUMMY_CONTAINER_NAME = "hv--container-name--hv";
   static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
+
   @NotEmpty private String deploymentType;
   @SchemaIgnore @NotEmpty private String serviceId;
 
@@ -124,12 +128,11 @@ public abstract class ContainerTask extends DeploymentSpecification {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
   public static abstract class Yaml extends DeploymentSpecification.Yaml {
     private String advancedType;
     private String advancedConfig;
     private ContainerDefinition.Yaml containerDefinition;
-
-    protected Yaml() {}
 
     protected Yaml(String deploymentType, String advancedType, String advancedConfig,
         ContainerDefinition.Yaml containerDefinition) {

@@ -197,15 +197,18 @@ public abstract class Notification extends Base {
     /**
      * Approval notification type.
      */
-    APPROVAL, /**
-               * Change notification type.
-               */
-    CHANGE, /**
-             * Failure notification type.
-             */
-    FAILURE, /**
-              * Information notification type.
-              */
+    APPROVAL,
+    /**
+     * Change notification type.
+     */
+    CHANGE,
+    /**
+     * Failure notification type.
+     */
+    FAILURE,
+    /**
+     * Information notification type.
+     */
     INFORMATION
   }
 

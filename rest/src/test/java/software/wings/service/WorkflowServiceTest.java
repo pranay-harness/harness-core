@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -35,6 +36,7 @@ import static software.wings.beans.TemplateExpression.Builder.aTemplateExpressio
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.Constants.*;
 import static software.wings.common.Constants.DEPLOY_CONTAINERS;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.PHASE_STEP_VALIDATION_MESSAGE;
@@ -110,6 +112,8 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -120,6 +124,7 @@ import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -176,6 +181,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private ArtifactStreamService arifactStreamService;
+  @Mock private ArtifactStream artifactStream;
 
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
     @Override
@@ -2998,5 +3005,19 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
     logger.info(JsonUtils.asJson(workflow2));
+  }
+
+  @Test
+  public void shouldAwsCodeDeployStateDefaults() {
+    when(arifactStreamService.getArtifactStreamsForService(APP_ID, SERVICE_ID)).thenReturn(asList(artifactStream));
+    when(artifactStream.getArtifactStreamType()).thenReturn(ArtifactStreamType.AMAZON_S3.name());
+    Map<String, String> defaults = workflowService.getStateDefaults(APP_ID, SERVICE_ID, StateType.AWS_CODEDEPLOY_STATE);
+    assertThat(defaults).isNotEmpty();
+    assertThat(defaults).containsKeys("bucket", "key", "bundleType");
+    assertThat(defaults).containsValues(ARTIFACT_S3_BUCKET_EXPRESSION, ARTIFACT__S3_KEY_EXPRESSION, "zip");
+  }
+  @Test
+  public void shouldAwsCodeDeployNoStateDefaults() {
+    assertThat(workflowService.getStateDefaults(APP_ID, SERVICE_ID, StateType.AWS_CODEDEPLOY_STATE)).isEmpty();
   }
 }

@@ -22,7 +22,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 3/28/16.
  */
-public interface ServiceResourceService {
+public interface ServiceResourceService extends OwnedByApplication {
   /**
    * List.
    *
@@ -114,6 +114,14 @@ public interface ServiceResourceService {
   void delete(@NotEmpty String appId, @NotEmpty String serviceId);
 
   /**
+   * Prune descending objects.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   */
+  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
    * Adds the command.
    *
    * @param appId            the app id
@@ -188,14 +196,6 @@ public interface ServiceResourceService {
    * @return the command stencils
    */
   List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName);
-
-  /**
-   * Delete by app id boolean.
-   *
-   * @param application the app id
-   * @return the boolean
-   */
-  void deleteByApp(Application application);
 
   /**
    * Find services by app list.
@@ -351,9 +351,27 @@ public interface ServiceResourceService {
   boolean isArtifactNeeded(Service service);
 
   /**
-   * Returns the list of service commands associated
-   * @param service
+   * Gets the list of service commands with the commands
+   * @param appId
+   * @param serviceId
    * @return
    */
-  List<ServiceCommand> getServiceCommands(Service service);
+  List<ServiceCommand> getServiceCommands(String appId, String serviceId);
+
+  /**
+   * Returns the service commands with the Command details
+   * @param appId
+   * @param serviceId
+   * @param withCommandDetails
+   * @return
+   */
+  List<ServiceCommand> getServiceCommands(String appId, String serviceId, boolean withCommandDetails);
+
+  /**
+   * Gets service with service commands with command details
+   * @param appId
+   * @param serviceId
+   * @return
+   */
+  Service getServiceWithServiceCommands(String appId, String serviceId);
 }
