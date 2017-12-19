@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -663,6 +664,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listAutoScalingGroups(computeProviderSetting, region);
     }
     return emptyList();
+  }
+
+  @Override
+  public Map<String, String> listAlbTargetGroups(String appId, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listTargetGroups(computeProviderSetting, region, null);
+    }
+    return emptyMap();
   }
 
   @Override

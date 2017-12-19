@@ -9,6 +9,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.utils.Misc.isNullOrEmpty;
+import static software.wings.utils.Misc.quietSleep;
+import static software.wings.utils.Misc.sleep;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -184,7 +187,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -1090,19 +1092,23 @@ public class AwsHelperService {
     return emptyList();
   }
 
-  public List<TargetGroup> listTargetGroupsForElb(
+  public List<TargetGroup> listTargetGroupsForAlb(
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String loadBalancerName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient = getAmazonElasticLoadBalancingClient(
           Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-      String loadBalancerArn =
-          amazonElasticLoadBalancingClient
-              .describeLoadBalancers(new DescribeLoadBalancersRequest().withNames(loadBalancerName))
-              .getLoadBalancers()
-              .get(0)
-              .getLoadBalancerArn();
+      DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
+
+      if (!isNullOrEmpty(loadBalancerName)) {
+        request.withNames(loadBalancerName);
+      }
+
+      String loadBalancerArn = amazonElasticLoadBalancingClient.describeLoadBalancers(request)
+                                   .getLoadBalancers()
+                                   .get(0)
+                                   .getLoadBalancerArn();
 
       return amazonElasticLoadBalancingClient
           .describeTargetGroups(
@@ -1145,7 +1151,7 @@ public class AwsHelperService {
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       AwsInfrastructureMapping infrastructureMapping) {
-    Misc.quietSleep(1, TimeUnit.SECONDS);
+    quietSleep(1, TimeUnit.SECONDS);
     int retryCount = RETRY_COUNTER;
     List<String> instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping);
     while (instanceIds.size() != infrastructureMapping.getDesiredCapacity()
@@ -1154,7 +1160,7 @@ public class AwsHelperService {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
-      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
+      sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
       instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping);
     }
   }

@@ -5,10 +5,11 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+
+import java.util.List;
 
 /**
  * Created by anubhaw on 12/19/17.
@@ -23,7 +24,9 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
 
-  @Attributes(title = "Auto Scaling group") private String autoScalingGroupName;
+  private String autoScalingGroupName;
+  private List<String> classicLoadBalancers;
+  private List<String> targetGroups;
 
   public AwsAmiInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_AMI.name());
