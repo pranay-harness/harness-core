@@ -61,7 +61,6 @@ import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -250,28 +249,10 @@ public class PipelineServiceImpl implements PipelineService {
     return true;
   }
 
-  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
-  public <T> List<T> descendingServices(Class<T> cls) {
-    List<T> descendings = new ArrayList<>();
-
-    for (Field field : PipelineServiceImpl.class.getDeclaredFields()) {
-      Object obj;
-      try {
-        obj = field.get(this);
-        if (cls.isInstance(obj)) {
-          T descending = (T) obj;
-          descendings.add(descending);
-        }
-      } catch (IllegalAccessException e) {
-      }
-    }
-
-    return descendings;
-  }
-
   @Override
   public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String pipelineId) {
-    List<OwnedByPipeline> services = descendingServices(OwnedByPipeline.class);
+    List<OwnedByPipeline> services =
+        ServiceClassLocator.descendingServices(this, PipelineServiceImpl.class, OwnedByPipeline.class);
     PruneObjectJob.pruneDescendingObjects(
         services, appId, pipelineId, (descending) -> { descending.pruneByPipeline(appId, pipelineId); });
   }
