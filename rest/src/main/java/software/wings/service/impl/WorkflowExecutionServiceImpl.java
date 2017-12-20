@@ -1805,14 +1805,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private List<StateExecutionInstance> getAllStateExecutionInstances(PageRequest<StateExecutionInstance> req) {
-    PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
-    long total = res.getTotal();
-    List<StateExecutionInstance> ret = res.getResponse();
-    while (total > ret.size()) {
-      req.setOffset(String.valueOf(ret.size()));
-      ret.addAll(wingsPersistence.query(StateExecutionInstance.class, req));
-    }
-    return ret;
+    return wingsPersistence.queryAll(StateExecutionInstance.class, req);
   }
 
   @Override

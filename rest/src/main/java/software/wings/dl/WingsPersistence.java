@@ -231,6 +231,16 @@ public interface WingsPersistence {
   <T extends Base> boolean delete(T entity);
 
   /**
+   * Query All - it should be rarely used.
+   *
+   * @param <T> the generic type
+   * @param cls the cls
+   * @param req the req
+   * @return the page response
+   */
+  <T> List<T> queryAll(Class<T> cls, PageRequest<T> req);
+
+  /**
    * Query.
    *
    * @param <T> the generic type
