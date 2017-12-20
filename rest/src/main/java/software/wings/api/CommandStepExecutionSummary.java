@@ -19,6 +19,7 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
+  private String previousDaemonSetYaml;
   private String clusterName;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
