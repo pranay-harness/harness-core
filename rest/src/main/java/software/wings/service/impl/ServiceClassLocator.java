@@ -12,6 +12,10 @@ import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Service class locator for all the artifact streams.
  * We currently use guice based lookup but we have an issue with the current design.
@@ -43,5 +47,32 @@ public class ServiceClassLocator {
       default:
         throw new WingsException("Unsupported artifact stream type: " + artifactStreamType);
     }
+  }
+
+  public static <T> List<T> descendingServices(Object inst, Class cls, Class<T> intr) {
+    List<T> descendings = new ArrayList<>();
+
+    synchronized (cls) {
+      for (Field field : cls.getDeclaredFields()) {
+        boolean originalAccessible = field.isAccessible();
+        if (!originalAccessible) {
+          field.setAccessible(true);
+        }
+        try {
+          Object obj = field.get(inst);
+          if (intr.isInstance(obj)) {
+            T descending = (T) obj;
+            descendings.add(descending);
+          }
+        } catch (IllegalAccessException e) {
+        } finally {
+          if (!originalAccessible) {
+            field.setAccessible(false);
+          }
+        }
+      }
+    }
+
+    return descendings;
   }
 }
