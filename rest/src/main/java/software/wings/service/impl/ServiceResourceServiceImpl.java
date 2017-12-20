@@ -98,7 +98,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -468,31 +467,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
-  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
-  public <T> List<T> descendingServices(Class<T> cls) {
-    List<T> descendings = new ArrayList<>();
-
-    for (Field field : ServiceResourceServiceImpl.class.getDeclaredFields()) {
-      Object obj;
-      try {
-        obj = field.get(this);
-        if (cls.isInstance(obj)) {
-          T descending = (T) obj;
-          descendings.add(descending);
-        }
-      } catch (IllegalAccessException e) {
-      }
-    }
-
-    return descendings;
-  }
-
   @Override
   public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String serviceId) {
     // TODO: Fix this one into the pattern
     executorService.submit(() -> deleteCommands(appId, serviceId));
 
-    List<OwnedByService> services = descendingServices(OwnedByService.class);
+    List<OwnedByService> services =
+        ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
     PruneObjectJob.pruneDescendingObjects(
         services, appId, serviceId, (descending) -> { descending.pruneByService(appId, serviceId); });
   }
@@ -690,7 +671,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Validator.notNullCheck("service", service);
 
     if (!isLinearCommandGraph(serviceCommand)) {
-      final WingsException wingsException =
+      WingsException wingsException =
           new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
       wingsException.addParam("message", "Graph is not a linear pipeline");
       throw wingsException;
@@ -744,7 +725,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (serviceCommand.getCommand() != null) {
       if (!isLinearCommandGraph(serviceCommand)) {
-        final WingsException wingsException =
+        WingsException wingsException =
             new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
         wingsException.addParam("message", "Graph is not a linear pipeline");
         throw wingsException;

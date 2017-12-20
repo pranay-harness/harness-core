@@ -34,7 +34,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 public class PruneObjectJob implements Job {
-  private static Logger logger = LoggerFactory.getLogger(PruneObjectJob.class);
+  protected static Logger logger = LoggerFactory.getLogger(PruneObjectJob.class);
 
   public static final String GROUP = "PRUNE_OBJECT_GROUP";
 
