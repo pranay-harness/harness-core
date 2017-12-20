@@ -18,6 +18,7 @@ import java.util.Map;
 public class ContainerRollbackRequestElement implements ContextElement {
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
+  private String previousDaemonSetYaml;
 
   @Override
   public ContextElementType getElementType() {

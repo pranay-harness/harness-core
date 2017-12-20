@@ -71,6 +71,6 @@ public interface KubernetesContainerService {
 
   NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
-  void rollbackDaemonSet(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  void waitForPodsToStop(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
 }

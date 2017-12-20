@@ -38,11 +38,8 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
     executionLogCallback.setLogService(logService);
 
     try {
-      context.setCommandExecutionData(
-          ContainerSetupCommandUnitExecutionData.builder()
-              .containerServiceName(executeInternal(cloudProviderSetting, cloudProviderCredentials, setupParams,
-                  context.getServiceVariables(), executionLogCallback))
-              .build());
+      context.setCommandExecutionData(executeInternal(cloudProviderSetting, cloudProviderCredentials, setupParams,
+          context.getServiceVariables(), executionLogCallback));
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
@@ -53,7 +50,7 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
     }
   }
 
-  protected abstract String executeInternal(SettingAttribute cloudProviderSetting,
+  protected abstract ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams setupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback);
 

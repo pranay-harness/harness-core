@@ -24,6 +24,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String namespace;
   private String controllerNamePrefix;
   private boolean rollbackDaemonSet;
+  private String previousDaemonSetYaml;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -45,6 +46,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String namespace;
     private String controllerNamePrefix;
     private boolean rollbackDaemonSet;
+    private String previousDaemonSetYaml;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -147,6 +149,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withPreviousDaemonSetYaml(String previousDaemonSetYaml) {
+      this.previousDaemonSetYaml = previousDaemonSetYaml;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -167,7 +174,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withExternalName(externalName)
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
-          .withRollbackDaemonSet(rollbackDaemonSet);
+          .withRollbackDaemonSet(rollbackDaemonSet)
+          .withPreviousDaemonSetYaml(previousDaemonSetYaml);
     }
 
     public KubernetesSetupParams build() {
@@ -191,6 +199,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
       kubernetesSetupParams.setRollbackDaemonSet(rollbackDaemonSet);
+      kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);
       return kubernetesSetupParams;
     }
   }

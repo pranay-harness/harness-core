@@ -123,7 +123,11 @@ public class EnvState extends State {
     if (workflowVariables == null || workflowVariables.isEmpty()) {
       return variables;
     }
-    variables.putAll(workflowVariables);
+    workflowVariables.keySet().forEach(s -> {
+      if (!variables.containsKey(s)) {
+        variables.put(s, workflowVariables.get(s));
+      }
+    });
     return variables;
   }
   /**

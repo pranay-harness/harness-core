@@ -31,4 +31,12 @@ public class WebHookResource {
     Validator.notNullCheck("Request body", webHookRequest);
     return webHookService.execute(webHookToken, webHookRequest);
   }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @Path("{webHookToken}/git")
+  public WebHookResponse executeGit(@PathParam("webHookToken") String webHookToken, String eventPayload) {
+    return webHookService.executeByEvent(webHookToken, eventPayload);
+  }
 }

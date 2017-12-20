@@ -15,6 +15,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -128,6 +129,12 @@ public class CommandStateExecutionData extends StateExecutionData {
     }
     if (oldInstanceData != null) {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
+    }
+    if (containerSetupParams != null && containerSetupParams instanceof KubernetesSetupParams) {
+      String previousDaemonSetYaml = ((KubernetesSetupParams) containerSetupParams).getPreviousDaemonSetYaml();
+      if (previousDaemonSetYaml != null) {
+        commandStepExecutionSummary.setPreviousDaemonSetYaml(previousDaemonSetYaml);
+      }
     }
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
