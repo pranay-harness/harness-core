@@ -96,6 +96,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Override
   public WebHookResponse executeByEvent(String token, String webhookEventPayload) {
     try {
+      logger.info("Received the webhook event payload {}", webhookEventPayload);
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       if (trigger == null) {
         return WebHookResponse.builder().error("Trigger not associated to the given token").build();
@@ -117,13 +118,19 @@ public class WebHookServiceImpl implements WebHookService {
       Map<String, String> resolvedParameters = new HashMap<>();
       DocumentContext ctx = JsonUtils.parseJson(webhookEventPayload);
       if (webhookParameters != null) {
-        webhookParameters.keySet().forEach(s -> {
+        for (String s : webhookParameters.keySet()) {
           String param = webhookParameters.get(s);
           String paramValue = null;
           try {
             Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(param);
             if (matcher.matches()) {
               String paramVariable = matcher.group(0).substring(2, matcher.group(0).length() - 1);
+              if (bitBucketPullRequest) {
+                if (!paramVariable.startsWith("pullRequest")) {
+                  paramVariable = "pullRequest." + paramVariable;
+                }
+              }
+              logger.info("Param Variable {}", paramVariable);
               paramValue = JsonUtils.jsonPath(ctx, paramVariable);
             }
           } catch (Exception e) {
@@ -134,7 +141,7 @@ public class WebHookServiceImpl implements WebHookService {
           } else {
             resolvedParameters.put(s, param);
           }
-        });
+        }
       }
       WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(trigger, resolvedParameters);
       return WebHookResponse.builder()
