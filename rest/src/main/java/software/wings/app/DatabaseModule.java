@@ -16,6 +16,7 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
@@ -97,6 +98,20 @@ public class DatabaseModule extends AbstractModule {
     this.distributedLockSvc = distributedLockSvc;
   }
 
+  @SuppressWarnings("deprecation")
+  public static void reportDeprecatedUnique(final Index index) {
+    if (index.unique()) {
+      throw new RuntimeException("Someone still uses deprecated unique annotation");
+    }
+  }
+
+  @SuppressWarnings("deprecation")
+  public static void reportDeprecatedUnique(final Indexed indexed) {
+    if (indexed.unique()) {
+      throw new RuntimeException("Someone still uses deprecated unique annotation");
+    }
+  }
+
   private void ensureIndex(Morphia morphia) {
     /*
     Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
@@ -110,10 +125,12 @@ public class DatabaseModule extends AbstractModule {
         List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
         if (indexesAnnotations != null) {
           indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+            reportDeprecatedUnique(index);
+
             BasicDBObject keys = new BasicDBObject();
             Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
             this.primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(keys, index.options().name(), index.unique() || index.options().unique());
+                .createIndex(keys, index.options().name(), index.options().unique());
           });
         }
 
@@ -121,18 +138,19 @@ public class DatabaseModule extends AbstractModule {
         for (final MappedField mf : mc.getPersistenceFields()) {
           if (mf.hasAnnotation(Indexed.class)) {
             final Indexed indexed = mf.getAnnotation(Indexed.class);
+            reportDeprecatedUnique(indexed);
+
+            BasicDBObject dbObject = new BasicDBObject().append(mf.getNameToStore(), 1);
             try {
               this.primaryDatastore.getCollection(mc.getClazz())
-                  .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
-                      indexed.unique() || indexed.options().unique());
+                  .createIndex(dbObject, null, indexed.options().unique());
             } catch (MongoCommandException mex) {
               if (mex.getErrorCode() == 85) { // When Index creation fails due to changed options drop it and recreate.
                 this.primaryDatastore.getCollection(mc.getClazz())
                     .dropIndex(new BasicDBObject().append(mf.getNameToStore(), 1));
                 try {
                   this.primaryDatastore.getCollection(mc.getClazz())
-                      .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
-                          indexed.unique() || indexed.options().unique());
+                      .createIndex(dbObject, null, indexed.options().unique());
                 } catch (MongoCommandException mex1) {
                   logger.error("Index creation failed for class " + mc.getClazz().getCanonicalName(), mex1);
                   throw mex1;
