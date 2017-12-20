@@ -24,6 +24,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
+import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
 import org.apache.commons.collections.CollectionUtils;
@@ -46,10 +47,13 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneFileJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
@@ -77,6 +81,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactServiceImpl.class);
+
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
 
   @Inject private WingsPersistence wingsPersistence;
@@ -87,8 +93,9 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
 
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+
   private final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)
@@ -283,12 +290,14 @@ public class ArtifactServiceImpl implements ArtifactService {
   public boolean delete(String appId, String artifactId) {
     Artifact artifact = get(appId, artifactId);
     Validator.notNullCheck("Artifact", artifact);
-    boolean deleted = wingsPersistence.delete(artifact);
-    if (deleted) {
-      artifact.getArtifactFiles().forEach(
-          artifactFile -> fileService.deleteFile(artifactFile.getFileUuid(), ARTIFACTS));
-    }
-    return deleted;
+
+    List<String> uuids = artifact.getArtifactFiles()
+                             .stream()
+                             .map(artifactFile -> artifactFile.getFileUuid())
+                             .collect(Collectors.toList());
+
+    PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS, uuids);
+    return wingsPersistence.delete(artifact);
   }
 
   @Override
