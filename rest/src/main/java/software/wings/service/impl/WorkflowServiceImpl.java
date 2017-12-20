@@ -157,7 +157,7 @@ import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.ElasticLoadBalancerState.Operation;
-import software.wings.sm.states.ScriptState;
+import software.wings.sm.states.ShellScriptState;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
@@ -321,7 +321,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
     Arrays.stream(values())
         .filter(state
-            -> state.getTypeClass() != ScriptState.class
+            -> state.getTypeClass() != ShellScriptState.class
                 || featureFlagService.isEnabled(SHELL_SCRIPT_AS_A_STEP, accountId))
         .forEach(state -> stencils.add(state));
 
