@@ -239,7 +239,7 @@ public class JenkinsImpl implements Jenkins {
 
   /**
    * This method generates the ui display name from the jenkins url.
-   * The jenkins url looks like <jenkins_base_url>/job/job1/job/job2/job/job3
+   * The jenkins url looks like &lt;jenkins_base_url&gt;/job/job1/job/job2/job/job3
    * from which we have to show job1/job2/job3 in the ui.
    * @param url
    * @return
