@@ -9,6 +9,9 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -16,6 +19,7 @@ import software.wings.service.impl.AwsHelperService;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -24,11 +28,13 @@ import java.util.Map;
  */
 @Singleton
 public class AmiServiceImpl implements AmiService {
+  private final static Logger logger = LoggerFactory.getLogger(AmiServiceImpl.class);
   @Inject private AwsHelperService awsHelperService;
 
   @Override
   public List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       Map<String, List<String>> tags, int maxNumberOfBuilds) {
+    logger.info("Retrieving images from Aws");
     List<BuildDetails> buildDetails = new ArrayList<>();
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("is-public").withValues("false"));
@@ -40,8 +46,7 @@ public class AmiServiceImpl implements AmiService {
     DescribeImagesResult describeImagesResult;
     describeImagesResult =
         awsHelperService.decribeEc2Images(awsConfig, encryptionDetails, region, describeImagesRequest);
-    Collections.sort(
-        describeImagesResult.getImages(), (o1, o2) -> o2.getCreationDate().compareTo(o1.getCreationDate()));
+    Collections.sort(describeImagesResult.getImages(), Comparator.comparing(Image::getCreationDate));
     describeImagesResult.getImages()
         .stream()
         .filter(image -> image != null && !isNullOrEmpty(image.getName()))
