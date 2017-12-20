@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
@@ -87,6 +88,8 @@ public interface ActivityService extends OwnedByEnvironment {
    * @return the boolean
    */
   boolean delete(String appId, String activityId);
+
+  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String activityId);
 
   /**
    * Update command unit status.

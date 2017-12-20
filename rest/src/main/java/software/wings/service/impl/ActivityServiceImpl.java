@@ -8,8 +8,9 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
-import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -28,15 +29,19 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.OwnedByActivity;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -52,6 +57,8 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EventEmitter eventEmitter;
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {
@@ -127,34 +134,6 @@ public class ActivityServiceImpl implements ActivityService {
     return rv;
   }
 
-  //  @Override
-  //  public List<CommandUnitDetails> getCommandUnits(String appId, String activityId) {
-  //    Activity activity = get(activityId, appId);
-  //    List<CommandUnitDetails> rv = new ArrayList<>();
-  //    if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
-  //      List<CommandUnit> commandUnits = activity.getCommandUnits();
-  //      CommandExecutionStatus finalExecutionStatus = null;
-  //      for (int idx = commandUnits.size() - 1; idx >= 0; idx--) {
-  //        CommandUnit commandUnit = commandUnits.get(idx);
-  //        if (asList(SUCCESS, FAILURE).contains(commandUnit.getCommandExecutionStatus())) {
-  //          finalExecutionStatus = commandUnit.getCommandExecutionStatus();
-  //        }
-  //        rv.add(CommandUnitDetails.builder().commandExecutionStatus(
-  //            finalExecutionStatus == null ? commandUnit.getCommandExecutionStatus() :
-  //            finalExecutionStatus).name(commandUnit.getName()).commandUnitType(
-  //            activity.getCommandUnitType()).build());
-  //      }
-  //      Collections.reverse(rv);
-  //    } else if (activity.getCommandUnitType() == CommandUnitType.JENKINS) {
-  //      rv.add(CommandUnitDetails.builder().commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus())).name(
-  //          COMMAND_UNIT_NAME).commandUnitType(CommandUnitType.JENKINS).build());
-  //    } else {
-  //      throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
-  //    }
-  //
-  //    return rv;
-  //  }
-
   @Override
   public Activity getLastActivityForService(String appId, String serviceId) {
     return wingsPersistence.createQuery(Activity.class)
@@ -179,12 +158,18 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public boolean delete(String appId, String activityId) {
-    boolean deleted = wingsPersistence.delete(
+    PruneObjectJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId);
+
+    return wingsPersistence.delete(
         wingsPersistence.createQuery(Activity.class).field("appId").equal(appId).field(ID_KEY).equal(activityId));
-    if (deleted) {
-      logService.deleteActivityLogs(appId, activityId);
-    }
-    return deleted;
+  }
+
+  @Override
+  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String activityId) {
+    List<OwnedByActivity> services =
+        ServiceClassLocator.descendingServices(this, ActivityServiceImpl.class, OwnedByActivity.class);
+    PruneObjectJob.pruneDescendingObjects(
+        services, appId, activityId, (descending) -> { descending.pruneByActivity(appId, activityId); });
   }
 
   @Override
