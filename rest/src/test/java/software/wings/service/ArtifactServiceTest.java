@@ -35,7 +35,9 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -50,9 +52,13 @@ import javax.validation.ConstraintViolationException;
  * Created by peeyushaggarwal on 4/4/16.
  */
 public class ArtifactServiceTest extends WingsBaseTest {
+  @Inject private WingsPersistence wingsPersistence;
+
   @Mock private FileService fileService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;
+
+  @Mock private QuartzScheduler jobScheduler;
 
   @InjectMocks @Inject private ArtifactService artifactService;
 
@@ -222,8 +228,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
+    assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
     artifactService.delete(savedArtifact.getAppId(), savedArtifact.getUuid());
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
+    assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNull();
   }
 
   @Test
