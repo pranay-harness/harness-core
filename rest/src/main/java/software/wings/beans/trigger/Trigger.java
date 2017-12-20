@@ -1,5 +1,6 @@
 package software.wings.beans.trigger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -7,6 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
@@ -28,8 +30,8 @@ public class Trigger extends Base {
   @NotNull private TriggerCondition condition;
   @NotEmpty private String pipelineId;
   private String pipelineName;
-
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
+  @JsonIgnore @Indexed private String webHookToken;
 
   public static final class Builder {
     protected String appId;
