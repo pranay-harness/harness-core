@@ -361,11 +361,13 @@ public abstract class ContainerServiceSetup extends State {
       String url = nexusConfig.getNexusUrl();
       int firstDotIndex = url.indexOf(".");
       int colonIndex = url.indexOf(":", firstDotIndex);
-      String registryUrl = url.substring(0, colonIndex) + ":" + nexusArtifactStream.getDockerPort() != null
+      String registryUrl =
+          url.substring(0, colonIndex > 0 ? colonIndex : url.length()) + ":" + nexusArtifactStream.getDockerPort()
+              != null
           ? nexusArtifactStream.getDockerPort()
           : "5000";
       String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
-
+      logger.info("Nexus Registry url: " + registryUrl);
       imageDetails.name(namePrefix + "/" + nexusArtifactStream.getImageName())
           .sourceName(nexusArtifactStream.getSourceName())
           .registryUrl(registryUrl)
