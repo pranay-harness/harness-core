@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.utils.Misc.isNullOrEmpty;
 
 import com.jayway.jsonpath.DocumentContext;
@@ -13,15 +14,19 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookEventType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
+import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -96,6 +101,18 @@ public class WebHookServiceImpl implements WebHookService {
         return WebHookResponse.builder().error("Trigger not associated to the given token").build();
       }
       WebHookTriggerCondition webhookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      boolean bitBucketPullRequest = false;
+      if (webhookTriggerCondition.getWebhookSource() != null
+          && BITBUCKET.equals(webhookTriggerCondition.getWebhookSource())) {
+        List<WebhookEventType> eventTypes = webhookTriggerCondition.getEventTypes();
+        if (webhookEventPayload.contains("pullRequest")) {
+          if (eventTypes.contains(WebhookEventType.PULL_REQUEST)) {
+            bitBucketPullRequest = true;
+          }
+        } else {
+          return WebHookResponse.builder().error("Invalid request payload. ArtifactStream does not exists").build();
+        }
+      }
       Map<String, String> webhookParameters = webhookTriggerCondition.getParameters();
       Map<String, String> resolvedParameters = new HashMap<>();
       DocumentContext ctx = JsonUtils.parseJson(webhookEventPayload);
@@ -104,12 +121,18 @@ public class WebHookServiceImpl implements WebHookService {
           String param = webhookParameters.get(s);
           String paramValue = null;
           try {
-            paramValue = JsonUtils.jsonPath(ctx, param);
+            Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(param);
+            if (matcher.matches()) {
+              String paramVariable = matcher.group(0).substring(2, matcher.group(0).length() - 1);
+              paramValue = JsonUtils.jsonPath(ctx, paramVariable);
+            }
           } catch (Exception e) {
             logger.warn("Failed to resolve the param {} in Json {}", param, webhookEventPayload);
-            if (!isNullOrEmpty(paramValue)) {
-              resolvedParameters.put(param, paramValue);
-            }
+          }
+          if (!isNullOrEmpty(paramValue)) {
+            resolvedParameters.put(s, paramValue);
+          } else {
+            resolvedParameters.put(s, param);
           }
         });
       }

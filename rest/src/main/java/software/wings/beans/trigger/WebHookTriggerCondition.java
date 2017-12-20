@@ -7,6 +7,7 @@ import lombok.Data;
 import software.wings.beans.WebHookToken;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,20 +19,20 @@ public class WebHookTriggerCondition extends TriggerCondition {
   private WebHookToken webHookToken;
   private String artifactStreamId;
   private Map<String, String> parameters = new HashMap<>();
-  private WebhookType webhookType;
-  private WebhookEventType webhookEventType;
+  private WebhookSource webhookSource;
+  private List<WebhookEventType> eventTypes;
 
   public WebHookTriggerCondition() {
     super(WEBHOOK);
   }
 
   public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters,
-      WebhookType webhookType, WebhookEventType webhookEventType) {
+      WebhookSource webhookSource, List<WebhookEventType> eventTypes) {
     this();
     this.webHookToken = webHookToken;
     this.artifactStreamId = artifactStreamId;
     this.parameters = parameters;
-    this.webhookType = webhookType;
-    this.webhookEventType = webhookEventType;
+    this.webhookSource = webhookSource;
+    this.eventTypes = eventTypes;
   }
 }
