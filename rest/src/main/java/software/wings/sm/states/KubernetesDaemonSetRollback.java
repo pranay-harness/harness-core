@@ -9,6 +9,7 @@ import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -26,6 +27,8 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
+import software.wings.common.Constants;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
@@ -75,6 +78,9 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
               -> cd.setCommands(cd.getCommands().stream().map(context::renderExpression).collect(Collectors.toList())));
     }
 
+    ContainerRollbackRequestElement rollbackElement =
+        context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -94,6 +100,7 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
         .withTargetPort(targetPort)
         .withControllerNamePrefix(controllerName)
         .withRollbackDaemonSet(true)
+        .withPreviousDaemonSetYaml(rollbackElement.getPreviousDaemonSetYaml())
         .build();
   }
 

@@ -446,9 +446,26 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void rollbackDaemonSet(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    // TODO(brett) - Implement
+  public void waitForPodsToStop(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
+    KubernetesClient kubernetesClient =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      with()
+          .pollInterval(1, TimeUnit.SECONDS)
+          .await()
+          .atMost(10, TimeUnit.MINUTES)
+          .until(()
+                     -> kubernetesClient.pods()
+                            .inNamespace(kubernetesConfig.getNamespace())
+                            .withLabels(labels)
+                            .list()
+                            .getItems()
+                            .size()
+                  <= 0);
+    } catch (ConditionTimeoutException e) {
+      logger.warn("Timed out waiting for pods to stop.", e);
+    }
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,

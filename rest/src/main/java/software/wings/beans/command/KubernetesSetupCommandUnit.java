@@ -1,6 +1,5 @@
 package software.wings.beans.command;
 
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -64,6 +63,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -95,7 +95,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   @Override
-  protected String executeInternal(SettingAttribute cloudProviderSetting,
+  protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
@@ -111,16 +111,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
 
     if (setupParams.isRollbackDaemonSet()) {
-      String daemonSetName = setupParams.getControllerNamePrefix();
-      executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName, LogLevel.INFO);
-      kubernetesContainerService.rollbackDaemonSet(kubernetesConfig, encryptedDataDetails, daemonSetName);
-      return daemonSetName;
+      return performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
     }
 
-    kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, emptyList());
+    kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
 
     String secretName = getKubernetesSecretName(setupParams.getImageDetails().getRegistryUrl());
-    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, emptyList(),
+    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails,
         createRegistrySecret(
             secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));
 
@@ -156,7 +153,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
 
-    Service service = kubernetesContainerService.getService(kubernetesConfig, emptyList(), kubernetesServiceName);
+    Service service =
+        kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
 
     if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
       Service serviceDefinition =
@@ -172,12 +170,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
         }
       }
-      service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, emptyList(), serviceDefinition);
+      service =
+          kubernetesContainerService.createOrReplaceService(kubernetesConfig, encryptedDataDetails, serviceDefinition);
       serviceClusterIP = service.getSpec().getClusterIP();
 
       if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer) {
         serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
-            kubernetesConfig, service, setupParams.getLoadBalancerIP(), executionLogCallback);
+            kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
       }
     } else if (service != null) {
       executionLogCallback.saveExecutionLog(
@@ -232,7 +231,42 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       containerInfos.forEach(info
           -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
     }
-    return containerServiceName;
+    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
+  }
+
+  private ContainerSetupCommandUnitExecutionData performDaemonSetRollback(
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
+    String daemonSetName = setupParams.getControllerNamePrefix();
+    String daemonSetYaml = setupParams.getPreviousDaemonSetYaml();
+    if (isNotBlank(daemonSetYaml)) {
+      try {
+        DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
+        executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName, LogLevel.INFO);
+        kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, daemonSet);
+        executionLogCallback.saveExecutionLog("Rolled back to DaemonSet with image(s): "
+                + daemonSet.getSpec()
+                      .getTemplate()
+                      .getSpec()
+                      .getContainers()
+                      .stream()
+                      .map(Container::getImage)
+                      .collect(Collectors.toList()),
+            LogLevel.INFO);
+      } catch (IOException e) {
+        executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
+      }
+    } else {
+      executionLogCallback.saveExecutionLog(
+          "DaemonSet " + daemonSetName + " did not exist previously. Deleting on rollback", LogLevel.INFO);
+      HasMetadata daemonSet =
+          kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, daemonSetName);
+      Map<String, String> labels = daemonSet.getMetadata().getLabels();
+      kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, daemonSetName);
+      executionLogCallback.saveExecutionLog("Waiting for pods to stop", LogLevel.INFO);
+      kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels);
+    }
+    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(daemonSetName).build();
   }
 
   private Secret createRegistrySecret(
@@ -251,7 +285,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service, String loadBalancerIP,
+  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, Service service, String loadBalancerIP,
       ExecutionLogCallback executionLogCallback) {
     String loadBalancerEndpoint = null;
     String serviceName = service.getMetadata().getName();
@@ -261,9 +296,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback.saveExecutionLog(
             "Waiting for service " + serviceName + " load balancer to be ready.", LogLevel.INFO);
         try {
-          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
+          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(5, TimeUnit.MINUTES).until(() -> {
             LoadBalancerStatus loadBalancerStatus =
-                kubernetesContainerService.getService(kubernetesConfig, emptyList(), serviceName)
+                kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, serviceName)
                     .getStatus()
                     .getLoadBalancer();
             boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
@@ -278,7 +313,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               LogLevel.INFO);
           return null;
         }
-        loadBalancer = kubernetesContainerService.getService(kubernetesConfig, emptyList(), serviceName)
+        loadBalancer = kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, serviceName)
                            .getStatus()
                            .getLoadBalancer();
       }
