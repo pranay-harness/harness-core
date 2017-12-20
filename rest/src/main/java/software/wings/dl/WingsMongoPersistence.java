@@ -425,6 +425,22 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   /**
    * {@inheritDoc}
+   * It should be rarely used
+   */
+  @Override
+  public <T> List<T> queryAll(Class<T> cls, PageRequest<T> req) {
+    PageResponse<T> res = query(cls, req);
+    List<T> ret = new ArrayList<>();
+    while (res != null && res.size() > 0) {
+      ret.addAll(res.getResponse());
+      req.setOffset(String.valueOf(ret.size()));
+      res = query(cls, req);
+    }
+    return ret;
+  }
+
+  /**
+   * {@inheritDoc}
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
