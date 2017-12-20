@@ -361,7 +361,9 @@ public abstract class ContainerServiceSetup extends State {
       String url = nexusConfig.getNexusUrl();
       int firstDotIndex = url.indexOf(".");
       int colonIndex = url.indexOf(":", firstDotIndex);
-      String registryUrl = url.substring(0, colonIndex) + ":8083";
+      String registryUrl = url.substring(0, colonIndex) + ":" + nexusArtifactStream.getDockerPort() != null
+          ? nexusArtifactStream.getDockerPort()
+          : "5000";
       String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
 
       imageDetails.name(namePrefix + "/" + nexusArtifactStream.getImageName())
