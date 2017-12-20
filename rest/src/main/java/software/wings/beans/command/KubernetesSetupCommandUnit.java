@@ -184,9 +184,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
     }
 
-    executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
-    cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
-
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
     executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
@@ -201,37 +198,46 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
 
     if (isDaemonSet) {
-      int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
-      List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(
-          kubernetesConfig, encryptedDataDetails, containerServiceName, desiredCount, executionLogCallback);
-
-      boolean allContainersSuccess =
-          containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-      if (containerInfos.size() != desiredCount || !allContainersSuccess) {
-        StringBuilder msg = new StringBuilder();
-        if (containerInfos.size() != desiredCount) {
-          String message = String.format("Expected data for %d container%s but got %d", desiredCount,
-              containerInfos.size() == 1 ? "" : "s", containerInfos.size());
-          executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
-          msg.append(message);
-        }
-        if (!allContainersSuccess) {
-          List<ContainerInfo> failed = containerInfos.stream()
-                                           .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
-                                           .collect(Collectors.toList());
-          String message =
-              String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
-                  failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList()));
-          executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
-          msg.append(message);
-        }
-        throw new WingsException(
-            ErrorCode.DEFAULT_ERROR_CODE, "message", "DaemonSet pods failed to reach desired count. " + msg.toString());
-      }
-      containerInfos.forEach(info
-          -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
+      listContainerInfosWhenReady(encryptedDataDetails, executionLogCallback, kubernetesConfig, containerServiceName);
+    } else {
+      executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
+      cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
     }
     return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
+  }
+
+  private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig, String containerServiceName) {
+    int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
+    executionLogCallback.saveExecutionLog("Waiting for pods to be ready", LogLevel.INFO);
+    List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(
+        kubernetesConfig, encryptedDataDetails, containerServiceName, desiredCount, executionLogCallback);
+
+    boolean allContainersSuccess =
+        containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+    if (containerInfos.size() != desiredCount || !allContainersSuccess) {
+      StringBuilder msg = new StringBuilder();
+      if (containerInfos.size() != desiredCount) {
+        String message = String.format("Expected data for %d container%s but got %d", desiredCount,
+            containerInfos.size() == 1 ? "" : "s", containerInfos.size());
+        executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+        msg.append(message);
+      }
+      if (!allContainersSuccess) {
+        List<ContainerInfo> failed = containerInfos.stream()
+                                         .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
+                                         .collect(Collectors.toList());
+        String message =
+            String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
+                failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList()));
+        executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+        msg.append(message);
+      }
+      throw new WingsException(
+          ErrorCode.DEFAULT_ERROR_CODE, "message", "DaemonSet pods failed to reach desired count. " + msg.toString());
+    }
+    containerInfos.forEach(info
+        -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
   }
 
   private ContainerSetupCommandUnitExecutionData performDaemonSetRollback(
@@ -253,6 +259,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .map(Container::getImage)
                       .collect(Collectors.toList()),
             LogLevel.INFO);
+        listContainerInfosWhenReady(encryptedDataDetails, executionLogCallback, kubernetesConfig, daemonSetName);
       } catch (IOException e) {
         executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
       }

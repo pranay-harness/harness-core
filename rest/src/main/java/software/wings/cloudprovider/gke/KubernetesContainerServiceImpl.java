@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
@@ -8,6 +9,7 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
@@ -20,6 +22,7 @@ import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -60,7 +63,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 2/9/17
@@ -470,8 +475,25 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int number) {
-    Map<String, String> labels =
-        getController(kubernetesConfig, encryptedDataDetails, controllerName).getMetadata().getLabels();
+    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    Map<String, String> labels = controller.getMetadata().getLabels();
+
+    PodTemplateSpec template = null;
+    if (controller instanceof ReplicationController) {
+      template = ((ReplicationController) controller).getSpec().getTemplate();
+    } else if (controller instanceof Deployment) {
+      template = ((Deployment) controller).getSpec().getTemplate();
+    } else if (controller instanceof ReplicaSet) {
+      template = ((ReplicaSet) controller).getSpec().getTemplate();
+    } else if (controller instanceof StatefulSet) {
+      template = ((StatefulSet) controller).getSpec().getTemplate();
+    } else if (controller instanceof DaemonSet) {
+      template = ((DaemonSet) controller).getSpec().getTemplate();
+    }
+
+    Set<String> images = template != null
+        ? template.getSpec().getContainers().stream().map(Container::getImage).collect(Collectors.toSet())
+        : emptySet();
 
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
@@ -482,11 +504,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         if (pods.size() != number) {
           return false;
         }
-        boolean allRunning = true;
-        for (Pod pod : pods) {
-          allRunning = allRunning && pod.getStatus().getPhase().equals(RUNNING);
-        }
-        return allRunning;
+        boolean allRunning = pods.stream().allMatch(pod -> pod.getStatus().getPhase().equals(RUNNING));
+        boolean allHaveImages = pods.stream().allMatch(pod
+            -> pod.getSpec()
+                   .getContainers()
+                   .stream()
+                   .map(Container::getImage)
+                   .collect(Collectors.toList())
+                   .containsAll(images));
+
+        return allRunning && allHaveImages;
       });
     } catch (ConditionTimeoutException e) {
       logger.warn("Timed out waiting for pods to be ready.", e);
