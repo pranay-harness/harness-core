@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
@@ -13,7 +14,6 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.CO
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -36,6 +36,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -52,13 +53,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
@@ -69,6 +70,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
 
   @Mock private ServiceInstanceService serviceInstanceService;
+  @Mock private LogService logService;
 
   @Mock private EventEmitter eventEmitter;
 
@@ -368,5 +370,12 @@ public class ActivityServiceTest extends WingsBaseTest {
                 .withAppId(activity.getAppId())
                 .withType(Type.UPDATE)
                 .build());
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    activityService.pruneDescendingObjects(APP_ID, ACTIVITY_ID);
+    InOrder inOrder = inOrder(logService);
+    inOrder.verify(logService).pruneByActivity(APP_ID, ACTIVITY_ID);
   }
 }
