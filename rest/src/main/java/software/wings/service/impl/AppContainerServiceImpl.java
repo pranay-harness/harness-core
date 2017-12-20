@@ -7,6 +7,7 @@ import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+import com.google.inject.name.Named;
 
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.beans.AppContainer;
@@ -16,6 +17,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneFileJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FileService;
@@ -30,6 +33,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -46,6 +50,8 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Inject private FileService fileService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**
    * {@inheritDoc}
@@ -128,11 +134,13 @@ public class AppContainerServiceImpl implements AppContainerService {
     AppContainer appContainer = get(accountId, appContainerId);
     Validator.notNullCheck("App Stack", appContainer);
     ensureAppContainerNotInUse(appContainerId);
-    // safe to delete
-    wingsPersistence.delete(AppContainer.class, appContainerId);
+
     if (!appContainer.isSystemCreated()) {
-      fileService.deleteFile(appContainer.getFileUuid(), PLATFORMS);
+      PruneFileJob.addDefaultJob(jobScheduler, AppContainer.class, appContainerId, FileBucket.PLATFORMS,
+          Arrays.asList(appContainer.getFileUuid()));
     }
+
+    wingsPersistence.delete(AppContainer.class, appContainerId);
   }
 
   private boolean newPlatformSoftwareBinaryUploaded(AppContainer storedAppContainer, AppContainer appContainer) {
