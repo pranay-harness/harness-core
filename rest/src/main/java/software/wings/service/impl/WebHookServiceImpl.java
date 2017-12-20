@@ -106,13 +106,15 @@ public class WebHookServiceImpl implements WebHookService {
       if (webhookTriggerCondition.getWebhookSource() != null
           && BITBUCKET.equals(webhookTriggerCondition.getWebhookSource())) {
         List<WebhookEventType> eventTypes = webhookTriggerCondition.getEventTypes();
-        if (webhookEventPayload.contains("pullRequest")) {
+        if (webhookEventPayload.contains("pullrequest")) {
           if (eventTypes.contains(WebhookEventType.PULL_REQUEST)) {
             bitBucketPullRequest = true;
           }
         } else {
-          return WebHookResponse.builder().error("Invalid request payload. ArtifactStream does not exists").build();
+          return WebHookResponse.builder().error("Only Pull Request supported for Bit Bucket.").build();
         }
+      } else {
+        return WebHookResponse.builder().error("Invalid Webhook Source. Only Bit Bucket supported now.").build();
       }
       Map<String, String> webhookParameters = webhookTriggerCondition.getParameters();
       Map<String, String> resolvedParameters = new HashMap<>();
@@ -126,8 +128,8 @@ public class WebHookServiceImpl implements WebHookService {
             if (matcher.matches()) {
               String paramVariable = matcher.group(0).substring(2, matcher.group(0).length() - 1);
               if (bitBucketPullRequest) {
-                if (!paramVariable.startsWith("pullRequest")) {
-                  paramVariable = "pullRequest." + paramVariable;
+                if (!paramVariable.startsWith("pullrequest")) {
+                  paramVariable = "pullrequest." + paramVariable;
                 }
               }
               logger.info("Param Variable {}", paramVariable);
