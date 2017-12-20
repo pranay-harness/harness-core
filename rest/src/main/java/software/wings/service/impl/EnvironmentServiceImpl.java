@@ -71,7 +71,6 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -353,28 +352,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     // point. We should have the necessary APIs elsewhere, if we find the users want it.
   }
 
-  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
-  public <T> List<T> descendingServices(Class<T> cls) {
-    List<T> descendings = new ArrayList<>();
-
-    for (Field field : EnvironmentServiceImpl.class.getDeclaredFields()) {
-      Object obj;
-      try {
-        obj = field.get(this);
-        if (cls.isInstance(obj)) {
-          T descending = (T) obj;
-          descendings.add(descending);
-        }
-      } catch (IllegalAccessException e) {
-      }
-    }
-
-    return descendings;
-  }
-
   @Override
   public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String envId) {
-    List<OwnedByEnvironment> services = descendingServices(OwnedByEnvironment.class);
+    List<OwnedByEnvironment> services =
+        ServiceClassLocator.descendingServices(this, EnvironmentServiceImpl.class, OwnedByEnvironment.class);
     PruneObjectJob.pruneDescendingObjects(
         services, appId, envId, (descending) -> { descending.pruneByEnvironment(appId, envId); });
   }
