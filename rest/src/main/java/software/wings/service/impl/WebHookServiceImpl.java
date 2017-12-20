@@ -145,11 +145,14 @@ public class WebHookServiceImpl implements WebHookService {
           }
         }
       }
+      logger.info("Triggering pipeline execution");
       WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(trigger, resolvedParameters);
+      logger.info("Pipeline execution trigger success");
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
           .build();
+
     } catch (Exception ex) {
       logger.error("WebHook call failed [%s]", token, ex);
       return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
