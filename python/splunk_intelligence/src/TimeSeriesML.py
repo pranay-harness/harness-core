@@ -293,10 +293,12 @@ class TSAnomlyDetector(object):
         control_data_dict = self.get_metrics_data(metric_name, self.metric_template, control_txn_data_dict)
         test_data_dict = self.get_metrics_data(metric_name, self.metric_template, test_txn_data_dict)
         response = {'results': {}, 'max_risk': -1, 'control_avg': -1, 'test_avg': -1}
-        if fast_analysis is None:
-            fast_analysis = True if len(control_data_dict['data']) > 4 else False
+
         if self.validate(txn_name, metric_name,
                          control_data_dict, test_data_dict):
+            if fast_analysis is None:
+                fast_analysis = True if len(control_data_dict['data']) > 19 else False
+
             if fast_analysis:
                 analysis_output = self.fast_analysis_metric(self._options.smooth_window, metric_name, control_data_dict,
                                                             test_data_dict)
@@ -385,7 +387,7 @@ class TSAnomlyDetector(object):
                         analysis_output['control_values'],
                         np.isnan(analysis_output['control_values'])).filled(0).tolist()
                     response['results'][host]['nn'] = 'base'
-                    response['results'][host]['control_index'] = 0 # []
+                    response['results'][host]['control_index'] = 0
                     # response['results'][host]['test_cuts'] = []
                     # response['results'][host]['optimal_cuts'] = []
                     # response['results'][host]['optimal_data'] = []
@@ -426,7 +428,6 @@ class TSAnomlyDetector(object):
         response['metric_name'] = metric_name
 
         return response
-
 
     @staticmethod
     def adjust_numeric_dist(metric_deviation_type, dist_2d_data):
@@ -687,15 +688,18 @@ def main(args):
     logger.info('test_events = ' + str(len(test_metrics)))
 
     # Uncomment when you want to save the files for local debugging
-    write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/test_live_new.json', test_metrics)
-
-    write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/control_live_new.json',control_metrics)
+    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/test_live_new3.json', test_metrics)
+    #
+    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/control_live_new3.json',control_metrics)
 
     result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
-    write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/result_new_test.json',
-                  result)
+    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/result_new_test3.json',
+    #               result)
     post_to_wings_server(options, result)
 
 
 if __name__ == "__main__":
     main(sys.argv)
+
+
+
