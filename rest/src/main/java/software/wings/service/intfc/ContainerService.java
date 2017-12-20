@@ -16,6 +16,9 @@ public interface ContainerService {
   @DelegateTaskType(TaskType.CONTAINER_ACTIVE_SERVICE_COUNTS)
   LinkedHashMap<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams);
 
+  @DelegateTaskType(TaskType.CONTAINER_DAEMON_SET_YAML)
+  String getDaemonSetYaml(ContainerServiceParams containerServiceParams);
+
   @DelegateTaskType(TaskType.CONTAINER_INFO)
   List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams);
 }

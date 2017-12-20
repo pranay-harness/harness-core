@@ -192,7 +192,17 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     } else if (phaseStepType == DEPLOY_AWS_LAMBDA) {
       return new ArrayList<>();
     } else if (phaseStepType == CONTAINER_SETUP) {
-      return new ArrayList<>();
+      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                 .stream()
+                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                 .findFirst();
+      if (!first.isPresent()) {
+        return null;
+      }
+      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+      return singletonList(ContainerRollbackRequestElement.builder()
+                               .previousDaemonSetYaml(commandStepExecutionSummary.getPreviousDaemonSetYaml())
+                               .build());
     }
     return null;
   }

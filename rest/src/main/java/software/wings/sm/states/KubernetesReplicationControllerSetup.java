@@ -2,21 +2,30 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
+import com.google.inject.Inject;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.collections.CollectionUtils;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
@@ -26,10 +35,15 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
+import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.intfc.ContainerService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +72,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     super(name, KUBERNETES_REPLICATION_CONTROLLER_SETUP.name());
   }
 
+  @Inject @Transient private transient DelegateProxyFactory delegateProxyFactory;
+
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
@@ -66,6 +82,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
 
+    boolean isDaemonSet = false;
     if (containerTask != null) {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
       kubernetesContainerTask.getContainerDefinitions()
@@ -73,6 +90,28 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
           .filter(cd -> CollectionUtils.isNotEmpty(cd.getCommands()))
           .forEach(cd
               -> cd.setCommands(cd.getCommands().stream().map(context::renderExpression).collect(Collectors.toList())));
+      isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
+    }
+
+    String previousDaemonSetYaml = null;
+    if (isDaemonSet) {
+      DelegateTask.SyncTaskContext syncTaskContext =
+          aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+      SettingAttribute settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+          ? aSettingAttribute()
+                .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
+                .build()
+          : settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+          (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+      ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                          .settingAttribute(settingAttribute)
+                                                          .containerServiceName(controllerNamePrefix)
+                                                          .encryptionDetails(encryptionDetails)
+                                                          .clusterName(clusterName)
+                                                          .build();
+      previousDaemonSetYaml =
+          delegateProxyFactory.get(ContainerService.class, syncTaskContext).getDaemonSetYaml(containerServiceParams);
     }
 
     return aKubernetesSetupParams()
@@ -93,6 +132,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withServiceType(serviceType)
         .withTargetPort(targetPort)
         .withControllerNamePrefix(controllerNamePrefix)
+        .withPreviousDaemonSetYaml(previousDaemonSetYaml)
         .build();
   }
 

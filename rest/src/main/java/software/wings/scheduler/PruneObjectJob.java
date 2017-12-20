@@ -16,6 +16,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -23,6 +24,7 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
@@ -44,6 +46,7 @@ public class PruneObjectJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  @Inject private ActivityService activityService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
   @Inject private PipelineService pipelineService;
@@ -110,7 +113,9 @@ public class PruneObjectJob implements Job {
     }
 
     try {
-      if (className.equals(Application.class.getCanonicalName())) {
+      if (className.equals(Activity.class.getCanonicalName())) {
+        activityService.pruneDescendingObjects(appId, objectId);
+      } else if (className.equals(Application.class.getCanonicalName())) {
         appService.pruneDescendingObjects(appId);
       } else if (className.equals(Environment.class.getCanonicalName())) {
         environmentService.pruneDescendingObjects(appId, objectId);

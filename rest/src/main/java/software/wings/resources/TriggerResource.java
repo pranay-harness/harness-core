@@ -8,7 +8,9 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WebHookToken;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebhookParameters;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
@@ -128,13 +130,23 @@ public class TriggerResource {
   }
 
   @GET
-  @Path("{pipelineId}/webhook_token")
+  @Path("{triggerId}/webhook_token")
   @Timed
   @ExceptionMetered
   public RestResponse<WebHookToken> generateWebhookToken(
-      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
-    return new RestResponse<>(triggerService.generateWebHookToken(appId, pipelineId));
+      @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
+    return new RestResponse<>(triggerService.generateWebHookToken(appId, triggerId));
   }
+
+  @GET
+  @Path("{triggerId}/webhook_token/git")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WebHookToken> generateGitWebhookToken(
+      @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
+    return new RestResponse<>(triggerService.generateWebHookToken(appId, triggerId));
+  }
+
   /**
    * Translate cron rest response.
    *
@@ -147,5 +159,14 @@ public class TriggerResource {
   @ExceptionMetered
   public RestResponse<String> translateCron(Map<String, String> inputMap) {
     return new RestResponse<>(triggerService.getCronDescription(inputMap.get("expression")));
+  }
+
+  @GET
+  @Path("webhook/parameters")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WebhookParameters> listWebhookParameters(@QueryParam("appId") String appId,
+      @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") WorkflowType workflowType) {
+    return new RestResponse<>(triggerService.listWebhookParameters(appId, workflowId, workflowType));
   }
 }
