@@ -186,6 +186,8 @@ public class StateExecutionData {
       case SUCCESS:
         breakDown.setSuccess(1);
         break;
+      default:
+        throw new RuntimeException(String.format("Unhandled ExecutionStatus {}", status.name()));
     }
     executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(breakDown).build());
     putNotNull(
