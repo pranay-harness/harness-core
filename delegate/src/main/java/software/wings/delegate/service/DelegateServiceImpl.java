@@ -227,6 +227,7 @@ public class DelegateServiceImpl implements DelegateService {
               .queryString("delegateId", delegateId)
               .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
               .header("Version", getVersion())
+              .header("X-Atmosphere-WebSocket-Proxy", "true")
               .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
                 @Override
                 public Reader encode(Delegate s) {
