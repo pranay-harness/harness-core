@@ -496,7 +496,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             mediumRisk++;
             break;
           default:
-            unhandled(riskLevel);
+            break;
         }
       }
 
