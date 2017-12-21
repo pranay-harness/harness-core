@@ -42,10 +42,8 @@
 
         <!-- Missing default switch action is error prone. Please make sure that you handle all possible cases with
         default value or throwing exception if the value is unexpected. Note that even you are extremely careful to
-        caver all options someone could add more cases in the future.
-        TODO: enable
+        caver all options someone could add more cases in the future. -->
         <module name="MissingSwitchDefault"/>
-        -->
 
         <!-- Fall through is most likely a mistake. It is a good thing such cases to be under monitoring
         TODO: enable
