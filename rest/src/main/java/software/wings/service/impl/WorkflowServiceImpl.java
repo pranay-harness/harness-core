@@ -65,6 +65,7 @@ import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPL
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 import static software.wings.sm.StateType.values;
+import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
@@ -1444,9 +1445,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
           return AwsCodeDeployState.loadDefaults();
         }
+        break;
       }
       default:
-        break;
+        unhandled(stateType);
     }
     return Collections.emptyMap();
   }

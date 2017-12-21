@@ -65,6 +65,7 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
             break;
           case ERROR:
             logger.error(responseMessage.toString());
+            break;
           default:
             unhandled(errorType);
         }
