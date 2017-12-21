@@ -83,6 +83,7 @@ import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
+import software.wings.sm.states.NewRelicDeploymentMarkerState;
 import software.wings.sm.states.WaitState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -180,6 +181,11 @@ public enum StateType implements StateTypeDescriptor {
    * Cloud watch state type.
    */
   CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
+
+  /**
+   * New relic deployment marker state type.
+   */
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 10, asList(), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
 
