@@ -365,6 +365,8 @@ public class MetricAnalysisJob implements Job {
                 // Do nothing. Don't run any analysis.
                 break;
               }
+              break;
+
               // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
             case COMPARE_WITH_CURRENT:
               logger.info("running time series ml analysis for minute " + analysisMinute);

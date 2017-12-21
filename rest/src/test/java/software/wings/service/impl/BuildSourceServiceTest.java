@@ -394,6 +394,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
           default:
             throw new IllegalArgumentException("invalid repo type");
         }
+        break;
 
       default:
         Service service =
@@ -432,6 +433,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
           default:
             throw new IllegalArgumentException("invalid repo type: " + repositoryType);
         }
+        break;
       case NEXUS:
         groupIds = buildSourceService.getGroupIds(appId, jobName, settingAttribute.getUuid());
         break;
@@ -454,6 +456,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         if (repositoryType.equals("docker")) {
           return;
         }
+        break;
       case DOCKER:
         assertTrue(buildSourceService.validateArtifactSource(
             appId, settingAttribute.getUuid(), artifactStream.getArtifactStreamAttributes()));
