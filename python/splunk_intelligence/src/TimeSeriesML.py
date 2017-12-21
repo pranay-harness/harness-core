@@ -6,6 +6,7 @@ import logging
 import sys
 import time
 from collections import OrderedDict
+from Queue import Empty
 
 import multiprocessing
 import numpy as np
@@ -583,6 +584,7 @@ def analyze_parallel(queue, options, metric_template, control_metrics_batch, tes
     queue.put(anomaly_detector.analyze())
 
 
+
 def parallelize_processing(options, metric_template, control_metrics, test_metrics):
     """
     Break the work into parallel units. Each transaction and its metrics constitute a unit.
@@ -629,7 +631,10 @@ def parallelize_processing(options, metric_template, control_metrics, test_metri
     processed = 0
     while processed < len(jobs):
         # TODO - get blocks forever. Will java kill us?
-        val = queue.get()
+        try:
+            val = queue.get(timeout=300)
+        except Empty:
+            sys.exit(5)
         for txn_data in val['transactions'].values():
             result['transactions'][txn_id] = txn_data
             txn_id += 1
