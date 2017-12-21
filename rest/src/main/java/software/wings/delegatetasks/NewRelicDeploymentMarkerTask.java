@@ -11,9 +11,9 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 import wiremock.org.apache.commons.lang.StringUtils;
 
-import javax.inject.Inject;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import javax.inject.Inject;
 
 public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   @Inject private NewRelicDelegateService newRelicDelegateService;
