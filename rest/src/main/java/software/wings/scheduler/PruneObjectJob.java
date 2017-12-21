@@ -68,7 +68,7 @@ public class PruneObjectJob implements Job {
 
   public static void addDefaultJob(QuartzScheduler jobScheduler, Class cls, String appId, String objectId) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(objectId, PruneObjectJob.GROUP);
+    jobScheduler.deleteJob(objectId, GROUP);
 
     JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
                             .withIdentity(objectId, PruneObjectJob.GROUP)
