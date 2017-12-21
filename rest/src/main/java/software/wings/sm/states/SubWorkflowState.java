@@ -4,6 +4,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.NameValuePair;
 import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
@@ -28,6 +29,8 @@ import javax.inject.Inject;
  */
 public class SubWorkflowState extends State {
   private static final Logger logger = LoggerFactory.getLogger(SubWorkflowState.class);
+
+  private List<NameValuePair> variableOverrides;
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
 
@@ -122,5 +125,13 @@ public class SubWorkflowState extends State {
 
   public void setSubWorkflowId(String subWorkflowId) {
     this.subWorkflowId = subWorkflowId;
+  }
+
+  public List<NameValuePair> getVariableOverrides() {
+    return variableOverrides;
+  }
+
+  public void setVariableOverrides(List<NameValuePair> variableOverrides) {
+    this.variableOverrides = variableOverrides;
   }
 }
