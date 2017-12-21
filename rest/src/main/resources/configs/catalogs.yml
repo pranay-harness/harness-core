@@ -191,6 +191,8 @@ DEPLOYMENT_TYPE:
       value: KUBERNETES
     - name: AWS Lambda
       value: AWS_LAMBDA
+    - name: AMI
+      value: AMI
 
 ENVIRONMENT_TYPE:
     - name: Production
