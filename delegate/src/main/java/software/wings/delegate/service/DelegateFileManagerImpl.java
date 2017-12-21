@@ -7,6 +7,7 @@ import static software.wings.managerclient.SafeHttpCall.execute;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import okhttp3.MediaType;
@@ -37,7 +38,6 @@ import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

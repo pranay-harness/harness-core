@@ -5,6 +5,8 @@ import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalSt
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
@@ -24,7 +26,6 @@ import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * A Pause state to pause state machine execution.

@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -22,7 +24,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 12/16/16.

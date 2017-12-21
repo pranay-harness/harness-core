@@ -9,6 +9,7 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.WAITING;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
@@ -26,8 +27,6 @@ import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
-
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 4/6/17.

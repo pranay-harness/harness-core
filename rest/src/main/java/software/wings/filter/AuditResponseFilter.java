@@ -1,13 +1,14 @@
 package software.wings.filter;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.common.AuditHelper;
 
 import java.io.IOException;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

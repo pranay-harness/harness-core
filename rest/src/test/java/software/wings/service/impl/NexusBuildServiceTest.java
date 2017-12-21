@@ -13,6 +13,7 @@ import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.newrelic.agent.deps.com.google.common.collect.ImmutableList;
 import org.junit.Test;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
 
 /**
  * Created by srinivas on 4/1/17.

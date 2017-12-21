@@ -5,6 +5,7 @@ import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/26/17.

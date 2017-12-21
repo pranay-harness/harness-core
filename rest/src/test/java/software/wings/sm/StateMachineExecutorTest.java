@@ -4,6 +4,8 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
@@ -19,7 +21,6 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 2/25/17.

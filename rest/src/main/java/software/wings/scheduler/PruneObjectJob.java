@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import javax.inject.Inject;
 
 public class PruneObjectJob implements Job {
   protected static Logger logger = LoggerFactory.getLogger(PruneObjectJob.class);

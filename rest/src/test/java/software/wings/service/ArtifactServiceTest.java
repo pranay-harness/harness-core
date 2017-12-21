@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 
 import de.flapdoodle.embed.process.collections.Collections;
 import org.junit.Before;
@@ -45,7 +46,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
-import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
 /**

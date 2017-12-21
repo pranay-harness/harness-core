@@ -3,6 +3,8 @@ package software.wings.resources;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -18,7 +20,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.utils.Validator;
 
 import java.util.Map;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;

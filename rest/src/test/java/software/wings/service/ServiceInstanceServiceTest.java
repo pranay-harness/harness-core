@@ -35,6 +35,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -57,7 +59,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 5/26/16.

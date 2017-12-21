@@ -5,7 +5,9 @@
 package software.wings.common;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -14,8 +16,6 @@ import software.wings.sm.ExpressionProcessorFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * A factory for creating WingsExpressionProcessor objects.

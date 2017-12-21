@@ -14,6 +14,7 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
@@ -45,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

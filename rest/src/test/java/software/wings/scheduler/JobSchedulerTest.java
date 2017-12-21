@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,8 +16,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import software.wings.WingsBaseTest;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 10/21/16.

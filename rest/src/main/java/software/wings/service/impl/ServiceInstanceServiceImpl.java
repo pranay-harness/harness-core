@@ -4,6 +4,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
@@ -19,8 +22,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

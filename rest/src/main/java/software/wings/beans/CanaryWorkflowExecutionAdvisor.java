@@ -14,6 +14,8 @@ import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -45,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 1/24/17.

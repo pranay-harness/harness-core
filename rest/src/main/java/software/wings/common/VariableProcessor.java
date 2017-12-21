@@ -4,6 +4,7 @@
 
 package software.wings.common;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.annotations.Transient;
@@ -19,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
 
 /**
  * The type Variable processor.

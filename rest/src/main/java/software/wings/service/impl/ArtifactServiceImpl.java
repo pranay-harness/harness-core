@@ -24,6 +24,8 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
@@ -70,8 +72,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 

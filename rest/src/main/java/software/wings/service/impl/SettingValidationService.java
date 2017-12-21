@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +34,6 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
 import java.util.Collections;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 5/1/17.

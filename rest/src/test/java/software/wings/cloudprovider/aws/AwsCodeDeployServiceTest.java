@@ -1,5 +1,7 @@
 package software.wings.cloudprovider.aws;
 
+import com.google.inject.Inject;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
@@ -14,7 +16,6 @@ import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 6/22/17.

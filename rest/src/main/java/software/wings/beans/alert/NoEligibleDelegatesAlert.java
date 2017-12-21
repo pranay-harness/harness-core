@@ -3,6 +3,8 @@ package software.wings.beans.alert;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -18,7 +20,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
 
 public class NoEligibleDelegatesAlert implements AlertData {
   @Inject @Transient @SchemaIgnore private transient EnvironmentService environmentService;

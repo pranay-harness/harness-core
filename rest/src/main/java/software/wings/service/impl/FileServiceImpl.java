@@ -7,6 +7,7 @@ import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.FILE_INTEGRITY_CHECK_FAILED;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
@@ -37,7 +38,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

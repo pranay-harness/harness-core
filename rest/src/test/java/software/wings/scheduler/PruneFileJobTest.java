@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,7 +34,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import javax.inject.Inject;
 
 public class PruneFileJobTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(PruneFileJobTest.class);

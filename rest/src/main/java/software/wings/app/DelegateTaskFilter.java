@@ -2,6 +2,8 @@ package software.wings.app;
 
 import static software.wings.beans.DelegateTaskEvent.Builder.aDelegateTaskEvent;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.BroadcastFilter.BroadcastAction.ACTION;
@@ -9,8 +11,6 @@ import org.atmosphere.cpr.BroadcastFilterAdapter;
 import software.wings.beans.DelegateTask;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.JsonUtils;
-
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 1/23/17.

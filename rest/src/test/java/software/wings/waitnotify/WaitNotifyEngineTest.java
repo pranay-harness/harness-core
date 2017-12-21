@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -15,7 +17,6 @@ import software.wings.rules.Listeners;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.inject.Inject;
 
 /**
  * The Class WaitNotifyEngineTest.

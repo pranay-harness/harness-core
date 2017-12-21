@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
@@ -49,7 +50,6 @@ import software.wings.service.impl.KubernetesHelperService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
 
 /**
  * Created by brett on 2/10/17.

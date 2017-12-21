@@ -4,6 +4,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -27,8 +29,6 @@ import software.wings.utils.HostCsvFileHelper;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

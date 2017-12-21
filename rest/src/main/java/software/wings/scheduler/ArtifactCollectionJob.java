@@ -22,6 +22,7 @@ import static software.wings.utils.ArtifactType.RPM;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
@@ -55,7 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 11/8/16.

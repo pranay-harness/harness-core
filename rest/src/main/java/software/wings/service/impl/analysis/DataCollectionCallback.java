@@ -2,6 +2,8 @@ package software.wings.service.impl.analysis;
 
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
@@ -13,7 +15,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 5/18/17.

@@ -17,6 +17,8 @@ import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -29,7 +31,6 @@ import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 
 import java.util.Collections;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/24/17.

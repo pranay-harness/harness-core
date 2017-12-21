@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -50,7 +51,6 @@ import software.wings.utils.HostCsvFileHelper;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 6/7/16.

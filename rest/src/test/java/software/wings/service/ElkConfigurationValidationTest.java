@@ -5,6 +5,8 @@ import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
+import com.google.inject.Inject;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +25,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 10/2/17.

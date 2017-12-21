@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -60,8 +61,6 @@ import software.wings.sm.TransitionType;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.EnvState;
 import software.wings.utils.WingsTestConstants;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 11/3/16.

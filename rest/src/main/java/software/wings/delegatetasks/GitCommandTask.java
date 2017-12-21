@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -19,7 +21,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 10/26/17.

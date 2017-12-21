@@ -10,6 +10,7 @@ import static software.wings.beans.NotificationAction.NotificationActionType.APP
 import static software.wings.beans.NotificationAction.NotificationActionType.REJECT;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -21,7 +22,6 @@ import software.wings.service.intfc.ArtifactService;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 /**

@@ -2,6 +2,9 @@ package software.wings.delegate.service;
 
 import static software.wings.managerclient.SafeHttpCall.execute;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.delegatetasks.MetricDataStoreService;
@@ -12,8 +15,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricNames;
 
 import java.io.IOException;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by raghu on 5/19/17.

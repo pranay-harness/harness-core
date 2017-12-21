@@ -7,6 +7,7 @@ import static software.wings.service.ExtendedFile.Builder.anExtendedFile;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -21,7 +22,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/17/16.
