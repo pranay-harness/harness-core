@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -382,6 +383,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("applicationName", codeDeployInfrastructureMapping.getApplicationName());
       updateOperations.set("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
       updateOperations.set("deploymentConfig", codeDeployInfrastructureMapping.getDeploymentConfig());
+    } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
+      AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
+      updateOperations.set("region", awsAmiInfrastructureMapping.getRegion());
+      updateOperations.set("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
+      if (awsAmiInfrastructureMapping.getClassicLoadBalancers() != null) {
+        updateOperations.set("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
+      }
+      if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
+        updateOperations.set("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
+      }
     }
 
     wingsPersistence.update(savedInfraMapping, updateOperations);
