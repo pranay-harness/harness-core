@@ -178,6 +178,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                       .withInfraMappingId(infrastructureMapping.getUuid())
                                       .withPhaseNameForRollback(phaseNameForRollback)
                                       .build();
+
+      if (getVariableOverrides() != null && !getVariableOverrides().isEmpty()) {
+        phaseElement.setVariableOverrides(getVariableOverrides());
+      }
       spawningInstance.getContextElements().push(phaseElement);
       spawningInstance.setContextElement(phaseElement);
     }
@@ -233,7 +237,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   }
 
   @SchemaIgnore
-
   public String getInfraMappingId() {
     return infraMappingId;
   }
