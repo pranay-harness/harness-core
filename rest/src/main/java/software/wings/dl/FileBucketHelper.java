@@ -18,6 +18,6 @@ public final class FileBucketHelper {
    * @return the or create file bucket
    */
   public GridFSBucket getOrCreateFileBucket(FileBucket fileBucket) {
-    return wingsPersistence.getOrCreateGridFSBucket(fileBucket.getName());
+    return wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName());
   }
 }
