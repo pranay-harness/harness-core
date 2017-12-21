@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.DescribeImagesRequest;
@@ -319,7 +320,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listAutoScalingGroups(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsHelperService.listAutoScalingGroups(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+    return awsHelperService
+        .listAutoScalingGroups(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region)
+        .stream()
+        .map(AutoScalingGroup::getAutoScalingGroupName)
+        .collect(Collectors.toList());
   }
 }

@@ -192,6 +192,21 @@ public interface Constants {
    * The constant PREPARE_STEPS.
    */
   String PREPARE_STEPS = "Prepare Steps";
+
+  /**
+   * The constant SETUP_AUTOSCALING_GROUP.
+   */
+  String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
+
+  /**
+   * The constant DEPLOY_AUTOSCALING_GROUP.
+   */
+  String DEPLOY_AUTOSCALING_GROUP = "Scale AutoScaling Group";
+
+  /**
+   * The constant UPGRADE_AUTOSCALING_GROUP.
+   */
+  String UPGRADE_AUTOSCALING_GROUP = "Upgrade AutoScaling Group";
   /**
    * The constant AWS_CODE_DEPLOY.
    */
@@ -222,6 +237,10 @@ public interface Constants {
    */
   String ROLLBACK_AWS_LAMBDA = "Rollback AWS Lambda";
   /**
+   * The constant ROLLBACK_AWS_AMI_CLUSTER.
+   */
+  String ROLLBACK_AWS_AMI_CLUSTER = "Rollback AutoScaling Group";
+  /**
    * The constant UPGRADE_CONTAINERS.
    */
   String UPGRADE_CONTAINERS = "Upgrade Containers";
@@ -250,6 +269,9 @@ public interface Constants {
    */
   String PHASE_NAME_PREFIX = "Phase ";
 
+  /**
+   * The constant phaseNamePattern.
+   */
   Pattern phaseNamePattern = Pattern.compile("Phase [0-9]+");
 
   /**
@@ -397,8 +419,17 @@ public interface Constants {
    */
   String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
+  /**
+   * The constant DELEGATE_VALIDATION_CACHE.
+   */
   String DELEGATE_VALIDATION_CACHE = "delegateValidationCache";
+  /**
+   * The constant DELEGATE_SYNC_CACHE.
+   */
   String DELEGATE_SYNC_CACHE = "delegateSyncCache";
+  /**
+   * The constant USER_CACHE.
+   */
   String USER_CACHE = "userCache";
 
   /**
@@ -428,30 +459,75 @@ public interface Constants {
    */
   String FILE_CONTENT_NOT_STORED = "__FILE_CONTENT_NOT_STORED__";
 
+  /**
+   * The constant WINGS_RUNTIME_PATH.
+   */
   String WINGS_RUNTIME_PATH = "WINGS_RUNTIME_PATH";
+  /**
+   * The constant WINGS_STAGING_PATH.
+   */
   String WINGS_STAGING_PATH = "WINGS_STAGING_PATH";
+  /**
+   * The constant WINGS_BACKUP_PATH.
+   */
   String WINGS_BACKUP_PATH = "WINGS_BACKUP_PATH";
   /**
    * Constants for HTTP state
    */
   String HTTP_URL = "httpUrl";
+  /**
+   * The constant HTTP_RESPONSE_METHOD.
+   */
   String HTTP_RESPONSE_METHOD = "httpResponseMethod";
+  /**
+   * The constant HTTP_RESPONSE_CODE.
+   */
   String HTTP_RESPONSE_CODE = "httpResponseCode";
+  /**
+   * The constant HTTP_RESPONSE_BODY.
+   */
   String HTTP_RESPONSE_BODY = "httpResponseBody";
+  /**
+   * The constant ASSERTION_STATEMENT.
+   */
   String ASSERTION_STATEMENT = "assertionStatement";
+  /**
+   * The constant ASSERTION_STATUS.
+   */
   String ASSERTION_STATUS = "assertionStatus";
+  /**
+   * The constant XPATH.
+   */
   String XPATH = "xpath('//status/text()')";
+  /**
+   * The constant JSONPATH.
+   */
   String JSONPATH = "jsonpath('health.status')";
 
   /**
    * Constants for expression
    */
   String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
+  /**
+   * The constant ARTIFACT__S3_KEY_EXPRESSION.
+   */
   String ARTIFACT__S3_KEY_EXPRESSION = "${artifact.key}";
 
+  /**
+   * The constant EXECUTE_WITH_PREVIOUS_STEPS.
+   */
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
+  /**
+   * The constant DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT.
+   */
   int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
 
+  /**
+   * The constant DEFAULT_RUNTIME_ENTITY_PAGESIZE.
+   */
   int DEFAULT_RUNTIME_ENTITY_PAGESIZE = 20;
+  /**
+   * The constant DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR.
+   */
   String DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR = "20";
 }

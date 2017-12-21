@@ -6,7 +6,6 @@ package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
@@ -23,6 +22,8 @@ import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
+import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -48,6 +49,9 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
 import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
@@ -70,7 +74,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
-import com.amazonaws.transform.MapEntry;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -82,6 +85,7 @@ import software.wings.api.DeploymentType;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
@@ -99,7 +103,6 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -1880,8 +1883,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (Arrays
-            .asList(
-                DeploymentType.ECS, DeploymentType.KUBERNETES, DeploymentType.AWS_CODEDEPLOY, DeploymentType.AWS_LAMBDA)
+            .asList(DeploymentType.ECS, DeploymentType.KUBERNETES, DeploymentType.AWS_CODEDEPLOY,
+                DeploymentType.AWS_LAMBDA, DeploymentType.AMI)
             .contains(workflowPhase.getDeploymentType())) {
       requiredEntityTypes.add(ARTIFACT);
       return requiredEntityTypes;
@@ -1931,9 +1934,61 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, workflowPhase);
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
       generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
+    } else if (deploymentType == DeploymentType.AMI) {
+      generateNewWorkflowPhaseStepsForAWSAmi(appId, envId, workflowPhase, !serviceRepeat);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase);
     }
+  }
+
+  private void generateNewWorkflowPhaseStepsForAWSAmi(
+      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    /*
+      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                   .addStep(aNode()
+                                                .withId(getUuid())
+                                                .withType(ECS_SERVICE_DEPLOY.name())
+                                                .withName(Constants.UPGRADE_CONTAINERS)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    }
+
+     */
+
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    if (serviceSetupRequired) {
+      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+      if (infraMapping instanceof AwsAmiInfrastructureMapping) {
+        workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
+                                       .addStep(aNode()
+                                                    .withId(getUuid())
+                                                    .withType(AWS_AMI_SERVICE_SETUP.name())
+                                                    .withName("AWS AutoScaling Group Setup")
+                                                    .build())
+                                       .build());
+      }
+    }
+    workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_AUTOSCALING_GROUP)
+                                   .addStep(aNode()
+                                                .withId(getUuid())
+                                                .withType(AWS_AMI_SERVICE_DEPLOY.name())
+                                                .withName(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   private void generateNewWorkflowPhaseStepsForAWSLambda(String appId, String envId, WorkflowPhase workflowPhase) {
@@ -2153,9 +2208,37 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
       return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase, AWS_LAMBDA_ROLLBACK.name());
+    } else if (deploymentType == DeploymentType.AMI) {
+      return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase, AWS_AMI_SERVICE_ROLLBACK.name());
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForAwsAmi(
+      WorkflowPhase workflowPhase, String containerServiceType) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_AUTOSCALING_GROUP)
+                          .addStep(aNode()
+                                       .withId(getUuid())
+                                       .withType(containerServiceType)
+                                       .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
+                                       .addProperty("rollback", true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .build();
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForAwsLambda(

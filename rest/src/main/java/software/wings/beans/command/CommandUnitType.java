@@ -37,6 +37,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
       PortCheckListeningCommandUnit.class, "Port Listening", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
   CODE_DEPLOY(CodeDeployCommandUnit.class, "Amazon Code Deploy", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
   AWS_LAMBDA(AwsLambdaCommandUnit.class, "AWS Lambda", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
+  AWS_AMI(AmiCommandUnit.class, "AWS AMI", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
   ECS_SETUP(EcsSetupCommandUnit.class, "Setup ECS Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   KUBERNETES_SETUP(
       KubernetesSetupCommandUnit.class, "Setup Kubernetes Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),

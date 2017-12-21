@@ -66,7 +66,14 @@ public enum ContextElementType {
    */
   CLUSTER,
 
-  AWS_LAMBDA_FUNCTION,
-
-  ARTIFACT;
+  /**
+   * Aws lambda function context element type.
+   */
+  AWS_LAMBDA_FUNCTION, /**
+                        * Ami service context element type.
+                        */
+  AMI_SERVICE, /**
+                * Artifact context element type.
+                */
+  ARTIFACT
 }

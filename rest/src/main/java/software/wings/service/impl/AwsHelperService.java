@@ -23,11 +23,19 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
+import com.amazonaws.services.autoscaling.model.AttachLoadBalancerTargetGroupsRequest;
+import com.amazonaws.services.autoscaling.model.AttachLoadBalancerTargetGroupsResult;
+import com.amazonaws.services.autoscaling.model.AttachLoadBalancersRequest;
+import com.amazonaws.services.autoscaling.model.AttachLoadBalancersResult;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
+import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
+import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
+import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
@@ -833,7 +841,7 @@ public class AwsHelperService {
     return tags;
   }
 
-  public List<String> listAutoScalingGroups(
+  public List<AutoScalingGroup> listAutoScalingGroups(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
@@ -841,10 +849,22 @@ public class AwsHelperService {
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonAutoScalingClient
           .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
-          .getAutoScalingGroups()
-          .stream()
-          .map(AutoScalingGroup::getAutoScalingGroupName)
-          .collect(Collectors.toList());
+          .getAutoScalingGroups();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return emptyList();
+  }
+
+  public List<LaunchConfiguration> listLaunchConfiguration(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonAutoScalingClient
+          .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withMaxRecords(100))
+          .getLaunchConfigurations();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1136,6 +1156,34 @@ public class AwsHelperService {
     }
   }
 
+  public AttachLoadBalancersResult attachLoadBalancerToAutoScalingGroup(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region,
+      AttachLoadBalancersRequest attachLoadBalancersRequest) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonAutoScalingClient.attachLoadBalancers(attachLoadBalancersRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new AttachLoadBalancersResult();
+  }
+
+  public AttachLoadBalancerTargetGroupsResult attachTargetGroupsToAutoScalingGroup(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region,
+      AttachLoadBalancerTargetGroupsRequest attachLoadBalancerTargetGroupsRequest) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonAutoScalingClient.attachLoadBalancerTargetGroups(attachLoadBalancerTargetGroupsRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new AttachLoadBalancerTargetGroupsResult();
+  }
+
   private AutoScalingGroup getAutoScalingGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       AwsInfrastructureMapping infrastructureMapping) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
@@ -1261,6 +1309,20 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return emptyList();
+  }
+
+  public CreateLaunchConfigurationResult createLaunchConfiguration(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region,
+      CreateLaunchConfigurationRequest createLaunchConfigurationRequest) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonAutoScalingClient.createLaunchConfiguration(createLaunchConfigurationRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new CreateLaunchConfigurationResult();
   }
 
   public CreateAutoScalingGroupResult createAutoScalingGroup(AwsConfig awsConfig,

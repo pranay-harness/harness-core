@@ -385,4 +385,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   UserDataSpecification updateUserDataSpecification(@Valid UserDataSpecification userDataSpecification);
 
   PageResponse<UserDataSpecification> listUserDataSpecification(PageRequest<UserDataSpecification> pageRequest);
+
+  UserDataSpecification getUserDataSpecification(String appId, String serviceId);
 }
