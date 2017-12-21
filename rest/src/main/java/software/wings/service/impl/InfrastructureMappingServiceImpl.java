@@ -21,7 +21,8 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
-import static software.wings.utils.Validator.*;
+import static software.wings.utils.Validator.duplicateCheck;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -89,7 +90,6 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;

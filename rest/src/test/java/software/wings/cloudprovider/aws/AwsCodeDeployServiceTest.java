@@ -7,7 +7,6 @@ import com.amazonaws.services.codedeploy.model.S3Location;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;

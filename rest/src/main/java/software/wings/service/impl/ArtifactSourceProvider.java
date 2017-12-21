@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.SearchFilter.Operator.*;
-import static software.wings.dl.PageRequest.Builder.*;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

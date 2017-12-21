@@ -6,7 +6,6 @@ import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.Archive;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

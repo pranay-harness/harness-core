@@ -1,15 +1,9 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
-import com.google.common.io.Files;
-
 import org.junit.Test;
-import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
@@ -26,7 +20,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.utils.JsonUtils;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import javax.inject.Inject;
 
 /**

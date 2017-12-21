@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
-import software.wings.beans.SystemCatalog;
 import software.wings.dl.PageRequest;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;

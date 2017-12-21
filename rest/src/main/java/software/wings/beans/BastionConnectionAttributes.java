@@ -2,13 +2,9 @@ package software.wings.beans;
 
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 
-import com.google.common.base.MoreObjects;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.Objects;
 
 /**
  * Created by anubhaw on 5/17/16.
