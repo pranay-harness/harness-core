@@ -20,6 +20,7 @@ parser.add_argument("--smooth_window", type=int, required=True)
 parser.add_argument("--min_rpm", type=int, required=True)
 parser.add_argument("--comparison_unit_window", type=int, required=True)
 parser.add_argument("--parallelProcesses", type=int, required=True)
+parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int)
 
 metric_template = FileLoader.load_data('resources/ts/metric_template.json')
 
@@ -27,7 +28,8 @@ def run_load():
     control_nodes = ['control-' + str(i) for i in range(50)]
     test_nodes = ['test-' + str(i) for i in range(12)]
     options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3',
-                                 '--min_rpm', '10', '--comparison_unit_window', '3', '--parallelProcesses', '2'])
+                                 '--min_rpm', '10', '--comparison_unit_window', '3', '--parallelProcesses', '2',
+                                 '--max_nodes_threshold', '19'])
 
     logger.info("Running Time Series analysis ")
     with open("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json",
@@ -76,7 +78,8 @@ def run_load():
 
 def run_debug():
     options = parser.parse_args(['--analysis_minute', '30', '--tolerance', '1', '--smooth_window', '3',
-                                 '--min_rpm', '10', '--comparison_unit_window', '3', '--parallelProcesses', '2'])
+                                 '--min_rpm', '10', '--comparison_unit_window', '3', '--parallelProcesses', '2',
+                                 '--max_nodes_threshold', '19'])
 
     logger.info("Running Time Series analysis ")
     with open("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json",
@@ -101,7 +104,8 @@ def run_live():
     from_time = to_time - timedelta(minutes=30)
 
     options = parser.parse_args(['--analysis_minute', '45', '--tolerance', '1', '--smooth_window', '3',
-                                 '--min_rpm', '10', '--comparison_unit_window', '3', '--parallelProcesses', '2'])
+                                 '--min_rpm', '10', '--comparison_unit_window', '3', '--parallelProcesses', '2',
+                                 '--max_nodes_threshold', '19'])
     control_data, test_data = source.live_analysis({'ip-172-31-8-144', 'ip-172-31-12-79'},
                                                    {'ip-172-31-13-153'}, from_time,
                                                    to_time)
