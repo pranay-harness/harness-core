@@ -1,6 +1,7 @@
 package software.wings.service.intfc.newrelic;
 
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -12,7 +13,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricData;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -34,6 +34,10 @@ public interface NewRelicDelegateService {
   NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
       long newRelicApplicationId, long instanceId, Collection<String> metricNames, long fromTime, long toTime)
       throws IOException;
+
+  @DelegateTaskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER)
+  String postDeploymentMarker(NewRelicConfig config, List<EncryptedDataDetail> encryptedDataDetails,
+      long newRelicApplicationId, NewRelicDeploymentMarkerPayload body) throws IOException;
 
   Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId) throws IOException;
