@@ -1,6 +1,8 @@
 package software.wings.service.impl.expression;
 
-import static software.wings.beans.EntityType.*;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.WORKFLOW;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

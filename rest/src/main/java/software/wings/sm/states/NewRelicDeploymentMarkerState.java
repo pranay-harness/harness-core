@@ -1,18 +1,20 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PhaseElement;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
@@ -20,19 +22,22 @@ import software.wings.service.impl.newrelic.NewRelicSettingProvider;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.*;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import javax.inject.Inject;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
-
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
+import javax.inject.Inject;
 
 @Attributes
 public class NewRelicDeploymentMarkerState extends State {
