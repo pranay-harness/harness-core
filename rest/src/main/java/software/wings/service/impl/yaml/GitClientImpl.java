@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.utils.Switch.unhandled;
+
 import groovy.lang.Singleton;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
@@ -106,6 +108,8 @@ public class GitClientImpl implements GitClient {
         return Change.ChangeType.DELETE;
       case RENAME:
         return Change.ChangeType.RENAME;
+      default:
+        unhandled(gitDiffChangeType);
     }
     return null;
   }
@@ -204,7 +208,8 @@ public class GitClientImpl implements GitClient {
         String repoDirectory = getRepoDirectory(gitConfig);
         String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
         File file = new File(filePath);
-        switch (gitFileChange.getChangeType()) {
+        final Change.ChangeType changeType = gitFileChange.getChangeType();
+        switch (changeType) {
           case ADD:
           case MODIFY:
             try {
@@ -267,6 +272,8 @@ public class GitClientImpl implements GitClient {
               throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in DELETE git operation");
             }
             break;
+          default:
+            unhandled(changeType);
         }
       });
       Status status = git.status().call();

@@ -7,6 +7,7 @@ import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
 import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
+import static software.wings.utils.Switch.unhandled;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Datastore;
@@ -188,6 +189,9 @@ public class MongoHelper {
 
       case NOT_EXISTS:
         return fieldEnd.doesNotExist();
+
+      default:
+        unhandled(op);
     }
     return null;
   }
