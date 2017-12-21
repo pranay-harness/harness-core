@@ -13,10 +13,10 @@ import lombok.NoArgsConstructor;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -56,12 +56,12 @@ public class AmiArtifactStream extends ArtifactStream {
     if (tags == null || tags.size() == 0) {
       return region;
     }
-    String tagFields = "";
+    List<String> tagFields = new ArrayList<>();
     for (Tag tag : tags) {
-      tagFields = tagFields + tag.getKey() + ":" + tag.getValue();
+      tagFields.add(tag.getKey() + ":" + tag.getValue());
     }
-    Set<String> tagNames = tags.stream().map(Tag::getKey).collect(Collectors.toSet());
-    return region + ":" + Joiner.on("_").join(tagNames);
+    //    Set<String> tagNames = tags.stream().map(Tag::getKey).collect(Collectors.toSet());
+    return region + ":" + Joiner.on("_").join(tagFields);
   }
 
   @Override
