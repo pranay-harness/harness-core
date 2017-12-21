@@ -13,7 +13,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
-
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -23,7 +22,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
 
 import java.util.List;
-
 import javax.inject.Inject;
 
 /**

@@ -3,10 +3,7 @@ package software.wings.service.impl.analysis;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.utils.JsonUtils;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 /**
