@@ -76,7 +76,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CryptoUtil;
 import software.wings.utils.Misc;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -263,39 +262,6 @@ public class TriggerServiceImpl implements TriggerService {
     }
     if (parameters.size() != 0) {
       payload.put("parameters", parameters);
-    }
-    webHookToken.setPayload(new Gson().toJson(payload));
-    return webHookToken;
-  }
-
-  @Override
-  public WebHookToken generateGitWebHookToken(String appId, String triggerId) {
-    Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
-    Validator.notNullCheck("Trigger", trigger);
-    Pipeline pipeline = validatePipeline(appId, trigger.getPipelineId(), true);
-
-    WebHookToken webHookToken =
-        WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtil.secureRandAlphaNumString(40)).build();
-    Map<String, Object> payload = new HashMap<>();
-    Map<String, String> parameters = new HashMap<>();
-    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-      for (PipelineStage.PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
-        if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
-          try {
-            Workflow workflow = workflowService.readWorkflow(
-                pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
-            notNullCheck("workflow", workflow);
-            notNullCheck("orchestrationWorkflow", workflow.getOrchestrationWorkflow());
-            workflow.getOrchestrationWorkflow().getUserVariables().forEach(uservariable -> {
-              if (!uservariable.getType().equals(VariableType.ENTITY)) {
-                parameters.put(uservariable.getName(), uservariable.getName() + "_placeholder");
-              }
-            });
-          } catch (Exception ex) {
-            logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
-          }
-        }
-      }
     }
     webHookToken.setPayload(new Gson().toJson(payload));
     return webHookToken;
@@ -801,8 +767,8 @@ public class TriggerServiceImpl implements TriggerService {
             || Misc.isNullOrEmpty(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
           WebHookToken webHookToken = generateWebHookToken(trigger.getAppId(), trigger.getPipelineId());
           webHookTriggerCondition.setWebHookToken(webHookToken);
-          trigger.setWebHookToken(webHookToken.getWebHookToken());
         }
+        trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
         break;
       case SCHEDULED:
         ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
