@@ -56,6 +56,10 @@ public class AmiArtifactStream extends ArtifactStream {
     if (tags == null || tags.size() == 0) {
       return region;
     }
+    String tagFields = "";
+    for (Tag tag : tags) {
+      tagFields = tagFields + tag.getKey() + ":" + tag.getValue();
+    }
     Set<String> tagNames = tags.stream().map(Tag::getKey).collect(Collectors.toSet());
     return region + ":" + Joiner.on("_").join(tagNames);
   }
@@ -75,6 +79,7 @@ public class AmiArtifactStream extends ArtifactStream {
         .withArtifactStreamType(getArtifactStreamType())
         .withRegion(region)
         .withTags(tagMap)
+        .withPlatform(platform)
         .build();
   }
 
