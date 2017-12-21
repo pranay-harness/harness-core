@@ -11,10 +11,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;

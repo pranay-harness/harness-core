@@ -1,6 +1,5 @@
 package software.wings.service.impl.analysis;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -10,11 +9,8 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.metrics.RiskLevel;
-import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;
 
-import java.util.List;
 import java.util.Map;
 
 /**

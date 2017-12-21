@@ -16,7 +16,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
