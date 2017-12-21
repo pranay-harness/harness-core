@@ -535,6 +535,11 @@ public class ConfigServiceImpl implements ConfigService {
         .forEach(configFile -> delete(appId, configFile.getUuid()));
   }
 
+  @Override
+  public void pruneByHost(String appId, String hostId) {
+    deleteByEntityId(appId, hostId);
+  }
+
   private boolean shouldUseKms(String accountId) {
     return featureFlagService.isEnabled(FeatureName.KMS, accountId)
         && secretManager.getEncryptionType(accountId) != EncryptionType.LOCAL;

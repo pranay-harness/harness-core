@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -31,6 +32,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Answers;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
@@ -44,9 +46,12 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.JobScheduler;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.utils.HostCsvFileHelper;
 import software.wings.utils.WingsTestConstants;
 
@@ -61,12 +66,16 @@ public class HostServiceTest extends WingsBaseTest {
 
   @Mock private EnvironmentService environmentService;
   @Mock private NotificationService notificationService;
+  @Mock private ConfigService configService;
+  @Mock private ServiceInstanceService serviceInstanceService;
 
   @Inject @InjectMocks private HostService hostService;
 
   @Mock private Query<Host> hostQuery;
   @Mock private FieldEnd hostQueryEnd;
   @Mock private UpdateOperations<Host> updateOperations;
+
+  @Mock private JobScheduler jobScheduler;
 
   private SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute()
@@ -156,7 +165,7 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteHost() {
-    Host host = hostBuilder.build();
+    Host host = hostBuilder.withAppId(APP_ID).withUuid(HOST_ID).build();
     when(hostQuery.get()).thenReturn(host);
     when(wingsPersistence.delete(any(Host.class))).thenReturn(true);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
@@ -168,6 +177,15 @@ public class HostServiceTest extends WingsBaseTest {
     verify(hostQuery).field(ID_KEY);
     verify(hostQueryEnd).equal(HOST_ID);
     verify(wingsPersistence).delete(host);
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    when(wingsPersistence.get(Host.class, APP_ID)).thenReturn(null);
+    hostService.pruneDescendingObjects(APP_ID, HOST_ID);
+    InOrder inOrder = inOrder(wingsPersistence, configService, serviceInstanceService);
+    inOrder.verify(configService).pruneByHost(APP_ID, HOST_ID);
+    inOrder.verify(serviceInstanceService).pruneByHost(APP_ID, HOST_ID);
   }
 
   /**

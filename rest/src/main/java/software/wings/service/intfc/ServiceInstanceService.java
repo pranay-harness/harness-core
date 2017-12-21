@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 5/26/16.
  */
-public interface ServiceInstanceService {
+public interface ServiceInstanceService extends OwnedByHost {
   /**
    * List page response.
    *
@@ -102,5 +102,5 @@ public interface ServiceInstanceService {
    * @param appId  the app id
    * @param hostId the host id
    */
-  void deleteByHost(String appId, String hostId);
+  void pruneByHost(String appId, String hostId);
 }

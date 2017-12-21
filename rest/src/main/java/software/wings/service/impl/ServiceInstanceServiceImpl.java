@@ -173,7 +173,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   }
 
   @Override
-  public void deleteByHost(String appId, String hostId) {
+  public void pruneByHost(String appId, String hostId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(ServiceInstance.class).field("appId").equal(appId).field("hostId").equal(hostId));
   }
