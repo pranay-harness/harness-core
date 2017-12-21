@@ -46,6 +46,9 @@ import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactCollectionState;
+import software.wings.sm.states.AwsAmiServiceDeployState;
+import software.wings.sm.states.AwsAmiServiceRollback;
+import software.wings.sm.states.AwsAmiServiceSetup;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsCodeDeployRollback;
@@ -264,6 +267,15 @@ public enum StateType implements StateTypeDescriptor {
 
   AWS_LAMBDA_ROLLBACK(AwsLambdaRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA),
       asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
+
+  AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+
+  AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+
+  AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

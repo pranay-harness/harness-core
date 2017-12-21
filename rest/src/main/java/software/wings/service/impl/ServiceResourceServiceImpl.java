@@ -878,6 +878,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return wingsPersistence.query(UserDataSpecification.class, pageRequest);
   }
 
+  @Override
+  public UserDataSpecification getUserDataSpecification(String appId, String serviceId) {
+    return wingsPersistence.createQuery(UserDataSpecification.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .get();
+  }
+
   /**
    * {@inheritDoc}
    */

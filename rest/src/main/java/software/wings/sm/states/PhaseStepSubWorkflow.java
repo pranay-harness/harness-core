@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.AmiServiceElement;
 import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ClusterElement;
@@ -328,6 +329,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
               elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
           executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+        } else if (phaseStepType == PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP) {
+          AmiServiceElement amiServiceElement = (AmiServiceElement) notifiedElement(
+              elementNotifyResponseData, AmiServiceElement.class, "Missing AmiServiceElement Element");
+          executionResponse.setContextElements(Lists.newArrayList(amiServiceElement));
         }
       }
     }
