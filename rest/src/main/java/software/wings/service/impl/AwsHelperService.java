@@ -1119,21 +1119,23 @@ public class AwsHelperService {
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient = getAmazonElasticLoadBalancingClient(
           Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-      DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
+      String loadBalancerArn = null;
 
       if (!isNullOrEmpty(loadBalancerName)) {
+        DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
         request.withNames(loadBalancerName);
+        loadBalancerArn = amazonElasticLoadBalancingClient.describeLoadBalancers(request)
+                              .getLoadBalancers()
+                              .get(0)
+                              .getLoadBalancerArn();
       }
 
-      String loadBalancerArn = amazonElasticLoadBalancingClient.describeLoadBalancers(request)
-                                   .getLoadBalancers()
-                                   .get(0)
-                                   .getLoadBalancerArn();
+      DescribeTargetGroupsRequest describeTargetGroupsRequest = new DescribeTargetGroupsRequest().withPageSize(400);
+      if (loadBalancerArn != null) {
+        describeTargetGroupsRequest.withLoadBalancerArn(loadBalancerArn);
+      }
 
-      return amazonElasticLoadBalancingClient
-          .describeTargetGroups(
-              new DescribeTargetGroupsRequest().withPageSize(400).withLoadBalancerArn(loadBalancerArn))
-          .getTargetGroups();
+      return amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest).getTargetGroups();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
