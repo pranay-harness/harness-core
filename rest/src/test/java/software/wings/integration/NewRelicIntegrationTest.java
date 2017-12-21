@@ -1,19 +1,7 @@
 package software.wings.integration;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,12 +11,8 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
-import software.wings.beans.CountsByStatuses;
-import software.wings.beans.NewRelicConfig;
-import software.wings.beans.RestResponse;
-import software.wings.beans.SettingAttribute;
+import software.wings.beans.*;
 import software.wings.beans.SettingAttribute.Category;
-import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.metrics.RiskLevel;
@@ -51,18 +35,20 @@ import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import java.io.IOException;
+import java.util.*;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 /**
  * Created by rsingh on 9/7/17.
@@ -368,9 +354,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.NA);
+    assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No data available");
+    assertEquals("No data available", metricsAnalysis.getMessage());
   }
 
   @Test
@@ -455,6 +441,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record.setTimeStamp(System.currentTimeMillis());
     record.setDataCollectionMinute(0);
     record.setLevel(ClusterLevel.H0);
+    record.setStateType(StateType.NEW_RELIC);
 
     metricDataAnalysisService.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, Collections.singletonList(record));
@@ -497,9 +484,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
 
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.NA);
+    assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No data available");
+    assertEquals("No data available", metricsAnalysis.getMessage());
   }
 
   @Test
@@ -570,6 +557,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record.setTimeStamp(System.currentTimeMillis());
     record.setDataCollectionMinute(0);
     record.setLevel(ClusterLevel.H0);
+    record.setStateType(StateType.NEW_RELIC);
 
     NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn1");
@@ -627,9 +615,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
 
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.LOW);
+    assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No problems found");
+    assertEquals("No problems found", metricsAnalysis.getMessage());
   }
 
   @Test
@@ -714,6 +702,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record.setTimeStamp(System.currentTimeMillis());
     record.setDataCollectionMinute(0);
     record.setLevel(ClusterLevel.H0);
+    record.setStateType(StateType.NEW_RELIC);
 
     record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn2");
@@ -773,9 +762,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
 
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.LOW);
+    assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertTrue(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No problems found");
-    assertEquals(metricsAnalysis.getMetricAnalyses().size(), 1);
+    assertEquals("No problems found", metricsAnalysis.getMessage());
+    assertEquals(1, metricsAnalysis.getMetricAnalyses().size());
   }
 }
