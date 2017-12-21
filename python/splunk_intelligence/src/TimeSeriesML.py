@@ -161,7 +161,7 @@ class TSAnomlyDetector(object):
         }
 
         Weights are presently only used to scale the average response times by the call count. The intution is
-        that the response times are more significant if the call counts are higher. 
+        that the response times are more significant if the call counts are higher.
 
         :param metric_name: the name of the metric
         :param metric_template containing the metric configurations
