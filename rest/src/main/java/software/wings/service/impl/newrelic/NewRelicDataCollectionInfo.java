@@ -33,4 +33,5 @@ public class NewRelicDataCollectionInfo {
   List<EncryptedDataDetail> encryptedDataDetails;
   private Set<String> hosts;
   private String settingAttributeId;
+  private String deploymentMarker;
 }
