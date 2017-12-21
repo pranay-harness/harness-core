@@ -1647,7 +1647,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @RepeatRule.Repeat(times = 2, successes = 1)
   public void shouldRetryOnError() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
