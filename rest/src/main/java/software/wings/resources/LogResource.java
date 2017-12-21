@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -12,7 +14,6 @@ import software.wings.service.intfc.LogService;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;

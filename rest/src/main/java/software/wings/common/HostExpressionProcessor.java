@@ -4,6 +4,8 @@
 
 package software.wings.common;
 
+import com.google.inject.Inject;
+
 import software.wings.api.HostElement;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -18,7 +20,6 @@ import software.wings.utils.MapperUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * The Class HostExpressionProcessor.

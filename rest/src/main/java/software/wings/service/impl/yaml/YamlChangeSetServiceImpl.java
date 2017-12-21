@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -16,8 +19,6 @@ import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

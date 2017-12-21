@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.junit.Test;
@@ -49,7 +50,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * The Class InstanceExpressionProcessorTest.

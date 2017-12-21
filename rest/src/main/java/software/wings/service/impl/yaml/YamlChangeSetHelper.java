@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml;
 
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
+import com.google.inject.Inject;
+
 import groovy.lang.Singleton;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -26,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 12/3/17.

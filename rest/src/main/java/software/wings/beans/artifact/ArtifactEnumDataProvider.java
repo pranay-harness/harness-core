@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.SearchFilter;
@@ -10,7 +11,6 @@ import software.wings.stencils.DataProvider;
 
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 2/2/17.

@@ -5,6 +5,7 @@ import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.intfc.FileService.FileBucket;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
@@ -32,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Audit Service Implementation class.

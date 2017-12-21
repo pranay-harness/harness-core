@@ -16,6 +16,8 @@ import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.codec.binary.Hex;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -47,7 +49,6 @@ import java.security.NoSuchAlgorithmException;
 import javax.cache.Cache;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 8/31/16.

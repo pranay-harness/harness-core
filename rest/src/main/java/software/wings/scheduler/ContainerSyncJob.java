@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
@@ -22,7 +23,6 @@ import software.wings.utils.Validator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
 
 /**
  * Periodic job that syncs for instances with the current containers like kubernetes and ECS.

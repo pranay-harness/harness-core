@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -65,7 +66,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/27/17.

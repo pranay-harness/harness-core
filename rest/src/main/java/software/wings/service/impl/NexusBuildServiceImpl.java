@@ -5,6 +5,8 @@ import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.ErrorCode;
@@ -24,8 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by srinivas on 3/31/17.

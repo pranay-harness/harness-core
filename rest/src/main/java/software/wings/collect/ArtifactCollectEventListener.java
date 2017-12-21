@@ -3,6 +3,9 @@ package software.wings.collect;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -36,9 +39,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.waitnotify.WaitNotifyEngine;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by peeyushaggarwal on 5/11/16.

@@ -2,6 +2,9 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import software.wings.beans.Base;
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.PageRequest;
@@ -19,8 +22,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

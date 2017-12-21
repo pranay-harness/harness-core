@@ -7,6 +7,8 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -37,7 +39,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * A Env state to pause state machine execution.

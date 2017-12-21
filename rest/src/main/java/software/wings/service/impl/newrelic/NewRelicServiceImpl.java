@@ -2,6 +2,8 @@ package software.wings.service.impl.newrelic;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -22,7 +24,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 8/28/17.

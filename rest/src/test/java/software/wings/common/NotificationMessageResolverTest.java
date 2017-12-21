@@ -5,12 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.exception.WingsException;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 7/25/16.

@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
 
+import com.google.inject.Inject;
+
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.model.LogMessage;
@@ -25,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 9/12/17.

@@ -3,6 +3,9 @@ package software.wings.service.impl;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.utils.Validator.equalCheck;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -18,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by brett on 7/16/17.

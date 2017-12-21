@@ -8,7 +8,9 @@ import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DuplicateKeyException;
@@ -54,8 +56,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * The Class WingsMongoPersistence.

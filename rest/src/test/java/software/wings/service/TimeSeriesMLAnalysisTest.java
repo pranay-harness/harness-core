@@ -2,6 +2,8 @@ package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.inject.Inject;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -35,7 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 10/16/17.

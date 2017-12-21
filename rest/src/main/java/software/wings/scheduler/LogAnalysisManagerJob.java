@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
@@ -32,7 +33,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 8/23/17.

@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -19,7 +21,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 public class ShellScriptTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(CommandTask.class);

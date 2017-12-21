@@ -2,6 +2,8 @@ package software.wings.utils;
 
 import static software.wings.common.Constants.USER_CACHE;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.User;
 
 import java.util.Optional;
@@ -13,7 +15,6 @@ import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.EternalExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
-import javax.inject.Singleton;
 
 /**
  * Created by peeyushaggarwal on 1/26/17.

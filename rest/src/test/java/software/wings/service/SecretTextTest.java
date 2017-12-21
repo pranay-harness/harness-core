@@ -15,6 +15,8 @@ import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEF
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -77,7 +79,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 11/3/17.

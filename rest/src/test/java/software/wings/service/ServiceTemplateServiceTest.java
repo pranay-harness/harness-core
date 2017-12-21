@@ -23,6 +23,8 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,7 +52,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 4/29/16.

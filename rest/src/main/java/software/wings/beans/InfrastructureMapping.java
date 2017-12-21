@@ -5,6 +5,8 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 
 import com.google.common.base.MoreObjects;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -37,8 +39,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 1/10/17.

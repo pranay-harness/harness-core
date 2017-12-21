@@ -1,11 +1,11 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import software.wings.service.intfc.TriggerService;
-
-import javax.inject.Inject;
 
 /**
  * Created by sgurubelli on 10/26/17.

@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -33,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 10/9/17.

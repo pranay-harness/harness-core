@@ -8,6 +8,8 @@ import static software.wings.beans.artifact.Artifact.Status.ERROR;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ApprovalNotification.ApprovalStage;
@@ -26,7 +28,6 @@ import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 12/20/16.

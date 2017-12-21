@@ -3,6 +3,8 @@ package software.wings.resources;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -22,7 +24,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.Stencil;
 
 import java.util.List;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;

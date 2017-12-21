@@ -26,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -66,8 +67,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-
-import javax.inject.Inject;
 
 /**
  * The type App service test.

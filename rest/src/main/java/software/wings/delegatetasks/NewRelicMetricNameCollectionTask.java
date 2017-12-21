@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 12/13/17.

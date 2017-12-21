@@ -6,6 +6,9 @@ import static org.apache.commons.csv.CSVFormat.DEFAULT;
 import static software.wings.beans.ErrorCode.INVALID_CSV_FILE;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import software.wings.beans.SettingAttribute;
@@ -18,8 +21,6 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 4/15/16.

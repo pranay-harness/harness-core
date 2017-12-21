@@ -6,6 +6,8 @@ import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentResult;
@@ -42,8 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 6/22/17.

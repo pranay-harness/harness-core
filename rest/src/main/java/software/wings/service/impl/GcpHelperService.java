@@ -6,6 +6,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.ContainerScopes;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
@@ -21,7 +22,6 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by bzane on 2/22/17

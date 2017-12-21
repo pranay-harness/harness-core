@@ -21,6 +21,8 @@ import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.Validator.prepareWingsException;
 
+import com.google.inject.Inject;
+
 import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -69,7 +71,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Created by sgurubelli on 6/27/17.

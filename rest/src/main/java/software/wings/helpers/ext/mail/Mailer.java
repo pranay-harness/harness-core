@@ -3,6 +3,8 @@ package software.wings.helpers.ext.mail;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.inject.Inject;
+
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -20,7 +22,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.

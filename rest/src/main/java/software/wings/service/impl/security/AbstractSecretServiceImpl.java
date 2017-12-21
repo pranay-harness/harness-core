@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
@@ -17,7 +18,6 @@ import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Iterator;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 11/6/17.

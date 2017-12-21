@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.waitnotify.ListNotifyResponseData.Builder.aListNotifyResponseData;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.assertj.core.util.Maps;
 import org.junit.Before;
@@ -40,7 +41,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
 
 import java.util.Arrays;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 12/21/16.

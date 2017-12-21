@@ -20,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -46,7 +47,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 8/9/16.

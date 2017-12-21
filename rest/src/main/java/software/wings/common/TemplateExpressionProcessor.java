@@ -4,6 +4,9 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Category;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -20,8 +23,6 @@ import software.wings.utils.ExpressionEvaluator;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by sgurubelli on 8/16/17.

@@ -1,11 +1,10 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import software.wings.app.MainConfiguration;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 10/21/16.

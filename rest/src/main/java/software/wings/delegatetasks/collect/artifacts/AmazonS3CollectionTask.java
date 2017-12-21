@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +17,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by rktummala on 7/30/17.

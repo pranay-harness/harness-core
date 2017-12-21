@@ -20,6 +20,8 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import com.google.inject.Inject;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
@@ -45,7 +47,6 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/24/17.

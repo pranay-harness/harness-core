@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -24,7 +26,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Entity Update Service Implementation.

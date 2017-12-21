@@ -6,6 +6,8 @@ package software.wings.resources;
 
 import static software.wings.utils.Validator.validateUuid;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -32,7 +34,6 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

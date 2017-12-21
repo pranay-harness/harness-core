@@ -12,6 +12,7 @@ import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -46,7 +47,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.validation.Valid;
 
 /**

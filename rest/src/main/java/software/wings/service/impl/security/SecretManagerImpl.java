@@ -10,6 +10,7 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
@@ -77,7 +78,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 10/30/17.

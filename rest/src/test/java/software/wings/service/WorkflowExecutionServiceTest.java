@@ -35,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import com.mongodb.WriteResult;
 import org.assertj.core.util.Lists;
@@ -75,7 +76,6 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * The Class workflowExecutionServiceTest.

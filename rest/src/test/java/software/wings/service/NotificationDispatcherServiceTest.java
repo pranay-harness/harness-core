@@ -27,6 +27,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
@@ -62,7 +63,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 10/31/16.

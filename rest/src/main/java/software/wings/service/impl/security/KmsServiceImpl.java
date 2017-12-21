@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
@@ -39,7 +40,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/29/17.
