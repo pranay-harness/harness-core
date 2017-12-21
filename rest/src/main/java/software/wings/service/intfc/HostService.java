@@ -53,6 +53,14 @@ public interface HostService {
   void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
+   * Prune owned from the app objects.
+   *
+   * @param appId the app id
+   * @param hostId the host id
+   */
+  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String hostId);
+
+  /**
    * Import hosts.
    *
    * @param infraId            the infra id

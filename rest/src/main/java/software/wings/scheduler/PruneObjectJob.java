@@ -23,11 +23,13 @@ import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 
@@ -49,6 +51,7 @@ public class PruneObjectJob implements Job {
   @Inject private ActivityService activityService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
+  @Inject private HostService hostService;
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
 
@@ -119,6 +122,8 @@ public class PruneObjectJob implements Job {
         appService.pruneDescendingObjects(appId);
       } else if (className.equals(Environment.class.getCanonicalName())) {
         environmentService.pruneDescendingObjects(appId, objectId);
+      } else if (className.equals(Host.class.getCanonicalName())) {
+        hostService.pruneDescendingObjects(appId, objectId);
       } else if (className.equals(Pipeline.class.getCanonicalName())) {
         pipelineService.pruneDescendingObjects(appId, objectId);
       } else if (className.equals(Service.class.getCanonicalName())) {
