@@ -3,14 +3,11 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.groupingBy;
 import static software.wings.beans.HostConnectionAttributes.AccessType;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;

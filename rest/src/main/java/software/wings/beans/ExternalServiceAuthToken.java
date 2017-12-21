@@ -4,8 +4,6 @@ import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
 import org.mongodb.morphia.annotations.Entity;
 
-import java.util.UUID;
-
 /**
  * Created by rsingh on 06/21/17.
  */

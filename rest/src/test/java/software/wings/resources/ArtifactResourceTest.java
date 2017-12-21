@@ -18,7 +18,6 @@ import com.google.common.io.Files;
 
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -26,7 +25,6 @@ import org.junit.rules.Verifier;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.ConstraintViolationExceptionMapper;
