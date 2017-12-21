@@ -93,6 +93,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.rules.RealMongo;
+import software.wings.rules.RepeatRule;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
@@ -1646,6 +1647,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @RepeatRule.Repeat(times = 2, successes = 1)
   public void shouldRetryOnError() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
