@@ -18,6 +18,7 @@ import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.Validator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -103,6 +105,26 @@ public class ContainerServiceImpl implements ContainerService {
       activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
     }
     return result;
+  }
+
+  @Override
+  public String getDaemonSetYaml(ContainerServiceParams containerServiceParams) {
+    String previousDaemonSetYaml = null;
+    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      String containerServiceName = containerServiceParams.getContainerServiceName();
+      HasMetadata daemonSet = kubernetesContainerService.getController(
+          kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
+      if (daemonSet != null) {
+        try {
+          previousDaemonSetYaml = KubernetesHelper.toYaml(daemonSet);
+        } catch (IOException e) {
+          logger.error("Error converting DaemonSet to yaml: {}", containerServiceName);
+        }
+      }
+    }
+    return previousDaemonSetYaml;
   }
 
   private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams) {

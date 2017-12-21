@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
-import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -67,7 +66,6 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -358,28 +356,10 @@ public class AppServiceImpl implements AppService {
     // point. We should have the necessary APIs elsewhere, if we find the users want it.
   }
 
-  // TODO: find a way to dedup this generic function. Encapsulation is an issue.
-  public <T> List<T> descendingServices(Class<T> cls) {
-    List<T> descendings = new ArrayList<>();
-
-    for (Field field : AppServiceImpl.class.getDeclaredFields()) {
-      Object obj;
-      try {
-        obj = field.get(this);
-        if (cls.isInstance(obj)) {
-          T descending = (T) obj;
-          descendings.add(descending);
-        }
-      } catch (IllegalAccessException e) {
-      }
-    }
-
-    return descendings;
-  }
-
   @Override
   public void pruneDescendingObjects(@NotEmpty String appId) {
-    List<OwnedByApplication> services = descendingServices(OwnedByApplication.class);
+    List<OwnedByApplication> services =
+        ServiceClassLocator.descendingServices(this, AppServiceImpl.class, OwnedByApplication.class);
     PruneObjectJob.pruneDescendingObjects(
         services, appId, appId, (descending) -> { descending.pruneByApplication(appId); });
   }

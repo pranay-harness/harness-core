@@ -65,6 +65,7 @@ import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
+import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
@@ -74,6 +75,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
@@ -126,6 +128,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -160,7 +163,7 @@ import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.ElasticLoadBalancerState.Operation;
-import software.wings.sm.states.ScriptState;
+import software.wings.sm.states.ShellScriptState;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
@@ -324,7 +327,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
     Arrays.stream(values())
         .filter(state
-            -> state.getTypeClass() != ScriptState.class
+            -> state.getTypeClass() != ShellScriptState.class
                 || featureFlagService.isEnabled(SHELL_SCRIPT_AS_A_STEP, accountId))
         .forEach(state -> stencils.add(state));
 
@@ -2114,14 +2117,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .build());
     }
 
-    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
-                                                .withName("Upgrade Containers")
-                                                .build())
-                                   .build());
-
+    KubernetesContainerTask containerTask =
+        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+            appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
+    if (containerTask == null || containerTask.kubernetesType() != DaemonSet.class) {
+      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                     .addStep(aNode()
+                                                  .withId(getUuid())
+                                                  .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
+                                                  .withName("Upgrade Containers")
+                                                  .build())
+                                     .build());
+    }
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
@@ -2202,8 +2209,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (deploymentType == DeploymentType.ECS) {
       return generateRollbackWorkflowPhaseForContainerService(workflowPhase, ECS_SERVICE_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.KUBERNETES) {
-      return generateRollbackWorkflowPhaseForContainerService(
-          workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
+      KubernetesContainerTask containerTask =
+          (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+              appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
+      if (containerTask != null && containerTask.kubernetesType() == DaemonSet.class) {
+        return generateRollbackWorkflowPhaseForDaemonSets(workflowPhase);
+      } else {
+        return generateRollbackWorkflowPhaseForContainerService(
+            workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
+      }
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
       return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
@@ -2405,6 +2419,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return rollbackWorkflowPhase;
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForDaemonSets(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                          .addStep(aNode()
+                                       .withId(getUuid())
+                                       .withType(KUBERNETES_DAEMON_SET_ROLLBACK.name())
+                                       .withName(Constants.ROLLBACK_CONTAINERS)
+                                       .addProperty("rollback", true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .build();
   }
 
   private Map<CommandType, List<Command>> getCommandTypeListMap(Service service) {

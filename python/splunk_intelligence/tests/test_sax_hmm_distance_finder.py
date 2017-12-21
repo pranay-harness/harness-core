@@ -1,3 +1,4 @@
+import json
 import sys
 
 import numpy as np
@@ -45,6 +46,7 @@ def run_analysis(filename, make_nan=False, comparison_unit_window=1):
     metric_names = set(metric_template.get_metric_names())
     for txn_id, txn_data in txns.items():
         for metric_name, metric_data in txn_data['metrics'].items():
+            #print(txn_data['txn_name'], metric_data['metric_name'])
             if metric_data['metric_name'] not in metric_names:
                 continue
             if make_nan:
@@ -80,11 +82,15 @@ def run_analysis(filename, make_nan=False, comparison_unit_window=1):
 
 
 def test_1():
-    run_analysis('resources/ts/nr_out_live_2.json', True, 3)
+    run_analysis('resources/ts/nr_out_live_2.json', True, 1)
 
 
 def test_2():
     run_analysis('resources/ts/nr_out_prod_1.json', True, 3)
+
+def test_3():
+    run_analysis('resources/ts/nr_out_prod_2.json', True, 3)
+
 
 
 def main(args):

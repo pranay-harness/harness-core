@@ -11,7 +11,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Version;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.sm.ExecutionStatus;
 

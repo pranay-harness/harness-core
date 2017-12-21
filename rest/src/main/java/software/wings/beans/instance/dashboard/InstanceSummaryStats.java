@@ -9,7 +9,7 @@ import java.util.Map;
 public class InstanceSummaryStats {
   private long totalCount;
   /**
-   * Key - groupByEntityType, Value - List<EntitySummaryStats>
+   * Key - groupByEntityType, Value - List&lt;EntitySummaryStats&gt;
    */
   private Map<String, List<EntitySummaryStats>> countMap;
 
@@ -32,7 +32,7 @@ public class InstanceSummaryStats {
   public static final class Builder {
     private long totalCount;
     /**
-     * Key - groupByEntityType, Value - List<EntitySummaryWithCount>
+     * Key - groupByEntityType, Value - List&lt;EntitySummaryStats&gt;
      */
     private Map<String, List<EntitySummaryStats>> countMap;
 

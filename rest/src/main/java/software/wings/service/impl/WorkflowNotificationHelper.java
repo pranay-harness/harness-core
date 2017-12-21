@@ -14,6 +14,7 @@ import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.RESUMED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 
@@ -95,6 +96,8 @@ public class WorkflowNotificationHelper {
       case ABORTED:
         messageTemplate = WORKFLOW_ABORTED_NOTIFICATION.name();
         break;
+      default:
+        unhandled(status);
     }
     if (messageTemplate == null) {
       logger.error("No messageTemplate found for notification, status={}", status);

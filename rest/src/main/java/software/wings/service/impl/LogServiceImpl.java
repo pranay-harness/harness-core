@@ -58,7 +58,7 @@ public class LogServiceImpl implements LogService {
   public static final int NUM_OF_LOGS_TO_KEEP = 200;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ActivityService activityService;
-  private Logger logger = LoggerFactory.getLogger(getClass());
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.LogService#list(software.wings.dl.PageRequest)
@@ -126,7 +126,7 @@ public class LogServiceImpl implements LogService {
   }
 
   @Override
-  public void deleteActivityLogs(String appId, String activityId) {
+  public void pruneByActivity(String appId, String activityId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(Log.class).field("appId").equal(appId).field("activityId").equal(activityId));
   }

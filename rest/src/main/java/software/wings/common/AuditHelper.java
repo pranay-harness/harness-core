@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
-import software.wings.utils.Misc;
 
 import java.io.InputStream;
 import javax.inject.Singleton;

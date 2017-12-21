@@ -3,6 +3,7 @@ package software.wings.helpers.ext.docker;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -224,6 +225,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         return false;
       case 401:
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Docker Registry credentials");
+      default:
+        unhandled(code);
     }
     return true;
   }

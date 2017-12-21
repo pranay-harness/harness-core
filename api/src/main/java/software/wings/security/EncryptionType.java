@@ -1,7 +1,5 @@
 package software.wings.security;
 
-import lombok.Data;
-
 /**
  * Created by rsingh on 10/18/17.
  */

@@ -24,7 +24,8 @@ import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.ENV_STATE;
-import static software.wings.utils.Validator.*;
+import static software.wings.utils.Validator.duplicateCheck;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.gson.Gson;
 import com.google.inject.name.Named;
@@ -42,7 +43,6 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
@@ -50,6 +50,7 @@ import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
@@ -59,6 +60,7 @@ import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookParameters;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -74,7 +76,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CryptoUtil;
 import software.wings.utils.Misc;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -611,8 +612,10 @@ public class TriggerServiceImpl implements TriggerService {
       List<Artifact> artifacts, Trigger trigger, Map<String, String> parameters) {
     WorkflowExecution workflowExecution;
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setArtifacts(
-        artifacts.stream().filter(distinctByKey(artifact -> artifact.getUuid())).collect(toList()));
+    if (artifacts != null) {
+      executionArgs.setArtifacts(
+          artifacts.stream().filter(distinctByKey(artifact -> artifact.getUuid())).collect(toList()));
+    }
     String pipelineId = trigger.getPipelineId();
     executionArgs.setOrchestrationId(pipelineId);
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
@@ -687,6 +690,56 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
+  @Override
+  public Trigger getTriggerByWebhookToken(String token) {
+    return wingsPersistence.executeGetOneQuery(
+        wingsPersistence.createQuery(Trigger.class).field("webHookToken").equal(token));
+  }
+
+  @Override
+  public WorkflowExecution triggerExecutionByWebHook(Trigger trigger, Map<String, String> parameters) {
+    return triggerExecution(null, trigger, parameters);
+  }
+
+  @Override
+  public WebhookParameters listWebhookParameters(String appId, String workflowId, WorkflowType workflowType) {
+    if (workflowType == null) {
+      workflowType = WorkflowType.PIPELINE;
+    }
+    List<String> parameters = new ArrayList<>();
+    if (PIPELINE.equals(workflowType)) {
+      Pipeline pipeline = validatePipeline(appId, workflowId, true);
+      for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+        for (PipelineStage.PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+          if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
+            try {
+              Workflow workflow = workflowService.readWorkflow(
+                  pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+              notNullCheck("workflow", workflow);
+              notNullCheck("orchestrationWorkflow", workflow.getOrchestrationWorkflow());
+              workflow.getOrchestrationWorkflow().getUserVariables().forEach(uservariable -> {
+                if (!uservariable.getType().equals(VariableType.ENTITY)) {
+                  if (!parameters.contains(uservariable.getName())) {
+                    parameters.add(uservariable.getName());
+                  }
+                }
+              });
+            } catch (Exception ex) {
+              logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
+            }
+          }
+        }
+      }
+    }
+    WebhookParameters webhookParameters = new WebhookParameters();
+    webhookParameters.setParams(parameters);
+    List<String> expressions = webhookParameters.getExpressions();
+    expressions.addAll(webhookParameters.pullRequestExpressions());
+    expressions = expressions.stream().sorted().collect(toList());
+    webhookParameters.setExpressions(expressions);
+    return webhookParameters;
+  }
+
   private ArtifactStream validateArtifactStream(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("ArtifactStream", artifactStream);
@@ -712,8 +765,10 @@ public class TriggerServiceImpl implements TriggerService {
         WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
         if (webHookTriggerCondition.getWebHookToken() == null
             || Misc.isNullOrEmpty(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
-          webHookTriggerCondition.setWebHookToken(generateWebHookToken(trigger.getAppId(), trigger.getPipelineId()));
+          WebHookToken webHookToken = generateWebHookToken(trigger.getAppId(), trigger.getPipelineId());
+          webHookTriggerCondition.setWebHookToken(webHookToken);
         }
+        trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
         break;
       case SCHEDULED:
         ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();

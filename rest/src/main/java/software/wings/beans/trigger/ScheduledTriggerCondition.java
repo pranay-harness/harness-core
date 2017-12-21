@@ -1,6 +1,6 @@
 package software.wings.beans.trigger;
 
-import static software.wings.beans.trigger.TriggerConditionType.*;
+import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;

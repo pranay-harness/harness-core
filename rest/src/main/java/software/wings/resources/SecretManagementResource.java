@@ -11,7 +11,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.RestResponse;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;

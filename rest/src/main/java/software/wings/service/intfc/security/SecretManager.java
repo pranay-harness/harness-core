@@ -1,7 +1,6 @@
 package software.wings.service.intfc.security;
 
 import software.wings.annotation.Encryptable;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.UuidAware;
 import software.wings.dl.PageResponse;
 import software.wings.security.EncryptionType;

@@ -11,6 +11,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -127,6 +128,22 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     final Response<NewRelicMetricDataResponse> response = request.execute();
     if (response.isSuccessful()) {
       return response.body().getMetric_data();
+    }
+
+    JSONObject errorObject = new JSONObject(response.errorBody().string());
+    throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+  }
+
+  @Override
+  public String postDeploymentMarker(NewRelicConfig config, List<EncryptedDataDetail> encryptedDataDetails,
+      long newRelicApplicationId, NewRelicDeploymentMarkerPayload body) throws IOException {
+    final String baseUrl =
+        config.getNewRelicUrl().endsWith("/") ? config.getNewRelicUrl() : config.getNewRelicUrl() + "/";
+    final String url = baseUrl + "v2/applications/" + newRelicApplicationId + "/deployments.json";
+    final Call<Object> request = getNewRelicRestClient(config, encryptedDataDetails).postDeploymentMarker(url, body);
+    final Response<Object> response = request.execute();
+    if (response.isSuccessful()) {
+      return "Successfully posted deployment marker to NewRelic";
     }
 
     JSONObject errorObject = new JSONObject(response.errorBody().string());

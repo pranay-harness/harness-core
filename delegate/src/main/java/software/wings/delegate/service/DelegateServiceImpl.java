@@ -220,20 +220,25 @@ public class DelegateServiceImpl implements DelegateService {
 
       URI uri = new URI(delegateConfiguration.getManagerUrl());
       // Stream the request body
-      request =
+      RequestBuilder reqBuilder =
           client.newRequestBuilder()
               .method(METHOD.GET)
               .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
               .queryString("delegateId", delegateId)
               .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
-              .header("Version", getVersion())
-              .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
-                @Override
-                public Reader encode(Delegate s) {
-                  return new StringReader(JsonUtils.asJson(s));
-                }
-              })
-              .transport(TRANSPORT.WEBSOCKET);
+              .header("Version", getVersion());
+      if (delegateConfiguration.isProxy()) {
+        reqBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
+      }
+
+      request = reqBuilder
+                    .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
+                      @Override
+                      public Reader encode(Delegate s) {
+                        return new StringReader(JsonUtils.asJson(s));
+                      }
+                    })
+                    .transport(TRANSPORT.WEBSOCKET);
 
       Options clientOptions =
           client.newOptionsBuilder()

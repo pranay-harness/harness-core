@@ -183,9 +183,14 @@ public class StateExecutionData {
       case PAUSED:
         breakDown.setInprogress(1);
         break;
+      case QUEUED:
+        breakDown.setQueued(1);
+        break;
       case SUCCESS:
         breakDown.setSuccess(1);
         break;
+      default:
+        throw new RuntimeException("Unhandled ExecutionStatus: " + status.name());
     }
     executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(breakDown).build());
     putNotNull(

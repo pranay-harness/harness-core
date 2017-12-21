@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,4 +31,5 @@ public class NewRelicDataCollectionInfo {
   List<EncryptedDataDetail> encryptedDataDetails;
   private Set<String> hosts;
   private String settingAttributeId;
+  private String deploymentMarker;
 }
