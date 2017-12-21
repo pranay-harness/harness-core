@@ -16,6 +16,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -23,6 +24,7 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
@@ -34,7 +36,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 public class PruneObjectJob implements Job {
-  private static Logger logger = LoggerFactory.getLogger(PruneObjectJob.class);
+  protected static Logger logger = LoggerFactory.getLogger(PruneObjectJob.class);
 
   public static final String GROUP = "PRUNE_OBJECT_GROUP";
 
@@ -44,6 +46,7 @@ public class PruneObjectJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  @Inject private ActivityService activityService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
   @Inject private PipelineService pipelineService;
@@ -65,7 +68,7 @@ public class PruneObjectJob implements Job {
 
   public static void addDefaultJob(QuartzScheduler jobScheduler, Class cls, String appId, String objectId) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(objectId, PruneObjectJob.GROUP);
+    jobScheduler.deleteJob(objectId, GROUP);
 
     JobDetail details = JobBuilder.newJob(PruneObjectJob.class)
                             .withIdentity(objectId, PruneObjectJob.GROUP)
@@ -110,7 +113,9 @@ public class PruneObjectJob implements Job {
     }
 
     try {
-      if (className.equals(Application.class.getCanonicalName())) {
+      if (className.equals(Activity.class.getCanonicalName())) {
+        activityService.pruneDescendingObjects(appId, objectId);
+      } else if (className.equals(Application.class.getCanonicalName())) {
         appService.pruneDescendingObjects(appId);
       } else if (className.equals(Environment.class.getCanonicalName())) {
         environmentService.pruneDescendingObjects(appId, objectId);

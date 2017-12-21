@@ -18,6 +18,8 @@ public class DelegateConfiguration {
 
   private Integer maxCachedArtifacts;
 
+  private boolean proxy;
+
   /**
    * Getter for property 'managerUrl'.
    *
@@ -82,5 +84,13 @@ public class DelegateConfiguration {
 
   public void setMaxCachedArtifacts(Integer maxCachedArtifacts) {
     this.maxCachedArtifacts = maxCachedArtifacts;
+  }
+
+  public boolean isProxy() {
+    return proxy;
+  }
+
+  public void setProxy(boolean proxy) {
+    this.proxy = proxy;
   }
 }

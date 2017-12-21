@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Describes execution context for a state machine execution.
@@ -340,6 +341,18 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       if (map != null) {
         context.putAll(map);
       }
+    }
+
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    if (phaseElement != null && phaseElement.getVariableOverrides() != null
+        && !phaseElement.getVariableOverrides().isEmpty()) {
+      Map<String, String> map = (Map<String, String>) context.get(ContextElement.SERVICE_VARIABLE);
+      if (map == null) {
+        map = new HashMap<>();
+      }
+      map.putAll(phaseElement.getVariableOverrides().stream().collect(
+          Collectors.toMap(nv -> nv.getName(), nv -> nv.getValue())));
+      context.put(ContextElement.SERVICE_VARIABLE, map);
     }
 
     context.putAll(

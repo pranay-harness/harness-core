@@ -1,10 +1,11 @@
 package software.wings.beans.command;
 
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
+import static software.wings.utils.KubernetesConvention.getKubernetesSecretName;
+import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.common.collect.ImmutableList;
@@ -62,6 +63,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -93,31 +95,29 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   @Override
-  protected String executeInternal(SettingAttribute cloudProviderSetting,
+  protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
 
-    KubernetesConfig kubernetesConfig;
-    if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
-    } else {
-      kubernetesConfig = gkeClusterService.getCluster(
-          cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), setupParams.getNamespace());
+    KubernetesConfig kubernetesConfig = cloudProviderSetting.getValue() instanceof KubernetesConfig
+        ? (KubernetesConfig) cloudProviderSetting.getValue()
+        : gkeClusterService.getCluster(
+              cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), setupParams.getNamespace());
+
+    String lastCtrlName = lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
+    int revision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
+
+    String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
+
+    if (setupParams.isRollbackDaemonSet()) {
+      return performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
     }
 
-    int revision = KubernetesConvention
-                       .getRevisionFromControllerName(lastReplicationController(
-                           kubernetesConfig, encryptedDataDetails, setupParams.getRcNamePrefix()))
-                       .orElse(-1)
-        + 1;
+    kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
 
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(setupParams.getRcNamePrefix());
-
-    kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, emptyList());
-
-    String secretName = KubernetesConvention.getKubernetesSecretName(setupParams.getImageDetails().getRegistryUrl());
-    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, emptyList(),
+    String secretName = getKubernetesSecretName(setupParams.getImageDetails().getRegistryUrl());
+    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails,
         createRegistrySecret(
             secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));
 
@@ -130,8 +130,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     boolean isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
     String containerServiceName = isDaemonSet
-        ? setupParams.getRcNamePrefix()
-        : KubernetesConvention.getControllerName(setupParams.getRcNamePrefix(), revision);
+        ? setupParams.getControllerNamePrefix()
+        : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
 
     Map<String, String> serviceLabels =
         ImmutableMap.<String, String>builder()
@@ -153,7 +153,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
 
-    Service service = kubernetesContainerService.getService(kubernetesConfig, emptyList(), kubernetesServiceName);
+    Service service =
+        kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
 
     if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
       Service serviceDefinition =
@@ -169,21 +170,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
         }
       }
-      service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, emptyList(), serviceDefinition);
+      service =
+          kubernetesContainerService.createOrReplaceService(kubernetesConfig, encryptedDataDetails, serviceDefinition);
       serviceClusterIP = service.getSpec().getClusterIP();
 
       if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer) {
         serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
-            kubernetesConfig, service, setupParams.getLoadBalancerIP(), executionLogCallback);
+            kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
       }
     } else if (service != null) {
       executionLogCallback.saveExecutionLog(
           "Kubernetes service type set to 'None'. Deleting existing service " + kubernetesServiceName, LogLevel.INFO);
       kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
     }
-
-    executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
-    cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
 
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
@@ -199,37 +198,82 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
 
     if (isDaemonSet) {
-      int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
-      List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(
-          kubernetesConfig, encryptedDataDetails, containerServiceName, desiredCount, executionLogCallback);
-
-      boolean allContainersSuccess =
-          containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-      if (containerInfos.size() != desiredCount || !allContainersSuccess) {
-        StringBuilder msg = new StringBuilder();
-        if (containerInfos.size() != desiredCount) {
-          String message = String.format("Expected data for %d container%s but got %d", desiredCount,
-              containerInfos.size() == 1 ? "" : "s", containerInfos.size());
-          executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
-          msg.append(message);
-        }
-        if (!allContainersSuccess) {
-          List<ContainerInfo> failed = containerInfos.stream()
-                                           .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
-                                           .collect(Collectors.toList());
-          String message =
-              String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
-                  failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList()));
-          executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
-          msg.append(message);
-        }
-        throw new WingsException(
-            ErrorCode.DEFAULT_ERROR_CODE, "message", "DaemonSet pods failed to reach desired count. " + msg.toString());
-      }
-      containerInfos.forEach(info
-          -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
+      listContainerInfosWhenReady(encryptedDataDetails, executionLogCallback, kubernetesConfig, containerServiceName);
+    } else {
+      executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
+      cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
     }
-    return containerServiceName;
+    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
+  }
+
+  private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig, String containerServiceName) {
+    int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
+    executionLogCallback.saveExecutionLog("Waiting for pods to be ready", LogLevel.INFO);
+    List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(
+        kubernetesConfig, encryptedDataDetails, containerServiceName, desiredCount, executionLogCallback);
+
+    boolean allContainersSuccess =
+        containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+    if (containerInfos.size() != desiredCount || !allContainersSuccess) {
+      StringBuilder msg = new StringBuilder();
+      if (containerInfos.size() != desiredCount) {
+        String message = String.format("Expected data for %d container%s but got %d", desiredCount,
+            containerInfos.size() == 1 ? "" : "s", containerInfos.size());
+        executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+        msg.append(message);
+      }
+      if (!allContainersSuccess) {
+        List<ContainerInfo> failed = containerInfos.stream()
+                                         .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
+                                         .collect(Collectors.toList());
+        String message =
+            String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
+                failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList()));
+        executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+        msg.append(message);
+      }
+      throw new WingsException(
+          ErrorCode.DEFAULT_ERROR_CODE, "message", "DaemonSet pods failed to reach desired count. " + msg.toString());
+    }
+    containerInfos.forEach(info
+        -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
+  }
+
+  private ContainerSetupCommandUnitExecutionData performDaemonSetRollback(
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
+    String daemonSetName = setupParams.getControllerNamePrefix();
+    String daemonSetYaml = setupParams.getPreviousDaemonSetYaml();
+    if (isNotBlank(daemonSetYaml)) {
+      try {
+        DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
+        executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName, LogLevel.INFO);
+        kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, daemonSet);
+        executionLogCallback.saveExecutionLog("Rolled back to DaemonSet with image(s): "
+                + daemonSet.getSpec()
+                      .getTemplate()
+                      .getSpec()
+                      .getContainers()
+                      .stream()
+                      .map(Container::getImage)
+                      .collect(Collectors.toList()),
+            LogLevel.INFO);
+        listContainerInfosWhenReady(encryptedDataDetails, executionLogCallback, kubernetesConfig, daemonSetName);
+      } catch (IOException e) {
+        executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
+      }
+    } else {
+      executionLogCallback.saveExecutionLog(
+          "DaemonSet " + daemonSetName + " did not exist previously. Deleting on rollback", LogLevel.INFO);
+      HasMetadata daemonSet =
+          kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, daemonSetName);
+      Map<String, String> labels = daemonSet.getMetadata().getLabels();
+      kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, daemonSetName);
+      executionLogCallback.saveExecutionLog("Waiting for pods to stop", LogLevel.INFO);
+      kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels);
+    }
+    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(daemonSetName).build();
   }
 
   private Secret createRegistrySecret(
@@ -248,7 +292,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service, String loadBalancerIP,
+  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, Service service, String loadBalancerIP,
       ExecutionLogCallback executionLogCallback) {
     String loadBalancerEndpoint = null;
     String serviceName = service.getMetadata().getName();
@@ -258,9 +303,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback.saveExecutionLog(
             "Waiting for service " + serviceName + " load balancer to be ready.", LogLevel.INFO);
         try {
-          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
+          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(5, TimeUnit.MINUTES).until(() -> {
             LoadBalancerStatus loadBalancerStatus =
-                kubernetesContainerService.getService(kubernetesConfig, emptyList(), serviceName)
+                kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, serviceName)
                     .getStatus()
                     .getLoadBalancer();
             boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
@@ -275,7 +320,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               LogLevel.INFO);
           return null;
         }
-        loadBalancer = kubernetesContainerService.getService(kubernetesConfig, emptyList(), serviceName)
+        loadBalancer = kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, serviceName)
                            .getStatus()
                            .getLoadBalancer();
       }
@@ -289,7 +334,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return loadBalancerEndpoint;
   }
 
-  private String lastReplicationController(
+  private String lastController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
     final HasMetadata[] lastReplicationController = {null};
     final AtomicInteger lastRevision = new AtomicInteger();

@@ -68,6 +68,7 @@ import software.wings.sm.states.ForkState;
 import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
+import software.wings.sm.states.KubernetesDaemonSetRollback;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
 import software.wings.sm.states.KubernetesReplicationControllerRollback;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
@@ -77,11 +78,12 @@ import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.RepeatState;
-import software.wings.sm.states.ScriptState;
+import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
+import software.wings.sm.states.NewRelicDeploymentMarkerState;
 import software.wings.sm.states.WaitState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -128,7 +130,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Script state type.
    */
-  SCRIPT(ScriptState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
+  SHELL_SCRIPT(ShellScriptState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Http state type.
@@ -179,6 +181,11 @@ public enum StateType implements StateTypeDescriptor {
    * Cloud watch state type.
    */
   CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
+
+  /**
+   * New relic deployment marker state type.
+   */
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 10, asList(), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
 
@@ -286,6 +293,10 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
+  KUBERNETES_DAEMON_SET_ROLLBACK(KubernetesDaemonSetRollback.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+
   AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
 
@@ -295,12 +306,12 @@ public enum StateType implements StateTypeDescriptor {
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private Class<? extends State> stateClass;
-  private Object jsonSchema;
+  private final Class<? extends State> stateClass;
+  private final Object jsonSchema;
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();
   private List<String> phaseStepTypes = new ArrayList<>();
-  private StencilCategory stencilCategory;
+  private final StencilCategory stencilCategory;
   private Integer displayOrder = DEFAULT_DISPLAY_ORDER;
   private String displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
   private List<InfrastructureMappingType> supportedInfrastructureMappingTypes = emptyList();
@@ -360,23 +371,23 @@ public enum StateType implements StateTypeDescriptor {
     this.scopes = asList(scopes);
     this.phaseStepTypes =
         phaseStepTypes.stream().map(phaseStepType -> phaseStepType.name()).collect(Collectors.toList());
-    this.jsonSchema = loadJsonSchema();
+    jsonSchema = loadJsonSchema();
     this.stencilCategory = stencilCategory;
     this.displayOrder = displayOrder;
     if (isNotBlank(displayName)) {
       this.displayName = displayName;
     }
     try {
-      this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+      uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception e) {
-      this.uiSchema = new HashMap<String, Object>();
+      uiSchema = new HashMap<String, Object>();
     }
     this.supportedInfrastructureMappingTypes = supportedInfrastructureMappingTypes;
   }
 
   private Object readResource(String file) {
     try {
-      URL url = this.getClass().getResource(file);
+      URL url = getClass().getResource(file);
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {

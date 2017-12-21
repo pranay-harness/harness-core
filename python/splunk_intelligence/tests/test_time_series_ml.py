@@ -64,7 +64,7 @@ def test_run_2():
                 assert out_metric_data[host_name] is not None
                 assert ''.join(host_data['control_cuts']) == ''.join(out_metric_data[host_name]['control_cuts'])
                 assert ''.join(host_data['test_cuts']) == ''.join(out_metric_data[host_name]['test_cuts'])
-                #assert compare(host_data['score'], out_metric_data[host_name]['score'])
+                assert compare(host_data['score'], out_metric_data[host_name]['score'])
                 assert host_data['optimal_cuts'] == out_metric_data[host_name]['optimal_cuts']
                 assert compare(host_data['risk'], out_metric_data[host_name]['risk'])
                 assert host_data['nn'] == out_metric_data[host_name]['nn']

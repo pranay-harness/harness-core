@@ -6,6 +6,7 @@ import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilde
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
@@ -17,6 +18,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
 
@@ -190,6 +192,18 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return singletonList(deployRequestElement);
     } else if (phaseStepType == DEPLOY_AWS_LAMBDA) {
       return new ArrayList<>();
+    } else if (phaseStepType == CONTAINER_SETUP) {
+      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                 .stream()
+                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                 .findFirst();
+      if (!first.isPresent()) {
+        return null;
+      }
+      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+      return singletonList(ContainerRollbackRequestElement.builder()
+                               .previousDaemonSetYaml(commandStepExecutionSummary.getPreviousDaemonSetYaml())
+                               .build());
     }
     return null;
   }
@@ -243,6 +257,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         validateServiceInstanceIdsParams(contextIntf);
         break;
       }
+      default:
+        unhandled(phaseStepType);
     }
   }
 

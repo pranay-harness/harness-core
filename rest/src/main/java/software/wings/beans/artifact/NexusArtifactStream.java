@@ -26,6 +26,7 @@ public class NexusArtifactStream extends ArtifactStream {
   private String groupId;
   private String imageName;
   private List<String> artifactPaths;
+  private String dockerPort;
 
   /**
    * Instantiates a new Nexus artifact stream.
@@ -64,6 +65,14 @@ public class NexusArtifactStream extends ArtifactStream {
 
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
+  }
+
+  public String getDockerPort() {
+    return dockerPort;
+  }
+
+  public void setDockerPort(String dockerPort) {
+    this.dockerPort = dockerPort;
   }
 
   @Override

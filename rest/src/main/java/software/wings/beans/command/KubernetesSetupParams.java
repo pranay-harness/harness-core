@@ -22,7 +22,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private Integer nodePort;
   private String externalName;
   private String namespace;
-  private String rcNamePrefix;
+  private String controllerNamePrefix;
+  private boolean rollbackDaemonSet;
+  private String previousDaemonSetYaml;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -31,8 +33,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String envName;
     private ImageDetails imageDetails;
     private ContainerTask containerTask;
-    private KubernetesServiceType serviceType;
     private String infraMappingId;
+    private KubernetesServiceType serviceType;
     private Integer port;
     private Integer targetPort;
     private KubernetesPortProtocol protocol;
@@ -42,7 +44,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private Integer nodePort;
     private String externalName;
     private String namespace;
-    private String rcNamePrefix;
+    private String controllerNamePrefix;
+    private boolean rollbackDaemonSet;
+    private String previousDaemonSetYaml;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -80,13 +84,13 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withServiceType(KubernetesServiceType serviceType) {
-      this.serviceType = serviceType;
+    public KubernetesSetupParamsBuilder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withInfraMappingId(String infraMappingId) {
-      this.infraMappingId = infraMappingId;
+    public KubernetesSetupParamsBuilder withServiceType(KubernetesServiceType serviceType) {
+      this.serviceType = serviceType;
       return this;
     }
 
@@ -135,8 +139,18 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withRcNamePrefix(String rcNamePrefix) {
-      this.rcNamePrefix = rcNamePrefix;
+    public KubernetesSetupParamsBuilder withControllerNamePrefix(String controllerNamePrefix) {
+      this.controllerNamePrefix = controllerNamePrefix;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withRollbackDaemonSet(boolean rollbackDaemonSet) {
+      this.rollbackDaemonSet = rollbackDaemonSet;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withPreviousDaemonSetYaml(String previousDaemonSetYaml) {
+      this.previousDaemonSetYaml = previousDaemonSetYaml;
       return this;
     }
 
@@ -148,8 +162,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withEnvName(envName)
           .withImageDetails(imageDetails)
           .withContainerTask(containerTask)
-          .withServiceType(serviceType)
           .withInfraMappingId(infraMappingId)
+          .withServiceType(serviceType)
           .withPort(port)
           .withTargetPort(targetPort)
           .withProtocol(protocol)
@@ -159,7 +173,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withNodePort(nodePort)
           .withExternalName(externalName)
           .withNamespace(namespace)
-          .withRcNamePrefix(rcNamePrefix);
+          .withControllerNamePrefix(controllerNamePrefix)
+          .withRollbackDaemonSet(rollbackDaemonSet)
+          .withPreviousDaemonSetYaml(previousDaemonSetYaml);
     }
 
     public KubernetesSetupParams build() {
@@ -170,8 +186,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setEnvName(envName);
       kubernetesSetupParams.setImageDetails(imageDetails);
       kubernetesSetupParams.setContainerTask(containerTask);
-      kubernetesSetupParams.setServiceType(serviceType);
       kubernetesSetupParams.setInfraMappingId(infraMappingId);
+      kubernetesSetupParams.setServiceType(serviceType);
       kubernetesSetupParams.setPort(port);
       kubernetesSetupParams.setTargetPort(targetPort);
       kubernetesSetupParams.setProtocol(protocol);
@@ -181,7 +197,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setNodePort(nodePort);
       kubernetesSetupParams.setExternalName(externalName);
       kubernetesSetupParams.setNamespace(namespace);
-      kubernetesSetupParams.setRcNamePrefix(rcNamePrefix);
+      kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
+      kubernetesSetupParams.setRollbackDaemonSet(rollbackDaemonSet);
+      kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);
       return kubernetesSetupParams;
     }
   }

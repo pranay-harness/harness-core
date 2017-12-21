@@ -1,6 +1,7 @@
 package software.wings.app;
 
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
@@ -97,7 +98,8 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           event.getResource().write(JsonUtils.asJson(message));
         }
       }
-      switch (r.transport()) {
+      AtmosphereResource.TRANSPORT transport = r.transport();
+      switch (transport) {
         case JSONP:
         case LONG_POLLING:
           event.getResource().resume();
@@ -107,11 +109,14 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         case STREAMING:
           res.getWriter().flush();
           break;
+        default:
+          unhandled(transport);
       }
     }
   }
 
   private void sendError(AtmosphereResource resource, ErrorCode errorCode) throws IOException {
+    AtmosphereResource.TRANSPORT transport = resource.transport();
     switch (resource.transport()) {
       case JSONP:
       case LONG_POLLING:
@@ -121,6 +126,8 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         break;
       case STREAMING:
         break;
+      default:
+        unhandled(transport);
     }
     resource.write(JsonUtils.asJson(ResponseCodeCache.getInstance().getResponseMessage(errorCode)));
     resource.close();

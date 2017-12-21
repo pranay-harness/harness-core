@@ -27,7 +27,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandType;
-import software.wings.beans.delegation.ScriptParameters;
+import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -53,16 +53,14 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
-public class ScriptState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(ScriptState.class);
+public class ShellScriptState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(ShellScriptState.class);
   @Inject @Transient private transient ActivityService activityService;
   @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient SecretManager secretManager;
 
-  @NotEmpty @Getter @Setter @Attributes(title = "Script") private String scriptString;
-
-  @NotEmpty @Getter @Setter @Attributes(title = "Host") private String host;
+  @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
 
   @NotEmpty
   @Getter
@@ -71,15 +69,17 @@ public class ScriptState extends State {
   @EnumData(enumDataProvider = SSHKeyDataProvider.class)
   private String sshKeyRef;
 
-  @NotEmpty @Getter @Setter @Attributes(title = "Working Directory") private String commandPath;
+  @Getter @Setter @Attributes(title = "Working Directory") private String commandPath;
+
+  @NotEmpty @Getter @Setter @Attributes(title = "Script") private String scriptString;
 
   /**
    * Create a new Script State with given name.
    *
    * @param name name of the state.
    */
-  public ScriptState(String name) {
-    super(name, StateType.SCRIPT.name());
+  public ShellScriptState(String name) {
+    super(name, StateType.SHELL_SCRIPT.name());
   }
 
   @Override
@@ -153,7 +153,7 @@ public class ScriptState extends State {
             .withAccountId(executionContext.getApp().getAccountId())
             .withWaitId(activityId)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-            .withParameters(new Object[] {ScriptParameters.builder()
+            .withParameters(new Object[] {ShellScriptParameters.builder()
                                               .accountId(executionContext.getApp().getAccountId())
                                               .appId(executionContext.getAppId())
                                               .activityId(activityId)
@@ -190,7 +190,7 @@ public class ScriptState extends State {
             .workflowExecutionId(executionContext.getWorkflowExecutionId())
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(Arrays.asList(Command.Builder.aCommand()
-                                            .withName(ScriptParameters.CommandUnit)
+                                            .withName(ShellScriptParameters.CommandUnit)
                                             .withCommandType(CommandType.OTHER)
                                             .build()))
             .serviceVariables(Maps.newHashMap())

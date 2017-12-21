@@ -35,7 +35,6 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
-import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
@@ -114,9 +113,7 @@ import javax.ws.rs.NotFoundException;
 @Singleton
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
-  private static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   private static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
-  private static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
@@ -176,7 +173,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     String id = wingsPersistence.save(artifactStream);
-    addCronForAutoArtifactCollection(artifactStream);
+    ArtifactCollectionJob.addDefaultJob(jobScheduler, artifactStream.getAppId(), artifactStream.getUuid());
 
     executorService.submit(() -> { artifactStreamChangeSetAsync(artifactStream); });
 
@@ -225,24 +222,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setName(name);
   }
 
-  private void addCronForAutoArtifactCollection(ArtifactStream artifactStream) {
-    JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
-                        .withIdentity(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP)
-                        .usingJobData("artifactStreamId", artifactStream.getUuid())
-                        .usingJobData("appId", artifactStream.getAppId())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(ARTIFACT_STREAM_POLL_INTERVAL)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
   @Override
   @ValidationGroups(Update.class)
   public ArtifactStream update(ArtifactStream artifactStream) {
@@ -265,9 +244,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
-    if (!artifactStream.isAutoDownload()) {
-      jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
-    }
 
     if (savedArtifactStream.getSourceName().equals(artifactStream.getSourceName())) {
       executorService.submit(() -> triggerService.updateByApp(savedArtifactStream.getAppId()));
@@ -306,7 +282,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                   .field("appId")
                                                   .equal(appId));
     if (deleted) {
-      jobScheduler.deleteJob(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
       artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(streamAction.getWorkflowId(), artifactStreamId));
       triggerService.deleteTriggersForArtifactStream(appId, artifactStreamId);
