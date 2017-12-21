@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.utils.Misc.isNullOrEmpty;
 
+import com.google.inject.Inject;
+
 import com.jayway.jsonpath.DocumentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution

@@ -18,6 +18,7 @@ import static software.wings.utils.Misc.sleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.common.base.Strings;
+import com.google.inject.Inject;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -48,7 +49,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 

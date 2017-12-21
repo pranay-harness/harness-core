@@ -6,6 +6,7 @@ import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +25,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.inject.Inject;
 
 /**
  * Created by brett on 11/5/17

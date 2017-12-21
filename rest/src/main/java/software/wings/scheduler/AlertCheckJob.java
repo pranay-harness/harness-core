@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
@@ -24,7 +25,6 @@ import software.wings.service.intfc.AlertService;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 /**
  * @author brett on 10/17/17

@@ -33,12 +33,38 @@
     <property name="fileExtensions" value="java, properties, xml"/>
 
     <module name="TreeWalker">
+        <!-- ANNOTATIONS -->
+
         <!-- Having the following annotations in the suggested order seems very natural ... and it is extremely easy
         to follow -->
         <module name="AtclauseOrder">
             <property name="tagOrder" value="@param, @return, @throws, @deprecated"/>
             <property name="target" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
         </module>
+
+        <!-- DEPENDENCIES -->
+
+        <!-- Committing to a single class to do particular job could reduce the memory footprint, startup time,
+         eliminate conflicts when copy/paste, allow for auto import. This rule banns classes and packages that
+         are we have alternatives to do the same job. -->
+        <module name="IllegalImport">
+            <!-- use com.google.inject instead -->
+            <property name="illegalPkgs" value="javax.inject"/>
+        </module>
+
+        <!-- IMPORT -->
+
+        <!-- Using star imports seems to be a convenience instrument created when the developers did indeed write
+        import clauses on their own. Today all this is handled from the IDEs and there is no such factor. The arguments
+        against seems to be valid. Star imports make it harder to track what is which and there are risks of using
+        classes from the wrong package by mistake. -->
+        <module name="AvoidStarImport"/>
+
+        <!-- There is no point of having redundant or unused imports -->
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+
+        <!-- SWITCH -->
 
         <!-- Missing default switch action is error prone. Please make sure that you handle all possible cases with
         default value or throwing exception if the value is unexpected. Note that even you are extremely careful to

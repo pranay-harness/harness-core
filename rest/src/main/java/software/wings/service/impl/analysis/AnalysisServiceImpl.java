@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -59,7 +60,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

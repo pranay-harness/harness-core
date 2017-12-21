@@ -11,6 +11,8 @@ import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServi
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -43,7 +45,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/16/17.

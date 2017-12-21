@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -16,7 +18,6 @@ import software.wings.service.intfc.ArtifactService;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Encoded;

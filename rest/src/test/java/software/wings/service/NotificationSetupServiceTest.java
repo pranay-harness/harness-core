@@ -5,6 +5,7 @@ import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aN
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -21,7 +22,6 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 10/30/16.

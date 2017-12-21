@@ -12,6 +12,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -57,7 +58,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * The Class InstanceExpressionProcessor.

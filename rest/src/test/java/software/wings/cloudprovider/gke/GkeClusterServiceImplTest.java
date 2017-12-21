@@ -26,6 +26,7 @@ import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +43,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by brett on 2/10/17.

@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Inject;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -11,8 +13,6 @@ import software.wings.beans.Application;
 import software.wings.dl.PageResponse;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppService;
-
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 4/9/17.

@@ -1,10 +1,10 @@
 package software.wings.service.impl.security;
 
+import com.google.inject.Inject;
+
 import software.wings.api.KmsTransitionEvent;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.intfc.security.SecretManager;
-
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 10/6/17.

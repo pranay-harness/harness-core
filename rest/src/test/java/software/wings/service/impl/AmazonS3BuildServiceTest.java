@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,6 @@ import software.wings.service.intfc.AmazonS3BuildService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * @author rktummala on 09/30/17

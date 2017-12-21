@@ -14,6 +14,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -88,7 +90,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/29/17.

@@ -5,6 +5,8 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import com.google.inject.Inject;
+
 import org.junit.After;
 import org.junit.Before;
 import org.mockito.InjectMocks;
@@ -21,7 +23,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by bsollish on 9/28/17.

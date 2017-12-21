@@ -18,6 +18,8 @@ import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
 
+import com.google.inject.Inject;
+
 import com.amazonaws.regions.Regions;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -78,7 +80,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 10/9/17.

@@ -13,6 +13,7 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
@@ -48,7 +49,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 10/30/16.

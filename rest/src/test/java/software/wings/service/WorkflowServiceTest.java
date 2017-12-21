@@ -69,6 +69,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -155,7 +156,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * The Class WorkflowServiceTest.

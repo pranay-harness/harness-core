@@ -10,6 +10,8 @@ import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.QUEUED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 
+import com.google.inject.Inject;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -25,8 +27,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutor;
-
-import javax.inject.Inject;
 
 public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent> {
   private final Logger logger = LoggerFactory.getLogger(ExecutionEventListener.class);

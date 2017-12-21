@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static org.junit.Assert.assertFalse;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -21,7 +23,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 10/10/17.

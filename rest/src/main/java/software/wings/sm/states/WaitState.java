@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
@@ -19,7 +20,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 /**
  * dummy implementation for wait state.

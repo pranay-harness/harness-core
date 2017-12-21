@@ -1,8 +1,8 @@
 package software.wings.yaml;
 
-import software.wings.service.intfc.EnvironmentService;
+import com.google.inject.Inject;
 
-import javax.inject.Inject;
+import software.wings.service.intfc.EnvironmentService;
 
 /**
  * Helper class that handles to and from yaml for config file entity.

@@ -5,6 +5,8 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -17,8 +19,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-
-import javax.inject.Inject;
 
 /**
  * Created by sgurubelli on 9/18/17.

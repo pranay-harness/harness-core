@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -10,8 +11,6 @@ import software.wings.beans.Event;
 import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AppService;
-
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.

@@ -2,6 +2,8 @@ package software.wings.resources.yaml;
 
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -16,7 +18,6 @@ import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.YamlVersionList;
 
 import java.util.Optional;
-import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;

@@ -5,6 +5,8 @@ import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
+import com.google.inject.Inject;
+
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
@@ -26,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.cache.Caching;
-import javax.inject.Inject;
 
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.

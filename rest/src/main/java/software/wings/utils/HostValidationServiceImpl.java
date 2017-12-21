@@ -5,6 +5,7 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
@@ -28,7 +29,6 @@ import software.wings.sm.ExecutionStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 @Singleton
 public class HostValidationServiceImpl implements HostValidationService {

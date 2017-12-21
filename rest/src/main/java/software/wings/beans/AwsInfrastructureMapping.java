@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -28,7 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/10/17.

@@ -1,13 +1,13 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.ArtifactStreamService;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 10/24/16.

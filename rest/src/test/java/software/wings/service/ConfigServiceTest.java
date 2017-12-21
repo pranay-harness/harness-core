@@ -20,6 +20,8 @@ import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -53,7 +55,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 8/9/16.

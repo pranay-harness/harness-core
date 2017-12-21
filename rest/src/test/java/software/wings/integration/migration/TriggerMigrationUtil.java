@@ -10,6 +10,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.StateType.ENV_STATE;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Ignore;
@@ -42,7 +43,6 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by sgurubelli on 10/27/17.

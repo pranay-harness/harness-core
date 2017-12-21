@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.google.common.base.MoreObjects;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -19,8 +21,6 @@ import software.wings.rules.RepeatRule.Repeat;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Objects;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 4/11/16.

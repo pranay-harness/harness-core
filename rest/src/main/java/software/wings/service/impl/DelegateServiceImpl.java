@@ -24,6 +24,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
@@ -90,7 +91,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.cache.Caching;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

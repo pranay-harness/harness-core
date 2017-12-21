@@ -7,6 +7,7 @@ import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import lombok.Getter;
@@ -51,7 +52,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 public class ShellScriptState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ShellScriptState.class);

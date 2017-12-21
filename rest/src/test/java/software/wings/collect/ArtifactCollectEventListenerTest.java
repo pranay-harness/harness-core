@@ -23,6 +23,8 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,7 +47,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Arrays;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/11/16.

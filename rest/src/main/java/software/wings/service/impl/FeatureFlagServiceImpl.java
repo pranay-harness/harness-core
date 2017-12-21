@@ -4,6 +4,7 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 public class FeatureFlagServiceImpl implements FeatureFlagService {

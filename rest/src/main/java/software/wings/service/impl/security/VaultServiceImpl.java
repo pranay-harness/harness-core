@@ -8,6 +8,7 @@ import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 11/2/17.

@@ -2,6 +2,8 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +14,6 @@ import software.wings.utils.JsonUtils;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * The Class CatalogServiceTest.

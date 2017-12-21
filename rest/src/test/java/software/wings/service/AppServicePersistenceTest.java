@@ -5,6 +5,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
@@ -24,7 +26,6 @@ import software.wings.service.intfc.AppService;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import javax.inject.Inject;
 
 @SetupScheduler
 public class AppServicePersistenceTest extends WingsBaseTest {

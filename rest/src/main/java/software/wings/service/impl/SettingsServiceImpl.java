@@ -17,6 +17,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +48,6 @@ import software.wings.utils.Validator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

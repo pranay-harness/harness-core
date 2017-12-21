@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import software.wings.utils.WingsReflectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 10/18/17.

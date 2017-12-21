@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +18,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 
 import java.util.Arrays;
-import javax.inject.Inject;
 
 /**
  * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.

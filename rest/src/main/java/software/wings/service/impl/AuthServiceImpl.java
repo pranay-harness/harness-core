@@ -12,6 +12,7 @@ import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.JWT;
@@ -56,7 +57,6 @@ import java.text.ParseException;
 import java.util.List;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 8/18/16.

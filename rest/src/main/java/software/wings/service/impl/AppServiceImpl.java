@@ -14,6 +14,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -72,8 +74,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

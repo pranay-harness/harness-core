@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import com.google.inject.Inject;
+
 import com.splunk.HttpService;
 import com.splunk.Job;
 import com.splunk.JobArgs;
@@ -29,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 5/18/17.
