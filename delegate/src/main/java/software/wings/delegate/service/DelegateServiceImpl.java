@@ -34,8 +34,10 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
@@ -112,8 +114,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.validation.constraints.NotNull;

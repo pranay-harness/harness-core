@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -15,7 +17,6 @@ import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.CacheHelper;
 
 import javax.cache.Cache;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 12/13/16.

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -22,7 +23,6 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 3/14/17.

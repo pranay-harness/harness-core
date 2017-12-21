@@ -5,6 +5,8 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 
+import com.google.inject.Inject;
+
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Duration;
@@ -21,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import javax.inject.Inject;
 
 /**
  * Created by brett on 11/2/17

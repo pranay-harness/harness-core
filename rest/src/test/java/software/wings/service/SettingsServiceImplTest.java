@@ -29,6 +29,9 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -61,8 +64,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Created by anubhaw on 5/23/16.

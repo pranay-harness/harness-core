@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.junit.Before;
@@ -44,8 +45,6 @@ import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 7/28/16.

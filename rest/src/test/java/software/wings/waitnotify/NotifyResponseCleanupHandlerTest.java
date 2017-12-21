@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SearchFilter.Operator;
@@ -16,8 +18,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
-
-import javax.inject.Inject;
 
 /**
  * Test for checking notify cleanup handler.

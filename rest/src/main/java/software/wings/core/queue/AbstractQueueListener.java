@@ -2,6 +2,9 @@ package software.wings.core.queue;
 
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
@@ -12,8 +15,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 4/13/16.

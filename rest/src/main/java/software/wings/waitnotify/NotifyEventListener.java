@@ -7,7 +7,9 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -25,8 +27,6 @@ import software.wings.sm.ExecutionStatus;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by peeyushaggarwal on 4/13/16.

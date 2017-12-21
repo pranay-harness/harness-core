@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
@@ -19,7 +20,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.inject.Inject;
 
 public class PruneFileJob implements Job {
   protected static Logger logger = LoggerFactory.getLogger(PruneFileJob.class);

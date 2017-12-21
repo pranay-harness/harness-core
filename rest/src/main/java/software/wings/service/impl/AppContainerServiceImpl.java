@@ -7,6 +7,8 @@ import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.mongodb.morphia.mapping.Mapper;
@@ -36,8 +38,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

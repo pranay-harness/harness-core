@@ -10,6 +10,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -46,7 +48,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 4/28/16.

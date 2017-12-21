@@ -3,6 +3,8 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
@@ -20,7 +22,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.utils.JsonUtils;
 
 import java.io.ByteArrayInputStream;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 5/19/16.

@@ -6,13 +6,13 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.inject.Singleton;
 
 /**
  * Created by sgurubelli on 8/9/17.

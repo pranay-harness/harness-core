@@ -2,6 +2,8 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static software.wings.common.Constants.BUILD_NO;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -19,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 12/14/16.

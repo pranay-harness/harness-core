@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 
 import com.google.common.base.Joiner;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 1/6/17.

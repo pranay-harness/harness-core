@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Inject;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -19,7 +21,6 @@ import software.wings.service.intfc.DockerBuildService;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/6/17.

@@ -25,6 +25,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,7 +51,6 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 6/2/16.

@@ -12,6 +12,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -31,7 +33,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.Date;
-import javax.inject.Inject;
 
 public class PruneObjectJobTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(PruneObjectJobTest.class);

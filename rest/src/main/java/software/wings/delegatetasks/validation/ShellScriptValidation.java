@@ -3,6 +3,8 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
+import com.google.inject.Inject;
+
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.DelegateTask;
@@ -14,7 +16,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
-import javax.inject.Inject;
 
 public class ShellScriptValidation extends AbstractDelegateValidateTask {
   @Inject private EncryptionService encryptionService;

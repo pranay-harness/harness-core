@@ -2,6 +2,8 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +14,6 @@ import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import javax.inject.Inject;
 
 /**
  * Helper class that has common collection logic that's used by all the artifact collection tasks.

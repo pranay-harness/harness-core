@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Service;
@@ -19,7 +20,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 11/17/16.

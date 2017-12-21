@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import lombok.AllArgsConstructor;
 import org.quartz.DisallowConcurrentExecution;
@@ -24,7 +25,6 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 8/24/17.

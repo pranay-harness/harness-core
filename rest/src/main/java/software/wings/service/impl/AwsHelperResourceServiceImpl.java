@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import software.wings.app.MainConfiguration;
@@ -11,8 +13,6 @@ import software.wings.service.intfc.AwsHelperResourceService;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by sgurubelli on 7/16/17.

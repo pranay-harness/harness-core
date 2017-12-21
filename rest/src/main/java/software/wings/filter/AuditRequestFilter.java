@@ -3,6 +3,7 @@ package software.wings.filter;
 import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -22,7 +23,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Arrays;
 import javax.annotation.Priority;
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;

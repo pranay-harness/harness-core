@@ -2,6 +2,9 @@ package software.wings.core.maintenance;
 
 import static java.util.Collections.synchronizedSet;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +17,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by brett on 9/15/17

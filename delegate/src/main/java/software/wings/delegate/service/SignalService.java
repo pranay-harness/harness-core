@@ -1,12 +1,12 @@
 package software.wings.delegate.service;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 1/4/17.

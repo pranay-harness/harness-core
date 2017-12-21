@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.caching.CacheControl;
@@ -11,7 +13,6 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AuditService;
 
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

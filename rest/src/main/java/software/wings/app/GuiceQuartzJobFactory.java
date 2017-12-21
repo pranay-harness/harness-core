@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.quartz.Job;
@@ -8,8 +9,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 11/8/16.

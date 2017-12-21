@@ -1,6 +1,7 @@
 package software.wings.common;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +10,6 @@ import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
 import java.io.InputStream;
-import javax.inject.Singleton;
 
 /**
  * AuditHelper uses threadlocal to stitch both request and response pay-load with the common http

@@ -11,6 +11,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
@@ -58,7 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 12/7/16.

@@ -42,6 +42,7 @@ import static software.wings.utils.WingsTestConstants.WEBHOOK_REQUEST_BODY;
 import static software.wings.utils.WingsTestConstants.WEBHOOK_TOKEN;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -77,7 +78,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by sgurubelli on 10/26/17.

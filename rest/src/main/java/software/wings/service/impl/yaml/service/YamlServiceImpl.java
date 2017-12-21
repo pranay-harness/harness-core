@@ -24,6 +24,7 @@ import static software.wings.utils.Util.isEmpty;
 
 import com.google.api.client.util.Throwables;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -66,7 +67,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
 
 /**
  * @author rktummala on 10/16/17

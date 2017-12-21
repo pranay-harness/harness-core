@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -16,7 +17,6 @@ import software.wings.sm.states.AbstractLogAnalysisState;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 8/24/17.

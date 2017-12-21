@@ -17,6 +17,8 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.LOG_ID;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
 import org.junit.Ignore;
@@ -37,8 +39,6 @@ import software.wings.service.intfc.LogService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.

@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import com.mongodb.WriteResult;
 import org.junit.Before;
@@ -61,7 +62,6 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.Arrays;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 11/4/16.

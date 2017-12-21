@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -14,8 +16,6 @@ import software.wings.utils.ArtifactType;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * @author rktummala  on 7/30/17.

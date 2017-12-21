@@ -4,6 +4,8 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.ResourceType.NOTIFICATION_GROUP;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -14,7 +16,6 @@ import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.NotificationSetupService;
 
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

@@ -2,6 +2,8 @@ package software.wings.service.impl.newrelic;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
+import com.google.inject.Inject;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +17,6 @@ import software.wings.sm.StateType;
 
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 8/4/16.

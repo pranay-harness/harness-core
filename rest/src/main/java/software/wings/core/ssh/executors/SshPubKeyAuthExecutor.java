@@ -2,13 +2,13 @@ package software.wings.core.ssh.executors;
 
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
+import com.google.inject.Inject;
+
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 2/8/16.

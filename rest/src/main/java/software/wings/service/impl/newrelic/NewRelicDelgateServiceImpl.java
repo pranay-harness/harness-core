@@ -1,5 +1,7 @@
 package software.wings.service.impl.newrelic;
 
+import com.google.inject.Inject;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang.StringUtils;
@@ -25,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 8/28/17.
