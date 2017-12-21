@@ -136,58 +136,48 @@ public interface FileService {
     /**
      * Lob file bucket.
      */
-    LOB("lob"),
+    LOB(),
     /**
      * Artifacts file bucket.
      */
-    ARTIFACTS("artifacts"),
+    ARTIFACTS(),
     /**
      * Audits file bucket.
      */
-    AUDITS("audits"),
+    AUDITS(),
     /**
      * Configs file bucket.
      */
-    CONFIGS("configs"),
+    CONFIGS(),
     /**
      * Logs file bucket.
      */
-    LOGS("logs"),
+    LOGS(),
     /**
      * Platforms file bucket.
      */
-    PLATFORMS("platforms");
+    PLATFORMS();
 
-    private String bucketName;
     private int chunkSize;
 
     /**
      * Instantiates a new file bucket.
      *
-     * @param bucketName the bucket name
      * @param chunkSize  the chunk size
      */
-    FileBucket(String bucketName, int chunkSize) {
-      this.bucketName = bucketName;
+    FileBucket(int chunkSize) {
       this.chunkSize = chunkSize;
     }
 
     /**
      * Instantiates a new file bucket.
-     *
-     * @param bucketName the bucket name
      */
-    FileBucket(String bucketName) {
-      this(bucketName, 1000 * 1000);
+    FileBucket() {
+      this(1000 * 1000);
     }
 
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return bucketName;
+    public String representationName() {
+      return name().toLowerCase();
     }
 
     /**

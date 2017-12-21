@@ -135,7 +135,8 @@ public class FileServiceImpl implements FileService {
       objIDs.add(new ObjectId(id));
     }
     BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$in", objIDs));
-    List<DBObject> dbObjects = wingsPersistence.getCollection(fileBucket.getName() + ".files").find(query).toArray();
+    List<DBObject> dbObjects =
+        wingsPersistence.getCollection(fileBucket.representationName() + ".files").find(query).toArray();
     return dbObjects;
   }
 
@@ -172,7 +173,8 @@ public class FileServiceImpl implements FileService {
    */
   @Override
   public boolean updateParentEntityIdAndVersion(String entityId, String fileId, int version, FileBucket fileBucket) {
-    DBCollection collection = wingsPersistence.getDatastore().getDB().getCollection(fileBucket.getName() + ".files");
+    DBCollection collection =
+        wingsPersistence.getDatastore().getDB().getCollection(fileBucket.representationName() + ".files");
     collection.createIndex(
         new BasicDBObject(of("metadata.entityId", 1, "metadata.version", 1)), new BasicDBObject("background", true));
     return collection
