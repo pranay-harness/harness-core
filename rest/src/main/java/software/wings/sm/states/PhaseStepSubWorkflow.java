@@ -18,6 +18,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
 
@@ -256,6 +257,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         validateServiceInstanceIdsParams(contextIntf);
         break;
       }
+      default:
+        unhandled(phaseStepType);
     }
   }
 

@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.gcr;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.inject.Inject;
@@ -158,6 +159,8 @@ public class GcrServiceImpl implements GcrService {
       case 401:
         throw new WingsException(
             ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Google Container Registry credentials");
+      default:
+        unhandled(code);
     }
     return true;
   }
