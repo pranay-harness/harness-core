@@ -78,8 +78,9 @@ public class NexusServiceImpl implements NexusService {
           return false;
         case 401:
           throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Invalid Nexus credentials");
+        default:
+          throw new WingsException(INVALID_ARTIFACT_SERVER, "message", response.message());
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, "message", response.message());
     }
     return true;
   }

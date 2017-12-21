@@ -7,6 +7,7 @@ package software.wings.sm;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ForkElement.Builder.aForkElement;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Switch.unhandled;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -51,7 +52,8 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class StateMachineExecutionSimulator {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutionSimulator.class);
+
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -160,6 +162,8 @@ public class StateMachineExecutionSimulator {
         entityTypes.add(EntityType.SSH_KEY_PASSPHRASE);
         break;
       }
+      default:
+        unhandled(accessType);
     }
   }
 
@@ -317,6 +321,8 @@ public class StateMachineExecutionSimulator {
         argsInContext.add(EntityType.SERVICE);
         return;
       }
+      default:
+        unhandled(contextElementType);
     }
   }
 

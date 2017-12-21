@@ -5,6 +5,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Sets;
 
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.common.cache.ResponseCodeCache;
 
 import java.util.List;
@@ -53,7 +55,8 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
         logger.info(msg, ex);
       }
       responseMessages.forEach(responseMessage -> {
-        switch (responseMessage.getErrorType()) {
+        final ResponseTypeEnum errorType = responseMessage.getErrorType();
+        switch (errorType) {
           case INFO:
             logger.info(responseMessage.toString());
             break;
@@ -62,6 +65,8 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
             break;
           case ERROR:
             logger.error(responseMessage.toString());
+          default:
+            unhandled(errorType);
         }
       });
     }
