@@ -11,7 +11,6 @@ import software.wings.beans.Application;
 import software.wings.dl.PageResponse;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppService;
-import software.wings.utils.Misc;
 
 import javax.inject.Inject;
 

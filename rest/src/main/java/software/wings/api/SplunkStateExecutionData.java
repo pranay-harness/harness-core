@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.common.Constants;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;

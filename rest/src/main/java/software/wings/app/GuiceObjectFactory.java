@@ -14,7 +14,6 @@ import org.atmosphere.cpr.MetaBroadcaster;
 import org.atmosphere.inject.AtmosphereProducers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;

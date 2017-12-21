@@ -3,8 +3,6 @@ package software.wings.service.intfc;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 
-import java.util.List;
-
 /**
  * Created by peeyushaggarwal on 11/16/16.
  */

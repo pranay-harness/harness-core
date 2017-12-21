@@ -1,6 +1,6 @@
 package software.wings.beans.trigger;
 
-import static software.wings.beans.trigger.TriggerConditionType.*;
+import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,7 +1,6 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.AwsConfig;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateTaskType;

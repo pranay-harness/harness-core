@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import org.json.JSONObject;
-import org.junit.Assert;
 import org.junit.Test;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 

@@ -1,6 +1,5 @@
 package software.wings.service.impl.splunk;
 
-import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;

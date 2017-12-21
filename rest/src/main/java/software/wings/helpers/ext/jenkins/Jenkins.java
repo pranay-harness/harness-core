@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.jenkins;
 
 import com.offbytwo.jenkins.model.Build;
-import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.lang3.tuple.Pair;

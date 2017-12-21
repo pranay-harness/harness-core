@@ -5,7 +5,6 @@ import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;

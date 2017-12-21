@@ -3,9 +3,9 @@ package software.wings.core.ssh.executors;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
-import software.wings.annotation.Encrypted;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
+import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
 

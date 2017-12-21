@@ -23,7 +23,6 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;

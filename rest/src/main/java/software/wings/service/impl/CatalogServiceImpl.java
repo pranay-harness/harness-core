@@ -14,7 +14,6 @@ import software.wings.beans.CatalogItem;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CatalogService;
-import software.wings.utils.Misc;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
