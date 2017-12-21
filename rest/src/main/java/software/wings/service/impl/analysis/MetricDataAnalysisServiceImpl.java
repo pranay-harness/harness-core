@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
 
@@ -488,13 +489,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       int highRisk = 0;
       int mediumRisk = 0;
       for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
-        switch (metricAnalysis.getRiskLevel()) {
+        final RiskLevel riskLevel = metricAnalysis.getRiskLevel();
+        switch (riskLevel) {
           case HIGH:
             highRisk++;
             break;
           case MEDIUM:
             mediumRisk++;
             break;
+          default:
+            unhandled(riskLevel);
         }
       }
 

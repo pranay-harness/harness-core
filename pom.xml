@@ -1122,7 +1122,7 @@
                         <logViolationsToConsole>true</logViolationsToConsole>
                         <failOnViolation>true</failOnViolation>
                         <failsOnError>true</failsOnError>
-                        <configLocation>do-not-use/google_checks.xml</configLocation>
+                        <configLocation>tools/src/main/resources/do-not-use/harness.xml</configLocation>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     </configuration>
                     <dependencies>

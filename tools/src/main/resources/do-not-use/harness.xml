@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+          "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+          "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+
+<!--
+    Checkstyle configuration that checks the Harness coding style.
+
+    Harness uses clang-format for checking indentation and code organization enforced with other means.
+    There is no point of duplicating this effort with providing checks from here.
+
+    There are many reasons a particular code style to be enforced.
+    There are few though that make a lot of practical sense. Lets limit this file to those:
+
+    1. Good practices preventing errors or error prone code.
+    2. Consistency for thing that make no sense to involve innovative approach ... or are so simple to
+       follow, there are no reason not to. After some initial learning curve those should be saving time.
+
+    The most important aspect of these checks is to never ever do style comment in a code review, which is
+    pointlessly time consuming and contributes to demoralization of both sides involved in it.
+
+    If a style requirement cannot be expressed with this configuration it is probably not worth having.
+
+    If you would like to add new rule or improve a current one, please make sure that you resolve all the
+    preexisting issues. If you cannot find to do so, it is probably not worth having it.
+ -->
+
+<module name = "Checker">
+    <property name="charset" value="UTF-8"/>
+
+    <property name="severity" value="warning"/>
+
+    <property name="fileExtensions" value="java, properties, xml"/>
+
+    <module name="TreeWalker">
+        <!-- Having the following annotations in the suggested order seems very natural ... and it is extremely easy
+        to follow -->
+        <module name="AtclauseOrder">
+            <property name="tagOrder" value="@param, @return, @throws, @deprecated"/>
+            <property name="target" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
+        </module>
+
+        <!-- Missing default switch action is error prone. Please make sure that you handle all possible cases with
+        default value or throwing exception if the value is unexpected. Note that even you are extremely careful to
+        caver all options someone could add more cases in the future. -->
+        <module name="MissingSwitchDefault"/>
+
+        <!-- Fall through is most likely a mistake. It is a good thing such cases to be under monitoring
+        TODO: enable
+        <module name="FallThrough"/>
+         -->
+    </module>
+</module>

@@ -180,8 +180,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
 
     PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse = aPageResponse().build();
-    when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class)))
-        .thenReturn(stateExecutionInstancePageResponse);
+    when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
+        .thenReturn(stateExecutionInstancePageResponse.getResponse());
 
     when(stateMachineExecutionSimulator.getStatusBreakdown(
              eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
@@ -191,7 +191,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
     assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
     verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(2)).query(eq(StateExecutionInstance.class), any(PageRequest.class));
+    verify(wingsPersistence, times(2)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
     verify(updateOperations, times(2)).set("breakdown", countsByStatuses);
     verify(stateMachineExecutionSimulator, times(2))
         .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
@@ -238,8 +238,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
 
     PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse = aPageResponse().build();
-    when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class)))
-        .thenReturn(stateExecutionInstancePageResponse);
+    when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
+        .thenReturn(stateExecutionInstancePageResponse.getResponse());
 
     when(stateMachineExecutionSimulator.getStatusBreakdown(
              eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
@@ -249,7 +249,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
     assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
     verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(3)).query(eq(StateExecutionInstance.class), any(PageRequest.class));
+    verify(wingsPersistence, times(3)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
     verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
     verify(stateMachineExecutionSimulator, times(2))
         .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
@@ -293,8 +293,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                 aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.PAUSED).build(),
                 aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.FAILED).build()))
             .build();
-    when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class)))
-        .thenReturn(stateExecutionInstancePageResponse);
+    when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
+        .thenReturn(stateExecutionInstancePageResponse.getResponse());
 
     when(stateMachineExecutionSimulator.getStatusBreakdown(
              eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
@@ -308,7 +308,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         .extracting(WorkflowExecution::getStatus)
         .containsExactly(SUCCESS, SUCCESS, ExecutionStatus.PAUSED);
     verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(3)).query(eq(StateExecutionInstance.class), any(PageRequest.class));
+    verify(wingsPersistence, times(3)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
     verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
     verify(stateMachineExecutionSimulator, times(2))
         .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
@@ -321,6 +321,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(StateMachine.class, APP_ID, STATE_MACHINE_ID)).thenReturn(aStateMachine().build());
     PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
     PageResponse<WorkflowExecution> pageResponse = aPageResponse()
+                                                       .withTotal(3)
                                                        .withResponse(asList(aWorkflowExecution()
                                                                                 .withAppId(APP_ID)
                                                                                 .withUuid(getUuid())
@@ -348,12 +349,13 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse =
         aPageResponse()
+            .withTotal(3)
             .withResponse(asList(aStateExecutionInstance().withUuid(getUuid()).withStatus(SUCCESS).build(),
                 aStateExecutionInstance().withUuid(getUuid()).withStatus(WAITING).build(),
                 aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.FAILED).build()))
             .build();
-    when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class)))
-        .thenReturn(stateExecutionInstancePageResponse);
+    when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
+        .thenReturn(stateExecutionInstancePageResponse.getResponse());
 
     when(stateMachineExecutionSimulator.getStatusBreakdown(
              eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
@@ -367,7 +369,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         .extracting(WorkflowExecution::getStatus)
         .containsExactly(SUCCESS, SUCCESS, WAITING);
     verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(3)).query(eq(StateExecutionInstance.class), any(PageRequest.class));
+    verify(wingsPersistence, times(3)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
     verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
     verify(stateMachineExecutionSimulator, times(2))
         .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
@@ -414,8 +416,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse =
         aPageResponse().withResponse(stateExecutionInstances).build();
-    when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class)))
-        .thenReturn(stateExecutionInstancePageResponse);
+    when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
+        .thenReturn(stateExecutionInstancePageResponse.getResponse());
 
     when(stateMachineExecutionSimulator.getStatusBreakdown(
              eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
@@ -431,7 +433,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         .containsExactly(SUCCESS, SUCCESS, RUNNING);
     assertThat(pageResponse2.get(2).getExecutionNode()).isEqualTo(node);
     verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(3)).query(eq(StateExecutionInstance.class), any(PageRequest.class));
+    verify(wingsPersistence, times(3)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
     verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
     verify(stateMachineExecutionSimulator, times(2))
         .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));

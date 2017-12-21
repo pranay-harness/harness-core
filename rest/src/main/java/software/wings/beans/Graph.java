@@ -354,6 +354,7 @@ public class Graph {
     private List<ElementExecutionSummary> elementStatusSummary;
     private List<InstanceStatusSummary> instanceStatusSummary;
     private List<TemplateExpression> templateExpressions;
+    private List<NameValuePair> variableOverrides;
 
     @Embedded private Map<String, Object> properties = new HashMap<>();
 
@@ -623,6 +624,14 @@ public class Graph {
       this.expanded = expanded;
     }
 
+    public List<NameValuePair> getVariableOverrides() {
+      return variableOverrides;
+    }
+
+    public void setVariableOverrides(List<NameValuePair> variableOverrides) {
+      this.variableOverrides = variableOverrides;
+    }
+
     /**
      * Gets next.
      *
@@ -860,6 +869,7 @@ public class Graph {
       private boolean rollback;
       private Map<String, Object> properties = new HashMap<>();
       private List<TemplateExpression> templateExpressions;
+      private List<NameValuePair> variableOverrides;
 
       private Object executionSummary;
       private Object executionDetails;
@@ -976,6 +986,17 @@ public class Graph {
       /**
        * Adds the property.
        *
+       * @param variableOverrides  the variableOverrides
+       * @return the builder
+       */
+      public Builder withVariableOverrides(List<NameValuePair> variableOverrides) {
+        this.variableOverrides = variableOverrides;
+        return this;
+      }
+
+      /**
+       * Adds the property.
+       *
        * @param name  the name
        * @param value the value
        * @return the builder
@@ -984,7 +1005,6 @@ public class Graph {
         this.properties.put(name, value);
         return this;
       }
-
       /**
        * With properties.
        *
@@ -1087,7 +1107,8 @@ public class Graph {
             .withX(x)
             .withY(y)
             .withProperties(properties)
-            .withTemplateExpressions(templateExpressions);
+            .withTemplateExpressions(templateExpressions)
+            .withVariableOverrides(variableOverrides);
       }
 
       /**
@@ -1109,6 +1130,7 @@ public class Graph {
         node.setOrigin(origin);
         node.setRollback(rollback);
         node.setTemplateExpressions(templateExpressions);
+        node.setVariableOverrides(variableOverrides);
         return node;
       }
     }

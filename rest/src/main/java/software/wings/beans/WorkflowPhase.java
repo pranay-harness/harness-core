@@ -48,6 +48,8 @@ public class WorkflowPhase implements UuidAware {
 
   private List<TemplateExpression> templateExpressions;
 
+  private List<NameValuePair> variableOverrides = new ArrayList<>();
+
   @Embedded private List<PhaseStep> phaseSteps = new ArrayList<>();
 
   public String getUuid() {
@@ -150,6 +152,14 @@ public class WorkflowPhase implements UuidAware {
     this.validationMessage = validationMessage;
   }
 
+  public List<NameValuePair> getVariableOverrides() {
+    return variableOverrides;
+  }
+
+  public void setVariableOverrides(List<NameValuePair> variableOverrides) {
+    this.variableOverrides = variableOverrides;
+  }
+
   /**
    * Get template expressions
    * @return
@@ -180,6 +190,7 @@ public class WorkflowPhase implements UuidAware {
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .addProperty("phaseNameForRollback", phaseNameForRollback)
         .withTemplateExpressions(templateExpressions)
+        .withVariableOverrides(variableOverrides)
         .build();
   }
 

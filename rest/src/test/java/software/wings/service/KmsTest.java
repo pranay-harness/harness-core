@@ -670,6 +670,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void noKmsEncryptionUpdateServiceVariable() throws IOException, IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
     String secretName = UUID.randomUUID().toString();

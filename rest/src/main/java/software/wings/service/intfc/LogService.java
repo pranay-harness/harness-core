@@ -15,7 +15,7 @@ import javax.validation.Valid;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-public interface LogService {
+public interface LogService extends OwnedByActivity {
   /**
    * List.
    *
@@ -54,14 +54,6 @@ public interface LogService {
    * @return the file
    */
   File exportLogs(@NotEmpty String appId, @NotEmpty String activityId);
-
-  /**
-   * Delete activity logs.
-   *
-   * @param appId      the app id
-   * @param activityId the activity id
-   */
-  void deleteActivityLogs(String appId, String activityId);
 
   /**
    * Batched save.

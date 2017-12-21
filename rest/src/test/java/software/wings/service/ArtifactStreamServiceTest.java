@@ -195,7 +195,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(ARTIFACT_STREAM_ID);
-    verify(jobScheduler).deleteJob(ARTIFACT_STREAM_ID, "ARTIFACT_STREAM_CRON_GROUP");
     verify(jobScheduler).deleteJob(WORKFLOW_ID, ARTIFACT_STREAM_ID);
   }
 

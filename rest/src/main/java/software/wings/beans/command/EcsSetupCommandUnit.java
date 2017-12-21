@@ -47,7 +47,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   @Override
-  protected String executeInternal(SettingAttribute cloudProviderSetting,
+  protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     EcsSetupParams setupParams = (EcsSetupParams) containerSetupParams;
@@ -126,7 +126,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), Log.LogLevel.INFO);
     }
 
-    return containerServiceName;
+    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
   }
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,

@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author Rishi
  */
-public interface AppService {
+public interface AppService extends OwnedByAccount {
   /**
    * Save.
    *
@@ -119,13 +119,6 @@ public interface AppService {
    * @return the app names by account id
    */
   List<String> getAppNamesByAccountId(String accountId);
-
-  /**
-   * Delete by acount id.
-   *
-   * @param accountId the account id
-   */
-  void deleteByAccountId(String accountId);
 
   String getAccountIdByAppId(String appId);
 }

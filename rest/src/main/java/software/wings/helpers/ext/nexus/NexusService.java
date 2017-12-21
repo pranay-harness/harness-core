@@ -33,7 +33,7 @@ public interface NexusService {
    * Get Artifact paths under repository
    *
    * @param repoId
-   * @return List<String> artifact paths
+   * @return List&lt;String&gt; artifact paths
    */
   List<String> getArtifactPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId);
 
@@ -41,7 +41,7 @@ public interface NexusService {
    * Get Artifact paths for a given repo from the given relative path
    *
    * @param repoId
-   * @return List<String> artifact paths
+   * @return List&lt;String&gt; artifact paths
    */
   List<String> getArtifactPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String name);

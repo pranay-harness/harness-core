@@ -8,6 +8,7 @@ import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
+import static software.wings.utils.Switch.unhandled;
 
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InfraNodeRequest.InfraNodeRequestBuilder;
@@ -170,6 +171,9 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
         //        }
         //        break;
         //      }
+
+      default:
+        unhandled(deploymentType);
     }
 
     return null;

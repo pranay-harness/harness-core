@@ -1,10 +1,8 @@
 package software.wings.helpers.ext.newrelic;
 
 import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.Url;
+import retrofit2.http.*;
+import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstancesResponse;
 import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
 import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
@@ -31,4 +29,6 @@ public interface NewRelicRestClient {
 
   @GET("v2/applications/{applicationId}/metrics.json?name=WebTransaction/")
   Call<NewRelicMetricResponse> listMetricNames(@Path("applicationId") long newRelicAppId);
+
+  @POST() Call<Object> postDeploymentMarker(@Url String url, @Body NewRelicDeploymentMarkerPayload body);
 }
