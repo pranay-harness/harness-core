@@ -692,7 +692,6 @@ def main(args):
 
     # Uncomment when you want to save the files for local debugging
     # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/test_live_new3.json', test_metrics)
-    #
     # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/control_live_new3.json',control_metrics)
 
     result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
