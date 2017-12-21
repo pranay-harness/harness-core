@@ -138,11 +138,11 @@ public class CatalogResource {
           }
           case CatalogNames.EXECUTION_TYPE: {
             catalogs.put(catalogType, ExecutionType.values());
-            ;
             break;
           }
           case CatalogNames.ENVIRONMENT_TYPE: {
             catalogs.put(catalogType, EnvironmentType.values());
+            break;
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }
