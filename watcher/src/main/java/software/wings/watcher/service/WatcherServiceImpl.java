@@ -249,7 +249,8 @@ public class WatcherServiceImpl implements WatcherService {
               Integer delegateVersionNumber = null;
               if (isNotBlank(delegateVersion)) {
                 try {
-                  delegateVersionNumber = Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf(".")));
+                  delegateVersionNumber =
+                      Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf(".") + 1));
                 } catch (NumberFormatException e) {
                   delegateVersionNumber = null;
                 }
@@ -467,8 +468,7 @@ public class WatcherServiceImpl implements WatcherService {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
       String bucketName =
           watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-      String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
-      String env = metaDataFileName.substring("watcher".length());
+      String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 8);
       S3Object commandsObj = amazonS3Client.getObject(bucketName, "commands/" + env);
       if (commandsObj != null) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(commandsObj.getObjectContent()));
@@ -478,7 +478,7 @@ public class WatcherServiceImpl implements WatcherService {
           String param = substringAfter(line, " ").trim();
 
           if ("minVersion".equals(cmd)) {
-            logger.info("Setting minimum delegate version to {}", param);
+            logger.info("Minimum delegate version: {}", param);
             minDelegateVersion.set(Integer.parseInt(param));
           }
         }
