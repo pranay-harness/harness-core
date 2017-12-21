@@ -289,7 +289,8 @@ class TSAnomlyDetector(object):
             return dict(score=w_dist, risk=risk, control_values=base_array, distances=adjusted_dist,
                         test_values=test_data_dict['data'])
 
-    def analyze_metric(self, txn_name, metric_name, control_txn_data_dict, test_txn_data_dict, fast_analysis=None):
+    def analyze_metric(self, txn_name, metric_name, control_txn_data_dict, test_txn_data_dict, max_nodes_threshold,
+                       fast_analysis=None):
 
         control_data_dict = self.get_metrics_data(metric_name, self.metric_template, control_txn_data_dict)
         test_data_dict = self.get_metrics_data(metric_name, self.metric_template, test_txn_data_dict)
@@ -298,7 +299,7 @@ class TSAnomlyDetector(object):
         if self.validate(txn_name, metric_name,
                          control_data_dict, test_data_dict):
             if fast_analysis is None:
-                fast_analysis = True if len(control_data_dict['data']) > 19 else False
+                fast_analysis = True if len(control_data_dict['data']) > max_nodes_threshold else False
 
             if fast_analysis:
                 analysis_output = self.fast_analysis_metric(self._options.smooth_window, metric_name, control_data_dict,
@@ -389,11 +390,6 @@ class TSAnomlyDetector(object):
                         np.isnan(analysis_output['control_values'])).filled(0).tolist()
                     response['results'][host]['nn'] = 'base'
                     response['results'][host]['control_index'] = 0
-                    # response['results'][host]['test_cuts'] = []
-                    # response['results'][host]['optimal_cuts'] = []
-                    # response['results'][host]['optimal_data'] = []
-                    # response['results'][host]['control_cuts'] = []
-
                 else:
                     response['results'][host]['control_data'] = np.ma.masked_array(
                         analysis_output['control_values'][index],
@@ -467,7 +463,8 @@ class TSAnomlyDetector(object):
 
                     logger.info("Analyzing txn " + txn_name + " metric " + metric_name)
                     response = self.analyze_metric(txn_name, metric_name, control_txn_data_dict,
-                                                          test_txn_data_dict, fast_analysis)
+                                                   test_txn_data_dict, self._options.max_nodes_threshold,
+                                                   fast_analysis)
                     ''' Use numbers for dictionary keys to avoid a failure on the Harness manager side
                         when saving data to MongoDB. MongoDB does not allow 'dot' chars in the key names for
                         dictionaries, and transactions or metric names can contain the dot char.
@@ -573,6 +570,7 @@ def parse(cli_args):
     parser.add_argument("--comparison_unit_window", type=int, required=True)
     parser.add_argument("--parallel_processes", type=int, required=True)
     parser.add_argument("--metric_template_url", type=str, required=True)
+    parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int)
     return parser.parse_args(cli_args)
 
 
