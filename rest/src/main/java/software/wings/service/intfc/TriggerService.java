@@ -89,15 +89,6 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline {
   WebHookToken generateWebHookToken(String appId, String triggerId);
 
   /**
-   * Generate web hook token web hook token.
-   *
-   * @param appId     the app id
-   * @param triggerId the stream id
-   * @return the web hook token
-   */
-  WebHookToken generateGitWebHookToken(String appId, String triggerId);
-
-  /**
    * Trigger stream action.
    *
    * @param artifact the artifact
