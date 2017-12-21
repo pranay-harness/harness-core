@@ -45,9 +45,7 @@
         caver all options someone could add more cases in the future. -->
         <module name="MissingSwitchDefault"/>
 
-        <!-- Fall through is most likely a mistake. It is a good thing such cases to be under monitoring
-        TODO: enable
+        <!-- Fall through is most likely a mistake. It is a good thing such cases to be under monitoring -->
         <module name="FallThrough"/>
-         -->
     </module>
 </module>
