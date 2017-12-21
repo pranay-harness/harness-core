@@ -9,7 +9,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateExecutionException;
 

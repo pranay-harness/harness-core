@@ -20,7 +20,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
-import software.wings.utils.Misc;
 
 import javax.validation.executable.ValidateOnExecution;
 

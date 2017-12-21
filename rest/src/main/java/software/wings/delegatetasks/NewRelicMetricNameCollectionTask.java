@@ -13,8 +13,6 @@ import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;

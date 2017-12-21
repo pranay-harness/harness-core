@@ -1,6 +1,6 @@
 package software.wings.common.cache;
 
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.*;
+import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;

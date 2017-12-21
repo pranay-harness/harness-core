@@ -2,8 +2,7 @@ package software.wings.sm;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
-import static software.wings.common.Constants.*;
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
 import static software.wings.common.Constants.PHASE_PARAM;
 
 import com.google.inject.Inject;
@@ -25,7 +24,6 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;

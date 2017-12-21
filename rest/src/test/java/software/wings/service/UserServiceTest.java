@@ -27,8 +27,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMEN
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
-import static software.wings.service.impl.UserServiceImpl.SIGNUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
+import static software.wings.service.impl.UserServiceImpl.SIGNUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;

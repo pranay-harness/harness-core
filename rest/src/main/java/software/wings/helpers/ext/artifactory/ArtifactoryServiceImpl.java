@@ -19,7 +19,7 @@ import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.utils.Validator.*;
+import static software.wings.utils.Validator.prepareWingsException;
 
 import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
@@ -47,7 +47,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
-import software.wings.utils.Validator;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;

@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import static software.wings.beans.artifact.Artifact.*;
+import static software.wings.beans.artifact.Artifact.Status;
 
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;

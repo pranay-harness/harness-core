@@ -4,7 +4,7 @@
 
 package software.wings.service.impl;
 
-import static software.wings.beans.Graph.Node.Builder.*;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 
 import com.google.inject.Injector;
 

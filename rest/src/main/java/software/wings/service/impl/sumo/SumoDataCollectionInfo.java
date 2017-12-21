@@ -3,7 +3,6 @@ package software.wings.service.impl.sumo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;

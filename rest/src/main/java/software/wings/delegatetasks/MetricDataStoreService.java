@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 

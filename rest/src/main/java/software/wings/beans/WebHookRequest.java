@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

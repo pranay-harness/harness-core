@@ -13,7 +13,6 @@ import io.dropwizard.auth.basic.BasicCredentials;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
-import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.UserService;
