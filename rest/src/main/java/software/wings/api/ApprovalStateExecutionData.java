@@ -3,7 +3,6 @@ package software.wings.api;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.User;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;

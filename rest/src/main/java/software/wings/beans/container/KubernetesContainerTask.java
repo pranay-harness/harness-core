@@ -28,10 +28,10 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import lombok.NoArgsConstructor;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
@@ -180,8 +180,8 @@ public class KubernetesContainerTask extends ContainerTask {
     }
   }
 
-  public String kubernetesType() {
-    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME).getClass().getName();
+  public Class<? extends HasMetadata> kubernetesType() {
+    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME).getClass();
   }
 
   public HasMetadata createController(String containerName, String imageNameTag, String secretName) {

@@ -1,18 +1,12 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-
 import com.google.inject.Singleton;
 
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;

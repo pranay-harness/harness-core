@@ -13,9 +13,7 @@ import software.wings.beans.Base;
 import software.wings.metrics.RiskLevel;
 import software.wings.sm.StateType;
 
-import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 08/30/17.

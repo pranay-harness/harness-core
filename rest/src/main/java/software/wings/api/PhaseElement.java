@@ -4,12 +4,15 @@
 
 package software.wings.api;
 
+import software.wings.beans.NameValuePair;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,6 +26,7 @@ public class PhaseElement implements ContextElement {
   private String infraMappingId;
   private String deploymentType;
   private String phaseNameForRollback;
+  private List<NameValuePair> variableOverrides = new ArrayList<>();
 
   @Override
   public ContextElementType getElementType() {
@@ -120,6 +124,14 @@ public class PhaseElement implements ContextElement {
    */
   public void setDeploymentType(String deploymentType) {
     this.deploymentType = deploymentType;
+  }
+
+  public List<NameValuePair> getVariableOverrides() {
+    return variableOverrides;
+  }
+
+  public void setVariableOverrides(List<NameValuePair> variableOverrides) {
+    this.variableOverrides = variableOverrides;
   }
 
   /**

@@ -11,8 +11,10 @@ import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
+import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
 import software.wings.delegatetasks.NewRelicMetricNameCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
+import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
@@ -25,6 +27,7 @@ import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
 import software.wings.delegatetasks.validation.CommandValidation;
+import software.wings.delegatetasks.validation.ContainerValidation;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.delegatetasks.validation.DockerValidation;
@@ -34,10 +37,10 @@ import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
-import software.wings.delegatetasks.validation.ContainerValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
+import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
 import software.wings.waitnotify.NotifyResponseData;
@@ -48,6 +51,7 @@ import java.util.function.Supplier;
 
 public enum TaskType {
   COMMAND(TaskGroup.COMMAND, CommandTask.class, CommandValidation.class),
+  SCRIPT(TaskGroup.SCRIPT, ShellScriptTask.class, ShellScriptValidation.class),
   HTTP(TaskGroup.HTTP, HttpTask.class, HttpValidation.class),
   JENKINS(TaskGroup.JENKINS, JenkinsTask.class, JenkinsValidation.class),
   JENKINS_COLLECTION(TaskGroup.JENKINS, JenkinsCollectionTask.class, JenkinsValidation.class),
@@ -110,6 +114,7 @@ public enum TaskType {
   NEWRELIC_COLLECT_METRIC_DATA(TaskGroup.NEWRELIC, NewRelicDataCollectionTask.class, NewRelicValidation.class),
   NEWRELIC_COLLECT_METRIC_NAMES(TaskGroup.NEWRELIC, NewRelicMetricNameCollectionTask.class, NewRelicValidation.class),
   NEWRELIC_GET_METRICES_DATA(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
+  NEWRELIC_POST_DEPLOYMENT_MARKER(TaskGroup.NEWRELIC, NewRelicDeploymentMarkerTask.class, NewRelicValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_COLLECT_LOG_DATA(TaskGroup.SPLUNK, SplunkDataCollectionTask.class, SplunkValidation.class),
@@ -144,13 +149,13 @@ public enum TaskType {
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class),
   CONTAINER_SERVICE_DESIRED_COUNT(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
-
   CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
-  AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AlwaysTrueValidation.class);
+  AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  CONTAINER_DAEMON_SET_YAML(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class);
 
-  private TaskGroup taskGroup;
-  private Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
-  private Class<? extends DelegateValidateTask> delegateValidateTaskClass;
+  private final TaskGroup taskGroup;
+  private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
+  private final Class<? extends DelegateValidateTask> delegateValidateTaskClass;
 
   TaskType(TaskGroup taskGroup, Class<? extends DelegateRunnableTask> delegateRunnableTaskClass,
       Class<? extends DelegateValidateTask> delegateValidateTaskClass) {

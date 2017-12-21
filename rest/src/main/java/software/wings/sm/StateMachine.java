@@ -34,6 +34,7 @@ import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
+import software.wings.sm.states.SubWorkflowState;
 import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
@@ -309,6 +310,11 @@ public class StateMachine extends Base {
       MapperUtils.mapObject(properties, state);
 
       state.resolveProperties();
+
+      if (node.getVariableOverrides() != null && !node.getVariableOverrides().isEmpty()
+          && state instanceof SubWorkflowState) {
+        ((SubWorkflowState) state).setVariableOverrides(node.getVariableOverrides());
+      }
 
       Map<String, String> stateValidateMessages = state.validateFields();
       node.setInValidFieldMessages(stateValidateMessages);

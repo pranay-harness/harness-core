@@ -22,11 +22,11 @@ public class KubernetesConvention {
   private static final String CONTAINER_SUFFIX = "-hs";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"':]");
 
-  public static String getReplicationControllerName(String prefix, int revision) {
+  public static String getControllerName(String prefix, int revision) {
     return normalize(prefix) + DOT + revision;
   }
 
-  public static String getReplicationControllerNamePrefix(String appName, String serviceName, String envName) {
+  public static String getControllerNamePrefix(String appName, String serviceName, String envName) {
     return normalize(appName + DOT + serviceName + DOT + envName);
   }
 

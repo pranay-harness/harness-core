@@ -85,11 +85,12 @@ if [ ! -e config-delegate.yml ]
 then
   echo "accountId: ACCOUNT_ID" > config-delegate.yml
   echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
-  echo "managerUrl: https://https://localhost:9090/api/" >> config-delegate.yml
+  echo "managerUrl: https://localhost:9090/api/" >> config-delegate.yml
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
   echo "doUpgrade: true" >> config-delegate.yml
   echo "localDiskPath: /tmp" >> config-delegate.yml
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
+  echo "proxy: false" >> config-delegate.yml
 fi
 
 export HOSTNAME

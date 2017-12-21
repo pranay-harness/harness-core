@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
 
@@ -9,7 +10,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
@@ -19,7 +19,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
-import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -488,13 +487,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       int highRisk = 0;
       int mediumRisk = 0;
       for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
-        switch (metricAnalysis.getRiskLevel()) {
+        final RiskLevel riskLevel = metricAnalysis.getRiskLevel();
+        switch (riskLevel) {
           case HIGH:
             highRisk++;
             break;
           case MEDIUM:
             mediumRisk++;
             break;
+          default:
+            unhandled(riskLevel);
         }
       }
 

@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Charsets;
 
@@ -131,6 +132,8 @@ public class SshSessionFactory {
         case ERROR:
           logger.error(message);
           break;
+        default:
+          unhandled(level);
       }
     }
   }

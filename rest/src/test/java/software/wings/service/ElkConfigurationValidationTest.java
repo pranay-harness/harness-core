@@ -1,16 +1,15 @@
 package software.wings.service;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.*;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.internal.util.reflection.Whitebox;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
@@ -18,7 +17,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;

@@ -1,9 +1,9 @@
 package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SlackConfig.Yaml;
+import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 

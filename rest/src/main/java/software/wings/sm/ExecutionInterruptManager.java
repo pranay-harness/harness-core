@@ -28,6 +28,7 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Injector;
 
@@ -153,7 +154,8 @@ public class ExecutionInterruptManager {
   }
 
   private void sendNotificationIfRequired(ExecutionInterrupt executionInterrupt) {
-    switch (executionInterrupt.getExecutionInterruptType()) {
+    final ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
+    switch (executionInterruptType) {
       case PAUSE_ALL: {
         sendNotification(executionInterrupt, PAUSED);
         break;
@@ -166,6 +168,8 @@ public class ExecutionInterruptManager {
         sendNotification(executionInterrupt, ExecutionStatus.ABORTED);
         break;
       }
+      default:
+        unhandled(executionInterruptType);
     }
   }
 
@@ -182,7 +186,8 @@ public class ExecutionInterruptManager {
                                                         : executionInterrupt.getExecutionUuid();
     String appId = stateExecutionInstance != null ? stateExecutionInstance.getAppId() : executionInterrupt.getAppId();
     try {
-      switch (executionInterrupt.getExecutionInterruptType()) {
+      final ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
+      switch (executionInterruptType) {
         case RESUME:
         case RETRY:
         case IGNORE:
@@ -200,6 +205,8 @@ public class ExecutionInterruptManager {
           alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
           break;
         }
+        default:
+          unhandled(executionInterruptType);
       }
     } catch (Exception e) {
       logger.error("Failed to close the ManualNeededAlert/ ApprovalNeededAlert  for appId, executionId  ", appId,

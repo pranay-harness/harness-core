@@ -4,8 +4,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebhookParameters;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -165,4 +167,27 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline {
    * @return
    */
   String getCronDescription(String expression);
+
+  /**
+   * Get trigger
+   * @param token
+   * @return
+   */
+  Trigger getTriggerByWebhookToken(String token);
+
+  /***
+   * Trigger execution by webhook
+   * @param trigger
+   * @param parameters
+   * @return
+   */
+  WorkflowExecution triggerExecutionByWebHook(Trigger trigger, Map<String, String> parameters);
+
+  /***
+   *
+   * @param appId
+   * @param workflowId
+   * @return
+   */
+  WebhookParameters listWebhookParameters(String appId, String workflowId, WorkflowType workflowType);
 }

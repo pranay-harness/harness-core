@@ -2,6 +2,7 @@ package software.wings.api;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 
@@ -13,8 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CodeDeployParams;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -70,7 +73,8 @@ public class CommandStateExecutionData extends StateExecutionData {
           List<CommandUnitDetails> commandUnits = activityService.getCommandUnits(appId, activityId);
           countsByStatuses = new CountsByStatuses();
           commandUnits.forEach(commandUnit -> {
-            switch (commandUnit.getCommandExecutionStatus()) {
+            final CommandExecutionStatus commandExecutionStatus = commandUnit.getCommandExecutionStatus();
+            switch (commandExecutionStatus) {
               case SUCCESS:
                 countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
                 break;
@@ -83,6 +87,8 @@ public class CommandStateExecutionData extends StateExecutionData {
               case QUEUED:
                 countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
                 break;
+              default:
+                unhandled(commandExecutionStatus);
             }
           });
         } catch (Exception e) {
@@ -128,6 +134,12 @@ public class CommandStateExecutionData extends StateExecutionData {
     }
     if (oldInstanceData != null) {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
+    }
+    if (containerSetupParams != null && containerSetupParams instanceof KubernetesSetupParams) {
+      String previousDaemonSetYaml = ((KubernetesSetupParams) containerSetupParams).getPreviousDaemonSetYaml();
+      if (previousDaemonSetYaml != null) {
+        commandStepExecutionSummary.setPreviousDaemonSetYaml(previousDaemonSetYaml);
+      }
     }
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);

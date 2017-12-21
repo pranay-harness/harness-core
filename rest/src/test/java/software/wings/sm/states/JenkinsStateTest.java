@@ -33,7 +33,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;

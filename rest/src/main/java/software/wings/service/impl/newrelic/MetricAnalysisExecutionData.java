@@ -9,15 +9,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**

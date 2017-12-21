@@ -13,8 +13,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.EncryptionType;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 

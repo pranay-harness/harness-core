@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.common.cache.ResponseCodeCache;
-import software.wings.utils.Misc;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;

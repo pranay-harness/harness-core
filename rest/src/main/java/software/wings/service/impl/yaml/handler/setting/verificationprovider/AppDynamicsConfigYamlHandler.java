@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AppDynamicsConfig.Yaml;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 

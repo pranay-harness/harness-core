@@ -2,8 +2,6 @@ package software.wings.service.impl.appdynamics;
 
 import static software.wings.utils.HttpUtil.validUrl;
 
-import com.google.common.base.Preconditions;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;

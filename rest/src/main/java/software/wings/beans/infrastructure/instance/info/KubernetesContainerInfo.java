@@ -1,6 +1,5 @@
 package software.wings.beans.infrastructure.instance.info;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

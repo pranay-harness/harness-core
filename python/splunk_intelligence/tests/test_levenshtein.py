@@ -1,3 +1,5 @@
+import sys
+
 from core.distance.LevenShtein import Hirschberg
 from core.distance.LevenShtein import LevenShteinDistance
 from core.distance.SAXHMMDistance import SAXHMMDistance
@@ -45,6 +47,11 @@ def test_ld_dist_5():
     result, indices = ld.find_optimal_alignment('bb', 'xbx')
     assert result == 'bx'
 
+def test_ld_dist_6():
+    ld = LevenShteinDistance(get_dist)
+    result, indices = ld.find_optimal_alignment('xxeca', 'ffxxx')
+    assert result == 'xxffx'
+
 
 def test_hb_dist():
     # hb = Hirschberg()
@@ -86,3 +93,10 @@ def test_hb_dist_5():
     hb = Hirschberg(get_dist)
     result = hb.find_optimal_alignment('bb', 'xbx')
     assert result == 'bx'
+
+
+def main(args):
+    test_ld_dist_6()
+
+if __name__ == "__main__":
+    main(sys.argv)

@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -101,7 +102,9 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
       if (message != null) {
         event.getResource().write(JsonUtils.asJson(message));
       }
-      switch (r.transport()) {
+
+      AtmosphereResource.TRANSPORT transport = r.transport();
+      switch (transport) {
         case JSONP:
         case LONG_POLLING:
           event.getResource().resume();
@@ -111,12 +114,15 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         case STREAMING:
           res.getWriter().flush();
           break;
+        default:
+          unhandled(transport);
       }
     }
   }
 
   private void sendError(AtmosphereResource resource, ErrorCode errorCode) throws IOException {
-    switch (resource.transport()) {
+    AtmosphereResource.TRANSPORT transport = resource.transport();
+    switch (transport) {
       case JSONP:
       case LONG_POLLING:
         resource.getResponse().sendError(errorCode.getStatus().getStatusCode());
@@ -125,6 +131,8 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         break;
       case STREAMING:
         break;
+      default:
+        unhandled(transport);
     }
     resource.write(JsonUtils.asJson(ResponseCodeCache.getInstance().getResponseMessage(errorCode)));
     resource.close();

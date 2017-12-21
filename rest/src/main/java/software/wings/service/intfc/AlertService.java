@@ -8,7 +8,7 @@ import software.wings.dl.PageResponse;
 
 import java.util.concurrent.Future;
 
-public interface AlertService extends OwnedByApplication {
+public interface AlertService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Alert> list(PageRequest<Alert> pageRequest);
 
   Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData);

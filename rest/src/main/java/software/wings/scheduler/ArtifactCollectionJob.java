@@ -23,10 +23,16 @@ import static software.wings.utils.ArtifactType.RPM;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.name.Named;
 
 import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -56,6 +62,14 @@ import javax.inject.Inject;
  * Created by anubhaw on 11/8/16.
  */
 public class ArtifactCollectionJob implements Job {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
+  private static final int POLL_INTERVAL = 60; // in secs
+
+  public static final String APP_ID_KEY = "appId";
+  public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
+
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private BuildSourceService buildSourceService;
@@ -63,12 +77,35 @@ public class ArtifactCollectionJob implements Job {
   @Inject private ExecutorService executorService;
   @Inject private TriggerService triggerService;
   @Inject private PersistentLocker persistentLocker;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+
+  public static void addDefaultJob(QuartzScheduler jobScheduler, String appId, String artifactStreamId) {
+    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
+    jobScheduler.deleteJob(artifactStreamId, GROUP);
+
+    JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
+                        .withIdentity(artifactStreamId, ArtifactCollectionJob.GROUP)
+                        .usingJobData(ARTIFACT_STREAM_ID_KEY, artifactStreamId)
+                        .usingJobData(APP_ID_KEY, appId)
+                        .build();
+
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(artifactStreamId, ArtifactCollectionJob.GROUP)
+                          .startNow()
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInSeconds(POLL_INTERVAL)
+                                            .repeatForever()
+                                            .withMisfireHandlingInstructionNowWithExistingCount())
+                          .build();
+
+    jobScheduler.scheduleJob(job, trigger);
+  }
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString("artifactStreamId");
-    String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
+    String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString(ARTIFACT_STREAM_ID_KEY);
+    String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
     logger.info("Received artifact collection job request for appId {} artifactStreamId {}", appId, artifactStreamId);
     executorService.submit(() -> executeJobAsync(appId, artifactStreamId));
     logger.info("Submitted request successfully");
@@ -77,7 +114,11 @@ public class ArtifactCollectionJob implements Job {
   private void executeJobAsync(String appId, String artifactStreamId) {
     List<Artifact> artifacts = null;
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    Validator.notNullCheck("Artifact Stream", artifactStream);
+    if (artifactStream == null || !artifactStream.isAutoDownload()) {
+      jobScheduler.deleteJob(artifactStreamId, GROUP);
+      return;
+    }
+
     try {
       artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStream);
     } catch (Exception e) {

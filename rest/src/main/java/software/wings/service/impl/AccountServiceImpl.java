@@ -16,11 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.name.Named;
 
 import org.apache.commons.codec.binary.Hex;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -43,11 +38,14 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.OwnedByAccount;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 
+import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -133,14 +131,30 @@ public class AccountServiceImpl implements AccountService {
     return wingsPersistence.get(Account.class, accountId);
   }
 
+  public <T> List<T> descendingServices(Class<T> cls) {
+    List<T> descendings = new ArrayList<>();
+
+    for (Field field : AccountServiceImpl.class.getDeclaredFields()) {
+      Object obj;
+      try {
+        obj = field.get(this);
+        if (cls.isInstance(obj)) {
+          T descending = (T) obj;
+          descendings.add(descending);
+        }
+      } catch (IllegalAccessException e) {
+      }
+    }
+
+    return descendings;
+  }
+
   @Override
   public void delete(String accountId) {
-    boolean deleted = wingsPersistence.delete(Account.class, accountId);
-    if (deleted) {
+    if (wingsPersistence.delete(Account.class, accountId)) {
       executorService.submit(() -> {
-        settingsService.deleteByAccountId(accountId);
-        appService.deleteByAccountId(accountId);
-        alertService.deleteByAccountId(accountId);
+        List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
+        services.stream().forEach(service -> service.deleteByAccountId(accountId));
       });
     }
   }
