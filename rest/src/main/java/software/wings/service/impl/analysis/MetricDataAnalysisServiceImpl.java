@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
@@ -495,8 +496,14 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
           case MEDIUM:
             mediumRisk++;
             break;
-          default:
+          case NA:
+            noop();
             break;
+          case LOW:
+            noop();
+            break;
+          default:
+            unhandled(riskLevel);
         }
       }
 
