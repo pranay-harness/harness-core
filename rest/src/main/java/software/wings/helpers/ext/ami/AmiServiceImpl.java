@@ -33,12 +33,15 @@ public class AmiServiceImpl implements AmiService {
 
   @Override
   public List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      Map<String, List<String>> tags, int maxNumberOfBuilds) {
+      Map<String, List<String>> tags, String platform, int maxNumberOfBuilds) {
     logger.info("Retrieving images from Aws");
     List<BuildDetails> buildDetails = new ArrayList<>();
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("is-public").withValues("false"));
     filters.add(new Filter("state").withValues("available"));
+    if (!isNullOrEmpty(platform)) {
+      filters.add(new Filter("platform").withValues(platform));
+    }
     if (tags != null && tags.size() != 0) {
       tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
     }
@@ -46,17 +49,16 @@ public class AmiServiceImpl implements AmiService {
     DescribeImagesResult describeImagesResult;
     describeImagesResult =
         awsHelperService.decribeEc2Images(awsConfig, encryptionDetails, region, describeImagesRequest);
+    logger.info("Sorting on creation time");
     Collections.sort(describeImagesResult.getImages(), Comparator.comparing(Image::getCreationDate));
     describeImagesResult.getImages()
         .stream()
         .filter(image -> image != null && !isNullOrEmpty(image.getName()))
         .forEach(image
             -> buildDetails.add(aBuildDetails().withNumber(image.getName()).withRevision(image.getImageId()).build()));
+    if (buildDetails.size() == 0) {
+      logger.info("No images found matching with the given Region {}, and filters {}", region, filters);
+    }
     return buildDetails;
-  }
-
-  @Override
-  public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return awsHelperService.listRegions(awsConfig, encryptionDetails);
   }
 }
