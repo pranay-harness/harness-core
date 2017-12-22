@@ -321,11 +321,31 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
       updateOperations.set("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
-      updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
-      updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
-      updateOperations.set("caCert", directKubernetesInfrastructureMapping.getCaCert());
-      updateOperations.set("clientCert", directKubernetesInfrastructureMapping.getClientCert());
-      updateOperations.set("clientKey", directKubernetesInfrastructureMapping.getClientKey());
+      if (directKubernetesInfrastructureMapping.getUsername() != null) {
+        updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
+      } else {
+        updateOperations.unset("username");
+      }
+      if (directKubernetesInfrastructureMapping.getPassword() != null) {
+        updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
+      } else {
+        updateOperations.unset("password");
+      }
+      if (directKubernetesInfrastructureMapping.getCaCert() != null) {
+        updateOperations.set("caCert", directKubernetesInfrastructureMapping.getCaCert());
+      } else {
+        updateOperations.unset("caCert");
+      }
+      if (directKubernetesInfrastructureMapping.getClientCert() != null) {
+        updateOperations.set("clientCert", directKubernetesInfrastructureMapping.getClientCert());
+      } else {
+        updateOperations.unset("clientCert");
+      }
+      if (directKubernetesInfrastructureMapping.getClientKey() != null) {
+        updateOperations.set("clientKey", directKubernetesInfrastructureMapping.getClientKey());
+      } else {
+        updateOperations.unset("clientKey");
+      }
       updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
       updateOperations.set("namespace",
           isNotBlank(directKubernetesInfrastructureMapping.getNamespace())

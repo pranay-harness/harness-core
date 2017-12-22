@@ -128,11 +128,16 @@ public class ContainerServiceImpl implements ContainerService {
   }
 
   private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams) {
-    return containerServiceParams.getSettingAttribute().getValue() instanceof GcpConfig
-        ? gkeClusterService.getCluster(containerServiceParams.getSettingAttribute(),
-              containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName(),
-              containerServiceParams.getNamespace())
-        : (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
+    KubernetesConfig kubernetesConfig;
+    if (containerServiceParams.getSettingAttribute().getValue() instanceof GcpConfig) {
+      kubernetesConfig = gkeClusterService.getCluster(containerServiceParams.getSettingAttribute(),
+          containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName(),
+          containerServiceParams.getNamespace());
+      kubernetesConfig.setDecrypted(true);
+    } else {
+      kubernetesConfig = (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
+    }
+    return kubernetesConfig;
   }
 
   @Override

@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -96,14 +97,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Override
   protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
-      Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> edd, ContainerSetupParams containerSetupParams, Map<String, String> serviceVariables,
+      ExecutionLogCallback executionLogCallback) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
 
-    KubernetesConfig kubernetesConfig = cloudProviderSetting.getValue() instanceof KubernetesConfig
-        ? (KubernetesConfig) cloudProviderSetting.getValue()
-        : gkeClusterService.getCluster(
-              cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), setupParams.getNamespace());
+    KubernetesConfig kubernetesConfig;
+    List<EncryptedDataDetail> encryptedDataDetails;
+    if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
+      kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
+      encryptedDataDetails = edd;
+    } else {
+      kubernetesConfig = gkeClusterService.getCluster(
+          cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace());
+      kubernetesConfig.setDecrypted(true);
+      encryptedDataDetails = emptyList();
+    }
 
     String lastCtrlName = lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
     int revision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;

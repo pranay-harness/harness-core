@@ -25,7 +25,9 @@ public class KubernetesHelperService {
    */
   public KubernetesClient getKubernetesClient(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
+    if (!kubernetesConfig.isDecrypted()) {
+      encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
+    }
     ConfigBuilder configBuilder = new ConfigBuilder()
                                       .withMasterUrl(kubernetesConfig.getMasterUrl())
                                       .withTrustCerts(true)
