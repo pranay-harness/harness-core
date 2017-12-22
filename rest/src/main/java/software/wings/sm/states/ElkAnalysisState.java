@@ -211,8 +211,11 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       Preconditions.checkNotNull(indexTemplate, "No index template mapping found for " + indices);
 
       final Object timeStampObject = indexTemplate.getProperties().get(timestampField);
-      Preconditions.checkNotNull(
-          timeStampObject, timestampField + " is not configured in the index mapping " + indices);
+      if (timeStampObject == null) {
+        logger.warn("No timestamp field mapping for {} for index {} ", timestampField, indices);
+        return DEFAULT_TIME_FORMAT;
+      }
+
       JSONObject timeStampJsonObject = new JSONObject(JsonUtils.asJson(timeStampObject));
 
       if (!timeStampJsonObject.has("format")) {
