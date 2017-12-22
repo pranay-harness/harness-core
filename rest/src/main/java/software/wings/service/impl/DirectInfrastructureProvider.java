@@ -33,9 +33,6 @@ public class DirectInfrastructureProvider implements InfrastructureProvider {
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {}
 
   @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {}
-
-  @Override
   public Host saveHost(Host host) {
     return null;
   }

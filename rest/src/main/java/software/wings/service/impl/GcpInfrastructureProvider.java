@@ -51,11 +51,6 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
-    hostService.deleteByInfraMappingId(appId, infraMappingId);
-  }
-
-  @Override
   public Host saveHost(Host host) {
     return hostService.saveHost(host);
   }

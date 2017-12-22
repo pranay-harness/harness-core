@@ -77,10 +77,4 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
         aPhysicalInfrastructureMapping().withAppId(APP_ID).withUuid(INFRA_MAPPING_ID).build(), HOST_CONN_ATTR_ID);
     verify(hostService).updateHostConnectionAttrByInfraMappingId(APP_ID, INFRA_MAPPING_ID, HOST_CONN_ATTR_ID);
   }
-
-  @Test
-  public void shouldDeleteHostByInfraMappingId() {
-    infrastructureProvider.deleteHostByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
-    verify(hostService).deleteByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
-  }
 }

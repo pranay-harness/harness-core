@@ -147,11 +147,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
   }
 
-  @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
-    hostService.deleteByInfraMappingId(appId, infraMappingId);
-  }
-
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
