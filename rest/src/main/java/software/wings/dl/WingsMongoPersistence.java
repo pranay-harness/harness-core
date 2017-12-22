@@ -474,6 +474,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * {@inheritDoc}
    */
   @Override
+  public <T> long getCount(Class<T> cls, PageRequest<T> req) {
+    return MongoHelper.getCount(datastoreMap.get(ReadPref.NORMAL), cls, req);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation) {
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();

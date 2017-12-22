@@ -162,7 +162,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             yaml = yamlArtifactStreamService.getArtifactStreamYamlString(appId, entityId);
             break;
           case "ConfigFile":
-            appId = ((ServiceLevelYamlNode) dn).getAppId();
+
+            if (dn instanceof ServiceLevelYamlNode) {
+              appId = ((ServiceLevelYamlNode) dn).getAppId();
+            } else if (dn instanceof EnvLevelYamlNode) {
+              appId = ((EnvLevelYamlNode) dn).getAppId();
+            }
+
             yaml = yamlResourceService.getConfigFileYaml(accountId, appId, entityId).getResource().getYaml();
             break;
           case "Workflow":
@@ -757,6 +763,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public String getRootPathByConfigFile(Service service) {
     return getRootPathByService(service) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
+  }
+
+  @Override
+  public String getRootPathByConfigFileOverride(Environment environment) {
+    return getRootPathByEnvironment(environment) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
   }
 
   @Override

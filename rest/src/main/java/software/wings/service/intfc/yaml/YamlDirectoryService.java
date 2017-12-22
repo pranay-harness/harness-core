@@ -57,6 +57,8 @@ public interface YamlDirectoryService {
 
   String getRootPathByConfigFile(Service service);
 
+  String getRootPathByConfigFileOverride(Environment environment);
+
   String getRootPathByEnvironment(Environment environment);
 
   String getRootPathByEnvironment(Environment environment, String appName);

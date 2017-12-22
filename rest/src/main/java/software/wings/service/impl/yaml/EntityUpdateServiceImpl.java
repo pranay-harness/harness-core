@@ -116,6 +116,29 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
   }
 
+  @Override
+  public List<GitFileChange> getConfigFileOverrideGitSyncFileSet(
+      String accountId, Environment environment, ConfigFile configFile, ChangeType changeType, String fileContent) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.getConfigFileOverrideYaml(accountId, configFile.getAppId(), configFile)
+                 .getResource()
+                 .getYaml();
+    }
+
+    GitFileChange gitFileChange =
+        createGitFileChange(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
+            configFile.getRelativeFilePath(), yaml, changeType, false);
+    if (fileContent != null) {
+      GitFileChange configFileChange =
+          createConfigFileChange(accountId, yamlDirectoryService.getRootPathByConfigFileOverride(environment),
+              configFile.getRelativeFilePath(), fileContent, changeType);
+      return Arrays.asList(gitFileChange, configFileChange);
+    } else {
+      return Arrays.asList(gitFileChange);
+    }
+  }
+
   public GitFileChange getEnvironmentGitSyncFile(String accountId, Environment environment, ChangeType changeType) {
     String yaml = null;
     if (!changeType.equals(ChangeType.DELETE)) {

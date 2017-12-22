@@ -5,6 +5,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.exception.YamlProcessingException;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 
@@ -20,7 +21,7 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
    * @return
    * @throws HarnessException if yaml is not well formed or if any error in processing
    */
-  List<ChangeContext> syncChangeSet(List<Change> changeList) throws HarnessException;
+  List<ChangeContext> processChangeSet(List<Change> changeList) throws YamlProcessingException;
 
   /**
    *

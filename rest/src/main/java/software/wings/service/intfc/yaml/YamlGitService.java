@@ -3,10 +3,13 @@ package software.wings.service.intfc.yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.GitCommit;
+import software.wings.beans.RestResponse;
+import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
+import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -50,6 +53,8 @@ public interface YamlGitService {
    */
   void fullSync(@NotEmpty String accountId);
 
+  void syncFiles(String accountId, List<GitFileChange> gitFileChangeList);
+
   List<GitFileChange> performFullSyncDryRun(String accountId);
 
   /**
@@ -79,4 +84,17 @@ public interface YamlGitService {
   GitSyncWebhook getWebhook(String entityId, String accountId);
 
   GitCommit saveCommit(GitCommit gitCommit);
+
+  void processFailedOrUnprocessedChanges(
+      List<GitFileChange> failedOrPendingChanges, Change failedChange, String errorMessage);
+
+  void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList);
+
+  RestResponse<List<GitSyncError>> listGitSyncErrors(String accountId);
+
+  long getGitSyncErrorCount(String accountId);
+
+  RestResponse discardGitSyncErrors(String accountId, List<String> yamlFilePathList);
+
+  RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent);
 }

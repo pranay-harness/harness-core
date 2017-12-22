@@ -14,7 +14,8 @@ public enum AlertType {
   ManualInterventionNeeded(ManualIntervention, Warning, ManualInterventionNeededAlert.class),
   NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class),
   NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),
-  InvalidKMS(Setup, Error, KmsSetupAlert.class);
+  InvalidKMS(Setup, Error, KmsSetupAlert.class),
+  GitSyncError(Setup, Error, GitSyncErrorAlert.class);
 
   private AlertCategory category;
   private AlertSeverity severity;

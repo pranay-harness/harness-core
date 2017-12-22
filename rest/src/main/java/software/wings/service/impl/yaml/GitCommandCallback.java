@@ -15,7 +15,7 @@ import software.wings.beans.yaml.GitCommandResult;
 import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.exception.HarnessException;
+import software.wings.exception.YamlProcessingException;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
@@ -46,9 +46,9 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient private transient final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Transient @Inject private transient YamlChangeSetService yamlChangeSetService;
-  @Transient @Inject private transient YamlService yamlSyncService;
+  @Transient @Inject private transient YamlService yamlService;
 
-  @Transient @Inject private transient YamlGitService yamlGitSyncService;
+  @Transient @Inject private transient YamlGitService yamlGitService;
 
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
@@ -76,43 +76,41 @@ public class GitCommandCallback implements NotifyCallback {
         if (yamlChangeSet != null) {
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
           if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
-            yamlGitSyncService.saveCommit(GitCommit.builder()
-                                              .accountId(accountId)
-                                              .yamlChangeSet(yamlChangeSet)
-                                              .yamlGitConfigId(yamlGitConfigId)
-                                              .status(GitCommit.Status.COMPLETED)
-                                              .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
-                                              .gitCommandResult(gitCommitAndPushResult)
-                                              .build());
+            yamlGitService.saveCommit(GitCommit.builder()
+                                          .accountId(accountId)
+                                          .yamlChangeSet(yamlChangeSet)
+                                          .yamlGitConfigId(yamlGitConfigId)
+                                          .status(GitCommit.Status.COMPLETED)
+                                          .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
+                                          .gitCommandResult(gitCommitAndPushResult)
+                                          .build());
           }
+          yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges());
         }
       } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
-        //        List<GitFileChange> filterChanges =
-        //            gitDiffResult.getGitFileChanges().stream().filter(gitFileChange ->
-        //            gitFileChange.getFilePath().endsWith(".yaml")).collect(Collectors.toList());
-        List<GitFileChange> filterChanges = gitDiffResult.getGitFileChanges();
+        List<GitFileChange> gitFileChangeList = gitDiffResult.getGitFileChanges();
         try {
-          List<ChangeContext> fileChangeContexts = yamlSyncService.syncChangeSet(filterChanges);
+          List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
           logger.info("Processed ChangeSet: [{}]", fileChangeContexts);
-
-          yamlGitSyncService.saveCommit(GitCommit.builder()
-                                            .accountId(accountId)
-                                            .yamlChangeSet(YamlChangeSet.builder()
-                                                               .accountId(accountId)
-                                                               .appId(Base.GLOBAL_APP_ID)
-                                                               .gitToHarness(true)
-                                                               .status(Status.COMPLETED)
-                                                               .gitFileChanges(gitDiffResult.getGitFileChanges())
-                                                               .build())
-                                            .yamlGitConfigId(yamlGitConfigId)
-                                            .status(GitCommit.Status.COMPLETED)
-                                            .commitId(gitDiffResult.getCommitId())
-                                            .gitCommandResult(gitDiffResult)
-                                            .build());
-        } catch (HarnessException ex) {
+          yamlGitService.saveCommit(GitCommit.builder()
+                                        .accountId(accountId)
+                                        .yamlChangeSet(YamlChangeSet.builder()
+                                                           .accountId(accountId)
+                                                           .appId(Base.GLOBAL_APP_ID)
+                                                           .gitToHarness(true)
+                                                           .status(Status.COMPLETED)
+                                                           .gitFileChanges(gitDiffResult.getGitFileChanges())
+                                                           .build())
+                                        .yamlGitConfigId(yamlGitConfigId)
+                                        .status(GitCommit.Status.COMPLETED)
+                                        .commitId(gitDiffResult.getCommitId())
+                                        .gitCommandResult(gitDiffResult)
+                                        .build());
+          yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
+        } catch (YamlProcessingException ex) {
           logger.error("Processing changeSet failed", ex);
-          yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+          yamlGitService.processFailedOrUnprocessedChanges(gitFileChangeList, ex.getChange(), ex.getMessage());
         }
       } else {
         logger.error("Unexpected commandType result: [{}] for changeSetId [{}]",
