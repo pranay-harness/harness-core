@@ -57,8 +57,8 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
   @Test
   public void createOrUpdateSystemAppStackCatalogs() throws IOException {
     long fileSize = configuration.getFileUploadLimits().getAppContainerLimit();
-    List<SystemCatalog> systemCatalogs = (systemCatalogService.list(
-        aPageRequest().addFilter("catalogType", EQ, APPSTACK).addFilter("family", EQ, TOMCAT).build()));
+    List<SystemCatalog> systemCatalogs = systemCatalogService.list(
+        aPageRequest().addFilter("catalogType", EQ, APPSTACK).addFilter("family", EQ, TOMCAT).build());
     Map<String, SystemCatalog> fileToSystemCatalog =
         systemCatalogs.stream().collect(Collectors.toMap(SystemCatalog::getFileName, Function.identity()));
     System.out.println("Creating System App Stack Catalogs");

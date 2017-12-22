@@ -145,7 +145,7 @@ public class AuditServiceImpl implements AuditService {
     final int batchSize = 1000;
     final int limit = 5000;
     final long days = retentionMillis / (24 * 60 * 60 * 1000L);
-    logger.info("Start: Deleting audit records older than {} time", (System.currentTimeMillis() - retentionMillis));
+    logger.info("Start: Deleting audit records older than {} time", System.currentTimeMillis() - retentionMillis);
     try {
       logger.info("Start: Deleting audit records older than {} days", days);
       with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {

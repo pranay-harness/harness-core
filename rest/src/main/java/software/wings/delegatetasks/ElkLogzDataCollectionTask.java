@@ -237,7 +237,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                 if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                   completed.set(true);
-                  throw(e);
+                  throw e;
                 } else {
                   /*
                    * Save the exception from the first attempt. This is usually

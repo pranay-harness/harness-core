@@ -178,7 +178,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean exists(String accountName) {
     Account res = wingsPersistence.get(
         Account.class, Builder.aPageRequest().addFilter("accountName", Operator.EQ, accountName).build());
-    return (res != null);
+    return res != null;
   }
 
   @Override

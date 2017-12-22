@@ -140,7 +140,7 @@ public class KubernetesIntegrationTest {
             .withImage("gcr.io/exploration-161417/todolist")
             .withArgs("8080")
             .withNewResources()
-            .withRequests(ImmutableMap.of("cpu", new Quantity("10m"), "memory", new Quantity(("10Mi"))))
+            .withRequests(ImmutableMap.of("cpu", new Quantity("10m"), "memory", new Quantity("10Mi")))
             .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))
             .endResources()
             .addNewPort()

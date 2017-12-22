@@ -122,7 +122,7 @@ public class WorkflowResource {
   public RestResponse<Workflow> create(@QueryParam("appId") String appId, Workflow workflow) {
     workflow.setAppId(appId);
     workflow.setWorkflowType(WorkflowType.ORCHESTRATION);
-    return new RestResponse<>((workflowService.createWorkflow(workflow)));
+    return new RestResponse<>(workflowService.createWorkflow(workflow));
   }
 
   @PUT
@@ -131,7 +131,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Workflow> update(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, WorkflowVersion workflowVersion) {
-    return new RestResponse<>((workflowService.updateWorkflow(appId, workflowId, workflowVersion.getDefaultVersion())));
+    return new RestResponse<>(workflowService.updateWorkflow(appId, workflowId, workflowVersion.getDefaultVersion()));
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)

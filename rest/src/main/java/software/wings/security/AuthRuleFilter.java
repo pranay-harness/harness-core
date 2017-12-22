@@ -219,7 +219,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       List<String> appIds, boolean emptyAppIdsInReq) {
     if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
       userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
-      if ((emptyAppIdsInReq && isPresent(requiredPermissionAttributes, PermissionScope.APP))) {
+      if (emptyAppIdsInReq && isPresent(requiredPermissionAttributes, PermissionScope.APP)) {
         userRequestInfoBuilder.withAppIdFilterRequired(true).withAllowedAppIds(ImmutableList.copyOf(appIdsOfAccount));
       }
     } else {
@@ -268,7 +268,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean isEmpty(List list) {
-    return (list == null || list.isEmpty());
+    return list == null || list.isEmpty();
   }
 
   private boolean isPresent(List<PermissionAttribute> requiredPermissionAttributes, PermissionScope permissionScope) {

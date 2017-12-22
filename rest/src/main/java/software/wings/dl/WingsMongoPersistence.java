@@ -789,7 +789,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   private void deleteEncryptionReference(Encryptable object, Set<String> fieldNames, String parentId) {
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
-      if ((fieldNames == null || fieldNames.contains(f.getName()))) {
+      if (fieldNames == null || fieldNames.contains(f.getName())) {
         Field encryptedField = getEncryptedRefField(f, object);
         encryptedField.setAccessible(true);
         String encryptedId;

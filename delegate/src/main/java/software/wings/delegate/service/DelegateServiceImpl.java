@@ -210,7 +210,7 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withExcludeScopes(new ArrayList<>());
 
       delegateId = registerDelegate(builder);
-      logger.info("[New] Delegate registered in {} ms", (clock.millis() - start));
+      logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
 
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());

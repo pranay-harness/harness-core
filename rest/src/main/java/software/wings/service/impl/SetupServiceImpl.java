@@ -175,7 +175,7 @@ public class SetupServiceImpl implements SetupService {
           .build();
     }
 
-    if ((app.getEnvironments() == null || app.getEnvironments().size() == 0)) {
+    if (app.getEnvironments() == null || app.getEnvironments().size() == 0) {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one environment.")

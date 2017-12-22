@@ -228,9 +228,9 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   private boolean isCommandUnitStatusUpdatableByLogStatus(CommandUnit commandUnit, Log log) {
-    return (log != null
+    return log != null
         && (QUEUED.equals(commandUnit.getCommandExecutionStatus())
                || RUNNING.equals(commandUnit.getCommandExecutionStatus()))
-        && !log.getCommandExecutionStatus().equals(commandUnit.getCommandExecutionStatus()));
+        && !log.getCommandExecutionStatus().equals(commandUnit.getCommandExecutionStatus());
   }
 }

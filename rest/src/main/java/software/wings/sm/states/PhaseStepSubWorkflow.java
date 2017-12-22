@@ -286,7 +286,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
     List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
-    if ((contextElements == null || contextElements.isEmpty())) {
+    if (contextElements == null || contextElements.isEmpty()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Setup not done");
     }
     Optional<ContextElement> containerServiceElement =

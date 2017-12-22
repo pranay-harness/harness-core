@@ -74,7 +74,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
 
     Properties props = new Properties();
-    if (schedulerConfig.getJobstoreclass() == "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore") {
+    if (schedulerConfig.getJobstoreclass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
       MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
       Builder mongoClientOptions = MongoClientOptions.builder()
                                        .connectTimeout(30000)

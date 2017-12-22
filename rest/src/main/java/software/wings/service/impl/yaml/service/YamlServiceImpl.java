@@ -417,7 +417,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final class FilePathComparator implements Comparator<Change> {
     @Override
     public int compare(Change o1, Change o2) {
-      return (findOrdinal(o1.getFilePath()) - findOrdinal(o2.getFilePath()));
+      return findOrdinal(o1.getFilePath()) - findOrdinal(o2.getFilePath());
     }
   }
 

@@ -72,9 +72,9 @@ public class ContainerInstanceHelper {
   @Inject private Queue<ContainerDeploymentEvent> containerDeploymentEventQueue;
 
   public boolean isContainerDeployment(InfrastructureMapping infrastructureMapping) {
-    return (infrastructureMapping instanceof ContainerInfrastructureMapping
+    return infrastructureMapping instanceof ContainerInfrastructureMapping
         || infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
-        || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping);
+        || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping;
   }
 
   public void extractContainerInfoAndSendEvent(String stateExecutionInstanceId, PhaseExecutionData phaseExecutionData,

@@ -123,7 +123,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
     }
-    return ((GcpConfig) computeProviderSetting.getValue());
+    return (GcpConfig) computeProviderSetting.getValue();
   }
 
   @Override

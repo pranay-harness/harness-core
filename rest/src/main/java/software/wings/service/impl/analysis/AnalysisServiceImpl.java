@@ -91,7 +91,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .equal(stateType)
                                      .field("stateExecutionId")
                                      .equal(stateExecutionId)
-                                     .field(("applicationId"))
+                                     .field("applicationId")
                                      .equal(appId)
                                      .field("query")
                                      .equal(searchQuery)
@@ -113,7 +113,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                        .equal(stateType)
                                        .field("stateExecutionId")
                                        .equal(stateExecutionId)
-                                       .field(("applicationId"))
+                                       .field("applicationId")
                                        .equal(appId)
                                        .field("query")
                                        .equal(searchQuery)
@@ -548,7 +548,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
         hostSummary.setXCordinate(sprinkalizedCordinate(analysisCluster.getX()));
         hostSummary.setYCordinate(sprinkalizedCordinate(analysisCluster.getY()));
-        hostSummary.setUnexpectedFreq((analysisCluster.isUnexpected_freq()));
+        hostSummary.setUnexpectedFreq(analysisCluster.isUnexpected_freq());
         hostSummary.setCount(computeCountFromFrequencies(analysisCluster));
         hostSummary.setFrequencies(getFrequencies(analysisCluster));
         clusterSummary.setLogText(analysisCluster.getText());

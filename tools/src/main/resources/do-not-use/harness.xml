@@ -52,6 +52,11 @@
             <property name="illegalPkgs" value="javax.inject"/>
         </module>
 
+        <!-- ERROR PREVENTION -->
+
+        <!-- Novice Java programmers often make this mistake -->
+        <module name="StringLiteralEquality"/>
+
         <!-- IMPORT -->
 
         <!-- Using star imports seems to be a convenience instrument created when the developers did indeed write
@@ -73,5 +78,12 @@
 
         <!-- Fall through is most likely a mistake. It is a good thing such cases to be under monitoring -->
         <module name="FallThrough"/>
+
+        <!-- Not a big deal, but extremely easy to follow -->
+        <module name="DefaultComesLast"/>
+
+        <!-- *** -->
+
+        <module name="UnnecessaryParentheses"/>
     </module>
 </module>
