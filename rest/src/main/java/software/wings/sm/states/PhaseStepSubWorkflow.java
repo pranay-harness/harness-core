@@ -18,6 +18,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
@@ -257,6 +258,25 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         validateServiceInstanceIdsParams(contextIntf);
         break;
       }
+
+      case SELECT_NODE:
+      case PROVISION_NODE:
+      case VERIFY_SERVICE:
+      case WRAP_UP:
+      case PRE_DEPLOYMENT:
+      case POST_DEPLOYMENT:
+      case STOP_SERVICE:
+      case DE_PROVISION_NODE:
+      case CLUSTER_SETUP:
+      case CONTAINER_SETUP:
+      case START_SERVICE:
+      case DEPLOY_AWSCODEDEPLOY:
+      case PREPARE_STEPS:
+      case DEPLOY_AWS_LAMBDA:
+      case COLLECT_ARTIFACT:
+        noop();
+        break;
+
       default:
         unhandled(phaseStepType);
     }
