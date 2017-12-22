@@ -1,5 +1,5 @@
 #!/bin/bash
-export LOGFILE=connectivity-check.log
+export LOGFILE=./connectivity-check.log
 
 # Time in seconds
 export CONNECT_TIMEOUT=15
@@ -21,8 +21,8 @@ printf "\n${Bold}${BBlue}Starting Harness Connectivity Tests:${ColorOff}\n\n"
 function test() {
   printf "$1"
   OUTPUT=$(curl -I --verbose -Ss $CURL_PROXY --connect-timeout $CONNECT_TIMEOUT --insecure --max-time $CONNECT_MAX_TIME $2 2>&1)
-  log+=$OUTPUT
-  log+="\n\n"
+  logs+=$OUTPUT
+  logs+="\n\n"
 
   if echo "$OUTPUT" | grep -q "HTTP/1.1 200 OK"; then
     printf "${BGreen}OK${ColorOff}.\n"
