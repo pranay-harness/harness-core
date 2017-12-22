@@ -63,7 +63,7 @@ public class PruneFileJob implements Job {
       FileBucket fileBucket = FileBucket.valueOf(bucket);
       Arrays.stream(fileUuids).forEach(uuid -> fileService.deleteFile(uuid, fileBucket));
     } catch (Exception e) {
-      logger.error(e.toString());
+      logger.error("Pruning the file failed.", e);
       return false;
     }
     return true;
@@ -99,7 +99,7 @@ public class PruneFileJob implements Job {
         }
       }
     } catch (ClassNotFoundException e) {
-      logger.error(e.toString());
+      logger.error("The class this job is for no longer exists!!!", e);
     }
 
     jobScheduler.deleteJob(objectId, GROUP);

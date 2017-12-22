@@ -135,7 +135,7 @@ public class AppContainerServiceImpl implements AppContainerService {
     Validator.notNullCheck("App Stack", appContainer);
     ensureAppContainerNotInUse(appContainerId);
 
-    if (!appContainer.isSystemCreated()) {
+    if (!appContainer.isSystemCreated() && appContainer.getFileUuid() != null) {
       PruneFileJob.addDefaultJob(jobScheduler, AppContainer.class, appContainerId, FileBucket.PLATFORMS,
           Arrays.asList(appContainer.getFileUuid()));
     }
