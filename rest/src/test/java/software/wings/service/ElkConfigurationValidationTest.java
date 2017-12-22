@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -98,6 +99,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void testValidConfig() throws Exception {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
