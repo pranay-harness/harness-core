@@ -61,5 +61,5 @@ public interface UserGroupService {
    */
   UserGroup updatePermissions(UserGroup userGroup);
 
-  Boolean delete(String accountId, String userGroupId);
+  boolean delete(String accountId, String userGroupId);
 }

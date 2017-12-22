@@ -123,11 +123,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public Boolean delete(String accountId, String userGroupId) {
+  public boolean delete(String accountId, String userGroupId) {
     UserGroup userGroup = get(accountId, userGroupId, false);
     Validator.notNullCheck("userGroup", userGroup);
     Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
-                                          .field("accountId")
+                                          .field(UserGroup.ACCOUNT_ID_KEY)
                                           .equal(accountId)
                                           .field(ID_KEY)
                                           .equal(userGroupId);

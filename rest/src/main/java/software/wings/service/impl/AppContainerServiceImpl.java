@@ -35,7 +35,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
@@ -132,12 +131,14 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public void delete(String accountId, String appContainerId) {
     AppContainer appContainer = get(accountId, appContainerId);
-    Validator.notNullCheck("App Stack", appContainer);
+    if (appContainer == null) {
+      return;
+    }
+
     ensureAppContainerNotInUse(appContainerId);
 
     if (!appContainer.isSystemCreated() && appContainer.getFileUuid() != null) {
-      PruneFileJob.addDefaultJob(jobScheduler, AppContainer.class, appContainerId, FileBucket.PLATFORMS,
-          Arrays.asList(appContainer.getFileUuid()));
+      PruneFileJob.addDefaultJob(jobScheduler, AppContainer.class, appContainerId, FileBucket.PLATFORMS);
     }
 
     wingsPersistence.delete(AppContainer.class, appContainerId);

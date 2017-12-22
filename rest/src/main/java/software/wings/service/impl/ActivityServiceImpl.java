@@ -160,8 +160,11 @@ public class ActivityServiceImpl implements ActivityService {
   public boolean delete(String appId, String activityId) {
     PruneObjectJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId);
 
-    return wingsPersistence.delete(
-        wingsPersistence.createQuery(Activity.class).field("appId").equal(appId).field(ID_KEY).equal(activityId));
+    return wingsPersistence.delete(wingsPersistence.createQuery(Activity.class)
+                                       .field(Activity.APP_ID_KEY)
+                                       .equal(appId)
+                                       .field(ID_KEY)
+                                       .equal(activityId));
   }
 
   @Override
@@ -175,7 +178,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Activity.class)
-        .field("appId")
+        .field(Activity.APP_ID_KEY)
         .equal(appId)
         .field("environmentId")
         .equal(envId)

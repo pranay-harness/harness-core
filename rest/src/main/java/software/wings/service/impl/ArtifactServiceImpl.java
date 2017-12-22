@@ -289,21 +289,18 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public boolean delete(String appId, String artifactId) {
     Artifact artifact = get(appId, artifactId);
-    Validator.notNullCheck("Artifact", artifact);
-
-    final List<ArtifactFile> artifactFiles = artifact.getArtifactFiles();
-    if (!artifactFiles.isEmpty()) {
-      List<String> uuids =
-          artifactFiles.stream().map(artifactFile -> artifactFile.getFileUuid()).collect(Collectors.toList());
-      PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS, uuids);
+    if (artifact == null) {
+      return true;
     }
+
+    PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS);
     return wingsPersistence.delete(artifact);
   }
 
   @Override
   public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
+        .field(Artifact.APP_ID_KEY)
         .equal(appId)
         .asList()
         .forEach(artifact -> delete(appId, artifact.getUuid()));
@@ -344,7 +341,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public void deleteByArtifactStream(String appId, String artifactStreamId) {
     wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
+        .field(Artifact.APP_ID_KEY)
         .equal(appId)
         .field("artifactStreamId")
         .equal(artifactStreamId)

@@ -241,10 +241,8 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowExceptionForNonExistentApplicationDelete() {
-    assertThatThrownBy(() -> appService.delete("NON_EXISTENT_APP_ID"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_ARGUMENT.name());
+  public void shouldNotThrowExceptionForNonExistentApplicationDelete() {
+    appService.delete("NON_EXISTENT_APP_ID");
   }
 
   /**
