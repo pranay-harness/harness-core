@@ -280,7 +280,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   public void shouldPruneDescendingObjects() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
-    appService.pruneDescendingObjects(APP_ID);
+    appService.pruneDescendingEntities(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
         alertService, triggerService);
@@ -300,7 +300,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
     doThrow(new WingsException("Forced exception")).when(pipelineService).pruneByApplication(APP_ID);
 
-    assertThatThrownBy(() -> appService.pruneDescendingObjects(APP_ID)).isInstanceOf(WingsException.class);
+    assertThatThrownBy(() -> appService.pruneDescendingEntities(APP_ID)).isInstanceOf(WingsException.class);
 
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,

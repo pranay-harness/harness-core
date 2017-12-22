@@ -31,7 +31,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
@@ -158,7 +158,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public boolean delete(String appId, String activityId) {
-    PruneObjectJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId);
 
     return wingsPersistence.delete(wingsPersistence.createQuery(Activity.class)
                                        .field(Activity.APP_ID_KEY)
@@ -168,10 +168,10 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String activityId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String activityId) {
     List<OwnedByActivity> services =
         ServiceClassLocator.descendingServices(this, ActivityServiceImpl.class, OwnedByActivity.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, activityId, (descending) -> { descending.pruneByActivity(appId, activityId); });
   }
 

@@ -68,7 +68,7 @@ public interface InfrastructureMappingService {
    * @param appId the app id
    * @param infraMappingId the infra mapping id
    */
-  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String infraMappingId);
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraMappingId);
 
   /**
    * Delete by service template.

@@ -74,7 +74,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
@@ -464,16 +464,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     saveYamlChangeSet(infrastructureMapping, ChangeType.DELETE);
 
-    PruneObjectJob.addDefaultJob(jobScheduler, InfrastructureMapping.class, appId, infraMappingId);
+    PruneEntityJob.addDefaultJob(jobScheduler, InfrastructureMapping.class, appId, infraMappingId);
 
     wingsPersistence.delete(infrastructureMapping);
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String infraMappingId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraMappingId) {
     List<OwnedByInfrastructureMapping> services = ServiceClassLocator.descendingServices(
         this, InfrastructureMappingServiceImpl.class, OwnedByInfrastructureMapping.class);
-    PruneObjectJob.pruneDescendingObjects(services, appId, infraMappingId,
+    PruneEntityJob.pruneDescendingEntities(services, appId, infraMappingId,
         (descending) -> { descending.pruneByInfrastructureMapping(appId, infraMappingId); });
   }
 

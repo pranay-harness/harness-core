@@ -76,7 +76,7 @@ public interface PipelineService extends OwnedByApplication {
    * @param appId      the app id
    * @param pipelineId the pipeline id
    */
-  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String pipelineId);
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String pipelineId);
 
   /**
    * Clone pipeline pipeline.

@@ -46,7 +46,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.OwnedByPipeline;
@@ -240,7 +240,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneObjectJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId);
 
     if (!wingsPersistence.delete(pipeline)) {
       return false;
@@ -250,10 +250,10 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String pipelineId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String pipelineId) {
     List<OwnedByPipeline> services =
         ServiceClassLocator.descendingServices(this, PipelineServiceImpl.class, OwnedByPipeline.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, pipelineId, (descending) -> { descending.pruneByPipeline(appId, pipelineId); });
   }
 

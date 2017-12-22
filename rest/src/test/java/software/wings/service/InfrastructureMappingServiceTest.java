@@ -302,7 +302,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldPruneDescendingObjects() {
-    infrastructureMappingService.pruneDescendingObjects(APP_ID, INFRA_MAPPING_ID);
+    infrastructureMappingService.pruneDescendingEntities(APP_ID, INFRA_MAPPING_ID);
     InOrder inOrder = inOrder(wingsPersistence, hostService, serviceInstanceService);
     inOrder.verify(hostService).pruneByInfrastructureMapping(APP_ID, INFRA_MAPPING_ID);
     inOrder.verify(serviceInstanceService).pruneByInfrastructureMapping(APP_ID, INFRA_MAPPING_ID);

@@ -45,7 +45,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -331,7 +331,7 @@ public class AppServiceImpl implements AppService {
     yamlChangeSetHelper.applicationYamlChange(application, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneObjectJob.addDefaultJob(jobScheduler, Application.class, appId, appId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Application.class, appId, appId);
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
@@ -357,10 +357,10 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId) {
+  public void pruneDescendingEntities(@NotEmpty String appId) {
     List<OwnedByApplication> services =
         ServiceClassLocator.descendingServices(this, AppServiceImpl.class, OwnedByApplication.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, appId, (descending) -> { descending.pruneByApplication(appId); });
   }
 

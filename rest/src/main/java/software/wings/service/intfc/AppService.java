@@ -94,7 +94,7 @@ public interface AppService extends OwnedByAccount {
    *
    * @param appId the app id
    */
-  void pruneDescendingObjects(@NotEmpty String appId);
+  void pruneDescendingEntities(@NotEmpty String appId);
 
   /**
    * Gets apps by account id.
