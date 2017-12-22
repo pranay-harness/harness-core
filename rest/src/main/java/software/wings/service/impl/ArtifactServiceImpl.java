@@ -291,12 +291,12 @@ public class ArtifactServiceImpl implements ArtifactService {
     Artifact artifact = get(appId, artifactId);
     Validator.notNullCheck("Artifact", artifact);
 
-    List<String> uuids = artifact.getArtifactFiles()
-                             .stream()
-                             .map(artifactFile -> artifactFile.getFileUuid())
-                             .collect(Collectors.toList());
-
-    PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS, uuids);
+    final List<ArtifactFile> artifactFiles = artifact.getArtifactFiles();
+    if (!artifactFiles.isEmpty()) {
+      List<String> uuids =
+          artifactFiles.stream().map(artifactFile -> artifactFile.getFileUuid()).collect(Collectors.toList());
+      PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS, uuids);
+    }
     return wingsPersistence.delete(artifact);
   }
 

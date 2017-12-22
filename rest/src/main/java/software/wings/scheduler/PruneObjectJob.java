@@ -132,7 +132,7 @@ public class PruneObjectJob implements Job {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
     } catch (Exception e) {
-      logger.error(e.toString());
+      logger.error("", e);
       return false;
     }
     return true;
@@ -162,7 +162,7 @@ public class PruneObjectJob implements Job {
         return;
       }
     } catch (ClassNotFoundException e) {
-      logger.error(e.toString());
+      logger.error("The class this job is for no longer exists!!!", e);
     }
 
     jobScheduler.deleteJob(objectId, GROUP);

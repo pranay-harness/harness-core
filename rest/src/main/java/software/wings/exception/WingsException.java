@@ -137,8 +137,8 @@ public class WingsException extends WingsApiException {
    * @param cause       the cause
    */
   public WingsException(List<ResponseMessage> messageList, String message, Throwable cause) {
-    super(message, cause);
-    responseMessageList = messageList;
+    this(message, cause);
+    responseMessageList.addAll(messageList);
   }
 
   /**
@@ -146,8 +146,8 @@ public class WingsException extends WingsApiException {
    * @param params
    */
   public WingsException(List<ResponseMessage> messageList, String message, Map<String, Object> params) {
-    super(message, null);
-    responseMessageList = messageList;
+    this(message, null);
+    responseMessageList.addAll(messageList);
     this.params = params;
   }
 
