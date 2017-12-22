@@ -24,14 +24,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Base;
-import software.wings.beans.Environment;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
-import java.util.Arrays;
 import java.util.Date;
 
 public class PruneFileJobTest extends WingsBaseTest {
@@ -45,13 +43,13 @@ public class PruneFileJobTest extends WingsBaseTest {
 
   @Inject @InjectMocks PruneFileJob job;
 
-  private final static String OBJECT_ID = "object_id";
+  private final static String ENTITY_ID = "entityId";
 
-  public JobDetail details(String className, String objectId, FileBucket bucket) {
+  public JobDetail details(String className, String entityId, FileBucket bucket) {
     return JobBuilder.newJob(PruneFileJob.class)
-        .withIdentity(OBJECT_ID, PruneFileJob.GROUP)
-        .usingJobData(PruneFileJob.OBJECT_CLASS_KEY, className)
-        .usingJobData(PruneFileJob.OBJECT_ID_KEY, objectId)
+        .withIdentity(ENTITY_ID, PruneFileJob.GROUP)
+        .usingJobData(PruneFileJob.ENTITY_CLASS_KEY, className)
+        .usingJobData(PruneFileJob.ENTITY_ID_KEY, entityId)
         .usingJobData(PruneFileJob.BUCKET_KEY, bucket.name())
         .build();
   }
@@ -62,53 +60,53 @@ public class PruneFileJobTest extends WingsBaseTest {
 
   @Test
   public void selfPruneTheJobWhenSucceed() throws Exception {
-    when(wingsPersistence.get(Artifact.class, OBJECT_ID)).thenReturn(null);
-    doNothing().when(fileService).deleteFile(OBJECT_ID, FileBucket.PLATFORMS);
+    when(wingsPersistence.get(Artifact.class, ENTITY_ID)).thenReturn(null);
+    doNothing().when(fileService).deleteFile(ENTITY_ID, FileBucket.PLATFORMS);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Artifact.class, OBJECT_ID, FileBucket.PLATFORMS));
+    when(context.getJobDetail()).thenReturn(details(Artifact.class, ENTITY_ID, FileBucket.PLATFORMS));
 
     job.execute(context);
 
-    verify(wingsPersistence, times(1)).get(Artifact.class, OBJECT_ID);
-    verify(fileService, times(1)).deleteAllFilesForEntity(OBJECT_ID, FileBucket.PLATFORMS);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneFileJob.GROUP);
+    verify(wingsPersistence, times(1)).get(Artifact.class, ENTITY_ID);
+    verify(fileService, times(1)).deleteAllFilesForEntity(ENTITY_ID, FileBucket.PLATFORMS);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneFileJob.GROUP);
   }
 
   @Test
   public void selfPruneTheJobIfServiceStillThereFirstTime() throws Exception {
-    when(wingsPersistence.get(AppContainer.class, OBJECT_ID)).thenReturn(anAppContainer().build());
+    when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(AppContainer.class, OBJECT_ID, FileBucket.PLATFORMS));
+    when(context.getJobDetail()).thenReturn(details(AppContainer.class, ENTITY_ID, FileBucket.PLATFORMS));
     when(context.getPreviousFireTime()).thenReturn(null);
 
     job.execute(context);
 
-    verify(fileService, times(0)).deleteAllFilesForEntity(OBJECT_ID, FileBucket.PLATFORMS);
-    verify(jobScheduler, times(0)).deleteJob(OBJECT_ID, PruneFileJob.GROUP);
+    verify(fileService, times(0)).deleteAllFilesForEntity(ENTITY_ID, FileBucket.PLATFORMS);
+    verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneFileJob.GROUP);
   }
 
   @Test
   public void selfPruneTheJobIfServiceStillThere() throws Exception {
-    when(wingsPersistence.get(AppContainer.class, OBJECT_ID)).thenReturn(anAppContainer().build());
+    when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(AppContainer.class, OBJECT_ID, FileBucket.PLATFORMS));
+    when(context.getJobDetail()).thenReturn(details(AppContainer.class, ENTITY_ID, FileBucket.PLATFORMS));
     when(context.getPreviousFireTime()).thenReturn(new Date());
 
     job.execute(context);
 
-    verify(fileService, times(0)).deleteAllFilesForEntity(OBJECT_ID, FileBucket.PLATFORMS);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneFileJob.GROUP);
+    verify(fileService, times(0)).deleteAllFilesForEntity(ENTITY_ID, FileBucket.PLATFORMS);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneFileJob.GROUP);
   }
 
   @Test
   public void UnhandledClass() throws Exception {
-    when(wingsPersistence.get(Base.class, OBJECT_ID)).thenReturn(null);
+    when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Base.class, OBJECT_ID, FileBucket.PLATFORMS));
+    when(context.getJobDetail()).thenReturn(details(Base.class, ENTITY_ID, FileBucket.PLATFORMS));
 
     Logger mockLogger = mock(Logger.class);
     Whitebox.setInternalState(job, "logger", mockLogger);
@@ -116,34 +114,34 @@ public class PruneFileJobTest extends WingsBaseTest {
     job.execute(context);
 
     verify(mockLogger, times(1)).error(any(String.class), matches(Base.class.getCanonicalName()));
-    verify(fileService, times(0)).deleteAllFilesForEntity(OBJECT_ID, FileBucket.PLATFORMS);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneFileJob.GROUP);
+    verify(fileService, times(0)).deleteAllFilesForEntity(ENTITY_ID, FileBucket.PLATFORMS);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneFileJob.GROUP);
   }
 
   @Test
   public void WrongClass() throws Exception {
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Base.class, OBJECT_ID, FileBucket.PLATFORMS));
+    when(context.getJobDetail()).thenReturn(details(Base.class, ENTITY_ID, FileBucket.PLATFORMS));
 
     job.execute(context);
 
-    verify(fileService, times(0)).deleteAllFilesForEntity(OBJECT_ID, FileBucket.PLATFORMS);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneFileJob.GROUP);
+    verify(fileService, times(0)).deleteAllFilesForEntity(ENTITY_ID, FileBucket.PLATFORMS);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneFileJob.GROUP);
   }
 
   @Test
   public void retryIfServiceThrew() throws Exception {
-    when(wingsPersistence.get(AppContainer.class, OBJECT_ID)).thenReturn(null);
+    when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(null);
 
     doThrow(new WingsException("Forced exception"))
         .when(fileService)
-        .deleteAllFilesForEntity(OBJECT_ID, FileBucket.PLATFORMS);
+        .deleteAllFilesForEntity(ENTITY_ID, FileBucket.PLATFORMS);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(AppContainer.class, OBJECT_ID, FileBucket.PLATFORMS));
+    when(context.getJobDetail()).thenReturn(details(AppContainer.class, ENTITY_ID, FileBucket.PLATFORMS));
 
     job.execute(context);
 
-    verify(jobScheduler, times(0)).deleteJob(OBJECT_ID, PruneFileJob.GROUP);
+    verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneFileJob.GROUP);
   }
 }

@@ -19,7 +19,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -177,14 +177,14 @@ public class HostServiceImpl implements HostService {
       return true;
     }
 
-    PruneObjectJob.addDefaultJob(jobScheduler, Host.class, host.getAppId(), host.getUuid());
+    PruneEntityJob.addDefaultJob(jobScheduler, Host.class, host.getAppId(), host.getUuid());
     return wingsPersistence.delete(host);
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String hostId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String hostId) {
     List<OwnedByHost> services = ServiceClassLocator.descendingServices(this, HostServiceImpl.class, OwnedByHost.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, hostId, (descending) -> { descending.pruneByHost(appId, hostId); });
   }
 

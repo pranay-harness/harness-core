@@ -58,7 +58,7 @@ public interface HostService extends OwnedByInfrastructureMapping {
    * @param appId the app id
    * @param hostId the host id
    */
-  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String hostId);
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String hostId);
 
   /**
    * Import hosts.

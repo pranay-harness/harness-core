@@ -68,7 +68,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
@@ -453,7 +453,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     yamlChangeSetHelper.serviceYamlChange(service, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneObjectJob.addDefaultJob(jobScheduler, Service.class, service.getAppId(), service.getUuid());
+    PruneEntityJob.addDefaultJob(jobScheduler, Service.class, service.getAppId(), service.getUuid());
 
     // safe to delete
     if (wingsPersistence.delete(Service.class, service.getUuid())) {
@@ -468,13 +468,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String serviceId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId) {
     // TODO: Fix this one into the pattern
     executorService.submit(() -> deleteCommands(appId, serviceId));
 
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, serviceId, (descending) -> { descending.pruneByService(appId, serviceId); });
   }
 
@@ -595,7 +595,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void pruneByApplication(String appId) {
     findServicesByApp(appId).forEach(service -> {
       wingsPersistence.delete(Service.class, service.getUuid());
-      pruneDescendingObjects(appId, service.getUuid());
+      pruneDescendingEntities(appId, service.getUuid());
     });
   }
 

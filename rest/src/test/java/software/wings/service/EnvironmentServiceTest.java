@@ -382,7 +382,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldPruneDescendingObjects() {
-    environmentService.pruneDescendingObjects(APP_ID, ENV_ID);
+    environmentService.pruneDescendingEntities(APP_ID, ENV_ID);
 
     InOrder inOrder =
         inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
@@ -395,7 +395,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldPruneDescendingObjectsSomeFailed() {
     doThrow(new WingsException("Forced exception")).when(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
 
-    assertThatThrownBy(() -> environmentService.pruneDescendingObjects(APP_ID, ENV_ID));
+    assertThatThrownBy(() -> environmentService.pruneDescendingEntities(APP_ID, ENV_ID));
 
     InOrder inOrder =
         inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);

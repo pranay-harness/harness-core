@@ -192,7 +192,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldPruneDescendingObjects() {
-    pipelineService.pruneDescendingObjects(APP_ID, PIPELINE_ID);
+    pipelineService.pruneDescendingEntities(APP_ID, PIPELINE_ID);
 
     InOrder inOrder = inOrder(wingsPersistence, workflowService, triggerService);
     inOrder.verify(triggerService).pruneByPipeline(APP_ID, PIPELINE_ID);

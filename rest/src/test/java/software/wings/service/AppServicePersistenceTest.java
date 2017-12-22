@@ -19,7 +19,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
 import software.wings.scheduler.JobScheduler;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.TestJobListener;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -70,7 +70,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
 
     // TODO: add to the application from all other objects that are owned from application
 
-    TestJobListener listener = new TestJobListener(PruneObjectJob.GROUP + "." + APP_ID);
+    TestJobListener listener = new TestJobListener(PruneEntityJob.GROUP + "." + APP_ID);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);
 
     // Delete the target application
