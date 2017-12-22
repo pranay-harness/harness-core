@@ -224,7 +224,7 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public void deleteByInfraMappingId(String appId, String infraMappingId) {
+  public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
     wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
                                 .field("appId")
                                 .equal(appId)
