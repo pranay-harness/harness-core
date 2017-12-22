@@ -181,7 +181,6 @@ public class HostServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldPruneDescendingObjects() {
-    when(wingsPersistence.get(Host.class, APP_ID)).thenReturn(null);
     hostService.pruneDescendingObjects(APP_ID, HOST_ID);
     InOrder inOrder = inOrder(wingsPersistence, configService, serviceInstanceService);
     inOrder.verify(configService).pruneByHost(APP_ID, HOST_ID);
