@@ -1,5 +1,7 @@
 package software.wings.service.impl.security;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -28,18 +30,17 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   @Override
   public void decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (encryptedDataDetails == null || encryptedDataDetails.isEmpty()) {
+    if (isEmpty(encryptedDataDetails)) {
       return;
     }
 
     for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
       try {
-        char[] decryptedValue = null;
+        char[] decryptedValue;
 
         Field f = WingsReflectionUtils.getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f == null) {
-          logger.warn(
-              "Could not find field {} " + encryptedDataDetail.getFieldName() + " in class " + object.getClass());
+          logger.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
           continue;
         }
         Preconditions.checkNotNull(f, "could not find " + encryptedDataDetail.getFieldName() + " in " + object);

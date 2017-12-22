@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static java.util.Collections.emptyList;
+
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -32,16 +34,19 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params, ContainerServiceData serviceData,
-      ExecutionLogCallback executionLogCallback) {
+  protected List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> edd,
+      ContainerResizeParams params, ContainerServiceData serviceData, ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) params;
     KubernetesConfig kubernetesConfig;
+    List<EncryptedDataDetail> encryptedDataDetails;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
+      encryptedDataDetails = edd;
     } else {
       kubernetesConfig = gkeClusterService.getCluster(
-          cloudProviderSetting, encryptedDataDetails, resizeParams.getClusterName(), resizeParams.getNamespace());
+          cloudProviderSetting, edd, resizeParams.getClusterName(), resizeParams.getNamespace());
+      kubernetesConfig.setDecrypted(true);
+      encryptedDataDetails = emptyList();
     }
     return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
         resizeParams.getClusterName(), serviceData.getName(), serviceData.getPreviousCount(),
