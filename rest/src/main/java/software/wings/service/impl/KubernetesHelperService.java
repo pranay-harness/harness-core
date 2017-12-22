@@ -26,18 +26,26 @@ public class KubernetesHelperService {
   public KubernetesClient getKubernetesClient(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
-    return new DefaultKubernetesClient(
-        new ConfigBuilder()
-            .withMasterUrl(kubernetesConfig.getMasterUrl())
-            .withTrustCerts(true)
-            .withUsername(kubernetesConfig.getUsername())
-            .withPassword(kubernetesConfig.getPassword() != null ? new String(kubernetesConfig.getPassword()) : "")
-            .withCaCertData(kubernetesConfig.getCaCert())
-            .withClientCertData(kubernetesConfig.getClientCert())
-            .withClientKeyData(kubernetesConfig.getClientKey())
-            .withNamespace(kubernetesConfig.getNamespace())
-            .build())
-        .inNamespace(kubernetesConfig.getNamespace());
+    ConfigBuilder configBuilder = new ConfigBuilder()
+                                      .withMasterUrl(kubernetesConfig.getMasterUrl())
+                                      .withTrustCerts(true)
+                                      .withUsername(kubernetesConfig.getUsername())
+                                      .withNamespace(kubernetesConfig.getNamespace());
+
+    if (kubernetesConfig.getPassword() != null) {
+      configBuilder.withPassword(new String(kubernetesConfig.getPassword()));
+    }
+    if (kubernetesConfig.getCaCert() != null) {
+      configBuilder.withCaCertData(new String(kubernetesConfig.getCaCert()));
+    }
+    if (kubernetesConfig.getClientCert() != null) {
+      configBuilder.withClientCertData(new String(kubernetesConfig.getClientCert()));
+    }
+    if (kubernetesConfig.getClientKey() != null) {
+      configBuilder.withClientKeyData(new String(kubernetesConfig.getClientKey()));
+    }
+
+    return new DefaultKubernetesClient(configBuilder.build()).inNamespace(kubernetesConfig.getNamespace());
   }
 
   public void validateCredential(KubernetesConfig kubernetesConfig) {

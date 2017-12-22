@@ -24,6 +24,9 @@ public class DirectKubernetesInfraMappingYamlHandler
     yaml.setMasterUrl(bean.getMasterUrl());
     yaml.setUsername(bean.getUsername());
     yaml.setPassword(new String(bean.getPassword()));
+    yaml.setCaCert(new String(bean.getCaCert()));
+    yaml.setClientCert(new String(bean.getClientCert()));
+    yaml.setClientKey(new String(bean.getClientKey()));
     yaml.setNamespace(bean.getNamespace());
     return yaml;
   }
@@ -68,6 +71,9 @@ public class DirectKubernetesInfraMappingYamlHandler
     bean.setUsername(infraMappingYaml.getUsername());
     bean.setPassword(infraMappingYaml.getPassword().toCharArray());
     bean.setEncryptedPassword(infraMappingYaml.getPassword());
+    bean.setEncryptedCaCert(infraMappingYaml.getCaCert());
+    bean.setEncryptedClientCert(infraMappingYaml.getClientCert());
+    bean.setEncryptedClientKey(infraMappingYaml.getClientKey());
     bean.setNamespace(infraMappingYaml.getNamespace());
   }
 

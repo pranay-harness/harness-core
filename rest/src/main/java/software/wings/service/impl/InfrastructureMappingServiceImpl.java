@@ -323,6 +323,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
       updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
       updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
+      updateOperations.set("caCert", directKubernetesInfrastructureMapping.getCaCert());
+      updateOperations.set("clientCert", directKubernetesInfrastructureMapping.getClientCert());
+      updateOperations.set("clientKey", directKubernetesInfrastructureMapping.getClientKey());
       updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
       updateOperations.set("namespace",
           isNotBlank(directKubernetesInfrastructureMapping.getNamespace())
