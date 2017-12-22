@@ -1328,7 +1328,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Map<String, String> getData(String appId, String... params) {
     PageRequest<Workflow> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", appId, EQ);
-    return listWorkflows(pageRequest).stream().collect(toMap(Workflow::getUuid, o -> (o.getName())));
+    return listWorkflows(pageRequest).stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }
 
   @Override

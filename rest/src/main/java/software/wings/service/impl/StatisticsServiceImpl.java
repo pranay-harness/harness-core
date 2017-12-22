@@ -454,7 +454,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     Map<Long, List<WorkflowExecution>> wflExecutionByDate = new HashMap<>();
     if (workflowExecutions != null) {
       wflExecutionByDate =
-          workflowExecutions.parallelStream().collect(groupingBy(wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt()))));
+          workflowExecutions.parallelStream().collect(groupingBy(wfl -> getStartOfTheDayEpoch(wfl.getCreatedAt())));
     }
 
     int aggTotalCount = 0;
@@ -568,8 +568,8 @@ public class StatisticsServiceImpl implements StatisticsService {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
-      if ((execution.getStatus() != SUCCESS && execution.getStatus() != FAILED && execution.getStatus() != ABORTED
-              && execution.getStatus() != ERROR)) {
+      if (execution.getStatus() != SUCCESS && execution.getStatus() != FAILED && execution.getStatus() != ABORTED
+          && execution.getStatus() != ERROR) {
         continue;
       }
       final List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();

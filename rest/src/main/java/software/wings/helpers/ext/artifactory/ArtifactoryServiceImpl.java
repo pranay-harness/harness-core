@@ -457,7 +457,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   private List<String> listGroupIds(Artifactory artifactory, String repoKey) {
     logger.info("Retrieving groupIds with anonymous user access");
     List<String> paths = gerGroupIdPathsAsync(artifactory, repoKey);
-    logger.info("Retrieved unique groupIds size {}", (paths == null ? 0 : paths.size()));
+    logger.info("Retrieved unique groupIds size {}", paths == null ? 0 : paths.size());
     return paths;
   }
 

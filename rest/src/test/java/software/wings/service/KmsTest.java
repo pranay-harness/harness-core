@@ -353,8 +353,8 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     appDynamicsConfig.setPassword(password.toCharArray());
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    assertNotNull((savedConfig).getEncryptedPassword());
-    assertNull((savedConfig).getPassword());
+    assertNotNull(savedConfig.getEncryptedPassword());
+    assertNull(savedConfig.getPassword());
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
     assertEquals(appDynamicsConfig, savedConfig);
 

@@ -179,7 +179,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw(e);
+        throw e;
       }
 
       // get error metrics
@@ -205,7 +205,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw(e);
+        throw e;
       }
 
       // get apdex metrics
@@ -231,7 +231,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw(e);
+        throw e;
       }
       logger.debug(records.toString());
       return records;

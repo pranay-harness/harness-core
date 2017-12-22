@@ -84,14 +84,14 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
           .setInitialNodeCount(5)
           .setStatus("RUNNING")
           .setEndpoint("1.1.1.1")
-          .setMasterAuth((new MasterAuth().setUsername("master1").setPassword("password1")))
+          .setMasterAuth(new MasterAuth().setUsername("master1").setPassword("password1"))
           .setNodePools(ImmutableList.of(
               new NodePool()
                   .setName("node-pool1.1")
                   .setAutoscaling(new NodePoolAutoscaling().setEnabled(false).setMinNodeCount(1).setMaxNodeCount(2)),
               new NodePool()
                   .setName("node-pool1.2")
-                  .setAutoscaling((new NodePoolAutoscaling().setEnabled(true).setMinNodeCount(1).setMaxNodeCount(3)))));
+                  .setAutoscaling(new NodePoolAutoscaling().setEnabled(true).setMinNodeCount(1).setMaxNodeCount(3))));
 
   private static final Cluster CLUSTER_2 =
       new Cluster()
@@ -100,7 +100,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
           .setInitialNodeCount(5)
           .setStatus("RUNNING")
           .setEndpoint("1.1.1.2")
-          .setMasterAuth((new MasterAuth().setUsername("master2").setPassword("password2")))
+          .setMasterAuth(new MasterAuth().setUsername("master2").setPassword("password2"))
           .setNodePools(ImmutableList.of(
               new NodePool()
                   .setName("node-pool2")

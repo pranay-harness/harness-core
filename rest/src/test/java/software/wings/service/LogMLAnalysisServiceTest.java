@@ -585,11 +585,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     assertEquals(numOfUnknownClusters + " anomalous clusters found", analysisSummary.getAnalysisSummaryMessage());
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getUnknownClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
-        assert (hosts.contains(hostname));
+        assert hosts.contains(hostname);
         hosts.remove(hostname);
       }
     }
-    assert (hosts.isEmpty());
+    assert hosts.isEmpty();
   }
 
   @Test
@@ -645,11 +645,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getTestClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
-        assert (hosts.contains(hostname));
+        assert hosts.contains(hostname);
         hosts.remove(hostname);
       }
     }
-    assert (hosts.isEmpty());
+    assert hosts.isEmpty();
   }
 
   @Test
@@ -691,11 +691,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getControlClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
-        assert (hosts.contains(hostname));
+        assert hosts.contains(hostname);
         hosts.remove(hostname);
       }
     }
-    assert (hosts.isEmpty());
+    assert hosts.isEmpty();
   }
 
   @Test
@@ -924,7 +924,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100), 0);
     for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
-      assert (clusterSummary.getScore() > 0);
+      assert clusterSummary.getScore() > 0;
     }
   }
 }

@@ -295,6 +295,6 @@ public class NexusServiceImpl implements NexusService {
         images = getGroupIdPaths(nexusConfig, encryptionDetails, repoKey.get());
       }
     }
-    return (images != null);
+    return images != null;
   }
 }

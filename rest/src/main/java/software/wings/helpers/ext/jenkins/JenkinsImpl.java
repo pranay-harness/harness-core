@@ -127,8 +127,8 @@ public class JenkinsImpl implements Jenkins {
                 int parts = jobNameSplit.length;
                 if (parts > 1) {
                   parentJobUrl = constructParentJobUrl(jobNameSplit);
-                  parentJobName = jobNameSplit[(parts - 2)];
-                  childJobName = jobNameSplit[(parts - 1)];
+                  parentJobName = jobNameSplit[parts - 2];
+                  childJobName = jobNameSplit[parts - 1];
                 } else {
                   childJobName = decodedJobName;
                 }

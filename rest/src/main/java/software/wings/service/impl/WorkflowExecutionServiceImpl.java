@@ -290,8 +290,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                           .set("executionArgs.notes", executionArgs.getNotes());
       UpdateResults updateResults = wingsPersistence.update(query, updateOps);
-      return (
-          updateResults != null && updateResults.getWriteResult() != null && updateResults.getWriteResult().getN() > 0);
+      return updateResults != null && updateResults.getWriteResult() != null
+          && updateResults.getWriteResult().getN() > 0;
 
     } catch (Exception ex) {
       return false;
@@ -873,7 +873,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private boolean isEmpty(String string) {
-    return (string == null || string.isEmpty() || string.equals("null"));
+    return string == null || string.isEmpty() || string.equals("null");
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,

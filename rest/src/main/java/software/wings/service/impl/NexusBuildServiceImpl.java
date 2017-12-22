@@ -49,8 +49,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
-    if ((artifactStreamAttributes.getArtifactType() != null
-            && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER))) {
+    if (artifactStreamAttributes.getArtifactType() != null
+        && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
       return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getImageName(), 50);
     } else {

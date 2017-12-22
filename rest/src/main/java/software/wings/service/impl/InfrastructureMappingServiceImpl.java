@@ -403,7 +403,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
-          ((CodeDeployInfrastructureMapping) infrastructureMapping);
+          (CodeDeployInfrastructureMapping) infrastructureMapping;
       updateOperations.set("region", codeDeployInfrastructureMapping.getRegion());
       updateOperations.set("applicationName", codeDeployInfrastructureMapping.getApplicationName());
       updateOperations.set("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());

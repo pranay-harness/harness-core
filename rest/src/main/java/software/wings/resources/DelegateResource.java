@@ -178,7 +178,7 @@ public class DelegateResource {
     }
     long startTime = System.currentTimeMillis();
     Delegate register = delegateService.register(delegate);
-    logger.info("Delegate registration took {} in ms", (System.currentTimeMillis() - startTime));
+    logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
     return new RestResponse<>(register);
   }
 

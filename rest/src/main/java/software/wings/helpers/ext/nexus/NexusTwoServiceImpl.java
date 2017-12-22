@@ -276,7 +276,7 @@ public class NexusTwoServiceImpl {
     queryParams.put("r", repoType);
     queryParams.put("g", groupId);
     queryParams.put("a", artifactName);
-    queryParams.put("v", (isBlank(version) ? "LATEST" : version));
+    queryParams.put("v", isBlank(version) ? "LATEST" : version);
     Call<Project> request =
         getRestClient(nexusConfig, encryptionDetails)
             .getPomModel(

@@ -74,7 +74,7 @@ public class SettingValidationService {
     }
 
     if (settingValue instanceof GcpConfig) {
-      gcpHelperService.validateCredential(((GcpConfig) settingValue));
+      gcpHelperService.validateCredential((GcpConfig) settingValue);
     } else if (settingValue instanceof AwsConfig) {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
@@ -93,7 +93,7 @@ public class SettingValidationService {
         try {
           ((ElkConfig) settingValue)
               .setKibanaVersion(elkAnalysisService.getVersion(
-                  settingAttribute.getAccountId(), ((ElkConfig) settingValue), Collections.emptyList()));
+                  settingAttribute.getAccountId(), (ElkConfig) settingValue, Collections.emptyList()));
         } catch (Exception ex) {
           logger.warn("Unable to validate ELK via Kibana", ex);
           return false;
