@@ -43,9 +43,4 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
     hostService.updateHostConnectionAttrByInfraMappingId(
         infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
   }
-
-  @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
-    hostService.deleteByInfraMappingId(appId, infraMappingId);
-  }
 }

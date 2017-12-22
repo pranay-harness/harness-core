@@ -41,12 +41,4 @@ public interface InfrastructureProvider {
    * @param hostConnectionAttrs   the host connection attrs
    */
   void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs);
-
-  /**
-   * Delete host by infra mapping id.
-   *
-   * @param appId          the app id
-   * @param infraMappingId the infra mapping id
-   */
-  void deleteHostByInfraMappingId(String appId, String infraMappingId);
 }

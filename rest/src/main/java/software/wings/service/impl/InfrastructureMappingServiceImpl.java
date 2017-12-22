@@ -74,6 +74,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -115,6 +116,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -131,6 +133,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private HostService hostService;
   @Inject private SecretManager secretManager;
 
   @Override
@@ -425,9 +428,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
       boolean deleted = wingsPersistence.delete(infrastructureMapping);
       if (deleted) {
-        InfrastructureProvider infrastructureProvider =
-            getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType());
-        executorService.submit(() -> infrastructureProvider.deleteHostByInfraMappingId(appId, infraMappingId));
+        executorService.submit(() -> hostService.deleteByInfraMappingId(appId, infraMappingId));
         executorService.submit(() -> serviceInstanceService.deleteByInfraMappingId(appId, infraMappingId));
         executorService.submit(() -> queueYamlChangeSet(infrastructureMapping, ChangeType.DELETE));
       }

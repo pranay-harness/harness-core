@@ -293,7 +293,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(wingsPersistence).delete(physicalInfrastructureMapping);
-    verify(staticInfrastructureProvider).deleteHostByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
+    verify(hostService).deleteByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
     verify(serviceInstanceService).deleteByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
   }
 

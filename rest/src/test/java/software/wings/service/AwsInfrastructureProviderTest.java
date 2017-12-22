@@ -168,12 +168,6 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDeleteHostByInfraMappingId() {
-    infrastructureProvider.deleteHostByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
-    verify(hostService).deleteByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
-  }
-
-  @Test
   public void shouldProvisionHosts() {
     String region = Regions.US_EAST_1.getName();
     AwsInfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()
