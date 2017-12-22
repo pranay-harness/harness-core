@@ -516,7 +516,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                 .field("serviceTemplateId")
                                                 .equal(serviceTemplateId)
                                                 .asKeyList();
-    keys.forEach(key -> delete(appId, key.toString(), true));
+    keys.forEach(key -> delete(appId, (String) key.getId(), true));
   }
 
   @Override
