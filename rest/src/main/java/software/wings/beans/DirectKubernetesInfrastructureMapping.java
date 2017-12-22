@@ -25,14 +25,17 @@ import software.wings.utils.Util;
 @EqualsAndHashCode(callSuper = true)
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping implements Encryptable {
   @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
-  @Attributes(title = "User Name", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true)
-
-  @Encrypted
-  private char[] password;
+  @Attributes(title = "User Name") private String username;
+  @Encrypted @Attributes(title = "Password") private char[] password;
+  @Encrypted @Attributes(title = "CA Certificate") private char[] caCert;
+  @Encrypted @Attributes(title = "Client Certificate") private char[] clientCert;
+  @Encrypted @Attributes(title = "Client Key") private char[] clientKey;
   @Attributes(title = "Namespace") private String namespace;
 
   @SchemaIgnore private String encryptedPassword;
+  @SchemaIgnore private String encryptedCaCert;
+  @SchemaIgnore private String encryptedClientCert;
+  @SchemaIgnore private String encryptedClientKey;
 
   @SchemaIgnore @Transient private boolean decrypted;
 
@@ -75,6 +78,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
         .masterUrl(masterUrl)
         .username(username)
         .encryptedPassword(encryptedPassword)
+        .encryptedCaCert(encryptedCaCert)
+        .encryptedClientCert(encryptedClientCert)
+        .encryptedClientKey(encryptedClientKey)
         .namespace(isNotEmpty(namespace) ? namespace : "default")
         .build();
   }
@@ -85,6 +91,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
         .withMasterUrl(getMasterUrl())
         .withUsername(getUsername())
         .withPassword(getPassword())
+        .withCaCert(getCaCert())
+        .withClientCert(getClientCert())
+        .withClientKey(getClientKey())
         .withNamespace(getNamespace())
         .withUuid(getUuid())
         .withComputeProviderSettingId(getComputeProviderSettingId())
@@ -112,6 +121,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String masterUrl;
     private String username;
     private char[] password;
+    private char[] caCert;
+    private char[] clientCert;
+    private char[] clientKey;
     private String namespace;
     private String uuid;
     private EmbeddedUser createdBy;
@@ -153,6 +165,21 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
     public Builder withPassword(char[] password) {
       this.password = password;
+      return this;
+    }
+
+    public Builder withCaCert(char[] caCert) {
+      this.caCert = caCert;
+      return this;
+    }
+
+    public Builder withClientCert(char[] clientCert) {
+      this.clientCert = clientCert;
+      return this;
+    }
+
+    public Builder withClientKey(char[] clientKey) {
+      this.clientKey = clientKey;
       return this;
     }
 
@@ -257,6 +284,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
           .withMasterUrl(masterUrl)
           .withUsername(username)
           .withPassword(password)
+          .withCaCert(caCert)
+          .withClientCert(clientCert)
+          .withClientKey(clientKey)
           .withNamespace(namespace)
           .withUuid(uuid)
           .withAppId(appId)
@@ -285,6 +315,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setMasterUrl(masterUrl);
       directKubernetesInfrastructureMapping.setUsername(username);
       directKubernetesInfrastructureMapping.setPassword(password);
+      directKubernetesInfrastructureMapping.setCaCert(caCert);
+      directKubernetesInfrastructureMapping.setClientCert(clientCert);
+      directKubernetesInfrastructureMapping.setClientKey(clientKey);
       directKubernetesInfrastructureMapping.setNamespace(namespace);
       directKubernetesInfrastructureMapping.setUuid(uuid);
       directKubernetesInfrastructureMapping.setAppId(appId);
@@ -315,17 +348,23 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String masterUrl;
     private String username;
     private String password;
+    private String caCert;
+    private String clientCert;
+    private String clientKey;
     private String namespace;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
-        String username, String password, String namespace) {
+        String username, String password, String caCert, String clientCert, String clientKey, String namespace) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, cluster);
       this.masterUrl = masterUrl;
       this.username = username;
       this.password = password;
+      this.caCert = caCert;
+      this.clientCert = clientCert;
+      this.clientKey = clientKey;
       this.namespace = namespace;
     }
   }
