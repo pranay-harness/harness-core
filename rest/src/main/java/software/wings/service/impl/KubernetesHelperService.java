@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -28,29 +29,36 @@ public class KubernetesHelperService {
     if (!kubernetesConfig.isDecrypted()) {
       encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
     }
-    ConfigBuilder configBuilder = new ConfigBuilder()
-                                      .withMasterUrl(kubernetesConfig.getMasterUrl())
-                                      .withTrustCerts(true)
-                                      .withUsername(kubernetesConfig.getUsername())
-                                      .withNamespace(kubernetesConfig.getNamespace());
-
+    String namespace = "default";
+    ConfigBuilder configBuilder = new ConfigBuilder().withTrustCerts(true);
+    if (isNotBlank(kubernetesConfig.getNamespace())) {
+      namespace = kubernetesConfig.getNamespace().trim();
+      configBuilder.withNamespace(namespace);
+    }
+    if (kubernetesConfig.getMasterUrl() != null) {
+      configBuilder.withMasterUrl(kubernetesConfig.getMasterUrl().trim());
+    }
+    if (kubernetesConfig.getUsername() != null) {
+      configBuilder.withUsername(kubernetesConfig.getUsername().trim());
+    }
     if (kubernetesConfig.getPassword() != null) {
-      configBuilder.withPassword(new String(kubernetesConfig.getPassword()));
+      configBuilder.withPassword(new String(kubernetesConfig.getPassword()).trim());
     }
     if (kubernetesConfig.getCaCert() != null) {
-      configBuilder.withCaCertData(new String(kubernetesConfig.getCaCert()));
+      configBuilder.withCaCertData(new String(kubernetesConfig.getCaCert()).trim());
     }
     if (kubernetesConfig.getClientCert() != null) {
-      configBuilder.withClientCertData(new String(kubernetesConfig.getClientCert()));
+      configBuilder.withClientCertData(new String(kubernetesConfig.getClientCert()).trim());
     }
     if (kubernetesConfig.getClientKey() != null) {
-      configBuilder.withClientKeyData(new String(kubernetesConfig.getClientKey()));
+      configBuilder.withClientKeyData(new String(kubernetesConfig.getClientKey()).trim());
     }
 
-    return new DefaultKubernetesClient(configBuilder.build()).inNamespace(kubernetesConfig.getNamespace());
+    return new DefaultKubernetesClient(configBuilder.build()).inNamespace(namespace);
   }
 
   public void validateCredential(KubernetesConfig kubernetesConfig) {
+    // TODO - Do we ever need to pass encryptedDataDetails instead of empty list?
     getKubernetesClient(kubernetesConfig, emptyList()).replicationControllers().list();
   }
 }

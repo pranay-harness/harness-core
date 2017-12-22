@@ -52,6 +52,7 @@ import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -212,7 +213,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (isBlank(directKubernetesInfrastructureMapping.getNamespace())) {
         directKubernetesInfrastructureMapping.setNamespace("default");
       }
-      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping, computeProviderSetting);
+      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
     }
 
     if (infraMapping instanceof PhysicalInfrastructureMapping) {
@@ -280,11 +281,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
       }
     }
+    // TODO - Validate via delegate sync task to KubernetesHelperService::validateCredential
   }
 
-  private void validateDirectKubernetesInfraMapping(
-      DirectKubernetesInfrastructureMapping infraMapping, SettingAttribute settingAttribute) {
-    infraMapping.createKubernetesConfig();
+  private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
+    KubernetesConfig kubernetesConfig = infraMapping.createKubernetesConfig();
+    // TODO - Validate via delegate sync task to KubernetesHelperService::validateCredential
   }
 
   @Override
