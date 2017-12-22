@@ -112,7 +112,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void deleteByEnv(String appId, String envId) {
     wingsPersistence.createQuery(ServiceInstance.class)
-        .field("appId")
+        .field(ServiceInstance.APP_ID_KEY)
         .equal(appId)
         .field("envId")
         .equal(envId)

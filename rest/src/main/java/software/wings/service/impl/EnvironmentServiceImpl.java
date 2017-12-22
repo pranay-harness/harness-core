@@ -249,7 +249,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public void delete(String appId, String envId) {
     Environment environment = wingsPersistence.get(Environment.class, appId, envId);
     if (environment == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Environment doesn't exist");
+      return;
     }
     ensureEnvironmentSafeToDelete(environment);
     delete(environment);

@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
@@ -213,8 +214,8 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public void deleteAllFilesForEntity(String entityId, FileBucket fileBucket) {
-    getAllFileIds(entityId, fileBucket)
-        .forEach(fileUuid -> fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(fileUuid)));
+    final GridFSBucket bucket = fileBucketHelper.getOrCreateFileBucket(fileBucket);
+    getAllFileIds(entityId, fileBucket).forEach(fileUuid -> bucket.delete(new ObjectId(fileUuid)));
   }
 
   private void verifyFileIntegrity(BaseFile baseFile, GridFSFile gridFsFile) {

@@ -397,27 +397,36 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void delete(String appId, String configId) {
-    Query<ConfigFile> query =
-        wingsPersistence.createQuery(ConfigFile.class).field("appId").equal(appId).field(ID_KEY).equal(configId);
+    // TODO: migrate to prune pattern
+
+    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class)
+                                  .field(ConfigFile.APP_ID_KEY)
+                                  .equal(appId)
+                                  .field(ID_KEY)
+                                  .equal(configId);
     ConfigFile configFile = query.get();
-    Preconditions.checkNotNull(configFile, "No file found for app " + appId + " with id " + configId);
+    if (configFile == null) {
+      return;
+    }
+
     boolean deleted = wingsPersistence.delete(query);
     if (deleted) {
       if (configFile.isEncrypted()) {
         EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-        Preconditions.checkNotNull("Encrypted record null for " + configFile);
-        encryptedData.removeParentId(configFile.getUuid());
-        wingsPersistence.save(encryptedData);
+        if (encryptedData != null) {
+          encryptedData.removeParentId(configFile.getUuid());
+          wingsPersistence.save(encryptedData);
+        }
       }
 
       List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                         .field("appId")
+                                         .field(ConfigFile.APP_ID_KEY)
                                          .equal(appId)
                                          .field("parentConfigFileId")
                                          .equal(configId)
                                          .asList();
       if (configFiles.size() != 0) {
-        configFiles.forEach(file -> delete(appId, file.getUuid()));
+        configFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
       }
       if (!configFile.isEncrypted()) {
         executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));

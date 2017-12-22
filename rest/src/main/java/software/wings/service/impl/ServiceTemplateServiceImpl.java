@@ -263,8 +263,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public void delete(String appId, String serviceTemplateId) {
+    // TODO: move to the prune pattern
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
-                                                  .field("appId")
+                                                  .field(ServiceTemplate.APP_ID_KEY)
                                                   .equal(appId)
                                                   .field(ID_KEY)
                                                   .equal(serviceTemplateId));
@@ -278,7 +279,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
-                                          .field("appId")
+                                          .field(ServiceTemplate.APP_ID_KEY)
                                           .equal(appId)
                                           .field("envId")
                                           .equal(envId)
@@ -291,7 +292,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ServiceTemplate.class)
-        .field("appId")
+        .field(ServiceTemplate.APP_ID_KEY)
         .equal(appId)
         .field("serviceId")
         .equal(serviceId)

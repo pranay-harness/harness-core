@@ -161,6 +161,7 @@ public class TriggerServiceImpl implements TriggerService {
     boolean deleted = wingsPersistence.delete(Trigger.class, triggerId);
     if (deleted) {
       if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
+        // TODO: make this jobs self prunable
         jobScheduler.deleteJob(triggerId, SCHEDULED_TRIGGER_CRON_GROUP);
       }
     }
@@ -170,7 +171,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Trigger.class)
-        .field("appId")
+        .field(Trigger.APP_ID_KEY)
         .equal(appId)
         .asList()
         .forEach(trigger -> delete(appId, trigger.getUuid()));
@@ -179,7 +180,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void pruneByPipeline(String appId, String pipelineId) {
     List<Trigger> triggers = wingsPersistence.createQuery(Trigger.class)
-                                 .field("appId")
+                                 .field(Trigger.APP_ID_KEY)
                                  .equal(appId)
                                  .field("pipelineId")
                                  .equal(pipelineId)

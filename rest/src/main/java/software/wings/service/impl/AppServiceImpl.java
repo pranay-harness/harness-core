@@ -321,7 +321,7 @@ public class AppServiceImpl implements AppService {
   public void delete(String appId) {
     Application application = wingsPersistence.get(Application.class, appId);
     if (application == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
+      return;
     }
 
     // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
@@ -396,7 +396,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.createQuery(SettingAttribute.class)
-        .field("accountId")
+        .field(SettingAttribute.ACCOUNT_ID_KEY)
         .equal(accountId)
         .asKeyList()
         .forEach(key -> delete(key.getId().toString()));

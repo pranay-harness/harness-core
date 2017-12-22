@@ -279,7 +279,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
                                                   .field(ID_KEY)
                                                   .equal(artifactStreamId)
-                                                  .field("appId")
+                                                  .field(ArtifactStream.APP_ID_KEY)
                                                   .equal(appId));
     if (deleted) {
       artifactStream.getStreamActions().forEach(
@@ -304,7 +304,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public void deleteByApplication(String appId) {
     wingsPersistence.createQuery(ArtifactStream.class)
-        .field("appId")
+        .field(ArtifactStream.APP_ID_KEY)
         .equal(appId)
         .asList()
         .forEach(artifactSource -> delete(appId, artifactSource.getUuid(), true));
@@ -715,7 +715,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ArtifactStream.class)
-        .field("appId")
+        .field(ArtifactStream.APP_ID_KEY)
         .equal(appId)
         .field("serviceId")
         .equal(serviceId)
