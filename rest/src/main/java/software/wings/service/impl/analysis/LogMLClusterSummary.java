@@ -17,4 +17,5 @@ public class LogMLClusterSummary {
   private List<String> tags;
   private double score;
   private RiskLevel riskLevel;
+  private int clusterLabel;
 }
