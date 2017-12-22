@@ -96,7 +96,7 @@ public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Aw
 
   private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {
     return tagList.stream()
-        .map(tag -> NameValuePair.Yaml.Builder.aYaml().withName(tag.getKey()).withValue(tag.getValue()).build())
+        .map(tag -> NameValuePair.Yaml.builder().name(tag.getKey()).value(tag.getValue()).build())
         .collect(Collectors.toList());
   }
 

@@ -15,12 +15,16 @@ import java.util.List;
 public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml, NameValuePair> {
   private NameValuePair toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     NameValuePair.Yaml yaml = changeContext.getYaml();
-    return NameValuePair.builder().name(yaml.getName()).value(yaml.getValue()).build();
+    return NameValuePair.builder().name(yaml.getName()).value(yaml.getValue()).valueType(yaml.getValueType()).build();
   }
 
   @Override
   public NameValuePair.Yaml toYaml(NameValuePair bean, String appId) {
-    return NameValuePair.Yaml.Builder.aYaml().withName(bean.getName()).withValue(bean.getValue()).build();
+    return NameValuePair.Yaml.builder()
+        .name(bean.getName())
+        .value(bean.getValue())
+        .valueType(bean.getValueType())
+        .build();
   }
 
   @Override

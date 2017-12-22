@@ -3,41 +3,59 @@ package software.wings.service.impl.yaml;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import com.google.inject.Inject;
+import com.google.common.collect.Lists;
 
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
+import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.GitSyncErrorAlert;
+import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.common.UUIDGenerator;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.utils.CryptoUtil;
+import software.wings.utils.Util;
 import software.wings.waitnotify.WaitNotifyEngine;
 import software.wings.yaml.directory.FolderNode;
+import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -59,6 +77,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private SecretManager secretManager;
   @Inject private ExecutorService executorService;
   @Inject private DelegateService delegateService;
+  @Inject private AlertService alertService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -140,14 +159,27 @@ public class YamlGitServiceImpl implements YamlGitService {
         FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
         List<GitFileChange> gitFileChanges = new ArrayList<>();
         gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "");
+        syncFiles(accountId, gitFileChanges);
+      } catch (Exception ex) {
+        logger.error("Failed to push directory for account {} ", yamlGitConfig.getAccountId(), ex);
+      }
+    }
+  }
 
-        YamlChangeSet yamlChangeSet =
-            YamlChangeSet.builder().accountId(accountId).status(Status.QUEUED).gitFileChanges(gitFileChanges).build();
-        yamlChangeSet.setAppId(GLOBAL_APP_ID);
-
+  @Override
+  public void syncFiles(String accountId, List<GitFileChange> gitFileChangeList) {
+    YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (yamlGitConfig != null) {
+      try {
+        YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
+                                          .accountId(accountId)
+                                          .status(Status.QUEUED)
+                                          .gitFileChanges(gitFileChangeList)
+                                          .appId(GLOBAL_APP_ID)
+                                          .build();
         yamlChangeSetService.save(yamlChangeSet);
       } catch (Exception ex) {
-        logger.error("Failed to push directory: ", ex);
+        logger.error("Failed to sync files for account {} ", yamlGitConfig.getAccountId(), ex);
       }
     }
   }
@@ -283,5 +315,131 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public GitCommit saveCommit(GitCommit gitCommit) {
     return wingsPersistence.saveAndGet(GitCommit.class, gitCommit);
+  }
+
+  @Override
+  public void processFailedOrUnprocessedChanges(
+      List<GitFileChange> orderedFileChanges, Change failedChange, String errorMessage) {
+    AtomicInteger index = new AtomicInteger(-1);
+
+    Optional<GitFileChange> fileChangeOptional =
+        orderedFileChanges.stream()
+            .filter(gitFileChange -> {
+              index.incrementAndGet();
+              return gitFileChange.getFilePath().equals(failedChange.getFilePath());
+            })
+            .findFirst();
+
+    if (fileChangeOptional.isPresent()) {
+      List<GitFileChange> failedOrUnprocessedChanges =
+          orderedFileChanges.subList(index.intValue(), orderedFileChanges.size());
+      upsertGitSyncErrors(failedOrUnprocessedChanges, errorMessage);
+    } else {
+      logger.error("Failed yaml not found in the result set, only adding it to the list of failures");
+      upsertGitSyncErrors(Arrays.asList(failedChange), errorMessage);
+    }
+
+    //    alertService.openAlert(failedChange.getAccountId(), GLOBAL_APP_ID, AlertType.GitSyncError,
+    //        getGitSyncErrorAlert(failedChange.getAccountId()));
+  }
+
+  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId) {
+    return GitSyncErrorAlert.builder().accountId(accountId).message("Unable to process changes from Git").build();
+  }
+
+  private void upsertGitSyncErrors(List<? extends Change> failedOrUnprocessedChanges, String errorMessage) {
+    failedOrUnprocessedChanges.stream().forEach(change -> {
+      Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
+                                      .field("accountId")
+                                      .equal(change.getAccountId())
+                                      .field("yamlFilePath")
+                                      .equal(change.getFilePath());
+      GitFileChange gitFileChange = (GitFileChange) change;
+      UpdateOperations<GitSyncError> updateOperations = wingsPersistence.createUpdateOperations(GitSyncError.class)
+                                                            .set("accountId", change.getAccountId())
+                                                            .set("yamlFilePath", change.getFilePath())
+                                                            .set("yamlContent", change.getFileContent())
+                                                            .set("gitCommitId", gitFileChange.getCommitId())
+                                                            .set("changeType", change.getChangeType().name())
+                                                            .set("failureReason", errorMessage);
+
+      wingsPersistence.upsert(query, updateOperations);
+    });
+  }
+
+  @Override
+  public void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList) {
+    List<String> yamlFilePathList =
+        gitFileChangeList.stream().map(GitFileChange::getFilePath).collect(Collectors.toList());
+    Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
+    query.field("accountId").equal(accountId);
+    query.field("yamlFilePath").in(yamlFilePathList);
+    wingsPersistence.delete(query);
+    closeAlertIfApplicable(accountId);
+  }
+
+  @Override
+  public RestResponse<List<GitSyncError>> listGitSyncErrors(String accountId) {
+    PageRequest<GitSyncError> pageRequest =
+        PageRequest.Builder.aPageRequest().addFilter("accountId", Operator.EQ, accountId).withLimit("500").build();
+    PageResponse<GitSyncError> response = wingsPersistence.query(GitSyncError.class, pageRequest);
+    return RestResponse.Builder.aRestResponse().withResource(response.getResponse()).build();
+  }
+
+  @Override
+  public long getGitSyncErrorCount(String accountId) {
+    PageRequest<GitSyncError> pageRequest =
+        PageRequest.Builder.aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
+    return wingsPersistence.getCount(GitSyncError.class, pageRequest);
+  }
+
+  @Override
+  public RestResponse discardGitSyncErrors(String accountId, List<String> yamlFilePathList) {
+    Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
+    query.field("accountId").equal(accountId);
+    query.field("yamlFilePath").in(yamlFilePathList);
+    wingsPersistence.delete(query);
+    closeAlertIfApplicable(accountId);
+    return RestResponse.Builder.aRestResponse().build();
+  }
+
+  private void closeAlertIfApplicable(String accountId) {
+    //    if (getGitSyncErrorCount(accountId) == 0) {
+    //      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
+    //    }
+  }
+
+  @Override
+  public RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent) {
+    RestResponse<List<GitSyncError>> listRestResponse = listGitSyncErrors(accountId);
+    List<GitSyncError> syncErrorList = listRestResponse.getResource();
+    if (Util.isEmpty(syncErrorList)) {
+      logger.error("No sync errors found to process for account {}", accountId);
+      return RestResponse.Builder.aRestResponse().build();
+    }
+
+    List<GitFileChange> gitFileChangeList = Lists.newArrayList();
+
+    syncErrorList.stream().forEach(syncError -> {
+
+      String currentYamlFilePath = syncError.getYamlFilePath();
+      String yamlContent;
+      if (currentYamlFilePath.equals(yamlFilePath)) {
+        yamlContent = newYamlContent;
+      } else {
+        yamlContent = syncError.getYamlContent();
+      }
+
+      GitFileChange gitFileChange = Builder.aGitFileChange()
+                                        .withAccountId(accountId)
+                                        .withFilePath(syncError.getYamlFilePath())
+                                        .withFileContent(yamlContent)
+                                        .withChangeType(ChangeType.ADD)
+                                        .build();
+      gitFileChangeList.add(gitFileChange);
+    });
+
+    syncFiles(accountId, gitFileChangeList);
+    return RestResponse.Builder.aRestResponse().build();
   }
 }

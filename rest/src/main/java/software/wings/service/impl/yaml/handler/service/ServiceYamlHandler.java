@@ -71,13 +71,13 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
           } else if (Type.TEXT == variableType) {
             value = String.valueOf(serviceVariable.getValue());
           } else {
-            logger.warn("Value type LB not supported, skipping the processing of value");
+            logger.warn("Value type {} not supported, skipping the processing of value", variableType);
           }
 
-          return NameValuePair.Yaml.Builder.aYaml()
-              .withValueType(variableType.name())
-              .withValue(value)
-              .withName(serviceVariable.getName())
+          return NameValuePair.Yaml.builder()
+              .valueType(variableType.name())
+              .value(value)
+              .name(serviceVariable.getName())
               .build();
         })
         .collect(Collectors.toList());
@@ -206,7 +206,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
           } else if (serviceVar.getType() == Type.TEXT) {
             serviceVar.setValue(value != null ? value.toCharArray() : null);
           } else {
-            logger.warn("Yaml doesn't support LB type service variables");
+            logger.warn("Yaml doesn't support {} type service variables", serviceVar.getType());
             return;
           }
 
@@ -219,17 +219,30 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   }
 
   private ServiceVariable createNewServiceVariable(String appId, String serviceId, NameValuePair.Yaml cv) {
-    ServiceVariable newServiceVariable = ServiceVariable.builder()
-                                             .name(cv.getName())
-                                             .value(cv.getValue().toCharArray())
-                                             .entityType(EntityType.SERVICE)
-                                             .entityId(serviceId)
-                                             .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID)
-                                             .type(Type.TEXT)
-                                             .build();
-    newServiceVariable.setAppId(appId);
+    Validator.notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType());
 
-    return newServiceVariable;
+    ServiceVariable.ServiceVariableBuilder serviceVariableBuilder =
+        ServiceVariable.builder()
+            .name(cv.getName())
+            .entityType(EntityType.SERVICE)
+            .entityId(serviceId)
+            .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID);
+
+    if ("TEXT".equals(cv.getValueType())) {
+      serviceVariableBuilder.type(Type.TEXT);
+      serviceVariableBuilder.value(cv.getValue().toCharArray());
+    } else if ("ENCRYPTED_TEXT".equals(cv.getValueType())) {
+      serviceVariableBuilder.type(Type.ENCRYPTED_TEXT);
+      serviceVariableBuilder.encryptedValue(cv.getValue());
+    } else {
+      logger.warn("Yaml doesn't support {} type service variables", cv.getValueType());
+      serviceVariableBuilder.value(cv.getValue().toCharArray());
+    }
+
+    ServiceVariable serviceVariable = serviceVariableBuilder.build();
+    serviceVariable.setAppId(appId);
+
+    return serviceVariable;
   }
 
   @Override

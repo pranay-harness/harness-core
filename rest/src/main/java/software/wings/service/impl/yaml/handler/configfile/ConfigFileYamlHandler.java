@@ -133,7 +133,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
       int index = yamlFilePath.lastIndexOf(PATH_DELIMITER);
       if (index != -1) {
         String configFileDirPath = yamlFilePath.substring(0, index);
-        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getFileName();
+        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getTargetFilePath();
 
         Optional<ChangeContext> contentChangeContext = changeSetContext.stream()
                                                            .filter(changeContext1 -> {
