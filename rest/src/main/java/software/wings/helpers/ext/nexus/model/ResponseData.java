@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResponseData {
   private String type;
-  //  private String format;
+  private String format;
   private String id;
   private String name;
   private String url;
