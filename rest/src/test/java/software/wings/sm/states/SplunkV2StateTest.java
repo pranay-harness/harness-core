@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -30,6 +31,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.rules.RealMongo;
 import software.wings.scheduler.QuartzScheduler;
@@ -37,11 +39,13 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -50,6 +54,7 @@ import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -81,6 +86,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Inject private MainConfiguration configuration;
   @Inject private SecretManager secretManager;
   @Mock private QuartzScheduler jobScheduler;
+  @Mock private ElkAnalysisService elkAnalysisService;
   private SplunkV2State splunkState;
 
   @Before
@@ -314,5 +320,80 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     assertTrue(analysisSummary.getTestClusters().isEmpty());
     assertTrue(analysisSummary.getUnknownClusters().isEmpty());
+  }
+
+  @Test(expected = WingsException.class)
+  public void elkTimeStampFieldFormatIndexNotFound() throws IOException {
+    String analysisServerConfigID = UUID.randomUUID().toString();
+    ElkAnalysisState elkAnalysisState = new ElkAnalysisState("Integration-test", StateType.ELK.name());
+    elkAnalysisState.setIndices("filebeat-*");
+    elkAnalysisState.setAnalysisServerConfigId(analysisServerConfigID);
+    Reflect.on(elkAnalysisState).set("elkAnalysisService", elkAnalysisService);
+    Map<String, ElkIndexTemplate> templates = new HashMap<>();
+
+    when(elkAnalysisService.getIndices(accountId, analysisServerConfigID)).thenReturn(templates);
+    elkAnalysisState.getTimestampFieldFormat(accountId, "@timestamp");
+  }
+
+  @Test(expected = WingsException.class)
+  public void elkTimeStampFieldFormatIndexPropertyNotFound() throws IOException {
+    String analysisServerConfigID = UUID.randomUUID().toString();
+    ElkAnalysisState elkAnalysisState = new ElkAnalysisState("Integration-test", StateType.ELK.name());
+    elkAnalysisState.setIndices("filebeat-*");
+    elkAnalysisState.setAnalysisServerConfigId(analysisServerConfigID);
+    Reflect.on(elkAnalysisState).set("elkAnalysisService", elkAnalysisService);
+    Map<String, ElkIndexTemplate> templates = new HashMap<>();
+    templates.put("filebeat-*", new ElkIndexTemplate());
+    when(elkAnalysisService.getIndices(accountId, analysisServerConfigID)).thenReturn(templates);
+    elkAnalysisState.getTimestampFieldFormat(accountId, "@timestamp");
+  }
+
+  @Test
+  public void elkTimeStampFieldFormatIndexNoTimestamp() throws IOException {
+    String analysisServerConfigID = UUID.randomUUID().toString();
+    ElkAnalysisState elkAnalysisState = new ElkAnalysisState("Integration-test", StateType.ELK.name());
+    elkAnalysisState.setIndices("filebeat-*");
+    elkAnalysisState.setAnalysisServerConfigId(analysisServerConfigID);
+    Reflect.on(elkAnalysisState).set("elkAnalysisService", elkAnalysisService);
+    Map<String, ElkIndexTemplate> templates = new HashMap<>();
+    ElkIndexTemplate elkIndexTemplate = new ElkIndexTemplate();
+    elkIndexTemplate.setProperties(new HashMap<>());
+    templates.put("filebeat-*", elkIndexTemplate);
+    when(elkAnalysisService.getIndices(accountId, analysisServerConfigID)).thenReturn(templates);
+    assertEquals("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", elkAnalysisState.getTimestampFieldFormat(accountId, "@timestamp"));
+  }
+
+  @Test
+  public void elkTimeStampFieldFormatIndexTimestampNoFormat() throws IOException {
+    String analysisServerConfigID = UUID.randomUUID().toString();
+    ElkAnalysisState elkAnalysisState = new ElkAnalysisState("Integration-test", StateType.ELK.name());
+    elkAnalysisState.setIndices("filebeat-*");
+    elkAnalysisState.setAnalysisServerConfigId(analysisServerConfigID);
+    Reflect.on(elkAnalysisState).set("elkAnalysisService", elkAnalysisService);
+    Map<String, ElkIndexTemplate> templates = new HashMap<>();
+    ElkIndexTemplate elkIndexTemplate = new ElkIndexTemplate();
+    elkIndexTemplate.setProperties(new HashMap<>());
+    elkIndexTemplate.getProperties().put("@timestamp", new HashMap<>());
+    ((Map) (elkIndexTemplate.getProperties().get("@timestamp"))).put("type", "date");
+    templates.put("filebeat-*", elkIndexTemplate);
+    when(elkAnalysisService.getIndices(accountId, analysisServerConfigID)).thenReturn(templates);
+    assertEquals("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", elkAnalysisState.getTimestampFieldFormat(accountId, "@timestamp"));
+  }
+
+  @Test
+  public void elkTimeStampFieldFormatIndexWithTimestamp() throws IOException {
+    String analysisServerConfigID = UUID.randomUUID().toString();
+    ElkAnalysisState elkAnalysisState = new ElkAnalysisState("Integration-test", StateType.ELK.name());
+    elkAnalysisState.setIndices("filebeat-*");
+    elkAnalysisState.setAnalysisServerConfigId(analysisServerConfigID);
+    Reflect.on(elkAnalysisState).set("elkAnalysisService", elkAnalysisService);
+    Map<String, ElkIndexTemplate> templates = new HashMap<>();
+    ElkIndexTemplate elkIndexTemplate = new ElkIndexTemplate();
+    elkIndexTemplate.setProperties(new HashMap<>());
+    elkIndexTemplate.getProperties().put("@timestamp", new HashMap<>());
+    ((Map) (elkIndexTemplate.getProperties().get("@timestamp"))).put("format", "anytimestamp");
+    templates.put("filebeat-*", elkIndexTemplate);
+    when(elkAnalysisService.getIndices(accountId, analysisServerConfigID)).thenReturn(templates);
+    assertEquals("anytimestamp", elkAnalysisState.getTimestampFieldFormat(accountId, "@timestamp"));
   }
 }

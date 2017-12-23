@@ -185,7 +185,8 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * New relic deployment marker state type.
    */
-  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 10, asList(), ORCHESTRATION_STENCILS),
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 10, "NewRelic Deployment Marker",
+      asList(), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
 
