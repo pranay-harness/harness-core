@@ -1,9 +1,6 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.common.collect.Maps;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +11,10 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.List;
 import java.util.Map;
+
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 /**
  * Created by anubhaw on 12/22/17.
@@ -35,6 +35,8 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
   private ResizeStrategy resizeStrategy;
   private int instanceCount;
   private InstanceUnitType instanceUnitType;
+  private List<ContainerServiceData> newInstanceData;
+  private List<ContainerServiceData> oldInstanceData;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -50,23 +52,34 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
     putNotNull(executionDetails, "activityId",
         anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
-    putNotNull(executionDetails, "commandName",
-        anExecutionDataValue().withValue(commandName).withDisplayName("Command Name").build());
+    String requestedCount = instanceCount + " " + (instanceUnitType == InstanceUnitType.PERCENTAGE ? "%" : "");
+    putNotNull(executionDetails, "requestedCount",
+        anExecutionDataValue().withValue(requestedCount).withDisplayName("Requested Instances").build());
+    putNotNull(executionDetails, "resizeStrategy",
+        anExecutionDataValue().withValue(resizeStrategy).withDisplayName("Resize Strategy").build());
+    putNotNull(executionDetails, "newAutoScalingGroupName",
+        anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New AutoScalingGroup").build());
+    if (newInstanceData != null && !newInstanceData.isEmpty()) {
+      putNotNull(executionDetails, "newInstanceDataDesiredCapacity",
+          anExecutionDataValue()
+              .withValue(newInstanceData.get(0).getDesiredCount())
+              .withDisplayName("New ASG Desired Capacity")
+              .build());
+    }
+    putNotNull(executionDetails, "oldAutoScalingGroupName",
+        anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old AutoScalingGroup").build());
+    if (oldInstanceData != null && !oldInstanceData.isEmpty()) {
+      putNotNull(executionDetails, "oldInstanceDataDesiredCapacity",
+          anExecutionDataValue()
+              .withValue(oldInstanceData.get(0).getDesiredCount())
+              .withDisplayName("Old ASG Desired Capacity")
+              .build());
+    }
     return executionDetails;
   }
 
   @Override
   public StepExecutionSummary getStepExecutionSummary() {
-    return AmiStepExecutionSummary.builder()
-        .activityId(activityId)
-        .commandName(commandName)
-        .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
-        .maxInstances(maxInstances)
-        .newVersion(newVersion)
-        .newAutoScalingGroupName(newAutoScalingGroupName)
-        .oldAutoScalingGroupName(oldAutoScalingGroupName)
-        .resizeStrategy(resizeStrategy)
-        .instanceUnitType(instanceUnitType)
-        .build();
+    return AmiStepExecutionSummary.builder().newInstanceData(newInstanceData).oldInstanceData(oldInstanceData).build();
   }
 }

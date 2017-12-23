@@ -1,53 +1,24 @@
 package software.wings.sm.states;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-
+import com.amazonaws.services.autoscaling.model.*;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
-
-import com.amazonaws.services.autoscaling.model.AttachLoadBalancerTargetGroupsRequest;
-import com.amazonaws.services.autoscaling.model.AttachLoadBalancersRequest;
-import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
-import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
-import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
-import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
-import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
-import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
-import com.amazonaws.services.autoscaling.model.Tag;
-import com.amazonaws.services.autoscaling.model.TagDescription;
+import io.fabric8.utils.Lists;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.PhaseElement;
-import software.wings.beans.Application;
-import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.Environment;
-import software.wings.beans.ResizeStrategy;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
+import software.wings.beans.*;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
-import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.*;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
@@ -58,6 +29,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 /**
  * Created by anubhaw on 12/19/17.
@@ -171,26 +144,15 @@ public class AwsAmiServiceSetup extends State {
     String newAutoScalingGroupName = EcsConvention.getServiceName(
         Misc.normalizeExpression(context.renderExpression(autoScalingGroupName)), harness_revision);
 
-    artifact = Artifact.Builder.anArtifact().withRevision("ami-730c7064").build();
     LaunchConfiguration cloneBaseLaunchConfiguration = baseLaunchConfiguration.clone();
-    cloneBaseLaunchConfiguration.setUserData(userDataSpecification.getData());
     cloneBaseLaunchConfiguration.setImageId(artifact.getRevision());
     cloneBaseLaunchConfiguration.setLaunchConfigurationName(newAutoScalingGroupName);
-
-    String encodededUserData = null;
-    try {
-      encodededUserData = BaseEncoding.base64().encode(userDataSpecification.getData().getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
-      // TODO:: handle error
-    }
 
     // TODO:: check for fields to be non null
     CreateLaunchConfigurationRequest createLaunchConfigurationRequest =
         new CreateLaunchConfigurationRequest()
             .withLaunchConfigurationName(newAutoScalingGroupName)
             .withImageId(artifact.getRevision())
-            .withUserData(encodededUserData)
             .withAssociatePublicIpAddress(baseLaunchConfiguration.getAssociatePublicIpAddress())
             .withBlockDeviceMappings(baseLaunchConfiguration.getBlockDeviceMappings())
             .withClassicLinkVPCId(baseLaunchConfiguration.getClassicLinkVPCId())
@@ -205,6 +167,17 @@ public class AwsAmiServiceSetup extends State {
             //            .withRamdiskId(baseLaunchConfiguration.getRamdiskId())
             .withSecurityGroups(baseLaunchConfiguration.getSecurityGroups())
             .withSpotPrice(baseLaunchConfiguration.getSpotPrice());
+
+    if (userDataSpecification != null) {
+      cloneBaseLaunchConfiguration.setUserData(userDataSpecification.getData());
+      try {
+        createLaunchConfigurationRequest.setUserData(
+            BaseEncoding.base64().encode(userDataSpecification.getData().getBytes("UTF-8")));
+      } catch (UnsupportedEncodingException e) {
+        e.printStackTrace();
+        // TODO:: handle error
+      }
+    }
 
     CreateLaunchConfigurationResult newLaunchConfiguration = awsHelperService.createLaunchConfiguration(
         awsConfig, encryptionDetails, region, createLaunchConfigurationRequest);
@@ -250,14 +223,19 @@ public class AwsAmiServiceSetup extends State {
     CreateAutoScalingGroupResult newAutoScalingGroup =
         awsHelperService.createAutoScalingGroup(awsConfig, encryptionDetails, region, createAutoScalingGroupRequest);
 
-    awsHelperService.attachLoadBalancerToAutoScalingGroup(awsConfig, encryptionDetails, region,
-        new AttachLoadBalancersRequest()
-            .withLoadBalancerNames(infrastructureMapping.getClassicLoadBalancers())
-            .withAutoScalingGroupName(newAutoScalingGroupName));
-    awsHelperService.attachTargetGroupsToAutoScalingGroup(awsConfig, encryptionDetails, region,
-        new AttachLoadBalancerTargetGroupsRequest()
-            .withAutoScalingGroupName(newAutoScalingGroupName)
-            .withTargetGroupARNs(infrastructureMapping.getTargetGroupArns()));
+    if (!Lists.isNullOrEmpty(infrastructureMapping.getClassicLoadBalancers())) {
+      awsHelperService.attachLoadBalancerToAutoScalingGroup(awsConfig, encryptionDetails, region,
+          new AttachLoadBalancersRequest()
+              .withLoadBalancerNames(infrastructureMapping.getClassicLoadBalancers())
+              .withAutoScalingGroupName(newAutoScalingGroupName));
+    }
+
+    if (!Lists.isNullOrEmpty(infrastructureMapping.getTargetGroupArns())) {
+      awsHelperService.attachTargetGroupsToAutoScalingGroup(awsConfig, encryptionDetails, region,
+          new AttachLoadBalancerTargetGroupsRequest()
+              .withAutoScalingGroupName(newAutoScalingGroupName)
+              .withTargetGroupARNs(infrastructureMapping.getTargetGroupArns()));
+    }
 
     AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
                                                        .newAutoScalingGroupName(newAutoScalingGroupName)
