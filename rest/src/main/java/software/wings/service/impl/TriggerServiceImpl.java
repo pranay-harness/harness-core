@@ -38,9 +38,6 @@ import net.redhogs.cronparser.Options;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronScheduleBuilder;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,12 +97,9 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class TriggerServiceImpl implements TriggerService {
-  public static final String SCHEDULED_TRIGGER_CRON_GROUP = "SCHEDULED_TRIGGER_CRON_GROUP";
-  private static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
   private static final Logger logger = LoggerFactory.getLogger(TriggerServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private ExecutorService executorService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
@@ -113,6 +107,8 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest) {
@@ -131,7 +127,8 @@ public class TriggerServiceImpl implements TriggerService {
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     notNullCheck("Trigger", savedTrigger);
     if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-      addCronForScheduledJobExecution(savedTrigger.getAppId(), savedTrigger);
+      ScheduledTriggerJob.add(
+          jobScheduler, savedTrigger.getAppId(), savedTrigger.getUuid(), ScheduledTriggerJob.getQuartzTrigger(trigger));
     }
     return savedTrigger;
   }
@@ -158,14 +155,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private boolean deleteTrigger(String triggerId, Trigger trigger) {
-    boolean deleted = wingsPersistence.delete(Trigger.class, triggerId);
-    if (deleted) {
-      if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-        // TODO: make this jobs self prunable
-        jobScheduler.deleteJob(triggerId, SCHEDULED_TRIGGER_CRON_GROUP);
-      }
-    }
-    return deleted;
+    return wingsPersistence.delete(Trigger.class, triggerId);
   }
 
   @Override
@@ -279,8 +269,8 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public void triggerScheduledExecutionAsync(String appId, String triggerId) {
-    executorService.submit(() -> triggerScheduledExecution(appId, triggerId));
+  public void triggerScheduledExecutionAsync(Trigger trigger) {
+    executorService.submit(() -> triggerScheduledExecution(trigger));
   }
 
   @Override
@@ -462,15 +452,8 @@ public class TriggerServiceImpl implements TriggerService {
         });
   }
 
-  private void triggerScheduledExecution(String appId, String triggerId) {
-    logger.info("Triggering scheduled job for appId {} and triggerId {}", appId, triggerId);
-    Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
-    if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-      logger.info("Trigger not found or wrong type. Deleting job associated to it");
-      jobScheduler.deleteJob(triggerId, SCHEDULED_TRIGGER_CRON_GROUP);
-      return;
-    }
-    List<Artifact> lastDeployedArtifacts = getLastDeployedArtifacts(appId, trigger.getPipelineId(), null);
+  private void triggerScheduledExecution(Trigger trigger) {
+    List<Artifact> lastDeployedArtifacts = getLastDeployedArtifacts(trigger.getAppId(), trigger.getPipelineId(), null);
 
     ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
@@ -481,7 +464,7 @@ public class TriggerServiceImpl implements TriggerService {
       }
     } else {
       List<Artifact> artifacts = new ArrayList<>();
-      addArtifactsFromSelections(appId, artifactSelections, artifacts);
+      addArtifactsFromSelections(trigger.getAppId(), artifactSelections, artifacts);
       if (CollectionUtils.isNotEmpty(artifacts)) {
         if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
           triggerExecution(artifacts, trigger);
@@ -631,37 +614,18 @@ public class TriggerServiceImpl implements TriggerService {
     return workflowExecution;
   }
 
-  private void addCronForScheduledJobExecution(String appId, Trigger trigger) {
-    logger.info("Adding scheduled cron name {} for appId {}", trigger.getName(), trigger.getAppId());
-    JobDetail job = JobBuilder.newJob(ScheduledTriggerJob.class)
-                        .withIdentity(trigger.getUuid(), SCHEDULED_TRIGGER_CRON_GROUP)
-                        .usingJobData("triggerId", trigger.getUuid())
-                        .usingJobData("appId", appId)
-                        .build();
-    org.quartz.Trigger quartzTrigger = getQuartzTrigger(trigger);
-    jobScheduler.scheduleJob(job, quartzTrigger);
-  }
-
   private void addOrUpdateCronForScheduledJob(Trigger trigger, Trigger existingTrigger) {
     if (existingTrigger.getCondition().getConditionType().equals(SCHEDULED)) {
       if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-        TriggerKey triggerKey = new TriggerKey(trigger.getUuid(), SCHEDULED_TRIGGER_CRON_GROUP);
-        org.quartz.Trigger quartzTrigger = getQuartzTrigger(trigger);
-        jobScheduler.rescheduleJob(triggerKey, quartzTrigger);
+        TriggerKey triggerKey = new TriggerKey(trigger.getUuid(), ScheduledTriggerJob.GROUP);
+        jobScheduler.rescheduleJob(triggerKey, ScheduledTriggerJob.getQuartzTrigger(trigger));
       } else {
-        jobScheduler.deleteJob(existingTrigger.getUuid(), SCHEDULED_TRIGGER_CRON_GROUP);
+        jobScheduler.deleteJob(existingTrigger.getUuid(), ScheduledTriggerJob.GROUP);
       }
     } else if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-      addCronForScheduledJobExecution(trigger.getAppId(), trigger);
+      ScheduledTriggerJob.add(
+          jobScheduler, trigger.getAppId(), trigger.getUuid(), ScheduledTriggerJob.getQuartzTrigger(trigger));
     }
-  }
-
-  private org.quartz.Trigger getQuartzTrigger(Trigger trigger) {
-    return TriggerBuilder.newTrigger()
-        .withIdentity(trigger.getUuid(), SCHEDULED_TRIGGER_CRON_GROUP)
-        .withSchedule(CronScheduleBuilder.cronSchedule(
-            CRON_PREFIX + ((ScheduledTriggerCondition) trigger.getCondition()).getCronExpression()))
-        .build();
   }
 
   private void validateAndSetCronExpression(Trigger trigger) {
@@ -671,9 +635,9 @@ public class TriggerServiceImpl implements TriggerService {
       }
       ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
       if (!isNullOrEmpty(scheduledTriggerCondition.getCronExpression())) {
-        CronScheduleBuilder.cronSchedule(CRON_PREFIX + scheduledTriggerCondition.getCronExpression());
+        CronScheduleBuilder.cronSchedule(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression());
         scheduledTriggerCondition.setCronDescription(
-            getCronDescription(CRON_PREFIX + scheduledTriggerCondition.getCronExpression()));
+            getCronDescription(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression()));
       }
     } catch (Exception ex) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Invalid cron expression");

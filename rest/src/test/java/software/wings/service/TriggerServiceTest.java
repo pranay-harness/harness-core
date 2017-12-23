@@ -23,7 +23,6 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 import static software.wings.beans.trigger.ArtifactSelection.builder;
 import static software.wings.beans.trigger.Trigger.Builder.aTrigger;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
-import static software.wings.service.impl.TriggerServiceImpl.SCHEDULED_TRIGGER_CRON_GROUP;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
@@ -68,6 +67,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
@@ -361,7 +361,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(artifactSelection -> artifactSelection.getType())
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
-    verify(jobScheduler).deleteJob(TRIGGER_ID, "SCHEDULED_TRIGGER_CRON_GROUP");
+    verify(jobScheduler).deleteJob(TRIGGER_ID, ScheduledTriggerJob.GROUP);
   }
 
   @Test
@@ -400,7 +400,6 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.delete(APP_ID, TRIGGER_ID);
     verify(wingsPersistence).delete(Trigger.class, TRIGGER_ID);
-    verify(jobScheduler).deleteJob(TRIGGER_ID, "SCHEDULED_TRIGGER_CRON_GROUP");
   }
 
   @Test
@@ -410,7 +409,6 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.delete(APP_ID, TRIGGER_ID);
     verify(wingsPersistence).delete(Trigger.class, TRIGGER_ID);
-    verify(jobScheduler, times(0)).deleteJob(TRIGGER_ID, "SCHEDULED_TRIGGER_CRON_GROUP");
   }
 
   @Test
@@ -466,7 +464,6 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.pruneByApplication(APP_ID);
     verify(wingsPersistence).delete(Trigger.class, TRIGGER_ID);
-    verify(jobScheduler).deleteJob(TRIGGER_ID, "SCHEDULED_TRIGGER_CRON_GROUP");
   }
 
   @Test
@@ -671,7 +668,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                             aWorkflowExecution().withAppId(APP_ID).withExecutionArgs(executionArgs).build()))
                         .build());
 
-    triggerService.triggerScheduledExecutionAsync(APP_ID, TRIGGER_ID);
+    triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger);
     verify(workflowExecutionService, times(0))
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
   }
@@ -706,7 +703,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(workflowExecutionService.triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerScheduledExecutionAsync(APP_ID, TRIGGER_ID);
+    triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger);
     verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
@@ -838,12 +835,6 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(workflowExecutionService)
         .listExecutions(any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
     verify(artifactService).getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, "123");
-  }
-
-  @Test
-  public void shouldDeleteScheduledJobIfTriggerDeleted() {
-    triggerService.triggerScheduledExecutionAsync(APP_ID, TRIGGER_ID);
-    verify(jobScheduler).deleteJob(TRIGGER_ID, SCHEDULED_TRIGGER_CRON_GROUP);
   }
 
   @Test
