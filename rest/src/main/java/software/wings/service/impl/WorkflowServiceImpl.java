@@ -1946,24 +1946,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void generateNewWorkflowPhaseStepsForAWSAmi(
       String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
-    /*
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(ECS_SERVICE_DEPLOY.name())
-                                                .withName(Constants.UPGRADE_CONTAINERS)
-                                                .build())
-                                   .build());
-
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
-
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
-    }
-
-     */
-
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -1979,7 +1961,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                        .build());
       }
     }
-    workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_AUTOSCALING_GROUP)
+    workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
                                    .addStep(aNode()
                                                 .withId(getUuid())
                                                 .withType(AWS_AMI_SERVICE_DEPLOY.name())
@@ -2240,7 +2222,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withPhaseNameForRollback(workflowPhase.getName())
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_AUTOSCALING_GROUP)
+        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
                           .addStep(aNode()
                                        .withId(getUuid())
                                        .withType(containerServiceType)

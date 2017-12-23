@@ -1,14 +1,19 @@
 package software.wings.sm.states;
 
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
+import com.github.reinert.jjschema.Attributes;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 
 /**
  * Created by anubhaw on 12/19/17.
  */
-public class AwsAmiServiceRollback extends State {
+public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
+  @Attributes(title = "Command")
+  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
+  @DefaultValue("Resize Service Cluster")
+  private String commandName = "Resize Service Cluster";
+
   /**
    * Instantiates a new state.
    *
@@ -19,10 +24,12 @@ public class AwsAmiServiceRollback extends State {
   }
 
   @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    return null;
+  public String getCommandName() {
+    return commandName;
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void setCommandName(String commandName) {
+    this.commandName = commandName;
+  }
 }

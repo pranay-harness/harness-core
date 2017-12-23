@@ -16,11 +16,10 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
-import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
-import software.wings.api.AmiServiceElement;
-import software.wings.api.AwsAmiExecutionData;
+import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -49,7 +48,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
@@ -68,8 +66,6 @@ public class AwsAmiServiceSetup extends State {
   public static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   private ResizeStrategy resizeStrategy;
 
-  @Attributes(title = "AutoScaling Group Name")
-  @DefaultValue("${app.name}_${service.name}_${env.name}")
   private String autoScalingGroupName;
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
@@ -119,8 +115,8 @@ public class AwsAmiServiceSetup extends State {
         (Encryptable) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
     String region = infrastructureMapping.getRegion();
-    String baseAutoScalingGroupName = infrastructureMapping.getAutoScalingGroupName();
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
+    String baseAutoScalingGroupName = infrastructureMapping.getAutoScalingGroupName();
     AutoScalingGroup baseAutoScalingGroup = awsHelperService
                                                 .describeAutoScalingGroups(awsConfig, encryptionDetails, region,
                                                     new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
@@ -263,20 +259,19 @@ public class AwsAmiServiceSetup extends State {
             .withAutoScalingGroupName(newAutoScalingGroupName)
             .withTargetGroupARNs(infrastructureMapping.getTargetGroupArns()));
 
-    AwsAmiExecutionData awsAmiExecutionData = AwsAmiExecutionData.builder()
-                                                  .newAutoScalingGroupName(newAutoScalingGroupName)
-                                                  .oldAutoScalingGroupName(oldAutoScalingGroupName)
-                                                  .maxInstances(maxInstances)
-                                                  .newVersion(harness_revision)
-                                                  .resizeStrategy(resizeStrategy)
-                                                  .build();
-    AmiServiceElement amiServiceElement = AmiServiceElement.builder()
-                                              .newAutoScalingGroupName(newAutoScalingGroupName)
-                                              .oldAutoScalingGroupName(oldAutoScalingGroupName)
-                                              .maxInstances(maxInstances)
-                                              .newVersion(harness_revision)
-                                              .resizeStrategy(resizeStrategy)
-                                              .build();
+    AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
+                                                       .newAutoScalingGroupName(newAutoScalingGroupName)
+                                                       .oldAutoScalingGroupName(oldAutoScalingGroupName)
+                                                       .maxInstances(maxInstances)
+                                                       .newVersion(harness_revision)
+                                                       .resizeStrategy(resizeStrategy)
+                                                       .build();
+    AmiServiceSetupElement amiServiceElement = AmiServiceSetupElement.builder()
+                                                   .newAutoScalingGroupName(newAutoScalingGroupName)
+                                                   .oldAutoScalingGroupName(oldAutoScalingGroupName)
+                                                   .maxInstances(maxInstances)
+                                                   .resizeStrategy(resizeStrategy)
+                                                   .build();
     return anExecutionResponse()
         .withStateExecutionData(awsAmiExecutionData)
         .addContextElement(amiServiceElement)

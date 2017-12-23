@@ -44,6 +44,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,8 +107,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       describeInstancesResult =
           new DescribeInstancesResult().withReservations(new Reservation().withInstances(instances));
     } else {
-      describeInstancesResult =
-          awsHelperService.describeAutoScalingGroupInstances(awsConfig, encryptedDataDetails, awsInfrastructureMapping);
+      describeInstancesResult = awsHelperService.describeAutoScalingGroupInstances(awsConfig, encryptedDataDetails,
+          awsInfrastructureMapping.getRegion(), awsInfrastructureMapping.getAutoScalingGroupName());
     }
     return describeInstancesResult;
   }
@@ -173,10 +174,12 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId);
 
     if (infrastructureMapping.isSetDesiredCapacity()) {
-      awsHelperService.setAutoScalingGroupCapacity(awsConfig, encryptionDetails, infrastructureMapping);
+      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
+          infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
+          infrastructureMapping.getDesiredCapacity(), new ExecutionLogCallback());
     }
-    List<String> instancesIds =
-        awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping);
+    List<String> instancesIds = awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails,
+        infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName());
     logger.info("Got {} instance ids from auto scaling group {}: {}", instancesIds.size(),
         infrastructureMapping.getAutoScalingGroupName(), instancesIds);
 

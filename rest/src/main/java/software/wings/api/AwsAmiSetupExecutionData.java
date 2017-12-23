@@ -22,7 +22,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AwsAmiExecutionData extends StateExecutionData implements NotifyResponseData {
+public class AwsAmiSetupExecutionData extends StateExecutionData implements NotifyResponseData {
   private String newAutoScalingGroupName;
   private String oldAutoScalingGroupName;
   private Integer newVersion;
