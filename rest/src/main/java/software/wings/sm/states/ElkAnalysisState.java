@@ -142,7 +142,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     final String timestampField = DEFAULT_TIME_FIELD;
     final String accountId = appService.get(context.getAppId()).getAccountId();
-    final String timestampFieldFormat = getTimestmpFieldFormat(accountId, timestampField);
+    final String timestampFieldFormat = getTimestampFieldFormat(accountId, timestampField);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -204,7 +204,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     return logger;
   }
 
-  private String getTimestmpFieldFormat(String accountId, String timestampField) {
+  protected String getTimestampFieldFormat(String accountId, String timestampField) {
     try {
       Map<String, ElkIndexTemplate> indexTemplateMap = elkAnalysisService.getIndices(accountId, analysisServerConfigId);
       final ElkIndexTemplate indexTemplate = indexTemplateMap.get(indices);
@@ -222,7 +222,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
         return DEFAULT_TIME_FORMAT;
       }
       return timeStampJsonObject.getString("format");
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new WingsException(e);
     }
   }
