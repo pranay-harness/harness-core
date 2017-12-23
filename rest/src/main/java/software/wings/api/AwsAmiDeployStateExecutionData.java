@@ -77,10 +77,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
       int desiredCapacity =
           rollback ? oldInstanceData.get(0).getPreviousCount() : oldInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "oldInstanceDataDesiredCapacity",
-          anExecutionDataValue()
-              .withValue(oldInstanceData.get(0).getDesiredCount())
-              .withDisplayName("Old ASG Desired Capacity")
-              .build());
+          anExecutionDataValue().withValue(desiredCapacity).withDisplayName("Old ASG Desired Capacity").build());
     }
     return executionDetails;
   }

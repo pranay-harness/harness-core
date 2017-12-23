@@ -19,6 +19,11 @@ public class AmiStepExecutionSummary extends StepExecutionSummary {
   private List<ContainerServiceData> oldInstanceData;
 
   public AmiServiceDeployElement getRollbackAmiServiceElement() {
-    return AmiServiceDeployElement.builder().newInstanceData(newInstanceData).oldInstanceData(oldInstanceData).build();
+    return AmiServiceDeployElement.builder()
+        .instanceCount(instanceCount)
+        .instanceUnitType(instanceUnitType)
+        .newInstanceData(newInstanceData)
+        .oldInstanceData(oldInstanceData)
+        .build();
   }
 }
