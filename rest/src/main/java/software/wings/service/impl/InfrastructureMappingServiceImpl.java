@@ -304,9 +304,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping) {
     InfrastructureMapping savedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
     UpdateOperations<InfrastructureMapping> updateOperations =
         wingsPersistence.createUpdateOperations(InfrastructureMapping.class);
-    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    updateOperations.set("computeProviderSettingId", infrastructureMapping.getComputeProviderSettingId());
 
     if (savedInfraMapping.getHostConnectionAttrs() != null
         && !savedInfraMapping.getHostConnectionAttrs().equals(infrastructureMapping.getHostConnectionAttrs())) {
