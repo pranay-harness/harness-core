@@ -8,7 +8,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by sgurubelli on 12/15/17.
