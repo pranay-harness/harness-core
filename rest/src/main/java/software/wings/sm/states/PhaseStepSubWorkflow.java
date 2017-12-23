@@ -343,7 +343,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
               elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
           executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
-          executionResponse.setNotifyElements(Lists.newArrayList(instanceElementListParam));
         }
       }
     }

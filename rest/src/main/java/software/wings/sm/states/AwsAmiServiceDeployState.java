@@ -169,6 +169,7 @@ public class AwsAmiServiceDeployState extends State {
     awsAmiDeployStateExecutionData.setMaxInstances(serviceSetupElement.getMaxInstances());
     awsAmiDeployStateExecutionData.setResizeStrategy(serviceSetupElement.getResizeStrategy());
     if (isRollback()) {
+      awsAmiDeployStateExecutionData.setRollback(true);
       AmiServiceDeployElement amiServiceDeployElement =
           context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
       awsAmiDeployStateExecutionData.setInstanceCount(amiServiceDeployElement.getInstanceCount());
