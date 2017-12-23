@@ -1,19 +1,50 @@
 package software.wings.sm.states;
 
-import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
-import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
-import com.github.reinert.jjschema.Attributes;
+import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
+import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.api.*;
-import software.wings.beans.*;
+import software.wings.api.AmiServiceDeployElement;
+import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AwsAmiDeployStateExecutionData;
+import software.wings.api.ContainerServiceData;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
+import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
+import software.wings.api.PhaseElement;
+import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.Environment;
+import software.wings.beans.InstanceUnitType;
+import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.ResizeStrategy;
+import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
@@ -23,10 +54,25 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.*;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.*;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.State;
+import software.wings.sm.StateExecutionException;
+import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Validator;
@@ -34,16 +80,12 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
-import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 12/19/17.
@@ -66,6 +108,7 @@ public class AwsAmiServiceDeployState extends State {
   @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
+  @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient protected transient ArtifactStreamService artifactStreamService;
   @Inject @Transient protected transient SecretManager secretManager;
@@ -174,6 +217,8 @@ public class AwsAmiServiceDeployState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
     Environment env = workflowStandardParams.getEnv();
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
+    Key<ServiceTemplate> serviceTemplateKey =
+        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
 
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     if (artifact == null) {
@@ -209,6 +254,10 @@ public class AwsAmiServiceDeployState extends State {
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(logService, logBuilder, activity.getUuid());
+
+    InstanceElementListParam instanceElementListParam = InstanceElementListParamBuilder.anInstanceElementListParam()
+                                                            .withInstanceElements(Collections.emptyList())
+                                                            .build();
 
     if (isRollback()) {
       AmiServiceDeployElement amiServiceDeployElement =
@@ -260,6 +309,7 @@ public class AwsAmiServiceDeployState extends State {
       Integer newAutoScalingGroupDesiredCapacity = newAutoScalingGroup.getDesiredCapacity();
       Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
       Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
+
       awsAmiDeployStateExecutionData.setNewInstanceData(
           Arrays.asList(aContainerServiceData()
                             .withName(newAutoScalingGroupName)
@@ -268,9 +318,7 @@ public class AwsAmiServiceDeployState extends State {
                             .build()));
 
       Integer oldAutoScalingGroupDesiredCapacity = oldAutoScalingGroup.getDesiredCapacity();
-      Integer totalOldInstancesToBeRemoved =
-          Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
-      Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalOldInstancesToBeRemoved);
+      Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
 
       awsAmiDeployStateExecutionData.setOldInstanceData(
           Arrays.asList(aContainerServiceData()
@@ -283,11 +331,50 @@ public class AwsAmiServiceDeployState extends State {
 
       resizeAsgs(region, awsConfig, encryptionDetails, newAutoScalingGroupName, newAsgFinalDesiredCount,
           oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback, resizeNewFirst);
+      DescribeInstancesResult describeInstancesResult = awsHelperService.describeAutoScalingGroupInstances(
+          awsConfig, encryptionDetails, region, newAutoScalingGroupName);
+      List<InstanceElement> instanceElements =
+          describeInstancesResult.getReservations()
+              .stream()
+              .flatMap(reservation -> reservation.getInstances().stream())
+              .map(instance -> {
+                String hostName = awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName());
+                return anInstanceElement()
+                    .withUuid(instance.getInstanceId())
+                    .withHostName(hostName)
+                    .withDisplayName(instance.getPublicDnsName())
+                    .withHost(aHostElement()
+                                  .withHostName(hostName)
+                                  .withPublicDns(instance.getPublicDnsName())
+                                  .withEc2Instance(instance)
+                                  .build())
+                    .withServiceTemplateElement(aServiceTemplateElement()
+                                                    .withUuid(serviceTemplateKey.getId().toString())
+                                                    .withServiceElement(phaseElement.getServiceElement())
+                                                    .build())
+                    .build();
+              })
+              .collect(Collectors.toList());
+
+      List<InstanceStatusSummary> instanceStatusSummaries =
+          instanceElements.stream()
+              .map(instanceElement
+                  -> anInstanceStatusSummary()
+                         .withInstanceElement((InstanceElement) instanceElement.cloneMin())
+                         .withStatus(ExecutionStatus.SUCCESS)
+                         .build())
+              .collect(Collectors.toList());
+      awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+      instanceElementListParam.setInstanceElements(instanceElements);
     }
 
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
 
-    return anExecutionResponse().withStateExecutionData(awsAmiDeployStateExecutionData).build();
+    return anExecutionResponse()
+        .withStateExecutionData(awsAmiDeployStateExecutionData)
+        .addContextElement(instanceElementListParam)
+        .addNotifyElement(instanceElementListParam)
+        .build();
   }
 
   private void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
