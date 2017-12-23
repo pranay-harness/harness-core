@@ -36,7 +36,8 @@ public class InstanceUtil {
     } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(infraMappingType)) {
       instanceType = InstanceType.PHYSICAL_HOST_INSTANCE;
     } else if (InfrastructureMappingType.AWS_SSH.name().equals(infraMappingType)
-        || InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name().equals(infraMappingType)) {
+        || InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name().equals(infraMappingType)
+        || InfrastructureMappingType.AWS_AMI.name().equals(infraMappingType)) {
       instanceType = InstanceType.EC2_CLOUD_INSTANCE;
     } else {
       String msg = "Unsupported infraMapping type:" + infraMappingType;

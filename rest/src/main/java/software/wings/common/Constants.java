@@ -163,6 +163,12 @@ public interface Constants {
    * The constant DEPLOY_SERVICE.
    */
   String DEPLOY_SERVICE = "Deploy Service";
+
+  /**
+   * The constant ROLLBACK_SERVICE.
+   */
+  String ROLLBACK_SERVICE = "Rollback Service";
+
   /**
    * The constant STOP_SERVICE.
    */

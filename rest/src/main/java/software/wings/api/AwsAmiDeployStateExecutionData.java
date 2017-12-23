@@ -1,9 +1,6 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.common.collect.Maps;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +15,8 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 /**
  * Created by anubhaw on 12/22/17.
@@ -41,6 +40,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
   private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
+  private boolean rollback;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -58,21 +58,24 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
         anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
     String requestedCount = instanceCount + " " + (instanceUnitType == InstanceUnitType.PERCENTAGE ? "%" : "");
     putNotNull(executionDetails, "requestedCount",
-        anExecutionDataValue().withValue(requestedCount).withDisplayName("Requested Instances").build());
-    putNotNull(executionDetails, "resizeStrategy",
-        anExecutionDataValue().withValue(resizeStrategy).withDisplayName("Resize Strategy").build());
+        anExecutionDataValue().withValue(requestedCount).withDisplayName("Desired Instance Requested").build());
+    if (resizeStrategy != null) {
+      putNotNull(executionDetails, "resizeStrategy",
+          anExecutionDataValue().withValue(resizeStrategy.getDisplayName()).withDisplayName("Resize Strategy").build());
+    }
     putNotNull(executionDetails, "newAutoScalingGroupName",
-        anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New AutoScalingGroup").build());
+        anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New ASG").build());
     if (newInstanceData != null && !newInstanceData.isEmpty()) {
+      int desiredCapacity =
+          rollback ? newInstanceData.get(0).getPreviousCount() : newInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "newInstanceDataDesiredCapacity",
-          anExecutionDataValue()
-              .withValue(newInstanceData.get(0).getDesiredCount())
-              .withDisplayName("New ASG Desired Capacity")
-              .build());
+          anExecutionDataValue().withValue(desiredCapacity).withDisplayName("New ASG Desired Capacity").build());
     }
     putNotNull(executionDetails, "oldAutoScalingGroupName",
-        anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old AutoScalingGroup").build());
+        anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old ASG").build());
     if (oldInstanceData != null && !oldInstanceData.isEmpty()) {
+      int desiredCapacity =
+          rollback ? oldInstanceData.get(0).getPreviousCount() : oldInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "oldInstanceDataDesiredCapacity",
           anExecutionDataValue()
               .withValue(oldInstanceData.get(0).getDesiredCount())
@@ -84,6 +87,11 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
 
   @Override
   public StepExecutionSummary getStepExecutionSummary() {
-    return AmiStepExecutionSummary.builder().newInstanceData(newInstanceData).oldInstanceData(oldInstanceData).build();
+    return AmiStepExecutionSummary.builder()
+        .instanceCount(instanceCount)
+        .instanceUnitType(instanceUnitType)
+        .newInstanceData(newInstanceData)
+        .oldInstanceData(oldInstanceData)
+        .build();
   }
 }

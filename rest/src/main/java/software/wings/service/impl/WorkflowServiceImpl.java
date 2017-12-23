@@ -4,79 +4,9 @@
 
 package software.wings.service.impl;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.EntityType.ARTIFACT;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
-import static software.wings.beans.EntityType.WORKFLOW;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
-import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
-import static software.wings.beans.FeatureName.SHELL_SCRIPT_AS_A_STEP;
-import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.beans.OrchestrationWorkflowType.CANARY;
-import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
-import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
-import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
-import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
-import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
-import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
-import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
-import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
-import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
-import static software.wings.beans.PhaseStepType.DE_PROVISION_NODE;
-import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
-import static software.wings.beans.PhaseStepType.PROVISION_NODE;
-import static software.wings.beans.PhaseStepType.STOP_SERVICE;
-import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
-import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.common.Constants.ARTIFACT_TYPE;
-import static software.wings.common.Constants.ENTITY_TYPE;
-import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
-import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
-import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
-import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
-import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
-import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
-import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
-import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
-import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
-import static software.wings.sm.StateType.AWS_LAMBDA_ROLLBACK;
-import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
-import static software.wings.sm.StateType.AWS_NODE_SELECT;
-import static software.wings.sm.StateType.COMMAND;
-import static software.wings.sm.StateType.DC_NODE_SELECT;
-import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
-import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
-import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
-import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
-import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
-import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
-import static software.wings.sm.StateType.values;
-import static software.wings.utils.Switch.unhandled;
-import static software.wings.utils.Validator.notNullCheck;
-
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -87,44 +17,9 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.DeploymentType;
 import software.wings.app.StaticConfiguration;
-import software.wings.beans.Account;
-import software.wings.beans.Application;
-import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.BasicOrchestrationWorkflow;
-import software.wings.beans.BuildWorkflow;
-import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.CustomOrchestrationWorkflow;
-import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.EntityType;
-import software.wings.beans.EntityVersion;
-import software.wings.beans.ExecutionScope;
-import software.wings.beans.FailureStrategy;
-import software.wings.beans.FailureType;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.Graph;
+import software.wings.beans.*;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.MultiServiceOrchestrationWorkflow;
-import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
-import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.PhaseStep;
-import software.wings.beans.PhysicalInfrastructureMapping;
-import software.wings.beans.Pipeline;
-import software.wings.beans.RepairActionCode;
-import software.wings.beans.RoleType;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.TemplateExpression;
-import software.wings.beans.Variable;
-import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowPhase;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
@@ -141,28 +36,12 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.EntityVersionService;
-import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.service.intfc.NotificationSetupService;
-import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateMachine;
-import software.wings.sm.StateType;
-import software.wings.sm.StateTypeDescriptor;
-import software.wings.sm.StateTypeScope;
+import software.wings.sm.*;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.ElasticLoadBalancerState.Operation;
 import software.wings.sm.states.ShellScriptState;
@@ -176,22 +55,49 @@ import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import javax.validation.executable.ValidateOnExecution;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.validation.executable.ValidateOnExecution;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.EntityType.*;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
+import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
+import static software.wings.beans.FeatureName.SHELL_SCRIPT_AS_A_STEP;
+import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.OrchestrationWorkflowType.*;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.*;
+import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DE_PROVISION_NODE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
+import static software.wings.beans.PhaseStepType.STOP_SERVICE;
+import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
+import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.Constants.*;
+import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
+import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.*;
+import static software.wings.sm.StateType.COMMAND;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.utils.Switch.unhandled;
+import static software.wings.utils.Validator.notNullCheck;
 
 /**
  * The Class WorkflowServiceImpl.
@@ -326,7 +232,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
-    Arrays.stream(values())
+    Arrays.stream(StateType.values())
         .filter(state
             -> state.getTypeClass() != ShellScriptState.class
                 || featureFlagService.isEnabled(SHELL_SCRIPT_AS_A_STEP, accountId))
@@ -2224,7 +2130,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withPhaseNameForRollback(workflowPhase.getName())
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
+        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
                           .addStep(aNode()
                                        .withId(getUuid())
                                        .withType(containerServiceType)
