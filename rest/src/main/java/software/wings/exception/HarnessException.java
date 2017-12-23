@@ -110,10 +110,7 @@ public class HarnessException extends Exception {
    */
   public HarnessException(ErrorCode errorCode, String message, Throwable cause) {
     super(message, cause);
-    ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setMessage(message);
-    responseMessageList.add(responseMessage);
+    responseMessageList.add(ResponseMessage.builder().code(errorCode).message(message).build());
   }
 
   /**
