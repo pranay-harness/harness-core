@@ -1,9 +1,6 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.common.collect.Maps;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +10,8 @@ import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
+
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 /**
  * Created by anubhaw on 12/20/17.
@@ -41,9 +40,13 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Noti
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+    Map<String, ExecutionDataValue> executionDetails = Maps.newHashMap();
     putNotNull(executionDetails, "newAutoScalingGroupName",
-        anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("AutoScaling Group Name").build());
+        anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New ASG Name").build());
+    putNotNull(executionDetails, "maxInstances",
+        anExecutionDataValue().withValue(maxInstances).withDisplayName("Desired Capacity").build());
+    putNotNull(executionDetails, "oldAutoScalingGroupName",
+        anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old ASG Name").build());
     return executionDetails;
   }
 }

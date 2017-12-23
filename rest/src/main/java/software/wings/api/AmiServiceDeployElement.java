@@ -2,6 +2,7 @@ package software.wings.api;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.InstanceUnitType;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -15,6 +16,8 @@ import java.util.Map;
 @Data
 @Builder
 public class AmiServiceDeployElement implements ContextElement {
+  private int instanceCount;
+  private InstanceUnitType instanceUnitType;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
 
