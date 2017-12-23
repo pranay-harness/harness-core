@@ -31,8 +31,8 @@ public class AmiBuildServiceImpl implements AmiBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.AMI.name());
-    return amiService.getBuilds(
-        awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(), artifactStreamAttributes.getTags(), 50);
+    return amiService.getBuilds(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
+        artifactStreamAttributes.getTags(), artifactStreamAttributes.getPlatform(), 50);
   }
 
   @Override

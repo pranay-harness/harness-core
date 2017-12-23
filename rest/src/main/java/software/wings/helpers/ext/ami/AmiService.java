@@ -18,16 +18,9 @@ public interface AmiService {
    * @param region
    * @param tags
    * @param maxNumberOfBuilds
+   * @param platform
    * @return
    */
   List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      Map<String, List<String>> tags, int maxNumberOfBuilds);
-
-  /**
-   * Lists aws regions
-   *
-   * @param awsConfig aws config
-   * @return
-   */
-  List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
+      Map<String, List<String>> tags, String platform, int maxNumberOfBuilds);
 }
