@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -13,6 +15,7 @@ import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.utils.Misc.quietSleep;
 import static software.wings.utils.Misc.sleep;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -188,13 +191,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -1142,21 +1145,41 @@ public class AwsHelperService {
     return emptyList();
   }
 
-  public void setAutoScalingGroupCapacity(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      AwsInfrastructureMapping infrastructureMapping) {
+  public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
+      ExecutionLogCallback executionLogCallback) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(
-          Regions.fromName(infrastructureMapping.getRegion()), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      amazonAutoScalingClient.setDesiredCapacity(
-          new SetDesiredCapacityRequest()
-              .withAutoScalingGroupName(infrastructureMapping.getAutoScalingGroupName())
-              .withDesiredCapacity(infrastructureMapping.getDesiredCapacity()));
-      waitForAllInstancesToBeReady(awsConfig, encryptionDetails, infrastructureMapping);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+      executionLogCallback.saveExecutionLog(
+          String.format("Set AutoScaling Group: [%s] desired size to [%s]", autoScalingGroupName, desiredCapacity));
+      amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
+                                                     .withAutoScalingGroupName(autoScalingGroupName)
+                                                     .withDesiredCapacity(desiredCapacity));
+      executionLogCallback.saveExecutionLog(
+          "Successfully set desired size.\nWaiting for AutoScaling Group to reach at desired capacity");
+      waitForAllInstancesToBeReady(
+          awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity, executionLogCallback);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
   }
+
+  //  public void setAutoScalingGroupCapacity(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+  //      String region, String autoScalingGroupName, Integer desiredCount) {
+  //    try {
+  //      encryptionService.decrypt(awsConfig, encryptionDetails);
+  //      AmazonAutoScalingClient amazonAutoScalingClient =
+  //          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+  //      amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
+  //                                                     .withAutoScalingGroupName(autoScalingGroupName)
+  //                                                     .withDesiredCapacity(desiredCount));
+  //    } catch (AmazonServiceException amazonServiceException) {
+  //      handleAmazonServiceException(amazonServiceException);
+  //    }
+  //  }
 
   public AttachLoadBalancersResult attachLoadBalancerToAutoScalingGroup(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region,
@@ -1186,53 +1209,71 @@ public class AwsHelperService {
     return new AttachLoadBalancerTargetGroupsResult();
   }
 
-  private AutoScalingGroup getAutoScalingGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      AwsInfrastructureMapping infrastructureMapping) {
+  private AutoScalingGroup getAutoScalingGroup(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(
-        Regions.fromName(infrastructureMapping.getRegion()), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonAutoScalingClient amazonAutoScalingClient =
+        getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     return amazonAutoScalingClient
-        .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
-            infrastructureMapping.getAutoScalingGroupName()))
+        .describeAutoScalingGroups(
+            new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName))
         .getAutoScalingGroups()
         .iterator()
         .next();
   }
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      AwsInfrastructureMapping infrastructureMapping) {
+      String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     quietSleep(1, TimeUnit.SECONDS);
     int retryCount = RETRY_COUNTER;
-    List<String> instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping);
-    while (instanceIds.size() != infrastructureMapping.getDesiredCapacity()
-        || !allInstanceInReadyState(awsConfig, encryptionDetails, infrastructureMapping.getRegion(), instanceIds)) {
+    List<String> instanceIds =
+        listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
+    while (instanceIds.size() != desiredCount
+        || !allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, executionLogCallback)) {
+      if (instanceIds.size() != desiredCount) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Waiting for AutoScaling group to meet desired count. %s/%s instances registered ...",
+                instanceIds.size(), desiredCount));
+      }
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
       sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
-      instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping);
+      instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
     }
+    executionLogCallback.saveExecutionLog(
+        String.format("AutoScaling reached to steady state", instanceIds.size(), desiredCount));
   }
 
-  private boolean allInstanceInReadyState(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> instanceIds) {
+  private boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<String> instanceIds, ExecutionLogCallback executionLogCallback) {
     DescribeInstancesResult describeInstancesResult = describeEc2Instances(
         awsConfig, encryptionDetails, region, new DescribeInstancesRequest().withInstanceIds(instanceIds));
-    return describeInstancesResult.getReservations()
-        .stream()
-        .flatMap(reservation -> reservation.getInstances().stream())
-        .allMatch(instance -> instance.getState().getName().equals("running"));
+    boolean allRunning = instanceIds.size() == 0
+        || describeInstancesResult.getReservations()
+               .stream()
+               .flatMap(reservation -> reservation.getInstances().stream())
+               .allMatch(instance -> instance.getState().getName().equals("running"));
+    if (!allRunning) {
+      Map<String, Long> instanceStateCountMap =
+          describeInstancesResult.getReservations()
+              .stream()
+              .flatMap(reservation -> reservation.getInstances().stream())
+              .collect(groupingBy(instance -> instance.getState().getName(), counting()));
+      executionLogCallback.saveExecutionLog("Waiting for instances to be in running state");
+      executionLogCallback.saveExecutionLog(Joiner.on(",").withKeyValueSeparator("=").join(instanceStateCountMap));
+    }
+    return allRunning;
   }
 
-  DescribeInstancesResult describeAutoScalingGroupInstances(AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptionDetails, AwsInfrastructureMapping infrastructureMapping) {
+  DescribeInstancesResult describeAutoScalingGroupInstances(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEc2Client =
-          getAmazonEc2Client(infrastructureMapping.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       List<String> instanceIds =
-          listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping);
+          listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
       return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds));
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1240,9 +1281,9 @@ public class AwsHelperService {
     return new DescribeInstancesResult();
   }
 
-  public List<String> listInstanceIdsFromAutoScalingGroup(AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptionDetails, AwsInfrastructureMapping infrastructureMapping) {
-    return getAutoScalingGroup(awsConfig, encryptionDetails, infrastructureMapping)
+  public List<String> listInstanceIdsFromAutoScalingGroup(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+    return getAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName)
         .getInstances()
         .stream()
         .map(com.amazonaws.services.autoscaling.model.Instance::getInstanceId)

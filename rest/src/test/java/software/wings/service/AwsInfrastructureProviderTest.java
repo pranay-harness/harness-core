@@ -42,6 +42,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
 
 import java.util.Collections;
 import java.util.List;
@@ -183,8 +184,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                          .withDesiredCapacity(1)
                                                          .build();
 
-    when(
-        awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(), infrastructureMapping))
+    when(awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(),
+             infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName()))
         .thenReturn(singletonList("INSTANCE_ID"));
 
     when(awsHelperService.describeEc2Instances(
@@ -206,9 +207,13 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .isEqualTo(singletonList(
             aHost().withHostName(HOST_NAME).withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()));
 
-    verify(awsHelperService).setAutoScalingGroupCapacity(awsConfig, Collections.emptyList(), infrastructureMapping);
     verify(awsHelperService)
-        .listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(), infrastructureMapping);
+        .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, Collections.emptyList(),
+            infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
+            infrastructureMapping.getDesiredCapacity(), new ExecutionLogCallback());
+    verify(awsHelperService)
+        .listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
+            infrastructureMapping.getAutoScalingGroupName());
     verify(awsHelperService)
         .describeEc2Instances(
             awsConfig, Collections.emptyList(), region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));

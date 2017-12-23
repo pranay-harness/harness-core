@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -20,19 +21,21 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AmiServiceElement implements ContextElement {
+public class AmiServiceSetupElement implements ContextElement {
   private String uuid;
   private String name;
+  private String commandName;
+  private InstanceUnitType instanceUnitType;
+  private int instanceCount;
   private String newAutoScalingGroupName;
   private String oldAutoScalingGroupName;
-  private Integer newVersion;
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
   private ResizeStrategy resizeStrategy;
 
   @Override
   public ContextElementType getElementType() {
-    return ContextElementType.AMI_SERVICE;
+    return ContextElementType.AMI_SERVICE_SETUP;
   }
 
   @Override

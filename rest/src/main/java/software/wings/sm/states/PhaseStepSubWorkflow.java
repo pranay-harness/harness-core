@@ -5,6 +5,7 @@ import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployReques
 import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
@@ -24,7 +25,8 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.AmiServiceElement;
+import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ClusterElement;
@@ -65,6 +67,7 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -193,6 +196,16 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return singletonList(deployRequestElement);
     } else if (phaseStepType == DEPLOY_AWS_LAMBDA) {
       return new ArrayList<>();
+    } else if (phaseStepType == AMI_DEPLOY_AUTOSCALING_GROUP) {
+      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                 .stream()
+                                                 .filter(s -> s instanceof AmiStepExecutionSummary)
+                                                 .findFirst();
+      if (!first.isPresent()) {
+        return null;
+      }
+      AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) first.get();
+      return Arrays.asList(amiStepExecutionSummary.getRollbackAmiServiceElement());
     } else if (phaseStepType == CONTAINER_SETUP) {
       Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                  .stream()
@@ -346,9 +359,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
           executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
         } else if (phaseStepType == PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP) {
-          AmiServiceElement amiServiceElement = (AmiServiceElement) notifiedElement(
-              elementNotifyResponseData, AmiServiceElement.class, "Missing AmiServiceElement Element");
+          AmiServiceSetupElement amiServiceElement = (AmiServiceSetupElement) notifiedElement(
+              elementNotifyResponseData, AmiServiceSetupElement.class, "Missing AmiServiceElement Element");
           executionResponse.setContextElements(Lists.newArrayList(amiServiceElement));
+          executionResponse.setNotifyElements(Lists.newArrayList(amiServiceElement));
         }
       }
     }

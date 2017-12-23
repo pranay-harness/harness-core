@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
+import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
@@ -279,10 +280,11 @@ public enum StateType implements StateTypeDescriptor {
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
+      ORCHESTRATION_STENCILS),
 
   AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+      asList(AMI_DEPLOY_AUTOSCALING_GROUP), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

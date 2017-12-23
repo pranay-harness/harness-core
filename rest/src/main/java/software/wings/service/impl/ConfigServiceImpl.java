@@ -405,7 +405,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (deleted) {
       if (configFile.isEncrypted()) {
         EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-        Preconditions.checkNotNull("Encrypted record null for " + configFile);
+        Preconditions.checkNotNull(encryptedData, "Encrypted record null for " + configFile);
         encryptedData.removeParentId(configFile.getUuid());
         wingsPersistence.save(encryptedData);
       }
