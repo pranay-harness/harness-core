@@ -6,12 +6,7 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import software.wings.WingsBaseTest;
 import software.wings.rules.SetupScheduler;
 
@@ -24,27 +19,12 @@ public class StateMachineExecutionCleanupJobTest extends WingsBaseTest {
 
   private final static String appId = "Dummy App Id";
 
-  public void scheduleJob() {
-    JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
-                        .withIdentity(appId, StateMachineExecutionCleanupJob.GROUP)
-                        .usingJobData(StateMachineExecutionCleanupJob.APP_ID_KEY, appId)
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(appId, StateMachineExecutionCleanupJob.GROUP)
-                          .startNow()
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(1).repeatForever())
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
   @Test
   public void selfPrune() throws SchedulerException, InterruptedException, TimeoutException {
     TestJobListener listener = new TestJobListener(StateMachineExecutionCleanupJob.GROUP + "." + appId);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);
 
-    scheduleJob();
+    StateMachineExecutionCleanupJob.add(jobScheduler, appId);
 
     listener.waitToSatisfy(5000);
 

@@ -86,9 +86,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class AppServiceImpl implements AppService {
   private static final Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
-  private static final int SM_CLEANUP_POLL_INTERVAL = 60;
-  private static final int INSTANCE_SYNC_POLL_INTERVAL = 600;
-
   @Inject private AlertService alertService;
   @Inject private ArtifactService artifactService;
   @Inject private EnvironmentService environmentService;
@@ -128,8 +125,8 @@ public class AppServiceImpl implements AppService {
             .withNotificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
             .build());
-    addCronForStateMachineExecutionCleanup(application);
-    addCronForContainerSync(application);
+    StateMachineExecutionCleanupJob.add(jobScheduler, application.getUuid());
+    ContainerSyncJob.add(jobScheduler, application.getUuid());
 
     yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.ADD);
 
@@ -164,38 +161,6 @@ public class AppServiceImpl implements AppService {
                              .withAppId(app.getUuid())
                              .withAppName(app.getName())
                              .build()));
-  }
-
-  void addCronForStateMachineExecutionCleanup(Application application) {
-    JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
-                        .withIdentity(application.getUuid(), StateMachineExecutionCleanupJob.GROUP)
-                        .usingJobData(StateMachineExecutionCleanupJob.APP_ID_KEY, application.getUuid())
-                        .build();
-
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(application.getUuid(), StateMachineExecutionCleanupJob.GROUP)
-            .withSchedule(
-                SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(SM_CLEANUP_POLL_INTERVAL).repeatForever())
-            .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
-  void addCronForContainerSync(Application application) {
-    JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
-                        .withIdentity(application.getUuid(), ContainerSyncJob.GROUP)
-                        .usingJobData(ContainerSyncJob.APP_ID_KEY, application.getUuid())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(application.getUuid(), ContainerSyncJob.GROUP)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(INSTANCE_SYNC_POLL_INTERVAL)
-                                            .repeatForever())
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
   }
 
   /* (non-Javadoc)
@@ -401,10 +366,6 @@ public class AppServiceImpl implements AppService {
         .equal(accountId)
         .asKeyList()
         .forEach(key -> delete(key.getId().toString()));
-  }
-
-  void deleteCronForStateMachineExecutionCleanup(String appId) {
-    jobScheduler.deleteJob(appId, StateMachineExecutionCleanupJob.GROUP);
   }
 
   @Override
