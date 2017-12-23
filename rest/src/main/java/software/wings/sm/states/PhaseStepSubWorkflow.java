@@ -1,46 +1,9 @@
 package software.wings.sm.states;
 
-import static java.util.Collections.singletonList;
-import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
-import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
-import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
-import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
-import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
-import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
-import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
-import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
-import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.START_SERVICE;
-import static software.wings.beans.PhaseStepType.STOP_SERVICE;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.EXISTS;
-import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.utils.Switch.unhandled;
-
-import com.google.common.collect.Lists;
-
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.Lists;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.AmiServiceSetupElement;
-import software.wings.api.AmiStepExecutionSummary;
-import software.wings.api.AwsCodeDeployRequestElement;
-import software.wings.api.AwsLambdaContextElement;
-import software.wings.api.ClusterElement;
-import software.wings.api.CommandStepExecutionSummary;
-import software.wings.api.ContainerRollbackRequestElement;
-import software.wings.api.ContainerServiceData;
-import software.wings.api.ContainerServiceElement;
-import software.wings.api.DeploymentType;
-import software.wings.api.InstanceElementListParam;
-import software.wings.api.PhaseElement;
-import software.wings.api.PhaseExecutionData;
-import software.wings.api.PhaseStepExecutionData;
-import software.wings.api.ServiceInstanceArtifactParam;
-import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.*;
 import software.wings.beans.Activity;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
@@ -50,29 +13,22 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
-import software.wings.sm.ElementNotifyResponseData;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.ExecutionStatusData;
-import software.wings.sm.PhaseExecutionSummary;
-import software.wings.sm.PhaseStepExecutionSummary;
-import software.wings.sm.SpawningExecutionResponse;
-import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateType;
-import software.wings.sm.StepExecutionSummary;
+import software.wings.sm.*;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Collections.singletonList;
+import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
+import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
+import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
+import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.PhaseStepType.*;
+import static software.wings.beans.SearchFilter.Operator.*;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Switch.unhandled;
 
 /**
  * Created by rishi on 1/12/17.

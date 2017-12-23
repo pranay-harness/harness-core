@@ -6,6 +6,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,14 +15,22 @@ import java.util.Map;
 @Data
 @Builder
 public class AmiServiceDeployElement implements ContextElement {
-  private String uuid;
-  private String name;
-  private String activityId;
-  private String commandName;
+  private List<ContainerServiceData> newInstanceData;
+  private List<ContainerServiceData> oldInstanceData;
 
   @Override
   public ContextElementType getElementType() {
     return ContextElementType.AMI_SERVICE_DEPLOY;
+  }
+
+  @Override
+  public String getUuid() {
+    return null;
+  }
+
+  @Override
+  public String getName() {
+    return null;
   }
 
   @Override

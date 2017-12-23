@@ -1,37 +1,19 @@
 package software.wings.sm.states;
 
-import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.api.AmiServiceDeployElement;
-import software.wings.api.AmiServiceSetupElement;
-import software.wings.api.AwsAmiDeployStateExecutionData;
-import software.wings.api.PhaseElement;
-import software.wings.beans.Activity;
+import software.wings.api.*;
+import software.wings.beans.*;
 import software.wings.beans.Activity.Type;
-import software.wings.beans.Application;
-import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.Environment;
-import software.wings.beans.InstanceUnitType;
-import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
@@ -41,23 +23,10 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
-import software.wings.sm.StateExecutionException;
-import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.*;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Validator;
@@ -70,10 +39,18 @@ import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
+
 /**
  * Created by anubhaw on 12/19/17.
  */
 public class AwsAmiServiceDeployState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(AwsAmiServiceDeployState.class);
+
   @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")
@@ -231,9 +208,19 @@ public class AwsAmiServiceDeployState extends State {
 
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
 
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(logService, logBuilder, activity.getUuid());
+
     if (isRollback()) {
-      instanceCount = serviceSetupElement.getInstanceCount();
-      instanceUnitType = serviceSetupElement.getInstanceUnitType();
+      AmiServiceDeployElement amiServiceDeployElement =
+          context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
+      // TODO: old and new both should be present with 1 element atleast
+      ContainerServiceData oldContainerServiceData = amiServiceDeployElement.getOldInstanceData().get(0);
+      ContainerServiceData newContainerServiceData = amiServiceDeployElement.getNewInstanceData().get(0);
+      resizeAsgs(region, awsConfig, encryptionDetails, oldContainerServiceData.getName(),
+          oldContainerServiceData.getPreviousCount(), newContainerServiceData.getName(),
+          newContainerServiceData.getPreviousCount(), executionLogCallback,
+          serviceSetupElement.getResizeStrategy() == ResizeStrategy.RESIZE_NEW_FIRST);
+
     } else {
       awsAmiDeployStateExecutionData.setInstanceCount(instanceCount);
       awsAmiDeployStateExecutionData.setInstanceUnitType(instanceUnitType);
@@ -244,72 +231,83 @@ public class AwsAmiServiceDeployState extends State {
       awsAmiDeployStateExecutionData.setOldAutoScalingGroupName(serviceSetupElement.getOldAutoScalingGroupName());
       awsAmiDeployStateExecutionData.setMaxInstances(serviceSetupElement.getMaxInstances());
       awsAmiDeployStateExecutionData.setResizeStrategy(serviceSetupElement.getResizeStrategy());
+      String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
+      String oldAutoScalingGroupName = serviceSetupElement.getOldAutoScalingGroupName();
+
+      Integer totalExpectedCount;
+      if (getInstanceUnitType() == PERCENTAGE) {
+        int percent = Math.min(getInstanceCount(), 100);
+        int instanceCount = (int) Math.round((percent * serviceSetupElement.getMaxInstances()) / 100.0);
+        totalExpectedCount = Math.max(instanceCount, 1);
+      } else {
+        totalExpectedCount = getInstanceCount();
+      }
+
+      AutoScalingGroup newAutoScalingGroup = awsHelperService
+                                                 .describeAutoScalingGroups(awsConfig, encryptionDetails, region,
+                                                     new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
+                                                         Arrays.asList(newAutoScalingGroupName)))
+                                                 .getAutoScalingGroups()
+                                                 .get(0);
+
+      AutoScalingGroup oldAutoScalingGroup = awsHelperService
+                                                 .describeAutoScalingGroups(awsConfig, encryptionDetails, region,
+                                                     new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
+                                                         Arrays.asList(oldAutoScalingGroupName)))
+                                                 .getAutoScalingGroups()
+                                                 .get(0);
+
+      Integer newAutoScalingGroupDesiredCapacity = newAutoScalingGroup.getDesiredCapacity();
+      Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
+      Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
+      awsAmiDeployStateExecutionData.setNewInstanceData(
+          Arrays.asList(aContainerServiceData()
+                            .withName(newAutoScalingGroupName)
+                            .withDesiredCount(newAsgFinalDesiredCount)
+                            .withPreviousCount(newAutoScalingGroupDesiredCapacity)
+                            .build()));
+
+      Integer oldAutoScalingGroupDesiredCapacity = oldAutoScalingGroup.getDesiredCapacity();
+      Integer totalOldInstancesToBeRemoved =
+          Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
+      Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalOldInstancesToBeRemoved);
+
+      awsAmiDeployStateExecutionData.setOldInstanceData(
+          Arrays.asList(aContainerServiceData()
+                            .withName(oldAutoScalingGroupName)
+                            .withDesiredCount(oldAsgFinalDesiredCount)
+                            .withPreviousCount(oldAutoScalingGroupDesiredCapacity)
+                            .build()));
+
+      boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
+
+      resizeAsgs(region, awsConfig, encryptionDetails, newAutoScalingGroupName, newAsgFinalDesiredCount,
+          oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback, resizeNewFirst);
     }
 
-    String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
-    String oldAutoScalingGroupName = serviceSetupElement.getOldAutoScalingGroupName();
+    activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
 
-    Integer totalExpectedCount;
-    if (getInstanceUnitType() == PERCENTAGE) {
-      int percent = Math.min(getInstanceCount(), 100);
-      int instanceCount = Long.valueOf(Math.round(percent * getInstanceCount() / 100.0)).intValue();
-      totalExpectedCount = Math.max(instanceCount, 1);
-    } else {
-      totalExpectedCount = getInstanceCount();
-    }
-
-    AutoScalingGroup newAutoScalingGroup = awsHelperService
-                                               .describeAutoScalingGroups(awsConfig, encryptionDetails, region,
-                                                   new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
-                                                       Arrays.asList(newAutoScalingGroupName)))
-                                               .getAutoScalingGroups()
-                                               .get(0);
-
-    AutoScalingGroup oldAutoScalingGroup = awsHelperService
-                                               .describeAutoScalingGroups(awsConfig, encryptionDetails, region,
-                                                   new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
-                                                       Arrays.asList(oldAutoScalingGroupName)))
-                                               .getAutoScalingGroups()
-                                               .get(0);
-
-    Integer newAutoScalingGroupDesiredCapacity = newAutoScalingGroup.getDesiredCapacity();
-    Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
-    Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
-
-    Integer oldAutoScalingGroupDesiredCapacity = oldAutoScalingGroup.getDesiredCapacity();
-    Integer totalOldInstancesToBeRemoved = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
-    Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalOldInstancesToBeRemoved);
-
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(logService, logBuilder, activity.getUuid());
-    //
-    //    if (serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST)) {
-    //      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
-    //      region,
-    //          newAutoScalingGroupName, totalNewInstancesToBeAdded, executionLogCallback);
-    //      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
-    //      region,
-    //          oldAutoScalingGroupName, totalOldInstancesToBeRemoved, executionLogCallback);
-    //    } else {
-    //      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
-    //      region,
-    //          oldAutoScalingGroupName, totalOldInstancesToBeRemoved, executionLogCallback);
-    //      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
-    //      region,
-    //          newAutoScalingGroupName, totalNewInstancesToBeAdded, executionLogCallback);
-    //    }
-    //
-    //    activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
-    AmiServiceDeployElement amiServiceDeployElement =
-        AmiServiceDeployElement.builder().activityId(activity.getUuid()).commandName(commandName).build();
-
-    return anExecutionResponse()
-        .withAsync(false)
-        .withStateExecutionData(awsAmiDeployStateExecutionData)
-        .withExecutionStatus(ExecutionStatus.FAILED)
-        .addContextElement(amiServiceDeployElement)
-        .addNotifyElement(amiServiceDeployElement)
-        .build();
+    return anExecutionResponse().withStateExecutionData(awsAmiDeployStateExecutionData).build();
   }
+
+  private void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
+      Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst) {
+    if (resizeNewFirst) {
+      logger.info("resizeAsgs");
+      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+          awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
+      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+          awsConfig, encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
+    } else {
+      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+          awsConfig, encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
+      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+          awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
+    }
+  }
+
+  protected void compouteCounts() {}
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
