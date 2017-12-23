@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.integration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -27,7 +27,7 @@ import java.io.IOException;
  * Created by peeyushaggarwal on 5/17/16.
  */
 @RealMongo
-public class FileServiceTest extends WingsBaseTest {
+public class FileServiceIntegrationTest extends WingsBaseTest {
   /**
    * The Temporary folder.
    */

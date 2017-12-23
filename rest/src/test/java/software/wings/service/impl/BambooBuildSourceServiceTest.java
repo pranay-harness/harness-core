@@ -72,21 +72,18 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getJobs() {
     Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
     assertTrue(jobs.size() > 0);
   }
 
   @Test
-  @RealMongo
   public void getPlans() {
     Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
     assertTrue(plans.size() > 0);
   }
 
   @Test
-  @RealMongo
   public void getPlansWithType() {
     Service service =
         Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
@@ -97,7 +94,6 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getArtifactPaths() {
     Set<String> artifactPaths =
         buildSourceService.getArtifactPaths(appId, "TOD-TOD", settingAttribute.getUuid(), null, streamType.name());
@@ -106,7 +102,6 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getBuilds() {
     Service service =
         Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
@@ -124,7 +119,6 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getLastSuccessfulBuild() {
     Service service =
         Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
