@@ -2,6 +2,9 @@ package software.wings.service.impl;
 
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -16,8 +19,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by brett on 2/27/17
@@ -47,11 +48,6 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
     hostService.updateHostConnectionAttrByInfraMappingId(
         infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
-  }
-
-  @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
-    hostService.deleteByInfraMappingId(appId, infraMappingId);
   }
 
   @Override

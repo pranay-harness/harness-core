@@ -5,6 +5,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
@@ -17,14 +19,13 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
 import software.wings.scheduler.JobScheduler;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.TestJobListener;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import javax.inject.Inject;
 
 @SetupScheduler
 public class AppServicePersistenceTest extends WingsBaseTest {
@@ -69,7 +70,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
 
     // TODO: add to the application from all other objects that are owned from application
 
-    TestJobListener listener = new TestJobListener(PruneObjectJob.GROUP + "." + APP_ID);
+    TestJobListener listener = new TestJobListener(PruneEntityJob.GROUP + "." + APP_ID);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);
 
     // Delete the target application

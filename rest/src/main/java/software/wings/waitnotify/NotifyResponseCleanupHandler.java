@@ -11,6 +11,7 @@ import static software.wings.core.maintenance.MaintenanceController.isMaintenanc
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,6 @@ import software.wings.sm.ExecutionStatus;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * This is meant to cleanup notifyResponse objects that have already been used to callback waiting

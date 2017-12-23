@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import com.google.inject.Singleton;
+
 import org.mongodb.morphia.query.Query;
 import org.reflections.Reflections;
 import software.wings.beans.Base;
@@ -10,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Singleton;
 
 /**
  * Created by rsingh on 7/13/17.

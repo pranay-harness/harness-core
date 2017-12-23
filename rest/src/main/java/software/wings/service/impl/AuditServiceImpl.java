@@ -5,6 +5,7 @@ import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.intfc.FileService.FileBucket;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
@@ -32,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Audit Service Implementation class.
@@ -145,7 +145,7 @@ public class AuditServiceImpl implements AuditService {
     final int batchSize = 1000;
     final int limit = 5000;
     final long days = retentionMillis / (24 * 60 * 60 * 1000L);
-    logger.info("Start: Deleting audit records older than {} time", (System.currentTimeMillis() - retentionMillis));
+    logger.info("Start: Deleting audit records older than {} time", System.currentTimeMillis() - retentionMillis);
     try {
       logger.info("Start: Deleting audit records older than {} days", days);
       with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {

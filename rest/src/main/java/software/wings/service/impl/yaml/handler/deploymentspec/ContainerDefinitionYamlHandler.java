@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ObjectType;
@@ -23,7 +24,6 @@ import software.wings.utils.Util;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * @author rktummala on 11/15/17

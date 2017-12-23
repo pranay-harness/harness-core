@@ -1,12 +1,12 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.waitnotify.WaitNotifyEngine;
-
-import javax.inject.Inject;
 
 /**
  * Created by sgurubelli on 11/21/17.

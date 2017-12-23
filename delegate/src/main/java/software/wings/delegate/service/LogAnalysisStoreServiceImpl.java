@@ -2,6 +2,9 @@ package software.wings.delegate.service;
 
 import static software.wings.managerclient.SafeHttpCall.execute;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.analysis.LogElement;
@@ -10,8 +13,6 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by rsingh on 06/20/17.

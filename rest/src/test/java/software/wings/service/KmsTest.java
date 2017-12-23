@@ -14,6 +14,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -88,7 +90,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/29/17.
@@ -352,8 +353,8 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     appDynamicsConfig.setPassword(password.toCharArray());
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    assertNotNull((savedConfig).getEncryptedPassword());
-    assertNull((savedConfig).getPassword());
+    assertNotNull(savedConfig.getEncryptedPassword());
+    assertNull(savedConfig.getPassword());
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
     assertEquals(appDynamicsConfig, savedConfig);
 

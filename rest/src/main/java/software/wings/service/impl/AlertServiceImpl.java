@@ -14,6 +14,7 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.BasicDBObject;
@@ -45,7 +46,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);

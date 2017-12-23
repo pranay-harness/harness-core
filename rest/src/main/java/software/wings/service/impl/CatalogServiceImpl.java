@@ -6,6 +6,8 @@ package software.wings.service.impl;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
@@ -21,8 +23,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * The Class CatalogServiceImpl.

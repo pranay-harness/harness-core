@@ -2,6 +2,8 @@ package software.wings.service.impl.elk;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
+import com.google.inject.Inject;
+
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -18,7 +20,6 @@ import software.wings.service.intfc.elk.ElkDelegateService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 8/23/17.

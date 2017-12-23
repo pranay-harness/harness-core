@@ -6,6 +6,7 @@ import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersi
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
@@ -24,8 +25,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EntityVersionService;
-
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 10/18/16.

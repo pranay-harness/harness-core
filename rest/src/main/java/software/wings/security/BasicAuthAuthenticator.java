@@ -6,6 +6,7 @@ import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
@@ -18,7 +19,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.UserService;
 
 import java.util.Optional;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 3/10/16.

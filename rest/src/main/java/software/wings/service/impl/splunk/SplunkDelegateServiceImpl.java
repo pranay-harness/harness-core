@@ -1,5 +1,7 @@
 package software.wings.service.impl.splunk;
 
+import com.google.inject.Inject;
+
 import com.splunk.HttpService;
 import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
@@ -14,7 +16,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 6/30/17.

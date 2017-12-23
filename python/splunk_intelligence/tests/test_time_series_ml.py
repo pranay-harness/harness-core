@@ -15,9 +15,10 @@ parser.add_argument("--smooth_window", type=int, required=True)
 parser.add_argument("--min_rpm", type=int, required=True)
 parser.add_argument("--comparison_unit_window", type=int, required=True)
 parser.add_argument("--parallelProcesses", type=int, required=True)
+parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int)
 
 options = parser.parse_args(['--analysis_minute', '29', '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10',
-                             '--comparison_unit_window', '1', '--parallelProcesses', '1'])
+                             '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19'])
 
 metric_template = FileLoader.load_data('resources/ts/metric_template.json')
 

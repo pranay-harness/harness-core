@@ -2,6 +2,8 @@ package software.wings.service.impl.appdynamics;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
@@ -21,7 +23,6 @@ import software.wings.service.intfc.security.SecretManager;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

@@ -1,5 +1,8 @@
 package software.wings.delegatetasks;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -17,8 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Created by rsingh on 9/11/17.

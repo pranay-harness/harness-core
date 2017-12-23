@@ -3,6 +3,8 @@ package software.wings.service;
 import static org.junit.Assert.assertEquals;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
@@ -22,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.

@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
@@ -43,7 +44,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/11/17.
@@ -365,6 +365,8 @@ public class MetricAnalysisJob implements Job {
                 // Do nothing. Don't run any analysis.
                 break;
               }
+              timeSeriesML(analysisMinute);
+              break;
               // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
             case COMPARE_WITH_CURRENT:
               logger.info("running time series ml analysis for minute " + analysisMinute);

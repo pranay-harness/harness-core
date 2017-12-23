@@ -1,11 +1,12 @@
 package software.wings.scheduler;
 
+import com.google.inject.Singleton;
+
 import software.wings.service.intfc.analysis.AnalysisService;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Singleton;
 
 /**
  * Created by rsingh on 8/18/17.

@@ -78,6 +78,8 @@ public class NexusServiceImpl implements NexusService {
           return false;
         case 401:
           throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Invalid Nexus credentials");
+        case 405:
+          throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Method not allowed" + response.message());
         default:
           throw new WingsException(INVALID_ARTIFACT_SERVER, "message", response.message());
       }
@@ -274,12 +276,25 @@ public class NexusServiceImpl implements NexusService {
     if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
       return getRepositories(nexusConfig, Collections.emptyList()) != null;
     } else {
-      Map<String, String> repositories = getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER);
+      Map<String, String> repositories;
+
+      try {
+        repositories = getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER);
+      } catch (WingsException e) {
+        if (e.getMessage() != null && e.getMessage().contains("Invalid Nexus credentials")) {
+          throw e;
+        }
+        return true;
+      } catch (Exception e) {
+        logger.warn(
+            "Failed to retrieve repositories. Ignoring validation for Nexus 3 for now. User can give custom path");
+        return true;
+      }
       Optional<String> repoKey = repositories.keySet().stream().findFirst();
       if (repoKey.isPresent()) {
         images = getGroupIdPaths(nexusConfig, encryptionDetails, repoKey.get());
       }
     }
-    return (images != null);
+    return images != null;
   }
 }

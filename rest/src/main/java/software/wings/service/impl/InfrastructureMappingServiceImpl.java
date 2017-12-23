@@ -29,11 +29,14 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -54,6 +57,7 @@ import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -73,11 +77,15 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneEntityJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -107,7 +115,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -118,23 +125,27 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
-  @Inject private ServiceInstanceService serviceInstanceService;
-  @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private AppService appService;
-  @Inject private SettingsService settingsService;
-  @Inject private ExecutorService executorService;
-  @Inject private ServiceResourceService serviceResourceService;
-  @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private AwsCodeDeployService awsCodeDeployService;
-  @Inject private WorkflowService workflowService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private FeatureFlagService featureFlagService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private ExecutorService executorService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private HostService hostService;
+  @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private SettingsService settingsService;
+  @Inject private StencilPostProcessor stencilPostProcessor;
+  @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private SecretManager secretManager;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -212,7 +223,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (isBlank(directKubernetesInfrastructureMapping.getNamespace())) {
         directKubernetesInfrastructureMapping.setNamespace("default");
       }
-      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping, computeProviderSetting);
+      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
     }
 
     if (infraMapping instanceof PhysicalInfrastructureMapping) {
@@ -221,11 +232,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     InfrastructureMapping savedInfraMapping = duplicateCheck(
         () -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping), "name", infraMapping.getName());
-    executorService.submit(() -> queueYamlChangeSet(savedInfraMapping, ChangeType.ADD));
+    executorService.submit(() -> saveYamlChangeSet(savedInfraMapping, ChangeType.ADD));
     return savedInfraMapping;
   }
 
-  private void queueYamlChangeSet(InfrastructureMapping infraMapping, ChangeType crudType) {
+  private void saveYamlChangeSet(InfrastructureMapping infraMapping, ChangeType crudType) {
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
@@ -246,7 +257,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String escapedString = Pattern.quote(name);
 
     // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.
-    PageRequest<InfrastructureMapping> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
                                                          .addFilter("appId", Operator.EQ, infraMapping.getAppId())
                                                          .addFilter("envId", Operator.EQ, infraMapping.getEnvId())
                                                          .addFilter("name", Operator.STARTS_WITH, escapedString)
@@ -280,11 +291,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
       }
     }
+    // TODO - Validate via delegate sync task to KubernetesHelperService::validateCredential
   }
 
-  private void validateDirectKubernetesInfraMapping(
-      DirectKubernetesInfrastructureMapping infraMapping, SettingAttribute settingAttribute) {
-    infraMapping.createKubernetesConfig();
+  private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
+    KubernetesConfig kubernetesConfig = infraMapping.createKubernetesConfig();
+    // TODO - Validate via delegate sync task to KubernetesHelperService::validateCredential
   }
 
   @Override
@@ -295,9 +307,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping) {
     InfrastructureMapping savedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
     UpdateOperations<InfrastructureMapping> updateOperations =
         wingsPersistence.createUpdateOperations(InfrastructureMapping.class);
-    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    updateOperations.set("computeProviderSettingId", infrastructureMapping.getComputeProviderSettingId());
 
     if (savedInfraMapping.getHostConnectionAttrs() != null
         && !savedInfraMapping.getHostConnectionAttrs().equals(infrastructureMapping.getHostConnectionAttrs())) {
@@ -321,8 +335,31 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
       updateOperations.set("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
-      updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
-      updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
+      if (directKubernetesInfrastructureMapping.getUsername() != null) {
+        updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
+      } else {
+        updateOperations.unset("username");
+      }
+      if (directKubernetesInfrastructureMapping.getPassword() != null) {
+        updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
+      } else {
+        updateOperations.unset("password");
+      }
+      if (directKubernetesInfrastructureMapping.getCaCert() != null) {
+        updateOperations.set("caCert", directKubernetesInfrastructureMapping.getCaCert());
+      } else {
+        updateOperations.unset("caCert");
+      }
+      if (directKubernetesInfrastructureMapping.getClientCert() != null) {
+        updateOperations.set("clientCert", directKubernetesInfrastructureMapping.getClientCert());
+      } else {
+        updateOperations.unset("clientCert");
+      }
+      if (directKubernetesInfrastructureMapping.getClientKey() != null) {
+        updateOperations.set("clientKey", directKubernetesInfrastructureMapping.getClientKey());
+      } else {
+        updateOperations.unset("clientKey");
+      }
       updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
       updateOperations.set("namespace",
           isNotBlank(directKubernetesInfrastructureMapping.getNamespace())
@@ -378,7 +415,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
-          ((CodeDeployInfrastructureMapping) infrastructureMapping);
+          (CodeDeployInfrastructureMapping) infrastructureMapping;
       updateOperations.set("region", codeDeployInfrastructureMapping.getRegion());
       updateOperations.set("applicationName", codeDeployInfrastructureMapping.getApplicationName());
       updateOperations.set("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
@@ -398,7 +435,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     wingsPersistence.update(savedInfraMapping, updateOperations);
 
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-    executorService.submit(() -> queueYamlChangeSet(updatedInfraMapping, ChangeType.MODIFY));
+    executorService.submit(() -> saveYamlChangeSet(updatedInfraMapping, ChangeType.MODIFY));
     return updatedInfraMapping;
   }
 
@@ -432,19 +469,27 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void delete(String appId, String infraMappingId, boolean forceDelete) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    if (infrastructureMapping != null) {
-      if (!forceDelete) {
-        ensureInfraMappingSafeToDelete(infrastructureMapping);
-      }
-      boolean deleted = wingsPersistence.delete(infrastructureMapping);
-      if (deleted) {
-        InfrastructureProvider infrastructureProvider =
-            getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType());
-        executorService.submit(() -> infrastructureProvider.deleteHostByInfraMappingId(appId, infraMappingId));
-        executorService.submit(() -> serviceInstanceService.deleteByInfraMappingId(appId, infraMappingId));
-        executorService.submit(() -> queueYamlChangeSet(infrastructureMapping, ChangeType.DELETE));
-      }
+    if (infrastructureMapping == null) {
+      return;
     }
+
+    if (!forceDelete) {
+      ensureInfraMappingSafeToDelete(infrastructureMapping);
+    }
+
+    saveYamlChangeSet(infrastructureMapping, ChangeType.DELETE);
+
+    PruneEntityJob.addDefaultJob(jobScheduler, InfrastructureMapping.class, appId, infraMappingId);
+
+    wingsPersistence.delete(infrastructureMapping);
+  }
+
+  @Override
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraMappingId) {
+    List<OwnedByInfrastructureMapping> services = ServiceClassLocator.descendingServices(
+        this, InfrastructureMappingServiceImpl.class, OwnedByInfrastructureMapping.class);
+    PruneEntityJob.pruneDescendingEntities(services, appId, infraMappingId,
+        (descending) -> { descending.pruneByInfrastructureMapping(appId, infraMappingId); });
   }
 
   private void ensureInfraMappingSafeToDelete(InfrastructureMapping infrastructureMapping) {
@@ -486,7 +531,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                 .field("serviceTemplateId")
                                                 .equal(serviceTemplateId)
                                                 .asKeyList();
-    keys.forEach(key -> delete(appId, key.toString(), true));
+    keys.forEach(key -> delete(appId, (String) key.getId(), true));
   }
 
   @Override

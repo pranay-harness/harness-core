@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -65,7 +66,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/27/17.
@@ -585,11 +585,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     assertEquals(numOfUnknownClusters + " anomalous clusters found", analysisSummary.getAnalysisSummaryMessage());
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getUnknownClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
-        assert (hosts.contains(hostname));
+        assert hosts.contains(hostname);
         hosts.remove(hostname);
       }
     }
-    assert (hosts.isEmpty());
+    assert hosts.isEmpty();
   }
 
   @Test
@@ -645,11 +645,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getTestClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
-        assert (hosts.contains(hostname));
+        assert hosts.contains(hostname);
         hosts.remove(hostname);
       }
     }
-    assert (hosts.isEmpty());
+    assert hosts.isEmpty();
   }
 
   @Test
@@ -691,11 +691,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getControlClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
-        assert (hosts.contains(hostname));
+        assert hosts.contains(hostname);
         hosts.remove(hostname);
       }
     }
-    assert (hosts.isEmpty());
+    assert hosts.isEmpty();
   }
 
   @Test
@@ -924,7 +924,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100), 0);
     for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
-      assert (clusterSummary.getScore() > 0);
+      assert clusterSummary.getScore() > 0;
     }
   }
 }

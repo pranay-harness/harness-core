@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import com.google.inject.Inject;
+
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.exception.WingsException;
@@ -13,7 +15,6 @@ import wiremock.org.apache.commons.lang.StringUtils;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   @Inject private NewRelicDelegateService newRelicDelegateService;

@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.utils.Misc.isNullOrEmpty;
 
+import com.google.inject.Inject;
+
 import com.jayway.jsonpath.DocumentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -102,11 +103,15 @@ public class WebHookServiceImpl implements WebHookService {
         return WebHookResponse.builder().error("Trigger not associated to the given token").build();
       }
       WebHookTriggerCondition webhookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      String pullRequestPrefix = "pullrequest.";
       boolean bitBucketPullRequest = false;
       if (webhookTriggerCondition.getWebhookSource() != null
           && BITBUCKET.equals(webhookTriggerCondition.getWebhookSource())) {
         List<WebhookEventType> eventTypes = webhookTriggerCondition.getEventTypes();
-        if (webhookEventPayload.contains("pullrequest")) {
+        if (webhookEventPayload.contains("pullrequest") || webhookEventPayload.contains("pullRequest")) {
+          if (webhookEventPayload.contains("pullRequest")) {
+            pullRequestPrefix = "pullRequest.";
+          }
           if (eventTypes.contains(WebhookEventType.PULL_REQUEST)) {
             bitBucketPullRequest = true;
           }
@@ -128,12 +133,15 @@ public class WebHookServiceImpl implements WebHookService {
             if (matcher.matches()) {
               String paramVariable = matcher.group(0).substring(2, matcher.group(0).length() - 1);
               if (bitBucketPullRequest) {
-                if (!paramVariable.startsWith("pullrequest")) {
-                  paramVariable = "pullrequest." + paramVariable;
+                if (!paramVariable.startsWith("pullrequest") || !paramVariable.startsWith("pullRequest")) {
+                  paramVariable = pullRequestPrefix + paramVariable;
                 }
               }
               logger.info("Param Variable {}", paramVariable);
               paramValue = JsonUtils.jsonPath(ctx, paramVariable);
+            } else {
+              logger.info("Not variable {}", param);
+              paramValue = JsonUtils.jsonPath(ctx, param);
             }
           } catch (Exception e) {
             logger.warn("Failed to resolve the param {} in Json {}", param, webhookEventPayload);

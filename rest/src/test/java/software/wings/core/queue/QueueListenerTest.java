@@ -10,6 +10,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -23,8 +26,6 @@ import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 4/13/16.

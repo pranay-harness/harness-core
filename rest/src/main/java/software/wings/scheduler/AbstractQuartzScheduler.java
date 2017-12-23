@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.MongoClientOptions;
@@ -27,7 +28,6 @@ import software.wings.exception.WingsException;
 
 import java.util.Date;
 import java.util.Properties;
-import javax.inject.Inject;
 
 public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceListener {
   private Injector injector;
@@ -74,7 +74,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
 
     Properties props = new Properties();
-    if (schedulerConfig.getJobstoreclass() == "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore") {
+    if (schedulerConfig.getJobstoreclass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
       MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
       Builder mongoClientOptions = MongoClientOptions.builder()
                                        .connectTimeout(30000)

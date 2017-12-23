@@ -5,6 +5,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -179,7 +179,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw(e);
+        throw e;
       }
 
       // get error metrics
@@ -205,7 +205,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw(e);
+        throw e;
       }
 
       // get apdex metrics
@@ -231,7 +231,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       } catch (Exception e) {
         logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw(e);
+        throw e;
       }
       logger.debug(records.toString());
       return records;

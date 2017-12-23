@@ -2,6 +2,8 @@ package software.wings.service.impl.appdynamics;
 
 import static software.wings.utils.HttpUtil.validUrl;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -25,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 4/17/17.

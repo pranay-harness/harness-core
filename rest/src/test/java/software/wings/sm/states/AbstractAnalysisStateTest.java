@@ -6,6 +6,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Inject;
+
 import org.joor.Reflect;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -38,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 12/7/17.

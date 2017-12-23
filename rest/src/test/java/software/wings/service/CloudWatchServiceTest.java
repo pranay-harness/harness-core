@@ -12,6 +12,8 @@ import static software.wings.utils.WingsTestConstants.NAMESPACE;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import com.google.inject.Inject;
+
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
@@ -28,7 +30,6 @@ import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 12/15/16.

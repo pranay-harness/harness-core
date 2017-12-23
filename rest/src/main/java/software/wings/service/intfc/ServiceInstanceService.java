@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 5/26/16.
  */
-public interface ServiceInstanceService {
+public interface ServiceInstanceService extends OwnedByHost, OwnedByInfrastructureMapping {
   /**
    * List page response.
    *
@@ -89,18 +89,10 @@ public interface ServiceInstanceService {
   void updateActivity(@NotNull Activity activity);
 
   /**
-   * Delete by infra mapping id.
-   *
-   * @param appId          the app id
-   * @param infraMappingId the infra mapping id
-   */
-  void deleteByInfraMappingId(String appId, String infraMappingId);
-
-  /**
    * Delete by host.
    *
    * @param appId  the app id
    * @param hostId the host id
    */
-  void deleteByHost(String appId, String hostId);
+  void pruneByHost(String appId, String hostId);
 }

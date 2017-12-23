@@ -15,60 +15,37 @@ import software.wings.yaml.BaseYaml;
 public class NameValuePair {
   private String name;
   /*
-    Value can only be of type String / number types
+    Value can only be of type String or in encrypted format
   */
   private String value;
 
   /*
-   Could be String, Integer, Long, etc.
+   Could be TEXT / ENCRYPTED_TEXT
   */
   private String valueType;
 
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static class Yaml extends BaseYaml {
+  public static abstract class AbstractYaml extends BaseYaml {
     private String name;
     private String value;
     private String valueType;
 
-    public static final class Builder {
-      private String name;
-      private String value;
-      private String valueType;
+    public AbstractYaml(String name, String value, String valueType) {
+      this.name = name;
+      this.value = value;
+      this.valueType = valueType;
+    }
+  }
 
-      private Builder() {}
-
-      public static Builder aYaml() {
-        return new Builder();
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder withValue(String value) {
-        this.value = value;
-        return this;
-      }
-
-      public Builder withValueType(String valueType) {
-        this.valueType = valueType;
-        return this;
-      }
-
-      public Builder but() {
-        return aYaml().withName(name).withValue(value).withValueType(valueType);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setName(name);
-        yaml.setValue(value);
-        yaml.setValueType(valueType);
-        return yaml;
-      }
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static class Yaml extends AbstractYaml {
+    @Builder
+    public Yaml(String name, String value, String valueType) {
+      super(name, value, valueType);
     }
   }
 }

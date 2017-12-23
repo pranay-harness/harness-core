@@ -5,6 +5,8 @@ import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.ErrorCode;
@@ -24,8 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by srinivas on 3/31/17.
@@ -49,8 +49,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
-    if ((artifactStreamAttributes.getArtifactType() != null
-            && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER))) {
+    if (artifactStreamAttributes.getArtifactType() != null
+        && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
       return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getImageName(), 50);
     } else {

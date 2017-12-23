@@ -96,16 +96,23 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {
+    MasterAuth masterAuth = cluster.getMasterAuth();
     KubernetesConfig.KubernetesConfigBuilder kubernetesConfigBuilder =
         KubernetesConfig.builder()
             .masterUrl("https://" + cluster.getEndpoint() + "/")
-            .username(cluster.getMasterAuth().getUsername())
-            .clientKey(cluster.getMasterAuth().getClientKey())
-            .clientCert(cluster.getMasterAuth().getClientCertificate())
-            .caCert(cluster.getMasterAuth().getClusterCaCertificate())
+            .username(masterAuth.getUsername())
             .namespace(isNotEmpty(namespace) ? namespace : "default");
-    if (cluster.getMasterAuth().getPassword() != null) {
-      kubernetesConfigBuilder.password(cluster.getMasterAuth().getPassword().toCharArray());
+    if (masterAuth.getPassword() != null) {
+      kubernetesConfigBuilder.password(masterAuth.getPassword().toCharArray());
+    }
+    if (masterAuth.getClusterCaCertificate() != null) {
+      kubernetesConfigBuilder.caCert(masterAuth.getClusterCaCertificate().toCharArray());
+    }
+    if (masterAuth.getClientCertificate() != null) {
+      kubernetesConfigBuilder.clientCert(masterAuth.getClientCertificate().toCharArray());
+    }
+    if (masterAuth.getClientKey() != null) {
+      kubernetesConfigBuilder.clientKey(masterAuth.getClientKey().toCharArray());
     }
     KubernetesConfig kubernetesConfig = kubernetesConfigBuilder.build();
     kubernetesConfig.setDecrypted(true);
@@ -116,7 +123,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
     }
-    return ((GcpConfig) computeProviderSetting.getValue());
+    return (GcpConfig) computeProviderSetting.getValue();
   }
 
   @Override

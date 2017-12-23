@@ -37,6 +37,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.github.tomakehurst.wiremock.http.Fault;
@@ -64,7 +65,6 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * The Class HttpStateTest.

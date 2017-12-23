@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.LambdaSpecification;
@@ -23,7 +24,6 @@ import software.wings.utils.Validator;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * @author rktummala on 11/15/17

@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -39,7 +41,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 11/3/17.

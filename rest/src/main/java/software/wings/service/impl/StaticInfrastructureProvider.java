@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.AwsInfrastructureMapping;
@@ -13,7 +14,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/12/17.
@@ -42,10 +42,5 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
     hostService.updateHostConnectionAttrByInfraMappingId(
         infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
-  }
-
-  @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
-    hostService.deleteByInfraMappingId(appId, infraMappingId);
   }
 }

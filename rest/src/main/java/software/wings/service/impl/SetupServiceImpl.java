@@ -5,6 +5,9 @@ import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter.Operator;
@@ -28,8 +31,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -174,7 +175,7 @@ public class SetupServiceImpl implements SetupService {
           .build();
     }
 
-    if ((app.getEnvironments() == null || app.getEnvironments().size() == 0)) {
+    if (app.getEnvironments() == null || app.getEnvironments().size() == 0) {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one environment.")

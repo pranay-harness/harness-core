@@ -28,8 +28,10 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
+import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.slf4j.LoggerFactory;
@@ -47,7 +49,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * The interface State machine event manager.
@@ -205,6 +206,13 @@ public class ExecutionInterruptManager {
           alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
           break;
         }
+        case ABORT_ALL:
+        case PAUSE:
+        case END_EXECUTION:
+        case ROLLBACK_DONE:
+          noop();
+          break;
+
         default:
           unhandled(executionInterruptType);
       }

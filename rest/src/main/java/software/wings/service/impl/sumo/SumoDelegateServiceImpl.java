@@ -1,5 +1,7 @@
 package software.wings.service.impl.sumo;
 
+import com.google.inject.Inject;
+
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
@@ -12,7 +14,6 @@ import software.wings.service.intfc.sumo.SumoDelegateService;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by sriram_parthasarathy on 9/11/17.

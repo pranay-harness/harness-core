@@ -40,12 +40,9 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
     }
 
     return TemplateExpression.Builder.aTemplateExpression()
-        .withDescription(yaml.getDescription())
         .withExpression(yaml.getExpression())
-        .withExpressionAllowed(yaml.isExpressionAllowed())
         .withFieldName(yaml.getFieldName())
         .withMetadata(properties)
-        .withMandatory(yaml.isMandatory())
         .build();
   }
 
@@ -61,11 +58,8 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
             .collect(Collectors.toList());
 
     return Yaml.Builder.aYaml()
-        .withDescription(bean.getDescription())
         .withExpression(bean.getExpression())
-        .withExpressionAllowed(bean.isExpressionAllowed())
         .withFieldName(bean.getFieldName())
-        .withMandatory(bean.isMandatory())
         .withMetadata(nameValuePairYamlList)
         .build();
   }

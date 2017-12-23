@@ -6,15 +6,19 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Environment.VariableOverrideYaml;
 import software.wings.beans.Environment.Yaml;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -22,6 +26,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
@@ -31,6 +36,7 @@ import software.wings.utils.Validator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -42,17 +48,18 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Inject EnvironmentService environmentService;
   @Inject SecretManager secretManager;
   @Inject ServiceVariableService serviceVariableService;
+  @Inject ServiceResourceService serviceResourceService;
   @Inject ServiceTemplateService serviceTemplateService;
 
   @Override
   public Environment.Yaml toYaml(Environment environment, String appId) {
     List<ServiceVariable> serviceVariableList = getAllVariableOverridesForEnv(environment);
-    List<NameValuePair.Yaml> nameValuePairList = convertToNameValuePair(serviceVariableList);
+    List<VariableOverrideYaml> variableOverrideYamlList = convertToVariableOverrideYaml(serviceVariableList);
     return Environment.Yaml.builder()
         .type(ENVIRONMENT.name())
         .description(environment.getDescription())
         .environmentType(environment.getEnvironmentType().name())
-        .configVariables(nameValuePairList)
+        .variableOverrides(variableOverrideYamlList)
         .build();
   }
 
@@ -73,7 +80,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     return serviceVariableList;
   }
 
-  private List<NameValuePair.Yaml> convertToNameValuePair(List<ServiceVariable> serviceVariables) {
+  private List<VariableOverrideYaml> convertToVariableOverrideYaml(List<ServiceVariable> serviceVariables) {
     if (serviceVariables == null) {
       return Lists.newArrayList();
     }
@@ -94,10 +101,24 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             logger.warn("Value type LB not supported, skipping the processing of value");
           }
 
-          return NameValuePair.Yaml.Builder.aYaml()
-              .withValueType(variableType.name())
-              .withValue(value)
-              .withName(serviceVariable.getName())
+          String parentServiceName;
+          String parentServiceVariableId = serviceVariable.getParentServiceVariableId();
+          if (parentServiceVariableId != null) {
+            ServiceVariable parentServiceVariable =
+                serviceVariableService.get(serviceVariable.getAppId(), parentServiceVariableId);
+            String serviceId = parentServiceVariable.getEntityId();
+            Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
+            Validator.notNullCheck("Service not found for id: " + serviceId, service);
+            parentServiceName = service.getName();
+          } else {
+            parentServiceName = null;
+          }
+
+          return VariableOverrideYaml.builder()
+              .valueType(variableType.name())
+              .value(value)
+              .name(serviceVariable.getName())
+              .serviceName(parentServiceName)
               .build();
         })
         .collect(Collectors.toList());
@@ -125,11 +146,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       current.setUuid(previous.getUuid());
       Yaml previousYaml = toYaml(previous, previous.getAppId());
       List<ServiceVariable> currentVariableList = getAllVariableOverridesForEnv(previous);
-      saveOrUpdateServiceVariables(previousYaml.getConfigVariables(), yaml.getConfigVariables(), currentVariableList,
-          current.getAppId(), current.getUuid());
+      saveOrUpdateVariableOverrides(previousYaml.getVariableOverrides(), yaml.getVariableOverrides(),
+          currentVariableList, current.getAppId(), current.getUuid());
       return environmentService.update(current);
     } else {
-      saveOrUpdateServiceVariables(null, yaml.getConfigVariables(), emptyList(), current.getAppId(), current.getUuid());
+      saveOrUpdateVariableOverrides(
+          null, yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid());
       return environmentService.save(current);
     }
   }
@@ -157,38 +179,38 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     }
   }
 
-  private void saveOrUpdateServiceVariables(List<NameValuePair.Yaml> previousConfigVarNameValuePairs,
-      List<NameValuePair.Yaml> latestConfigVarNameValuePairs, List<ServiceVariable> currentVariables, String appId,
+  private void saveOrUpdateVariableOverrides(List<VariableOverrideYaml> previousVariableOverrideList,
+      List<VariableOverrideYaml> latestVariableOverrideList, List<ServiceVariable> currentVariables, String appId,
       String envId) throws HarnessException {
     // what are the config variable changes? Which are additions and which are deletions?
-    List<NameValuePair.Yaml> configVarsToAdd = new ArrayList<>();
-    List<NameValuePair.Yaml> configVarsToDelete = new ArrayList<>();
-    List<NameValuePair.Yaml> configVarsToUpdate = new ArrayList<>();
+    List<VariableOverrideYaml> configVarsToAdd = new ArrayList<>();
+    List<VariableOverrideYaml> configVarsToDelete = new ArrayList<>();
+    List<VariableOverrideYaml> configVarsToUpdate = new ArrayList<>();
 
-    // ----------- START CONFIG VARIABLE SECTION ---------------
-    if (latestConfigVarNameValuePairs != null) {
+    // ----------- START VARIABLE OVERRIDES SECTION ---------------
+    if (latestVariableOverrideList != null) {
       // initialize the config vars to add from the after
-      for (NameValuePair.Yaml cv : latestConfigVarNameValuePairs) {
+      for (VariableOverrideYaml cv : latestVariableOverrideList) {
         configVarsToAdd.add(cv);
       }
     }
 
-    if (previousConfigVarNameValuePairs != null) {
+    if (previousVariableOverrideList != null) {
       // initialize the config vars to delete from the before, and remove the befores from the config vars to add list
-      for (NameValuePair.Yaml cv : previousConfigVarNameValuePairs) {
+      for (VariableOverrideYaml cv : previousVariableOverrideList) {
         configVarsToDelete.add(cv);
         configVarsToAdd.remove(cv);
       }
     }
 
-    if (latestConfigVarNameValuePairs != null) {
+    if (latestVariableOverrideList != null) {
       // remove the afters from the config vars to delete list
-      for (NameValuePair.Yaml cv : latestConfigVarNameValuePairs) {
+      for (VariableOverrideYaml cv : latestVariableOverrideList) {
         configVarsToDelete.remove(cv);
 
-        if (previousConfigVarNameValuePairs.contains(cv)) {
-          NameValuePair.Yaml beforeCV = null;
-          for (NameValuePair.Yaml bcv : previousConfigVarNameValuePairs) {
+        if (previousVariableOverrideList.contains(cv)) {
+          VariableOverrideYaml beforeCV = null;
+          for (VariableOverrideYaml bcv : previousVariableOverrideList) {
             if (bcv.equals(cv)) {
               beforeCV = bcv;
               break;
@@ -211,9 +233,10 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       }
     });
 
-    // save the new variables
-    configVarsToAdd.stream().forEach(
-        configVar -> serviceVariableService.save(createNewVariableOverride(appId, envId, configVar)));
+    for (VariableOverrideYaml configVar : configVarsToAdd) {
+      // save the new variables
+      serviceVariableService.save(createNewVariableOverride(appId, envId, configVar));
+    }
 
     try {
       // update the existing variables
@@ -239,17 +262,66 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     }
   }
 
-  private ServiceVariable createNewVariableOverride(String appId, String envId, NameValuePair.Yaml cv) {
-    ServiceVariable newServiceVariable = ServiceVariable.builder()
-                                             .name(cv.getName())
-                                             .value(cv.getValue().toCharArray())
-                                             .entityType(EntityType.ENVIRONMENT)
-                                             .entityId(envId)
-                                             .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID)
-                                             .type(Type.TEXT)
-                                             .build();
-    newServiceVariable.setAppId(appId);
+  private ServiceVariable createNewVariableOverride(String appId, String envId, VariableOverrideYaml overrideYaml)
+      throws HarnessException {
+    Validator.notNullCheck(
+        "Value type is not set for variable: " + overrideYaml.getName(), overrideYaml.getValueType());
 
-    return newServiceVariable;
+    ServiceVariable.ServiceVariableBuilder variableBuilder = ServiceVariable.builder().name(overrideYaml.getName());
+    if (overrideYaml.getServiceName() == null) {
+      variableBuilder.entityType(EntityType.ENVIRONMENT)
+          .entityId(envId)
+          .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID);
+    } else {
+      String parentServiceName = overrideYaml.getServiceName();
+      Service service = serviceResourceService.getServiceByName(appId, parentServiceName);
+      Validator.notNullCheck("No service found for given name: " + parentServiceName, service);
+      List<Key<ServiceTemplate>> templateRefKeysByService =
+          serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
+      if (Util.isEmpty(templateRefKeysByService)) {
+        throw new HarnessException("Unable to locate a service template for the given service: " + parentServiceName);
+      }
+
+      String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
+      if (Util.isEmpty(serviceTemplateId)) {
+        throw new HarnessException(
+            "Unable to locate a service template with the given service: " + parentServiceName + " and env: " + envId);
+      }
+
+      List<ServiceVariable> serviceVariablesList =
+          serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false);
+      Optional<ServiceVariable> variableOptional =
+          serviceVariablesList.stream()
+              .filter(serviceVariable -> serviceVariable.getName().equals(serviceVariable.getName()))
+              .findFirst();
+      if (variableOptional.isPresent()) {
+        ServiceVariable parentServiceVariable = variableOptional.get();
+        variableBuilder.parentServiceVariableId(parentServiceVariable.getUuid());
+      } else {
+        throw new HarnessException("Missing field parentServiceName in yaml");
+      }
+
+      variableBuilder.entityType(EntityType.SERVICE_TEMPLATE)
+          .entityId(serviceTemplateId)
+          .templateId(serviceTemplateId)
+          .overrideType(OverrideType.ALL);
+    }
+
+    if ("TEXT".equals(overrideYaml.getValueType())) {
+      variableBuilder.type(Type.TEXT);
+      variableBuilder.value(overrideYaml.getValue().toCharArray());
+    } else if ("ENCRYPTED_TEXT".equals(overrideYaml.getValueType())) {
+      variableBuilder.type(Type.ENCRYPTED_TEXT);
+      variableBuilder.encryptedValue(overrideYaml.getValue());
+      variableBuilder.value(overrideYaml.getValue().toCharArray());
+    } else {
+      logger.warn("Yaml doesn't support {} type service variables", overrideYaml.getValueType());
+      variableBuilder.value(overrideYaml.getValue().toCharArray());
+    }
+
+    ServiceVariable serviceVariable = variableBuilder.build();
+    serviceVariable.setAppId(appId);
+
+    return serviceVariable;
   }
 }

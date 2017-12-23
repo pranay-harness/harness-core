@@ -406,15 +406,28 @@ public class Environment extends Base {
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String environmentType = "NON_PROD";
-    private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
+    private List<VariableOverrideYaml> variableOverrides = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String description, String environmentType,
-        List<NameValuePair.Yaml> configVariables) {
+        List<VariableOverrideYaml> variableOverrides) {
       super(type, harnessApiVersion);
       this.description = description;
       this.environmentType = environmentType;
-      this.configVariables = configVariables;
+      this.variableOverrides = variableOverrides;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class VariableOverrideYaml extends NameValuePair.AbstractYaml {
+    private String serviceName;
+
+    @lombok.Builder
+    public VariableOverrideYaml(String name, String value, String valueType, String serviceName) {
+      super(name, value, valueType);
+      this.serviceName = serviceName;
     }
   }
 }

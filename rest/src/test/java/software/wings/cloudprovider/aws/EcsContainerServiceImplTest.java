@@ -14,6 +14,8 @@ import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
+import com.google.inject.Inject;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
@@ -46,7 +48,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/3/17.

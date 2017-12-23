@@ -2,13 +2,13 @@ package software.wings.beans;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.utils.JsonUtils;
-
-import javax.inject.Inject;
 
 /**
  * Test case.

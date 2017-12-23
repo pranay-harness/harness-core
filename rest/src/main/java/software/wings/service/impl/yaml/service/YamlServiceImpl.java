@@ -22,16 +22,19 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 import static software.wings.utils.Util.isEmpty;
 
-import com.google.api.client.util.Throwables;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -49,9 +52,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
+import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
@@ -66,7 +69,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
 
 /**
  * @author rktummala on 10/16/17
@@ -77,7 +79,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private YamlResourceService yamlResourceService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -89,7 +90,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   @Override
-  public List<ChangeContext> syncChangeSet(List<Change> changeList) throws HarnessException {
+  public List<ChangeContext> processChangeSet(List<Change> changeList) throws YamlProcessingException {
     // compute the order of processing
     computeProcessingOrder(changeList);
     // validate
@@ -111,7 +112,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     RestResponse rr = new RestResponse<>();
 
     try {
-      List<ChangeContext> changeContextList = syncChangeSet(Arrays.asList(change));
+      List<ChangeContext> changeContextList = processChangeSet(Arrays.asList(change));
       Validator.notNullCheck("Change Context List is null", changeContextList);
       boolean empty = isEmpty(changeContextList);
       if (!empty) {
@@ -123,11 +124,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
       } else {
         software.wings.yaml.YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR,
-            "Unable to update yaml for:" + yamlPayload.getName());
+            "Update yaml failed. Reason: " + yamlPayload.getName());
       }
     } catch (HarnessException e) {
       software.wings.yaml.YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml:" + e.getMessage());
+          rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Update failed. Reason:" + e.getMessage());
     }
 
     return rr;
@@ -268,79 +269,80 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    * @param changeList
    * @throws WingsException
    */
-  private void computeProcessingOrder(List<Change> changeList) throws HarnessException {
+  private void computeProcessingOrder(List<Change> changeList) throws YamlProcessingException {
     Collections.sort(changeList, new FilePathComparator());
   }
 
-  private List<ChangeContext> validate(List<Change> changeList) throws HarnessException {
+  private List<ChangeContext> validate(List<Change> changeList) throws YamlProcessingException {
     List<ChangeContext> changeContextList = Lists.newArrayList();
 
-    try {
-      changeList.forEach(change -> {
-        try {
-          if (change.getFilePath().endsWith(YAML_EXTENSION)) {
-            validateYaml(change.getFileContent());
-            YamlType yamlType = findYamlType(change.getFilePath());
-            String yamlSubType = getYamlSubType(change.getFileContent());
+    for (Change change : changeList) {
+      String yamlFilePath = change.getFilePath();
 
-            BaseYamlHandler yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
-            if (yamlSyncHandler != null) {
-              Class yamlClass = yamlSyncHandler.getYamlClass();
-              BaseYaml yaml = getYaml(change.getFileContent(), yamlClass, false);
-              Validator.notNullCheck("Could not get yaml object for :" + change.getFilePath(), yaml);
+      try {
+        if (yamlFilePath.endsWith(YAML_EXTENSION)) {
+          validateYaml(change.getFileContent());
+          YamlType yamlType = findYamlType(yamlFilePath);
+          String yamlSubType = getYamlSubType(change.getFileContent());
 
-              ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
-                                                               .withChange(change)
-                                                               .withYaml(yaml)
-                                                               .withYamlType(yamlType)
-                                                               .withYamlSyncHandler(yamlSyncHandler);
-              ChangeContext changeContext = changeContextBuilder.build();
-              changeContextList.add(changeContext);
-              yamlSyncHandler.validate(changeContext, changeContextList);
-            } else {
-              throw new HarnessException(
-                  "Can't find yaml handler for type: " + yamlType + " and subType: " + yamlSubType);
-            }
+          BaseYamlHandler yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
+          if (yamlSyncHandler != null) {
+            Class yamlClass = yamlSyncHandler.getYamlClass();
+            BaseYaml yaml = getYaml(change.getFileContent(), yamlClass, false);
+            Validator.notNullCheck("Could not get yaml object for :" + yamlFilePath, yaml);
+
+            ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
+                                                             .withChange(change)
+                                                             .withYaml(yaml)
+                                                             .withYamlType(yamlType)
+                                                             .withYamlSyncHandler(yamlSyncHandler);
+            ChangeContext changeContext = changeContextBuilder.build();
+            changeContextList.add(changeContext);
+            yamlSyncHandler.validate(changeContext, changeContextList);
           } else {
-            // Special handling for config files
-            YamlType yamlType = findYamlType(change.getFilePath());
-            if (YamlType.CONFIG_FILE_CONTENT == yamlType || YamlType.CONFIG_FILE_OVERRIDE_CONTENT == yamlType) {
-              /*              String fileContent = change.getFileContent();
-                            InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
-                            Map<String, Object> properties = Maps.newHashMap();
-                            String filePath = change.getFilePath();
-                            int index = filePath.lastIndexOf('/');
-                            String fileName = filePath;
-                            if (index != -1) {
-                              fileName = filePath.substring(index + 1);
-                            }
-                            properties.put(fileName, inputStream);
-                            ChangeContext.Builder changeContextBuilder =
-                 ChangeContext.Builder.aChangeContext().withChange(change).
-                                withYamlType(yamlType).withProperties(properties);
-                            changeContextList.add(changeContextBuilder.build());
-              */
-
-              ChangeContext.Builder changeContextBuilder =
-                  ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
-              changeContextList.add(changeContextBuilder.build());
-
-              //              FileOutputStream outputStream = new FileOutputStream(change.getFilePath());
-              //              outputStream.write(fileContent.getBytes());
-              //              outputStream.close();
-
-            } else {
-              throw new HarnessException("Can't find yaml handler for type: " + yamlType);
-            }
+            throw new YamlProcessingException("Unsupported type: " + yamlType, change);
           }
-        } catch (IOException | HarnessException ex) {
-          logger.error("Unable to de-serialize yaml from string", ex);
-          Throwables.propagate(ex);
+        } else {
+          // Special handling for config files
+          YamlType yamlType = findYamlType(yamlFilePath);
+          if (YamlType.CONFIG_FILE_CONTENT == yamlType || YamlType.CONFIG_FILE_OVERRIDE_CONTENT == yamlType) {
+            ChangeContext.Builder changeContextBuilder =
+                ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
+            changeContextList.add(changeContextBuilder.build());
+          } else {
+            throw new YamlProcessingException("Unsupported type: " + yamlType, change);
+          }
         }
-
-      });
-    } catch (RuntimeException ex) {
-      throw new HarnessException(ex);
+      } catch (ScannerException ex) {
+        String message;
+        Mark contextMark = ex.getContextMark();
+        if (contextMark != null) {
+          String snippet = contextMark.get_snippet();
+          if (snippet != null) {
+            message = "Not a well-formed yaml. The field " + snippet + " in line " + contextMark.getLine()
+                + " doesn't end with :";
+          } else {
+            message = ex.getMessage();
+          }
+        } else {
+          message = ex.getMessage();
+        }
+        logger.error(message, ex);
+        throw new YamlProcessingException(message, ex, change);
+      } catch (UnrecognizedPropertyException ex) {
+        String propertyName = ex.getPropertyName();
+        if (propertyName != null) {
+          String error = "Unrecognized field: " + propertyName;
+          logger.error(error, ex);
+          throw new YamlProcessingException(error, ex, change);
+        } else {
+          logger.error("Unable to de-serialize yaml from string", ex);
+          throw new YamlProcessingException(ex.getMessage(), ex, change);
+        }
+      } catch (Exception ex) {
+        logger.error("Unable to de-serialize yaml from string", ex);
+        throw new YamlProcessingException(ex.getMessage(), ex, change);
+      }
     }
 
     return changeContextList;
@@ -359,24 +361,21 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return (String) map.get("type");
   }
 
-  private void process(List<ChangeContext> changeContextList) throws HarnessException {
-    try {
-      changeContextList.stream().forEachOrdered(changeContext -> {
-        try {
-          logger.info("Processing change [{}]", changeContext.getChange());
-          processChange(changeContext, changeContextList);
-          logger.info("Processing done for change [{}]", changeContext.getChange());
-        } catch (HarnessException ex) {
-          Throwables.propagate(ex);
-        }
-      });
-    } catch (RuntimeException ex) {
-      logger.error("Exception: ", ex);
-      throw new HarnessException(ex);
+  private void process(List<ChangeContext> changeContextList) throws YamlProcessingException {
+    for (ChangeContext changeContext : changeContextList) {
+      String yamlFilePath = changeContext.getChange().getFilePath();
+      try {
+        logger.info("Processing change [{}]", changeContext.getChange());
+        processYamlChange(changeContext, changeContextList);
+        logger.info("Processing done for change [{}]", changeContext.getChange());
+      } catch (Exception ex) {
+        logger.error("Exception while processing yaml change {}", yamlFilePath, ex);
+        throw new YamlProcessingException(ex.getMessage(), ex, changeContext.getChange());
+      }
     }
   }
 
-  private void processChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
+  private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
     Validator.notNullCheck("changeContext is null", changeContext);
     Change change = changeContext.getChange();
@@ -418,7 +417,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final class FilePathComparator implements Comparator<Change> {
     @Override
     public int compare(Change o1, Change o2) {
-      return (findOrdinal(o1.getFilePath()) - findOrdinal(o2.getFilePath()));
+      return findOrdinal(o1.getFilePath()) - findOrdinal(o2.getFilePath());
     }
   }
 
@@ -451,14 +450,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    * @param yamlString
    * @return
    */
-  private void validateYaml(String yamlString) throws HarnessException {
+  private void validateYaml(String yamlString) throws ScannerException {
     Yaml yamlObj = new Yaml();
 
-    try {
-      // We just load the yaml to see if its well formed.
-      yamlObj.load(yamlString);
-    } catch (Exception e) {
-      throw new HarnessException(e);
-    }
+    // We just load the yaml to see if its well formed.
+    yamlObj.load(yamlString);
   }
 }

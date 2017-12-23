@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
@@ -42,7 +43,6 @@ import software.wings.service.intfc.JenkinsBuildService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/13/16.

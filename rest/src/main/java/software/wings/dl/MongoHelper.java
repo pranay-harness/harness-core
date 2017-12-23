@@ -75,6 +75,24 @@ public class MongoHelper {
   }
 
   /**
+   * Get count.
+   *
+   * @param <T>       the generic type
+   * @param datastore the datastore
+   * @param cls       the cls
+   * @return the page response
+   */
+  public static <T> long getCount(Datastore datastore, Class<T> cls, PageRequest<T> req) {
+    Query q = datastore.createQuery(cls);
+
+    Mapper mapper = ((DatastoreImpl) datastore).getMapper();
+    MappedClass mappedClass = mapper.addMappedClass(cls);
+    q = MongoHelper.applyPageRequest(q, req, mappedClass, mapper);
+
+    return q.count();
+  }
+
+  /**
    * Apply page request.
    *
    * @param <T>         the generic type

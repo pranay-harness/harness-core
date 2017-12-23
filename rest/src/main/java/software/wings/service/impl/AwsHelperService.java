@@ -1638,9 +1638,9 @@ public class AwsHelperService {
       // name in all cases. Also, their documentation says it would return empty string if its in the default region.
       // http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html But it returns US. Added additional
       // checks based on other stuff
-      if (region == "US" || region == null) {
+      if (region == null || region.equals("US")) {
         return "us-east-1";
-      } else if (region == "EU") {
+      } else if (region.equals("EU")) {
         return "eu-west-1";
       }
 

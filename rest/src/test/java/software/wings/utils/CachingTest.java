@@ -2,13 +2,14 @@ package software.wings.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Cache;
 
 import javax.cache.annotation.CacheKey;
 import javax.cache.annotation.CacheResult;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 8/29/16.

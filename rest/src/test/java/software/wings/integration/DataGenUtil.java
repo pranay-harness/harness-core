@@ -93,6 +93,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   public static final String HARNESS_NEXUS = "Harness Nexus";
+  public static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
   public static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
   public static final String HARNESS_BAMBOO_SERVICE = "Harness BambooService";
   public static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";

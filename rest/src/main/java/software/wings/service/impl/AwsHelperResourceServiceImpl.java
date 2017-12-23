@@ -4,6 +4,8 @@ import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.ResourceType;
@@ -19,8 +21,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

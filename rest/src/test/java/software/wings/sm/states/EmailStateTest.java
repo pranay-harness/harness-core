@@ -9,6 +9,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import freemarker.template.TemplateException;
@@ -30,7 +31,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.io.IOException;
-import javax.inject.Inject;
 
 /**
  * The Class EmailStateTest.

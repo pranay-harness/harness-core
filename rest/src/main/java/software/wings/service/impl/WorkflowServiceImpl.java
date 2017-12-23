@@ -70,9 +70,11 @@ import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPL
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 import static software.wings.sm.StateType.values;
+import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
@@ -189,7 +191,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -1333,7 +1334,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Map<String, String> getData(String appId, String... params) {
     PageRequest<Workflow> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", appId, EQ);
-    return listWorkflows(pageRequest).stream().collect(toMap(Workflow::getUuid, o -> (o.getName())));
+    return listWorkflows(pageRequest).stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }
 
   @Override
@@ -1450,9 +1451,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
           return AwsCodeDeployState.loadDefaults();
         }
+        break;
       }
       default:
-        break;
+        unhandled(stateType);
     }
     return Collections.emptyMap();
   }

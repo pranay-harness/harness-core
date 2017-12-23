@@ -4,6 +4,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_
 
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
+import com.google.inject.Inject;
 
 import org.apache.commons.lang.WordUtils;
 import org.slf4j.Logger;
@@ -38,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 5/18/17.

@@ -1023,7 +1023,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                     .build();
                   containerInfos.add(containerInfo);
                   executionLogCallback.saveExecutionLog(
-                      ("Container docker ID: " + containerInfo.getContainerId()), LogLevel.INFO);
+                      "Container docker ID: " + containerInfo.getContainerId(), LogLevel.INFO);
 
                 });
             logger.info("TaskMetadata = " + taskMetadata);

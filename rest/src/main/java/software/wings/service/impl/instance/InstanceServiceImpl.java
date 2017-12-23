@@ -176,7 +176,10 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public boolean delete(String instanceId) {
     Instance instance = get(instanceId);
-    Validator.notNullCheck("Instance", instance);
+    if (instance == null) {
+      return true;
+    }
+
     return wingsPersistence.delete(instance);
   }
 

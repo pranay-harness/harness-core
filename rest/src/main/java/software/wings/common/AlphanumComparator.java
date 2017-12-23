@@ -46,7 +46,7 @@ public class AlphanumComparator implements Comparator<String> {
   }
 
   private final boolean isDigit(char ch) {
-    return ((ch >= 48) && (ch <= 57));
+    return (ch >= 48) && (ch <= 57);
   }
 
   /**

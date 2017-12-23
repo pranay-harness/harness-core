@@ -5,6 +5,7 @@
 package software.wings.common;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.apache.commons.lang3.ArrayUtils;
 import software.wings.api.ServiceElement;
@@ -28,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
 
 /**
  * The Class ServiceExpressionProcessor.

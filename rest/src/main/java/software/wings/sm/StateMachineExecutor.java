@@ -31,6 +31,7 @@ import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aSt
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -79,7 +80,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Class responsible for executing state machine.

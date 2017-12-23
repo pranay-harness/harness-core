@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.MembersInjector;
 
 import org.junit.Before;
@@ -32,7 +33,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * The Class WorkflowStandardParamsTest.

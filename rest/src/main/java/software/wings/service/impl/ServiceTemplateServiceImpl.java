@@ -12,6 +12,8 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -49,8 +51,6 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -263,8 +263,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public void delete(String appId, String serviceTemplateId) {
+    // TODO: move to the prune pattern
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
-                                                  .field("appId")
+                                                  .field(ServiceTemplate.APP_ID_KEY)
                                                   .equal(appId)
                                                   .field(ID_KEY)
                                                   .equal(serviceTemplateId));
@@ -278,7 +279,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
-                                          .field("appId")
+                                          .field(ServiceTemplate.APP_ID_KEY)
                                           .equal(appId)
                                           .field("envId")
                                           .equal(envId)
@@ -291,7 +292,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ServiceTemplate.class)
-        .field("appId")
+        .field(ServiceTemplate.APP_ID_KEY)
         .equal(appId)
         .field("serviceId")
         .equal(serviceId)

@@ -7,6 +7,8 @@ import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.mongodb.morphia.mapping.Mapper;
@@ -33,11 +35,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -132,12 +131,14 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public void delete(String accountId, String appContainerId) {
     AppContainer appContainer = get(accountId, appContainerId);
-    Validator.notNullCheck("App Stack", appContainer);
+    if (appContainer == null) {
+      return;
+    }
+
     ensureAppContainerNotInUse(appContainerId);
 
-    if (!appContainer.isSystemCreated()) {
-      PruneFileJob.addDefaultJob(jobScheduler, AppContainer.class, appContainerId, FileBucket.PLATFORMS,
-          Arrays.asList(appContainer.getFileUuid()));
+    if (!appContainer.isSystemCreated() && appContainer.getFileUuid() != null) {
+      PruneFileJob.addDefaultJob(jobScheduler, AppContainer.class, appContainerId, FileBucket.PLATFORMS);
     }
 
     wingsPersistence.delete(AppContainer.class, appContainerId);

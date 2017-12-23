@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
@@ -14,7 +15,6 @@ import software.wings.sm.StateExecutionException;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 12/14/16.

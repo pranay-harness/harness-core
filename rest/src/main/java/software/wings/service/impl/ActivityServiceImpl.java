@@ -8,6 +8,8 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -29,7 +31,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
@@ -41,8 +43,6 @@ import software.wings.sm.ExecutionStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -158,24 +158,27 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public boolean delete(String appId, String activityId) {
-    PruneObjectJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId);
 
-    return wingsPersistence.delete(
-        wingsPersistence.createQuery(Activity.class).field("appId").equal(appId).field(ID_KEY).equal(activityId));
+    return wingsPersistence.delete(wingsPersistence.createQuery(Activity.class)
+                                       .field(Activity.APP_ID_KEY)
+                                       .equal(appId)
+                                       .field(ID_KEY)
+                                       .equal(activityId));
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String activityId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String activityId) {
     List<OwnedByActivity> services =
         ServiceClassLocator.descendingServices(this, ActivityServiceImpl.class, OwnedByActivity.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, activityId, (descending) -> { descending.pruneByActivity(appId, activityId); });
   }
 
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Activity.class)
-        .field("appId")
+        .field(Activity.APP_ID_KEY)
         .equal(appId)
         .field("environmentId")
         .equal(envId)
@@ -228,9 +231,9 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   private boolean isCommandUnitStatusUpdatableByLogStatus(CommandUnit commandUnit, Log log) {
-    return (log != null
+    return log != null
         && (QUEUED.equals(commandUnit.getCommandExecutionStatus())
                || RUNNING.equals(commandUnit.getCommandExecutionStatus()))
-        && !log.getCommandExecutionStatus().equals(commandUnit.getCommandExecutionStatus()));
+        && !log.getCommandExecutionStatus().equals(commandUnit.getCommandExecutionStatus());
   }
 }

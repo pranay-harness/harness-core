@@ -3,6 +3,8 @@ package software.wings.resources;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -28,7 +30,6 @@ import software.wings.sm.ExecutionInterrupt;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;

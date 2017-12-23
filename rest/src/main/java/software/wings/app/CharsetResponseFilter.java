@@ -1,6 +1,7 @@
 package software.wings.app;
 
-import javax.inject.Singleton;
+import com.google.inject.Singleton;
+
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;

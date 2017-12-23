@@ -2,7 +2,11 @@ package software.wings.service.impl.yaml;
 
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
+import com.google.inject.Inject;
+
 import groovy.lang.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -12,6 +16,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
@@ -19,6 +24,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.ByteArrayOutputStream;
@@ -26,13 +32,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 12/3/17.
  */
 @Singleton
 public class YamlChangeSetHelper {
+  private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetHelper.class);
+
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;
@@ -40,6 +47,7 @@ public class YamlChangeSetHelper {
   @Inject private YamlGitService yamlGitService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
   @Inject private FileService fileService;
 
   public void applicationUpdateYamlChangeAsync(Application savedApp, Application updatedApp) {
@@ -74,21 +82,42 @@ public class YamlChangeSetHelper {
 
   public void configFileYamlChange(ConfigFile configFile, ChangeType changeType) {
     if (configFile.getEntityType() == EntityType.SERVICE) {
-      String fileContent = null;
-      if (!configFile.isEncrypted()) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        fileService.downloadToStream(configFile.getFileUuid(), outputStream, FileBucket.CONFIGS);
-        fileContent = outputStream.toString();
-      }
+      String fileContent = loadFileContentIntoString(configFile);
 
       Service service = serviceResourceService.get(configFile.getAppId(), configFile.getEntityId());
-      configFileYamlChange(configFile.getAccountId(),
+      queueYamlChangeSet(configFile.getAccountId(),
           entityUpdateService.getConfigFileGitSyncFileSet(
               configFile.getAccountId(), service, configFile, changeType, fileContent));
+    } else if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE
+        || configFile.getEntityType() == EntityType.ENVIRONMENT) {
+      String fileContent = loadFileContentIntoString(configFile);
+      String envId = null;
+      if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
+        envId = configFile.getEnvId();
+      } else if (configFile.getEntityType() == EntityType.ENVIRONMENT) {
+        envId = configFile.getEntityId();
+      }
+
+      Environment environment = environmentService.get(configFile.getAppId(), envId, false);
+      Validator.notNullCheck("Environment not found for the given id:" + envId, environment);
+      queueYamlChangeSet(configFile.getAccountId(),
+          entityUpdateService.getConfigFileOverrideGitSyncFileSet(
+              configFile.getAccountId(), environment, configFile, changeType, fileContent));
+    } else {
+      logger.error("Unsupported override type {} for config file {}", configFile.getEntityType(), configFile.getUuid());
     }
   }
 
-  private void configFileYamlChange(String accountId, List<GitFileChange> gitFileChangeList) {
+  private String loadFileContentIntoString(ConfigFile configFile) {
+    if (!configFile.isEncrypted()) {
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      fileService.downloadToStream(configFile.getFileUuid(), outputStream, FileBucket.CONFIGS);
+      return outputStream.toString();
+    }
+    return null;
+  }
+
+  private void queueYamlChangeSet(String accountId, List<GitFileChange> gitFileChangeList) {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
       yamlChangeSetService.queueChangeSet(ygs, gitFileChangeList);

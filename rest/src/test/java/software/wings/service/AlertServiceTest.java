@@ -21,6 +21,8 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
+import com.google.inject.Inject;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import org.junit.Before;
@@ -47,7 +49,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
 
 public class AlertServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;

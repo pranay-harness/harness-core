@@ -11,6 +11,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
@@ -51,8 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 10/4/16.
@@ -147,11 +147,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
     hostService.updateHostConnectionAttrByInfraMappingId(
         infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
-  }
-
-  @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
-    hostService.deleteByInfraMappingId(appId, infraMappingId);
   }
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
