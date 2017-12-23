@@ -1,20 +1,23 @@
 package software.wings.api;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
 import com.google.common.collect.Maps;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 /**
  * Created by anubhaw on 12/22/17.
@@ -37,6 +40,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
   private InstanceUnitType instanceUnitType;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
+  private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {

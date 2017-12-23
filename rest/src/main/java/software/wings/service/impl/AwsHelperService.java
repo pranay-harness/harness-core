@@ -1267,7 +1267,7 @@ public class AwsHelperService {
     return allRunning;
   }
 
-  DescribeInstancesResult describeAutoScalingGroupInstances(
+  public DescribeInstancesResult describeAutoScalingGroupInstances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);

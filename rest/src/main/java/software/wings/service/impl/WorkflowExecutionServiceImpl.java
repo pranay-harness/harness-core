@@ -62,6 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
+import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
@@ -1869,6 +1870,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           CommandStateExecutionData commandStateExecutionData =
               (CommandStateExecutionData) next.getStateExecutionData();
           instanceStatusSummaries.addAll(commandStateExecutionData.getNewInstanceStatusSummaries());
+        } else if (nextStateType == StateType.AWS_AMI_SERVICE_DEPLOY
+            && next.getStateExecutionData() instanceof AwsAmiDeployStateExecutionData) {
+          AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
+              (AwsAmiDeployStateExecutionData) next.getStateExecutionData();
+          instanceStatusSummaries.addAll(awsAmiDeployStateExecutionData.getNewInstanceStatusSummaries());
         }
         last = next;
       }
