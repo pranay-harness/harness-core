@@ -13,8 +13,13 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -35,6 +40,7 @@ public class StateMachineExecutionCleanupJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutionCleanupJob.class);
 
   public static final String GROUP = "SM_CLEANUP_CRON_GROUP";
+  private static final int POLL_INTERVAL = 60;
 
   public static final String APP_ID_KEY = "appId";
 
@@ -42,6 +48,23 @@ public class StateMachineExecutionCleanupJob implements Job {
   @Inject private ExecutionInterruptManager executionInterruptManager;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+
+  public static void add(QuartzScheduler jobScheduler, String appId) {
+    jobScheduler.deleteJob(appId, GROUP);
+
+    JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
+                        .withIdentity(appId, GROUP)
+                        .usingJobData(StateMachineExecutionCleanupJob.APP_ID_KEY, appId)
+                        .build();
+
+    Trigger trigger =
+        TriggerBuilder.newTrigger()
+            .withIdentity(appId, GROUP)
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
+            .build();
+
+    jobScheduler.scheduleJob(job, trigger);
+  }
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
