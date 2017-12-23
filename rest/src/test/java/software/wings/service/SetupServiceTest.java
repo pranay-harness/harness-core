@@ -11,6 +11,8 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -27,8 +29,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowExecutionService;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 6/30/16.

@@ -4,6 +4,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 /**
  * @author rktummala on 12/08/17
@@ -133,7 +133,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
       int index = yamlFilePath.lastIndexOf(PATH_DELIMITER);
       if (index != -1) {
         String configFileDirPath = yamlFilePath.substring(0, index);
-        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getFileName();
+        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getTargetFilePath();
 
         Optional<ChangeContext> contentChangeContext = changeSetContext.stream()
                                                            .filter(changeContext1 -> {

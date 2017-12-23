@@ -50,6 +50,8 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -160,8 +162,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -290,8 +290,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                           .set("executionArgs.notes", executionArgs.getNotes());
       UpdateResults updateResults = wingsPersistence.update(query, updateOps);
-      return (
-          updateResults != null && updateResults.getWriteResult() != null && updateResults.getWriteResult().getN() > 0);
+      return updateResults != null && updateResults.getWriteResult() != null
+          && updateResults.getWriteResult().getN() > 0;
 
     } catch (Exception ex) {
       return false;
@@ -873,7 +873,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private boolean isEmpty(String string) {
-    return (string == null || string.isEmpty() || string.equals("null"));
+    return string == null || string.isEmpty() || string.equals("null");
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,

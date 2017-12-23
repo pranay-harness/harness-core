@@ -4,22 +4,28 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneEntityJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.OwnedByHost;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
@@ -27,8 +33,6 @@ import software.wings.utils.HostCsvFileHelper;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -45,6 +49,8 @@ public class HostServiceImpl implements HostService {
   @Inject private ConfigService configService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceInstanceService serviceInstanceService;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -163,25 +169,23 @@ public class HostServiceImpl implements HostService {
   @Override
   public void delete(String appId, String envId, String hostId) {
     Host applicationHost = get(appId, envId, hostId);
-    if (delete(applicationHost)) {
-      Environment environment = environmentService.get(applicationHost.getAppId(), applicationHost.getEnvId(), false);
-      //      notificationService.sendNotificationAsync(
-      //          anInformationNotification().withAppId(applicationHost.getAppId()).withNotificationTemplateId(HOST_DELETE_NOTIFICATION)
-      //              .withNotificationTemplateVariables(ImmutableMap.of("HOST_NAME", applicationHost.getHostName(),
-      //              "ENV_NAME", environment.getName())).build());
-    }
+    delete(applicationHost);
   }
 
   private boolean delete(Host host) {
-    if (host != null) {
-      boolean delete = wingsPersistence.delete(host);
-      if (delete) {
-        executorService.submit(() -> serviceInstanceService.deleteByHost(host.getAppId(), host.getUuid()));
-        executorService.submit(() -> configService.deleteByEntityId(host.getAppId(), host.getUuid()));
-      }
-      return delete;
+    if (host == null) {
+      return true;
     }
-    return false;
+
+    PruneEntityJob.addDefaultJob(jobScheduler, Host.class, host.getAppId(), host.getUuid());
+    return wingsPersistence.delete(host);
+  }
+
+  @Override
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String hostId) {
+    List<OwnedByHost> services = ServiceClassLocator.descendingServices(this, HostServiceImpl.class, OwnedByHost.class);
+    PruneEntityJob.pruneDescendingEntities(
+        services, appId, hostId, (descending) -> { descending.pruneByHost(appId, hostId); });
   }
 
   @Override
@@ -220,7 +224,7 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public void deleteByInfraMappingId(String appId, String infraMappingId) {
+  public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
     wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
                                 .field("appId")
                                 .equal(appId)

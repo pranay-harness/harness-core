@@ -89,7 +89,7 @@ public interface ActivityService extends OwnedByEnvironment {
    */
   boolean delete(String appId, String activityId);
 
-  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String activityId);
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String activityId);
 
   /**
    * Update command unit status.

@@ -17,6 +17,7 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 4/7/17.

@@ -53,7 +53,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
             -> !newRelicAppToConfigMap.containsKey(
                 metricNames.getNewRelicAppId() + "-" + metricNames.getNewRelicConfigId()))
         .filter(
-            metricNames -> (System.currentTimeMillis() - metricNames.getLastUpdatedTime() > TimeUnit.DAYS.toMillis(1)))
+            metricNames -> System.currentTimeMillis() - metricNames.getLastUpdatedTime() > TimeUnit.DAYS.toMillis(1))
         .forEach(metricNames -> {
           try {
             for (WorkflowInfo workflowInfo : metricNames.getRegisteredWorkflows()) {

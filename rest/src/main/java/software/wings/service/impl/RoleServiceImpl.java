@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Role;
@@ -17,8 +19,6 @@ import software.wings.service.intfc.UserService;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

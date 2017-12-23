@@ -12,6 +12,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -31,10 +33,9 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.Date;
-import javax.inject.Inject;
 
-public class PruneObjectJobTest extends WingsBaseTest {
-  public static final Logger logger = LoggerFactory.getLogger(PruneObjectJobTest.class);
+public class PruneEntityJobTest extends WingsBaseTest {
+  public static final Logger logger = LoggerFactory.getLogger(PruneEntityJobTest.class);
 
   @Mock private WingsPersistence wingsPersistence;
 
@@ -43,73 +44,73 @@ public class PruneObjectJobTest extends WingsBaseTest {
 
   @Mock private QuartzScheduler jobScheduler;
 
-  @Inject @InjectMocks PruneObjectJob job;
+  @Inject @InjectMocks PruneEntityJob job;
 
   private final static String APP_ID = "app_id";
-  private final static String OBJECT_ID = "object_id";
+  private final static String ENTITY_ID = "entityId";
 
-  public JobDetail details(String className, String appId, String objectId) {
-    return JobBuilder.newJob(PruneObjectJob.class)
-        .withIdentity(OBJECT_ID, PruneObjectJob.GROUP)
-        .usingJobData(PruneObjectJob.OBJECT_CLASS_KEY, className)
-        .usingJobData(PruneObjectJob.APP_ID_KEY, appId)
-        .usingJobData(PruneObjectJob.OBJECT_ID_KEY, objectId)
+  public JobDetail details(String className, String appId, String entityId) {
+    return JobBuilder.newJob(PruneEntityJob.class)
+        .withIdentity(ENTITY_ID, PruneEntityJob.GROUP)
+        .usingJobData(PruneEntityJob.ENTITY_CLASS_KEY, className)
+        .usingJobData(PruneEntityJob.APP_ID_KEY, appId)
+        .usingJobData(PruneEntityJob.ENTITY_ID, entityId)
         .build();
   }
 
-  public JobDetail details(Class cls, String appId, String objectId) {
-    return details(cls.getCanonicalName(), appId, objectId);
+  public JobDetail details(Class cls, String appId, String entityId) {
+    return details(cls.getCanonicalName(), appId, entityId);
   }
 
   @Test
   public void selfPruneTheJobWhenSucceed() throws Exception {
-    when(wingsPersistence.get(Environment.class, OBJECT_ID)).thenReturn(null);
+    when(wingsPersistence.get(Environment.class, ENTITY_ID)).thenReturn(null);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Environment.class, APP_ID, OBJECT_ID));
+    when(context.getJobDetail()).thenReturn(details(Environment.class, APP_ID, ENTITY_ID));
 
     job.execute(context);
 
-    verify(environmentService, times(1)).pruneDescendingObjects(APP_ID, OBJECT_ID);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneObjectJob.GROUP);
+    verify(environmentService, times(1)).pruneDescendingEntities(APP_ID, ENTITY_ID);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 
   @Test
   public void selfPruneTheJobIfServiceStillThereFirstTime() throws Exception {
-    when(wingsPersistence.get(Application.class, OBJECT_ID))
+    when(wingsPersistence.get(Application.class, ENTITY_ID))
         .thenReturn(anApplication().withAccountId(ACCOUNT_ID).build());
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Application.class, APP_ID, OBJECT_ID));
+    when(context.getJobDetail()).thenReturn(details(Application.class, APP_ID, ENTITY_ID));
     when(context.getPreviousFireTime()).thenReturn(null);
 
     job.execute(context);
 
-    verify(environmentService, times(0)).pruneDescendingObjects(APP_ID, OBJECT_ID);
-    verify(jobScheduler, times(0)).deleteJob(OBJECT_ID, PruneObjectJob.GROUP);
+    verify(environmentService, times(0)).pruneDescendingEntities(APP_ID, ENTITY_ID);
+    verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 
   @Test
   public void selfPruneTheJobIfServiceStillThere() throws Exception {
-    when(wingsPersistence.get(Environment.class, OBJECT_ID))
-        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(OBJECT_ID).build());
+    when(wingsPersistence.get(Environment.class, ENTITY_ID))
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENTITY_ID).build());
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Environment.class, APP_ID, OBJECT_ID));
+    when(context.getJobDetail()).thenReturn(details(Environment.class, APP_ID, ENTITY_ID));
     when(context.getPreviousFireTime()).thenReturn(new Date());
 
     job.execute(context);
 
-    verify(environmentService, times(0)).pruneDescendingObjects(APP_ID, OBJECT_ID);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneObjectJob.GROUP);
+    verify(environmentService, times(0)).pruneDescendingEntities(APP_ID, ENTITY_ID);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 
   @Test
   public void UnhandledClass() throws Exception {
-    when(wingsPersistence.get(Base.class, OBJECT_ID)).thenReturn(null);
+    when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Base.class, APP_ID, OBJECT_ID));
+    when(context.getJobDetail()).thenReturn(details(Base.class, APP_ID, ENTITY_ID));
 
     Logger mockLogger = mock(Logger.class);
     Whitebox.setInternalState(job, "logger", mockLogger);
@@ -117,45 +118,45 @@ public class PruneObjectJobTest extends WingsBaseTest {
     job.execute(context);
 
     verify(mockLogger, times(1)).error(any(String.class), matches(Base.class.getCanonicalName()));
-    verify(environmentService, times(0)).pruneDescendingObjects(APP_ID, OBJECT_ID);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneObjectJob.GROUP);
+    verify(environmentService, times(0)).pruneDescendingEntities(APP_ID, ENTITY_ID);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 
   @Test
   public void WrongClass() throws Exception {
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details("foo", APP_ID, OBJECT_ID));
+    when(context.getJobDetail()).thenReturn(details("foo", APP_ID, ENTITY_ID));
 
     job.execute(context);
 
-    verify(environmentService, times(0)).pruneDescendingObjects(APP_ID, OBJECT_ID);
-    verify(jobScheduler, times(1)).deleteJob(OBJECT_ID, PruneObjectJob.GROUP);
+    verify(environmentService, times(0)).pruneDescendingEntities(APP_ID, ENTITY_ID);
+    verify(jobScheduler, times(1)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 
   @Test
   public void retryIfServiceThrew() throws Exception {
-    when(wingsPersistence.get(Environment.class, OBJECT_ID)).thenReturn(null);
+    when(wingsPersistence.get(Environment.class, ENTITY_ID)).thenReturn(null);
 
-    doThrow(new WingsException("Forced exception")).when(environmentService).pruneDescendingObjects(APP_ID, OBJECT_ID);
+    doThrow(new WingsException("Forced exception")).when(environmentService).pruneDescendingEntities(APP_ID, ENTITY_ID);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Environment.class, APP_ID, OBJECT_ID));
+    when(context.getJobDetail()).thenReturn(details(Environment.class, APP_ID, ENTITY_ID));
 
     job.execute(context);
 
-    verify(jobScheduler, times(0)).deleteJob(OBJECT_ID, PruneObjectJob.GROUP);
+    verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 
   @Test
   public void differentAppIdAndObjectIdForApplication() throws Exception {
-    when(wingsPersistence.get(Application.class, OBJECT_ID)).thenReturn(null);
+    when(wingsPersistence.get(Application.class, ENTITY_ID)).thenReturn(null);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
-    when(context.getJobDetail()).thenReturn(details(Application.class, APP_ID, OBJECT_ID));
+    when(context.getJobDetail()).thenReturn(details(Application.class, APP_ID, ENTITY_ID));
 
     assertThatThrownBy(() -> job.execute(context)).isInstanceOf(WingsException.class);
 
-    verify(environmentService, times(0)).pruneDescendingObjects(APP_ID, OBJECT_ID);
-    verify(jobScheduler, times(0)).deleteJob(OBJECT_ID, PruneObjectJob.GROUP);
+    verify(environmentService, times(0)).pruneDescendingEntities(APP_ID, ENTITY_ID);
+    verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 }

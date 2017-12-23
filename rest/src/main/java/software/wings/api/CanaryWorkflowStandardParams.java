@@ -10,6 +10,8 @@ import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
 import static software.wings.utils.Switch.unhandled;
 
+import com.google.inject.Inject;
+
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InfraNodeRequest.InfraNodeRequestBuilder;
 import software.wings.beans.InfrastructureMapping;
@@ -39,7 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 5/25/17.

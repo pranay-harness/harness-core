@@ -9,6 +9,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
@@ -27,7 +28,6 @@ import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

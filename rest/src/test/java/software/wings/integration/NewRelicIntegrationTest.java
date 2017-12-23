@@ -368,9 +368,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.NA);
+    assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No data available");
+    assertEquals("No data available", metricsAnalysis.getMessage());
   }
 
   @Test
@@ -455,6 +455,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record.setTimeStamp(System.currentTimeMillis());
     record.setDataCollectionMinute(0);
     record.setLevel(ClusterLevel.H0);
+    record.setStateType(StateType.NEW_RELIC);
 
     metricDataAnalysisService.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, Collections.singletonList(record));
@@ -497,9 +498,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
 
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.NA);
+    assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No data available");
+    assertEquals("No data available", metricsAnalysis.getMessage());
   }
 
   @Test
@@ -570,6 +571,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record.setTimeStamp(System.currentTimeMillis());
     record.setDataCollectionMinute(0);
     record.setLevel(ClusterLevel.H0);
+    record.setStateType(StateType.NEW_RELIC);
 
     NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn1");
@@ -627,9 +629,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
 
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.LOW);
+    assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No problems found");
+    assertEquals("No problems found", metricsAnalysis.getMessage());
   }
 
   @Test
@@ -714,6 +716,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record.setTimeStamp(System.currentTimeMillis());
     record.setDataCollectionMinute(0);
     record.setLevel(ClusterLevel.H0);
+    record.setStateType(StateType.NEW_RELIC);
 
     record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn2");
@@ -773,9 +776,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
 
-    assertEquals(metricsAnalysis.getRiskLevel(), RiskLevel.LOW);
+    assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertTrue(metricsAnalysis.isShowTimeSeries());
-    assertEquals(metricsAnalysis.getMessage(), "No problems found");
-    assertEquals(metricsAnalysis.getMetricAnalyses().size(), 1);
+    assertEquals("No problems found", metricsAnalysis.getMessage());
+    assertEquals(1, metricsAnalysis.getMetricAnalyses().size());
   }
 }

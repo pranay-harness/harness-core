@@ -1,9 +1,9 @@
 package software.wings.lock;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-
-import javax.inject.Inject;
 
 /**
  * The Class PersistentLockerTest.

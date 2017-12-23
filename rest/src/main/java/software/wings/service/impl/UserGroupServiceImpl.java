@@ -4,6 +4,9 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
@@ -20,8 +23,6 @@ import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -122,11 +123,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public Boolean delete(String accountId, String userGroupId) {
+  public boolean delete(String accountId, String userGroupId) {
     UserGroup userGroup = get(accountId, userGroupId, false);
     Validator.notNullCheck("userGroup", userGroup);
     Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
-                                          .field("accountId")
+                                          .field(UserGroup.ACCOUNT_ID_KEY)
                                           .equal(accountId)
                                           .field(ID_KEY)
                                           .equal(userGroupId);

@@ -3,6 +3,8 @@ package software.wings.sm.states;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceElement;
@@ -39,7 +41,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 1/12/17.

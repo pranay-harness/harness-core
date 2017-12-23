@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -24,7 +26,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Entity Update Service Implementation.
@@ -108,6 +109,29 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     if (fileContent != null) {
       GitFileChange configFileChange =
           createConfigFileChange(accountId, yamlDirectoryService.getRootPathByConfigFile(service),
+              configFile.getRelativeFilePath(), fileContent, changeType);
+      return Arrays.asList(gitFileChange, configFileChange);
+    } else {
+      return Arrays.asList(gitFileChange);
+    }
+  }
+
+  @Override
+  public List<GitFileChange> getConfigFileOverrideGitSyncFileSet(
+      String accountId, Environment environment, ConfigFile configFile, ChangeType changeType, String fileContent) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.getConfigFileOverrideYaml(accountId, configFile.getAppId(), configFile)
+                 .getResource()
+                 .getYaml();
+    }
+
+    GitFileChange gitFileChange =
+        createGitFileChange(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
+            configFile.getRelativeFilePath(), yaml, changeType, false);
+    if (fileContent != null) {
+      GitFileChange configFileChange =
+          createConfigFileChange(accountId, yamlDirectoryService.getRootPathByConfigFileOverride(environment),
               configFile.getRelativeFilePath(), fileContent, changeType);
       return Arrays.asList(gitFileChange, configFileChange);
     } else {

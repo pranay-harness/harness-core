@@ -4,6 +4,8 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -37,7 +39,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
-import javax.inject.Inject;
 
 @Attributes
 public class NewRelicDeploymentMarkerState extends State {

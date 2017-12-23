@@ -4,6 +4,7 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.annotation.Encryptable;
@@ -21,7 +22,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**

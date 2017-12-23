@@ -26,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -66,8 +67,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-
-import javax.inject.Inject;
 
 /**
  * The type App service test.
@@ -242,10 +241,8 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowExceptionForNonExistentApplicationDelete() {
-    assertThatThrownBy(() -> appService.delete("NON_EXISTENT_APP_ID"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_ARGUMENT.name());
+  public void shouldNotThrowExceptionForNonExistentApplicationDelete() {
+    appService.delete("NON_EXISTENT_APP_ID");
   }
 
   /**
@@ -283,7 +280,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   public void shouldPruneDescendingObjects() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
-    appService.pruneDescendingObjects(APP_ID);
+    appService.pruneDescendingEntities(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
         alertService, triggerService);
@@ -303,7 +300,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
     doThrow(new WingsException("Forced exception")).when(pipelineService).pruneByApplication(APP_ID);
 
-    assertThatThrownBy(() -> appService.pruneDescendingObjects(APP_ID)).isInstanceOf(WingsException.class);
+    assertThatThrownBy(() -> appService.pruneDescendingEntities(APP_ID)).isInstanceOf(WingsException.class);
 
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,

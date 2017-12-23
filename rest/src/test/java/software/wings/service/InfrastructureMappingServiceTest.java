@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,12 +41,14 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
@@ -69,6 +72,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.AppService;
@@ -86,7 +90,6 @@ import software.wings.utils.WingsTestConstants;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -108,6 +111,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private FieldEnd end;
   @Mock private SecretManager secretManager;
+
+  @Mock private JobScheduler jobScheduler;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -293,8 +298,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(wingsPersistence).delete(physicalInfrastructureMapping);
-    verify(staticInfrastructureProvider).deleteHostByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
-    verify(serviceInstanceService).deleteByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    infrastructureMappingService.pruneDescendingEntities(APP_ID, INFRA_MAPPING_ID);
+    InOrder inOrder = inOrder(wingsPersistence, hostService, serviceInstanceService);
+    inOrder.verify(hostService).pruneByInfrastructureMapping(APP_ID, INFRA_MAPPING_ID);
+    inOrder.verify(serviceInstanceService).pruneByInfrastructureMapping(APP_ID, INFRA_MAPPING_ID);
   }
 
   @Test

@@ -9,6 +9,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
@@ -18,7 +20,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.

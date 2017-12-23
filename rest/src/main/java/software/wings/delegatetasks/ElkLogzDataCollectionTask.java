@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
 
+import com.google.inject.Inject;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -29,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -236,7 +237,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                 if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                   completed.set(true);
-                  throw(e);
+                  throw e;
                 } else {
                   /*
                    * Save the exception from the first attempt. This is usually

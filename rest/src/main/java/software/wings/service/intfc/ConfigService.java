@@ -18,7 +18,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 4/25/16.
  */
-public interface ConfigService extends OwnedByService {
+public interface ConfigService extends OwnedByService, OwnedByHost {
   /**
    * List.
    *

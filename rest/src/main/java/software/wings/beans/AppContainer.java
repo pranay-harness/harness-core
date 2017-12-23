@@ -31,7 +31,7 @@ public class AppContainer extends BaseFile {
   private FileType fileType;
   @NotEmpty private String accountId;
   private boolean systemCreated;
-  @FormDataParam(("version")) private String version;
+  @FormDataParam("version") private String version;
   private boolean hardened;
 
   /**

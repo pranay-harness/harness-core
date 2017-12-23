@@ -413,7 +413,7 @@ public class CommandState extends State {
     CommandExecutionResult commandExecutionResult = null;
     String activityId = null;
     for (Object status : response.values()) {
-      commandExecutionResult = ((CommandExecutionResult) status);
+      commandExecutionResult = (CommandExecutionResult) status;
     }
 
     for (String key : response.keySet()) {

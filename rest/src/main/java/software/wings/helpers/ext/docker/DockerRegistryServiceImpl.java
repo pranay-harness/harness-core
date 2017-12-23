@@ -24,6 +24,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -47,8 +48,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private DockerRegistryRestClient getDockerRegistryRestClient(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(dockerConfig, encryptionDetails);
-    OkHttpClient okHttpClient =
-        new OkHttpClient().newBuilder().connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS).build();
+    OkHttpClient okHttpClient = HttpUtil.getUnsafeOkHttpClient();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
                             .baseUrl(dockerConfig.getDockerRegistryUrl())

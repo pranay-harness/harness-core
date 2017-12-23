@@ -14,6 +14,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -43,7 +45,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -72,8 +74,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -85,9 +85,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class AppServiceImpl implements AppService {
   private static final Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
-
-  private static final int SM_CLEANUP_POLL_INTERVAL = 60;
-  private static final int INSTANCE_SYNC_POLL_INTERVAL = 600;
 
   @Inject private AlertService alertService;
   @Inject private ArtifactService artifactService;
@@ -128,8 +125,8 @@ public class AppServiceImpl implements AppService {
             .withNotificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
             .build());
-    addCronForStateMachineExecutionCleanup(application);
-    addCronForContainerSync(application);
+    StateMachineExecutionCleanupJob.add(jobScheduler, application.getUuid());
+    ContainerSyncJob.add(jobScheduler, application.getUuid());
 
     yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.ADD);
 
@@ -164,38 +161,6 @@ public class AppServiceImpl implements AppService {
                              .withAppId(app.getUuid())
                              .withAppName(app.getName())
                              .build()));
-  }
-
-  void addCronForStateMachineExecutionCleanup(Application application) {
-    JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
-                        .withIdentity(application.getUuid(), StateMachineExecutionCleanupJob.GROUP)
-                        .usingJobData(StateMachineExecutionCleanupJob.APP_ID_KEY, application.getUuid())
-                        .build();
-
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(application.getUuid(), StateMachineExecutionCleanupJob.GROUP)
-            .withSchedule(
-                SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(SM_CLEANUP_POLL_INTERVAL).repeatForever())
-            .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
-  void addCronForContainerSync(Application application) {
-    JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
-                        .withIdentity(application.getUuid(), ContainerSyncJob.GROUP)
-                        .usingJobData(ContainerSyncJob.APP_ID_KEY, application.getUuid())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(application.getUuid(), ContainerSyncJob.GROUP)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(INSTANCE_SYNC_POLL_INTERVAL)
-                                            .repeatForever())
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
   }
 
   /* (non-Javadoc)
@@ -321,7 +286,7 @@ public class AppServiceImpl implements AppService {
   public void delete(String appId) {
     Application application = wingsPersistence.get(Application.class, appId);
     if (application == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
+      return;
     }
 
     // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
@@ -331,7 +296,7 @@ public class AppServiceImpl implements AppService {
     yamlChangeSetHelper.applicationYamlChange(application, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneObjectJob.addDefaultJob(jobScheduler, Application.class, appId, appId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Application.class, appId, appId);
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
@@ -357,10 +322,10 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId) {
+  public void pruneDescendingEntities(@NotEmpty String appId) {
     List<OwnedByApplication> services =
         ServiceClassLocator.descendingServices(this, AppServiceImpl.class, OwnedByApplication.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, appId, (descending) -> { descending.pruneByApplication(appId); });
   }
 
@@ -385,6 +350,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public List<String> getAppNamesByAccountId(String accountId) {
     List<String> appIdList = new ArrayList<>();
+
     wingsPersistence.createQuery(Application.class)
         .field("accountId")
         .equal(accountId)
@@ -396,14 +362,10 @@ public class AppServiceImpl implements AppService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.createQuery(SettingAttribute.class)
-        .field("accountId")
+        .field(SettingAttribute.ACCOUNT_ID_KEY)
         .equal(accountId)
         .asKeyList()
         .forEach(key -> delete(key.getId().toString()));
-  }
-
-  void deleteCronForStateMachineExecutionCleanup(String appId) {
-    jobScheduler.deleteJob(appId, StateMachineExecutionCleanupJob.GROUP);
   }
 
   @Override

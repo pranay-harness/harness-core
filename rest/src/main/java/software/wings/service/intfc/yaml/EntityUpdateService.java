@@ -31,6 +31,9 @@ public interface EntityUpdateService {
   List<GitFileChange> getConfigFileGitSyncFileSet(
       String accountId, Service service, ConfigFile configFile, ChangeType changeType, String fileContent);
 
+  List<GitFileChange> getConfigFileOverrideGitSyncFileSet(
+      String accountId, Environment environment, ConfigFile configFile, ChangeType changeType, String fileContent);
+
   GitFileChange getEnvironmentGitSyncFile(String accountId, Environment environment, ChangeType changeType);
 
   GitFileChange getInfraMappingGitSyncFile(String accountId, InfrastructureMapping infraMapping, ChangeType changeType);

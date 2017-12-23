@@ -1,8 +1,11 @@
 package software.wings.service.impl.analysis;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.utils.Switch.noop;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -59,7 +62,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -91,7 +93,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .equal(stateType)
                                      .field("stateExecutionId")
                                      .equal(stateExecutionId)
-                                     .field(("applicationId"))
+                                     .field("applicationId")
                                      .equal(appId)
                                      .field("query")
                                      .equal(searchQuery)
@@ -113,7 +115,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                        .equal(stateType)
                                        .field("stateExecutionId")
                                        .equal(stateExecutionId)
-                                       .field(("applicationId"))
+                                       .field("applicationId")
                                        .equal(appId)
                                        .field("query")
                                        .equal(searchQuery)
@@ -548,15 +550,21 @@ public class AnalysisServiceImpl implements AnalysisService {
         final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
         hostSummary.setXCordinate(sprinkalizedCordinate(analysisCluster.getX()));
         hostSummary.setYCordinate(sprinkalizedCordinate(analysisCluster.getY()));
-        hostSummary.setUnexpectedFreq((analysisCluster.isUnexpected_freq()));
+        hostSummary.setUnexpectedFreq(analysisCluster.isUnexpected_freq());
         hostSummary.setCount(computeCountFromFrequencies(analysisCluster));
         hostSummary.setFrequencies(getFrequencies(analysisCluster));
+        hostSummary.setFrequencyMap(getFrequencyMap(analysisCluster));
         clusterSummary.setLogText(analysisCluster.getText());
         clusterSummary.setTags(analysisCluster.getTags());
+        clusterSummary.setClusterLabel(analysisCluster.getCluster_label());
         clusterSummary.getHostSummary().put(Misc.replaceUnicodeWithDot(hostEntry.getKey()), hostSummary);
-        double score = 0.0;
+
+        double score;
         if (clusterScores != null && clusterScores.containsKey(labelEntry.getKey())) {
           switch (cluster_type) {
+            case CONTROL:
+              noop();
+              break;
             case TEST:
               score = clusterScores.get(labelEntry.getKey()).getFreq_score() * 100;
               clusterSummary.setScore(score);
@@ -570,6 +578,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                       : score > MEDIUM_RISK_THRESHOLD ? RiskLevel.MEDIUM : RiskLevel.LOW);
               break;
             default:
+              unhandled(cluster_type);
           }
         }
       }
@@ -577,6 +586,22 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     return analysisSummaries;
+  }
+
+  private Map<Integer, Integer> getFrequencyMap(SplunkAnalysisCluster analysisCluster) {
+    Map<Integer, Integer> frequencyMap = new HashMap<>();
+    int count;
+    for (Map frequency : analysisCluster.getMessage_frequencies()) {
+      if (!frequency.containsKey("count")) {
+        continue;
+      }
+      count = (Integer) frequency.get("count");
+      if (!frequencyMap.containsKey(count)) {
+        frequencyMap.put(count, 0);
+      }
+      frequencyMap.put(count, frequencyMap.get(count) + 1);
+    }
+    return frequencyMap;
   }
 
   private int computeCountFromFrequencies(SplunkAnalysisCluster analysisCluster) {

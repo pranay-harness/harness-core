@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_KEY_ID;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -43,7 +44,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * The type State machine execution simulator test.

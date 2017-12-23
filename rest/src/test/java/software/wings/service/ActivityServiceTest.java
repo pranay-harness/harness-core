@@ -374,7 +374,7 @@ public class ActivityServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldPruneDescendingObjects() {
-    activityService.pruneDescendingObjects(APP_ID, ACTIVITY_ID);
+    activityService.pruneDescendingEntities(APP_ID, ACTIVITY_ID);
     InOrder inOrder = inOrder(logService);
     inOrder.verify(logService).pruneByActivity(APP_ID, ACTIVITY_ID);
   }

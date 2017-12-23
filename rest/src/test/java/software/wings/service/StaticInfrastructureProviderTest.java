@@ -17,6 +17,8 @@ import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -29,7 +31,6 @@ import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 
 import java.util.Collections;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/24/17.
@@ -75,11 +76,5 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
     infrastructureProvider.updateHostConnAttrs(
         aPhysicalInfrastructureMapping().withAppId(APP_ID).withUuid(INFRA_MAPPING_ID).build(), HOST_CONN_ATTR_ID);
     verify(hostService).updateHostConnectionAttrByInfraMappingId(APP_ID, INFRA_MAPPING_ID, HOST_CONN_ATTR_ID);
-  }
-
-  @Test
-  public void shouldDeleteHostByInfraMappingId() {
-    infrastructureProvider.deleteHostByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
-    verify(hostService).deleteByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
   }
 }

@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -12,7 +14,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.InfrastructureProvider;
 
 import java.util.List;
-import javax.inject.Singleton;
 
 /**
  * Created by brett on 6/27/17
@@ -30,9 +31,6 @@ public class DirectInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {}
-
-  @Override
-  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {}
 
   @Override
   public Host saveHost(Host host) {

@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.google.common.io.CharStreams;
+import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
@@ -66,7 +67,6 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Set;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.

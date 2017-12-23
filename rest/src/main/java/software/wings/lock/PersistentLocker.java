@@ -1,13 +1,12 @@
 package software.wings.lock;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 /**
  * Persistent Locker implementation using Mongo DB.

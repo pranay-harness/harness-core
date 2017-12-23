@@ -169,7 +169,7 @@ public class StencilPostProcessor {
     try {
       if (value != null) {
         JsonNode jsonSchema = stencil.getJsonSchema();
-        ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(fieldName));
+        ObjectNode jsonSchemaField = (ObjectNode) jsonSchema.get("properties").get(fieldName);
         if (jsonSchemaField != null) {
           jsonSchemaField.set("default", JsonUtils.asTree(value));
         }
@@ -190,7 +190,7 @@ public class StencilPostProcessor {
       if (data != null) {
         return data.keySet().stream().map(key -> {
           JsonNode jsonSchema = t.getJsonSchema();
-          ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(fieldName));
+          ObjectNode jsonSchemaField = (ObjectNode) jsonSchema.get("properties").get(fieldName);
           jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
           jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
           jsonSchemaField.set("default", JsonUtils.asTree(key));
@@ -212,7 +212,7 @@ public class StencilPostProcessor {
       if (data != null) {
         return data.keySet().stream().map(key -> {
           JsonNode jsonSchema = t.getJsonSchema();
-          ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(fieldName));
+          ObjectNode jsonSchemaField = (ObjectNode) jsonSchema.get("properties").get(fieldName);
           jsonSchemaField.set("default", JsonUtils.asTree(key));
           OverridingStencil overridingStencil = t.getOverridingStencil();
           overridingStencil.setOverridingJsonSchema(jsonSchema);
@@ -231,7 +231,7 @@ public class StencilPostProcessor {
     try {
       if (data != null) {
         JsonNode jsonSchema = t.getJsonSchema();
-        ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(fieldName));
+        ObjectNode jsonSchemaField = (ObjectNode) jsonSchema.get("properties").get(fieldName);
         jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
         jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
         OverridingStencil overridingStencil = t.getOverridingStencil();

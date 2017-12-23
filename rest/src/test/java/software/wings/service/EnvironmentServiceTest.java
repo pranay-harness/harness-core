@@ -40,6 +40,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -88,7 +89,6 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 6/28/16.
@@ -382,7 +382,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldPruneDescendingObjects() {
-    environmentService.pruneDescendingObjects(APP_ID, ENV_ID);
+    environmentService.pruneDescendingEntities(APP_ID, ENV_ID);
 
     InOrder inOrder =
         inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
@@ -395,7 +395,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldPruneDescendingObjectsSomeFailed() {
     doThrow(new WingsException("Forced exception")).when(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
 
-    assertThatThrownBy(() -> environmentService.pruneDescendingObjects(APP_ID, ENV_ID));
+    assertThatThrownBy(() -> environmentService.pruneDescendingEntities(APP_ID, ENV_ID));
 
     InOrder inOrder =
         inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);

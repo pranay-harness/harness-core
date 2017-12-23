@@ -10,6 +10,8 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -45,7 +47,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.UUID;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 6/19/17.

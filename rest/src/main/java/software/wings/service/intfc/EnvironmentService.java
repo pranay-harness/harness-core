@@ -89,7 +89,7 @@ public interface EnvironmentService extends OwnedByApplication {
    * @param appId the app id
    * @param envId the env id
    */
-  void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String envId);
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Create default environments.

@@ -2,6 +2,7 @@ package software.wings.delegate.service;
 
 import static software.wings.managerclient.SafeHttpCall.execute;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.ConfigFile;
@@ -10,7 +11,6 @@ import software.wings.managerclient.ManagerClient;
 
 import java.io.IOException;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 1/10/17.

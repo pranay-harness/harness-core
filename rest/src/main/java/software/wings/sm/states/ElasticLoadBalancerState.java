@@ -2,6 +2,8 @@ package software.wings.sm.states;
 
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.inject.Inject;
+
 import com.amazonaws.regions.Regions;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -30,8 +32,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
-
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 10/3/16.

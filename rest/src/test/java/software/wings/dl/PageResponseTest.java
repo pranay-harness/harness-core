@@ -3,12 +3,11 @@ package software.wings.dl;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.utils.JsonUtils;
-
-import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 4/25/16.

@@ -12,6 +12,7 @@ import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -46,7 +47,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.validation.Valid;
 
 /**
@@ -103,7 +103,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return null;
     }
 
-    executorService.submit(() -> queueServiceVariableYamlChangeSet(serviceVariable));
+    executorService.submit(() -> savewServiceVariableYamlChangeSet(serviceVariable));
     return newServiceVariable;
   }
 
@@ -138,7 +138,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return null;
     }
 
-    executorService.submit(() -> queueServiceVariableYamlChangeSet(serviceVariable));
+    executorService.submit(() -> savewServiceVariableYamlChangeSet(serviceVariable));
 
     return updatedServiceVariable;
   }
@@ -167,15 +167,20 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public void delete(@NotEmpty String appId, @NotEmpty String settingId) {
     ServiceVariable serviceVariable = get(appId, settingId);
-    boolean deleted = wingsPersistence.delete(
-        wingsPersistence.createQuery(ServiceVariable.class).field("appId").equal(appId).field(ID_KEY).equal(settingId));
-
-    if (deleted) {
-      executorService.submit(() -> queueServiceVariableYamlChangeSet(serviceVariable));
+    if (serviceVariable == null) {
+      return;
     }
+
+    savewServiceVariableYamlChangeSet(serviceVariable);
+
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
+                                .field(ServiceVariable.APP_ID_KEY)
+                                .equal(appId)
+                                .field(ID_KEY)
+                                .equal(settingId));
   }
 
-  private void queueServiceVariableYamlChangeSet(ServiceVariable serviceVariable) {
+  private void savewServiceVariableYamlChangeSet(ServiceVariable serviceVariable) {
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     if (serviceVariable.getEntityType() == EntityType.SERVICE) {
       Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());

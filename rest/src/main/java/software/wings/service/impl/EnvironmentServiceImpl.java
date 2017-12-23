@@ -20,6 +20,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +47,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.PruneObjectJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
@@ -78,8 +80,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -249,7 +249,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public void delete(String appId, String envId) {
     Environment environment = wingsPersistence.get(Environment.class, appId, envId);
     if (environment == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Environment doesn't exist");
+      return;
     }
     ensureEnvironmentSafeToDelete(environment);
     delete(environment);
@@ -328,7 +328,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     yamlChangeSetHelper.environmentYamlChange(environment, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneObjectJob.addDefaultJob(jobScheduler, Environment.class, environment.getAppId(), environment.getUuid());
+    PruneEntityJob.addDefaultJob(jobScheduler, Environment.class, environment.getAppId(), environment.getUuid());
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
@@ -353,10 +353,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
-  public void pruneDescendingObjects(@NotEmpty String appId, @NotEmpty String envId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String envId) {
     List<OwnedByEnvironment> services =
         ServiceClassLocator.descendingServices(this, EnvironmentServiceImpl.class, OwnedByEnvironment.class);
-    PruneObjectJob.pruneDescendingObjects(
+    PruneEntityJob.pruneDescendingEntities(
         services, appId, envId, (descending) -> { descending.pruneByEnvironment(appId, envId); });
   }
 
@@ -366,7 +366,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
     environments.forEach(environment -> {
       wingsPersistence.delete(environment);
-      pruneDescendingObjects(appId, environment.getUuid());
+      pruneDescendingEntities(appId, environment.getUuid());
     });
   }
 

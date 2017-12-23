@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 5/9/16.
  */
-public interface HostService {
+public interface HostService extends OwnedByInfrastructureMapping {
   /**
    * List.
    *
@@ -51,6 +51,14 @@ public interface HostService {
    * @param hostId the host id
    */
   void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
+
+  /**
+   * Prune owned from the app objects.
+   *
+   * @param appId the app id
+   * @param hostId the host id
+   */
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String hostId);
 
   /**
    * Import hosts.
@@ -135,14 +143,6 @@ public interface HostService {
    * @param hostConnectionAttrs the host connection attrs
    */
   void updateHostConnectionAttrByInfraMappingId(String appId, String infraMappingId, String hostConnectionAttrs);
-
-  /**
-   * Delete by infra mapping id.
-   *
-   * @param appId          the app id
-   * @param infraMappingId the infra mapping id
-   */
-  void deleteByInfraMappingId(String appId, String infraMappingId);
 
   /**
    * Delete by service.

@@ -6,13 +6,14 @@ package software.wings.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.infrastructure.Host;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * The Class ExpressionEvaluatorTest.

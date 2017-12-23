@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -8,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
 
 /**
  * Cron that runs every mid night to cleanup the data

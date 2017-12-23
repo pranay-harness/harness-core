@@ -24,6 +24,8 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
@@ -70,8 +72,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -289,21 +289,18 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public boolean delete(String appId, String artifactId) {
     Artifact artifact = get(appId, artifactId);
-    Validator.notNullCheck("Artifact", artifact);
+    if (artifact == null) {
+      return true;
+    }
 
-    List<String> uuids = artifact.getArtifactFiles()
-                             .stream()
-                             .map(artifactFile -> artifactFile.getFileUuid())
-                             .collect(Collectors.toList());
-
-    PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS, uuids);
+    PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS);
     return wingsPersistence.delete(artifact);
   }
 
   @Override
   public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
+        .field(Artifact.APP_ID_KEY)
         .equal(appId)
         .asList()
         .forEach(artifact -> delete(appId, artifact.getUuid()));
@@ -344,7 +341,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public void deleteByArtifactStream(String appId, String artifactStreamId) {
     wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
+        .field(Artifact.APP_ID_KEY)
         .equal(appId)
         .field("artifactStreamId")
         .equal(artifactStreamId)

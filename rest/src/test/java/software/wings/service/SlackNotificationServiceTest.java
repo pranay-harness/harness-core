@@ -9,6 +9,7 @@ import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aN
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
@@ -29,7 +30,6 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 12/16/16.

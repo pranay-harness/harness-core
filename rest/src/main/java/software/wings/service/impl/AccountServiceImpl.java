@@ -13,6 +13,8 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.codec.binary.Hex;
@@ -51,8 +53,6 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -178,7 +178,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean exists(String accountName) {
     Account res = wingsPersistence.get(
         Account.class, Builder.aPageRequest().addFilter("accountName", Operator.EQ, accountName).build());
-    return (res != null);
+    return res != null;
   }
 
   @Override

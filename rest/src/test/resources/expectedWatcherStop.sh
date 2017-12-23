@@ -84,6 +84,7 @@ then
       i=$((i+1))
     else
       echo "Delegate stopped"
+      rm -rf msg
       exit 0
     fi
   done
@@ -91,5 +92,6 @@ then
   exit 1
 else
   echo "Delegate not running"
+  rm -rf msg
   exit 0
 fi

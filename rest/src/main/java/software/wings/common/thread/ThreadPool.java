@@ -94,7 +94,7 @@ public class ThreadPool {
    * @return the boolean
    */
   public static boolean isIdle() {
-    return (commonPool.getActiveCount() == 0);
+    return commonPool.getActiveCount() == 0;
   }
 
   private static class Delayed implements Runnable {

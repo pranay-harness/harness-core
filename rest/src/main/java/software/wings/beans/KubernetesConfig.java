@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
@@ -21,16 +20,19 @@ import software.wings.settings.SettingValue;
 @Builder
 @ToString(exclude = "password")
 public class KubernetesConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Cluster master URL", required = true) @NotEmpty private String masterUrl;
-  @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
-  private String caCert;
-  private String clientCert;
-  private String clientKey;
+  @NotEmpty private String masterUrl;
+  private String username;
+  @Encrypted private char[] password;
+  @Encrypted private char[] caCert;
+  @Encrypted private char[] clientCert;
+  @Encrypted private char[] clientKey;
   private String namespace;
   @NotEmpty @SchemaIgnore private String accountId;
 
   @SchemaIgnore private String encryptedPassword;
+  @SchemaIgnore private String encryptedCaCert;
+  @SchemaIgnore private String encryptedClientCert;
+  @SchemaIgnore private String encryptedClientKey;
 
   /**
    * Instantiates a new setting value.
@@ -39,8 +41,9 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.KUBERNETES.name());
   }
 
-  public KubernetesConfig(String masterUrl, String username, char[] password, String caCert, String clientCert,
-      String clientKey, String namespace, String accountId, String encryptedPassword) {
+  public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
+      char[] clientKey, String namespace, String accountId, String encryptedPassword, String encryptedCaCert,
+      String encryptedClientCert, String encryptedClientKey) {
     this();
     this.masterUrl = masterUrl;
     this.username = username;
@@ -51,5 +54,8 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
     this.namespace = namespace;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.encryptedCaCert = encryptedCaCert;
+    this.encryptedClientCert = encryptedClientCert;
+    this.encryptedClientKey = encryptedClientKey;
   }
 }

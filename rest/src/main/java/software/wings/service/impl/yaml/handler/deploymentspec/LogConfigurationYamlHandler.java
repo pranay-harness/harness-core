@@ -38,8 +38,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
       return Collections.emptyList();
     }
     return logOptionList.stream()
-        .map(logOption
-            -> NameValuePair.Yaml.Builder.aYaml().withName(logOption.getKey()).withValue(logOption.getValue()).build())
+        .map(logOption -> NameValuePair.Yaml.builder().name(logOption.getKey()).value(logOption.getValue()).build())
         .collect(Collectors.toList());
   }
 

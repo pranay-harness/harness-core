@@ -4,6 +4,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
@@ -19,8 +22,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -111,7 +112,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void deleteByEnv(String appId, String envId) {
     wingsPersistence.createQuery(ServiceInstance.class)
-        .field("appId")
+        .field(ServiceInstance.APP_ID_KEY)
         .equal(appId)
         .field("envId")
         .equal(envId)
@@ -163,7 +164,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   }
 
   @Override
-  public void deleteByInfraMappingId(String appId, String infraMappingId) {
+  public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
                                 .field("appId")
                                 .equal(appId)
@@ -172,7 +173,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   }
 
   @Override
-  public void deleteByHost(String appId, String hostId) {
+  public void pruneByHost(String appId, String hostId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(ServiceInstance.class).field("appId").equal(appId).field("hostId").equal(hostId));
   }

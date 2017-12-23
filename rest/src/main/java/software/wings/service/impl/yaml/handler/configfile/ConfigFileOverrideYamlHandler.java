@@ -65,7 +65,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       fileName = bean.getFileName();
     }
 
-    String serviceName;
+    String serviceName = null;
     if (EntityType.SERVICE_TEMPLATE.equals(bean.getEntityType())) {
       ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, bean.getTemplateId());
       Validator.notNullCheck("Service template is null for the given id:" + bean.getTemplateId(), serviceTemplate);
@@ -73,10 +73,10 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       Service service = serviceResourceService.get(appId, serviceId);
       Validator.notNullCheck("Service is null for the given id:" + serviceId, service);
       serviceName = service.getName();
-    } else if (EntityType.ENVIRONMENT.equals(bean.getEntityType())) {
-      serviceName = "ALL";
     } else {
-      throw new WingsException("Unknown entity type: " + bean.getEntityType());
+      if (!EntityType.ENVIRONMENT.equals(bean.getEntityType())) {
+        throw new WingsException("Unknown entity type: " + bean.getEntityType());
+      }
     }
 
     return ConfigFile.OverrideYaml.builder()
@@ -105,24 +105,10 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     BoundedInputStream inputStream = null;
     ConfigFile previous = get(accountId, yamlFilePath);
     if (!yaml.isEncrypted()) {
-      /*      Optional<ChangeContext> fileContentChangeContext = changeSetContext.stream().filter(changeContext1 -> {
-              Map properties = changeContext1.getProperties();
-              Object value = properties.get(configFileName);
-              return value != null;
-            }).findFirst();
-
-            if (fileContentChangeContext.isPresent()) {
-              ChangeContext contentChangeContext = fileContentChangeContext.get();
-              Map properties = contentChangeContext.getProperties();
-              inputStream = (InputStream) properties.get(configFileName);
-
-            }
-      */
-
       int index = yamlFilePath.lastIndexOf(PATH_DELIMITER);
       if (index != -1) {
         String configFileDirPath = yamlFilePath.substring(0, index);
-        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getFileName();
+        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getTargetFilePath();
 
         Optional<ChangeContext> contentChangeContext = changeSetContext.stream()
                                                            .filter(changeContext1 -> {
@@ -137,19 +123,6 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
           inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes()));
         }
       }
-
-      //      try {
-      //        inputStream = new BoundedInputStream(new FileInputStream(configFileName));
-      //      } catch (FileNotFoundException e) {
-      //        logger.error("Unable to locate the file: " + configFileName);
-      //        throw new HarnessException(e);
-      //      }
-
-      //      if (previous != null)  {
-      //        inputStream = new BoundedInputStream(new FileInputStream(yaml.getTargetFilePath()));
-      //      } else {
-      //        inputStream = new BoundedInputStream();
-      //      }
     }
 
     ConfigFile configFile = new ConfigFile();
@@ -168,11 +141,9 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       configFile.setChecksumType(checksumType);
     }
 
-    //    configFile.setConfigOverrideExpression(getConfigOverrideExpression());
-    configFile.setConfigOverrideType(ConfigOverrideType.ALL);
     if (!Util.isEmpty(yaml.getServiceName())) {
       String serviceName = yaml.getServiceName();
-      if (serviceName.equals(ConfigOverrideType.ALL.name())) {
+      if (serviceName == null) {
         configFile.setEntityType(EntityType.ENVIRONMENT);
         configFile.setEntityId(envId);
         configFile.setEnvId(Base.GLOBAL_ENV_ID);
@@ -186,10 +157,10 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
         List<Key<ServiceTemplate>> templateRefKeysByService =
             serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
         if (Util.isEmpty(templateRefKeysByService)) {
-          throw new HarnessException("Unable to locate a service with the given name: " + serviceName);
+          throw new HarnessException("Unable to locate a service template for the given service: " + serviceName);
         }
 
-        String serviceTemplateId = templateRefKeysByService.get(0).getCollection();
+        String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
         if (Util.isEmpty(serviceTemplateId)) {
           throw new HarnessException(
               "Unable to locate a service template with the given service: " + serviceName + " and env: " + envId);
@@ -198,6 +169,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
         configFile.setEntityId(serviceTemplateId);
         configFile.setTemplateId(serviceTemplateId);
         configFile.setEntityType(EntityType.SERVICE_TEMPLATE);
+        configFile.setConfigOverrideType(ConfigOverrideType.ALL);
         configFile.setEnvId(envId);
       }
     }

@@ -47,6 +47,7 @@ import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -102,7 +103,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.cache.Cache;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 3/9/16.

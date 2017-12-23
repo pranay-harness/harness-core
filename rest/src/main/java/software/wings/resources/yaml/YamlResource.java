@@ -2,6 +2,8 @@ package software.wings.resources.yaml;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -30,12 +32,14 @@ import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.DirectoryNode;
+import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import javax.inject.Inject;
+import java.util.List;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -58,7 +62,7 @@ public class YamlResource {
   private YamlArtifactStreamService yamlArtifactStreamService;
   private YamlService yamlService;
   private YamlDirectoryService yamlDirectoryService;
-  private YamlGitService yamlGitSyncService;
+  private YamlGitService yamlGitService;
   private AuthService authService;
 
   /**
@@ -80,7 +84,7 @@ public class YamlResource {
     this.yamlDirectoryService = yamlDirectoryService;
     this.yamlArtifactStreamService = yamlArtifactStreamService;
     this.yamlService = yamlService;
-    this.yamlGitSyncService = yamlGitSyncService;
+    this.yamlGitService = yamlGitSyncService;
     this.authService = authService;
   }
 
@@ -410,7 +414,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse pushDirectory(@QueryParam("accountId") String accountId) {
-    yamlGitSyncService.fullSync(accountId);
+    yamlGitService.fullSync(accountId);
     return new RestResponse<>();
   }
 
@@ -550,7 +554,7 @@ public class YamlResource {
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
     yamlGitSync.setAppId(Base.GLOBAL_APP_ID);
-    return new RestResponse<>(yamlGitSyncService.save(yamlGitSync));
+    return new RestResponse<>(yamlGitService.save(yamlGitSync));
   }
 
   /**
@@ -566,7 +570,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<YamlGitConfig> get(
       @PathParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(yamlGitSyncService.get(accountId, entityId));
+    return new RestResponse<>(yamlGitService.get(accountId, entityId));
   }
 
   /**
@@ -584,7 +588,7 @@ public class YamlResource {
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
     yamlGitSync.setAppId(Base.GLOBAL_APP_ID);
-    return new RestResponse<>(yamlGitSyncService.update(yamlGitSync));
+    return new RestResponse<>(yamlGitService.update(yamlGitSync));
   }
 
   /**
@@ -602,7 +606,7 @@ public class YamlResource {
   @PublicApi
   public RestResponse webhookCatcher(@QueryParam("accountId") String accountId,
       @PathParam("entityToken") String entityToken, YamlWebHookPayload yamlWebHookPayload) {
-    yamlGitSyncService.processWebhookPost(accountId, entityToken, yamlWebHookPayload);
+    yamlGitService.processWebhookPost(accountId, entityToken, yamlWebHookPayload);
     return new RestResponse();
   }
 
@@ -624,7 +628,7 @@ public class YamlResource {
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
     }
-    return new RestResponse<>(yamlGitSyncService.getWebhook(entityId, accountId));
+    return new RestResponse<>(yamlGitService.getWebhook(entityId, accountId));
   }
 
   /**
@@ -640,7 +644,32 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId, @QueryParam("token") String token) {
     authService.validateToken(token);
-    yamlGitSyncService.performFullSyncDryRun(accountId);
+    yamlGitService.performFullSyncDryRun(accountId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("git-sync-errors")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<GitSyncError>> listGitSyncErrors(@QueryParam("accountId") String accountId) {
+    return yamlGitService.listGitSyncErrors(accountId);
+  }
+
+  @POST
+  @Path("git-sync-errors")
+  @Timed
+  @ExceptionMetered
+  public RestResponse fixGitSyncError(
+      @QueryParam("accountId") String accountId, @QueryParam("yamlFilePath") String yamlFilePath, String yamlContent) {
+    return yamlGitService.fixGitSyncErrors(accountId, yamlFilePath, yamlContent);
+  }
+
+  @POST
+  @Path("git-sync-errors-discard")
+  @Timed
+  @ExceptionMetered
+  public RestResponse discardGitSyncErrors(@QueryParam("accountId") String accountId, List<String> yamlFilePathList) {
+    return yamlGitService.discardGitSyncErrors(accountId, yamlFilePathList);
   }
 }

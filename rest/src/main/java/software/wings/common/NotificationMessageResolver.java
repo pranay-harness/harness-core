@@ -2,6 +2,8 @@ package software.wings.common;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -16,8 +18,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 7/25/16.

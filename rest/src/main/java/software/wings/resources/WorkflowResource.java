@@ -6,6 +6,8 @@ package software.wings.resources;
 
 import static software.wings.utils.Validator.validateUuid;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -32,7 +34,6 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -121,7 +122,7 @@ public class WorkflowResource {
   public RestResponse<Workflow> create(@QueryParam("appId") String appId, Workflow workflow) {
     workflow.setAppId(appId);
     workflow.setWorkflowType(WorkflowType.ORCHESTRATION);
-    return new RestResponse<>((workflowService.createWorkflow(workflow)));
+    return new RestResponse<>(workflowService.createWorkflow(workflow));
   }
 
   @PUT
@@ -130,7 +131,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Workflow> update(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, WorkflowVersion workflowVersion) {
-    return new RestResponse<>((workflowService.updateWorkflow(appId, workflowId, workflowVersion.getDefaultVersion())));
+    return new RestResponse<>(workflowService.updateWorkflow(appId, workflowId, workflowVersion.getDefaultVersion()));
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)

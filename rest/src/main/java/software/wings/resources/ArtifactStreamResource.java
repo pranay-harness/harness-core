@@ -3,6 +3,8 @@ package software.wings.resources;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -27,7 +29,6 @@ import software.wings.stencils.Stencil;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;

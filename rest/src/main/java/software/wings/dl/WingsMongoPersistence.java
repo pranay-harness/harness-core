@@ -8,7 +8,9 @@ import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DuplicateKeyException;
@@ -54,8 +56,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * The Class WingsMongoPersistence.
@@ -474,6 +474,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * {@inheritDoc}
    */
   @Override
+  public <T> long getCount(Class<T> cls, PageRequest<T> req) {
+    return MongoHelper.getCount(datastoreMap.get(ReadPref.NORMAL), cls, req);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation) {
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();
@@ -781,7 +789,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   private void deleteEncryptionReference(Encryptable object, Set<String> fieldNames, String parentId) {
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
-      if ((fieldNames == null || fieldNames.contains(f.getName()))) {
+      if (fieldNames == null || fieldNames.contains(f.getName())) {
         Field encryptedField = getEncryptedRefField(f, object);
         encryptedField.setAccessible(true);
         String encryptedId;
