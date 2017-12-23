@@ -25,8 +25,9 @@ public class AmiStepExecutionSummary extends StepExecutionSummary {
 
   public AmiServiceSetupElement getRollbackAmiServiceElement() {
     return AmiServiceSetupElement.builder()
-        .maxInstances(instanceCount)
         .commandName(commandName)
+        .instanceCount(instanceCount)
+        .instanceUnitType(instanceUnitType)
         .newAutoScalingGroupName(oldAutoScalingGroupName)
         .oldAutoScalingGroupName(newAutoScalingGroupName)
         .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)

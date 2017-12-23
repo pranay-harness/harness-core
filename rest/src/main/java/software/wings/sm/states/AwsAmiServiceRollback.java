@@ -11,8 +11,8 @@ import software.wings.stencils.EnumData;
 public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Resize Service Cluster")
-  private String commandName = "Resize Service Cluster";
+  @DefaultValue("Amazon AMI")
+  private String commandName = "Amazon AMI";
 
   /**
    * Instantiates a new state.

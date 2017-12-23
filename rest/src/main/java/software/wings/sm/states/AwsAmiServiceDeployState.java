@@ -84,7 +84,7 @@ public class AwsAmiServiceDeployState extends State {
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Amazon AMI")
-  private String commandName;
+  private String commandName = "Amazon AMI";
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
@@ -231,6 +231,21 @@ public class AwsAmiServiceDeployState extends State {
 
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
 
+    if (isRollback()) {
+      instanceCount = serviceSetupElement.getInstanceCount();
+      instanceUnitType = serviceSetupElement.getInstanceUnitType();
+    } else {
+      awsAmiDeployStateExecutionData.setInstanceCount(instanceCount);
+      awsAmiDeployStateExecutionData.setInstanceUnitType(instanceUnitType);
+      awsAmiDeployStateExecutionData.setActivityId(activity.getUuid());
+      awsAmiDeployStateExecutionData.setAutoScalingSteadyStateTimeout(
+          serviceSetupElement.getAutoScalingSteadyStateTimeout());
+      awsAmiDeployStateExecutionData.setNewAutoScalingGroupName(serviceSetupElement.getNewAutoScalingGroupName());
+      awsAmiDeployStateExecutionData.setOldAutoScalingGroupName(serviceSetupElement.getOldAutoScalingGroupName());
+      awsAmiDeployStateExecutionData.setMaxInstances(serviceSetupElement.getMaxInstances());
+      awsAmiDeployStateExecutionData.setResizeStrategy(serviceSetupElement.getResizeStrategy());
+    }
+
     String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
     String oldAutoScalingGroupName = serviceSetupElement.getOldAutoScalingGroupName();
 
@@ -286,6 +301,7 @@ public class AwsAmiServiceDeployState extends State {
     //    activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
     AmiServiceDeployElement amiServiceDeployElement =
         AmiServiceDeployElement.builder().activityId(activity.getUuid()).commandName(commandName).build();
+
     return anExecutionResponse()
         .withAsync(false)
         .withStateExecutionData(awsAmiDeployStateExecutionData)
