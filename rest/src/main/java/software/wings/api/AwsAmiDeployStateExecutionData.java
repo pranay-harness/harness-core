@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
@@ -32,6 +33,8 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
   private ResizeStrategy resizeStrategy;
+  private int instanceCount;
+  private InstanceUnitType instanceUnitType;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -63,6 +66,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
         .newAutoScalingGroupName(newAutoScalingGroupName)
         .oldAutoScalingGroupName(oldAutoScalingGroupName)
         .resizeStrategy(resizeStrategy)
+        .instanceUnitType(instanceUnitType)
         .build();
   }
 }
