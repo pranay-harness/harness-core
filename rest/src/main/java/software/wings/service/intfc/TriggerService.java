@@ -109,7 +109,7 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline {
    * @param appId     the app id
    * @param triggerId the trigger id
    */
-  void triggerScheduledExecutionAsync(String appId, String triggerId);
+  void triggerScheduledExecutionAsync(Trigger trigger);
 
   /**
    * Trigger execution by webhook with the given service build numbers

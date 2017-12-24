@@ -124,7 +124,6 @@ public class SplunkV2StateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void noTestNodes() {
     SplunkV2State spyState = spy(splunkState);
     doReturn(Collections.emptySet()).when(spyState).getCanaryNewHostNames(executionContext);
@@ -147,7 +146,6 @@ public class SplunkV2StateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void noControlNodesCompareWithCurrent() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
@@ -172,7 +170,6 @@ public class SplunkV2StateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void compareWithCurrentSameTestAndControlNodes() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
@@ -197,7 +194,6 @@ public class SplunkV2StateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void testTriggerCollection() {
     assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).asList().size());
     SplunkConfig splunkConfig = SplunkConfig.builder()
@@ -241,7 +237,6 @@ public class SplunkV2StateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void handleAsyncSummaryFail() {
     LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
     logAnalysisExecutionData.setCorrelationId(UUID.randomUUID().toString());
@@ -268,7 +263,6 @@ public class SplunkV2StateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void handleAsyncSummaryPassNoData() {
     LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
     logAnalysisExecutionData.setCorrelationId(UUID.randomUUID().toString());

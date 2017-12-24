@@ -40,10 +40,7 @@ public class YamlHelper {
 
   public static void addResponseMessage(
       RestResponse rr, ErrorCode errorCode, ResponseTypeEnum responseType, String message) {
-    ResponseMessage rm = new ResponseMessage();
-    rm.setCode(errorCode);
-    rm.setErrorType(responseType);
-    rm.setMessage(message);
+    ResponseMessage rm = ResponseMessage.builder().code(errorCode).errorType(responseType).message(message).build();
 
     List<ResponseMessage> responseMessages = rr.getResponseMessages();
     responseMessages.add(rm);

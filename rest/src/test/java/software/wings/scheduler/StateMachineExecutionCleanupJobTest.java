@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
@@ -13,7 +12,6 @@ import software.wings.rules.SetupScheduler;
 import java.util.concurrent.TimeoutException;
 
 @SetupScheduler
-@Ignore
 public class StateMachineExecutionCleanupJobTest extends WingsBaseTest {
   @Inject private JobScheduler jobScheduler;
 
