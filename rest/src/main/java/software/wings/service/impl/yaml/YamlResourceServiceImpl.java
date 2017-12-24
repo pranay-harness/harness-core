@@ -22,7 +22,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -53,12 +52,8 @@ import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
-import software.wings.yaml.artifactstream.OrchestrationStreamActionYaml;
-import software.wings.yaml.artifactstream.StreamActionYaml;
 import software.wings.yaml.command.CommandYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
-
-import java.util.List;
 
 public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private AppService appService;
@@ -194,39 +189,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         return rr;
       }
     }
-
-    List<ArtifactStreamAction> streamActions = artifactStream.getStreamActions();
-
-    if (streamActions != null) {
-      for (ArtifactStreamAction sa : streamActions) {
-        StreamActionYaml say;
-
-        switch (sa.getWorkflowType()) {
-          case ORCHESTRATION:
-            say = new OrchestrationStreamActionYaml();
-            say.setWorkflowName(sa.getWorkflowName());
-            say.setWorkflowType(sa.getWorkflowType().name());
-            say.setEnvName(sa.getEnvName());
-            break;
-          case PIPELINE:
-            say = new StreamActionYaml();
-            say.setWorkflowName(sa.getWorkflowName());
-            say.setWorkflowType(sa.getWorkflowType().name());
-            break;
-          case SIMPLE:
-            say = new StreamActionYaml();
-            break;
-          default:
-            // handle not found
-            say = new StreamActionYaml();
-        }
-
-        // TODO Rishi mentioned streamactions / triggers would be pulled out of artifact streams. Skipping the handling
-        // right now
-        //        artifactStreamYaml.getStreamActions().add(say);
-      }
-    }
-
     String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, artifactStream.getUuid(),
