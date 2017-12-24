@@ -149,7 +149,6 @@ public class BambooArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withMetadataOnly(isMetadataOnly());
   }
 
@@ -376,7 +375,6 @@ public class BambooArtifactStream extends ArtifactStream {
       bambooArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       bambooArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      bambooArtifactStream.setStreamActions(streamActions);
       bambooArtifactStream.setMetadataOnly(metadataOnly);
       return bambooArtifactStream;
     }

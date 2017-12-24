@@ -5,8 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Service.Builder.aService;
@@ -97,24 +95,6 @@ public class ArtifactServiceTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
   }
-
-  @Test
-  @Ignore
-  public void shouldCreateArtifactTriggerArtifactStreamAction() {
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
-        .thenReturn(aJenkinsArtifactStream()
-                        .withUuid(ARTIFACT_STREAM_ID)
-                        .withAppId(APP_ID)
-                        .withSourceName("ARTIFACT_SOURCE")
-                        .withServiceId(SERVICE_ID)
-                        .withMetadataOnly(true)
-                        .build());
-    assertThat(artifactService.create(builder.but().build()))
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
-    verify(artifactStreamService, times(1)).triggerStreamActionPostArtifactCollectionAsync(any());
-  }
-
   /**
    * Should throw exception when app id does not match for artifac to be created.
    */
