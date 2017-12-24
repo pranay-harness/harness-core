@@ -12,6 +12,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.stencils.Stencil;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;

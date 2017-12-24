@@ -445,7 +445,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
 
-    triggerService.deleteTriggersForArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
+    triggerService.pruneByArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
     verify(wingsPersistence).delete(Trigger.class, TRIGGER_ID);
   }
 

@@ -40,10 +40,10 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
-import software.wings.service.intfc.OwnedByAccount;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;

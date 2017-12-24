@@ -25,8 +25,8 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.OwnedByHost;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ownership.OwnedByHost;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 

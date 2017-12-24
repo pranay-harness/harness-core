@@ -189,7 +189,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.MODIFY));
 
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     }
   }

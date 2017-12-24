@@ -7,6 +7,8 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByHost;
+import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;

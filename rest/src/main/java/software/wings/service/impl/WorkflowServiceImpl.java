@@ -533,7 +533,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (ygs != null) {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.ADD));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     });
 
@@ -706,7 +706,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (ygs != null) {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, finalWorkflow, ChangeType.MODIFY));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     });
     return workflow;
@@ -1173,7 +1173,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
 
     //
@@ -1784,7 +1784,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (ygs != null) {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, finalWorkflow, ChangeType.MODIFY));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     });
 
