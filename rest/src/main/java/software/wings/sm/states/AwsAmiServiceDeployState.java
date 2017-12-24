@@ -92,7 +92,7 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 12/19/17.
  */
 public class AwsAmiServiceDeployState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(AwsAmiServiceDeployState.class);
+  @Transient private static final transient Logger logger = LoggerFactory.getLogger(AwsAmiServiceDeployState.class);
 
   @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
 
