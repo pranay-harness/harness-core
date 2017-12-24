@@ -1,6 +1,8 @@
 package software.wings.service.impl.expression;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ASSERTION_STATEMENT;
@@ -183,9 +185,16 @@ public abstract class ExpressionBuilder {
         .collect(Collectors.toSet());
   }
 
-  protected Set<String> getServiceVariablesOfTemplates(String appId, PageRequest<ServiceTemplate> pageRequest) {
+  protected Set<String> getServiceVariablesOfTemplates(
+      String appId, PageRequest<ServiceTemplate> pageRequest, EntityType entityType) {
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, false);
-    return getServiceVariables(
-        appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toList()));
+    if (SERVICE.equals(entityType)) {
+      return getServiceVariables(
+          appId, serviceTemplates.stream().map(ServiceTemplate::getServiceId).collect(Collectors.toList()), SERVICE);
+    } else if (ENVIRONMENT.equals(entityType)) {
+      return getServiceVariables(
+          appId, serviceTemplates.stream().map(ServiceTemplate::getEnvId).collect(Collectors.toList()), ENVIRONMENT);
+    }
+    return new TreeSet<>();
   }
 }

@@ -99,11 +99,14 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
           .addFilter("appId", EQ, APP_ID)
           .addFilter("serviceId", IN, asList(SERVICE_ID).toArray())
           .build();
-  PageResponse<ServiceTemplate> serviceTemplates =
-      aPageResponse()
-          .withResponse(
-              asList(aServiceTemplate().withUuid(TEMPLATE_ID).withAppId(APP_ID).withServiceId(SERVICE_ID).build()))
-          .build();
+  PageResponse<ServiceTemplate> serviceTemplates = aPageResponse()
+                                                       .withResponse(asList(aServiceTemplate()
+                                                                                .withUuid(TEMPLATE_ID)
+                                                                                .withEnvId(ENV_ID)
+                                                                                .withAppId(APP_ID)
+                                                                                .withServiceId(SERVICE_ID)
+                                                                                .build()))
+                                                       .build();
 
   @Before
   public void setUp() {
@@ -160,18 +163,17 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceTemplateVariableExpressions() {
-    PageRequest<ServiceVariable> serviceVariablePageRequest =
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, APP_ID)
-            .addFilter("entityId", IN, asList(TEMPLATE_ID).toArray())
-            .build();
+    PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
+                                                                  .withLimit(PageRequest.UNLIMITED)
+                                                                  .addFilter("appId", EQ, APP_ID)
+                                                                  .addFilter("entityId", IN, asList(ENV_ID).toArray())
+                                                                  .addFilter("entityType", EQ, ENVIRONMENT)
+                                                                  .build();
 
-    serviceVariables =
-        aPageResponse()
-            .withResponse(asList(
-                ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
-            .build();
+    serviceVariables = aPageResponse()
+                           .withResponse(asList(
+                               ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
+                           .build();
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
@@ -218,17 +220,16 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetEnvironmentServiceVariableOverridesExpressions() {
-    PageRequest<ServiceVariable> serviceVariablePageRequest =
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, APP_ID)
-            .addFilter("entityId", IN, asList(TEMPLATE_ID).toArray())
-            .build();
-    serviceVariables =
-        aPageResponse()
-            .withResponse(asList(
-                ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
-            .build();
+    PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
+                                                                  .withLimit(PageRequest.UNLIMITED)
+                                                                  .addFilter("appId", EQ, APP_ID)
+                                                                  .addFilter("entityId", IN, asList(ENV_ID).toArray())
+                                                                  .addFilter("entityType", EQ, ENVIRONMENT)
+                                                                  .build();
+    serviceVariables = aPageResponse()
+                           .withResponse(asList(
+                               ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
+                           .build();
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), anyBoolean())).thenReturn(serviceTemplates);
 
@@ -240,17 +241,16 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetWorkflowExpressions() {
-    PageRequest<ServiceVariable> serviceVariablePageRequest =
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, APP_ID)
-            .addFilter("entityId", IN, asList(TEMPLATE_ID).toArray())
-            .build();
-    serviceVariables =
-        aPageResponse()
-            .withResponse(asList(
-                ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
-            .build();
+    PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
+                                                                  .withLimit(PageRequest.UNLIMITED)
+                                                                  .addFilter("appId", EQ, APP_ID)
+                                                                  .addFilter("entityId", IN, asList(ENV_ID).toArray())
+                                                                  .addFilter("entityType", EQ, ENVIRONMENT)
+                                                                  .build();
+    serviceVariables = aPageResponse()
+                           .withResponse(asList(
+                               ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
+                           .build();
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID);
@@ -261,18 +261,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetWorkflowVariablesExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withUserVariables(userVariables)
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow = buildCanaryWorkflow(userVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
 
@@ -303,6 +292,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
             .withName(WORKFLOW_NAME)
             .withAppId(APP_ID)
             .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withEnvId(ENV_ID)
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withUserVariables(userVariables)
@@ -331,8 +321,17 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     assertThat(expressions.contains("workflow.variables.name1")).isTrue();
     assertThat(expressions.contains(HTTP_URL)).isTrue();
   }
+
   @Test
-  public void shouldGetWorkflowCodeDeployStateExpressions() {
+  public void shouldGetWorkflowStateExpressionsAllService() {
+    when(serviceResourceService.list(
+             aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
+             false, false))
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build()))
+                        .build());
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
+
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
     Workflow workflow =
         aWorkflow()
@@ -346,6 +345,25 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                     .build())
             .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
+                                                                  .withLimit(PageRequest.UNLIMITED)
+                                                                  .addFilter("appId", EQ, APP_ID)
+                                                                  .addFilter("entityId", IN, asList(ENV_ID).toArray())
+                                                                  .addFilter("entityType", EQ, ENVIRONMENT)
+                                                                  .build();
+    Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, "All", HTTP);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.contains("env.name"));
+    assertThat(expressions.contains("workflow.variables.name1")).isTrue();
+    assertThat(expressions.contains(HTTP_URL)).isTrue();
+  }
+
+  @Test
+  public void shouldGetWorkflowCodeDeployStateExpressions() {
+    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
+    Workflow workflow = buildCanaryWorkflow(userVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
 
@@ -373,31 +391,19 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetWorkflowCommandStateExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withUserVariables(userVariables)
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow = buildCanaryWorkflow(userVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    PageRequest<ServiceVariable> serviceVariablePageRequest =
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, APP_ID)
-            .addFilter("entityId", IN, asList(TEMPLATE_ID).toArray())
-            .build();
-    serviceVariables =
-        aPageResponse()
-            .withResponse(asList(
-                ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
-            .build();
+    PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
+                                                                  .withLimit(PageRequest.UNLIMITED)
+                                                                  .addFilter("appId", EQ, APP_ID)
+                                                                  .addFilter("entityId", IN, asList(ENV_ID).toArray())
+                                                                  .addFilter("entityType", EQ, ENVIRONMENT)
+                                                                  .build();
+    serviceVariables = aPageResponse()
+                           .withResponse(asList(
+                               ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
+                           .build();
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, COMMAND);
@@ -405,5 +411,19 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     assertThat(expressions.contains("env.name"));
     assertThat(expressions.contains("workflow.variables.name1")).isTrue();
     assertThat(expressions.contains(WINGS_STAGING_PATH)).isTrue();
+  }
+
+  private Workflow buildCanaryWorkflow(List<Variable> userVariables) {
+    return aWorkflow()
+        .withName(WORKFLOW_NAME)
+        .withAppId(APP_ID)
+        .withWorkflowType(WorkflowType.ORCHESTRATION)
+        .withOrchestrationWorkflow(
+            aCanaryOrchestrationWorkflow()
+                .withUserVariables(userVariables)
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                .build())
+        .build();
   }
 }
