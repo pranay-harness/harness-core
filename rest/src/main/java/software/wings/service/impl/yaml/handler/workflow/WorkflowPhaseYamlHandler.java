@@ -162,9 +162,14 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     Service service = serviceResourceService.get(appId, bean.getServiceId());
     String serviceName = service != null ? service.getName() : null;
     String deploymentType = Util.getStringFromEnum(bean.getDeploymentType());
+
+    String infraMappingId = bean.getInfraMappingId();
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
+    Validator.notNullCheck("Infra mapping not found for given id:" + infraMappingId, infrastructureMapping);
+
     return Yaml.builder()
         .computeProviderName(computeProviderName)
-        .infraMappingName(bean.getInfraMappingName())
+        .infraMappingName(infrastructureMapping.getName())
         .serviceName(serviceName)
         .name(bean.getName())
         .phaseNameForRollback(bean.getPhaseNameForRollback())
