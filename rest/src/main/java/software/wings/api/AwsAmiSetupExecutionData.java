@@ -1,6 +1,9 @@
 package software.wings.api;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
 import com.google.common.collect.Maps;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +13,6 @@ import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
-
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 /**
  * Created by anubhaw on 12/20/17.

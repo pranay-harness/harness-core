@@ -30,7 +30,6 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.rules.RealMongo;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
