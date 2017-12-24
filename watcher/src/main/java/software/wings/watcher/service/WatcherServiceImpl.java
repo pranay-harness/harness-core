@@ -355,15 +355,18 @@ public class WatcherServiceImpl implements WatcherService {
       PipedOutputStream outputStream = new PipedOutputStream();
       new ProcessExecutor()
           .timeout(5, TimeUnit.SECONDS)
-          .command("ps", delegateProcess, "|", "wc", "-l")
+          .command("ps", delegateProcess)
           .readOutput(true)
           .redirectOutput(outputStream)
           .start();
 
       PipedInputStream inputStream = new PipedInputStream(outputStream);
       BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-      String output = reader.readLine();
-      return "2".equals(output);
+      int lines = 0;
+      while (reader.readLine() != null) {
+        lines++;
+      }
+      return lines == 2;
     } catch (Exception e) {
       logger.error("Error checking whether delegate {} is alive", delegateProcess, e);
     }
