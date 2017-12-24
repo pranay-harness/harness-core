@@ -4,17 +4,16 @@
 
 package software.wings.api;
 
-import static software.wings.api.HostElement.Builder.aHostElement;
-
-import com.google.common.base.MoreObjects;
-
 import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.base.MoreObjects;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static software.wings.api.HostElement.Builder.aHostElement;
 
 /**
  * The Class HostElement.
@@ -126,6 +125,7 @@ public class HostElement implements ContextElement {
         .withHostName(hostName)
         .withPublicDns(publicDns)
         .withInstanceId(instanceId)
+        .withEc2Instance(ec2Instance)
         .build();
   }
 
