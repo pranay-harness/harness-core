@@ -79,13 +79,13 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.OwnedByService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -538,7 +538,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           List<GitFileChange> changeSet = new ArrayList<>();
           changeSet.add(
               entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.DELETE));
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
+          yamlChangeSetService.saveChangeSet(ygs, changeSet);
         }
       });
     }

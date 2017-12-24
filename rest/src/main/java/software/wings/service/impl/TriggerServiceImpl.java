@@ -189,7 +189,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public void deleteTriggersForArtifactStream(String appId, String artifactStreamId) {
+  public void pruneByArtifactStream(String appId, String artifactStreamId) {
     List<Trigger> triggers = getTriggersByApp(appId);
 
     triggers.stream()
