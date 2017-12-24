@@ -106,7 +106,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void testValidateSplunkConfig() throws Exception {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(splunkDelegateService);
     setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
@@ -136,7 +135,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void testValidateSumoLogicConfig() throws Exception {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(sumoDelegateService);
     setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
@@ -153,7 +151,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void saveLogDataWithNoState() throws Exception {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, Collections.singletonList(new LogElement()));
@@ -162,7 +159,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void saveLogDataWithInvalidState() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
@@ -176,7 +172,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void saveLogDataNoHeartbeat() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
@@ -438,14 +433,12 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void testIsBaseLineCreatedWithCurrentStrategy() throws Exception {
     Assert.assertTrue(analysisService.isBaselineCreated(
         AnalysisComparisonStrategy.COMPARE_WITH_CURRENT, null, null, null, null, null, null));
   }
 
   @Test
-  @RealMongo
   public void testIsBaseLineCreatedNoWorkFlowExecutions() throws Exception {
     Assert.assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
         StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, null));
@@ -471,7 +464,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void testIsBaseLineCreatedNoSuccessfulExecution() throws Exception {
     final WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
@@ -550,7 +542,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void testAnalysisSummaryUnknownClusters() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -653,7 +644,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void testAnalysisSummaryControlClusters() throws Exception {
     int numOfControlClusters = 1 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -699,7 +689,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getCollectionMinuteForL1NoRecords() throws Exception {
     assertEquals(-1,
         analysisService.getCollectionMinuteForL1(
@@ -707,7 +696,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getCollectionMinuteForL1PartialRecords() throws Exception {
     String query = UUID.randomUUID().toString();
     int numOfHosts = 2 + r.nextInt(10);
@@ -743,7 +731,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getCollectionMinuteForL1AllRecords() throws Exception {
     String query = UUID.randomUUID().toString();
     int numOfHosts = 1 + r.nextInt(10);
@@ -808,7 +795,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getLogDataRecordForL0() throws Exception {
     String query = UUID.randomUUID().toString();
     assertFalse(analysisService.getLogDataRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2).isPresent());

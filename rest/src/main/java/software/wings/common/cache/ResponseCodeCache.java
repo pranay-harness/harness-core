@@ -95,11 +95,10 @@ public class ResponseCodeCache {
   }
 
   private ResponseMessage getResponseMessage(ErrorCode errorCode, ResponseTypeEnum responseTypeEnum, String message) {
-    ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setMessage(message);
-    responseMessage.setErrorType(responseTypeEnum == null ? ResponseTypeEnum.ERROR : responseTypeEnum);
-
-    return responseMessage;
+    return ResponseMessage.builder()
+        .code(errorCode)
+        .message(message)
+        .errorType(responseTypeEnum == null ? ResponseTypeEnum.ERROR : responseTypeEnum)
+        .build();
   }
 }

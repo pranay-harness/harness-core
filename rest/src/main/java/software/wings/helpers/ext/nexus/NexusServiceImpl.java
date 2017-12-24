@@ -59,11 +59,7 @@ public class NexusServiceImpl implements NexusService {
    * prepareResponseMessage
    */
   public static ResponseMessage prepareResponseMessage(final ErrorCode errorCode, final String errorMsg) {
-    final ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setErrorType(ResponseTypeEnum.ERROR);
-    responseMessage.setMessage(errorMsg);
-    return responseMessage;
+    return ResponseMessage.builder().code(errorCode).errorType(ResponseTypeEnum.ERROR).message(errorMsg).build();
   }
 
   public static boolean isSuccessful(Response<?> response) {

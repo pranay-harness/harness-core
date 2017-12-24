@@ -129,10 +129,10 @@ public class Validator {
    */
   public static ResponseMessage prepareResponseMessage(
       ErrorCode errorCode, ResponseTypeEnum errorType, String errorMsg) {
-    final ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setErrorType(errorType == null ? ERROR : errorType);
-    responseMessage.setMessage(errorMsg);
-    return responseMessage;
+    return ResponseMessage.builder()
+        .code(errorCode)
+        .errorType(errorType == null ? ERROR : errorType)
+        .message(errorMsg)
+        .build();
   }
 }

@@ -119,7 +119,6 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @RealMongo
   public void shouldUpdateUser() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();

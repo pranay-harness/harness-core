@@ -1,7 +1,6 @@
 package software.wings.scheduler;
 
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
-import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -100,7 +99,7 @@ public class PruneEntityJob implements Job {
       } catch (WingsException e) {
         messages.addAll(e.getResponseMessageList());
       } catch (RuntimeException e) {
-        messages.add(aResponseMessage().withCode(UNKNOWN_ERROR).withMessage(e.getMessage()).build());
+        messages.add(ResponseMessage.builder().code(UNKNOWN_ERROR).message(e.getMessage()).build());
       }
     }
 

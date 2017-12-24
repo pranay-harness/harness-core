@@ -3,7 +3,6 @@ package software.wings.integration;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -14,6 +13,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -79,10 +79,10 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
     assertThat(response.getStatus()).isEqualTo(400);
     assertThat(response.readEntity(RestResponse.class).getResponseMessages())
-        .containsExactly(aResponseMessage()
-                             .withCode(ErrorCode.INVALID_ARTIFACT_SERVER)
-                             .withMessage("Jenkins URL must be a valid URL")
-                             .withErrorType(ERROR)
+        .containsExactly(ResponseMessage.builder()
+                             .code(ErrorCode.INVALID_ARTIFACT_SERVER)
+                             .message("Jenkins URL must be a valid URL")
+                             .errorType(ERROR)
                              .build());
   }
 
