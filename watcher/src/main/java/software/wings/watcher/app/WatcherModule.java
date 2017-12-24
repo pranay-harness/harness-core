@@ -43,6 +43,10 @@ public class WatcherModule extends AbstractModule {
         .annotatedWith(Names.named("upgradeExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(
             1, new ThreadFactoryBuilder().setNameFormat("Upgrade-Thread").setPriority(Thread.MAX_PRIORITY).build()));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("commandCheckExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder().setNameFormat("CommandCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
 
     int cores = Runtime.getRuntime().availableProcessors();
     bind(ExecutorService.class)
