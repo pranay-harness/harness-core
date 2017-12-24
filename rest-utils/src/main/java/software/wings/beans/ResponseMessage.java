@@ -1,7 +1,9 @@
 package software.wings.beans;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.Serializable;
 
@@ -10,6 +12,8 @@ import java.io.Serializable;
  */
 @Builder
 @Getter
+@EqualsAndHashCode
+@ToString
 public class ResponseMessage implements Serializable {
   private static final long serialVersionUID = 7669895652860634550L;
 
