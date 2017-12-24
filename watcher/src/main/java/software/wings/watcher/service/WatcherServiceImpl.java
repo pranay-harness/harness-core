@@ -63,8 +63,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
@@ -256,7 +254,7 @@ public class WatcherServiceImpl implements WatcherService {
         synchronized (runningDelegates) {
           for (String delegateProcess : runningDelegates) {
             Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
-            if (isAlive(delegateProcess) && delegateData != null && !delegateData.isEmpty()) {
+            if (delegateData != null && !delegateData.isEmpty()) {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               Integer delegateMinorVersion = getMinorVersion(delegateVersion);
 
@@ -348,30 +346,6 @@ public class WatcherServiceImpl implements WatcherService {
       }
     }
     return delegateVersionNumber;
-  }
-
-  private boolean isAlive(String delegateProcess) {
-    try {
-      PipedOutputStream outputStream = new PipedOutputStream();
-      new ProcessExecutor()
-          .timeout(5, TimeUnit.SECONDS)
-          .command("ps", delegateProcess)
-          .readOutput(true)
-          .redirectOutput(outputStream)
-          .start();
-
-      PipedInputStream inputStream = new PipedInputStream(outputStream);
-      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-      int lines = 0;
-      while (reader.readLine() != null) {
-        lines++;
-      }
-      return lines == 2;
-    } catch (Exception e) {
-      logger.error("Error checking whether delegate {} is alive", delegateProcess, e);
-    }
-
-    return true;
   }
 
   private void startDelegateProcess(List<String> oldDelegateProcesses, String scriptName, String watcherProcess) {
