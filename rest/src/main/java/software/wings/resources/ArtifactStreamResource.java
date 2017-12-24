@@ -8,25 +8,16 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import net.redhogs.cronparser.CronExpressionDescriptor;
-import net.redhogs.cronparser.DescriptionTypeEnum;
-import net.redhogs.cronparser.I18nMessages;
-import net.redhogs.cronparser.Options;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
-import software.wings.beans.WebHookToken;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.stencils.Stencil;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
@@ -174,90 +165,6 @@ public class ArtifactStreamResource {
     artifactStreamService.delete(appId, id);
     return new RestResponse<>();
   }
-
-  /**
-   * Add action rest response.
-   *
-   * @param appId                the app id
-   * @param streamId             the stream id
-   * @param artifactStreamAction the artifact stream action
-   * @return the rest response
-   */
-  @POST
-  @Path("{streamId}/actions")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<ArtifactStream> addAction(@QueryParam("appId") String appId,
-      @PathParam("streamId") String streamId, ArtifactStreamAction artifactStreamAction) {
-    // convert ArtifactStreamAction -> new Model
-    return new RestResponse<>(artifactStreamService.addStreamAction(appId, streamId, artifactStreamAction));
-  }
-
-  /**
-   * Update action rest response.
-   *
-   * @param appId                the app id
-   * @param streamId             the stream id
-   * @param actionId     the artifactStreamId
-   * @param artifactStreamAction the artifact stream action
-   * @return the rest response
-   */
-  @PUT
-  @Path("{streamId}/actions/{actionId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<ArtifactStream> updateAction(@QueryParam("appId") String appId,
-      @PathParam("streamId") String streamId, @PathParam("actionId") String actionId,
-      ArtifactStreamAction artifactStreamAction) {
-    artifactStreamAction.setUuid(actionId);
-    return new RestResponse<>(artifactStreamService.updateStreamAction(appId, streamId, artifactStreamAction));
-  }
-
-  @GET
-  @Path("{streamId}/webhook_token")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<WebHookToken> updateAction(
-      @QueryParam("appId") String appId, @PathParam("streamId") String streamId) {
-    return new RestResponse<>(artifactStreamService.generateWebHookToken(appId, streamId));
-  }
-
-  /**
-   * Add action rest response.
-   *
-   * @param appId            the app id
-   * @param streamId         the stream id
-   * @param actionId the action id
-   * @return the rest response
-   */
-  @DELETE
-  @Path("{streamId}/actions/{actionId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<ArtifactStream> deleteAction(@QueryParam("appId") String appId,
-      @PathParam("streamId") String streamId, @PathParam("actionId") String actionId) {
-    return new RestResponse<>(artifactStreamService.deleteStreamAction(appId, streamId, actionId));
-  }
-
-  /**
-   * Translate cron rest response.
-   *
-   * @param inputMap the input map
-   * @return the rest response
-   */
-  @POST
-  @Path("cron/translate")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<String> translateCron(Map<String, String> inputMap) {
-    try {
-      return new RestResponse<>(CronExpressionDescriptor.getDescription(
-          DescriptionTypeEnum.FULL, inputMap.get("expression"), new Options(), I18nMessages.DEFAULT_LOCALE));
-    } catch (ParseException e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Incorrect cron expression");
-    }
-  }
-
   /**
    * Installed plugin setting schema rest response.
    *

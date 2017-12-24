@@ -139,7 +139,6 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
         .withSettingId(getSettingId())
         .withServiceId(getServiceId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .build();
   }
@@ -163,7 +162,6 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withMetadataOnly(isMetadataOnly());
   }
 
@@ -389,7 +387,6 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
       artifactoryDockerArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       artifactoryDockerArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       artifactoryDockerArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      artifactoryDockerArtifactStream.setStreamActions(streamActions);
       artifactoryDockerArtifactStream.setMetadataOnly(metadataOnly);
       artifactoryDockerArtifactStream.setImageName(imageName);
       return artifactoryDockerArtifactStream;

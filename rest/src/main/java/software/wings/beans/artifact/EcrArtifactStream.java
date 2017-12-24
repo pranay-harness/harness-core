@@ -137,8 +137,7 @@ public class EcrArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoDownload(isAutoDownload())
-        .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withStreamActions(getStreamActions());
+        .withAutoApproveForProduction(isAutoApproveForProduction());
   }
 
   /**
@@ -369,7 +368,6 @@ public class EcrArtifactStream extends ArtifactStream {
       ecrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       ecrArtifactStream.setAutoDownload(autoDownload);
       ecrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      ecrArtifactStream.setStreamActions(streamActions);
       return ecrArtifactStream;
     }
   }

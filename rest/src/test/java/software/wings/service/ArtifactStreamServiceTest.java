@@ -3,46 +3,33 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import com.mongodb.WriteResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
-import software.wings.beans.Service;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -180,116 +167,5 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(artifactStream.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
     verify(wingsPersistence, times(1)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
     verify(wingsPersistence).saveAndGet(ArtifactStream.class, jenkinsArtifactStream);
-  }
-
-  @Test
-  public void shouldDelete() {
-    jenkinsArtifactStream.setStreamActions(
-        asList(ArtifactStreamAction.Builder.anArtifactStreamAction().withWorkflowId(WORKFLOW_ID).build()));
-    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
-    artifactStreamService.delete(APP_ID, ARTIFACT_STREAM_ID);
-    verify(wingsPersistence).delete(any(Query.class));
-    verify(wingsPersistence).createQuery(any());
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field(Mapper.ID_KEY);
-    verify(end).equal(ARTIFACT_STREAM_ID);
-    verify(jobScheduler).deleteJob(WORKFLOW_ID, ARTIFACT_STREAM_ID);
-  }
-
-  @Test
-  public void shouldAddStreamAction() {
-    ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
-                                                    .withCustomAction(true)
-                                                    .withCronExpression("* * * * ?")
-                                                    .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                                    .withWorkflowId(WORKFLOW_ID)
-                                                    .withEnvId(ENV_ID)
-                                                    .build();
-    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID, null))
-        .thenReturn(aWorkflow()
-                        .withServices(asList(Service.Builder.aService().withUuid(SERVICE_ID).build()))
-                        .withName("NAME")
-                        .withEnvId(ENV_ID)
-                        .build());
-    when(environmentService.get(APP_ID, ENV_ID, false))
-        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).build());
-    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    artifactStreamService.addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
-    verify(wingsPersistence).createQuery(any());
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field(Mapper.ID_KEY);
-    verify(end).equal(ARTIFACT_STREAM_ID);
-    verify(query).field("streamActions.uuid");
-    verify(end).notEqual(artifactStreamAction.getUuid());
-    verify(updateOperations).add("streamActions", artifactStreamAction);
-    verify(wingsPersistence).update(query, updateOperations);
-    verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
-  }
-
-  @Test
-  public void shouldDeleteStreamAction() {
-    ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
-                                                    .withUuid("ACTION_ID")
-                                                    .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                                    .withWorkflowId(WORKFLOW_ID)
-                                                    .build();
-    jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
-    when(query.get()).thenReturn(jenkinsArtifactStream);
-    when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class)))
-        .thenReturn(new UpdateResults(new WriteResult(1, true, null)));
-    artifactStreamService.deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
-    verify(wingsPersistence).createQuery(any());
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field(Mapper.ID_KEY);
-    verify(end).equal(ARTIFACT_STREAM_ID);
-    verify(query).field("streamActions.uuid");
-    verify(end).equal("ACTION_ID");
-    verify(updateOperations).removeAll("streamActions", ImmutableMap.of("uuid", "ACTION_ID"));
-    verify(wingsPersistence).update(query, updateOperations);
-    verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
-  }
-
-  @Test
-  public void shouldUpdateStreamAction() {
-    ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
-                                                    .withUuid("ACTION_ID")
-                                                    .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                                    .withWorkflowId(WORKFLOW_ID)
-                                                    .build();
-    jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
-
-    doReturn(jenkinsArtifactStream).when(spyArtifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
-    doReturn(jenkinsArtifactStream)
-        .when(spyArtifactStreamService)
-        .deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
-    doReturn(jenkinsArtifactStream)
-        .when(spyArtifactStreamService)
-        .addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
-
-    spyArtifactStreamService.updateStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
-
-    verify(spyArtifactStreamService).deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
-    verify(spyArtifactStreamService).addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
-  }
-
-  @Test
-  public void shouldTriggerScheduledStreamAction() {
-    ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
-                                                    .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                                    .withWorkflowId(WORKFLOW_ID)
-                                                    .withUuid("ACTION_ID")
-                                                    .withCustomAction(true)
-                                                    .withCronExpression("0 * * * * ?")
-                                                    .build();
-    jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
-
-    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    // when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID,
-    // ARTIFACT_STREAM_ID)).thenReturn(Artifact.Builder.anArtifact().withAppId(APP_ID))
-    artifactStreamService.triggerScheduledStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
   }
 }
