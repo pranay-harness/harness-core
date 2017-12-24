@@ -1,6 +1,7 @@
 package software.wings.service.impl.expression;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -10,6 +11,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
@@ -35,7 +37,7 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
     SortedSet<String> expressions = new TreeSet<>();
     expressions.addAll(getStaticExpressions());
     expressions.addAll(getDynamicExpressions(appId, entityId));
-    expressions.addAll(getServiceTemplateVariableExpressions(appId, entityId));
+    expressions.addAll(getServiceTemplateVariableExpressions(appId, entityId, ENVIRONMENT));
     return expressions;
   }
 
@@ -68,7 +70,7 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
     }
   }
 
-  public Set<String> getServiceTemplateVariableExpressions(String appId, String serviceId) {
+  public Set<String> getServiceTemplateVariableExpressions(String appId, String serviceId, EntityType entityType) {
     List<String> serviceIds = getServiceIds(appId, serviceId);
     if (!serviceIds.isEmpty()) {
       PageRequest<ServiceTemplate> serviceTemplatePageRequest = aPageRequest()
@@ -76,7 +78,7 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
                                                                     .addFilter("appId", EQ, appId)
                                                                     .addFilter("serviceId", IN, serviceIds.toArray())
                                                                     .build();
-      return getServiceVariablesOfTemplates(appId, serviceTemplatePageRequest);
+      return getServiceVariablesOfTemplates(appId, serviceTemplatePageRequest, entityType);
     }
     return new TreeSet<>();
   }
