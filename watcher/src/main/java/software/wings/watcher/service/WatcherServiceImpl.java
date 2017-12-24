@@ -284,8 +284,9 @@ public class WatcherServiceImpl implements WatcherService {
                   shutdownNeededList.add(delegateProcess);
                 }
               } else if (restartNeeded || now - heartbeat > DELEGATE_HEARTBEAT_TIMEOUT
-                  || (delegateMinorVersion != null && delegateMinorVersion < minMinorVersion.getAndSet(0))) {
+                  || (delegateMinorVersion != null && delegateMinorVersion < minMinorVersion.get())) {
                 restartNeededList.add(delegateProcess);
+                minMinorVersion.set(0);
               } else if (upgradeNeeded) {
                 upgradeNeededList.add(delegateProcess);
               }
