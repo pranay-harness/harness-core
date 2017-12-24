@@ -35,6 +35,8 @@ import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
+import com.amazonaws.services.autoscaling.model.DeleteAutoScalingGroupRequest;
+import com.amazonaws.services.autoscaling.model.DeleteLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
@@ -198,6 +200,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -1394,6 +1397,45 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeAutoScalingGroupsResult();
+  }
+
+  public void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      List<AutoScalingGroup> autoScalingGroups) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      autoScalingGroups.forEach(autoScalingGroup -> {
+        try {
+          amazonAutoScalingClient.deleteAutoScalingGroup(
+              new DeleteAutoScalingGroupRequest().withAutoScalingGroupName(autoScalingGroup.getAutoScalingGroupName()));
+          waitForAutoScalingGroupToBeDeleted(amazonAutoScalingClient, autoScalingGroup);
+        } catch (Exception ignored) {
+          logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
+        }
+        try {
+          amazonAutoScalingClient.deleteLaunchConfiguration(
+              new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(
+                  autoScalingGroup.getLaunchConfigurationName()));
+        } catch (Exception ignored) {
+          logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
+        }
+
+      });
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+  }
+
+  private void waitForAutoScalingGroupToBeDeleted(
+      AmazonAutoScalingClient amazonAutoScalingClient, AutoScalingGroup autoScalingGroup) {
+    int retry_counter = 12;
+    DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult();
+    do {
+      Misc.quietSleep(5, TimeUnit.SECONDS);
+      describeAutoScalingGroupsResult = amazonAutoScalingClient.describeAutoScalingGroups(
+          new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroup.getAutoScalingGroupName()));
+    } while (--retry_counter > 0 && describeAutoScalingGroupsResult.getAutoScalingGroups().size() != 0);
   }
 
   public Datapoint getCloudWatchMetricStatistics(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
