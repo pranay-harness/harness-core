@@ -4,14 +4,25 @@
 
 package software.wings.sm;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.ForkElement.Builder.aForkElement;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Switch.unhandled;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.*;
+import software.wings.beans.CountsByStatuses;
+import software.wings.beans.EntityType;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.ServiceInstance;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -26,13 +37,13 @@ import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.utils.KryoUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.api.ForkElement.Builder.aForkElement;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.utils.Switch.unhandled;
 
 /**
  * The type State machine execution simulator.
