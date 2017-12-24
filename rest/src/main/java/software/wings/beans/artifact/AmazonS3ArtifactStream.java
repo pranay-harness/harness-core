@@ -154,7 +154,6 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withMetadataOnly(getMetadataOnly());
   }
 
@@ -378,7 +377,6 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
       amazonS3ArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       amazonS3ArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       amazonS3ArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      amazonS3ArtifactStream.setStreamActions(streamActions);
       amazonS3ArtifactStream.setMetadataOnly(metadataOnly);
       return amazonS3ArtifactStream;
     }

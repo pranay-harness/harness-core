@@ -185,7 +185,6 @@ public class NexusArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withMetadataOnly(isMetadataOnly());
   }
 

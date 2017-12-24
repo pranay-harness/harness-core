@@ -160,8 +160,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withMetadataOnly(getMetadataOnly())
-        .withStreamActions(getStreamActions());
+        .withMetadataOnly(getMetadataOnly());
   }
 
   /**
@@ -388,7 +387,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
       jenkinsArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       jenkinsArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       jenkinsArtifactStream.setMetadataOnly(metadataOnly);
-      jenkinsArtifactStream.setStreamActions(streamActions);
       return jenkinsArtifactStream;
     }
   }

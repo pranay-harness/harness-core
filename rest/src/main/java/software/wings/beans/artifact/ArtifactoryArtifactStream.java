@@ -239,7 +239,6 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withMetadataOnly(getMetadataOnly())
         .withArtifactPattern(getArtifactPattern())
         .withMetadataOnly(getMetadataOnly())
@@ -511,7 +510,6 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       artifactoryArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       artifactoryArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       artifactoryArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      artifactoryArtifactStream.setStreamActions(streamActions);
       artifactoryArtifactStream.setMetadataOnly(metadataOnly);
       artifactoryArtifactStream.setArtifactPattern(artifactPattern);
       artifactoryArtifactStream.setImageName(imageName);
