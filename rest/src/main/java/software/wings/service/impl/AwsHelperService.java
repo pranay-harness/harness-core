@@ -1399,6 +1399,21 @@ public class AwsHelperService {
     return new DescribeAutoScalingGroupsResult();
   }
 
+  public AutoScalingGroup getAutoScalingGroups(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+    try {
+      DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
+          describeAutoScalingGroups(awsConfig, encryptionDetails, region,
+              new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName));
+      return describeAutoScalingGroupsResult.getAutoScalingGroups().size() != 0
+          ? describeAutoScalingGroupsResult.getAutoScalingGroups().get(0)
+          : null;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
   public void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<AutoScalingGroup> autoScalingGroups) {
     try {
