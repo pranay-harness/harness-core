@@ -81,12 +81,6 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private EnvironmentExpressionBuilder environmentExpressionBuilder;
   @Inject @InjectMocks private WorkflowExpressionBuilder workflowExpressionBuilder;
 
-  PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
-                                                                .withLimit(UNLIMITED)
-                                                                .addFilter("appId", EQ, APP_ID)
-                                                                .addFilter("entityId", IN, asList(SERVICE_ID).toArray())
-                                                                .addFilter("entityType", EQ, SERVICE)
-                                                                .build();
   PageResponse<ServiceVariable> serviceVariables =
       aPageResponse()
           .withResponse(asList(
@@ -110,6 +104,14 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
+    PageRequest<ServiceVariable> serviceVariablePageRequest =
+        aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter("appId", EQ, APP_ID)
+            .addFilter("entityId", IN, asList(SERVICE_ID).toArray())
+            .addFilter("entityType", EQ, SERVICE)
+            .build();
+
     when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(serviceTemplates);

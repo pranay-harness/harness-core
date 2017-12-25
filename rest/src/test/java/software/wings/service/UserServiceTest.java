@@ -381,7 +381,6 @@ public class UserServiceTest extends WingsBaseTest {
     verify(end).equal(USER_ID);
     verify(updateOperations).add("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
     verify(cache).remove(USER_ID);
-    ;
   }
 
   /**
@@ -399,7 +398,6 @@ public class UserServiceTest extends WingsBaseTest {
     verify(end).equal(USER_ID);
     verify(updateOperations).removeAll("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
     verify(cache).remove(USER_ID);
-    ;
   }
 
   /**

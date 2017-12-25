@@ -140,7 +140,6 @@ public class AuthServiceTest extends WingsBaseTest {
                                asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
-    ;
   }
 
   @Test
@@ -171,7 +170,6 @@ public class AuthServiceTest extends WingsBaseTest {
                                asList(new PermissionAttribute(ResourceType.APPLICATION, Action.READ)), null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
-    ;
   }
 
   @Test
@@ -184,7 +182,6 @@ public class AuthServiceTest extends WingsBaseTest {
                                asList(new PermissionAttribute(ResourceType.APPLICATION, Action.UPDATE)), null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
-    ;
   }
 
   @Test

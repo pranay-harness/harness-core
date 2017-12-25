@@ -155,7 +155,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
-    ;
+
     verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 

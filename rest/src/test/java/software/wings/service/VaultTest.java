@@ -283,18 +283,18 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   public void saveAndEditConfig() throws IOException {
-    String accountId = UUID.randomUUID().toString();
+    String renameAccountId = UUID.randomUUID().toString();
     String name = UUID.randomUUID().toString();
     VaultConfig vaultConfig = getVaultConfig();
     vaultConfig.setName(name);
-    vaultConfig.setAccountId(accountId);
+    vaultConfig.setAccountId(renameAccountId);
 
-    vaultService.saveVaultConfig(accountId, vaultConfig);
+    vaultService.saveVaultConfig(renameAccountId, vaultConfig);
 
-    VaultConfig savedConfig = vaultService.getSecretConfig(accountId);
+    VaultConfig savedConfig = vaultService.getSecretConfig(renameAccountId);
     vaultConfig = getVaultConfig();
     vaultConfig.setName(name);
-    vaultConfig.setAccountId(accountId);
+    vaultConfig.setAccountId(renameAccountId);
     assertEquals(vaultConfig, savedConfig);
     assertEquals(name, savedConfig.getName());
     List<EncryptedData> encryptedDataList =
@@ -308,7 +308,7 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig = getVaultConfig();
     savedConfig.setAuthToken(vaultConfig.getAuthToken());
     savedConfig.setName(name);
-    vaultService.saveVaultConfig(accountId, savedConfig);
+    vaultService.saveVaultConfig(renameAccountId, savedConfig);
     encryptedDataList =
         wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.VAULT).asList();
     assertEquals(1, encryptedDataList.size());
