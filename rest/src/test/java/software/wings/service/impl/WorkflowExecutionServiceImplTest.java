@@ -177,9 +177,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Graph graph =
         aGraph()
             .addNodes(aNode()
@@ -317,9 +314,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldRenderSimpleWorkflow() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Graph graph = aGraph()
                       .addNodes(aNode()
                                     .withId("n1")
@@ -448,9 +442,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerComplexWorkflow() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
     Host host2 = wingsPersistence.saveAndGet(
@@ -617,9 +608,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void triggerPipeline() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Host host = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
 
@@ -769,7 +757,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldTriggerWorkflow() throws InterruptedException {
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     triggerWorkflow(appId, env);
   }
 
@@ -781,7 +768,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
 
     WorkflowExecution execution = workflowExecutionService.getExecutionDetails(appId, triggerWorkflow(appId, env));
     Node node0 = execution.getExecutionNode();
@@ -827,7 +813,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldUpdateFailedCount() throws InterruptedException {
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     triggerWorkflow(appId, env);
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
@@ -940,7 +925,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldListWorkflow() throws InterruptedException {
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
 
     triggerWorkflow(appId, env);
 
@@ -960,9 +944,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Repeat(times = 2, successes = 1)
   public void shouldPauseAndResumeState() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Graph graph = aGraph()
                       .addNodes(aNode()
                                     .withId("wait1")
@@ -1069,9 +1050,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Ignore
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Service service1 = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(

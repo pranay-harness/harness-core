@@ -223,16 +223,13 @@ public class AwsCodeDeployState extends State {
   protected CodeDeployParams prepareCodeDeployParams(ExecutionContext context,
       CodeDeployInfrastructureMapping infrastructureMapping, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, Builder executionDataBuilder) {
-    String key = context.renderExpression(this.key);
-    String bucket = context.renderExpression(this.bucket);
-
     CodeDeployParams codeDeployParams = CodeDeployParams.builder()
                                             .applicationName(infrastructureMapping.getApplicationName())
                                             .deploymentGroupName(infrastructureMapping.getDeploymentGroup())
                                             .region(infrastructureMapping.getRegion())
                                             .deploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
-                                            .bucket(bucket)
-                                            .key(key)
+                                            .bucket(context.renderExpression(bucket))
+                                            .key(context.renderExpression(key))
                                             .bundleType(bundleType)
                                             .enableAutoRollback(enableAutoRollback)
                                             .autoRollbackConfigurations(autoRollbackConfigurations)

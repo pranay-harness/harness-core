@@ -197,8 +197,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
 
   // TODO Disabled test. Enable when purge is revisited
   public void testPurge() throws Exception {
-    final String applicationId = "some-application";
-    final String serviceId = "some-service";
+    final String sameApplicationId = "some-application";
+    final String sameServiceId = "some-service";
     int numOfWorkFlows = 3;
     int numOfExecutionPerWorkFlow = 5;
     int numOfMinutes = 10;
@@ -208,12 +208,12 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     Map<String, String> workFlowToStateExecution = new HashMap<>();
     int totalRecordsInserted = 0;
     for (int workflowNum = 0; workflowNum < numOfWorkFlows; workflowNum++) {
-      Workflow workflow = aWorkflow().withAppId(applicationId).withName("workflow-" + workflowNum).build();
+      Workflow workflow = aWorkflow().withAppId(sameApplicationId).withName("workflow-" + workflowNum).build();
       String workFlowId = wingsPersistence.save(workflow);
       for (int executionNum = 0; executionNum < numOfExecutionPerWorkFlow; executionNum++) {
         WorkflowExecution workflowExecution = aWorkflowExecution()
                                                   .withWorkflowId(workFlowId)
-                                                  .withAppId(applicationId)
+                                                  .withAppId(sameApplicationId)
                                                   .withName(workFlowId + "-execution-" + executionNum)
                                                   .withStatus(ExecutionStatus.SUCCESS)
                                                   .build();
@@ -228,7 +228,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
                 + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId
                 + "&clusterLevel=" + ClusterLevel.L2.name() + "&stateExecutionId=" + stateExecutionId
                 + "&workflowId=" + workFlowId + "&workflowExecutionId=" + workFlowExecutionId
-                + "&appId=" + applicationId + "&serviceId=" + serviceId);
+                + "&appId=" + sameApplicationId + "&serviceId=" + sameServiceId);
 
             for (Entry<Integer, List<LogElement>> entry : recordsByMinute.entrySet()) {
               totalRecordsInserted += entry.getValue().size();

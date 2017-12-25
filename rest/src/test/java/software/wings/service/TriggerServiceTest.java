@@ -95,7 +95,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private TriggerService triggerService;
 
-  private Trigger trigger = aTrigger().withUuid(TRIGGER_ID).withAppId(APP_ID).withName(TRIGGER_NAME).build();
+  private Trigger defaultTrigger = aTrigger().withUuid(TRIGGER_ID).withAppId(APP_ID).withName(TRIGGER_NAME).build();
   private Trigger artifactConditionTrigger = aTrigger()
                                                  .withPipelineId(PIPELINE_ID)
                                                  .withUuid(TRIGGER_ID)
@@ -170,14 +170,14 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void shouldListTriggers() {
     PageRequest<Trigger> pageRequest = new PageRequest<>();
     when(wingsPersistence.query(Trigger.class, pageRequest))
-        .thenReturn(aPageResponse().withResponse(asList(trigger)).build());
+        .thenReturn(aPageResponse().withResponse(asList(defaultTrigger)).build());
     PageResponse<Trigger> triggers = triggerService.list(pageRequest);
     assertThat(triggers.size()).isEqualTo(1);
   }
 
   @Test
   public void shouldGet() {
-    when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(this.trigger);
+    when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(this.defaultTrigger);
     Trigger trigger = triggerService.get(APP_ID, TRIGGER_ID);
     assertThat(trigger.getName()).isEqualTo(TRIGGER_NAME);
     verify(wingsPersistence).get(Trigger.class, APP_ID, TRIGGER_ID);
@@ -206,7 +206,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     artifactConditionTrigger.setArtifactSelections(asList(builder().serviceId(SERVICE_ID).type(ARTIFACT_SOURCE).build(),
         builder().type(LAST_COLLECTED).artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter(ARTIFACT_FILTER).build()));
 
-    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+    when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(artifactConditionTrigger);
 
     Trigger updatedTrigger = triggerService.update(artifactConditionTrigger);
@@ -241,7 +241,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(pipelineConditionTrigger);
     pipelineConditionTrigger.setArtifactSelections(
         asList(builder().type(PIPELINE_SOURCE).build(), builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
-    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+    when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(pipelineConditionTrigger);
 
     Trigger updatedTrigger = triggerService.update(pipelineConditionTrigger);
@@ -278,7 +278,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         builder().type(LAST_COLLECTED).artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter(ARTIFACT_FILTER).build(),
         builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
 
-    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+    when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(scheduledConditionTrigger);
 
     Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger);
@@ -315,7 +315,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         builder().type(LAST_COLLECTED).artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter(ARTIFACT_FILTER).build(),
         builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
 
-    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+    when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(webhookConditionTrigger);
 
     Trigger updatedTrigger = triggerService.update(webhookConditionTrigger);
@@ -869,7 +869,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     List<Trigger> triggersHasArtifactStreamAction =
         triggerService.getTriggersHasArtifactStreamAction(APP_ID, ARTIFACT_STREAM_ID);
-    ;
+
     assertThat(triggersHasArtifactStreamAction).isNotEmpty();
   }
 
@@ -879,7 +879,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     webhookConditionTrigger.setArtifactSelections(asList(
         builder().type(LAST_COLLECTED).artifactFilter(ARTIFACT_FILTER).build(), builder().type(LAST_DEPLOYED).build()));
 
-    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+    when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(webhookConditionTrigger);
 
     triggerService.save(webhookConditionTrigger);
@@ -892,7 +892,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         asList(builder().type(LAST_COLLECTED).artifactFilter(ARTIFACT_FILTER).build(),
             builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
 
-    when(wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid()))
+    when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(webhookConditionTrigger);
 
     triggerService.update(webhookConditionTrigger);
