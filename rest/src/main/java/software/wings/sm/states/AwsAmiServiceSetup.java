@@ -118,7 +118,6 @@ public class AwsAmiServiceSetup extends State {
 
     AwsAmiInfrastructureMapping infrastructureMapping =
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    // TODO:: ensure infraMappingType
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     // TODO:: ensure cloudProviderType
@@ -160,7 +159,7 @@ public class AwsAmiServiceSetup extends State {
             .filter(autoScalingGroup
                 -> autoScalingGroup.getTags().stream().anyMatch(tagDescription
                     -> tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG)
-                        && tagDescription.getValue().startsWith(serviceId)))
+                        && tagDescription.getValue().startsWith(infrastructureMapping.getUuid())))
             .sorted(Comparator.comparing(AutoScalingGroup::getCreatedTime))
             .collect(toList());
 
@@ -239,7 +238,7 @@ public class AwsAmiServiceSetup extends State {
 
     tags.add(new Tag()
                  .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
-                 .withValue(AsgConvention.getRevisionTagValue(serviceId, harness_revision))
+                 .withValue(AsgConvention.getRevisionTagValue(infrastructureMapping.getUuid(), harness_revision))
                  .withPropagateAtLaunch(true)
                  .withResourceType("auto-scaling-group"));
     tags.add(new Tag().withKey("Name").withValue(newAutoScalingGroupName).withPropagateAtLaunch(true));
@@ -306,6 +305,7 @@ public class AwsAmiServiceSetup extends State {
         emptyHarnessAsgToBeDeleted =
             emptyHarnessAsgToBeDeleted.subList(0, emptyHarnessAsgToBeDeleted.size() - MAX_OLD_ASG_VERSION_TO_KEEP);
       }
+      logger.info("ASG Cleanup. Deleting following ASG [{}]", Joiner.on(",").join(emptyHarnessAsgToBeDeleted));
       List<AutoScalingGroup> finalEmptyHarnessAsgToBeDeleted = emptyHarnessAsgToBeDeleted;
       executorService.submit(()
                                  -> awsHelperService.deleteAutoScalingGroups(
