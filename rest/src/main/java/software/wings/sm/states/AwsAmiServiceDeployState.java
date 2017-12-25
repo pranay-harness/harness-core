@@ -84,8 +84,10 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -357,15 +359,20 @@ public class AwsAmiServiceDeployState extends State {
       ContainerServiceData oldContainerServiceData = awsAmiDeployStateExecutionData.getOldInstanceData().get(0);
       ContainerServiceData newContainerServiceData = awsAmiDeployStateExecutionData.getNewInstanceData().get(0);
 
+      Set<String> existingInstanceIds = new HashSet<>(awsHelperService.listInstanceIdsFromAutoScalingGroup(
+          awsConfig, encryptionDetails, region, newContainerServiceData.getName()));
+
       resizeAsgs(region, awsConfig, encryptionDetails, newContainerServiceData.getName(),
           newContainerServiceData.getDesiredCount(), oldContainerServiceData.getName(),
           oldContainerServiceData.getDesiredCount(), executionLogCallback, resizeNewFirst);
+
       DescribeInstancesResult describeInstancesResult = awsHelperService.describeAutoScalingGroupInstances(
           awsConfig, encryptionDetails, region, newContainerServiceData.getName());
       List<InstanceElement> instanceElements =
           describeInstancesResult.getReservations()
               .stream()
               .flatMap(reservation -> reservation.getInstances().stream())
+              .filter(instance -> !existingInstanceIds.contains(instance.getInstanceId()))
               .map(instance -> {
                 String hostName = awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName());
                 return anInstanceElement()
@@ -384,6 +391,11 @@ public class AwsAmiServiceDeployState extends State {
                     .build();
               })
               .collect(Collectors.toList());
+
+      int instancesAdded = newContainerServiceData.getDesiredCount() - newContainerServiceData.getPreviousCount();
+      if (instancesAdded > 0 && instancesAdded < instanceElements.size()) {
+        instanceElements = instanceElements.subList(0, instancesAdded); // Ignore old instances recycled
+      }
 
       List<InstanceStatusSummary> instanceStatusSummaries =
           instanceElements.stream()
