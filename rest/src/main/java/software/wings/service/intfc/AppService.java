@@ -5,6 +5,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 
@@ -90,7 +91,7 @@ public interface AppService extends OwnedByAccount {
   void delete(@NotEmpty String appId);
 
   /**
-   * Prune owned from the app objects.
+   * Prune owned from the app entities.
    *
    * @param appId the app id
    */

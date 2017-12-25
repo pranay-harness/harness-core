@@ -49,11 +49,11 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.OwnedByPipeline;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -182,7 +182,7 @@ public class PipelineServiceImpl implements PipelineService {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.MODIFY));
 
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     });
 
@@ -236,7 +236,7 @@ public class PipelineServiceImpl implements PipelineService {
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.DELETE));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
@@ -437,7 +437,7 @@ public class PipelineServiceImpl implements PipelineService {
       if (ygs != null) {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, finalPipeline, ChangeType.ADD));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     });
 

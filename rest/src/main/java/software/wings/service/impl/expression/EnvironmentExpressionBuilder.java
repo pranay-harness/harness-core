@@ -1,5 +1,7 @@
 package software.wings.service.impl.expression;
 
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -53,11 +55,13 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
             .addFilter("envId", EQ, envId)
             .addFilter("serviceId", IN, serviceIds.toArray())
             .addFieldsIncluded("uuid")
-            .build());
+            .build(),
+        SERVICE);
   }
 
   public Set<String> getServiceTemplateVariableExpressions(String appId, String envId) {
-    return getServiceVariablesOfTemplates(
-        appId, aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("envId", EQ, envId).build());
+    return getServiceVariablesOfTemplates(appId,
+        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("envId", EQ, envId).build(),
+        ENVIRONMENT);
   }
 }

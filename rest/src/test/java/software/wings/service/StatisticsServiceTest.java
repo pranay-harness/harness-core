@@ -464,7 +464,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                        .withFailedActivityCount(0)
                                        .withTotalCount(2)
                                        .build());
-    ;
+
     assertThat(statistics.getStatsMap().get(NON_PROD)).hasSize(1);
   }
   @Test

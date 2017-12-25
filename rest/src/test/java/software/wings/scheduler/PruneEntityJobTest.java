@@ -54,7 +54,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
         .withIdentity(ENTITY_ID, PruneEntityJob.GROUP)
         .usingJobData(PruneEntityJob.ENTITY_CLASS_KEY, className)
         .usingJobData(PruneEntityJob.APP_ID_KEY, appId)
-        .usingJobData(PruneEntityJob.ENTITY_ID, entityId)
+        .usingJobData(PruneEntityJob.ENTITY_ID_KEY, entityId)
         .build();
   }
 

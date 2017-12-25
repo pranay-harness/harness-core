@@ -5,6 +5,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.validation.Update;
 

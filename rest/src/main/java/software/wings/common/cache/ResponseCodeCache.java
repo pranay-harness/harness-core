@@ -2,7 +2,6 @@ package software.wings.common.cache;
 
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
@@ -26,14 +25,10 @@ public class ResponseCodeCache {
 
   private ResponseCodeCache() {
     messages = new Properties();
-    InputStream in = null;
-    try {
-      in = getClass().getResourceAsStream(RESPONSE_MESSAGE_FILE);
+    try (InputStream in = getClass().getResourceAsStream(RESPONSE_MESSAGE_FILE)) {
       messages.load(in);
     } catch (IOException exception) {
       throw new WingsException(exception);
-    } finally {
-      IOUtils.closeQuietly(in);
     }
   }
 
@@ -57,7 +52,7 @@ public class ResponseCodeCache {
     if (message == null) {
       return null;
     }
-    return getResponseMessage(errorCode, ERROR, message);
+    return ResponseMessage.builder().code(errorCode).message(message).errorType(ERROR).build();
   }
 
   /**
@@ -69,7 +64,7 @@ public class ResponseCodeCache {
    */
   public ResponseMessage getResponseMessage(ErrorCode errorCode, Map<String, Object> params) {
     String message = getMessage(errorCode, params);
-    return getResponseMessage(errorCode, ERROR, message);
+    return ResponseMessage.builder().code(errorCode).message(message).errorType(ERROR).build();
   }
 
   /**
@@ -82,7 +77,7 @@ public class ResponseCodeCache {
   public ResponseMessage getResponseMessage(
       ErrorCode errorCode, ResponseTypeEnum responseTypeEnum, Map<String, Object> params) {
     String message = getMessage(errorCode, params);
-    return getResponseMessage(errorCode, responseTypeEnum, message);
+    return ResponseMessage.builder().code(errorCode).message(message).errorType(ERROR).build();
   }
 
   private String getMessage(ErrorCode errorCode, Map<String, Object> params) {
@@ -92,13 +87,5 @@ public class ResponseCodeCache {
     }
     message = StrSubstitutor.replace(message, params);
     return message;
-  }
-
-  private ResponseMessage getResponseMessage(ErrorCode errorCode, ResponseTypeEnum responseTypeEnum, String message) {
-    return ResponseMessage.builder()
-        .code(errorCode)
-        .message(message)
-        .errorType(responseTypeEnum == null ? ResponseTypeEnum.ERROR : responseTypeEnum)
-        .build();
   }
 }

@@ -41,7 +41,7 @@ public class QueueListenerController implements Managed {
   public void stop() throws Exception {
     abstractQueueListeners.forEach(AbstractQueueListener::shutDown);
     executorService.shutdownNow();
-    while (!executorService.awaitTermination(1, TimeUnit.SECONDS))
-      ;
+    while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+    }
   }
 }

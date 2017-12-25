@@ -36,8 +36,8 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.OwnedByActivity;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ownership.OwnedByActivity;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;

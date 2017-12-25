@@ -6,6 +6,7 @@ import software.wings.beans.Log;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByActivity;
 import software.wings.utils.validation.Create;
 
 import java.io.File;

@@ -47,7 +47,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
 
   @Override
   public Set<String> listTags(String appId, String computeProviderId, String region, String resourceTypeStr) {
-    ResourceType resourceType = (resourceTypeStr == null ? ResourceType.Image : ResourceType.valueOf(resourceTypeStr));
+    ResourceType resourceType = resourceTypeStr == null ? ResourceType.Image : ResourceType.valueOf(resourceTypeStr);
     SettingAttribute computeProviderSetting = settingService.get(computeProviderId);
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listTags(

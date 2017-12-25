@@ -57,6 +57,15 @@
         <!-- Novice Java programmers often make this mistake -->
         <module name="StringLiteralEquality"/>
 
+        <!-- That is easy to forget -->
+        <module name="SuperFinalize"/>
+
+        <!-- TODO: Shadowing field could be a source of bugs, very hard to figure out
+        <module name="HiddenField">
+            <property name="tokens" value="VARIABLE_DEF"/>
+        </module>
+        -->
+
         <!-- IMPORT -->
 
         <!-- Using star imports seems to be a convenience instrument created when the developers did indeed write
@@ -84,6 +93,7 @@
 
         <!-- *** -->
 
+        <module name="EmptyStatement"/>
         <module name="UnnecessaryParentheses"/>
     </module>
 </module>

@@ -4,7 +4,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
-import software.wings.service.intfc.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
