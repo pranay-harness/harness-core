@@ -8,6 +8,7 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.utils.Misc.isNotNullOrEmpty;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.common.base.Objects;
@@ -82,6 +83,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -190,8 +192,8 @@ public class AwsAmiServiceDeployState extends State {
     String region = infrastructureMapping.getRegion();
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) awsConfig, context.getAppId(), context.getWorkflowExecutionId());
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
@@ -408,20 +410,32 @@ public class AwsAmiServiceDeployState extends State {
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
       Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst) {
     if (resizeNewFirst) {
-      logger.info("resizeAsgs");
       awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
           awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
-      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-          awsConfig, encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
+      if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+        awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
+            oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
+      }
     } else {
-      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-          awsConfig, encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
+      if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+        awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
+            oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
+      }
       awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
           awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
     }
   }
-
-  protected void compouteCounts() {}
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (!isRollback() && getInstanceCount() == 0) {
+      invalidFields.put("instanceCount", "Instance count must be greater than 0");
+    }
+    if (getCommandName() == null) {
+      invalidFields.put("commandName", "Command name must not be null");
+    }
+    return invalidFields;
+  }
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
