@@ -1277,7 +1277,9 @@ public class AwsHelperService {
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       List<String> instanceIds =
           listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
-      return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds));
+      return instanceIds.size() == 0
+          ? new DescribeInstancesResult()
+          : amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds));
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
