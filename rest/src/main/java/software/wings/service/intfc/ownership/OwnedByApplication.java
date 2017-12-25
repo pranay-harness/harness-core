@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package software.wings.service.intfc.ownership;
 
 public interface OwnedByApplication {
   /**

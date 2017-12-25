@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.stencils.Stencil;
 
 import java.util.List;
@@ -59,6 +60,14 @@ public interface ArtifactStreamService extends OwnedByService {
    * @return true, if successful
    */
   boolean delete(@NotEmpty String appId, @NotEmpty String artifactStreamId);
+
+  /**
+   * Prune owned from the app entities.
+   *
+   * @param appId the app id
+   * @param triggerId the id
+   */
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String artifactStreamId);
 
   /**
    * Gets artifact stream schema.

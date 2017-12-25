@@ -9,6 +9,8 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByHost;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.utils.validation.Create;
 
 import java.util.List;

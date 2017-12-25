@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -33,12 +34,14 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.ArtifactCollectionJob;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -135,7 +138,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       // add GitSyncFiles for trigger (artifact stream)
       changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
 
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
 
@@ -201,6 +204,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return artifactStream;
   }
 
+  private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId) {
+    List<software.wings.beans.trigger.Trigger> triggers =
+        triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+    if (CollectionUtils.isEmpty(triggers)) {
+      return;
+    }
+    List<String> triggerNames =
+        triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
+    throw new WingsException(INVALID_REQUEST, "message",
+        String.format(
+            "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+  }
+
   @Override
   public boolean delete(String appId, String artifactStreamId) {
     return delete(appId, artifactStreamId, false);
@@ -212,37 +228,33 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return true;
     }
     if (!forceDelete) {
-      List<software.wings.beans.trigger.Trigger> triggers =
-          triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
-      if (!CollectionUtils.isEmpty(triggers)) {
-        List<String> triggerNames =
-            triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
-        throw new WingsException(INVALID_REQUEST, "message",
-            String.format(
-                "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
-      }
+      ensureArtifactStreamSafeToDelete(appId, artifactStreamId);
     }
-    boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
-                                                  .field(ID_KEY)
-                                                  .equal(artifactStreamId)
-                                                  .field(ArtifactStream.APP_ID_KEY)
-                                                  .equal(appId));
-    if (deleted) {
-      triggerService.deleteTriggersForArtifactStream(appId, artifactStreamId);
 
-      executorService.submit(() -> {
-        String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
+    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
 
-          changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.DELETE));
-
-          yamlChangeSetService.queueChangeSet(ygs, changeSet);
-        }
-      });
+      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.DELETE));
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
-    return deleted;
+
+    PruneEntityJob.addDefaultJob(jobScheduler, ArtifactStream.class, appId, artifactStreamId);
+
+    return wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
+                                       .field(ID_KEY)
+                                       .equal(artifactStreamId)
+                                       .field(ArtifactStream.APP_ID_KEY)
+                                       .equal(appId));
+  }
+
+  @Override
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String triggerId) {
+    List<OwnedByArtifactStream> services =
+        ServiceClassLocator.descendingServices(this, ArtifactStreamServiceImpl.class, OwnedByArtifactStream.class);
+    PruneEntityJob.pruneDescendingEntities(
+        services, appId, appId, (descending) -> { descending.pruneByArtifactStream(appId, triggerId); });
   }
 
   @Override

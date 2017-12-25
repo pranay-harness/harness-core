@@ -107,7 +107,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public void queueChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> gitFileChanges) {
+  public void saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> gitFileChanges) {
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
                                       .accountId(yamlGitConfig.getAccountId())
                                       .gitFileChanges(gitFileChanges)

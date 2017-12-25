@@ -78,7 +78,7 @@ public class CommandServiceImpl implements CommandService {
             List<GitFileChange> changeSet = new ArrayList<>();
             changeSet.add(
                 entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD));
-            yamlChangeSetService.queueChangeSet(ygs, changeSet);
+            yamlChangeSetService.saveChangeSet(ygs, changeSet);
           }
         }
       });
@@ -98,7 +98,7 @@ public class CommandServiceImpl implements CommandService {
       if (ygs != null) {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.MODIFY));
-        yamlChangeSetService.queueChangeSet(ygs, changeSet);
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     });
     return wingsPersistence.saveAndGet(Command.class, command);

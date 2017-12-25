@@ -1,14 +1,22 @@
 package software.wings.service.impl.instance;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceChangeEvent;
 import software.wings.api.InstanceChangeEvent.Builder;
 import software.wings.api.PhaseExecutionData;
-import software.wings.beans.*;
+import software.wings.beans.Application;
+import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.EmbeddedUser;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -20,12 +28,14 @@ import software.wings.core.queue.Queue;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.sm.*;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.PipelineSummary;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Validator;
 
 import java.util.List;
-
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 /**
  * Both the normal instance and container instance are handled here.
@@ -137,7 +147,7 @@ public class InstanceHelper {
     String hostUuid = host.getUuid();
     if (hostUuid == null) {
       if (host.getEc2Instance() != null) {
-        setInstanceInfoAndKey(builder, host.getEc2Instance(), infraMappingType, phaseExecutionData.getInfraMappingId());
+        setInstanceInfoAndKey(builder, host.getEc2Instance(), phaseExecutionData.getInfraMappingId());
       } else {
         logger.warn(
             "Cannot build host based instance info since both hostId and ec2Instance are null for workflow execution {}",
@@ -196,48 +206,42 @@ public class InstanceHelper {
 
   private void setInstanceInfoAndKey(
       Instance.Builder builder, Host host, String infraMappingType, String infraMappingId) {
-    InstanceInfo instanceInfo = null;
+    InstanceInfo instanceInfo;
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
     builder.withHostInstanceKey(hostInstanceKey);
 
-    if (InfrastructureMappingType.AWS_SSH.getName().equals(infraMappingType)
-        || InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName().equals(infraMappingType)
-        || InfrastructureMappingType.AWS_AMI.getName().equals(infraMappingType)) {
+    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)) {
+      instanceInfo = PhysicalHostInstanceInfo.Builder.aPhysicalHostInstanceInfo()
+                         .withHostPublicDns(host.getPublicDns())
+                         .withHostId(host.getUuid())
+                         .withHostName(host.getHostName())
+                         .build();
+    } else {
       instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
                          .withEc2Instance(host.getEc2Instance())
                          .withHostId(host.getUuid())
                          .withHostName(host.getHostName())
                          .withHostPublicDns(host.getPublicDns())
                          .build();
-    } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)) {
-      instanceInfo = PhysicalHostInstanceInfo.Builder.aPhysicalHostInstanceInfo()
-                         .withHostPublicDns(host.getPublicDns())
-                         .withHostId(host.getUuid())
-                         .withHostName(host.getHostName())
-                         .build();
     }
 
     builder.withInstanceInfo(instanceInfo);
   }
 
-  private void setInstanceInfoAndKey(Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance,
-      String infraMappingType, String infraMappingId) {
-    InstanceInfo instanceInfo = null;
+  private void setInstanceInfoAndKey(
+      Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId) {
     String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName =
-        privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.lastIndexOf(".ec2.internal"));
+    String privateDnsName = privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf("."));
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
     builder.withHostInstanceKey(hostInstanceKey);
 
-    if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName().equals(infraMappingType)) {
-      instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
-                         .withEc2Instance(ec2Instance)
-                         .withHostName(privateDnsName)
-                         .withHostPublicDns(ec2Instance.getPublicDnsName())
-                         .build();
-    }
+    InstanceInfo instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
+                                    .withEc2Instance(ec2Instance)
+                                    .withHostName(privateDnsName)
+                                    .withHostPublicDns(ec2Instance.getPublicDnsName())
+                                    .build();
 
     builder.withInstanceInfo(instanceInfo);
   }
