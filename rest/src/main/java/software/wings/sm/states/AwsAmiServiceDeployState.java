@@ -107,8 +107,8 @@ public class AwsAmiServiceDeployState extends State {
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Amazon AMI")
-  private String commandName = "Amazon AMI";
+  @DefaultValue("Resize AutoScaling Group")
+  private String commandName = "Resize AutoScaling Group";
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
