@@ -137,7 +137,7 @@ public class InstanceHelper {
     String hostUuid = host.getUuid();
     if (hostUuid == null) {
       if (host.getEc2Instance() != null) {
-        setInstanceInfoAndKey(builder, host.getEc2Instance(), infraMappingType, phaseExecutionData.getInfraMappingId());
+        setInstanceInfoAndKey(builder, host.getEc2Instance(), phaseExecutionData.getInfraMappingId());
       } else {
         logger.warn(
             "Cannot build host based instance info since both hostId and ec2Instance are null for workflow execution {}",
@@ -196,48 +196,42 @@ public class InstanceHelper {
 
   private void setInstanceInfoAndKey(
       Instance.Builder builder, Host host, String infraMappingType, String infraMappingId) {
-    InstanceInfo instanceInfo = null;
+    InstanceInfo instanceInfo;
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
     builder.withHostInstanceKey(hostInstanceKey);
 
-    if (InfrastructureMappingType.AWS_SSH.getName().equals(infraMappingType)
-        || InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName().equals(infraMappingType)
-        || InfrastructureMappingType.AWS_AMI.getName().equals(infraMappingType)) {
+    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)) {
+      instanceInfo = PhysicalHostInstanceInfo.Builder.aPhysicalHostInstanceInfo()
+                         .withHostPublicDns(host.getPublicDns())
+                         .withHostId(host.getUuid())
+                         .withHostName(host.getHostName())
+                         .build();
+    } else {
       instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
                          .withEc2Instance(host.getEc2Instance())
                          .withHostId(host.getUuid())
                          .withHostName(host.getHostName())
                          .withHostPublicDns(host.getPublicDns())
                          .build();
-    } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)) {
-      instanceInfo = PhysicalHostInstanceInfo.Builder.aPhysicalHostInstanceInfo()
-                         .withHostPublicDns(host.getPublicDns())
-                         .withHostId(host.getUuid())
-                         .withHostName(host.getHostName())
-                         .build();
     }
 
     builder.withInstanceInfo(instanceInfo);
   }
 
-  private void setInstanceInfoAndKey(Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance,
-      String infraMappingType, String infraMappingId) {
-    InstanceInfo instanceInfo = null;
+  private void setInstanceInfoAndKey(
+      Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId) {
     String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName =
-        privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.lastIndexOf(".ec2.internal"));
+    String privateDnsName = privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf("."));
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
     builder.withHostInstanceKey(hostInstanceKey);
 
-    if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName().equals(infraMappingType)) {
-      instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
-                         .withEc2Instance(ec2Instance)
-                         .withHostName(privateDnsName)
-                         .withHostPublicDns(ec2Instance.getPublicDnsName())
-                         .build();
-    }
+    InstanceInfo instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
+                                    .withEc2Instance(ec2Instance)
+                                    .withHostName(privateDnsName)
+                                    .withHostPublicDns(ec2Instance.getPublicDnsName())
+                                    .build();
 
     builder.withInstanceInfo(instanceInfo);
   }
