@@ -1,16 +1,16 @@
 package software.wings.common.cache;
 
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
-
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.exception.WingsException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Properties;
 
@@ -18,6 +18,8 @@ import java.util.Properties;
  * The Class ResponseCodeCache.
  */
 public class ResponseCodeCache {
+  protected static Logger logger = LoggerFactory.getLogger(ResponseCodeCache.class);
+
   private static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
 
   private static final ResponseCodeCache instance = new ResponseCodeCache();
@@ -26,14 +28,10 @@ public class ResponseCodeCache {
 
   private ResponseCodeCache() {
     messages = new Properties();
-    InputStream in = null;
-    try {
-      in = getClass().getResourceAsStream(RESPONSE_MESSAGE_FILE);
+    try (InputStream in = getClass().getResourceAsStream(RESPONSE_MESSAGE_FILE)) {
       messages.load(in);
     } catch (IOException exception) {
       throw new WingsException(exception);
-    } finally {
-      IOUtils.closeQuietly(in);
     }
   }
 
@@ -46,59 +44,33 @@ public class ResponseCodeCache {
     return instance;
   }
 
-  /**
-   * Converts error code into ResponseMessage object.
-   *
-   * @param errorCode errorCode for which message is needed.
-   * @return ResponseMessage Object.
-   */
-  public ResponseMessage getResponseMessage(ErrorCode errorCode) {
-    String message = messages.getProperty(errorCode.getCode());
-    if (message == null) {
-      return null;
+  public ResponseMessage rebuildMessage(ResponseMessage inputMessage, Map<String, Object> params) {
+    if (StringUtils.isNotEmpty(inputMessage.getMessage())) {
+      logger.error(
+          MessageFormat.format("The provided response message \"{0}\" will be overridden!", inputMessage.getMessage()));
     }
-    return getResponseMessage(errorCode, ERROR, message);
+
+    return ResponseMessage.builder()
+        .code(inputMessage.getCode())
+        .message(getMessage(inputMessage.getCode(), params))
+        .level(inputMessage.getLevel())
+        .acuteness(inputMessage.getAcuteness())
+        .build();
   }
 
-  /**
-   * Converts error code and map of key value pairs for substitution into ResponseMessage object .
-   *
-   * @param errorCode errorCode for which message is needed.
-   * @param params    for substituting in ResponseMessage
-   * @return ResponseMessage object.
-   */
-  public ResponseMessage getResponseMessage(ErrorCode errorCode, Map<String, Object> params) {
-    String message = getMessage(errorCode, params);
-    return getResponseMessage(errorCode, ERROR, message);
-  }
-
-  /**
-   * Converts error code and map of key value pairs for substitution into ResponseMessage object .
-   * @param errorCode
-   * @param responseTypeEnum
-   * @param params
-   * @return
-   */
-  public ResponseMessage getResponseMessage(
-      ErrorCode errorCode, ResponseTypeEnum responseTypeEnum, Map<String, Object> params) {
-    String message = getMessage(errorCode, params);
-    return getResponseMessage(errorCode, responseTypeEnum, message);
-  }
-
-  private String getMessage(ErrorCode errorCode, Map<String, Object> params) {
+  public String getMessage(ErrorCode errorCode, Map<String, Object> params) {
     String message = messages.getProperty(errorCode.getCode());
     if (message == null) {
+      logger.error("Response message for error code {} is not provided!", errorCode.getCode());
       message = errorCode.name();
     }
-    message = StrSubstitutor.replace(message, params);
-    return message;
-  }
 
-  private ResponseMessage getResponseMessage(ErrorCode errorCode, ResponseTypeEnum responseTypeEnum, String message) {
-    return ResponseMessage.builder()
-        .code(errorCode)
-        .message(message)
-        .errorType(responseTypeEnum == null ? ResponseTypeEnum.ERROR : responseTypeEnum)
-        .build();
+    message = StrSubstitutor.replace(message, params);
+    if (message.matches(".*(\\$\\$)*\\$\\{.*")) {
+      logger.error(MessageFormat.format(
+          "Insufficient parameter from [{0}] in message \"{1}\"", String.join(", ", params.keySet()), message));
+    }
+
+    return message;
   }
 }

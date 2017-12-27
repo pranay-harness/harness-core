@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 
@@ -18,9 +19,7 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -51,15 +50,9 @@ public class NexusServiceImpl implements NexusService {
 
   public static void handleException(IOException e) {
     List<ResponseMessage> responseMessages = new ArrayList<>();
-    responseMessages.add(prepareResponseMessage(INVALID_ARTIFACT_SERVER, e.getMessage()));
+    responseMessages.add(
+        ResponseMessage.builder().code(INVALID_ARTIFACT_SERVER).level(ERROR).message(e.getMessage()).build());
     throw new WingsException(responseMessages, e.getMessage(), e);
-  }
-
-  /**
-   * prepareResponseMessage
-   */
-  public static ResponseMessage prepareResponseMessage(final ErrorCode errorCode, final String errorMsg) {
-    return ResponseMessage.builder().code(errorCode).errorType(ResponseTypeEnum.ERROR).message(errorMsg).build();
   }
 
   public static boolean isSuccessful(Response<?> response) {

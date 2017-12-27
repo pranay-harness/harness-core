@@ -3,12 +3,12 @@ package software.wings.helpers.ext.nexus;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.handleException;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.prepareResponseMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -94,7 +94,8 @@ public class NexusTwoServiceImpl {
               + " for repository " + repoId + " under path " + path,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(INVALID_REQUEST, e.getMessage()));
+      responseMessages.add(
+          ResponseMessage.builder().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build());
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving groupId paths success");

@@ -91,6 +91,7 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
+  @Inject @Named("commandCheckExecutor") private ScheduledExecutorService commandCheckExecutor;
   @Inject private ExecutorService executorService;
   @Inject private Clock clock;
   @Inject private WatcherConfiguration watcherConfiguration;
@@ -101,7 +102,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final AtomicBoolean working = new AtomicBoolean(false);
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
 
-  private final AtomicInteger minDelegateVersion = new AtomicInteger(0);
+  private final AtomicInteger minMinorVersion = new AtomicInteger(0);
 
   @Override
   public void run(boolean upgrade) {
@@ -118,6 +119,7 @@ public class WatcherServiceImpl implements WatcherService {
 
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
       startUpgradeCheck();
+      startCommandCheck();
       startWatching();
 
       logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
@@ -146,14 +148,22 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void startUpgradeCheck() {
     upgradeExecutor.scheduleWithFixedDelay(() -> {
-      boolean forCodeFormatingOnly;
+      boolean forCodeFormattingOnly; // This line is here for clang-format
       synchronized (this) {
         if (!working.get()) {
           checkForWatcherUpgrade();
-          checkForCommands();
         }
       }
     }, 0, watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
+  }
+
+  private void startCommandCheck() {
+    commandCheckExecutor.scheduleWithFixedDelay(() -> {
+      boolean forCodeFormattingOnly; // This line is here for clang-format
+      synchronized (this) {
+        checkForCommands();
+      }
+    }, 0, 3, TimeUnit.MINUTES);
   }
 
   @SuppressWarnings({"unchecked"})
@@ -246,15 +256,7 @@ public class WatcherServiceImpl implements WatcherService {
             Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
             if (delegateData != null && !delegateData.isEmpty()) {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
-              Integer delegateVersionNumber = null;
-              if (isNotBlank(delegateVersion)) {
-                try {
-                  delegateVersionNumber =
-                      Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf(".") + 1));
-                } catch (NumberFormatException e) {
-                  delegateVersionNumber = null;
-                }
-              }
+              Integer delegateMinorVersion = getMinorVersion(delegateVersion);
 
               long heartbeat = Optional.ofNullable((Long) delegateData.get(DELEGATE_HEARTBEAT)).orElse(0L);
               boolean newDelegate = Optional.ofNullable((Boolean) delegateData.get(DELEGATE_IS_NEW)).orElse(false);
@@ -282,8 +284,9 @@ public class WatcherServiceImpl implements WatcherService {
                   shutdownNeededList.add(delegateProcess);
                 }
               } else if (restartNeeded || now - heartbeat > DELEGATE_HEARTBEAT_TIMEOUT
-                  || (delegateVersionNumber != null && delegateVersionNumber < minDelegateVersion.get())) {
+                  || (delegateMinorVersion != null && delegateMinorVersion < minMinorVersion.get())) {
                 restartNeededList.add(delegateProcess);
+                minMinorVersion.set(0);
               } else if (upgradeNeeded) {
                 upgradeNeededList.add(delegateProcess);
               }
@@ -332,6 +335,18 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       logger.error("Error processing delegate stream: {}", e.getMessage(), e);
     }
+  }
+
+  private Integer getMinorVersion(String delegateVersion) {
+    Integer delegateVersionNumber = null;
+    if (isNotBlank(delegateVersion)) {
+      try {
+        delegateVersionNumber = Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf(".") + 1));
+      } catch (NumberFormatException e) {
+        delegateVersionNumber = null;
+      }
+    }
+    return delegateVersionNumber;
   }
 
   private void startDelegateProcess(List<String> oldDelegateProcesses, String scriptName, String watcherProcess) {
@@ -478,8 +493,10 @@ public class WatcherServiceImpl implements WatcherService {
           String param = substringAfter(line, " ").trim();
 
           if ("minVersion".equals(cmd)) {
-            logger.info("Minimum delegate version: {}", param);
-            minDelegateVersion.set(Integer.parseInt(param));
+            int minVersion = Integer.parseInt(param);
+            if (minMinorVersion.getAndSet(minVersion) != minVersion) {
+              logger.info("Setting minimum delegate version: {}", minVersion);
+            }
           }
         }
       }

@@ -11,6 +11,8 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;

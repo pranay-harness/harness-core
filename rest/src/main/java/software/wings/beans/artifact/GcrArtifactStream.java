@@ -145,8 +145,7 @@ public class GcrArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoDownload(isAutoDownload())
-        .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withStreamActions(getStreamActions());
+        .withAutoApproveForProduction(isAutoApproveForProduction());
   }
 
   /**
@@ -377,7 +376,6 @@ public class GcrArtifactStream extends ArtifactStream {
       gcrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       gcrArtifactStream.setAutoDownload(autoDownload);
       gcrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      gcrArtifactStream.setStreamActions(streamActions);
       return gcrArtifactStream;
     }
   }

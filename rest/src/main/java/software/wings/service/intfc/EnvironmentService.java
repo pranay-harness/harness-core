@@ -8,6 +8,7 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 

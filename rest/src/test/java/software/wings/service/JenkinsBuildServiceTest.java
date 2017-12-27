@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -145,14 +146,15 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateInvalidUrl() throws IOException {
-    JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
-                                      .jenkinsUrl("BAD_URL")
-                                      .username("username")
-                                      .password("password".toCharArray())
-                                      .accountId(ACCOUNT_ID)
-                                      .build();
+    JenkinsConfig badJenkinsConfig = JenkinsConfig.builder()
+                                         .jenkinsUrl("BAD_URL")
+                                         .username("username")
+                                         .password("password".toCharArray())
+                                         .accountId(ACCOUNT_ID)
+                                         .build();
     try {
-      jenkinsBuildService.validateArtifactServer(jenkinsConfig);
+      jenkinsBuildService.validateArtifactServer(badJenkinsConfig);
+      fail("jenkinsBuildService.validateArtifactServer did not throw!!!");
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();

@@ -6,6 +6,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 

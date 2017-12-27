@@ -6,6 +6,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.utils.ArtifactType;
 
 import java.io.File;

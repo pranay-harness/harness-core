@@ -124,8 +124,7 @@ public class DockerArtifactStream extends ArtifactStream {
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
         .withAutoDownload(isAutoDownload())
-        .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withStreamActions(getStreamActions());
+        .withAutoApproveForProduction(isAutoApproveForProduction());
   }
 
   /**
@@ -341,7 +340,6 @@ public class DockerArtifactStream extends ArtifactStream {
       dockerArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       dockerArtifactStream.setAutoDownload(autoDownload);
       dockerArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      dockerArtifactStream.setStreamActions(streamActions);
       return dockerArtifactStream;
     }
   }

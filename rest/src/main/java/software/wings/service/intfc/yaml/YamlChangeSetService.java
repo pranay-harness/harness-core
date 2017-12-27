@@ -74,5 +74,5 @@ public interface YamlChangeSetService {
    * @param yamlGitConfig       the yamlGitConfig
    * @param changeSet the change set
    */
-  void queueChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> changeSet);
+  void saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> changeSet);
 }

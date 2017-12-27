@@ -23,11 +23,13 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -44,7 +46,7 @@ public class PruneEntityJob implements Job {
   public static final String GROUP = "PRUNE_ENTITY_GROUP";
 
   public static final String ENTITY_CLASS_KEY = "class";
-  public static final String ENTITY_ID = "entityId";
+  public static final String ENTITY_ID_KEY = "entityId";
   public static final String APP_ID_KEY = "appId";
 
   @Inject private WingsPersistence wingsPersistence;
@@ -52,6 +54,7 @@ public class PruneEntityJob implements Job {
   @Inject private ActivityService activityService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
+  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private HostService hostService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private PipelineService pipelineService;
@@ -76,13 +79,13 @@ public class PruneEntityJob implements Job {
     jobScheduler.deleteJob(entityId, GROUP);
 
     JobDetail details = JobBuilder.newJob(PruneEntityJob.class)
-                            .withIdentity(entityId, PruneEntityJob.GROUP)
-                            .usingJobData(PruneEntityJob.ENTITY_CLASS_KEY, cls.getCanonicalName())
-                            .usingJobData(PruneEntityJob.APP_ID_KEY, appId)
-                            .usingJobData(PruneEntityJob.ENTITY_ID, entityId)
+                            .withIdentity(entityId, GROUP)
+                            .usingJobData(ENTITY_CLASS_KEY, cls.getCanonicalName())
+                            .usingJobData(APP_ID_KEY, appId)
+                            .usingJobData(ENTITY_ID_KEY, entityId)
                             .build();
 
-    org.quartz.Trigger trigger = PruneEntityJob.defaultTrigger(entityId);
+    org.quartz.Trigger trigger = defaultTrigger(entityId);
 
     jobScheduler.scheduleJob(details, trigger);
   }
@@ -122,6 +125,8 @@ public class PruneEntityJob implements Job {
         activityService.pruneDescendingEntities(appId, entityId);
       } else if (className.equals(Application.class.getCanonicalName())) {
         appService.pruneDescendingEntities(appId);
+      } else if (className.equals(ArtifactStream.class.getCanonicalName())) {
+        artifactStreamService.pruneDescendingEntities(appId, entityId);
       } else if (className.equals(Environment.class.getCanonicalName())) {
         environmentService.pruneDescendingEntities(appId, entityId);
       } else if (className.equals(Host.class.getCanonicalName())) {
@@ -148,7 +153,7 @@ public class PruneEntityJob implements Job {
     String className = map.getString(ENTITY_CLASS_KEY);
 
     String appId = map.getString(APP_ID_KEY);
-    String entityId = map.getString(ENTITY_ID);
+    String entityId = map.getString(ENTITY_ID_KEY);
     try {
       Class cls = Class.forName(className);
 

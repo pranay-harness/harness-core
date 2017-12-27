@@ -85,8 +85,16 @@ public class Misc {
     return str == null || str.length() == 0;
   }
 
+  public static boolean isNotNullOrEmpty(String str) {
+    return !isNullOrEmpty(str);
+  }
+
   public static boolean isNullOrEmpty(List list) {
     return list == null || list.size() == 0;
+  }
+
+  public static boolean isNotNullOrEmpty(List list) {
+    return !isNullOrEmpty(list);
   }
 
   /**

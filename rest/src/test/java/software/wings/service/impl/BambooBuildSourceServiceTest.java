@@ -25,7 +25,6 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
-import software.wings.rules.RealMongo;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.utils.ArtifactType;

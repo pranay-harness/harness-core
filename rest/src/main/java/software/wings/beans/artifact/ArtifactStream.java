@@ -24,8 +24,6 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -64,8 +62,6 @@ public abstract class ArtifactStream extends Base {
   @SchemaIgnore private boolean autoApproveForProduction = false;
 
   @SchemaIgnore private boolean metadataOnly = false;
-
-  @SchemaIgnore private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
   /**
    * Instantiates a new lastArtifact source.
@@ -194,15 +190,6 @@ public abstract class ArtifactStream extends Base {
   public void setMetadataOnly(boolean metadataOnly) {
     this.metadataOnly = metadataOnly;
   }
-  /**
-   * Gets stream actions.
-   *
-   * @return the stream actions
-   */
-  @SchemaIgnore
-  public List<ArtifactStreamAction> getStreamActions() {
-    return streamActions;
-  }
 
   @SchemaIgnore
   @Override
@@ -261,15 +248,6 @@ public abstract class ArtifactStream extends Base {
     this.name = name;
   }
 
-  /**
-   * Sets stream actions.
-   *
-   * @param streamActions the stream actions
-   */
-  public void setStreamActions(List<ArtifactStreamAction> streamActions) {
-    this.streamActions = streamActions;
-  }
-
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -282,8 +260,7 @@ public abstract class ArtifactStream extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(
-              sourceName, artifactStreamType, settingId, autoDownload, autoApproveForProduction, streamActions);
+        + Objects.hash(sourceName, artifactStreamType, settingId, autoDownload, autoApproveForProduction);
   }
 
   @Override
@@ -301,8 +278,7 @@ public abstract class ArtifactStream extends Base {
     return Objects.equals(this.sourceName, other.sourceName)
         && Objects.equals(this.artifactStreamType, other.artifactStreamType)
         && Objects.equals(this.settingId, other.settingId) && Objects.equals(this.autoDownload, other.autoDownload)
-        && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
-        && Objects.equals(this.streamActions, other.streamActions);
+        && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction);
   }
 
   /**

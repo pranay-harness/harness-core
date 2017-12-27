@@ -52,7 +52,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
     if (schedulerConfig.getAutoStart().equals("true")) {
       injector.getInstance(MaintenanceController.class).register(this);
-      this.scheduler = createScheduler();
+      scheduler = createScheduler();
     }
   }
 
@@ -121,8 +121,8 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
     try {
       return scheduler.scheduleJob(jobDetail, trigger);
     } catch (org.quartz.ObjectAlreadyExistsException ex) {
-      // We do not need to polute the logs with error logs, just the job already exists.
-      // TODO: add additional check if the aboit to add job properties are the same with the already existing one.
+      // We do not need to pollute the logs with error logs, just the job already exists.
+      // TODO: add additional check if the about to add job properties are the same with the already existing one.
       //       we should update the job if they differ.
     } catch (SchedulerException ex) {
       logger.error("Couldn't schedule cron for job {} with trigger {}", jobDetail.toString(), trigger.toString(), ex);
@@ -161,9 +161,9 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
 
   @Override
   public void onEnterMaintenance() {
-    if (this.scheduler != null) {
+    if (scheduler != null) {
       try {
-        this.scheduler.standby();
+        scheduler.standby();
       } catch (SchedulerException e) {
         logger.error("Error putting scheduler into standby.", e);
       }
@@ -172,9 +172,9 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
 
   @Override
   public void onLeaveMaintenance() {
-    if (this.scheduler != null) {
+    if (scheduler != null) {
       try {
-        this.scheduler.start();
+        scheduler.start();
       } catch (SchedulerException e) {
         logger.error("Error starting scheduler.", e);
       }
