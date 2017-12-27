@@ -36,7 +36,6 @@ import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionInterruptType;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
@@ -84,7 +83,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
           context, executionEvent.getExecutionStatus(), phaseSubWorkflow, workflowExecution);
 
-      if (executionEvent.getExecutionStatus() == ExecutionStatus.SUCCESS) {
+      if (executionEvent.getExecutionStatus().isFinalStatus()) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
         instanceHelper.extractInstanceOrContainerInfoBaseOnType(context.getStateExecutionInstanceId(),
             context.getStateExecutionData(), workflowStandardParams, context.getAppId(), workflowExecution);
