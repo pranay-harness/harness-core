@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Splitter;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
@@ -134,7 +136,11 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
       default:
         unhandled(transport);
     }
-    resource.write(JsonUtils.asJson(ResponseCodeCache.getInstance().getResponseMessage(errorCode)));
+    resource.write(JsonUtils.asJson(ResponseMessage.builder()
+                                        .code(errorCode)
+                                        .level(ERROR)
+                                        .message(ResponseCodeCache.getInstance().getMessage(errorCode, null))
+                                        .build()));
     resource.close();
   }
 }
