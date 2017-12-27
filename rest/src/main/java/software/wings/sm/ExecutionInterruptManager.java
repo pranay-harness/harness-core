@@ -157,19 +157,27 @@ public class ExecutionInterruptManager {
   private void sendNotificationIfRequired(ExecutionInterrupt executionInterrupt) {
     final ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
     switch (executionInterruptType) {
-      case PAUSE_ALL: {
+      case PAUSE_ALL:
         sendNotification(executionInterrupt, PAUSED);
         break;
-      }
-      case RESUME_ALL: {
+      case RESUME_ALL:
         sendNotification(executionInterrupt, ExecutionStatus.RESUMED);
         break;
-      }
       case ABORT_ALL:
-      case ABORT: {
         sendNotification(executionInterrupt, ExecutionStatus.ABORTED);
         break;
-      }
+      case ABORT:
+      case PAUSE:
+      case RESUME:
+      case RETRY:
+      case IGNORE:
+      case MARK_FAILED:
+      case MARK_SUCCESS:
+      case ROLLBACK:
+      case END_EXECUTION:
+      case ROLLBACK_DONE:
+        noop();
+        break;
       default:
         unhandled(executionInterruptType);
     }
@@ -197,7 +205,9 @@ public class ExecutionInterruptManager {
         case ABORT:
         case RESUME_ALL:
         case MARK_SUCCESS:
-        case MARK_FAILED: {
+        case MARK_FAILED:
+        case END_EXECUTION:
+        case ABORT_ALL: {
           // Close ManualIntervention alert
           ManualInterventionNeededAlert manualInterventionNeededAlert =
               ManualInterventionNeededAlert.builder()
@@ -207,13 +217,11 @@ public class ExecutionInterruptManager {
           alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
           break;
         }
-        case ABORT_ALL:
         case PAUSE:
-        case END_EXECUTION:
+        case PAUSE_ALL:
         case ROLLBACK_DONE:
           noop();
           break;
-
         default:
           unhandled(executionInterruptType);
       }
