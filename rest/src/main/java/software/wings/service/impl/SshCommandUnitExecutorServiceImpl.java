@@ -111,14 +111,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     } catch (ExecutionException e) {
       if (e.getCause() instanceof WingsException) {
         WingsException ex = (WingsException) e.getCause();
-        String errorMessage =
-            Joiner.on(",").join(ex.getResponseMessageList()
-                                    .stream()
-                                    .map(responseMessage
-                                        -> ResponseCodeCache.getInstance()
-                                               .getResponseMessage(responseMessage.getCode(), ex.getParams())
-                                               .getMessage())
-                                    .collect(toList()));
+        String errorMessage = Joiner.on(",").join(
+            ex.getResponseMessageList()
+                .stream()
+                .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
+                .collect(toList()));
         logService.save(context.getAccountId(),
             aLog()
                 .withAppId(context.getAppId())

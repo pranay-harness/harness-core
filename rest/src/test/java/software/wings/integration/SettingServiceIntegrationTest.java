@@ -3,7 +3,7 @@ package software.wings.integration;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import org.junit.Before;
@@ -82,7 +82,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
         .containsExactly(ResponseMessage.builder()
                              .code(ErrorCode.INVALID_ARTIFACT_SERVER)
                              .message("Jenkins URL must be a valid URL")
-                             .errorType(ERROR)
+                             .level(ERROR)
                              .build());
   }
 

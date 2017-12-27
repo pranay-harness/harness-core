@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
@@ -23,7 +24,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -94,11 +94,8 @@ public class NexusTwoServiceImpl {
               + " for repository " + repoId + " under path " + path,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(ResponseMessage.builder()
-                               .code(INVALID_REQUEST)
-                               .errorType(ResponseTypeEnum.ERROR)
-                               .message(e.getMessage())
-                               .build());
+      responseMessages.add(
+          ResponseMessage.builder().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build());
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving groupId paths success");

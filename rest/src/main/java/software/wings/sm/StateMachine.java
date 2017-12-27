@@ -111,8 +111,7 @@ public class StateMachine extends Base {
     } catch (WingsException wingsException) {
       logger.error("Error in State Machine transform", wingsException);
       wingsException.getResponseMessageList().forEach(responseMessage -> {
-        sb.append(
-            ResponseCodeCache.getInstance().getResponseMessage(responseMessage.getCode(), wingsException.getParams()));
+        sb.append(ResponseCodeCache.getInstance().rebuildMessage(responseMessage, wingsException.getParams()));
       });
     }
     orchestrationWorkflow.validate();

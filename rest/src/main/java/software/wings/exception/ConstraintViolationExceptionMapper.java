@@ -2,6 +2,7 @@ package software.wings.exception;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.google.common.base.Joiner;
@@ -18,7 +19,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 
 import java.lang.annotation.Annotation;
@@ -177,7 +177,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
   }
 
   private ResponseMessage errorMessageToResponseMessage(String s) {
-    return ResponseMessage.builder().code(INVALID_ARGUMENT).errorType(ResponseTypeEnum.ERROR).message(s).build();
+    return ResponseMessage.builder().code(INVALID_ARGUMENT).level(ERROR).message(s).build();
   }
 
   private String processMessage(ConstraintViolation<?> v, String message) {

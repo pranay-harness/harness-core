@@ -1,13 +1,13 @@
 package software.wings.utils;
 
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.Level.WARN;
 
 import com.mongodb.DuplicateKeyException;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 
@@ -102,7 +102,7 @@ public class Validator {
    * @return
    */
   public static WingsException prepareWingsException(
-      ErrorCode errorCode, ResponseTypeEnum responseType, String param, String message) {
+      ErrorCode errorCode, Level responseType, String param, String message) {
     List<ResponseMessage> responseMessages = new ArrayList<>();
     responseMessages.add(prepareResponseMessage(errorCode, responseType, message));
     Map<String, Object> params = new HashMap();
@@ -123,16 +123,11 @@ public class Validator {
   /**
    * Prepares Response Message
    * @param errorCode
-   * @param errorType
+   * @param level
    * @param errorMsg
    * @return
    */
-  public static ResponseMessage prepareResponseMessage(
-      ErrorCode errorCode, ResponseTypeEnum errorType, String errorMsg) {
-    return ResponseMessage.builder()
-        .code(errorCode)
-        .errorType(errorType == null ? ERROR : errorType)
-        .message(errorMsg)
-        .build();
+  public static ResponseMessage prepareResponseMessage(ErrorCode errorCode, Level level, String errorMsg) {
+    return ResponseMessage.builder().code(errorCode).level(level == null ? ERROR : level).message(errorMsg).build();
   }
 }

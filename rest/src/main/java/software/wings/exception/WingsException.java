@@ -101,7 +101,7 @@ public class WingsException extends WingsApiException {
    * @param cause     the cause
    */
   public WingsException(ErrorCode errorCode, Throwable cause) {
-    this(errorCode, errorCode.getCode(), cause);
+    this(errorCode, null, cause);
   }
 
   /**
@@ -112,7 +112,7 @@ public class WingsException extends WingsApiException {
    * @param cause     the cause
    */
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
-    super(message, cause);
+    super(message == null ? errorCode.getCode() : message, cause);
     responseMessageList.add(ResponseMessage.builder().code(errorCode).message(message).build());
   }
 
