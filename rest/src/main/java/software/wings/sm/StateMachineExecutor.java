@@ -646,13 +646,11 @@ public class StateMachineExecutor {
     String errorMessage;
     if (e instanceof WingsException) {
       WingsException ex = (WingsException) e;
-      errorMessage = Joiner.on(",").join(ex.getResponseMessageList()
-                                             .stream()
-                                             .map(responseMessage
-                                                 -> ResponseCodeCache.getInstance()
-                                                        .getResponseMessage(responseMessage.getCode(), ex.getParams())
-                                                        .getMessage())
-                                             .collect(toList()));
+      errorMessage = Joiner.on(",").join(
+          ex.getResponseMessageList()
+              .stream()
+              .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
+              .collect(toList()));
     } else {
       errorMessage = e.getMessage();
     }

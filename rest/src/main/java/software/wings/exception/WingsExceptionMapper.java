@@ -2,22 +2,20 @@ package software.wings.exception;
 
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
+import static software.wings.beans.ResponseMessage.Acuteness.SERIOUS;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.utils.Switch.unhandled;
-
-import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.common.cache.ResponseCodeCache;
 
 import java.util.List;
-import java.util.Set;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -27,10 +25,6 @@ import javax.ws.rs.ext.ExceptionMapper;
  */
 public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private final Set<ErrorCode> logIgnoredErrorCodes =
-      Sets.newHashSet(ErrorCode.INVALID_TOKEN, ErrorCode.INVALID_CREDENTIAL, ErrorCode.EXPIRED_TOKEN,
-          ErrorCode.ACCOUNT_DOES_NOT_EXIT, ErrorCode.USER_DOES_NOT_EXIST, ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND,
-          ErrorCode.RESOURCE_NOT_FOUND, ErrorCode.UNAVAILABLE_DELEGATES);
 
   /**
    * {@inheritDoc}
@@ -40,37 +34,39 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
     List<ResponseMessage> responseMessages =
         ex.getResponseMessageList()
             .stream()
-            .map(responseMessage
-                -> ResponseCodeCache.getInstance().getResponseMessage(
-                    responseMessage.getCode(), responseMessage.getErrorType(), ex.getParams()))
+            .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
             .collect(toList());
-    if (responseMessages.stream().noneMatch(
-            responseMessage -> logIgnoredErrorCodes.contains(responseMessage.getCode()))) {
+
+    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getAcuteness() == SERIOUS)) {
       String msg = "Exception occurred: " + ex.getMessage();
-      if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getErrorType() == ERROR)) {
+      if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
         logger.error(msg, ex);
-      } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getErrorType() == WARN)) {
+      } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == WARN)) {
         logger.warn(msg, ex);
       } else {
         logger.info(msg, ex);
       }
-      responseMessages.forEach(responseMessage -> {
-        final ResponseTypeEnum errorType = responseMessage.getErrorType();
-        switch (errorType) {
-          case INFO:
-            logger.info(responseMessage.toString());
-            break;
-          case WARN:
-            logger.warn(responseMessage.toString());
-            break;
-          case ERROR:
-            logger.error(responseMessage.toString());
-            break;
-          default:
-            unhandled(errorType);
-        }
-      });
     }
+
+    responseMessages.stream()
+        .filter(responseMessage -> responseMessage.getAcuteness() == SERIOUS)
+        .forEach(responseMessage -> {
+          final Level errorType = responseMessage.getLevel();
+          switch (errorType) {
+            case INFO:
+              logger.info(responseMessage.toString());
+              break;
+            case WARN:
+              logger.warn(responseMessage.toString());
+              break;
+            case ERROR:
+              logger.error(responseMessage.toString());
+              break;
+            default:
+              unhandled(errorType);
+          }
+        });
+
     return Response.status(resolveHttpStatus(ex.getResponseMessageList()))
         .entity(aRestResponse().withResponseMessages(responseMessages).build())
         .build();

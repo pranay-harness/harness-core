@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.beans.ResponseMessage.Level;
 
 import java.util.Objects;
 
@@ -13,7 +13,7 @@ public class SetupAction {
   private String displayText;
   private String code;
   private String url;
-  private ResponseTypeEnum errorType;
+  private Level errorType;
 
   /**
    * Gets display text.
@@ -74,7 +74,7 @@ public class SetupAction {
    *
    * @return the error type
    */
-  public ResponseTypeEnum getErrorType() {
+  public Level getErrorType() {
     return errorType;
   }
 
@@ -83,7 +83,7 @@ public class SetupAction {
    *
    * @param errorType the error type
    */
-  public void setErrorType(ResponseTypeEnum errorType) {
+  public void setErrorType(Level errorType) {
     this.errorType = errorType;
   }
 

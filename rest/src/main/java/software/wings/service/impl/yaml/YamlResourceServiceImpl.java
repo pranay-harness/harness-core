@@ -16,7 +16,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Pipeline;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -102,7 +102,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     } else {
       // handle missing serviceCommand
       RestResponse rr = new RestResponse<>();
-      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
           "The ServiceCommand with appId: '" + appId + "' and serviceCommandId: '" + serviceCommandId
               + "' was not found!");
       return rr;
@@ -163,7 +163,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     if (artifactStream == null) {
       // handle missing artifactStream
       RestResponse rr = new RestResponse<>();
-      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
           "The ArtifactStream with appId: '" + appId + "' and artifactStreamId: '" + artifactStreamId
               + "' was not found!");
       return rr;
@@ -184,7 +184,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       } else {
         // handle service not found
         RestResponse rr = new RestResponse<>();
-        YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
             "The Service with appId: '" + appId + "' and serviceId: '" + serviceId + "' was not found!");
         return rr;
       }
