@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.YamlType;
@@ -41,7 +41,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
     }
 
     RestResponse rr = new RestResponse<>();
-    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
         "ArtifactStream with this Id: '" + artifactStreamId + "' was not found!");
     return rr;
   }

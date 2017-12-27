@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.beans.ResponseMessage.Acuteness.SERIOUS;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,25 +21,35 @@ import java.io.Serializable;
 public class ResponseMessage implements Serializable {
   private static final long serialVersionUID = 7669895652860634550L;
 
-  private ErrorCode code;
-  private ResponseTypeEnum errorType;
-  private String message;
+  public enum Level { INFO, WARN, ERROR }
 
-  /**
-   * The Enum ResponseTypeEnum.
-   */
-  public enum ResponseTypeEnum {
-    /**
-     * Info response type enum.
+  public enum Acuteness {
+    /*
+     * Serious acuteness indicates an issue report that requires harness side system admin / developer attention.
+     * This is the default acuteness and it should be used for all issues that do not fit in any of the other
+     * categories.
      */
-    INFO,
-    /**
-     * Warn response type enum.
+    SERIOUS,
+
+    /*
+     * Alerting acuteness indicates an issue report that should be propagate as an alert to the customer alert
+     * system for their admin to take a look. For example connectivity issues with services that are on their
+     * side.
      */
-    WARN,
-    /**
-     * Error response type enum.
+    // TODO: this is just an idea for potential improvement, not implemented yet.
+    // ALERTING or ALARMING,
+
+    /*
+     * Harmless acuteness indicates an issue report that is based on user feedback that is still a part of the normal
+     * flow of the system. For example already used name for an entity, or deleting entity while still in use from
+     * another. Such type of reports make sense to be reported to the user, but they do not indicate any problem with
+     * the software or the system to require any further attention.
      */
-    ERROR
+    HARMLESS
   }
+
+  @Builder.Default private ErrorCode code = DEFAULT_ERROR_CODE;
+  @Builder.Default private Level level = ERROR;
+  @Builder.Default private Acuteness acuteness = SERIOUS;
+  private String message;
 }

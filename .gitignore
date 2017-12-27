@@ -13,11 +13,14 @@
 access*gz
 access.log
 delegate-gc-logs.gc
+delegate.*.log
 delegate.log
 delegate/repository
 delegate/restart.sh
 delgate.out
 dependency-reduced-pom.xml
+dump.tar.gz
+dump/
 mygclogfilename.gc
 portal-gc-logs.gc
 portal.log
