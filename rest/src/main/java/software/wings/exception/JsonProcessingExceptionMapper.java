@@ -2,6 +2,7 @@ package software.wings.exception;
 
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -35,7 +35,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
                       .withResponseMessages(singletonList(ResponseMessage.builder()
                                                               .code(ErrorCode.DEFAULT_ERROR_CODE)
                                                               .message("Error generating response")
-                                                              .errorType(ResponseTypeEnum.ERROR)
+                                                              .level(ERROR)
                                                               .build()))
                       .build())
           .build();
@@ -54,7 +54,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
                       .withResponseMessages(singletonList(ResponseMessage.builder()
                                                               .code(ErrorCode.DEFAULT_ERROR_CODE)
                                                               .message("Error reading request")
-                                                              .errorType(ResponseTypeEnum.ERROR)
+                                                              .level(ERROR)
                                                               .build()))
                       .build())
           .build();
@@ -69,7 +69,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
                     .withResponseMessages(singletonList(ResponseMessage.builder()
                                                             .code(ErrorCode.DEFAULT_ERROR_CODE)
                                                             .message("Unable to process JSON " + message)
-                                                            .errorType(ResponseTypeEnum.ERROR)
+                                                            .level(ERROR)
                                                             .build()))
                     .build())
         .build();

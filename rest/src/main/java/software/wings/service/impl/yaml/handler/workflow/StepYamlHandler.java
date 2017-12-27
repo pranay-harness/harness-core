@@ -1,13 +1,12 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.NameValuePair;
-import software.wings.beans.NameValuePair.Yaml;
 import software.wings.beans.ObjectType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -29,6 +28,7 @@ import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
@@ -69,58 +69,42 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
     }
 
     // properties
-    Map<String, Object> properties;
-    List<NameValuePair> nameValuePairList = Lists.newArrayList();
-    if (yaml.getProperties() != null) {
-      nameValuePairList = yaml.getProperties()
-                              .stream()
-                              .map(nvpYaml -> {
-                                NameValuePair nameValuePair =
-                                    NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build();
-                                convertNameToIdIfKnownType(nameValuePair, appId, accountId);
-                                return nameValuePair;
-                              })
-                              .collect(Collectors.toList());
+    Map<String, Object> outputProperties = Maps.newHashMap();
+
+    Map<String, Object> yamlProperties = yaml.getProperties();
+    if (yamlProperties != null) {
+      yamlProperties.entrySet().stream().forEach(
+          entry -> convertNameToIdIfKnownType(entry, outputProperties, appId, accountId));
     }
 
-    generateKnownProperties(nameValuePairList, changeContext);
-
-    properties = Util.toProperties(nameValuePairList);
+    generateKnownProperties(outputProperties, changeContext);
 
     return Node.Builder.aNode()
         .withName(yaml.getName())
         .withType(yaml.getType())
         .withRollback(yaml.isRollback())
         .withTemplateExpressions(templateExpressions)
-        .withProperties(properties)
+        .withProperties(outputProperties.size() > 0 ? outputProperties : null)
         .build();
   }
 
-  private void generateKnownProperties(List<NameValuePair> nameValuePairList, ChangeContext<StepYaml> changeContext) {
+  private void generateKnownProperties(Map<String, Object> outputProperties, ChangeContext<StepYaml> changeContext) {
     String id = UUIDGenerator.getUuid();
 
     String phaseStepId = changeContext.getEntityIdMap().get("PHASE_STEP");
-    NameValuePair idProperty = NameValuePair.builder().name("id").value(id).valueType("String").build();
-    NameValuePair parentId = NameValuePair.builder().name("parentId").value(phaseStepId).valueType("String").build();
-    NameValuePair subWorkflowId = NameValuePair.builder().name("subWorkflowId").value(id).valueType("String").build();
-    nameValuePairList.add(idProperty);
-    nameValuePairList.add(parentId);
-    nameValuePairList.add(subWorkflowId);
+    outputProperties.put("id", id);
+    outputProperties.put("parentId", phaseStepId);
+    outputProperties.put("subWorkflowId", id);
   }
 
   @Override
   public StepYaml toYaml(Node bean, String appId) {
-    List<NameValuePair.Yaml> nameValuePairYamlList = Lists.newArrayList();
-    if (bean.getProperties() != null) {
-      List<NameValuePair> nameValuePairs = Util.toYamlList(bean.getProperties());
-      // properties
-      BaseYamlHandler nameValuePairYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR, ObjectType.NAME_VALUE_PAIR);
-      nameValuePairs.stream().forEach(nameValuePair -> {
-        if (!shouldBeIgnored(nameValuePair)) {
-          nameValuePair = convertIdToNameIfKnownType(nameValuePair, appId);
-          Yaml yaml = (Yaml) nameValuePairYamlHandler.toYaml(nameValuePair, appId);
-          nameValuePairYamlList.add(yaml);
+    Map<String, Object> properties = bean.getProperties();
+    final Map<String, Object> outputProperties = Maps.newHashMap();
+    if (properties != null) {
+      properties.entrySet().stream().forEach(entry -> {
+        if (!shouldBeIgnored(entry.getKey())) {
+          convertIdToNameIfKnownType(entry, outputProperties, appId);
         }
       });
     }
@@ -140,7 +124,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
 
     return StepYaml.builder()
         .name(bean.getName())
-        .properties(nameValuePairYamlList)
+        .properties(outputProperties.size() > 0 ? outputProperties : null)
         .rollback(bean.getRollback())
         .type(bean.getType())
         .templateExpressions(templateExprYamlList)
@@ -148,72 +132,77 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
   }
 
   // If the properties contain known entity id, convert it into name
-  private NameValuePair convertIdToNameIfKnownType(NameValuePair nameValuePair, String appId) {
-    String name = nameValuePair.getName();
-    if (Util.isEmpty(name)) {
-      return nameValuePair;
-    }
-
-    String entityId = nameValuePair.getValue();
-    switch (name) {
-      case "computeProviderId":
-        SettingAttribute settingAttribute = settingsService.get(entityId);
-        Validator.notNullCheck("Setting Attribute is null for the given id:" + entityId, settingAttribute);
-        nameValuePair.setValue(settingAttribute.getName());
-        nameValuePair.setName("computeProviderName");
-        return nameValuePair;
-      case "serviceId":
-        Service service = serviceResourceService.get(appId, entityId);
-        Validator.notNullCheck("Service is null for the given id:" + entityId, service);
-        nameValuePair.setValue(service.getName());
-        nameValuePair.setName("serviceName");
-        return nameValuePair;
-      case "infraMappingId":
-        InfrastructureMapping infraMapping = infraMappingService.get(appId, entityId);
-        Validator.notNullCheck("Infra mapping is null for the given id:" + entityId, infraMapping);
-        nameValuePair.setValue(infraMapping.getName());
-        nameValuePair.setName("infraMappingName");
-        return nameValuePair;
-      default:
-        return nameValuePair;
-    }
-  }
-
-  // If the properties contain known entity type, convert the name back to id, this is used in toBean() path
-  private void convertNameToIdIfKnownType(NameValuePair nameValuePair, String appId, String accountId) {
-    String name = nameValuePair.getName();
+  private void convertIdToNameIfKnownType(
+      Entry<String, Object> mapEntry, Map<String, Object> outputProperties, String appId) {
+    String name = mapEntry.getKey();
     if (Util.isEmpty(name)) {
       return;
     }
 
-    String entityName = nameValuePair.getValue();
+    Object objectValue = mapEntry.getValue();
+
     switch (name) {
-      case "computeProviderName":
-        SettingAttribute settingAttribute = settingsService.getSettingAttributeByName(accountId, entityName);
-        Validator.notNullCheck("Setting Attribute is null for the given name:" + entityName, settingAttribute);
-        nameValuePair.setValue(settingAttribute.getUuid());
-        nameValuePair.setName("computeProviderId");
+      case "computeProviderId":
+        String computeProviderId = (String) objectValue;
+        SettingAttribute settingAttribute = settingsService.get(computeProviderId);
+        Validator.notNullCheck("Setting Attribute is null for the given id:" + computeProviderId, settingAttribute);
+        outputProperties.put("computeProviderName", settingAttribute.getName());
         return;
-      case "serviceName":
-        Service service = serviceResourceService.getServiceByName(appId, entityName);
-        Validator.notNullCheck("Service is null for the given name:" + entityName, service);
-        nameValuePair.setValue(service.getUuid());
-        nameValuePair.setName("serviceId");
+      case "serviceId":
+        String serviceId = (String) objectValue;
+        Service service = serviceResourceService.get(appId, serviceId);
+        Validator.notNullCheck("Service is null for the given id:" + serviceId, service);
+        outputProperties.put("serviceName", service.getName());
         return;
-      case "infraMappingName":
-        InfrastructureMapping infraMapping = infraMappingService.get(appId, entityName);
-        Validator.notNullCheck("Infra mapping is null for the given name:" + entityName, infraMapping);
-        nameValuePair.setValue(infraMapping.getUuid());
-        nameValuePair.setName("infraMappingId");
+      case "infraMappingId":
+        String infraMappingId = (String) objectValue;
+        InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
+        Validator.notNullCheck("Infra mapping is null for the given id:" + infraMappingId, infraMapping);
+        outputProperties.put("infraMappingName", infraMapping.getName());
         return;
       default:
+        outputProperties.put(name, objectValue);
+        return;
+    }
+  }
+
+  // If the properties contain known entity type, convert the name back to id, this is used in toBean() path
+  private void convertNameToIdIfKnownType(
+      Entry<String, Object> mapEntry, Map<String, Object> properties, String appId, String accountId) {
+    String name = mapEntry.getKey();
+    if (Util.isEmpty(name)) {
+      return;
+    }
+
+    Object objectValue = mapEntry.getValue();
+
+    switch (name) {
+      case "computeProviderName":
+        String computeProviderName = (String) objectValue;
+        SettingAttribute settingAttribute = settingsService.getSettingAttributeByName(accountId, computeProviderName);
+        Validator.notNullCheck("Setting Attribute is null for the given name:" + computeProviderName, settingAttribute);
+        properties.put("computeProviderId", settingAttribute.getUuid());
+        return;
+      case "serviceName":
+        String serviceName = (String) objectValue;
+        Service service = serviceResourceService.getServiceByName(appId, serviceName);
+        Validator.notNullCheck("Service is null for the given name:" + serviceName, service);
+        properties.put("serviceId", service.getUuid());
+        return;
+      case "infraMappingName":
+        String infraMappingName = (String) objectValue;
+        InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingName);
+        Validator.notNullCheck("Infra mapping is null for the given name:" + infraMappingName, infraMapping);
+        properties.put("infraMappingId", infraMapping.getUuid());
+        return;
+      default:
+        properties.put(name, objectValue);
         return;
     }
   }
 
   // Some of these properties need not be exposed, they could be generated in the toBean() method
-  private boolean shouldBeIgnored(NameValuePair nameValuePair) {
-    String name = nameValuePair.getName();
+  private boolean shouldBeIgnored(String name) {
     if (Util.isEmpty(name)) {
       return true;
     }

@@ -10,6 +10,9 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByArtifactStream;
+import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -20,7 +23,7 @@ import javax.validation.Valid;
 /**
  * Created by sgurubelli on 10/26/17.
  */
-public interface TriggerService extends OwnedByApplication, OwnedByPipeline {
+public interface TriggerService extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream {
   /**
    * List.
    *
@@ -62,22 +65,6 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline {
    * @return true, if successful
    */
   boolean delete(@NotEmpty String appId, @NotEmpty String triggerId);
-
-  /**
-   * Delete triggers for pipeline
-   *
-   * @param appId
-   * @param pipelineId
-   */
-  void pruneByPipeline(String appId, String pipelineId);
-
-  /**
-   * Delete triggers for ArtifactStream
-   *
-   * @param appId
-   * @param artifactStreamId
-   */
-  void deleteTriggersForArtifactStream(String appId, String artifactStreamId);
 
   /**
    * Generate web hook token web hook token.

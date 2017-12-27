@@ -3,6 +3,9 @@ package software.wings.service.impl;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.utils.Validator.equalCheck;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -17,8 +20,6 @@ import software.wings.utils.ArtifactType;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by sgurubelli on 12/15/17.

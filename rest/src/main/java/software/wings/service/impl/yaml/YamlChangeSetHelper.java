@@ -72,7 +72,7 @@ public class YamlChangeSetHelper {
   private void applicationYamlChange(String accountId, GitFileChange gitFileChange) {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(gitFileChange));
+      yamlChangeSetService.saveChangeSet(ygs, Arrays.asList(gitFileChange));
     }
   }
 
@@ -120,7 +120,7 @@ public class YamlChangeSetHelper {
   private void queueYamlChangeSet(String accountId, List<GitFileChange> gitFileChangeList) {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      yamlChangeSetService.queueChangeSet(ygs, gitFileChangeList);
+      yamlChangeSetService.saveChangeSet(ygs, gitFileChangeList);
     }
   }
 
@@ -141,7 +141,7 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.add(entityUpdateService.getAppGitSyncFile(newApp, ChangeType.MODIFY));
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId)); // full sync on name change
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
 
@@ -180,7 +180,7 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, newEnv, ChangeType.MODIFY));
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId)); // full sync on name change
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
 
@@ -191,7 +191,7 @@ public class YamlChangeSetHelper {
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, crudType));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
 
@@ -230,7 +230,7 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.MODIFY));
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
 
@@ -247,7 +247,7 @@ public class YamlChangeSetHelper {
                 -> changeSet.add(
                     entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
       }
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
 
@@ -276,7 +276,7 @@ public class YamlChangeSetHelper {
     String accountId = newSettingAttribute.getAccountId();
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      yamlChangeSetService.queueChangeSet(ygs, Arrays.asList(settingAttributeGitSyncFile));
+      yamlChangeSetService.saveChangeSet(ygs, Arrays.asList(settingAttributeGitSyncFile));
     }
   }
 
@@ -299,7 +299,7 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.add(newSettingAttrGitSyncFile);
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
-      yamlChangeSetService.queueChangeSet(ygs, changeSet);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
 }

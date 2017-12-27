@@ -32,13 +32,13 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Workflow;
@@ -123,12 +123,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         rr.setResource(base);
 
       } else {
-        software.wings.yaml.YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR,
-            "Update yaml failed. Reason: " + yamlPayload.getName());
+        software.wings.yaml.YamlHelper.addResponseMessage(
+            rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update yaml failed. Reason: " + yamlPayload.getName());
       }
     } catch (HarnessException e) {
       software.wings.yaml.YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Update failed. Reason:" + e.getMessage());
+          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update failed. Reason:" + e.getMessage());
     }
 
     return rr;
@@ -245,12 +245,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         rr.setResource(yaml);
       } else {
         software.wings.yaml.YamlHelper.addResponseMessage(
-            rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml for:" + yamlFilePath);
+            rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Unable to update yaml for:" + yamlFilePath);
       }
 
     } catch (HarnessException e) {
       software.wings.yaml.YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.ERROR, "Unable to update yaml for:" + yamlFilePath);
+          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Unable to update yaml for:" + yamlFilePath);
     }
     return rr;
   }

@@ -6,6 +6,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 

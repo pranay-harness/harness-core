@@ -1,5 +1,6 @@
 package software.wings.exception;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 
@@ -100,7 +101,7 @@ public class WingsException extends WingsApiException {
    * @param cause     the cause
    */
   public WingsException(ErrorCode errorCode, Throwable cause) {
-    this(errorCode, errorCode.getCode(), cause);
+    this(errorCode, null, cause);
   }
 
   /**
@@ -111,7 +112,7 @@ public class WingsException extends WingsApiException {
    * @param cause     the cause
    */
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
-    super(message, cause);
+    super(message == null ? errorCode.getCode() : message, cause);
     responseMessageList.add(ResponseMessage.builder().code(errorCode).message(message).build());
   }
 
@@ -133,18 +134,18 @@ public class WingsException extends WingsApiException {
    * @param message     the message
    * @param cause       the cause
    */
-  public WingsException(List<ResponseMessage> messageList, String message, Throwable cause) {
-    this(message, cause);
-    responseMessageList.addAll(messageList);
+  public WingsException(@NotEmpty List<ResponseMessage> messageList, String message, Throwable cause) {
+    super(message, cause);
+    responseMessageList = messageList;
   }
 
   /**
    * @param messageList
    * @param params
    */
-  public WingsException(List<ResponseMessage> messageList, String message, Map<String, Object> params) {
-    this(message, null);
-    responseMessageList.addAll(messageList);
+  public WingsException(@NotEmpty List<ResponseMessage> messageList, String message, Map<String, Object> params) {
+    super(message, null);
+    responseMessageList = messageList;
     this.params = params;
   }
 

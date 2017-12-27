@@ -14,7 +14,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -38,9 +38,8 @@ import java.util.Optional;
 public class YamlHelper {
   public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
 
-  public static void addResponseMessage(
-      RestResponse rr, ErrorCode errorCode, ResponseTypeEnum responseType, String message) {
-    ResponseMessage rm = ResponseMessage.builder().code(errorCode).errorType(responseType).message(message).build();
+  public static void addResponseMessage(RestResponse rr, ErrorCode errorCode, Level level, String message) {
+    ResponseMessage rm = ResponseMessage.builder().code(errorCode).level(level).message(message).build();
 
     List<ResponseMessage> responseMessages = rr.getResponseMessages();
     responseMessages.add(rm);
@@ -48,36 +47,35 @@ public class YamlHelper {
   }
 
   public static void addUnrecognizedFieldsMessage(RestResponse rr) {
-    addResponseMessage(rr, ErrorCode.UNRECOGNIZED_YAML_FIELDS, ResponseTypeEnum.ERROR,
-        "ERROR: The Yaml provided contains unrecognized fields!");
+    addResponseMessage(
+        rr, ErrorCode.UNRECOGNIZED_YAML_FIELDS, Level.ERROR, "ERROR: The Yaml provided contains unrecognized fields!");
   }
 
   public static void addCouldNotMapBeforeYamlMessage(RestResponse rr) {
     addResponseMessage(
-        rr, ErrorCode.COULD_NOT_MAP_BEFORE_YAML, ResponseTypeEnum.ERROR, "ERROR: The BEFORE Yaml could not be mapped!");
+        rr, ErrorCode.COULD_NOT_MAP_BEFORE_YAML, Level.ERROR, "ERROR: The BEFORE Yaml could not be mapped!");
   }
 
   public static void addMissingBeforeYamlMessage(RestResponse rr) {
-    addResponseMessage(
-        rr, ErrorCode.MISSING_BEFORE_YAML, ResponseTypeEnum.ERROR, "ERROR: The BEFORE Yaml is empty or missing!");
+    addResponseMessage(rr, ErrorCode.MISSING_BEFORE_YAML, Level.ERROR, "ERROR: The BEFORE Yaml is empty or missing!");
   }
 
   public static void addMissingYamlMessage(RestResponse rr) {
-    addResponseMessage(rr, ErrorCode.MISSING_YAML, ResponseTypeEnum.ERROR, "ERROR: The Yaml is empty or missing!");
+    addResponseMessage(rr, ErrorCode.MISSING_YAML, Level.ERROR, "ERROR: The Yaml is empty or missing!");
   }
 
   public static void addNonEmptyDeletionsWarningMessage(RestResponse rr) {
-    addResponseMessage(rr, ErrorCode.NON_EMPTY_DELETIONS, ResponseTypeEnum.WARN,
+    addResponseMessage(rr, ErrorCode.NON_EMPTY_DELETIONS, Level.WARN,
         "WARNING: This operation will delete objects! Pass 'deleteEnabled=true' if you want to proceed.");
   }
 
   public static void addSettingAttributeNotFoundMessage(RestResponse rr, String uuid) {
-    addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-        "ERROR: No Setting Attribute found for uuid: '" + uuid + "'!");
+    addResponseMessage(
+        rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR, "ERROR: No Setting Attribute found for uuid: '" + uuid + "'!");
   }
 
   public static void addUnknownSettingVariableTypeMessage(RestResponse rr, SettingVariableTypes settingVariableType) {
-    addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+    addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
         "ERROR: Unrecognized SettingVariableType: '" + settingVariableType + "'!");
   }
 

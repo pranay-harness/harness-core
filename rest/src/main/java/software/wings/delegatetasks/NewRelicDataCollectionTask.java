@@ -366,7 +366,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   }
                 } else {
                   taskResult.setErrorMessage(ex.getMessage());
-                };
+                }
               }
               logger.warn("error fetching new relic metrics for minute " + dataCollectionMinute + ". retrying in "
                       + RETRY_SLEEP_SECS + "s",

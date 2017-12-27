@@ -1277,7 +1277,9 @@ public class AwsHelperService {
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       List<String> instanceIds =
           listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
-      return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds));
+      return instanceIds.size() == 0
+          ? new DescribeInstancesResult()
+          : amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds));
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1397,6 +1399,21 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeAutoScalingGroupsResult();
+  }
+
+  public AutoScalingGroup getAutoScalingGroups(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+    try {
+      DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
+          describeAutoScalingGroups(awsConfig, encryptionDetails, region,
+              new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName));
+      return describeAutoScalingGroupsResult.getAutoScalingGroups().size() != 0
+          ? describeAutoScalingGroupsResult.getAutoScalingGroups().get(0)
+          : null;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
   }
 
   public void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,

@@ -1,11 +1,14 @@
 package software.wings.service.impl.expression;
 
+import static software.wings.beans.EntityType.SERVICE;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -26,12 +29,14 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
     SortedSet<String> expressions = new TreeSet<>();
     Workflow workflow = workflowService.readWorkflow(appId, entityId);
     expressions.addAll(getWorkflowVariableExpressions(workflow));
-    if (serviceId != null && !serviceId.equalsIgnoreCase("All")) {
+    if (!Misc.isNullOrEmpty(serviceId) && !serviceId.equalsIgnoreCase("All")) {
       expressions.addAll(getExpressions(appId, entityId, serviceId));
     } else {
+      expressions.addAll(getExpressions(appId, entityId));
+      expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
       if (workflow != null && workflow.getEnvId() != null) {
         expressions.addAll(
-            environmentExpressionBuilder.getServiceTemplateVariableExpressions(serviceId, workflow.getEnvId()));
+            environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
       }
     }
     if (stateType != null) {
@@ -53,7 +58,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
     SortedSet<String> expressions = new TreeSet<>();
     expressions.addAll(getExpressions(appId, entityId));
     expressions.addAll(serviceExpressionBuilder.getDynamicExpressions(appId, serviceId));
-    expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, serviceId));
+    expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, serviceId, SERVICE));
     return expressions;
   }
 

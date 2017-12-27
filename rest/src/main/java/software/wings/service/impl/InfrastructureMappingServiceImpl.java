@@ -85,12 +85,12 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
-import software.wings.service.intfc.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -240,7 +240,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      yamlChangeSetService.queueChangeSet(
+      yamlChangeSetService.saveChangeSet(
           ygs, Arrays.asList(entityUpdateService.getInfraMappingGitSyncFile(accountId, infraMapping, crudType)));
     }
   }
