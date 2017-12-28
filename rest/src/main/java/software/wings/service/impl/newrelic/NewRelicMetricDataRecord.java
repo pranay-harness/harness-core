@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -27,6 +28,7 @@ import software.wings.sm.StateType;
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

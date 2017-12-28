@@ -23,6 +23,7 @@ import software.wings.yaml.setting.CollaborationProviderYaml;
  */
 @JsonTypeName("SMTP")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class SmtpConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Host", required = true) @NotEmpty private String host;

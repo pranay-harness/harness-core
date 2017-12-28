@@ -18,6 +18,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 
 @JsonTypeName("GIT")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "password")
 public class GitConfig extends SettingValue implements Encryptable {

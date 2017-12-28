@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
  */
 @JsonTypeName("HOST_CONNECTION_ATTRIBUTES")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class HostConnectionAttributes extends SettingValue implements Encryptable {
   @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;

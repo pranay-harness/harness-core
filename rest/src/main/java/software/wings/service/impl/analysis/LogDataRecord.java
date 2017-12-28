@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -29,6 +30,7 @@ import java.util.List;
   }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
 })
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public class LogDataRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;

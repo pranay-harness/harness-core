@@ -10,6 +10,7 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.sm.StateExecutionData;
 
@@ -21,6 +22,7 @@ import java.util.Map;
  * Created by anubhaw on 12/9/16.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,6 +1,7 @@
 package software.wings.service.impl.splunk;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.SplunkConfig;
@@ -15,6 +16,7 @@ import java.util.Set;
  * Created by rsingh on 5/18/17.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @ToString(callSuper = true)
 public class SplunkDataCollectionInfo extends LogDataCollectionInfo {
