@@ -20,6 +20,7 @@ import software.wings.yaml.setting.CloudProviderYaml;
  */
 @JsonTypeName("GCP")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class GcpConfig extends SettingValue implements Encryptable {
   @JsonIgnore @Encrypted private char[] serviceAccountKeyFileContent;

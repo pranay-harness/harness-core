@@ -21,6 +21,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("SPLUNK")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 @Builder
 public class SplunkConfig extends SettingValue implements Encryptable {

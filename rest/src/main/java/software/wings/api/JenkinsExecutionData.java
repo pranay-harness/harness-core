@@ -4,6 +4,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.FilePathAssertionEntry;
 import software.wings.waitnotify.NotifyResponseData;
@@ -15,6 +16,7 @@ import java.util.Map;
  * Created by peeyushaggarwal on 10/24/16.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class JenkinsExecutionData extends StateExecutionData implements NotifyResponseData {
   private String jobName;

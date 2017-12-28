@@ -24,6 +24,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("JENKINS")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "password")
 public class JenkinsConfig extends SettingValue implements Encryptable {

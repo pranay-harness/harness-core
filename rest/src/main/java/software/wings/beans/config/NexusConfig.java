@@ -20,6 +20,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
  */
 @JsonTypeName("NEXUS")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class NexusConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;

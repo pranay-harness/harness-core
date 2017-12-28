@@ -21,6 +21,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("SUMO")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"accessId", "accessKey"})
 public class SumoConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Sumo Logic API Server URL", required = true) @NotEmpty private String sumoUrl;
