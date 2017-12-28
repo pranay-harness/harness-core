@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -14,6 +15,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

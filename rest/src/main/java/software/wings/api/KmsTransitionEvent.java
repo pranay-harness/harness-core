@@ -3,6 +3,7 @@ package software.wings.api;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
@@ -12,6 +13,7 @@ import software.wings.security.EncryptionType;
  * Created by rsingh on 10/6/17.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

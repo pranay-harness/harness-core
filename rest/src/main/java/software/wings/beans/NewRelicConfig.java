@@ -27,6 +27,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Extension
 @JsonTypeName("NEW_RELIC")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "apiKey")
 public class NewRelicConfig extends SettingValue implements Encryptable {

@@ -8,6 +8,7 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * The type Ssh execution credential.
@@ -16,6 +17,7 @@ import lombok.Data;
  */
 @JsonTypeName("SSH")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class SSHExecutionCredential extends ExecutionCredential {
   private String sshUser;
   private char[] sshPassword;

@@ -23,6 +23,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("ELK")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 public class ElkConfig extends SettingValue implements Encryptable {
   @Attributes(required = true, title = "Connector type")

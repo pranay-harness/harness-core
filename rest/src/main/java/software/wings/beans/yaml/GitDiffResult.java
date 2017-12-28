@@ -2,6 +2,7 @@ package software.wings.beans.yaml;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
  * The type Git diff result.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class GitDiffResult extends GitCommandResult {
   private String repoName;
