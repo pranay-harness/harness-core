@@ -32,7 +32,7 @@ public class HealthResource {
   @ExceptionMetered
   public RestResponse<String> get() {
     if (isMaintenance()) {
-      logger.info("In maintenance mode, responding RESOURCE_NOT_FOUND for load balancer health check.");
+      logger.info("In maintenance mode. Throwing runtime exception for letting load balancer know.");
       throw new RuntimeException("In maintenance");
     }
     return new RestResponse<>("healthy");
