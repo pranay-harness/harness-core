@@ -1,6 +1,7 @@
 package software.wings.service.impl.sumo;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.SumoConfig;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @ToString(callSuper = true)
 public class SumoDataCollectionInfo extends LogDataCollectionInfo {

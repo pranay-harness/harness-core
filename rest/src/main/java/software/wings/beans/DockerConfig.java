@@ -22,6 +22,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @JsonTypeName("DOCKER")
 @Builder
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 public class DockerConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;

@@ -47,6 +47,7 @@ import javax.ws.rs.DefaultValue;
     options = @IndexOptions(
         unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

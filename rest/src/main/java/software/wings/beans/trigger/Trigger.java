@@ -1,5 +1,7 @@
 package software.wings.beans.trigger;
 
+import static software.wings.beans.WorkflowType.PIPELINE;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +13,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.WorkflowType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +33,49 @@ public class Trigger extends Base {
   @NotNull private TriggerCondition condition;
   @NotEmpty private String pipelineId;
   private String pipelineName;
+  @JsonIgnore private String workflowId;
+  @JsonIgnore private String workflowName;
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
   @JsonIgnore @Indexed private String webHookToken;
+  private WorkflowType workflowType = PIPELINE;
+
+  public void setPipelineId(String pipelineId) {
+    this.pipelineId = pipelineId;
+    this.workflowId = pipelineId;
+  }
+
+  public void setPipelineName(String pipelineName) {
+    this.pipelineName = pipelineName;
+    this.workflowName = pipelineName;
+  }
+
+  public String getPipelineId() {
+    if (this.pipelineId == null) {
+      return this.workflowId;
+    }
+    return pipelineId;
+  }
+
+  public String getPipelineName() {
+    if (this.pipelineName == null) {
+      return this.workflowName;
+    }
+    return this.pipelineName;
+  }
+
+  public String getWorkflowId() {
+    if (workflowId == null) {
+      return pipelineId;
+    }
+    return workflowId;
+  }
+
+  public String getWorkflowName() {
+    if (workflowName == null) {
+      return pipelineName;
+    }
+    return workflowName;
+  }
 
   public static final class Builder {
     protected String appId;
@@ -40,7 +84,9 @@ public class Trigger extends Base {
     private String description;
     private TriggerCondition condition;
     private String pipelineId;
+    private String workflowId;
     private List<ArtifactSelection> artifactSelections = new ArrayList<>();
+    private WorkflowType workflowType = PIPELINE;
 
     private Builder() {}
 
@@ -65,6 +111,12 @@ public class Trigger extends Base {
 
     public Builder withPipelineId(String pipelineId) {
       this.pipelineId = pipelineId;
+      this.workflowId = pipelineId;
+      return this;
+    }
+
+    public Builder withWorkflowId(String workflowId) {
+      this.workflowId = workflowId;
       return this;
     }
 
@@ -83,6 +135,11 @@ public class Trigger extends Base {
       return this;
     }
 
+    public Builder withWorkflowType(WorkflowType workflowType) {
+      this.workflowType = workflowType;
+      return this;
+    }
+
     public Trigger build() {
       Trigger trigger = new Trigger();
       trigger.setName(name);
@@ -92,6 +149,8 @@ public class Trigger extends Base {
       trigger.setArtifactSelections(artifactSelections);
       trigger.setAppId(appId);
       trigger.setUuid(uuid);
+      trigger.setWorkflowId(workflowId);
+      trigger.setWorkflowType(workflowType);
       return trigger;
     }
   }

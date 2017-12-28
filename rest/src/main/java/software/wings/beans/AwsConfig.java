@@ -19,6 +19,7 @@ import software.wings.yaml.setting.CloudProviderYaml;
  */
 @JsonTypeName("AWS")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "secretKey")
 public class AwsConfig extends SettingValue implements Encryptable {

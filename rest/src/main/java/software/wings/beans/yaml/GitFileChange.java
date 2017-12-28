@@ -1,12 +1,14 @@
 package software.wings.beans.yaml;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
  * Created by anubhaw on 10/16/17.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
 public class GitFileChange extends Change {
   private String commitId;

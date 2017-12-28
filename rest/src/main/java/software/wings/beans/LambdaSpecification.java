@@ -17,6 +17,7 @@ import javax.validation.Valid;
 
 @Entity("lambdaSpecifications")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class LambdaSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;

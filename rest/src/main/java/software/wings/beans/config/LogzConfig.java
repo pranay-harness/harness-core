@@ -21,6 +21,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("LOGZ")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "token")
 public class LogzConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;

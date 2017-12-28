@@ -4,6 +4,7 @@ import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.WebHookToken;
 
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map;
  * Created by sgurubelli on 10/25/17.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class WebHookTriggerCondition extends TriggerCondition {
   private WebHookToken webHookToken;

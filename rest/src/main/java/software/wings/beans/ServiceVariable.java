@@ -5,6 +5,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -36,6 +37,7 @@ import javax.validation.constraints.NotNull;
     },
     options = @IndexOptions(unique = true, name = "serviceVariableUniqueIdx")))
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

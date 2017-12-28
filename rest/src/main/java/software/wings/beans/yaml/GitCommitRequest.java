@@ -2,6 +2,7 @@ package software.wings.beans.yaml;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  */
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class GitCommitRequest extends GitCommandRequest {
   private List<GitFileChange> gitFileChanges = new ArrayList<>();

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus.model;
 
+import lombok.EqualsAndHashCode;
 import org.sonatype.nexus.rest.model.NexusResponse;
 
 import java.io.Serializable;
@@ -15,6 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "content")
 @XmlAccessorType(XmlAccessType.FIELD)
 @lombok.Data
+@EqualsAndHashCode(callSuper = false)
 public class IndexBrowserTreeViewResponse extends NexusResponse implements Serializable {
   @XmlElement(name = "data") private Data data;
 }
