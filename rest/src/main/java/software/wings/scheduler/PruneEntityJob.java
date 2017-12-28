@@ -93,7 +93,7 @@ public class PruneEntityJob implements Job {
   public interface PruneService<T> { public void prune(T descending); }
 
   public static <T> void pruneDescendingEntities(
-      List<T> descendingServices, String appId, String entiryId, PruneService<T> lambda) {
+      List<T> descendingServices, String appId, String entityId, PruneService<T> lambda) {
     List<ResponseMessage> messages = new ArrayList<>();
 
     for (T descending : descendingServices) {
@@ -108,7 +108,7 @@ public class PruneEntityJob implements Job {
 
     if (!messages.isEmpty()) {
       throw new WingsException(
-          messages, "Fail to prune some of the entitys for app: " + appId + ", entity: " + entiryId, (Throwable) null);
+          messages, "Fail to prune some of the entities for app: " + appId + ", entity: " + entityId, (Throwable) null);
     }
   }
 
@@ -140,6 +140,9 @@ public class PruneEntityJob implements Job {
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
+    } catch (WingsException e) {
+      e.processMessages();
+      return false;
     } catch (Exception e) {
       logger.error("", e);
       return false;
