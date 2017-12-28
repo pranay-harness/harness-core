@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -12,6 +13,7 @@ import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.randomSeedString;
+import static software.wings.service.KmsTest.getKmsConfig;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -37,6 +39,7 @@ import org.assertj.core.util.Lists;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
@@ -50,6 +53,10 @@ import software.wings.WingsBaseTest;
 import software.wings.app.DatabaseModule;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.License;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
@@ -375,5 +382,19 @@ public String getDelegateToken() throws UnknownHostException {
   }
 
   return jwt.serialize();
+}
+protected void enableKmsFeatureFlag() {
+  KmsConfig kmsConfig = getKmsConfig();
+  kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
+
+  WebTarget target = client.target(API_BASE + "/kms/save-global-kms?accountId=" + accountId);
+  RestResponse<String> response = getRequestBuilderWithAuthHeader(target).post(
+      Entity.entity(kmsConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+
+  assertNotNull(response.getResource());
+  FeatureFlag kmsFeatureFlag =
+      wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(FeatureName.KMS.name()).get();
+  kmsFeatureFlag.setEnabled(true);
+  wingsPersistence.save(kmsFeatureFlag);
 }
 }
