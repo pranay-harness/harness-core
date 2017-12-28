@@ -15,9 +15,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
-import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
-import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
@@ -45,26 +43,22 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.AsgConvention;
-import software.wings.utils.Validator;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -73,21 +67,18 @@ import java.util.concurrent.ExecutorService;
 public class AwsAmiServiceSetup extends State {
   private static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
-  private ResizeStrategy resizeStrategy;
 
   private String autoScalingGroupName;
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
+  private ResizeStrategy resizeStrategy;
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient protected transient ArtifactStreamService artifactStreamService;
   @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient EncryptionService encryptionService;
   @Inject @Transient protected transient ActivityService activityService;
-  @Inject @Transient protected transient DelegateService delegateService;
   @Inject @Transient protected transient ExecutorService executorService;
 
   @Transient private static final Logger logger = LoggerFactory.getLogger(AwsAmiServiceSetup.class);
@@ -120,14 +111,102 @@ public class AwsAmiServiceSetup extends State {
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    // TODO:: ensure cloudProviderType
-
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (Encryptable) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
-
     String region = infrastructureMapping.getRegion();
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
-    String baseAutoScalingGroupName = infrastructureMapping.getAutoScalingGroupName();
+
+    AutoScalingGroup baseAutoScalingGroup = ensureAndGetBaseAutoScalingGroup(
+        infrastructureMapping, encryptionDetails, region, awsConfig, infrastructureMapping.getAutoScalingGroupName());
+
+    LaunchConfiguration baseLaunchConfiguration = ensureAndGetBaseLaunchConfiguration(
+        infrastructureMapping, encryptionDetails, region, awsConfig, baseAutoScalingGroup);
+
+    List<AutoScalingGroup> harnessManagedAutoScalingGroups =
+        awsHelperService.listAutoScalingGroups(awsConfig, encryptionDetails, region)
+            .stream()
+            .filter(autoScalingGroup
+                -> autoScalingGroup.getTags().stream().anyMatch(
+                    tagDescription -> isHarnessManagedTag(infrastructureMapping.getUuid(), tagDescription)))
+            .sorted(Comparator.comparing(AutoScalingGroup::getCreatedTime).reversed())
+            .collect(toList());
+
+    String lastDeployedAsgName = getLastDeployedAsgNameWithNonZeroCapacity(harnessManagedAutoScalingGroups);
+    Integer harnessRevision = getNewHarnessVersion(harnessManagedAutoScalingGroups);
+
+    String asgNamePrefix = isNotEmpty(autoScalingGroupName)
+        ? normalizeExpression(context.renderExpression(autoScalingGroupName))
+        : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
+    String newAutoScalingGroupName = AsgConvention.getAsgName(asgNamePrefix, harnessRevision);
+
+    AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
+                                                       .newAutoScalingGroupName(newAutoScalingGroupName)
+                                                       .oldAutoScalingGroupName(lastDeployedAsgName)
+                                                       .maxInstances(maxInstances)
+                                                       .newVersion(harnessRevision)
+                                                       .resizeStrategy(resizeStrategy)
+                                                       .build();
+
+    AmiServiceSetupElement amiServiceElement =
+        AmiServiceSetupElement.builder()
+            .newAutoScalingGroupName(newAutoScalingGroupName)
+            .oldAutoScalingGroupName(lastDeployedAsgName)
+            .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+            .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+            .build();
+
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    String errorMessage = null;
+
+    try {
+      awsHelperService.createLaunchConfiguration(awsConfig, encryptionDetails, region,
+          createNewLaunchConfigurationRequest(
+              artifact, userDataSpecification, baseLaunchConfiguration, newAutoScalingGroupName));
+      awsHelperService.createAutoScalingGroup(awsConfig, encryptionDetails, region,
+          createNewAutoScalingGroupRequest(
+              infrastructureMapping, newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision));
+    } catch (Exception ex) {
+      logger.error("Ami setup step failed with error ", ex);
+      executionStatus = ExecutionStatus.FAILED;
+      errorMessage = ex.getMessage();
+    }
+
+    deleteOldHarnessManagedAutoScalingGroups(encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups,
+        amiServiceElement.getOldAutoScalingGroupName());
+
+    return anExecutionResponse()
+        .withStateExecutionData(awsAmiExecutionData)
+        .addContextElement(amiServiceElement)
+        .addNotifyElement(amiServiceElement)
+        .withExecutionStatus(executionStatus)
+        .withErrorMessage(errorMessage)
+        .build();
+  }
+
+  private boolean isHarnessManagedTag(String infraMappingId, TagDescription tagDescription) {
+    return tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG)
+        && tagDescription.getValue().startsWith(infraMappingId);
+  }
+
+  private LaunchConfiguration ensureAndGetBaseLaunchConfiguration(AwsAmiInfrastructureMapping infrastructureMapping,
+      List<EncryptedDataDetail> encryptionDetails, String region, AwsConfig awsConfig,
+      AutoScalingGroup baseAutoScalingGroup) {
+    LaunchConfiguration baseAutoScalingGroupLaunchConfiguration = awsHelperService.getLaunchConfiguration(
+        awsConfig, encryptionDetails, region, baseAutoScalingGroup.getLaunchConfigurationName());
+
+    if (baseAutoScalingGroupLaunchConfiguration == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+          String.format(
+              "LaunchConfiguration [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
+              baseAutoScalingGroup.getAutoScalingGroupName(), infrastructureMapping.getAutoScalingGroupName(),
+              infrastructureMapping.getRegion()));
+    }
+    return baseAutoScalingGroupLaunchConfiguration;
+  }
+
+  private AutoScalingGroup ensureAndGetBaseAutoScalingGroup(AwsAmiInfrastructureMapping infrastructureMapping,
+      List<EncryptedDataDetail> encryptionDetails, String region, AwsConfig awsConfig,
+      String baseAutoScalingGroupName) {
     AutoScalingGroup baseAutoScalingGroup =
         awsHelperService.getAutoScalingGroups(awsConfig, encryptionDetails, region, baseAutoScalingGroupName);
     if (baseAutoScalingGroup == null) {
@@ -137,78 +216,49 @@ public class AwsAmiServiceSetup extends State {
               "Reference AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
               infrastructureMapping.getAutoScalingGroupName(), infrastructureMapping.getRegion()));
     }
+    return baseAutoScalingGroup;
+  }
 
-    String baseAutoScalingGroupLaunchConfigurationName = baseAutoScalingGroup.getLaunchConfigurationName();
-    List<LaunchConfiguration> launchConfigurations =
-        awsHelperService.listLaunchConfiguration(awsConfig, encryptionDetails, region);
-    // TODO:: filter on autoscaling group or launch config name
-
-    LaunchConfiguration baseLaunchConfiguration =
-        launchConfigurations.stream()
-            .filter(launchConfiguration
-                -> launchConfiguration.getLaunchConfigurationName().equals(baseAutoScalingGroupLaunchConfigurationName))
-            .findFirst()
-            .orElse(null);
-
-    Validator.notNullCheck("Launch Configuration", baseLaunchConfiguration);
-
-    List<AutoScalingGroup> autoScalingGroups =
-        awsHelperService.listAutoScalingGroups(awsConfig, encryptionDetails, region);
-    List<AutoScalingGroup> harnessAutoScalingGroups =
-        autoScalingGroups.stream()
-            .filter(autoScalingGroup
-                -> autoScalingGroup.getTags().stream().anyMatch(tagDescription
-                    -> tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG)
-                        && tagDescription.getValue().startsWith(infrastructureMapping.getUuid())))
-            .sorted(Comparator.comparing(AutoScalingGroup::getCreatedTime))
-            .collect(toList());
-
-    Integer harness_revision = 0;
-    String oldAutoScalingGroupName = null;
-    if (isNotNullOrEmpty(harnessAutoScalingGroups)) {
-      AutoScalingGroup autoScalingGroup = harnessAutoScalingGroups.get(harnessAutoScalingGroups.size() - 1);
-      Optional<TagDescription> optTag =
-          autoScalingGroup.getTags()
-              .stream()
-              .filter(tagDescription -> tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG))
-              .findFirst();
-      oldAutoScalingGroupName = autoScalingGroup.getAutoScalingGroupName();
-      if (optTag.isPresent()) {
-        harness_revision = getRevisionFromTag(optTag.get().getValue());
-      }
+  private Integer getNewHarnessVersion(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
+    Integer harnessRevision = 1;
+    if (isNotNullOrEmpty(harnessManagedAutoScalingGroups)) {
+      harnessRevision = harnessManagedAutoScalingGroups.stream()
+                            .flatMap(autoScalingGroup -> autoScalingGroup.getTags().stream())
+                            .filter(tagDescription -> tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG))
+                            .mapToInt(tagDescription -> getRevisionFromTag(tagDescription.getValue()))
+                            .max()
+                            .orElse(0);
+      harnessRevision += 1; // bump it by 1
     }
+    return harnessRevision;
+  }
 
-    harness_revision += 1; // new version
+  private String getLastDeployedAsgNameWithNonZeroCapacity(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
+    String oldAutoScalingGroupName = null;
+    if (isNotNullOrEmpty(harnessManagedAutoScalingGroups)) {
+      oldAutoScalingGroupName = harnessManagedAutoScalingGroups.stream()
+                                    .filter(hAsg -> hAsg.getDesiredCapacity() != 0)
+                                    .findFirst()
+                                    .orElse(harnessManagedAutoScalingGroups.get(
+                                        harnessManagedAutoScalingGroups.size() - 1)) // take the last deployed anyway
+                                    .getAutoScalingGroupName();
+    }
+    return oldAutoScalingGroupName;
+  }
 
-    String asgNamePrefix = isNotEmpty(autoScalingGroupName)
-        ? normalizeExpression(context.renderExpression(autoScalingGroupName))
-        : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
-    String newAutoScalingGroupName = AsgConvention.getAsgName(asgNamePrefix, harness_revision);
-
-    LaunchConfiguration cloneBaseLaunchConfiguration = baseLaunchConfiguration.clone();
-    cloneBaseLaunchConfiguration.setImageId(artifact.getRevision());
-    cloneBaseLaunchConfiguration.setLaunchConfigurationName(newAutoScalingGroupName);
-
+  private CreateLaunchConfigurationRequest createNewLaunchConfigurationRequest(Artifact artifact,
+      UserDataSpecification userDataSpecification, LaunchConfiguration cloneBaseLaunchConfiguration,
+      String newAutoScalingGroupName) {
     CreateLaunchConfigurationRequest createLaunchConfigurationRequest =
         new CreateLaunchConfigurationRequest()
             .withLaunchConfigurationName(newAutoScalingGroupName)
             .withImageId(artifact.getRevision())
-            .withAssociatePublicIpAddress(cloneBaseLaunchConfiguration.getAssociatePublicIpAddress())
-            .withBlockDeviceMappings(cloneBaseLaunchConfiguration.getBlockDeviceMappings())
-            .withClassicLinkVPCId(cloneBaseLaunchConfiguration.getClassicLinkVPCId())
-            .withClassicLinkVPCSecurityGroups(cloneBaseLaunchConfiguration.getClassicLinkVPCSecurityGroups())
-            .withEbsOptimized(cloneBaseLaunchConfiguration.getEbsOptimized())
-            .withIamInstanceProfile(cloneBaseLaunchConfiguration.getIamInstanceProfile())
-            .withInstanceMonitoring(cloneBaseLaunchConfiguration.getInstanceMonitoring())
-            .withInstanceType(cloneBaseLaunchConfiguration.getInstanceType())
-            //            .withKernelId(baseLaunchConfiguration.getKernelId())
-            .withKeyName(cloneBaseLaunchConfiguration.getKeyName())
-            .withPlacementTenancy(cloneBaseLaunchConfiguration.getPlacementTenancy())
-            //            .withRamdiskId(baseLaunchConfiguration.getRamdiskId())
             .withSecurityGroups(cloneBaseLaunchConfiguration.getSecurityGroups())
-            .withSpotPrice(cloneBaseLaunchConfiguration.getSpotPrice());
+            .withClassicLinkVPCId(cloneBaseLaunchConfiguration.getClassicLinkVPCId())
+            .withBlockDeviceMappings(cloneBaseLaunchConfiguration.getBlockDeviceMappings())
+            .withEbsOptimized(cloneBaseLaunchConfiguration.getEbsOptimized())
+            .withAssociatePublicIpAddress(cloneBaseLaunchConfiguration.getAssociatePublicIpAddress());
 
-    // TODO:: check for fields to be non null
     if (userDataSpecification != null && userDataSpecification.getData() != null) {
       try {
         createLaunchConfigurationRequest.setUserData(
@@ -218,12 +268,36 @@ public class AwsAmiServiceSetup extends State {
       }
     }
 
-    CreateLaunchConfigurationResult newLaunchConfiguration = awsHelperService.createLaunchConfiguration(
-        awsConfig, encryptionDetails, region, createLaunchConfigurationRequest);
+    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getInstanceType())) {
+      createLaunchConfigurationRequest.setInstanceType(cloneBaseLaunchConfiguration.getInstanceType());
+    }
+    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getKernelId())) {
+      createLaunchConfigurationRequest.setKernelId(cloneBaseLaunchConfiguration.getKernelId());
+    }
 
-    AutoScalingGroup clonedBaseASG = baseAutoScalingGroup.clone();
+    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getRamdiskId())) {
+      createLaunchConfigurationRequest.setRamdiskId(cloneBaseLaunchConfiguration.getRamdiskId());
+    }
+    if (cloneBaseLaunchConfiguration.getInstanceMonitoring() != null) {
+      createLaunchConfigurationRequest.setInstanceMonitoring(cloneBaseLaunchConfiguration.getInstanceMonitoring());
+    }
+    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getSpotPrice())) {
+      createLaunchConfigurationRequest.setSpotPrice(cloneBaseLaunchConfiguration.getSpotPrice());
+    }
+    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getIamInstanceProfile())) {
+      createLaunchConfigurationRequest.setIamInstanceProfile(cloneBaseLaunchConfiguration.getIamInstanceProfile());
+    }
+    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getPlacementTenancy())) {
+      createLaunchConfigurationRequest.setPlacementTenancy(cloneBaseLaunchConfiguration.getPlacementTenancy());
+    }
 
-    List<Tag> tags = clonedBaseASG.getTags()
+    return createLaunchConfigurationRequest;
+  }
+
+  private CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(
+      AwsAmiInfrastructureMapping infrastructureMapping, String newAutoScalingGroupName,
+      AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision) {
+    List<Tag> tags = baseAutoScalingGroup.getTags()
                          .stream()
                          .filter(tagDescription
                              -> !asList(HARNESS_AUTOSCALING_GROUP_TAG, "Name")
@@ -238,29 +312,22 @@ public class AwsAmiServiceSetup extends State {
 
     tags.add(new Tag()
                  .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
-                 .withValue(AsgConvention.getRevisionTagValue(infrastructureMapping.getUuid(), harness_revision))
+                 .withValue(AsgConvention.getRevisionTagValue(infrastructureMapping.getUuid(), harnessRevision))
                  .withPropagateAtLaunch(true)
                  .withResourceType("auto-scaling-group"));
     tags.add(new Tag().withKey("Name").withValue(newAutoScalingGroupName).withPropagateAtLaunch(true));
 
-    // TODO:: check for fields to be non null
     CreateAutoScalingGroupRequest createAutoScalingGroupRequest =
         new CreateAutoScalingGroupRequest()
             .withAutoScalingGroupName(newAutoScalingGroupName)
-            .withAvailabilityZones(clonedBaseASG.getAvailabilityZones())
-            .withDefaultCooldown(clonedBaseASG.getDefaultCooldown())
-            .withDesiredCapacity(0)
-            .withMinSize(clonedBaseASG.getMinSize())
-            .withMaxSize(clonedBaseASG.getMaxSize())
-            .withAvailabilityZones(clonedBaseASG.getAvailabilityZones())
-            .withHealthCheckGracePeriod(clonedBaseASG.getHealthCheckGracePeriod())
-            .withHealthCheckType(clonedBaseASG.getHealthCheckType())
             .withLaunchConfigurationName(newAutoScalingGroupName)
-            .withNewInstancesProtectedFromScaleIn(clonedBaseASG.getNewInstancesProtectedFromScaleIn())
-            .withPlacementGroup(clonedBaseASG.getPlacementGroup())
-            .withTags(tags)
-            .withTerminationPolicies(clonedBaseASG.getTerminationPolicies())
-            .withVPCZoneIdentifier(clonedBaseASG.getVPCZoneIdentifier());
+            .withDesiredCapacity(0)
+            .withMinSize(baseAutoScalingGroup.getMinSize())
+            .withMaxSize(baseAutoScalingGroup.getMaxSize())
+            .withDefaultCooldown(baseAutoScalingGroup.getDefaultCooldown())
+            .withAvailabilityZones(baseAutoScalingGroup.getAvailabilityZones())
+            .withTerminationPolicies(baseAutoScalingGroup.getTerminationPolicies())
+            .withNewInstancesProtectedFromScaleIn(baseAutoScalingGroup.getNewInstancesProtectedFromScaleIn());
 
     if (!Lists.isNullOrEmpty(infrastructureMapping.getClassicLoadBalancers())) {
       createAutoScalingGroupRequest.setLoadBalancerNames(infrastructureMapping.getClassicLoadBalancers());
@@ -270,37 +337,34 @@ public class AwsAmiServiceSetup extends State {
       createAutoScalingGroupRequest.setTargetGroupARNs(infrastructureMapping.getTargetGroupArns());
     }
 
-    CreateAutoScalingGroupResult newAutoScalingGroup =
-        awsHelperService.createAutoScalingGroup(awsConfig, encryptionDetails, region, createAutoScalingGroupRequest);
+    if (baseAutoScalingGroup.getDefaultCooldown() != null) {
+      createAutoScalingGroupRequest.setDefaultCooldown(baseAutoScalingGroup.getDefaultCooldown());
+    }
 
-    AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
-                                                       .newAutoScalingGroupName(newAutoScalingGroupName)
-                                                       .oldAutoScalingGroupName(oldAutoScalingGroupName)
-                                                       .maxInstances(maxInstances)
-                                                       .newVersion(harness_revision)
-                                                       .resizeStrategy(resizeStrategy)
-                                                       .build();
-    AmiServiceSetupElement amiServiceElement =
-        AmiServiceSetupElement.builder()
-            .newAutoScalingGroupName(newAutoScalingGroupName)
-            .oldAutoScalingGroupName(oldAutoScalingGroupName)
-            .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-            .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .build();
-    deleteOldHarnessManagedAutoScalingGroups(encryptionDetails, region, awsConfig, harnessAutoScalingGroups);
+    if (isNotNullOrEmpty(baseAutoScalingGroup.getHealthCheckType())) {
+      createAutoScalingGroupRequest.setHealthCheckType(baseAutoScalingGroup.getHealthCheckType());
+    }
+    if (baseAutoScalingGroup.getHealthCheckGracePeriod() != null) {
+      createAutoScalingGroupRequest.setHealthCheckGracePeriod(baseAutoScalingGroup.getHealthCheckGracePeriod());
+    }
+    if (isNotNullOrEmpty(baseAutoScalingGroup.getPlacementGroup())) {
+      createAutoScalingGroupRequest.setPlacementGroup(baseAutoScalingGroup.getPlacementGroup());
+    }
 
-    return anExecutionResponse()
-        .withStateExecutionData(awsAmiExecutionData)
-        .addContextElement(amiServiceElement)
-        .addNotifyElement(amiServiceElement)
-        .build();
+    if (isNotNullOrEmpty(baseAutoScalingGroup.getVPCZoneIdentifier())) {
+      createAutoScalingGroupRequest.setVPCZoneIdentifier(baseAutoScalingGroup.getVPCZoneIdentifier());
+    }
+    return createAutoScalingGroupRequest;
   }
 
   private void deleteOldHarnessManagedAutoScalingGroups(List<EncryptedDataDetail> encryptionDetails, String region,
-      AwsConfig awsConfig, List<AutoScalingGroup> harnessAutoScalingGroups) {
+      AwsConfig awsConfig, List<AutoScalingGroup> harnessAutoScalingGroups, String oldAutoScalingGroupName) {
     try {
       List<AutoScalingGroup> emptyHarnessAsgToBeDeleted =
-          harnessAutoScalingGroups.stream().filter(asg -> asg.getDesiredCapacity() == 0).collect(toList());
+          harnessAutoScalingGroups.stream()
+              .filter(asg
+                  -> asg.getDesiredCapacity() == 0 || !asg.getAutoScalingGroupName().equals(oldAutoScalingGroupName))
+              .collect(toList());
       if (emptyHarnessAsgToBeDeleted.size() > MAX_OLD_ASG_VERSION_TO_KEEP) {
         emptyHarnessAsgToBeDeleted =
             emptyHarnessAsgToBeDeleted.subList(0, emptyHarnessAsgToBeDeleted.size() - MAX_OLD_ASG_VERSION_TO_KEEP);

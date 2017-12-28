@@ -877,6 +877,25 @@ public class AwsHelperService {
     return emptyList();
   }
 
+  public LaunchConfiguration getLaunchConfiguration(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String launchConfigName) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonAutoScalingClient
+          .describeLaunchConfigurations(
+              new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launchConfigName))
+          .getLaunchConfigurations()
+          .stream()
+          .findFirst()
+          .orElse(null);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
   public CreateClusterResult createCluster(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, CreateClusterRequest createClusterRequest) {
     try {
