@@ -56,6 +56,7 @@ import javax.validation.Valid;
                       , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") },
         options = @IndexOptions(unique = true)))
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class SettingAttribute extends Base {
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty private String accountId;

@@ -2,6 +2,7 @@ package software.wings.yaml.gitSync;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -17,6 +18,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "yamlChangeSet")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class YamlChangeSet extends Base {
   @Indexed @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();

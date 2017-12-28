@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 8/4/16.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class LogAnalysisExecutionData extends StateExecutionData {
   private String correlationId;
   private String stateExecutionInstanceId;

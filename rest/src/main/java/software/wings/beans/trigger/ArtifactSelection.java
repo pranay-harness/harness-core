@@ -1,5 +1,6 @@
 package software.wings.beans.trigger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -18,13 +19,16 @@ public class ArtifactSelection {
   private String artifactFilter;
   private String pipelineId;
   private String pipelineName;
+  @JsonIgnore private String workflowId;
+  @JsonIgnore private String workflowName;
 
   public enum Type { ARTIFACT_SOURCE, LAST_COLLECTED, LAST_DEPLOYED, PIPELINE_SOURCE, WEBHOOK_VARIABLE }
 
   public ArtifactSelection() {}
 
   public ArtifactSelection(String serviceId, String serviceName, Type type, String artifactStreamId,
-      String artifactSourceName, String artifactFilter, String pipelineId, String pipelineName) {
+      String artifactSourceName, String artifactFilter, String pipelineId, String pipelineName, String workflowId,
+      String workflowName) {
     this.serviceId = serviceId;
     this.serviceName = serviceName;
     this.type = type;
@@ -33,5 +37,45 @@ public class ArtifactSelection {
     this.artifactFilter = artifactFilter;
     this.pipelineId = pipelineId;
     this.pipelineName = pipelineName;
+    this.workflowId = workflowId;
+    this.workflowName = workflowName;
+  }
+
+  public void setPipelineId(String pipelineId) {
+    this.pipelineId = pipelineId;
+    this.workflowId = pipelineId;
+  }
+
+  public void setPipelineName(String pipelineName) {
+    this.pipelineName = pipelineName;
+    this.workflowName = pipelineName;
+  }
+
+  public String getPipelineId() {
+    if (this.pipelineId == null) {
+      return this.workflowId;
+    }
+    return pipelineId;
+  }
+
+  public String getPipelineName() {
+    if (this.pipelineName == null) {
+      return this.workflowName;
+    }
+    return this.pipelineName;
+  }
+
+  public String getWorkflowId() {
+    if (workflowId == null) {
+      return pipelineId;
+    }
+    return workflowId;
+  }
+
+  public String getWorkflowName() {
+    if (workflowName == null) {
+      return pipelineName;
+    }
+    return workflowName;
   }
 }

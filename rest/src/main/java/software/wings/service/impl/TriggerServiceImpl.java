@@ -301,7 +301,7 @@ public class TriggerServiceImpl implements TriggerService {
         .filter(trigger
             -> trigger.getArtifactSelections().stream().anyMatch(artifactSelection
                 -> artifactSelection.getType().equals(LAST_DEPLOYED)
-                    && artifactSelection.getPipelineId().equals(pipelineId)))
+                    && artifactSelection.getWorkflowId().equals(pipelineId)))
         .collect(toList());
   }
 
@@ -343,7 +343,7 @@ public class TriggerServiceImpl implements TriggerService {
     if (serviceBuildNumbers == null || serviceBuildNumbers.size() == 0) {
       return;
     }
-    Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getPipelineId(), true);
+    Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
     if (pipeline == null) {
       throw new WingsException("Pipeline does not exist any more");
     }
@@ -431,14 +431,14 @@ public class TriggerServiceImpl implements TriggerService {
             -> trigger.getCondition().getConditionType().equals(PIPELINE_COMPLETION)
                 && ((PipelineTriggerCondition) trigger.getCondition()).getPipelineId().equals(sourcePipelineId))
         .filter(Objects::nonNull)
-        .filter(distinctByKey(trigger -> trigger.getPipelineId()))
+        .filter(distinctByKey(trigger -> trigger.getWorkflowId()))
         .collect(toList())
         .forEach(trigger -> {
 
           List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
           if (CollectionUtils.isEmpty(artifactSelections)) {
             logger.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",
-                trigger.getPipelineId(), sourcePipelineId);
+                trigger.getWorkflowId(), sourcePipelineId);
             triggerExecution(getLastDeployedArtifacts(appId, sourcePipelineId, null), trigger);
           } else {
             List<Artifact> artifacts = new ArrayList<>();
@@ -453,12 +453,12 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void triggerScheduledExecution(Trigger trigger) {
-    List<Artifact> lastDeployedArtifacts = getLastDeployedArtifacts(trigger.getAppId(), trigger.getPipelineId(), null);
+    List<Artifact> lastDeployedArtifacts = getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), null);
 
     ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
     if (artifactSelections == null || artifactSelections.size() == 0) {
-      logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getPipelineId());
+      logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
       if (!CollectionUtils.isEmpty(lastDeployedArtifacts)) {
         triggerExecution(lastDeployedArtifacts, trigger, null);
       }
@@ -490,7 +490,7 @@ public class TriggerServiceImpl implements TriggerService {
       if (artifactSelection.getType().equals(LAST_COLLECTED)) {
         addLastCollectedArtifact(appId, artifactSelection, artifacts);
       } else if (artifactSelection.getType().equals(LAST_DEPLOYED)) {
-        addLastDeployedArtifacts(appId, artifactSelection.getPipelineId(), artifactSelection.getServiceId(), artifacts);
+        addLastDeployedArtifacts(appId, artifactSelection.getWorkflowId(), artifactSelection.getServiceId(), artifacts);
       }
     }
   }
@@ -600,7 +600,7 @@ public class TriggerServiceImpl implements TriggerService {
       executionArgs.setArtifacts(
           artifacts.stream().filter(distinctByKey(artifact -> artifact.getUuid())).collect(toList()));
     }
-    String pipelineId = trigger.getPipelineId();
+    String pipelineId = trigger.getWorkflowId();
     executionArgs.setOrchestrationId(pipelineId);
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setWorkflowType(PIPELINE);
@@ -730,7 +730,7 @@ public class TriggerServiceImpl implements TriggerService {
         WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
         if (webHookTriggerCondition.getWebHookToken() == null
             || Misc.isNullOrEmpty(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
-          WebHookToken webHookToken = generateWebHookToken(trigger.getAppId(), trigger.getPipelineId());
+          WebHookToken webHookToken = generateWebHookToken(trigger.getAppId(), trigger.getWorkflowId());
           webHookTriggerCondition.setWebHookToken(webHookToken);
         }
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
@@ -760,13 +760,13 @@ public class TriggerServiceImpl implements TriggerService {
       Service service;
       switch (artifactSelection.getType()) {
         case LAST_DEPLOYED:
-          if (Misc.isNullOrEmpty(artifactSelection.getPipelineId())) {
+          if (Misc.isNullOrEmpty(artifactSelection.getWorkflowId())) {
             throw new WingsException(INVALID_REQUEST, "message", "Pipeline cannot be empty for Last deployed type");
           }
           Pipeline pipeline =
-              pipelineService.readPipeline(trigger.getAppId(), artifactSelection.getPipelineId(), false);
+              pipelineService.readPipeline(trigger.getAppId(), artifactSelection.getWorkflowId(), false);
           notNullCheck("LastDeployedPipeline", pipeline);
-          artifactSelection.setPipelineName(pipeline.getName());
+          artifactSelection.setWorkflowName(pipeline.getName());
           break;
         case LAST_COLLECTED:
           if (Misc.isNullOrEmpty(artifactSelection.getArtifactStreamId())) {
@@ -799,8 +799,8 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void validateInput(Trigger trigger) {
-    Pipeline executePipeline = validatePipeline(trigger.getAppId(), trigger.getPipelineId(), true);
-    trigger.setPipelineName(executePipeline.getName());
+    Pipeline executePipeline = validatePipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
+    trigger.setWorkflowName(executePipeline.getName());
 
     validateAndSetTriggerCondition(trigger);
     validateAndSetArtifactSelections(trigger, executePipeline.getServices());

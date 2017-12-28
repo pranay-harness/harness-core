@@ -3,6 +3,7 @@ package software.wings.service.impl.logz;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.config.LogzConfig;
@@ -17,6 +18,7 @@ import java.util.Set;
  * Created by rsingh on 8/21/17.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)

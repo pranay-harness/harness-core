@@ -24,6 +24,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Extension
 @JsonTypeName("APP_DYNAMICS")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "password")
 public class AppDynamicsConfig extends SettingValue implements Encryptable {

@@ -21,6 +21,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
  */
 @JsonTypeName("BAMBOO")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "password")
 public class BambooConfig extends SettingValue implements Encryptable {

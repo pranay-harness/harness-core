@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -30,6 +31,7 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("entityId") }, options = @IndexOptions(unique = true)))
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class YamlGitConfig extends Base implements Encryptable {

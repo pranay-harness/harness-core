@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
@@ -24,6 +25,7 @@ import java.util.Map;
  */
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

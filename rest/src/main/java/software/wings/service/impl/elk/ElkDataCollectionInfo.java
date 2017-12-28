@@ -2,6 +2,7 @@ package software.wings.service.impl.elk;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.ElkConfig;
@@ -16,6 +17,7 @@ import java.util.Set;
  * Created by rsingh on 5/18/17.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
