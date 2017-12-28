@@ -4,6 +4,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -11,6 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  */
 @JsonTypeName("BASTION_HOST_CONNECTION_ATTRIBUTES")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class BastionConnectionAttributes extends HostConnectionAttributes {
   @NotEmpty private String hostName;
 

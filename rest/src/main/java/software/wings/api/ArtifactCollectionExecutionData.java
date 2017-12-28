@@ -4,6 +4,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -13,6 +14,7 @@ import java.util.Map;
  * Created by sgurubelli on 11/20/17.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class ArtifactCollectionExecutionData extends StateExecutionData implements NotifyResponseData {
   private String artifactSource;

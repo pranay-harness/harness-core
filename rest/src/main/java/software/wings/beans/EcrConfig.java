@@ -6,6 +6,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -27,6 +28,7 @@ import software.wings.stencils.EnumData;
 @Deprecated
 @Builder
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "secretKey")
 public class EcrConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Amazon ECR Registry URL", required = true) @NotEmpty private String ecrUrl;

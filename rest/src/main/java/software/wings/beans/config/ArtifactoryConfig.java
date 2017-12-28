@@ -21,6 +21,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
  */
 @JsonTypeName("ARTIFACTORY")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 @Builder
 public class ArtifactoryConfig extends SettingValue implements Encryptable {

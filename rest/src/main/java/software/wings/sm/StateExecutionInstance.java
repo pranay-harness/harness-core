@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -24,6 +25,7 @@ import java.util.Map;
  */
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String childStateMachineId;

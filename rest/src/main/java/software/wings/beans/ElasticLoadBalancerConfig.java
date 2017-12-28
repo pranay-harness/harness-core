@@ -23,6 +23,7 @@ import software.wings.yaml.setting.LoadBalancerProviderYaml;
  */
 @JsonTypeName("ELB")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "secretKey")
 public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Encryptable {

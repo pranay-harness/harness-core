@@ -1,9 +1,11 @@
 package software.wings.yaml.artifactstream;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.yaml.BaseYaml;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class StreamActionYaml extends BaseYaml {
   public String workflowType;
   public String workflowName;

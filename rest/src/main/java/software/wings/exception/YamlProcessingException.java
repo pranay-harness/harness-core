@@ -8,7 +8,7 @@ import software.wings.beans.yaml.Change;
  * @author rktummala on 12/18/17
  */
 @Data
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = false)
 public class YamlProcessingException extends HarnessException {
   private Change change;
 
