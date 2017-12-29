@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -24,13 +25,16 @@ import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.LogService;
 
 import java.util.Date;
 
@@ -38,6 +42,9 @@ public class PruneEntityJobTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(PruneEntityJobTest.class);
 
   @Mock private WingsPersistence wingsPersistence;
+
+  @Mock private LogService logService;
+  @Inject @InjectMocks private ActivityService activityService;
 
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
@@ -144,6 +151,29 @@ public class PruneEntityJobTest extends WingsBaseTest {
 
     job.execute(context);
 
+    verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
+  }
+
+  @Test
+  public void verifyThrowFromDescendingEntity() throws Exception {
+    when(wingsPersistence.get(Activity.class, ENTITY_ID)).thenReturn(null);
+
+    WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
+    doThrow(exception).when(logService).pruneByActivity(APP_ID, ENTITY_ID);
+
+    JobExecutionContext context = mock(JobExecutionContext.class);
+    when(context.getJobDetail()).thenReturn(details(Activity.class, APP_ID, ENTITY_ID));
+
+    Logger mockLogger = mock(Logger.class);
+    Whitebox.setInternalState(exception, "logger", mockLogger);
+
+    job.execute(context);
+
+    verify(mockLogger, times(1))
+        .error(matches(".*Fail to prune some of the entities for app: app_id, entity: entityId.*"),
+            any(WingsException.class));
+
+    verify(logService, times(1)).pruneByActivity(APP_ID, ENTITY_ID);
     verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
   }
 

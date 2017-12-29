@@ -56,6 +56,7 @@ logging:
   loggers:
     com.novemberain.quartz.mongodb: WARN
     org.quartz.plugins: WARN
+    org.glassfish.jersey: WARN
   appenders:
     - type: console
       threshold: TRACE

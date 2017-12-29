@@ -216,11 +216,11 @@ public class WatcherServiceImpl implements WatcherService {
           executorService.submit(() -> {
             try {
               new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", extraWatcher).start();
-              messageService.closeChannel(WATCHER, extraWatcher);
-              messageService.removeData(WATCHER_DATA, EXTRA_WATCHER);
             } catch (Exception e) {
               logger.error("Error killing watcher {}", extraWatcher, e);
             }
+            messageService.closeChannel(WATCHER, extraWatcher);
+            messageService.removeData(WATCHER_DATA, EXTRA_WATCHER);
           });
         }
       } else {
@@ -434,14 +434,14 @@ public class WatcherServiceImpl implements WatcherService {
     executorService.submit(() -> {
       try {
         new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
-        messageService.closeData(DELEGATE_DASH + delegateProcess);
-        messageService.closeChannel(DELEGATE, delegateProcess);
-        synchronized (runningDelegates) {
-          runningDelegates.remove(delegateProcess);
-          messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
-        }
       } catch (Exception e) {
         logger.error("Error killing delegate {}", delegateProcess, e);
+      }
+      messageService.closeData(DELEGATE_DASH + delegateProcess);
+      messageService.closeChannel(DELEGATE, delegateProcess);
+      synchronized (runningDelegates) {
+        runningDelegates.remove(delegateProcess);
+        messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
       }
     });
   }

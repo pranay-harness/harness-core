@@ -37,7 +37,8 @@ public class ResponseMessage implements Serializable {
      * side.
      */
     // TODO: this is just an idea for potential improvement, not implemented yet.
-    // ALERTING or ALARMING,
+    //       for the time being it will act as HARMLESS.
+    ALERTING,
 
     /*
      * Harmless acuteness indicates an issue report that is based on user feedback that is still a part of the normal
