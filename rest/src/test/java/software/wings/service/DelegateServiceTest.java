@@ -16,7 +16,6 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
-import static software.wings.common.Constants.DELEGATE_VALIDATION_CACHE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -66,7 +65,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
-import java.util.Set;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -89,7 +87,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private Broadcaster broadcaster;
   @Mock private CacheHelper cacheHelper;
   @Mock private javax.cache.Cache<String, DelegateTask> cache;
-  @Mock private javax.cache.Cache<String, Set> validationCache;
   @Mock private AssignDelegateService assignDelegateService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
@@ -117,7 +114,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     when(cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)).thenReturn(cache);
-    when(cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class)).thenReturn(validationCache);
   }
 
   @Test
