@@ -13,6 +13,7 @@ import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 import org.junit.After;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
@@ -54,6 +55,7 @@ public class ExecutionResourceTest {
    * Test find by name.
    */
   @Test
+  @Ignore
   public void testListExecutions() {
     String appId = UUIDGenerator.getUuid();
 
