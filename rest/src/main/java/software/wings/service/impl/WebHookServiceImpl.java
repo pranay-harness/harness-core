@@ -127,7 +127,7 @@ public class WebHookServiceImpl implements WebHookService {
       if (webhookParameters != null) {
         for (String s : webhookParameters.keySet()) {
           String param = webhookParameters.get(s);
-          String paramValue = null;
+          Object paramValue = null;
           try {
             Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(param);
             if (matcher.matches()) {
@@ -146,8 +146,8 @@ public class WebHookServiceImpl implements WebHookService {
           } catch (Exception e) {
             logger.warn("Failed to resolve the param {} in Json {}", param, webhookEventPayload);
           }
-          if (!isNullOrEmpty(paramValue)) {
-            resolvedParameters.put(s, paramValue);
+          if (paramValue != null) {
+            resolvedParameters.put(s, String.valueOf(paramValue));
           } else {
             resolvedParameters.put(s, param);
           }
