@@ -426,10 +426,6 @@ public interface Constants {
   String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
   /**
-   * The constant DELEGATE_VALIDATION_CACHE.
-   */
-  String DELEGATE_VALIDATION_CACHE = "delegateValidationCache";
-  /**
    * The constant DELEGATE_SYNC_CACHE.
    */
   String DELEGATE_SYNC_CACHE = "delegateSyncCache";

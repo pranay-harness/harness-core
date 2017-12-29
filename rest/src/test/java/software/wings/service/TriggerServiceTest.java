@@ -276,7 +276,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(scheduledConditionTrigger);
     scheduledConditionTrigger.setArtifactSelections(asList(
         builder().type(LAST_COLLECTED).artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter(ARTIFACT_FILTER).build(),
-        builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(scheduledConditionTrigger);
@@ -313,7 +313,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
     webhookConditionTrigger.setArtifactSelections(asList(
         builder().type(LAST_COLLECTED).artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter(ARTIFACT_FILTER).build(),
-        builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(webhookConditionTrigger);
@@ -349,7 +349,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     webhookConditionTrigger.setArtifactSelections(asList(
         builder().type(LAST_COLLECTED).artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter(ARTIFACT_FILTER).build(),
-        builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
     Trigger updatedTrigger = triggerService.update(webhookConditionTrigger);
@@ -468,8 +468,9 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGenerateWebHookToken() {
+    when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(webhookConditionTrigger);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
-    WebHookToken webHookToken = triggerService.generateWebHookToken(APP_ID, PIPELINE_ID);
+    WebHookToken webHookToken = triggerService.generateWebHookToken(APP_ID, TRIGGER_ID);
     assertThat(webHookToken).isNotNull();
     assertThat(webHookToken.getPayload()).contains("application");
   }
@@ -547,7 +548,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .artifactStreamId(ARTIFACT_STREAM_ID)
             .artifactFilter(ARTIFACT_FILTER)
             .build(),
-        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
@@ -617,7 +618,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .artifactStreamId(ARTIFACT_STREAM_ID)
             .artifactFilter(ARTIFACT_FILTER)
             .build(),
-        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(pipelineConditionTrigger)).build());
@@ -691,7 +692,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                                                                .artifactStreamId(ARTIFACT_STREAM_ID)
                                                                .artifactFilter(ARTIFACT_FILTER)
                                                                .build(),
-        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(scheduledConditionTrigger);
     when(wingsPersistence.query(any(), any(PageRequest.class)))
@@ -756,7 +757,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                 .artifactStreamId(ARTIFACT_STREAM_ID)
                 .artifactFilter(ARTIFACT_FILTER)
                 .build(),
-            builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).pipelineId(PIPELINE_ID).build()));
+            builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(webhookConditionTrigger);
     when(wingsPersistence.query(any(), any(PageRequest.class)))
@@ -806,7 +807,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                 .artifactStreamId(ARTIFACT_STREAM_ID)
                 .artifactFilter(ARTIFACT_FILTER)
                 .build(),
-            builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).pipelineId(PIPELINE_ID).build()));
+            builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(webhookConditionTrigger);
     when(wingsPersistence.query(any(), any(PageRequest.class)))
@@ -846,7 +847,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .artifactStreamId(ARTIFACT_STREAM_ID)
             .artifactFilter(ARTIFACT_FILTER)
             .build(),
-        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(pipelineConditionTrigger)).build());
 
@@ -863,7 +864,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .artifactStreamId(ARTIFACT_STREAM_ID)
             .artifactFilter(ARTIFACT_FILTER)
             .build(),
-        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).pipelineId(PIPELINE_ID).build()));
+        builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
 
@@ -890,7 +891,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
     webhookConditionTrigger.setArtifactSelections(
         asList(builder().type(LAST_COLLECTED).artifactFilter(ARTIFACT_FILTER).build(),
-            builder().type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
+            builder().type(LAST_DEPLOYED).workflowId(PIPELINE_ID).build()));
 
     when(wingsPersistence.get(Trigger.class, defaultTrigger.getAppId(), defaultTrigger.getUuid()))
         .thenReturn(webhookConditionTrigger);

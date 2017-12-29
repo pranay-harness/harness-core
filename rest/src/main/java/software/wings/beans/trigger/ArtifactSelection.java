@@ -1,6 +1,5 @@
 package software.wings.beans.trigger;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -19,8 +18,8 @@ public class ArtifactSelection {
   private String artifactFilter;
   private String pipelineId;
   private String pipelineName;
-  @JsonIgnore private String workflowId;
-  @JsonIgnore private String workflowName;
+  private String workflowId;
+  private String workflowName;
 
   public enum Type { ARTIFACT_SOURCE, LAST_COLLECTED, LAST_DEPLOYED, PIPELINE_SOURCE, WEBHOOK_VARIABLE }
 

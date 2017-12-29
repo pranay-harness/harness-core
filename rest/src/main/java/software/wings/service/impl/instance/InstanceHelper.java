@@ -5,17 +5,24 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
+import com.amazonaws.services.ec2.model.Reservation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceChangeEvent;
 import software.wings.api.InstanceChangeEvent.Builder;
 import software.wings.api.PhaseExecutionData;
 import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
@@ -25,9 +32,13 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.core.queue.Queue;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PipelineSummary;
@@ -35,6 +46,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,6 +64,9 @@ public class InstanceHelper {
   @Inject private InstanceUtil instanceUtil;
   @Inject private ContainerInstanceHelper containerInstanceHelper;
   @Inject private HostService hostService;
+  @Inject private AwsHelperService awsHelperService;
+  @Inject private SettingsService settingsService;
+  @Inject private SecretManager secretManager;
 
   /**
    *   The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -98,8 +113,8 @@ public class InstanceHelper {
           }
           for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
             if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
-              Instance instance = buildInstanceUsingHostInfo(workflowExecution, artifact, instanceStatusSummary,
-                  phaseExecutionData, infrastructureMapping.getInfraMappingType());
+              Instance instance = buildInstanceUsingHostInfo(
+                  workflowExecution, artifact, instanceStatusSummary, phaseExecutionData, infrastructureMapping);
               if (instance != null) {
                 instanceList.add(instance);
               }
@@ -139,15 +154,51 @@ public class InstanceHelper {
   }
 
   public Instance buildInstanceUsingHostInfo(WorkflowExecution workflowExecution, Artifact artifact,
-      InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData, String infraMappingType) {
+      InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData,
+      InfrastructureMapping infraMapping) {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
     Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
 
-    Instance.Builder builder = buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMappingType);
+    Instance.Builder builder =
+        buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMapping.getInfraMappingType());
     String hostUuid = host.getUuid();
+
+    String region = null;
+    if (infraMapping instanceof AwsAmiInfrastructureMapping) {
+      region = ((AwsAmiInfrastructureMapping) infraMapping).getRegion();
+    } else if (infraMapping instanceof CodeDeployInfrastructureMapping) {
+      region = ((CodeDeployInfrastructureMapping) infraMapping).getRegion();
+    }
+
     if (hostUuid == null) {
       if (host.getEc2Instance() != null) {
         setInstanceInfoAndKey(builder, host.getEc2Instance(), phaseExecutionData.getInfraMappingId());
+      } else if (host.getInstanceId() != null && region != null) {
+        // TODO:: Avoid sequential fetch for Instance
+        SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
+        List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+            (Encryptable) cloudProviderSetting.getValue(), workflowExecution.getAppId(), workflowExecution.getUuid());
+        AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
+        com.amazonaws.services.ec2.model.Instance instance =
+            awsHelperService
+                .describeEc2Instances(awsConfig, encryptionDetails, region,
+                    new DescribeInstancesRequest().withInstanceIds(host.getInstanceId()))
+                .getReservations()
+                .stream()
+                .findFirst()
+                .orElse(new Reservation().withInstances(new ArrayList<>()))
+                .getInstances()
+                .stream()
+                .findFirst()
+                .orElse(null);
+        if (instance != null) {
+          setInstanceInfoAndKey(builder, instance, phaseExecutionData.getInfraMappingId());
+        } else {
+          logger.warn(
+              "Cannot build host based instance info since instanceId is not found in AWS wworkflowId:{}, instanceId:{}",
+              workflowExecution.getUuid(), instance.getInstanceId());
+          return null;
+        }
       } else {
         logger.warn(
             "Cannot build host based instance info since both hostId and ec2Instance are null for workflow execution {}",
@@ -157,7 +208,8 @@ public class InstanceHelper {
     } else {
       Host hostInfo = hostService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), hostUuid);
       Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
-      setInstanceInfoAndKey(builder, hostInfo, infraMappingType, phaseExecutionData.getInfraMappingId());
+      setInstanceInfoAndKey(
+          builder, hostInfo, infraMapping.getInfraMappingType(), phaseExecutionData.getInfraMappingId());
     }
     return builder.build();
   }

@@ -2,8 +2,9 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static freemarker.template.Configuration.VERSION_2_3_23;
-import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringAfter;
@@ -18,7 +19,6 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
-import static software.wings.common.Constants.DELEGATE_VALIDATION_CACHE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -81,15 +81,12 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.cache.Cache;
 import javax.cache.Caching;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -522,56 +519,111 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-    if (delegateTask != null && !assignDelegateService.canAssign(delegateId, delegateTask)) {
+    if (delegateTask == null) {
+      return null;
+    }
+    if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
       logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
       ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
-      delegateTask = null;
+      return null;
     }
-    if (delegateTask != null
-        && Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(emptyList()).contains(delegateId)) {
+    if (isBlacklisted(delegateId, delegateTask)) {
       logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
-      delegateTask = null;
+      return null;
     }
-    if (delegateTask != null) {
-      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-        return assignTask(delegateId, taskId, delegateTask);
-      } else {
-        logger.info(
-            "Delegate {} to validate task {} {}", delegateId, taskId, delegateTask.isAsync() ? "(async)" : "(sync)");
-        // Store delegateId as validation response pending
-        addToValidationCache(delegateId, taskId);
-      }
+
+    if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+      return assignTask(delegateId, taskId, delegateTask);
+    } else {
+      // Set delegate as validating
+      addToValidating(delegateId, delegateTask);
+      return delegateTask;
     }
-    return delegateTask;
   }
 
   @Override
   public DelegateTask reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
-    // Remove delegateId from pending validation responses
-    markCompleteInValidationCache(delegateId, taskId);
-
     assignDelegateService.saveConnectionResults(results);
-
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-    if (delegateTask != null) {
-      if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
-        return assignTask(delegateId, taskId, delegateTask);
-      } else if (clock.millis() - delegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(5)) {
-        blacklistDelegateForTask(delegateId, delegateTask);
-      }
+    if (delegateTask == null) {
+      return null;
+    }
+
+    // Mark delegate as validation complete
+    addToValidationComplete(delegateId, delegateTask);
+    if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
+      return assignTask(delegateId, taskId, delegateTask);
+    } else if (clock.millis() - delegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(5)) {
+      addToBlacklisted(delegateId, delegateTask);
     }
     return null;
   }
 
-  private void blacklistDelegateForTask(String delegateId, DelegateTask delegateTask) {
-    logger.info("Blacklisting delegate {} for task {}", delegateId, delegateTask.getUuid());
-    List<String> blacklistedDelegates =
-        Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new ArrayList<>());
-    blacklistedDelegates.add(delegateId);
+  @Override
+  public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    if (delegateTask == null) {
+      logger.info("Task {} not found or was already assigned", taskId);
+      return null;
+    }
+
+    // Tell delegate whether to proceed anyway because all eligible delegates failed
+    if (isValidationComplete(delegateTask)) {
+      logger.info("Validation attempts are complete for task {}", taskId);
+      return assignTask(delegateId, taskId, delegateTask);
+    } else {
+      logger.info("Task {} is still being validated");
+      return null;
+    }
+  }
+
+  private void addToValidating(String delegateId, DelegateTask delegateTask) {
+    logger.info("Delegate {} to validate task {} {}", delegateId, delegateTask.getUuid(),
+        delegateTask.isAsync() ? "(async)" : "(sync)");
+    Set<String> validating = Optional.ofNullable(delegateTask.getValidatingDelegateIds()).orElse(emptySet());
+    validating.add(delegateId);
+    delegateTask.setValidatingDelegateIds(validating);
+    storeDelegateTracking(delegateTask, "validatingDelegateIds", delegateTask.getValidatingDelegateIds());
+  }
+
+  private void addToValidationComplete(String delegateId, DelegateTask delegateTask) {
+    logger.info("Delegate {} completed validating task {} {}", delegateId, delegateTask.getUuid(),
+        delegateTask.isAsync() ? "(async)" : "(sync)");
+    Set<String> validationComplete =
+        Optional.ofNullable(delegateTask.getValidationCompleteDelegateIds()).orElse(emptySet());
+    validationComplete.add(delegateId);
+    delegateTask.setValidationCompleteDelegateIds(validationComplete);
+    storeDelegateTracking(
+        delegateTask, "validationCompleteDelegateIds", delegateTask.getValidationCompleteDelegateIds());
+  }
+
+  private void addToBlacklisted(String delegateId, DelegateTask delegateTask) {
+    logger.info("Delegate {} blacklisted for task {} {}", delegateId, delegateTask.getUuid(),
+        delegateTask.isAsync() ? "(async)" : "(sync)");
+    Set<String> blacklisted = Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(emptySet());
+    blacklisted.add(delegateId);
+    delegateTask.setBlacklistedDelegateIds(blacklisted);
+    storeDelegateTracking(delegateTask, "blacklistedDelegateIds", delegateTask.getBlacklistedDelegateIds());
+  }
+
+  private boolean isValidationComplete(DelegateTask delegateTask) {
+    Set<String> validatingDelegates = delegateTask.getValidatingDelegateIds();
+    Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
+    return isNotEmpty(validatingDelegates) && isNotEmpty(completeDelegates)
+        && completeDelegates.containsAll(validatingDelegates);
+  }
+
+  private boolean isBlacklisted(String delegateId, DelegateTask delegateTask) {
+    Set<String> blacklistedDelegateIds = delegateTask.getBlacklistedDelegateIds();
+    return isNotEmpty(blacklistedDelegateIds) && blacklistedDelegateIds.contains(delegateId);
+  }
+
+  private void storeDelegateTracking(
+      DelegateTask delegateTask, String trackDelegateField, Set<String> trackedDelegates) {
     if (delegateTask.isAsync()) {
-      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                            .set("blacklistedDelegateIds", blacklistedDelegates);
+      UpdateOperations<DelegateTask> updateOperations =
+          wingsPersistence.createUpdateOperations(DelegateTask.class).set(trackDelegateField, trackedDelegates);
       Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                             .field("accountId")
                                             .equal(delegateTask.getAccountId())
@@ -583,62 +635,32 @@ public class DelegateServiceImpl implements DelegateService {
                                             .equal(delegateTask.getUuid());
       wingsPersistence.update(updateQuery, updateOperations);
     } else {
-      delegateTask.setBlacklistedDelegateIds(blacklistedDelegates);
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
     }
   }
 
-  @Override
-  public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
-    // Tell delegate whether to proceed anyway because all eligible delegates failed.
-    if (isValidationComplete(taskId)) {
-      logger.info("Validation attempts are complete for task {}", taskId);
-      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-      if (delegateTask != null) {
-        return assignTask(delegateId, taskId, delegateTask);
-      } else {
-        logger.info("Task {} not found or was already assigned", taskId);
-      }
+  private void clearFromValidationCache(DelegateTask delegateTask) {
+    delegateTask.setValidatingDelegateIds(null);
+    delegateTask.setValidationCompleteDelegateIds(null);
+    delegateTask.setBlacklistedDelegateIds(null);
+    if (delegateTask.isAsync()) {
+      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                            .unset("validatingDelegateIds")
+                                                            .unset("validationCompleteDelegateIds")
+                                                            .unset("blacklistedDelegateIds");
+      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                            .field("accountId")
+                                            .equal(delegateTask.getAccountId())
+                                            .field("status")
+                                            .equal(DelegateTask.Status.QUEUED)
+                                            .field("delegateId")
+                                            .doesNotExist()
+                                            .field(ID_KEY)
+                                            .equal(delegateTask.getUuid());
+      wingsPersistence.update(updateQuery, updateOperations);
     } else {
-      logger.info("Task {} is still being validated");
+      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
     }
-    return null;
-  }
-
-  private void addToValidationCache(String delegateId, String taskId) {
-    Cache<String, Set> delegateValidationCache =
-        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
-    Set<String> validatingDelegates = delegateValidationCache.get("validating-" + taskId);
-    if (validatingDelegates == null) {
-      validatingDelegates = new HashSet<>();
-    }
-    validatingDelegates.add(delegateId);
-    delegateValidationCache.put("validating-" + taskId, validatingDelegates);
-  }
-
-  private void markCompleteInValidationCache(String delegateId, String taskId) {
-    Cache<String, Set> delegateValidationCache =
-        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
-    Set<String> completeDelegates = delegateValidationCache.get("complete-" + taskId);
-    if (completeDelegates == null) {
-      completeDelegates = new HashSet<>();
-    }
-    completeDelegates.add(delegateId);
-    delegateValidationCache.put("complete-" + taskId, completeDelegates);
-  }
-
-  private boolean isValidationComplete(String taskId) {
-    Cache<String, Set> delegateValidationCache =
-        cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class);
-    Set<String> validatingDelegates = delegateValidationCache.get("validating-" + taskId);
-    Set<String> completeDelegates = delegateValidationCache.get("complete-" + taskId);
-    return validatingDelegates != null && completeDelegates != null
-        && completeDelegates.containsAll(validatingDelegates);
-  }
-
-  private void clearFromValidationCache(String taskId) {
-    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove("validating-" + taskId);
-    cacheHelper.getCache(DELEGATE_VALIDATION_CACHE, String.class, Set.class).remove("complete-" + taskId);
   }
 
   private DelegateTask getUnassignedDelegateTask(String accountId, String taskId) {
@@ -675,7 +697,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning.
-    clearFromValidationCache(taskId);
+    clearFromValidationCache(delegateTask);
 
     logger.info(
         "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");

@@ -90,11 +90,9 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    */
   void triggerExecutionPostPipelineCompletionAsync(String appId, String pipelineId);
 
-  /**
-   * Trigger scheduled stream action.
-   *
-   * @param appId     the app id
-   * @param triggerId the trigger id
+  /***
+   * Trigger
+   * @param trigger
    */
   void triggerScheduledExecutionAsync(Trigger trigger);
 

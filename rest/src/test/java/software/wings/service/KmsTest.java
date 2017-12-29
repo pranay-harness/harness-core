@@ -2697,7 +2697,7 @@ public class KmsTest extends WingsBaseTest {
     }
   }
 
-  private KmsConfig getKmsConfig() {
+  public static KmsConfig getKmsConfig() {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
     kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
