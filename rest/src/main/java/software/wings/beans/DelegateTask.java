@@ -14,10 +14,10 @@ import software.wings.beans.DelegateTask.Converter;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -38,7 +38,9 @@ public class DelegateTask extends Base {
   private boolean async = true;
   private String envId;
   private String infrastructureMappingId;
-  private List<String> blacklistedDelegateIds = new ArrayList<>();
+  private Set<String> blacklistedDelegateIds = new HashSet<>();
+  private Set<String> validatingDelegateIds = new HashSet<>();
+  private Set<String> validationCompleteDelegateIds = new HashSet<>();
 
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
@@ -265,12 +267,28 @@ public class DelegateTask extends Base {
     this.async = async;
   }
 
-  public List<String> getBlacklistedDelegateIds() {
+  public Set<String> getBlacklistedDelegateIds() {
     return blacklistedDelegateIds;
   }
 
-  public void setBlacklistedDelegateIds(List<String> blacklistedDelegateIds) {
+  public void setBlacklistedDelegateIds(Set<String> blacklistedDelegateIds) {
     this.blacklistedDelegateIds = blacklistedDelegateIds;
+  }
+
+  public Set<String> getValidatingDelegateIds() {
+    return validatingDelegateIds;
+  }
+
+  public void setValidatingDelegateIds(Set<String> validatingDelegateIds) {
+    this.validatingDelegateIds = validatingDelegateIds;
+  }
+
+  public Set<String> getValidationCompleteDelegateIds() {
+    return validationCompleteDelegateIds;
+  }
+
+  public void setValidationCompleteDelegateIds(Set<String> validationCompleteDelegateIds) {
+    this.validationCompleteDelegateIds = validationCompleteDelegateIds;
   }
 
   @Override
