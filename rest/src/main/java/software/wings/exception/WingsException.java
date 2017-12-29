@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 /**
  * The generic exception class for the Wings Application.
@@ -144,6 +145,16 @@ public class WingsException extends WingsApiException {
   /**
    * Instantiates a new wings exception.
    *
+   * @param message     the message
+   */
+  public WingsException(@NotNull ResponseMessage responseMessage) {
+    super(responseMessage.getMessage() == null ? responseMessage.getCode().name() : responseMessage.getMessage(), null);
+    responseMessageList.add(responseMessage);
+  }
+
+  /**
+   * Instantiates a new wings exception.
+   *
    * @param messageList the message list
    * @param message     the message
    * @param cause       the cause
@@ -169,8 +180,9 @@ public class WingsException extends WingsApiException {
    * @param key   the key
    * @param value the value
    */
-  public void addParam(String key, Object value) {
+  public WingsException addParam(String key, Object value) {
     params.put(key, value);
+    return this;
   }
 
   public List<ResponseMessage> processMessages() {

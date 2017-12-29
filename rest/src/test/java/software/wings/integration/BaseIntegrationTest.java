@@ -39,7 +39,6 @@ import org.assertj.core.util.Lists;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
