@@ -548,13 +548,12 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTask reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
-    // Remove delegateId from pending validation responses
-    markCompleteInValidationCache(delegateId, taskId);
-
     assignDelegateService.saveConnectionResults(results);
 
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
     if (delegateTask != null) {
+      // Remove delegateId from pending validation responses
+      markCompleteInValidationCache(delegateId, taskId);
       if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
       } else if (clock.millis() - delegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(5)) {
@@ -590,17 +589,17 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
-    // Tell delegate whether to proceed anyway because all eligible delegates failed.
-    if (isValidationComplete(taskId)) {
-      logger.info("Validation attempts are complete for task {}", taskId);
-      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
-      if (delegateTask != null) {
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    if (delegateTask != null) {
+      // Tell delegate whether to proceed anyway because all eligible delegates failed.
+      if (isValidationComplete(taskId)) {
+        logger.info("Validation attempts are complete for task {}", taskId);
         return assignTask(delegateId, taskId, delegateTask);
       } else {
-        logger.info("Task {} not found or was already assigned", taskId);
+        logger.info("Task {} is still being validated");
       }
     } else {
-      logger.info("Task {} is still being validated");
+      logger.info("Task {} not found or was already assigned", taskId);
     }
     return null;
   }
