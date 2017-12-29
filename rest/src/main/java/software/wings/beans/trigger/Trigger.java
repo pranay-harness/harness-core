@@ -17,6 +17,7 @@ import software.wings.beans.WorkflowType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -31,13 +32,14 @@ public class Trigger extends Base {
   @NotEmpty private String name;
   private String description;
   @NotNull private TriggerCondition condition;
-  @NotEmpty private String pipelineId;
+  private String pipelineId;
   private String pipelineName;
-  @JsonIgnore private String workflowId;
-  @JsonIgnore private String workflowName;
+  private String workflowId;
+  private String workflowName;
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
   @JsonIgnore @Indexed private String webHookToken;
   private WorkflowType workflowType = PIPELINE;
+  private Map<String, String> workflowVariables;
 
   public void setPipelineId(String pipelineId) {
     this.pipelineId = pipelineId;

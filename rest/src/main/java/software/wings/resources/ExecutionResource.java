@@ -79,7 +79,7 @@ public class ExecutionResource {
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("accountId") String accountId,
       @QueryParam("appId") List<String> appIds, @QueryParam("envId") String envId,
       @QueryParam("orchestrationId") String orchestrationId, @BeanParam PageRequest<WorkflowExecution> pageRequest,
-      @DefaultValue("true") @QueryParam("includeGraph") boolean includeGraph,
+      @DefaultValue("false") @QueryParam("includeGraph") boolean includeGraph,
       @QueryParam("workflowType") List<String> workflowTypes,
       @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions) {
     SearchFilter filter = new SearchFilter();
@@ -124,7 +124,7 @@ public class ExecutionResource {
       filter.setOp(Operator.EQ);
       pageRequest.addFilter(filter);
     }
-    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, true));
+    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false));
   }
 
   /**

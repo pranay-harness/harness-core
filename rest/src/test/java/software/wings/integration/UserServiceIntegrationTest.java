@@ -1,27 +1,39 @@
 package software.wings.integration;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.io.ByteStreams;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import software.wings.beans.Account;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
+import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.AccountService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;
@@ -33,6 +45,14 @@ import javax.ws.rs.core.GenericType;
  */
 public class UserServiceIntegrationTest extends BaseIntegrationTest {
   private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
+  @Inject private AccountService accountService;
+
+  @Before
+  public void setUp() throws Exception {
+    loginAdminUser();
+    deleteAllDocuments(Arrays.asList(KmsConfig.class));
+    deleteAllDocuments(Arrays.asList(EncryptedData.class));
+  }
 
   @Test
   public void testBlankEmail() throws IOException {
@@ -330,5 +350,26 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
       Assert.assertEquals(1, restResponse.getResponseMessages().size());
       Assert.assertEquals(ErrorCode.USER_ALREADY_REGISTERED, restResponse.getResponseMessages().get(0).getCode());
     }
+  }
+
+  @Test
+  public void testAccountCreationWithKms() {
+    loginAdminUser();
+    enableKmsFeatureFlag();
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(UUID.randomUUID().toString())
+                          .withCompanyName(UUID.randomUUID().toString())
+                          .build();
+
+    assertFalse(accountService.exists(account.getAccountName()));
+    assertNull(accountService.getByName(account.getCompanyName()));
+
+    WebTarget target = client.target(API_BASE + "/users/account");
+    RestResponse<Account> response = getRequestBuilderWithAuthHeader(target).post(
+        Entity.entity(account, APPLICATION_JSON), new GenericType<RestResponse<Account>>() {});
+
+    assertNotNull(response.getResource());
+    assertTrue(accountService.exists(account.getAccountName()));
+    assertNotNull(accountService.getByName(account.getCompanyName()));
   }
 }
