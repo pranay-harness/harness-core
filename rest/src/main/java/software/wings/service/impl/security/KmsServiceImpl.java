@@ -51,7 +51,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
-    if (kmsConfig == null) {
+    if (kmsConfig == null || value == null) {
       return encryptLocal(value);
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
@@ -66,7 +66,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public char[] decrypt(EncryptedData data, String accountId, KmsConfig kmsConfig) {
-    if (kmsConfig == null) {
+    if (kmsConfig == null || data.getEncryptedValue() == null) {
       return decryptLocal(data);
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
