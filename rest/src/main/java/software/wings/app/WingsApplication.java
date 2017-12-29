@@ -4,7 +4,6 @@ import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
-import static software.wings.common.Constants.DELEGATE_VALIDATION_CACHE;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.inject.AbstractModule;
@@ -181,26 +180,6 @@ public class WingsApplication extends Application<MainConfiguration> {
           @Override
           public Class<DelegateTask> getValueType() {
             return DelegateTask.class;
-          }
-
-          @Override
-          public boolean isStoreByValue() {
-            return true;
-          }
-        });
-
-    Caching.getCachingProvider().getCacheManager().createCache(
-        DELEGATE_VALIDATION_CACHE, new Configuration<String, Set>() {
-          public static final long serialVersionUID = 1l;
-
-          @Override
-          public Class<String> getKeyType() {
-            return String.class;
-          }
-
-          @Override
-          public Class<Set> getValueType() {
-            return Set.class;
           }
 
           @Override
