@@ -126,7 +126,7 @@ public class HostElement implements ContextElement {
         .withHostName(hostName)
         .withPublicDns(publicDns)
         .withInstanceId(instanceId)
-        .withEc2Instance(ec2Instance)
+        //        .withEc2Instance(ec2Instance)
         .build();
   }
 
