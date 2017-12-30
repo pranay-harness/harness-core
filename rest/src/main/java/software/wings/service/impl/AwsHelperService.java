@@ -1435,6 +1435,19 @@ public class AwsHelperService {
     return null;
   }
 
+  public void deleteLaunchConfig(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      amazonAutoScalingClient.deleteLaunchConfiguration(
+          new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(autoScalingGroupName));
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+  }
+
   public void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<AutoScalingGroup> autoScalingGroups) {
     try {
