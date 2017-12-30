@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static freemarker.template.Configuration.VERSION_2_3_23;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -81,6 +80,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -581,7 +581,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void addToValidating(String delegateId, DelegateTask delegateTask) {
     logger.info("Delegate {} to validate task {} {}", delegateId, delegateTask.getUuid(),
         delegateTask.isAsync() ? "(async)" : "(sync)");
-    Set<String> validating = Optional.ofNullable(delegateTask.getValidatingDelegateIds()).orElse(emptySet());
+    Set<String> validating = Optional.ofNullable(delegateTask.getValidatingDelegateIds()).orElse(new HashSet<>());
     validating.add(delegateId);
     delegateTask.setValidatingDelegateIds(validating);
     storeDelegateTracking(delegateTask, "validatingDelegateIds", delegateTask.getValidatingDelegateIds());
@@ -591,7 +591,7 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Delegate {} completed validating task {} {}", delegateId, delegateTask.getUuid(),
         delegateTask.isAsync() ? "(async)" : "(sync)");
     Set<String> validationComplete =
-        Optional.ofNullable(delegateTask.getValidationCompleteDelegateIds()).orElse(emptySet());
+        Optional.ofNullable(delegateTask.getValidationCompleteDelegateIds()).orElse(new HashSet<>());
     validationComplete.add(delegateId);
     delegateTask.setValidationCompleteDelegateIds(validationComplete);
     storeDelegateTracking(
@@ -601,7 +601,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void addToBlacklisted(String delegateId, DelegateTask delegateTask) {
     logger.info("Delegate {} blacklisted for task {} {}", delegateId, delegateTask.getUuid(),
         delegateTask.isAsync() ? "(async)" : "(sync)");
-    Set<String> blacklisted = Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(emptySet());
+    Set<String> blacklisted = Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new HashSet<>());
     blacklisted.add(delegateId);
     delegateTask.setBlacklistedDelegateIds(blacklisted);
     storeDelegateTracking(delegateTask, "blacklistedDelegateIds", delegateTask.getBlacklistedDelegateIds());
