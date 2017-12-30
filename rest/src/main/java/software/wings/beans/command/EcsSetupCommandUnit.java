@@ -23,7 +23,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Log;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.beans.container.PortMapping;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.EcsConvention;
@@ -85,25 +84,23 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
 
-    int portToExpose =
+    List<LoadBalancer> loadBalancers =
         ecsContainerTask.getContainerDefinitions()
             .stream()
             .flatMap(containerDefinition
-                -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(emptyList()).stream())
-            .filter(PortMapping::isLoadBalancerPort)
-            .findFirst()
-            .map(PortMapping::getContainerPort)
-            .orElse(0);
+                -> Optional.ofNullable(containerDefinition.getPortMappings())
+                       .orElse(emptyList())
+                       .stream()
+                       .map(portMapping
+                           -> new LoadBalancer()
+                                  .withLoadBalancerName(setupParams.getLoadBalancerName())
+                                  .withContainerName(containerDefinition.getName())
+                                  .withContainerPort(portMapping.getContainerPort())
+                                  .withTargetGroupArn(setupParams.getTargetGroupArn())))
+            .collect(Collectors.toList());
 
-    boolean exposePort = setupParams.isUseLoadBalancer() && portToExpose != 0;
-
-    if (exposePort) {
-      createServiceRequest
-          .withLoadBalancers(new LoadBalancer()
-                                 .withContainerName(containerName)
-                                 .withContainerPort(portToExpose)
-                                 .withTargetGroupArn(setupParams.getTargetGroupArn()))
-          .withRole(setupParams.getRoleArn());
+    if (setupParams.isUseLoadBalancer()) {
+      createServiceRequest.withLoadBalancers(loadBalancers).withRole(setupParams.getRoleArn());
     }
 
     executionLogCallback.saveExecutionLog(
@@ -119,7 +116,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), Log.LogLevel.INFO);
     executionLogCallback.saveExecutionLog("ECS Service Name: " + containerServiceName, Log.LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, Log.LogLevel.INFO);
-    if (exposePort) {
+    if (setupParams.isUseLoadBalancer()) {
       executionLogCallback.saveExecutionLog(
           "Load Balancer Name: " + setupParams.getLoadBalancerName(), Log.LogLevel.INFO);
       executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), Log.LogLevel.INFO);

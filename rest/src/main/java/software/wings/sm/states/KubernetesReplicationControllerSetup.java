@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
@@ -12,7 +14,6 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
@@ -44,7 +45,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/1/17
@@ -87,9 +87,11 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
       kubernetesContainerTask.getContainerDefinitions()
           .stream()
-          .filter(cd -> CollectionUtils.isNotEmpty(cd.getCommands()))
-          .forEach(cd
-              -> cd.setCommands(cd.getCommands().stream().map(context::renderExpression).collect(Collectors.toList())));
+          .filter(containerDefinition -> isNotEmpty(containerDefinition.getCommands()))
+          .forEach(containerDefinition
+              -> containerDefinition.setCommands(
+                  containerDefinition.getCommands().stream().map(context::renderExpression).collect(toList())));
+      kubernetesContainerTask.setAdvancedConfig(context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
       isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
     }
 
