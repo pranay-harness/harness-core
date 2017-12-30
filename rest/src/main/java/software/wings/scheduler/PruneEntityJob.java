@@ -1,7 +1,5 @@
 package software.wings.scheduler;
 
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -26,6 +24,7 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.CauseCollection;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -95,20 +94,22 @@ public class PruneEntityJob implements Job {
   public static <T> void pruneDescendingEntities(
       List<T> descendingServices, String appId, String entityId, PruneService<T> lambda) {
     List<ResponseMessage> messages = new ArrayList<>();
+    CauseCollection causeCollection = new CauseCollection();
 
     for (T descending : descendingServices) {
       try {
         lambda.prune(descending);
       } catch (WingsException e) {
         messages.addAll(e.getResponseMessageList());
-      } catch (RuntimeException e) {
-        messages.add(ResponseMessage.builder().code(UNKNOWN_ERROR).message(e.getMessage()).build());
+        causeCollection.addCause(e);
+      } catch (Throwable e) {
+        causeCollection.addCause(e);
       }
     }
 
     if (!messages.isEmpty()) {
-      throw new WingsException(
-          messages, "Fail to prune some of the entities for app: " + appId + ", entity: " + entityId, (Throwable) null);
+      throw new WingsException(messages,
+          "Fail to prune some of the entities for app: " + appId + ", entity: " + entityId, causeCollection.getCause());
     }
   }
 

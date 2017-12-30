@@ -534,16 +534,16 @@ public enum ErrorCode {
    * @return the description
    */
   public String getDescription() {
-    return description != null ? description : upperUnderscoreToSpaceSepratedCamelCase(code);
+    return description != null ? description : upperUnderscoreToSpaceSeparatedCamelCase(code);
   }
 
   /**
-   * Upper underscore to space seprated camel case string.
+   * Upper underscore to space separated camel case string.
    *
    * @param original the original
    * @return the string
    */
-  public static String upperUnderscoreToSpaceSepratedCamelCase(String original) {
+  public static String upperUnderscoreToSpaceSeparatedCamelCase(String original) {
     return Splitter.on("_").splitToList(original).stream().map(ErrorCode::capitalize).collect(Collectors.joining(" "));
   }
 

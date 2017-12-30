@@ -52,25 +52,27 @@ public class ResponseCodeCache {
 
     return ResponseMessage.builder()
         .code(inputMessage.getCode())
-        .message(getMessage(inputMessage.getCode(), params))
+        .message(prepareMessage(inputMessage.getCode(), params))
         .level(inputMessage.getLevel())
         .acuteness(inputMessage.getAcuteness())
         .build();
   }
 
-  public String getMessage(ErrorCode errorCode, Map<String, Object> params) {
+  public String prepareMessage(ErrorCode errorCode, Map<String, Object> params) {
     String message = messages.getProperty(errorCode.getCode());
     if (message == null) {
       logger.error("Response message for error code {} is not provided!", errorCode.getCode());
       message = errorCode.name();
     }
+    return prepareMessage(message, params);
+  }
 
+  private String prepareMessage(String message, Map<String, Object> params) {
     message = StrSubstitutor.replace(message, params);
     if (message.matches(".*(\\$\\$)*\\$\\{.*")) {
       logger.error(MessageFormat.format(
           "Insufficient parameter from [{0}] in message \"{1}\"", String.join(", ", params.keySet()), message));
     }
-
     return message;
   }
 }

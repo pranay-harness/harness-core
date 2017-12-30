@@ -134,7 +134,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
     resource.write(JsonUtils.asJson(ResponseMessage.builder()
                                         .code(errorCode)
                                         .level(ERROR)
-                                        .message(ResponseCodeCache.getInstance().getMessage(errorCode, null))
+                                        .message(ResponseCodeCache.getInstance().prepareMessage(errorCode, null))
                                         .build()));
     resource.close();
   }
