@@ -212,7 +212,7 @@ public class AwsAmiServiceSetup extends State {
       List<EncryptedDataDetail> encryptionDetails, String region, AwsConfig awsConfig,
       String baseAutoScalingGroupName) {
     AutoScalingGroup baseAutoScalingGroup =
-        awsHelperService.getAutoScalingGroups(awsConfig, encryptionDetails, region, baseAutoScalingGroupName);
+        awsHelperService.getAutoScalingGroup(awsConfig, encryptionDetails, region, baseAutoScalingGroupName);
     if (baseAutoScalingGroup == null) {
       logger.error("Couldn't find reference AutoScalingGroup: {}", infrastructureMapping.getAutoScalingGroupName());
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
@@ -328,6 +328,7 @@ public class AwsAmiServiceSetup extends State {
             .withDesiredCapacity(0)
             .withMinSize(baseAutoScalingGroup.getMinSize())
             .withMaxSize(baseAutoScalingGroup.getMaxSize())
+            .withTags(tags)
             .withDefaultCooldown(baseAutoScalingGroup.getDefaultCooldown())
             .withAvailabilityZones(baseAutoScalingGroup.getAvailabilityZones())
             .withTerminationPolicies(baseAutoScalingGroup.getTerminationPolicies())

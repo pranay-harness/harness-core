@@ -16,7 +16,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
-import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.Key;
@@ -230,19 +229,11 @@ public class AwsAmiServiceDeployState extends State {
       String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
       String oldAutoScalingGroupName = serviceSetupElement.getOldAutoScalingGroupName();
 
-      AutoScalingGroup newAutoScalingGroup = awsHelperService
-                                                 .describeAutoScalingGroups(awsConfig, encryptionDetails, region,
-                                                     new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
-                                                         Arrays.asList(newAutoScalingGroupName)))
-                                                 .getAutoScalingGroups()
-                                                 .get(0);
+      AutoScalingGroup newAutoScalingGroup =
+          awsHelperService.getAutoScalingGroup(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
 
-      AutoScalingGroup oldAutoScalingGroup = awsHelperService
-                                                 .describeAutoScalingGroups(awsConfig, encryptionDetails, region,
-                                                     new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
-                                                         Arrays.asList(oldAutoScalingGroupName)))
-                                                 .getAutoScalingGroups()
-                                                 .get(0);
+      AutoScalingGroup oldAutoScalingGroup =
+          awsHelperService.getAutoScalingGroup(awsConfig, encryptionDetails, region, oldAutoScalingGroupName);
 
       Integer newAutoScalingGroupDesiredCapacity = newAutoScalingGroup.getDesiredCapacity();
       Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
@@ -265,13 +256,6 @@ public class AwsAmiServiceDeployState extends State {
                             .withPreviousCount(oldAutoScalingGroupDesiredCapacity)
                             .build()));
     }
-
-    Builder logBuilder = aLog()
-                             .withAppId(activity.getAppId())
-                             .withActivityId(activity.getUuid())
-                             .withLogLevel(LogLevel.INFO)
-                             .withCommandUnitName(commandUnitList.get(0).getName())
-                             .withExecutionResult(CommandExecutionStatus.RUNNING);
 
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, activity.getUuid(),
                                  aStringNotifyResponseData().withData(activity.getUuid()).build()),
