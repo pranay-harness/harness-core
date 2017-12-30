@@ -62,7 +62,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
   private AwsConfig awsConfig = (AwsConfig) connectorConfig.getValue();
 
-  private static final int DESIRED_CAPACITY = 2;
+  private static final int DESIRED_COUNT = 2;
 
   @Before
   public void setUp() throws Exception {
@@ -92,15 +92,15 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
              new DescribeClustersRequest().withClusters(CLUSTER_NAME)))
         .thenReturn(describeClustersResult);
     ecsContainerService.provisionNodes(Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(),
-        DESIRED_CAPACITY, LAUNCHER_TEMPLATE_NAME, params);
+        DESIRED_COUNT, LAUNCHER_TEMPLATE_NAME, params);
 
     verify(awsHelperService)
         .createAutoScalingGroup(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
             new CreateAutoScalingGroupRequest()
                 .withLaunchConfigurationName(LAUNCHER_TEMPLATE_NAME)
-                .withDesiredCapacity(DESIRED_CAPACITY)
-                .withMaxSize(2 * DESIRED_CAPACITY)
-                .withMinSize(DESIRED_CAPACITY / 2)
+                .withDesiredCapacity(DESIRED_COUNT)
+                .withMaxSize(2 * DESIRED_COUNT)
+                .withMinSize(DESIRED_COUNT / 2)
                 .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
                 .withAvailabilityZones(Arrays.asList("AZ1", "AZ2"))
                 .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"));
@@ -117,11 +117,9 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                                                     .withCluster(CLUSTER_NAME)
                                                     .withServiceName(SERVICE_NAME)
                                                     .withTaskDefinition("TASK_TEMPLATE")
-                                                    .withDesiredCount(DESIRED_CAPACITY);
-    Service service = new Service()
-                          .withDesiredCount(DESIRED_CAPACITY)
-                          .withRunningCount(DESIRED_CAPACITY)
-                          .withServiceArn("SERVICE_ARN");
+                                                    .withDesiredCount(DESIRED_COUNT);
+    Service service =
+        new Service().withDesiredCount(DESIRED_COUNT).withRunningCount(DESIRED_COUNT).withServiceArn("SERVICE_ARN");
     when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), anyObject(), any()))
         .thenReturn(new DescribeServicesResult().withServices(Arrays.asList(service)));
 
@@ -150,17 +148,17 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   public void shouldProvisionTasks() {
     when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), any(), any()))
         .thenReturn(new DescribeServicesResult().withServices(
-            Arrays.asList(new Service().withDesiredCount(DESIRED_CAPACITY).withRunningCount(DESIRED_CAPACITY))));
+            Arrays.asList(new Service().withDesiredCount(DESIRED_COUNT).withRunningCount(DESIRED_COUNT))));
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(),
-        CLUSTER_NAME, SERVICE_NAME, DESIRED_CAPACITY, 10, new ExecutionLogCallback());
+        CLUSTER_NAME, SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback());
     verify(awsHelperService)
         .updateService(Regions.US_EAST_1.getName(), awsConfig, Collections.emptyList(),
             new UpdateServiceRequest()
                 .withCluster(CLUSTER_NAME)
                 .withService(SERVICE_NAME)
-                .withDesiredCount(DESIRED_CAPACITY));
+                .withDesiredCount(DESIRED_COUNT));
     verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(DescribeTasksRequest.class));
   }
 }

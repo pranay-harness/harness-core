@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static java.util.Collections.singletonList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
-import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
@@ -226,10 +225,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private List<ContainerServiceData> reverse(List<ContainerServiceData> serviceCounts) {
     return serviceCounts.stream()
         .map(sc
-            -> aContainerServiceData()
-                   .withName(sc.getName())
-                   .withPreviousCount(sc.getDesiredCount())
-                   .withDesiredCount(sc.getPreviousCount())
+            -> ContainerServiceData.builder()
+                   .name(sc.getName())
+                   .previousCount(sc.getDesiredCount())
+                   .desiredCount(sc.getPreviousCount())
                    .build())
         .collect(Collectors.toList());
   }
