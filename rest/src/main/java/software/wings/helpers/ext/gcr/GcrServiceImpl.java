@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.gcr;
 
+import static java.util.Collections.emptyList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.Switch.unhandled;
 
@@ -87,10 +88,13 @@ public class GcrServiceImpl implements GcrService {
   }
 
   private List<BuildDetails> processBuildResponse(GcrImageTagResponse dockerImageTagResponse) {
-    return dockerImageTagResponse.getTags()
-        .stream()
-        .map(s -> aBuildDetails().withNumber(s).build())
-        .collect(Collectors.toList());
+    if (dockerImageTagResponse != null && dockerImageTagResponse.getTags() != null) {
+      return dockerImageTagResponse.getTags()
+          .stream()
+          .map(tag -> aBuildDetails().withNumber(tag).build())
+          .collect(Collectors.toList());
+    }
+    return emptyList();
   }
 
   @Override
