@@ -1189,20 +1189,6 @@ public class AwsHelperService {
     }
   }
 
-  //  public void setAutoScalingGroupCapacity(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-  //      String region, String autoScalingGroupName, Integer desiredCount) {
-  //    try {
-  //      encryptionService.decrypt(awsConfig, encryptionDetails);
-  //      AmazonAutoScalingClient amazonAutoScalingClient =
-  //          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-  //      amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
-  //                                                     .withAutoScalingGroupName(autoScalingGroupName)
-  //                                                     .withDesiredCapacity(desiredCount));
-  //    } catch (AmazonServiceException amazonServiceException) {
-  //      handleAmazonServiceException(amazonServiceException);
-  //    }
-  //  }
-
   public AttachLoadBalancersResult attachLoadBalancerToAutoScalingGroup(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region,
       AttachLoadBalancersRequest attachLoadBalancersRequest) {
@@ -1231,17 +1217,19 @@ public class AwsHelperService {
     return new AttachLoadBalancerTargetGroupsResult();
   }
 
-  private AutoScalingGroup getAutoScalingGroup(
+  public AutoScalingGroup getAutoScalingGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    return amazonAutoScalingClient
-        .describeAutoScalingGroups(
-            new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName))
-        .getAutoScalingGroups()
-        .iterator()
-        .next();
+    try {
+      DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
+          describeAutoScalingGroups(awsConfig, encryptionDetails, region,
+              new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName));
+      return describeAutoScalingGroupsResult.getAutoScalingGroups().size() != 0
+          ? describeAutoScalingGroupsResult.getAutoScalingGroups().get(0)
+          : null;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
   }
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
