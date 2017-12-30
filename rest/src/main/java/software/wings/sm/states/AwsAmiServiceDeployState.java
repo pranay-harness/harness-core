@@ -412,6 +412,8 @@ public class AwsAmiServiceDeployState extends State {
 
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
 
+    executionLogCallback.saveExecutionLog("Successfully completed resize operation", CommandExecutionStatus.SUCCESS);
+
     return anExecutionResponse()
         .withStateExecutionData(awsAmiDeployStateExecutionData)
         .addContextElement(instanceElementListParam)
@@ -522,8 +524,12 @@ public class AwsAmiServiceDeployState extends State {
     }
 
     public void saveExecutionLog(String line) {
+      saveExecutionLog(line, CommandExecutionStatus.RUNNING);
+    }
+
+    public void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
       if (logService != null) {
-        Log log = logBuilder.but().withLogLine(line).build();
+        Log log = logBuilder.but().withExecutionResult(commandExecutionStatus).withLogLine(line).build();
         logService.batchedSaveCommandUnitLogs(activityId, log.getCommandUnitName(), log);
       } else {
         logger.warn("No logService injected. Couldn't save log [{}]", line);

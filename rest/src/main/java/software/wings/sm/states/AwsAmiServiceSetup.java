@@ -159,6 +159,10 @@ public class AwsAmiServiceSetup extends State {
     String errorMessage = null;
 
     try {
+      if (awsHelperService.getLaunchConfiguration(awsConfig, encryptionDetails, region, newAutoScalingGroupName)
+          != null) {
+        awsHelperService.deleteLaunchConfig(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
+      }
       awsHelperService.createLaunchConfiguration(awsConfig, encryptionDetails, region,
           createNewLaunchConfigurationRequest(
               artifact, userDataSpecification, baseLaunchConfiguration, newAutoScalingGroupName));
