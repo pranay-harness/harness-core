@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -69,6 +70,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.KubernetesContainerTask;
+import software.wings.common.VariableProcessor;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -85,6 +87,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ExpressionEvaluator;
 
 import java.util.Collections;
 
@@ -105,6 +108,8 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private EncryptionService encryptionService;
+  @Mock private VariableProcessor variableProcessor;
+  @Mock private ExpressionEvaluator evaluator;
 
   @InjectMocks
   private KubernetesReplicationControllerSetup kubernetesReplicationControllerSetup =
@@ -182,6 +187,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("artifactService", artifactService);
+    on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
 
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
@@ -209,6 +215,10 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
+    when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
+    when(evaluator.merge(any(), any(), any())).thenReturn("");
   }
 
   @Test

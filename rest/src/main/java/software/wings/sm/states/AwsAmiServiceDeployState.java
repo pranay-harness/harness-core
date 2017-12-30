@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -240,20 +239,20 @@ public class AwsAmiServiceDeployState extends State {
       Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
 
       awsAmiDeployStateExecutionData.setNewInstanceData(
-          Arrays.asList(aContainerServiceData()
-                            .withName(newAutoScalingGroupName)
-                            .withDesiredCount(newAsgFinalDesiredCount)
-                            .withPreviousCount(newAutoScalingGroupDesiredCapacity)
+          Arrays.asList(ContainerServiceData.builder()
+                            .name(newAutoScalingGroupName)
+                            .desiredCount(newAsgFinalDesiredCount)
+                            .previousCount(newAutoScalingGroupDesiredCapacity)
                             .build()));
 
       Integer oldAutoScalingGroupDesiredCapacity = oldAutoScalingGroup.getDesiredCapacity();
       Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
 
       awsAmiDeployStateExecutionData.setOldInstanceData(
-          Arrays.asList(aContainerServiceData()
-                            .withName(oldAutoScalingGroupName)
-                            .withDesiredCount(oldAsgFinalDesiredCount)
-                            .withPreviousCount(oldAutoScalingGroupDesiredCapacity)
+          Arrays.asList(ContainerServiceData.builder()
+                            .name(oldAutoScalingGroupName)
+                            .desiredCount(oldAsgFinalDesiredCount)
+                            .previousCount(oldAutoScalingGroupDesiredCapacity)
                             .build()));
     }
 

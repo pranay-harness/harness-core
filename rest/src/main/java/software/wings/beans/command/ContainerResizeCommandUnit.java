@@ -49,9 +49,9 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
     try {
       List<ContainerInfo> containerInfos = new ArrayList<>();
-      params.getDesiredCounts().forEach(dc
-          -> containerInfos.addAll(
-              executeInternal(cloudProviderSetting, cloudProviderCredentials, params, dc, executionLogCallback)));
+      params.getDesiredCounts().forEach(containerServiceData
+          -> containerInfos.addAll(executeInternal(
+              cloudProviderSetting, cloudProviderCredentials, params, containerServiceData, executionLogCallback)));
       context.setCommandExecutionData(ResizeCommandUnitExecutionData.builder().containerInfos(containerInfos).build());
       boolean allContainersSuccess =
           containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);

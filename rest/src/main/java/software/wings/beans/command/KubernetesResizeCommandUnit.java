@@ -35,7 +35,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
   @Override
   protected List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> edd,
-      ContainerResizeParams params, ContainerServiceData serviceData, ExecutionLogCallback executionLogCallback) {
+      ContainerResizeParams params, ContainerServiceData containerServiceData,
+      ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) params;
     KubernetesConfig kubernetesConfig;
     List<EncryptedDataDetail> encryptedDataDetails;
@@ -49,8 +50,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       encryptedDataDetails = emptyList();
     }
     return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-        resizeParams.getClusterName(), serviceData.getName(), serviceData.getPreviousCount(),
-        serviceData.getDesiredCount(), executionLogCallback);
+        resizeParams.getClusterName(), containerServiceData.getName(), containerServiceData.getPreviousCount(),
+        containerServiceData.getDesiredCount(), executionLogCallback);
   }
 
   @Data

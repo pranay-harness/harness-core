@@ -158,7 +158,7 @@ public class ExpressionEvaluator {
    */
   public String merge(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     if (expression == null) {
-      return expression;
+      return null;
     }
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
@@ -181,7 +181,7 @@ public class ExpressionEvaluator {
         }
       }
 
-      String evaluatedValue = variable;
+      String evaluatedValue;
       try {
         evaluatedValue = String.valueOf(evaluate(variable, context));
         if (evaluatedValue == null) {
