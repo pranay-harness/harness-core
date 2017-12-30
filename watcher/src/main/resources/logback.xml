@@ -40,7 +40,7 @@
     </appender>
 
     <logger name="software.wings" level="INFO"/>
-    <logger name="org.zeroturnaround" level="DEBUG"/>
+    <logger name="org.zeroturnaround" level="WARN"/>
 
     <root level="INFO">
         <appender-ref ref="file"/>

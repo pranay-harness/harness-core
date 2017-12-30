@@ -248,6 +248,7 @@ public class AwsCodeDeployState extends State {
               .applicationName(codeDeployParams.getApplicationName())
               .deploymentGroupName(codeDeployParams.getDeploymentGroupName())
               .deploymentConfigurationName(codeDeployParams.getDeploymentConfigurationName())
+              .region(codeDeployParams.getRegion())
               .bucket(s3Location.getBucket())
               .key(s3Location.getKey())
               .bundleType(s3Location.getBundleType())
