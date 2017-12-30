@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -56,6 +55,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -258,15 +258,15 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     CommandStateExecutionData commandStateExecutionData =
         aCommandStateExecutionData()
             .withActivityId(ACTIVITY_ID)
-            .withNewInstanceData(singletonList(aContainerServiceData()
-                                                   .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-                                                   .withPreviousCount(0)
-                                                   .withDesiredCount(1)
+            .withNewInstanceData(singletonList(ContainerServiceData.builder()
+                                                   .name(KUBERNETES_REPLICATION_CONTROLLER_NAME)
+                                                   .previousCount(0)
+                                                   .desiredCount(1)
                                                    .build()))
-            .withOldInstanceData(singletonList(aContainerServiceData()
-                                                   .withName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
-                                                   .withPreviousCount(1)
-                                                   .withDesiredCount(0)
+            .withOldInstanceData(singletonList(ContainerServiceData.builder()
+                                                   .name(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
+                                                   .previousCount(1)
+                                                   .desiredCount(0)
                                                    .build()))
             .withDownsize(false)
             .build();

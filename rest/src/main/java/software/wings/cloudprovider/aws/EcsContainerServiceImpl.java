@@ -932,37 +932,32 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   @Override
   public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, Integer desiredCount,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
+      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
     try {
-      List<Service> services = awsHelperService
-                                   .describeServices(region, awsConfig, encryptedDataDetails,
-                                       new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                                   .getServices();
-      int oldDesiredCount = services != null && services.size() > 0 ? services.get(0).getDesiredCount() : 0;
+      if (desiredCount != previousCount) {
+        UpdateServiceRequest updateServiceRequest =
+            new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
+        UpdateServiceResult updateServiceResult =
+            awsHelperService.updateService(region, awsConfig, encryptedDataDetails, updateServiceRequest);
+        List<ServiceEvent> events = updateServiceResult.getService().getEvents();
 
-      UpdateServiceRequest updateServiceRequest =
-          new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
-      UpdateServiceResult updateServiceResult =
-          awsHelperService.updateService(region, awsConfig, encryptedDataDetails, updateServiceRequest);
-      List<ServiceEvent> events = updateServiceResult.getService().getEvents();
+        String latestExcludedEventId = null;
+        if (events.size() > 0) {
+          latestExcludedEventId = events.get(0).getId();
+        }
 
-      String latestExcludedEventId = null;
-      if (events.size() > 0) {
-        latestExcludedEventId = events.get(0).getId();
-      }
-
-      waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
-          serviceName, desiredCount, executionLogCallback);
-      executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
-      waitForTasksToBeInRunningStateButDontThrowException(
-          region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
-
-      if (oldDesiredCount < desiredCount) { // don't do it for downsize.
-        waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, encryptedDataDetails, clusterName,
-            serviceName, serviceSteadyStateTimeout, executionLogCallback);
+        waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
+            serviceName, desiredCount, executionLogCallback);
+        executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
+        waitForTasksToBeInRunningStateButDontThrowException(
+            region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
+        if (desiredCount > previousCount) { // don't do it for downsize.
+          waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, encryptedDataDetails, clusterName,
+              serviceName, serviceSteadyStateTimeout, executionLogCallback);
+        }
       }
 
       List<String> taskArns = awsHelperService

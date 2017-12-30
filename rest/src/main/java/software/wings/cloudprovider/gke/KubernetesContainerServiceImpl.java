@@ -175,36 +175,38 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
-      int count, ExecutionLogCallback executionLogCallback) {
+      int desiredCount, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
-                                              controllerName, clusterName, previousCount, count),
+                                              controllerName, clusterName, previousCount, desiredCount),
         Log.LogLevel.INFO);
 
-    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
-    if (controller instanceof ReplicationController) {
-      rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (controller instanceof Deployment) {
-      deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (controller instanceof ReplicaSet) {
-      replicaOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (controller instanceof StatefulSet) {
-      statefulOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(count);
-    } else if (controller instanceof DaemonSet) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
-    }
+    if (previousCount != desiredCount) {
+      HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+      if (controller instanceof ReplicationController) {
+        rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+      } else if (controller instanceof Deployment) {
+        deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+      } else if (controller instanceof ReplicaSet) {
+        replicaOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+      } else if (controller instanceof StatefulSet) {
+        statefulOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+      } else if (controller instanceof DaemonSet) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
+      }
 
-    logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
-        previousCount, count);
+      logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
+          previousCount, desiredCount);
+    }
     return getContainerInfosWhenReady(
-        kubernetesConfig, encryptedDataDetails, controllerName, count, executionLogCallback);
+        kubernetesConfig, encryptedDataDetails, controllerName, desiredCount, executionLogCallback);
   }
 
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int count,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int desiredCount,
       ExecutionLogCallback executionLogCallback) {
     logger.info("Waiting for pods to be ready...");
-    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, count);
+    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, desiredCount);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     for (Pod pod : pods) {

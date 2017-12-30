@@ -16,11 +16,7 @@ import java.util.List;
 public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   @Override
   public Yaml toYaml(PortMapping portMapping, String appId) {
-    return Yaml.builder()
-        .containerPort(portMapping.getContainerPort())
-        .hostPort(portMapping.getHostPort())
-        .loadBalancerPort(portMapping.isLoadBalancerPort())
-        .build();
+    return Yaml.builder().containerPort(portMapping.getContainerPort()).hostPort(portMapping.getHostPort()).build();
   }
 
   @Override
@@ -29,14 +25,10 @@ public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
     return toBean(changeContext);
   }
 
-  private PortMapping toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private PortMapping toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
 
-    return PortMapping.builder()
-        .containerPort(yaml.getContainerPort())
-        .hostPort(yaml.getHostPort())
-        .loadBalancerPort(yaml.isLoadBalancerPort())
-        .build();
+    return PortMapping.builder().containerPort(yaml.getContainerPort()).hostPort(yaml.getHostPort()).build();
   }
 
   @Override

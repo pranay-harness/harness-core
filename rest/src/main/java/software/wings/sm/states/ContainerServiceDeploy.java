@@ -2,8 +2,8 @@ package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
@@ -175,17 +175,17 @@ public abstract class ContainerServiceDeploy extends State {
     int previousCount = previousDesiredCount.get();
     int desiredCount = getNewInstancesDesiredCount(contextData);
 
-    if (desiredCount <= previousCount) {
-      String msg = "Desired instance count must be greater than the current instance count: {current: " + previousCount
-          + ", desired: " + desiredCount + "}";
+    if (desiredCount < previousCount) {
+      String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
+          + previousCount + ", desired: " + desiredCount + "}";
       logger.error(msg);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
     }
 
-    return aContainerServiceData()
-        .withName(contextData.containerElement.getName())
-        .withPreviousCount(previousCount)
-        .withDesiredCount(desiredCount)
+    return ContainerServiceData.builder()
+        .name(contextData.containerElement.getName())
+        .previousCount(previousCount)
+        .desiredCount(desiredCount)
         .build();
   }
 
@@ -234,10 +234,10 @@ public abstract class ContainerServiceDeploy extends State {
       int previousCount = previousCounts.get(serviceName);
       int desiredCount = Math.max(previousCount - downsizeCount, 0);
       if (previousCount != desiredCount) {
-        desiredCounts.add(aContainerServiceData()
-                              .withName(serviceName)
-                              .withPreviousCount(previousCount)
-                              .withDesiredCount(desiredCount)
+        desiredCounts.add(ContainerServiceData.builder()
+                              .name(serviceName)
+                              .previousCount(previousCount)
+                              .desiredCount(desiredCount)
                               .build());
       }
       downsizeCount -= previousCount - desiredCount;
@@ -247,7 +247,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   private ExecutionResponse addNewInstances(ContextData contextData, CommandStateExecutionData executionData) {
     List<ContainerServiceData> desiredCounts = executionData.getNewInstanceData();
-    if (desiredCounts == null || desiredCounts.isEmpty()) {
+    if (isEmpty(desiredCounts)) {
       // No instances to add; continue execution. This happens on rollback of a first deployment.
       return handleNewInstancesAdded(contextData, executionData);
     }
@@ -258,7 +258,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   private ExecutionResponse downsizeOldInstances(ContextData contextData, CommandStateExecutionData executionData) {
     List<ContainerServiceData> desiredCounts = executionData.getOldInstanceData();
-    if (desiredCounts == null || desiredCounts.isEmpty()) {
+    if (isEmpty(desiredCounts)) {
       // No instances to downsize; continue execution. This happens on a first deployment.
       return handleOldInstancesDownsized(contextData, executionData);
     }

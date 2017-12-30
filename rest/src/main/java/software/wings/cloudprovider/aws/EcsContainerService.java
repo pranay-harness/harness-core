@@ -37,8 +37,8 @@ public interface EcsContainerService {
    * Provision tasks.
    */
   List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, Integer desiredCount,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
+      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
   /**
    * Create service.

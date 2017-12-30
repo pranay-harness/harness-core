@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -20,6 +22,7 @@ import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -57,6 +60,17 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     String taskFamily = isNotEmpty(ecsServiceName)
         ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
         : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
+
+    if (containerTask != null) {
+      EcsContainerTask ecsContainerTask = (EcsContainerTask) containerTask;
+      ecsContainerTask.getContainerDefinitions()
+          .stream()
+          .filter(containerDefinition -> isNotEmpty(containerDefinition.getCommands()))
+          .forEach(containerDefinition
+              -> containerDefinition.setCommands(
+                  containerDefinition.getCommands().stream().map(context::renderExpression).collect(toList())));
+      ecsContainerTask.setAdvancedConfig(context.renderExpression(ecsContainerTask.getAdvancedConfig()));
+    }
 
     return anEcsSetupParams()
         .withAppName(app.getName())

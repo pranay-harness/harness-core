@@ -29,12 +29,12 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
 
   @Override
   protected List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params, ContainerServiceData serviceData,
-      ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params,
+      ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = (EcsResizeParams) params;
     return awsClusterService.resizeCluster(resizeParams.getRegion(), cloudProviderSetting, encryptedDataDetails,
-        resizeParams.getClusterName(), serviceData.getName(), serviceData.getPreviousCount(),
-        serviceData.getDesiredCount(), resizeParams.getEcsServiceSteadyStateTimeout(), executionLogCallback);
+        resizeParams.getClusterName(), containerServiceData.getName(), containerServiceData.getPreviousCount(),
+        containerServiceData.getDesiredCount(), resizeParams.getEcsServiceSteadyStateTimeout(), executionLogCallback);
   }
 
   @Data
