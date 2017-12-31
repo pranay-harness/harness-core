@@ -3,9 +3,13 @@ package software.wings.exception;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import software.wings.BasicTest;
+import software.wings.category.FastUnitTests;
 
-public class CauseCollectionTest {
+public class CauseCollectionTest extends BasicTest {
   @Test
+  @Category(FastUnitTests.class)
   public void collectCauseCollection() {
     final CauseCollection collection = new CauseCollection()
                                            .addCause(new Exception("first"))
@@ -25,6 +29,7 @@ public class CauseCollectionTest {
     }
   }
 
+  @Category(FastUnitTests.class)
   @Test
   public void causeCollectionLimit() {
     CauseCollection collection = new CauseCollection().addCause(new Exception(new Exception()));
@@ -42,6 +47,7 @@ public class CauseCollectionTest {
     assertThat(count).isEqualTo(50);
   }
 
+  @Category(FastUnitTests.class)
   @Test
   public void causeCollectionDeduplication() {
     final Exception exception = new Exception(new Exception(new Exception()));
