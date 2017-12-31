@@ -20,6 +20,9 @@ com.amazonaws.services.ec2.model.InstanceState, 1013
 com.amazonaws.services.ec2.model.Tag, 1014
 com.amazonaws.AbortedException, 1015
 com.amazonaws.services.ec2.model.StateReason, 1016
+com.amazonaws.SdkClientException, 1017
+
+io.fabric8.kubernetes.client.KubernetesClientException, 2000
 
 software.wings.sm.ExecutionInterruptType, 4000
 software.wings.sm.StateType, 4001
@@ -29,6 +32,8 @@ software.wings.sm.ContextElementType, 4004
 software.wings.beans.ErrorStrategy, 4005
 software.wings.sm.states.ForkState$ForkStateExecutionData, 4006
 software.wings.api.ForkElement, 4007
+software.wings.beans.CountsByStatuses, 4008
+software.wings.sm.ExecutionInterrupt, 4009
 
 software.wings.beans.Base, 5001
 software.wings.beans.DelegateScripts, 5002
@@ -242,3 +247,5 @@ software.wings.beans.yaml.Change$ChangeType, 5212
 software.wings.waitnotify.ErrorNotifyResponseData, 5213
 software.wings.beans.VaultConfig, 5214
 software.wings.beans.yaml.GitPushResult$RefUpdate, 5215
+software.wings.service.impl.analysis.ElkConnector, 5216
+software.wings.service.impl.elk.ElkIndexTemplate, 5217

@@ -139,6 +139,8 @@ public class KryoUtils {
             kryo.register(CGLibProxySerializer.CGLibProxyMarker.class, new CGLibProxySerializer(), 63);
             kryo.register(java.lang.RuntimeException.class, 64);
             kryo.register(java.lang.NullPointerException.class, 65);
+            kryo.register(java.lang.IllegalStateException.class, 66);
+            kryo.register(java.io.IOException.class, 67);
 
             // External Serializers
             UnmodifiableCollectionsSerializer.registerSerializers(kryo);
