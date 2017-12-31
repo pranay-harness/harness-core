@@ -350,6 +350,11 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void startDelegateProcess(List<String> oldDelegateProcesses, String scriptName, String watcherProcess) {
+    if (!new File("delegate.sh").exists()) {
+      working.set(false);
+      return;
+    }
+
     executorService.submit(() -> {
       StartedProcess newDelegate = null;
       try {
