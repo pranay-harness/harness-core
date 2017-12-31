@@ -29,7 +29,6 @@ public interface Jenkins {
    * Gets the child jobs for the given parent folder job. For the root level jobs, pass null.
    * @param parentFolderJobName parent folder job name. To get the root level jobs, pass null.
    * @return
-   * @throws IOException
    */
   List<JobDetails> getJobs(@Nullable String parentFolderJobName) throws IOException;
 

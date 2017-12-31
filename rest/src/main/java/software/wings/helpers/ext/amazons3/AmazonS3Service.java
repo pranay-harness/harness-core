@@ -40,8 +40,6 @@ public interface AmazonS3Service {
    * @param taskId        task id
    * @param accountId     account id
    * @return
-   * @throws IOException
-   * @throws URISyntaxException
    */
   ListNotifyResponseData downloadArtifacts(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, List<String> artifactPaths, String delegateId, String taskId, String accountId)

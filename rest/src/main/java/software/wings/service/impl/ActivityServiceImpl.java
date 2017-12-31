@@ -172,7 +172,7 @@ public class ActivityServiceImpl implements ActivityService {
     List<OwnedByActivity> services =
         ServiceClassLocator.descendingServices(this, ActivityServiceImpl.class, OwnedByActivity.class);
     PruneEntityJob.pruneDescendingEntities(
-        services, appId, activityId, (descending) -> { descending.pruneByActivity(appId, activityId); });
+        services, appId, activityId, descending -> descending.pruneByActivity(appId, activityId));
   }
 
   @Override

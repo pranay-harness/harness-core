@@ -352,7 +352,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    * To find the yaml sub type, we need to look at the type field in the yaml payload
    * @param fileContent
    * @return
-   * @throws IOException
    */
   private String getYamlSubType(String fileContent) throws IOException {
     YamlReader reader = new YamlReader(fileContent);
