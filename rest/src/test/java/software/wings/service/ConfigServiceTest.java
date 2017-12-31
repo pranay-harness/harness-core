@@ -107,7 +107,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setFileName(FILE_NAME);
     PageResponse<ConfigFile> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(configFile));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
 
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
@@ -309,7 +309,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setFileName(FILE_NAME);
     PageResponse<ConfigFile> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(configFile));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
 
     PageRequest<ConfigFile> pageRequest =
         aPageRequest()
@@ -347,7 +347,7 @@ public class ConfigServiceTest extends WingsBaseTest {
 
     PageResponse<ConfigFile> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(configFile));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
 
     PageRequest<ConfigFile> pageRequest =
         aPageRequest()

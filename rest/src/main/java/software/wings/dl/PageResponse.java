@@ -35,7 +35,7 @@ import javax.ws.rs.core.UriInfo;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PageResponse<T> extends PageRequest<T> implements List<T> {
   private List<T> response = Lists.newArrayList();
-  private long total;
+  private Long total;
 
   /**
    * Instantiates a new page response.
@@ -74,7 +74,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
    *
    * @return the total
    */
-  public long getTotal() {
+  public Long getTotal() {
     return total;
   }
 
@@ -83,7 +83,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
    *
    * @param total the total
    */
-  public void setTotal(long total) {
+  public void setTotal(Long total) {
     this.total = total;
   }
 

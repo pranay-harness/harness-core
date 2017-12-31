@@ -82,7 +82,7 @@ public class ServiceVariableResourceTest {
   public void shouldListVariables() throws Exception {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     when(VARIABLE_SERVICE.list(any(PageRequest.class), anyBoolean())).thenReturn(pageResponse);
     RestResponse<PageResponse<ServiceVariable>> restResponse =
         RESOURCES.client()

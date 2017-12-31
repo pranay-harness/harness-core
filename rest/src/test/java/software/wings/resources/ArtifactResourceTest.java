@@ -101,7 +101,7 @@ public class ArtifactResourceTest {
     when(ARTIFACT_SERVICE.download(APP_ID, ARTIFACT_ID)).thenReturn(tempFile);
     PageResponse<Artifact> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(ACTUAL));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     when(ARTIFACT_SERVICE.list(any(PageRequest.class), eq(true))).thenReturn(pageResponse);
   }
 

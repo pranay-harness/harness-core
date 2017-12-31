@@ -56,7 +56,7 @@ public class HostResourceTest extends WingsBaseTest {
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(host));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     when(RESOURCE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
     RestResponse<PageResponse<Host>> restResponse = RESOURCES.client()
                                                         .target(format("/hosts?appId=%s&envId=%s", APP_ID, ENV_ID))

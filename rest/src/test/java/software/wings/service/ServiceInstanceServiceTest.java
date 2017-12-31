@@ -105,7 +105,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   public void shouldListServiceInstances() {
     PageResponse<ServiceInstance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(builder.build()));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")

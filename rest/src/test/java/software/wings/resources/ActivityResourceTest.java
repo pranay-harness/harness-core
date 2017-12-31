@@ -104,12 +104,12 @@ public class ActivityResourceTest {
     reset(ACTIVITY_SERVICE, LOG_SERVICE);
     PageResponse<Activity> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(ACTUAL_ACTIVITY));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     when(ACTIVITY_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
     when(ACTIVITY_SERVICE.get(anyString(), anyString())).thenReturn(ACTUAL_ACTIVITY);
     PageResponse<Log> logPageResponse = new PageResponse<>();
     logPageResponse.setResponse(Lists.newArrayList(ACTUAL_LOG));
-    logPageResponse.setTotal(1);
+    logPageResponse.setTotal(1l);
     when(LOG_SERVICE.list(anyString(), anyString(), anyString(), any(PageRequest.class))).thenReturn(logPageResponse);
   }
 

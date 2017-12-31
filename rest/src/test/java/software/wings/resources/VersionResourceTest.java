@@ -38,7 +38,7 @@ public class VersionResourceTest {
   public void shouldListVersions() throws Exception {
     PageResponse<EntityVersion> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(anEntityVersion().build()));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     when(ENTITY_VERSION_SERVICE.listEntityVersions(any(PageRequest.class))).thenReturn(pageResponse);
     RestResponse<PageResponse<EntityVersion>> restResponse =
         RESOURCES.client()

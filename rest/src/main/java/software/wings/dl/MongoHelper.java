@@ -58,18 +58,23 @@ public class MongoHelper {
     MappedClass mappedClass = mapper.addMappedClass(cls);
     q = MongoHelper.applyPageRequest(q, req, mappedClass, mapper);
 
-    long total = q.countAll();
-    q.offset(req.getStart());
-    if (PageRequest.UNLIMITED.equals(req.getLimit())) {
-      q.limit(PageRequest.DEFAULT_UNLIMITED);
-    } else {
-      q.limit(req.getPageSize());
-    }
-    List<T> list = q.asList();
-
     PageResponse<T> response = new PageResponse<>(req);
-    response.setTotal(total);
-    response.setResponse(list);
+
+    if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
+      long total = q.countAll();
+      response.setTotal(total);
+    }
+
+    if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.LIST)) {
+      q.offset(req.getStart());
+      if (PageRequest.UNLIMITED.equals(req.getLimit())) {
+        q.limit(PageRequest.DEFAULT_UNLIMITED);
+      } else {
+        q.limit(req.getPageSize());
+      }
+      List<T> list = q.asList();
+      response.setResponse(list);
+    }
 
     return response;
   }

@@ -72,6 +72,7 @@ public class PageRequest<T> {
 
   @JsonIgnore private ReadPref readPref;
 
+  @JsonIgnore private List<Option> options;
   /**
    * Instantiates a new page request.
    */
@@ -244,6 +245,14 @@ public class PageRequest<T> {
 
   public void setReadPref(ReadPref readPref) {
     this.readPref = readPref;
+  }
+
+  public List<Option> getOptions() {
+    return options;
+  }
+
+  public void setOptions(List<Option> options) {
+    this.options = options;
   }
 
   /**
@@ -449,6 +458,7 @@ public class PageRequest<T> {
         .toString();
   }
 
+  public enum Option { COUNT, LIST }
   /**
    * The enum Page request type.
    */
