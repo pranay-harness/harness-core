@@ -395,7 +395,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     String key = config.getExecutionId() + "~" + config.getHost().trim();
     logger.info("Fetch session for executionId : {}, hostName: {} ", config.getExecutionId(), config.getHost());
 
-    Session cahcedSession = sessions.computeIfAbsent(key, s -> {
+    Session cachedSession = sessions.computeIfAbsent(key, s -> {
       logger.info("No session found. Create new session for executionId : {}, hostName: {}", config.getExecutionId(),
           config.getHost());
       return getSession(this.config);
@@ -404,16 +404,16 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     // Unnecessary but required test before session reuse.
     // test channel. http://stackoverflow.com/questions/16127200/jsch-how-to-keep-the-session-alive-and-up
     try {
-      ChannelExec testChannel = (ChannelExec) cahcedSession.openChannel("exec");
+      ChannelExec testChannel = (ChannelExec) cachedSession.openChannel("exec");
       testChannel.setCommand("true");
       testChannel.connect();
       testChannel.disconnect();
       logger.info("Session connection test successful");
     } catch (Throwable throwable) {
       logger.error("Session connection test failed. Reopen new session", throwable);
-      cahcedSession = sessions.merge(key, cahcedSession, (session1, session2) -> getSession(this.config));
+      cachedSession = sessions.merge(key, cachedSession, (session1, session2) -> getSession(this.config));
     }
-    return cahcedSession;
+    return cachedSession;
   }
 
   private CommandExecutionStatus scpOneFile(String remoteFilePath, FileProvider fileProvider) {
