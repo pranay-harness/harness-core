@@ -483,6 +483,86 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   /**
+   * Should query Count only
+   */
+  @Test
+  public void shouldQueryCountOnly() {
+    createEntitiesForPagination();
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    req.setLimit("2");
+    req.setOffset("1");
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldValues("fieldA1");
+    filter.setFieldName("fieldA");
+    filter.setOp(Operator.CONTAINS);
+    req.addFilter(filter);
+
+    SortOrder order = new SortOrder();
+    order.setFieldName("fieldA");
+    order.setOrderType(OrderType.DESC);
+    req.addOrder(order);
+
+    req.setOptions(asList(PageRequest.Option.COUNT));
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    assertThat(res).isNotNull();
+    assertThat(res.getTotal()).isNotNull().isEqualTo(5);
+    assertThat(res.getResponse()).isNullOrEmpty();
+  }
+
+  /**
+   * Should query Count only
+   */
+  @Test
+  public void shouldQueryListOnly() {
+    createEntitiesForPagination();
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldValues("fieldA1");
+    filter.setFieldName("fieldA");
+    filter.setOp(Operator.CONTAINS);
+    req.addFilter(filter);
+
+    SortOrder order = new SortOrder();
+    order.setFieldName("fieldA");
+    order.setOrderType(OrderType.DESC);
+    req.addOrder(order);
+
+    req.setOptions(asList(PageRequest.Option.LIST));
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    assertThat(res).isNotNull();
+    assertThat(res.getTotal()).isNull();
+    assertThat(res.getResponse()).isNotNull().hasSize(5);
+  }
+
+  /**
+   * Should query Count only
+   */
+  @Test
+  public void shouldQueryCountAndList() {
+    createEntitiesForPagination();
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldValues("fieldA1");
+    filter.setFieldName("fieldA");
+    filter.setOp(Operator.CONTAINS);
+    req.addFilter(filter);
+
+    SortOrder order = new SortOrder();
+    order.setFieldName("fieldA");
+    order.setOrderType(OrderType.DESC);
+    req.addOrder(order);
+
+    req.setOptions(asList(PageRequest.Option.LIST, PageRequest.Option.COUNT));
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    assertThat(res).isNotNull();
+    assertThat(res.getTotal()).isNotNull().isEqualTo(5);
+    assertThat(res.getResponse()).isNotNull().hasSize(5);
+  }
+
+  /**
    * Should save referenced object.
    */
   @Test

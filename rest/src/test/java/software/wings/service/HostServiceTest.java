@@ -114,7 +114,7 @@ public class HostServiceTest extends WingsBaseTest {
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(hostBuilder.but().build()));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")

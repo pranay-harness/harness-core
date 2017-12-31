@@ -22,7 +22,7 @@ public class PageResponseTest extends WingsBaseTest {
   public void shouldReturnPageResponseAsAnObject() {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(Lists.newArrayList());
-    pageResponse.setTotal(100);
+    pageResponse.setTotal(100l);
     assertThatJson(jsonUtils.asJson(pageResponse))
         .isEqualTo("{\"start\":0,\"pageSize\":" + PageRequest.DEFAULT_UNLIMITED + ",\"filters\":[],"
             + "\"orders\":[],\"fieldsIncluded\":[],\"fieldsExcluded\":[],\"response\":[],"

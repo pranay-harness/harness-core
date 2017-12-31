@@ -73,7 +73,7 @@ public class DelegateResourceTest {
   public void shouldListDelegates() throws Exception {
     PageResponse<Delegate> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(aDelegate().build()));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     when(DELEGATE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
     RestResponse<PageResponse<Delegate>> restResponse =
         RESOURCES.client()

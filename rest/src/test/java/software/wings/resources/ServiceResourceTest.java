@@ -63,7 +63,7 @@ public class ServiceResourceTest {
   public void shouldListServices() {
     PageResponse<Service> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(aSERVICE));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
     when(RESOURCE_SERVICE.list(any(PageRequest.class), eq(true), eq(true))).thenReturn(pageResponse);
     RestResponse<PageResponse<Service>> restResponse =
         RESOURCES.client()

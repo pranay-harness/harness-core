@@ -115,7 +115,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   public void shouldList() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
 
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
@@ -244,7 +244,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   public void shouldGetForEntity() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
 
     PageRequest<ServiceVariable> pageRequest =
         aPageRequest()
@@ -265,7 +265,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   public void shouldDeleteByEntityId() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
 
     PageRequest<ServiceVariable> pageRequest =
         aPageRequest()
@@ -288,7 +288,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   public void shouldMaskEncryptedFields() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(ENCRYPTED_SERVICE_VARIABLE));
-    pageResponse.setTotal(1);
+    pageResponse.setTotal(1l);
 
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
