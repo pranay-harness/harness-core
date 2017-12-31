@@ -1,9 +1,9 @@
 package software.wings.utils.message;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.message.MessageServiceImpl.IN;
@@ -89,10 +89,10 @@ public class MessageServiceTest {
     Message message = messageService.readMessage(1000L);
 
     assertThat(message.getFromProcess()).isEqualTo(otherProcessId);
-    assertThat(message.getFromType()).is(OTHER_MESSENGER_TYPE);
+    assertThat(message.getFromType()).isEqualTo(OTHER_MESSENGER_TYPE);
     assertThat(message.getTimestamp()).isEqualTo(100L);
     assertThat(message.getMessage()).isEqualTo("message-text");
-    assertThat(message.getParams()).containsSequence(asList("p1", "p2"));
+    assertThat(message.getParams()).containsSequence("p1", "p2");
   }
 
   @Test
@@ -120,10 +120,10 @@ public class MessageServiceTest {
     Message message = messageService.readMessageFromChannel(OTHER_MESSENGER_TYPE, otherProcessId, 1000L);
 
     assertThat(message.getFromProcess()).isEqualTo(otherProcessId);
-    assertThat(message.getFromType()).is(OTHER_MESSENGER_TYPE);
+    assertThat(message.getFromType()).isEqualTo(OTHER_MESSENGER_TYPE);
     assertThat(message.getTimestamp()).isEqualTo(100L);
     assertThat(message.getMessage()).isEqualTo("message-text");
-    assertThat(message.getParams()).containsSequence(asList("p1", "p2"));
+    assertThat(message.getParams()).containsSequence("p1", "p2");
   }
 
   @Test

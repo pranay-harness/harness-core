@@ -50,6 +50,13 @@
         <module name="IllegalImport">
             <!-- use com.google.inject instead -->
             <property name="illegalPkgs" value="javax.inject"/>
+            <property name="illegalClasses" value="com.google.common.truth.Truth.assertThat,
+                                                   com.shazam.shazamcrest.MatcherAssert.assertThat,
+                                                   org.assertj.core.api.AssertionsForClassTypes.assertThat,
+                                                   org.assertj.core.api.AssertionsForInterfaceTypes.assertThat,
+                                                   org.assertj.core.api.Java6Assertions.assertThat,
+                                                   org.hamcrest.MatcherAssert.assertThat,
+                                                   org.junit.Assert.assertThat"/>
         </module>
 
         <!-- ERROR PREVENTION -->

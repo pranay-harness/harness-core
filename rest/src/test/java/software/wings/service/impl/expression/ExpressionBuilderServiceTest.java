@@ -1,7 +1,7 @@
 package software.wings.service.impl.expression;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
