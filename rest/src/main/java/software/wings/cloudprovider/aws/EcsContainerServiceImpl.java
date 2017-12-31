@@ -1085,7 +1085,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         int excludedEndIndex = IntStream.range(0, events.size())
                                    .filter(idx -> events.get(idx).getId().equals(excludedEventId[0]))
                                    .findFirst()
-                                   .orElse(0);
+                                   .orElse(events.size());
 
         for (int i = excludedEndIndex - 1; i >= 0; i--) {
           executionLogCallback.saveExecutionLog("EVENT: " + events.get(i).getMessage(), LogLevel.INFO);
