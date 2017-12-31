@@ -488,8 +488,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraMappingId) {
     List<OwnedByInfrastructureMapping> services = ServiceClassLocator.descendingServices(
         this, InfrastructureMappingServiceImpl.class, OwnedByInfrastructureMapping.class);
-    PruneEntityJob.pruneDescendingEntities(services, appId, infraMappingId,
-        (descending) -> { descending.pruneByInfrastructureMapping(appId, infraMappingId); });
+    PruneEntityJob.pruneDescendingEntities(
+        services, appId, infraMappingId, descending -> descending.pruneByInfrastructureMapping(appId, infraMappingId));
   }
 
   private void ensureInfraMappingSafeToDelete(InfrastructureMapping infrastructureMapping) {

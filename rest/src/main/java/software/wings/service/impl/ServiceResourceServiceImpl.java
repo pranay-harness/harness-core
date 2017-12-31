@@ -476,7 +476,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
     PruneEntityJob.pruneDescendingEntities(
-        services, appId, serviceId, (descending) -> { descending.pruneByService(appId, serviceId); });
+        services, appId, serviceId, descending -> descending.pruneByService(appId, serviceId));
   }
 
   private void ensureServiceSafeToDelete(Service service) {

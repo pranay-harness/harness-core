@@ -254,7 +254,7 @@ public class PipelineServiceImpl implements PipelineService {
     List<OwnedByPipeline> services =
         ServiceClassLocator.descendingServices(this, PipelineServiceImpl.class, OwnedByPipeline.class);
     PruneEntityJob.pruneDescendingEntities(
-        services, appId, pipelineId, (descending) -> { descending.pruneByPipeline(appId, pipelineId); });
+        services, appId, pipelineId, descending -> descending.pruneByPipeline(appId, pipelineId));
   }
 
   @Override
