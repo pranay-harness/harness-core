@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Splitter;
@@ -23,7 +24,6 @@ import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AuthService;
@@ -131,7 +131,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       default:
         unhandled(transport);
     }
-    resource.write(JsonUtils.asJson(ResponseMessage.builder()
+    resource.write(JsonUtils.asJson(aResponseMessage()
                                         .code(errorCode)
                                         .level(ERROR)
                                         .message(ResponseCodeCache.getInstance().prepareMessage(errorCode, null))

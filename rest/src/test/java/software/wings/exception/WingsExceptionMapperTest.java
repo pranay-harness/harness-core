@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -64,8 +65,7 @@ public class WingsExceptionMapperTest extends BasicTest {
   @Test
   @Category(FastUnitTests.class)
   public void overrideMessage() {
-    final ResponseMessage message =
-        ResponseMessage.builder().code(DEFAULT_ERROR_CODE).message("Override message").build();
+    final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).message("Override message").build();
 
     final WingsException exception = new WingsException(Arrays.asList(message), "Dummy message", (Throwable) null);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
@@ -85,7 +85,7 @@ public class WingsExceptionMapperTest extends BasicTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotLogHarmless() {
-    final ResponseMessage message = ResponseMessage.builder().code(DEFAULT_ERROR_CODE).acuteness(HARMLESS).build();
+    final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).acuteness(HARMLESS).build();
 
     final WingsException exception = new WingsException(Arrays.asList(message), "Dummy message", (Throwable) null);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();

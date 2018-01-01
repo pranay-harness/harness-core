@@ -40,6 +40,7 @@ import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
@@ -114,7 +115,6 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -1194,14 +1194,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       String message = String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
           pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames));
-      throw new WingsException(ResponseMessage.builder().code(INVALID_REQUEST).acuteness(HARMLESS).build())
+      throw new WingsException(aResponseMessage().code(INVALID_REQUEST).acuteness(HARMLESS).build())
           .addParam("message", message);
     }
 
     if (workflowExecutionService.workflowExecutionsRunning(
             workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
-      throw new WingsException(
-          ResponseMessage.builder().code(WORKFLOW_EXECUTION_IN_PROGRESS).acuteness(HARMLESS).build())
+      throw new WingsException(aResponseMessage().code(WORKFLOW_EXECUTION_IN_PROGRESS).acuteness(HARMLESS).build())
           .addParam("message", String.format("Workflow: [%s] couldn't be deleted", workflow.getName()));
     }
   }

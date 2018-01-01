@@ -5,6 +5,7 @@ import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,7 +15,6 @@ import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -38,10 +38,10 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
   public Optional<User> authenticate(BasicCredentials basicCredentials) throws AuthenticationException {
     User user = wingsPersistence.createQuery(User.class).field("email").equal(basicCredentials.getUsername()).get();
     if (user == null) {
-      throw new WingsException(ResponseMessage.builder().code(USER_DOES_NOT_EXIST).acuteness(HARMLESS).build());
+      throw new WingsException(aResponseMessage().code(USER_DOES_NOT_EXIST).acuteness(HARMLESS).build());
     }
     if (!user.isEmailVerified()) {
-      throw new WingsException(ResponseMessage.builder().code(EMAIL_NOT_VERIFIED).acuteness(HARMLESS).build());
+      throw new WingsException(aResponseMessage().code(EMAIL_NOT_VERIFIED).acuteness(HARMLESS).build());
     }
     if (checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
       AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
@@ -51,6 +51,6 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
       user.setToken(authToken.getUuid());
       return Optional.of(user);
     }
-    throw new WingsException(ResponseMessage.builder().code(INVALID_CREDENTIAL).acuteness(HARMLESS).build());
+    throw new WingsException(aResponseMessage().code(INVALID_CREDENTIAL).acuteness(HARMLESS).build());
   }
 }

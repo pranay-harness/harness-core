@@ -1,5 +1,7 @@
 package software.wings.common.cache;
 
+import static software.wings.beans.ResponseMessage.aResponseMessage;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
@@ -50,7 +52,7 @@ public class ResponseCodeCache {
           MessageFormat.format("The provided response message \"{0}\" will be overridden!", inputMessage.getMessage()));
     }
 
-    return ResponseMessage.builder()
+    return aResponseMessage()
         .code(inputMessage.getCode())
         .message(prepareMessage(inputMessage.getCode(), params))
         .level(inputMessage.getLevel())

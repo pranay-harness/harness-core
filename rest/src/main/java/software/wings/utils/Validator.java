@@ -3,6 +3,7 @@ package software.wings.utils;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.WARN;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.mongodb.DuplicateKeyException;
 import software.wings.beans.ErrorCode;
@@ -128,6 +129,6 @@ public class Validator {
    * @return
    */
   public static ResponseMessage prepareResponseMessage(ErrorCode errorCode, Level level, String errorMsg) {
-    return ResponseMessage.builder().code(errorCode).level(level == null ? ERROR : level).message(errorMsg).build();
+    return aResponseMessage().code(errorCode).level(level == null ? ERROR : level).message(errorMsg).build();
   }
 }

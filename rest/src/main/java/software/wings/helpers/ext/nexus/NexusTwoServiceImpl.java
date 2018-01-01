@@ -4,6 +4,7 @@ import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
@@ -94,8 +95,7 @@ public class NexusTwoServiceImpl {
               + " for repository " + repoId + " under path " + path,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(
-          ResponseMessage.builder().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build());
+      responseMessages.add(aResponseMessage().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build());
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving groupId paths success");

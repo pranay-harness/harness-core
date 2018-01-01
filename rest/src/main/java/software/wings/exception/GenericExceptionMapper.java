@@ -2,10 +2,10 @@ package software.wings.exception;
 
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.common.cache.ResponseCodeCache;
 
@@ -32,7 +32,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
     // No known exception or error code
     if (restResponse.getResponseMessages().size() == 0) {
       restResponse.getResponseMessages().add(
-          ResponseMessage.builder()
+          aResponseMessage()
               .code(DEFAULT_ERROR_CODE)
               .level(ERROR)
               .message(ResponseCodeCache.getInstance().prepareMessage(DEFAULT_ERROR_CODE, null))
