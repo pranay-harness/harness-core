@@ -306,7 +306,10 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     if (ArrayUtils.isNotEmpty(instanceIds)) {
-      pageRequest.addFilter(aSearchFilter().withField(ID_KEY, Operator.IN, instanceIds).build());
+      pageRequest.addFilter(
+          aSearchFilter()
+              .withField(ID_KEY, Operator.IN, Arrays.copyOf(instanceIds, instanceIds.length, Object[].class))
+              .build());
     } else {
       InstanceElement element = context.getContextElement(ContextElementType.INSTANCE);
       if (element != null) {
@@ -386,7 +389,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
               .build());
     }
     if (!ArrayUtils.isEmpty(names)) {
-      pageRequestBuilder.addFilter(aSearchFilter().withField("name", Operator.IN, serviceTemplateNames).build());
+      pageRequestBuilder.addFilter(
+          aSearchFilter()
+              .withField(
+                  "name", Operator.IN, Arrays.copyOf(serviceTemplateNames, serviceTemplateNames.length, Object[].class))
+              .build());
     }
     return serviceTemplateService.list(pageRequestBuilder.build(), false, false).getResponse();
   }

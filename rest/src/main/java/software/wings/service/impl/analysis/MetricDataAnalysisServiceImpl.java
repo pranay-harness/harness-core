@@ -120,7 +120,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return wingsPersistence.createQuery(NewRelicMetricNames.class)
         .field("registeredWorkflows")
         .exists()
-        .retrievedFields(false, "metrics")
+        .project("metrics", false)
         .asList();
   }
 

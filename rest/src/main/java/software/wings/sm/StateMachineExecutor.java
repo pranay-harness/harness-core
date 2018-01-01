@@ -73,6 +73,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1201,7 +1202,7 @@ public class StateMachineExecutor {
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
     StateExecutionData stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getStateName());
-    ops.add("stateExecutionDataHistory", stateExecutionData);
+    ops.addToSet("stateExecutionDataHistory", stateExecutionData);
     stateExecutionInstance.getStateExecutionDataHistory().add(stateExecutionData);
 
     stateExecutionMap.remove(stateExecutionInstance.getStateName());
@@ -1247,7 +1248,7 @@ public class StateMachineExecutor {
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("status", Operator.IN, statuses)
+            .addFilter("status", Operator.IN, Arrays.copyOf(statuses, statuses.length, Object[].class))
             .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addFieldsIncluded("uuid", "stateType")
             .build();
