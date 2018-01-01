@@ -121,7 +121,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
-    when(updateOperations.add(any(), any())).thenReturn(updateOperations);
+    when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
     when(updateOperations.removeAll(any(), any(Service.class))).thenReturn(updateOperations);
   }
 

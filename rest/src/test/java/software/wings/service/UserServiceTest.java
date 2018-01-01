@@ -168,7 +168,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
-    when(updateOperations.add(any(), any())).thenReturn(updateOperations);
+    when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
 
@@ -379,7 +379,7 @@ public class UserServiceTest extends WingsBaseTest {
     verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(USER_ID);
-    verify(updateOperations).add("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
+    verify(updateOperations).addToSet("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
     verify(cache).remove(USER_ID);
   }
 

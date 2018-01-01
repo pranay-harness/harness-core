@@ -96,7 +96,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     when(end.notEqual(any())).thenReturn(query);
     when(end.equal(any())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(ArtifactStream.class)).thenReturn(updateOperations);
-    when(updateOperations.add(any(), any())).thenReturn(updateOperations);
+    when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
     when(updateOperations.removeAll(any(String.class), any(ArtifactStreamAction.class))).thenReturn(updateOperations);
     when(appService.get(TARGET_APP_ID))
         .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());

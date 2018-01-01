@@ -668,7 +668,7 @@ public class UserServiceImpl implements UserService {
     ensureUserExists(userId);
     Role role = ensureRolePresent(roleId);
 
-    UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
+    UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).addToSet("roles", role);
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
     wingsPersistence.update(updateQuery, updateOp);
     evictUserFromCache(userId);
