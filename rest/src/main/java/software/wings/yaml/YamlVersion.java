@@ -104,8 +104,9 @@ public class YamlVersion extends Base implements YamlHistory {
 
   @Override
   public boolean equals(Object o) {
-    if (o == this)
+    if (o == this) {
       return true;
+    }
     if (!(o instanceof YamlVersion)) {
       return false;
     }

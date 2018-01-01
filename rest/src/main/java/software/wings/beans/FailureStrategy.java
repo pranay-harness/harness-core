@@ -159,23 +159,30 @@ public class FailureStrategy {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
 
     FailureStrategy that = (FailureStrategy) o;
 
-    if (retryCount != that.retryCount)
+    if (retryCount != that.retryCount) {
       return false;
-    if (failureTypes != null ? !failureTypes.equals(that.failureTypes) : that.failureTypes != null)
+    }
+    if (failureTypes != null ? !failureTypes.equals(that.failureTypes) : that.failureTypes != null) {
       return false;
-    if (executionScope != that.executionScope)
+    }
+    if (executionScope != that.executionScope) {
       return false;
-    if (repairActionCode != that.repairActionCode)
+    }
+    if (repairActionCode != that.repairActionCode) {
       return false;
-    if (retryIntervals != null ? !retryIntervals.equals(that.retryIntervals) : that.retryIntervals != null)
+    }
+    if (retryIntervals != null ? !retryIntervals.equals(that.retryIntervals) : that.retryIntervals != null) {
       return false;
+    }
     return repairActionCodeAfterRetry == that.repairActionCodeAfterRetry;
   }
 

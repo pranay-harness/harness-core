@@ -362,21 +362,27 @@ public class User extends Base implements Principal {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
-    if (!super.equals(o))
+    }
+    if (!super.equals(o)) {
       return false;
+    }
 
     User user = (User) o;
 
-    if (name != null ? !name.equals(user.name) : user.name != null)
+    if (name != null ? !name.equals(user.name) : user.name != null) {
       return false;
-    if (email != null ? !email.equals(user.email) : user.email != null)
+    }
+    if (email != null ? !email.equals(user.email) : user.email != null) {
       return false;
-    if (companyName != null ? !companyName.equals(user.companyName) : user.companyName != null)
+    }
+    if (companyName != null ? !companyName.equals(user.companyName) : user.companyName != null) {
       return false;
+    }
     return accountName != null ? accountName.equals(user.accountName) : user.accountName == null;
   }
 

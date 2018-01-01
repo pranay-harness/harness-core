@@ -336,30 +336,40 @@ public class PhaseStep {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
 
     PhaseStep phaseStep = (PhaseStep) o;
 
-    if (stepsInParallel != phaseStep.stepsInParallel)
+    if (stepsInParallel != phaseStep.stepsInParallel) {
       return false;
-    if (rollback != phaseStep.rollback)
+    }
+    if (rollback != phaseStep.rollback) {
       return false;
-    if (uuid != null ? !uuid.equals(phaseStep.uuid) : phaseStep.uuid != null)
+    }
+    if (uuid != null ? !uuid.equals(phaseStep.uuid) : phaseStep.uuid != null) {
       return false;
-    if (name != null ? !name.equals(phaseStep.name) : phaseStep.name != null)
+    }
+    if (name != null ? !name.equals(phaseStep.name) : phaseStep.name != null) {
       return false;
-    if (phaseStepType != phaseStep.phaseStepType)
+    }
+    if (phaseStepType != phaseStep.phaseStepType) {
       return false;
-    if (stepsIds != null ? !stepsIds.equals(phaseStep.stepsIds) : phaseStep.stepsIds != null)
+    }
+    if (stepsIds != null ? !stepsIds.equals(phaseStep.stepsIds) : phaseStep.stepsIds != null) {
       return false;
-    if (steps != null ? !steps.equals(phaseStep.steps) : phaseStep.steps != null)
+    }
+    if (steps != null ? !steps.equals(phaseStep.steps) : phaseStep.steps != null) {
       return false;
+    }
     if (failureStrategies != null ? !failureStrategies.equals(phaseStep.failureStrategies)
-                                  : phaseStep.failureStrategies != null)
+                                  : phaseStep.failureStrategies != null) {
       return false;
+    }
     return phaseStepNameForRollback != null ? phaseStepNameForRollback.equals(phaseStep.phaseStepNameForRollback)
                                             : phaseStep.phaseStepNameForRollback == null;
   }

@@ -84,17 +84,21 @@ public class Transition {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
 
     Transition that = (Transition) o;
 
-    if (fromState != null ? !fromState.equals(that.fromState) : that.fromState != null)
+    if (fromState != null ? !fromState.equals(that.fromState) : that.fromState != null) {
       return false;
-    if (toState != null ? !toState.equals(that.toState) : that.toState != null)
+    }
+    if (toState != null ? !toState.equals(that.toState) : that.toState != null) {
       return false;
+    }
     return transitionType == that.transitionType;
   }
 

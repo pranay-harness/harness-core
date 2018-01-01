@@ -71,10 +71,12 @@ public class ApprovalDetails {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
     ApprovalDetails that = (ApprovalDetails) o;
     return Objects.equals(approvalId, that.approvalId) && Objects.equals(approvedBy, that.approvedBy)
         && Objects.equals(comments, that.comments) && action == that.action;
