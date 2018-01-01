@@ -67,6 +67,10 @@
         <!-- That is easy to forget -->
         <module name="SuperFinalize"/>
 
+        <!-- The history knows about several bugs caused from migration from a single line to multi-line block
+         where the developer forget to add braces -->
+        <module name="NeedBraces"/>
+
         <!-- TODO: Shadowing field could be a source of bugs, very hard to figure out
         <module name="HiddenField">
             <property name="tokens" value="VARIABLE_DEF"/>

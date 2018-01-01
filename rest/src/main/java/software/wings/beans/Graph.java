@@ -227,23 +227,30 @@ public class Graph {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
 
     Graph graph = (Graph) o;
 
-    if (version != graph.version)
+    if (version != graph.version) {
       return false;
-    if (graphName != null ? !graphName.equals(graph.graphName) : graph.graphName != null)
+    }
+    if (graphName != null ? !graphName.equals(graph.graphName) : graph.graphName != null) {
       return false;
-    if (nodes != null ? !nodes.equals(graph.nodes) : graph.nodes != null)
+    }
+    if (nodes != null ? !nodes.equals(graph.nodes) : graph.nodes != null) {
       return false;
-    if (links != null ? !links.equals(graph.links) : graph.links != null)
+    }
+    if (links != null ? !links.equals(graph.links) : graph.links != null) {
       return false;
-    if (subworkflows != null ? !subworkflows.equals(graph.subworkflows) : graph.subworkflows != null)
+    }
+    if (subworkflows != null ? !subworkflows.equals(graph.subworkflows) : graph.subworkflows != null) {
       return false;
+    }
     return originState != null ? originState.equals(graph.originState) : graph.originState == null;
   }
 
@@ -799,37 +806,50 @@ public class Graph {
      */
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       Node other = (Node) obj;
       if (id == null) {
-        if (other.id != null)
+        if (other.id != null) {
           return false;
-      } else if (!id.equals(other.id))
+        }
+      } else if (!id.equals(other.id)) {
         return false;
+      }
       if (name == null) {
-        if (other.name != null)
+        if (other.name != null) {
           return false;
-      } else if (!name.equals(other.name))
+        }
+      } else if (!name.equals(other.name)) {
         return false;
+      }
       if (properties == null) {
-        if (other.properties != null)
+        if (other.properties != null) {
           return false;
-      } else if (!properties.equals(other.properties))
+        }
+      } else if (!properties.equals(other.properties)) {
         return false;
+      }
       if (type == null) {
-        if (other.type != null)
+        if (other.type != null) {
           return false;
-      } else if (!type.equals(other.type))
+        }
+      } else if (!type.equals(other.type)) {
         return false;
-      if (x != other.x)
+      }
+      if (x != other.x) {
         return false;
-      if (y != other.y)
+      }
+      if (y != other.y) {
         return false;
+      }
       return true;
     }
 
@@ -1240,33 +1260,44 @@ public class Graph {
      */
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       Link other = (Link) obj;
       if (from == null) {
-        if (other.from != null)
+        if (other.from != null) {
           return false;
-      } else if (!from.equals(other.from))
+        }
+      } else if (!from.equals(other.from)) {
         return false;
+      }
       if (id == null) {
-        if (other.id != null)
+        if (other.id != null) {
           return false;
-      } else if (!id.equals(other.id))
+        }
+      } else if (!id.equals(other.id)) {
         return false;
+      }
       if (to == null) {
-        if (other.to != null)
+        if (other.to != null) {
           return false;
-      } else if (!to.equals(other.to))
+        }
+      } else if (!to.equals(other.to)) {
         return false;
+      }
       if (type == null) {
-        if (other.type != null)
+        if (other.type != null) {
           return false;
-      } else if (!type.equals(other.type))
+        }
+      } else if (!type.equals(other.type)) {
         return false;
+      }
       return true;
     }
 

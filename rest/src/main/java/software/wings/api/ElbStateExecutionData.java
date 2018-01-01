@@ -44,17 +44,21 @@ public class ElbStateExecutionData extends StateExecutionData {
   }
 
   public boolean equals(Object o) {
-    if (o == this)
+    if (o == this) {
       return true;
-    if (!(o instanceof ElbStateExecutionData))
+    }
+    if (!(o instanceof ElbStateExecutionData)) {
       return false;
+    }
     final ElbStateExecutionData other = (ElbStateExecutionData) o;
-    if (!other.canEqual((Object) this))
+    if (!other.canEqual((Object) this)) {
       return false;
+    }
     final Object this$hostName = this.getHostName();
     final Object other$hostName = other.getHostName();
-    if (this$hostName == null ? other$hostName != null : !this$hostName.equals(other$hostName))
+    if (this$hostName == null ? other$hostName != null : !this$hostName.equals(other$hostName)) {
       return false;
+    }
     return true;
   }
 

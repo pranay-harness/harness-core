@@ -131,10 +131,12 @@ public class TemplateExpression {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
     TemplateExpression that = (TemplateExpression) o;
     return Objects.equals(fieldName, that.fieldName) && Objects.equals(expression, that.expression);
   }

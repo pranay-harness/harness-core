@@ -127,19 +127,24 @@ public class Variable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
 
     Variable variable = (Variable) o;
 
-    if (mandatory != variable.mandatory)
+    if (mandatory != variable.mandatory) {
       return false;
-    if (name != null ? !name.equals(variable.name) : variable.name != null)
+    }
+    if (name != null ? !name.equals(variable.name) : variable.name != null) {
       return false;
-    if (description != null ? !description.equals(variable.description) : variable.description != null)
+    }
+    if (description != null ? !description.equals(variable.description) : variable.description != null) {
       return false;
+    }
     return value != null ? value.equals(variable.value) : variable.value == null;
   }
 

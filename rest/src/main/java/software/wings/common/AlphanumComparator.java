@@ -60,16 +60,18 @@ public class AlphanumComparator implements Comparator<String> {
     if (isDigit(c)) {
       while (marker < slength) {
         c = s.charAt(marker);
-        if (!isDigit(c))
+        if (!isDigit(c)) {
           break;
+        }
         chunk.append(c);
         marker++;
       }
     } else {
       while (marker < slength) {
         c = s.charAt(marker);
-        if (isDigit(c))
+        if (isDigit(c)) {
           break;
+        }
         chunk.append(c);
         marker++;
       }
@@ -113,8 +115,9 @@ public class AlphanumComparator implements Comparator<String> {
         result = thisChunk.compareTo(thatChunk);
       }
 
-      if (result != 0)
+      if (result != 0) {
         return result;
+      }
     }
 
     return s1Length - s2Length;

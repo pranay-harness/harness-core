@@ -132,16 +132,15 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<ServiceElement> list() {
-    if (ArrayUtils.isEmpty(serviceNames)) {
-      ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
-      if (element != null)
-        return Lists.newArrayList(element);
-      else {
-        return getSelectedServices();
-      }
-    } else {
+    if (!ArrayUtils.isEmpty(serviceNames)) {
       return matchingServices(getSelectedServices(), serviceNames);
     }
+
+    ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
+    if (element != null) {
+      return Lists.newArrayList(element);
+    }
+    return getSelectedServices();
   }
 
   /**

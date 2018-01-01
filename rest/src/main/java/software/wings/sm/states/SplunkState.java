@@ -188,8 +188,9 @@ public class SplunkState extends HttpState {
   private String toPostBody(Map<String, String> params) throws UnsupportedEncodingException {
     StringBuilder postData = new StringBuilder();
     for (Entry<String, String> param : params.entrySet()) {
-      if (postData.length() != 0)
+      if (postData.length() != 0) {
         postData.append('&');
+      }
       postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
       postData.append('=');
       postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));

@@ -392,7 +392,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     List<NewRelicMetricHostAnalysisValue> hostAnalysisValues = new ArrayList<>();
 
     if (timeSeriesMLHostSummaryMap != null) {
-      for (Entry<String, TimeSeriesMLHostSummary> mlHostSummaryEntry : timeSeriesMLHostSummaryMap.entrySet())
+      for (Entry<String, TimeSeriesMLHostSummary> mlHostSummaryEntry : timeSeriesMLHostSummaryMap.entrySet()) {
         hostAnalysisValues.add(NewRelicMetricHostAnalysisValue.builder()
                                    .testHostName(mlHostSummaryEntry.getKey())
                                    .controlHostName(mlHostSummaryEntry.getValue().getNn())
@@ -400,6 +400,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                    .testValues(mlHostSummaryEntry.getValue().getTest_data())
                                    .riskLevel(getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
                                    .build());
+      }
     }
     return hostAnalysisValues;
   }

@@ -137,23 +137,30 @@ public class Role extends Base {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
-    if (!super.equals(o))
+    }
+    if (!super.equals(o)) {
       return false;
+    }
 
     Role role = (Role) o;
 
-    if (allApps != role.allApps)
+    if (allApps != role.allApps) {
       return false;
-    if (name != null ? !name.equals(role.name) : role.name != null)
+    }
+    if (name != null ? !name.equals(role.name) : role.name != null) {
       return false;
-    if (description != null ? !description.equals(role.description) : role.description != null)
+    }
+    if (description != null ? !description.equals(role.description) : role.description != null) {
       return false;
-    if (accountId != null ? !accountId.equals(role.accountId) : role.accountId != null)
+    }
+    if (accountId != null ? !accountId.equals(role.accountId) : role.accountId != null) {
       return false;
+    }
     return roleType == role.roleType;
   }
 
