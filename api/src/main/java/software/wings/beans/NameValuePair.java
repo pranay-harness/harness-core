@@ -27,7 +27,7 @@ public class NameValuePair {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static abstract class AbstractYaml extends BaseYaml {
+  public abstract static class AbstractYaml extends BaseYaml {
     private String name;
     private String value;
     private String valueType;

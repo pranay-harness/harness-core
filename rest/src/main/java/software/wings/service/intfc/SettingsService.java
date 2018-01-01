@@ -58,7 +58,7 @@ public interface SettingsService extends OwnedByAccount {
    */
   SettingAttribute get(String varId);
 
-  public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName);
+  SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName);
 
   /**
    * Update.

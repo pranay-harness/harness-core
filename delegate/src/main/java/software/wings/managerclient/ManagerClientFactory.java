@@ -25,7 +25,7 @@ import javax.net.ssl.X509TrustManager;
  * Created by peeyushaggarwal on 11/29/16.
  */
 public class ManagerClientFactory implements Provider<ManagerClient> {
-  public final static TrustManager[] TRUST_ALL_CERTS =
+  public static final TrustManager[] TRUST_ALL_CERTS =
       new X509TrustManager[] {new X509TrustManager(){public java.security.cert.X509Certificate[] getAcceptedIssuers(){
           return new java.security.cert.X509Certificate[] {};
 }

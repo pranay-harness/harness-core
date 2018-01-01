@@ -53,8 +53,8 @@ public class PruneEntityJobTest extends WingsBaseTest {
 
   @Inject @InjectMocks PruneEntityJob job;
 
-  private final static String APP_ID = "app_id";
-  private final static String ENTITY_ID = "entityId";
+  private static final String APP_ID = "app_id";
+  private static final String ENTITY_ID = "entityId";
 
   public JobDetail details(String className, String appId, String entityId) {
     return JobBuilder.newJob(PruneEntityJob.class)

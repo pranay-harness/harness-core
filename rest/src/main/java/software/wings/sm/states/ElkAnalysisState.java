@@ -47,9 +47,9 @@ import java.util.concurrent.TimeUnit;
  * Created by raghu on 8/4/17.
  */
 public class ElkAnalysisState extends AbstractLogAnalysisState {
-  @SchemaIgnore @Transient protected final static String DEFAULT_TIME_FIELD = "@timestamp";
+  @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FIELD = "@timestamp";
 
-  @SchemaIgnore @Transient protected final static String DEFAULT_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+  @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisState.class);
 

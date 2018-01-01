@@ -51,7 +51,7 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static abstract class Yaml extends InfrastructureMapping.Yaml {
+  public abstract static class Yaml extends InfrastructureMapping.Yaml {
     private String cluster;
 
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,

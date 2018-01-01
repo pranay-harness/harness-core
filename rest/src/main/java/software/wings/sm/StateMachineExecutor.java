@@ -1355,7 +1355,7 @@ public class StateMachineExecutor {
      * @param context              the context
      * @param stateMachineExecutor the state machine executor
      */
-    public SmExecutionDispatcher(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
+    SmExecutionDispatcher(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
       this.context = context;
       this.stateMachineExecutor = stateMachineExecutor;
     }
@@ -1380,7 +1380,7 @@ public class StateMachineExecutor {
      * @param context              the context
      * @param stateMachineExecutor the state machine executor
      */
-    public SmExecutionResumer(
+    SmExecutionResumer(
         ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor, ExecutionStatus status) {
       this.context = context;
       this.stateMachineExecutor = stateMachineExecutor;
@@ -1415,7 +1415,7 @@ public class StateMachineExecutor {
      * @param response             the response
      * @param stateMachineExecutor the state machine executor
      */
-    public SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
+    SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
         StateMachineExecutor stateMachineExecutor, boolean asyncError) {
       this.context = context;
       this.state = state;

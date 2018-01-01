@@ -18,8 +18,8 @@ import java.util.concurrent.TimeoutException;
 public class ScheduledTriggerJobTest extends WingsBaseTest {
   @Inject private JobScheduler jobScheduler;
 
-  private final static String appId = "Dummy App Id";
-  private final static String triggerId = "Dummy Trigger Id";
+  private static final String appId = "Dummy App Id";
+  private static final String triggerId = "Dummy Trigger Id";
 
   @Test
   public void selfPrune() throws SchedulerException, InterruptedException, TimeoutException {

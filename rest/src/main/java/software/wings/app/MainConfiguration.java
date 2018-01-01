@@ -326,7 +326,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   /**
    * Created by peeyushaggarwal on 8/30/16.
    */
-  public static abstract class AssetsConfigurationMixin {
+  public abstract static class AssetsConfigurationMixin {
     /**
      * Gets resource path to uri mappings.
      *

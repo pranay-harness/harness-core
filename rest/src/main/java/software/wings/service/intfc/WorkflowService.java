@@ -159,7 +159,7 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
    *
    * @return the map
    */
-  public Map<String, StateTypeDescriptor> stencilMap();
+  Map<String, StateTypeDescriptor> stencilMap();
 
   PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep);
 

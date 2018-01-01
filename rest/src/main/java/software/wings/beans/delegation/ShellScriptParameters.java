@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @Getter
 public class ShellScriptParameters {
-  public final static String CommandUnit = "Execute";
+  public static final String CommandUnit = "Execute";
 
   @Setter private String accountId;
   private final String appId;

@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @Singleton
 public class AmiServiceImpl implements AmiService {
-  private final static Logger logger = LoggerFactory.getLogger(AmiServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AmiServiceImpl.class);
   @Inject private AwsHelperService awsHelperService;
 
   @Override

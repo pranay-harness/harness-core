@@ -55,7 +55,7 @@ public abstract class State {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static abstract class Yaml extends BaseYaml {
+  public abstract static class Yaml extends BaseYaml {
     private String contextElementType;
     private String stateType;
     private boolean rollback;

@@ -55,7 +55,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  synchronized public YamlChangeSet getQueuedChangeSet(String accountId) {
+  public synchronized YamlChangeSet getQueuedChangeSet(String accountId) {
     boolean lockAcquired = false;
     try {
       lockAcquired = persistentLocker.acquireLock(YamlChangeSet.class, accountId);

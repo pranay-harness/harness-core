@@ -88,7 +88,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  public static abstract class Yaml extends AbstractCommandUnit.Yaml {
+  public abstract static class Yaml extends AbstractCommandUnit.Yaml {
     public Yaml(String commandUnitType) {
       super(commandUnitType);
     }

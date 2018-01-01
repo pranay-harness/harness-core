@@ -55,7 +55,7 @@ public enum ExecutionInterruptType {
 
   private String description;
 
-  private ExecutionInterruptType(String description) {
+  ExecutionInterruptType(String description) {
     this.description = description;
   }
 

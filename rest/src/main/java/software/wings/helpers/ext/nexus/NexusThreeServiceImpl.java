@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class NexusThreeServiceImpl {
-  private final static Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
 
   @Inject EncryptionService encryptionService;
 

@@ -465,14 +465,14 @@ public class MongoQueueTest extends WingsBaseTest {
     /**
      * Instantiates a new Test entity.
      */
-    public TestEntity() {}
+    TestEntity() {}
 
     /**
      * Instantiates a new Test entity.
      *
      * @param data the data
      */
-    public TestEntity(int data) {
+    TestEntity(int data) {
       this.data = data;
     }
 

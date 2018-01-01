@@ -53,7 +53,7 @@ public class ServiceInstanceDashboard {
 
     private Builder() {}
 
-    public static final Builder aServiceInstanceDashboard() {
+    public static Builder aServiceInstanceDashboard() {
       return new Builder();
     }
 

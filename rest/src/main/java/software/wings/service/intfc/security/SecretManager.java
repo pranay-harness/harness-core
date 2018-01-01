@@ -25,7 +25,7 @@ public interface SecretManager {
 
   EncryptionType getEncryptionType(String accountId);
 
-  PageResponse<SecretUsageLog> getUsageLogs(final String entityId, SettingValue.SettingVariableTypes variableType)
+  PageResponse<SecretUsageLog> getUsageLogs(String entityId, SettingValue.SettingVariableTypes variableType)
       throws IllegalAccessException;
 
   List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;

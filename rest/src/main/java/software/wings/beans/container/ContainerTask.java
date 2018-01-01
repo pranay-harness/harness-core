@@ -129,7 +129,7 @@ public abstract class ContainerTask extends DeploymentSpecification {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static abstract class Yaml extends DeploymentSpecification.Yaml {
+  public abstract static class Yaml extends DeploymentSpecification.Yaml {
     private String advancedType;
     private String advancedConfig;
     private ContainerDefinition.Yaml containerDefinition;
