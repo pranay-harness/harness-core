@@ -2,7 +2,7 @@ package software.wings.core.ssh.executors;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCode.INVALID_EXECUTION_ID;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;

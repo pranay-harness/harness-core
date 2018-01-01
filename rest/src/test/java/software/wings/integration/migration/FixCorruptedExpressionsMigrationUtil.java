@@ -1,6 +1,6 @@
 package software.wings.integration.migration;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 

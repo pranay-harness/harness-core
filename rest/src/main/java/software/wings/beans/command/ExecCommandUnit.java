@@ -2,7 +2,7 @@ package software.wings.beans.command;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static jersey.repackaged.com.google.common.collect.ImmutableMap.of;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 

@@ -4,7 +4,7 @@ import static software.wings.beans.DelegateTaskEvent.Builder.aDelegateTaskEvent;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.BroadcastFilter.BroadcastAction.ACTION;
 import org.atmosphere.cpr.BroadcastFilterAdapter;

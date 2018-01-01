@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

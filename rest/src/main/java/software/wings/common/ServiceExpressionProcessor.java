@@ -7,7 +7,7 @@ package software.wings.common;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;

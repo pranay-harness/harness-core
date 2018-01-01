@@ -3,7 +3,7 @@ package software.wings.stencils;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.MapUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

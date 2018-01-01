@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;

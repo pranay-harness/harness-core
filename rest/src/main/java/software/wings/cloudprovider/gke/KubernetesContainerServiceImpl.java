@@ -2,7 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 
 import com.google.common.base.Joiner;

@@ -6,7 +6,7 @@ package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -79,8 +79,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;

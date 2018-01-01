@@ -4,7 +4,7 @@
 
 package software.wings.common;
 
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static org.apache.commons.lang.ArrayUtils.isNotEmpty;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 
 import org.slf4j.Logger;

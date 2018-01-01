@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
 import software.wings.common.Constants;
 
 import java.util.List;

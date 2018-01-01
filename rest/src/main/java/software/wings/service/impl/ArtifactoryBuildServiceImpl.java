@@ -9,7 +9,7 @@ import static software.wings.utils.Validator.equalCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;

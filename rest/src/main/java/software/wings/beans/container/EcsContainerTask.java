@@ -2,9 +2,9 @@ package software.wings.beans.container;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.strip;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.strip;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 
 import com.amazonaws.services.ecs.model.HostVolumeProperties;
@@ -20,7 +20,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
@@ -137,7 +137,7 @@ public class EcsContainerTask extends ContainerTask {
 
   public TaskDefinition createTaskDefinition(String containerName, String imageName) {
     String configTemplate;
-    if (org.apache.commons.lang.StringUtils.isNotEmpty(getAdvancedConfig())) {
+    if (isNotEmpty(getAdvancedConfig())) {
       configTemplate = fetchAdvancedConfigNoComments();
     } else {
       configTemplate = fetchJsonConfig();

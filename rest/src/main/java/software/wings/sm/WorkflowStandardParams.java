@@ -8,7 +8,7 @@ import static software.wings.common.Constants.PHASE_PARAM;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;

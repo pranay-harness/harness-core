@@ -43,7 +43,7 @@ import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
 import org.atmosphere.wasync.Encoder;
