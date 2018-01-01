@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ResponseMessage.Acuteness.SERIOUS;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.WARN;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.utils.Switch.unhandled;
 
 import lombok.Getter;
@@ -128,7 +129,7 @@ public class WingsException extends WingsApiException {
    */
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
     super(message == null ? errorCode.getCode() : message, cause);
-    responseMessageList.add(ResponseMessage.builder().code(errorCode).message(message).build());
+    responseMessageList.add(aResponseMessage().code(errorCode).message(message).build());
   }
 
   /**

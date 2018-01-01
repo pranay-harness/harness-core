@@ -5,6 +5,7 @@ import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 
@@ -50,8 +51,7 @@ public class NexusServiceImpl implements NexusService {
 
   public static void handleException(IOException e) {
     List<ResponseMessage> responseMessages = new ArrayList<>();
-    responseMessages.add(
-        ResponseMessage.builder().code(INVALID_ARTIFACT_SERVER).level(ERROR).message(e.getMessage()).build());
+    responseMessages.add(aResponseMessage().code(INVALID_ARTIFACT_SERVER).level(ERROR).message(e.getMessage()).build());
     throw new WingsException(responseMessages, e.getMessage(), e);
   }
 

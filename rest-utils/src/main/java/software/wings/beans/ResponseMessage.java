@@ -14,7 +14,7 @@ import java.io.Serializable;
 /**
  * The Class ResponseMessage.
  */
-@Builder
+@Builder(builderMethodName = "aResponseMessage")
 @Getter
 @EqualsAndHashCode
 @ToString

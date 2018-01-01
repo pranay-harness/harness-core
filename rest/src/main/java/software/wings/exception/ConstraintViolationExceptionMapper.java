@@ -3,6 +3,7 @@ package software.wings.exception;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.google.common.base.Joiner;
@@ -177,7 +178,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
   }
 
   private ResponseMessage errorMessageToResponseMessage(String s) {
-    return ResponseMessage.builder().code(INVALID_ARGUMENT).level(ERROR).message(s).build();
+    return aResponseMessage().code(INVALID_ARGUMENT).level(ERROR).message(s).build();
   }
 
   private String processMessage(ConstraintViolation<?> v, String message) {
