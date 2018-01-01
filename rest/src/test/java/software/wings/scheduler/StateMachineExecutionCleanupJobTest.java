@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
 public class StateMachineExecutionCleanupJobTest extends WingsBaseTest {
   @Inject private JobScheduler jobScheduler;
 
-  private final static String appId = "Dummy App Id";
+  private static final String appId = "Dummy App Id";
 
   @Test
   public void selfPrune() throws SchedulerException, InterruptedException, TimeoutException {

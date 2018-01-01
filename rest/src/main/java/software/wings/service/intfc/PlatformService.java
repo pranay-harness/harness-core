@@ -16,7 +16,7 @@ public interface PlatformService {
    * @param req the req
    * @return the page response
    */
-  public PageResponse<AppContainer> list(PageRequest<AppContainer> req);
+  PageResponse<AppContainer> list(PageRequest<AppContainer> req);
 
   /**
    * Creates the.
@@ -24,7 +24,7 @@ public interface PlatformService {
    * @param platform the platform
    * @return the app container
    */
-  public AppContainer create(AppContainer platform);
+  AppContainer create(AppContainer platform);
 
   /**
    * Update.
@@ -32,5 +32,5 @@ public interface PlatformService {
    * @param platform the platform
    * @return the app container
    */
-  public AppContainer update(AppContainer platform);
+  AppContainer update(AppContainer platform);
 }

@@ -43,7 +43,7 @@ public class PruneFileJobTest extends WingsBaseTest {
 
   @Inject @InjectMocks PruneFileJob job;
 
-  private final static String ENTITY_ID = "entityId";
+  private static final String ENTITY_ID = "entityId";
 
   public JobDetail details(String className, String entityId, FileBucket bucket) {
     return JobBuilder.newJob(PruneFileJob.class)

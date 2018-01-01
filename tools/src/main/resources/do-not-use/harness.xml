@@ -105,6 +105,8 @@
         <!-- *** -->
 
         <module name="EmptyStatement"/>
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier" />
         <module name="UnnecessaryParentheses"/>
     </module>
 </module>

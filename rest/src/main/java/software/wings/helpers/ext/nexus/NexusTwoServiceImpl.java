@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class NexusTwoServiceImpl {
-  private final static Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
 
   @Inject EncryptionService encryptionService;
 
@@ -326,7 +326,7 @@ public class NexusTwoServiceImpl {
   static class MyAuthenticator extends Authenticator {
     private String username, password;
 
-    public MyAuthenticator(String user, String pass) {
+    MyAuthenticator(String user, String pass) {
       username = user;
       password = pass;
     }

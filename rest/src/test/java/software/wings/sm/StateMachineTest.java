@@ -545,7 +545,7 @@ public class StateMachineTest extends WingsBaseTest {
      * @param uuid     the uuid
      * @param duration duration to sleep for.
      */
-    public Notifier(String name, String uuid, int duration) {
+    Notifier(String name, String uuid, int duration) {
       this(name, uuid, duration, false);
     }
 
@@ -557,7 +557,7 @@ public class StateMachineTest extends WingsBaseTest {
      * @param duration   the duration
      * @param shouldFail the should fail
      */
-    public Notifier(String name, String uuid, int duration, boolean shouldFail) {
+    Notifier(String name, String uuid, int duration, boolean shouldFail) {
       this.name = name;
       this.uuid = uuid;
       this.duration = duration;

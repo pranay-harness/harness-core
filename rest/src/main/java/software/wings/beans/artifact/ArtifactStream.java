@@ -311,7 +311,7 @@ public abstract class ArtifactStream extends Base {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static abstract class Yaml extends BaseEntityYaml {
+  public abstract static class Yaml extends BaseEntityYaml {
     private String artifactServerName;
     private boolean metadataOnly = false;
 

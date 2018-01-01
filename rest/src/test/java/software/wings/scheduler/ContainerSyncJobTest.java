@@ -16,7 +16,7 @@ import java.util.concurrent.TimeoutException;
 public class ContainerSyncJobTest extends WingsBaseTest {
   @Inject private JobScheduler jobScheduler;
 
-  private final static String appId = "Dummy App Id";
+  private static final String appId = "Dummy App Id";
 
   @Inject private ContainerInstanceHelper containerInstanceHelper;
 

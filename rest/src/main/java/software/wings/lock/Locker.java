@@ -13,7 +13,7 @@ public interface Locker {
    * @param entityId    the entity id
    * @return true, if successful
    */
-  public boolean acquireLock(Class entityClass, String entityId);
+  boolean acquireLock(Class entityClass, String entityId);
 
   /**
    * Acquire lock.
@@ -22,7 +22,7 @@ public interface Locker {
    * @param entityId   the entity id
    * @return true, if successful
    */
-  public boolean acquireLock(String entityType, String entityId);
+  boolean acquireLock(String entityType, String entityId);
 
   /**
    * Release lock.
@@ -31,7 +31,7 @@ public interface Locker {
    * @param entityId    the entity id
    * @return true, if successful
    */
-  public boolean releaseLock(Class entityClass, String entityId);
+  boolean releaseLock(Class entityClass, String entityId);
 
   /**
    * Release lock.
@@ -40,5 +40,5 @@ public interface Locker {
    * @param entityId   the entity id
    * @return true, if successful
    */
-  public boolean releaseLock(String entityType, String entityId);
+  boolean releaseLock(String entityType, String entityId);
 }

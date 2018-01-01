@@ -170,11 +170,11 @@ public abstract class AbstractAnalysisState extends State {
     return executionDetails.getWorkflowId();
   }
 
-  @SchemaIgnore abstract public Logger getLogger();
+  @SchemaIgnore public abstract Logger getLogger();
 
-  abstract public String getAnalysisServerConfigId();
+  public abstract String getAnalysisServerConfigId();
 
-  abstract public void setAnalysisServerConfigId(String analysisServerConfigId);
+  public abstract void setAnalysisServerConfigId(String analysisServerConfigId);
 
   protected abstract String triggerAnalysisDataCollection(
       ExecutionContext context, String correlationId, Set<String> hosts);

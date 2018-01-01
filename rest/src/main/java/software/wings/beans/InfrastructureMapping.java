@@ -333,7 +333,7 @@ public abstract class InfrastructureMapping extends Base {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static abstract class Yaml extends BaseEntityYaml {
+  public abstract static class Yaml extends BaseEntityYaml {
     private String computeProviderType;
     private String serviceName;
     private String infraMappingType;

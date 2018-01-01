@@ -19,7 +19,7 @@ public interface AmazonS3Service {
    *
    * @return map RepoId and Name
    */
-  Map<String, String> getBuckets(final AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
+  Map<String, String> getBuckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Get artifact paths for a given repo from the given bucket.

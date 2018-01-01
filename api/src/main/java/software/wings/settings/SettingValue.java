@@ -270,7 +270,7 @@ public abstract class SettingValue implements ExtensionPoint {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static abstract class Yaml extends BaseYamlWithType {
+  public abstract static class Yaml extends BaseYamlWithType {
     public Yaml(String type) {
       super(type);
     }

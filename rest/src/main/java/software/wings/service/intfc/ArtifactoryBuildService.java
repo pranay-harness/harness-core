@@ -41,7 +41,7 @@ public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig>
       ArtifactType artifactType, String repositoryType);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_ARTIFACTORY_PATHS)
-  public List<String> getArtifactPaths(
+  List<String> getArtifactPaths(
       String jobName, String groupId, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_GROUP_IDS)

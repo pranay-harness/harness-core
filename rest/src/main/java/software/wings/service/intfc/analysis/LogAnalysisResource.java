@@ -66,7 +66,7 @@ public interface LogAnalysisResource {
 
   RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
+      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
       @QueryParam("delegateTaskId") String delegateTaskId, List<LogElement> logData) throws IOException;
 

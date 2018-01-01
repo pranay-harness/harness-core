@@ -42,7 +42,7 @@ import javax.xml.stream.XMLStreamException;
  */
 @Singleton
 public class NexusServiceImpl implements NexusService {
-  private final static Logger logger = LoggerFactory.getLogger(NexusServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(NexusServiceImpl.class);
 
   @Inject private NexusThreeServiceImpl nexusThreeService;
 

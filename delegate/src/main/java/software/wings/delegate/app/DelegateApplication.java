@@ -40,7 +40,7 @@ import java.util.logging.Level;
  * Created by peeyushaggarwal on 11/29/16.
  */
 public class DelegateApplication {
-  private final static Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
+  private static final Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
 
   private static String processId;
 

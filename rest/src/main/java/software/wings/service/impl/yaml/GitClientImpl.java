@@ -74,7 +74,7 @@ public class GitClientImpl implements GitClient {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  synchronized public GitCloneResult clone(GitConfig gitConfig) {
+  public synchronized GitCloneResult clone(GitConfig gitConfig) {
     String gitRepoDirectory = getRepoDirectory(gitConfig);
 
     try (Git git = Git.cloneRepository()
@@ -115,7 +115,7 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  synchronized public GitDiffResult diff(GitConfig gitConfig, String startCommitId) {
+  public synchronized GitDiffResult diff(GitConfig gitConfig, String startCommitId) {
     ensureRepoLocallyClonedAndUpdated(gitConfig);
 
     GitDiffResult diffResult = GitDiffResult.builder()
@@ -178,7 +178,7 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  synchronized public GitCheckoutResult checkout(GitConfig gitConfig) {
+  public synchronized GitCheckoutResult checkout(GitConfig gitConfig) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       Ref ref = git.checkout()
                     .setCreateBranch(true)
@@ -197,7 +197,7 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  synchronized public GitCommitResult commit(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
+  public synchronized GitCommitResult commit(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
     ensureRepoLocallyClonedAndUpdated(gitConfig);
     // TODO:: pull latest remote branch??
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
@@ -303,7 +303,7 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  synchronized public GitPushResult push(GitConfig gitConfig) {
+  public synchronized GitPushResult push(GitConfig gitConfig) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       Iterable<PushResult> pushResults = git.push()
                                              .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
@@ -345,7 +345,7 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  synchronized public PullResult pull(GitConfig gitConfig) {
+  public synchronized PullResult pull(GitConfig gitConfig) {
     ensureRepoLocallyClonedAndUpdated(gitConfig);
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       git.branchCreate()

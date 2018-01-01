@@ -107,7 +107,7 @@ public class ThreadPool {
      * @param runnable the runnable
      * @param delay    the delay
      */
-    public Delayed(Runnable runnable, int delay) {
+    Delayed(Runnable runnable, int delay) {
       this.runnable = runnable;
       this.delay = delay;
     }

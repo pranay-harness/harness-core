@@ -17,7 +17,7 @@ import javax.ws.rs.QueryParam;
  * Created by sriram_parthasarathy on 12/4/17.
  */
 public interface MetricAnalysisResource {
-  RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
+  RestResponse<Boolean> saveMetricData(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("delegateTaskId") String delegateTaskId, List<NewRelicMetricDataRecord> metricData)
       throws IOException;
@@ -26,16 +26,15 @@ public interface MetricAnalysisResource {
       @QueryParam("workflowExecutionId") String workFlowExecutionId,
       @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException;
 
-  RestResponse<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
-      @QueryParam("stateExecutionId") final String stateExecutionId,
-      @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("accountId") final String accountId) throws IOException;
+  RestResponse<NewRelicMetricAnalysisRecord> getMetricsAnalysis(@QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("accountId") String accountId)
+      throws IOException;
 
   RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("workflowId") final String workflowId, @QueryParam("analysisMinute") Integer analysisMinute,
-      TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException;
+      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("workflowId") String workflowId,
+      @QueryParam("analysisMinute") Integer analysisMinute, TimeSeriesMLAnalysisRecord mlAnalysisResponse)
+      throws IOException;
 
   RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId,

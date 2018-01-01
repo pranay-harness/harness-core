@@ -201,7 +201,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
         @Type(value = KubernetesSetupCommandUnit.Yaml.class, name = "KUBERNETES_SETUP"),
         @Type(value = EcsSetupCommandUnit.Yaml.class, name = "ECS_SETUP")
   })
-  public static abstract class Yaml extends BaseYaml {
+  public abstract static class Yaml extends BaseYaml {
     private String name;
     private String commandUnitType;
     private String deploymentType;

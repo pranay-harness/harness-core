@@ -13,7 +13,7 @@ public abstract class DeploymentSpecification extends Base {
   @Data
   @EqualsAndHashCode(callSuper = false)
   @NoArgsConstructor
-  public static abstract class Yaml extends BaseYamlWithType {
+  public abstract static class Yaml extends BaseYamlWithType {
     public Yaml(String type) {
       super(type);
     }

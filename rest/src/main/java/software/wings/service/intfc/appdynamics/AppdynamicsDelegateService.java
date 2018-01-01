@@ -20,7 +20,7 @@ import java.util.List;
 public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_APP_TASK)
   List<NewRelicApplication> getAllApplications(
-      final AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException;
+      AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK)
   List<AppdynamicsTier> getTiers(

@@ -89,7 +89,7 @@ public class PruneEntityJob implements Job {
     jobScheduler.scheduleJob(details, trigger);
   }
 
-  public interface PruneService<T> { public void prune(T descending); }
+  public interface PruneService<T> { void prune(T descending); }
 
   public static <T> void pruneDescendingEntities(
       List<T> descendingServices, String appId, String entityId, PruneService<T> lambda) {
