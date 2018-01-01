@@ -12,7 +12,6 @@ import com.google.common.collect.ImmutableMap;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.QueueReference;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -92,7 +91,7 @@ public class JenkinsTest {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler", "57", "build/libs/docker-scheduler-*.jar");
     assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
-    IOUtils.closeQuietly(fileInfo.getValue());
+    fileInfo.getValue().close();
   }
 
   /**
@@ -105,7 +104,7 @@ public class JenkinsTest {
   public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
     assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
-    IOUtils.closeQuietly(fileInfo.getValue());
+    fileInfo.getValue().close();
   }
 
   /**

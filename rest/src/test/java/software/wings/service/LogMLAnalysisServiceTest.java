@@ -56,6 +56,7 @@ import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -882,7 +883,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   public void loadPythonResponse() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
-    String jsonTxt = IOUtils.toString(is);
+    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
     assertEquals(records.getUnknown_events().size(), 7);
     assertEquals(records.getTest_events().size(), 33);
@@ -897,7 +898,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   public void checkClusterScores() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
-    String jsonTxt = IOUtils.toString(is);
+    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
     records.setStateType(StateType.ELK);
     records.setApplicationId(appId);

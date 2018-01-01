@@ -5,7 +5,6 @@ import static java.util.Arrays.stream;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import org.apache.commons.io.IOUtils;
 import retrofit2.Converter;
 import retrofit2.Converter.Factory;
 import retrofit2.Retrofit;
@@ -37,7 +36,7 @@ public class KryoConverterFactory extends Factory {
         try {
           return KryoUtils.asObject(value.bytes());
         } finally {
-          IOUtils.closeQuietly(value);
+          value.close();
         }
       };
     }

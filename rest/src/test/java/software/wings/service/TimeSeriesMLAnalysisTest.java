@@ -31,6 +31,7 @@ import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -71,7 +72,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   @Test
   public void testSaveMLAnalysis() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");
-    String jsonTxt = IOUtils.toString(is);
+    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     TimeSeriesMLAnalysisRecord record = JsonUtils.asObject(jsonTxt, TimeSeriesMLAnalysisRecord.class);
     newRelicResource.saveMLAnalysisRecords(
         accountId, appId, stateExecutionId, workflowExecutionId, workflowId, 0, record);
@@ -118,7 +119,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
 
   private List<NewRelicMetricDataRecord> loadMetrics(String fileName) throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream(fileName);
-    String jsonTxt = IOUtils.toString(is);
+    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     return JsonUtils.asList(jsonTxt, new TypeReference<List<NewRelicMetricDataRecord>>() {});
   }
 
