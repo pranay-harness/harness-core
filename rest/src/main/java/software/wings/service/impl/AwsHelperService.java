@@ -181,7 +181,6 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
@@ -531,18 +530,12 @@ public class AwsHelperService {
    * @return the boolean
    */
   public boolean canConnectToHost(String hostName, int port, int timeout) {
-    Socket client = new Socket();
-    try {
+    try (Socket client = new Socket()) {
       client.connect(new InetSocketAddress(hostName, port), timeout);
-      client.close();
-      return true;
     } catch (IOException e) {
-      logger.error(e.getMessage(), e);
-      e.printStackTrace();
       return false;
-    } finally {
-      IOUtils.closeQuietly(client);
     }
+    return true;
   }
 
   public List<Bucket> listS3Buckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {

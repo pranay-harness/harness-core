@@ -434,11 +434,11 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     PageRequest<TestEntity> req =
         aPageRequest()
-            .addFilter(aSearchFilter()
-                           .withField(null, Operator.OR,
-                               aSearchFilter().withField("mapField.abc", Operator.EXISTS, null).build(),
-                               aSearchFilter().withField("mapField.def", Operator.EXISTS, null).build())
-                           .build())
+            .addFilter(
+                aSearchFilter()
+                    .withField(null, Operator.OR, aSearchFilter().withField("mapField.abc", Operator.EXISTS).build(),
+                        aSearchFilter().withField("mapField.def", Operator.EXISTS).build())
+                    .build())
             .build();
 
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);

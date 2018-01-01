@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.client.Entity;
@@ -205,7 +206,8 @@ public class DelegateResourceTest {
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + Constants.DELEGATE_DIR + ".zip");
-    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity()).get(0)).isEqualTo("Test");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test");
   }
 
   @Test
