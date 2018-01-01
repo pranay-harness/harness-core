@@ -4,7 +4,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.GcpConfig;

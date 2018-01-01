@@ -1,13 +1,13 @@
 package software.wings.waitnotify;
 
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static org.apache.commons.lang.ArrayUtils.isNotEmpty;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;

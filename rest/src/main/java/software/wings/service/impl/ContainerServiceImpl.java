@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;

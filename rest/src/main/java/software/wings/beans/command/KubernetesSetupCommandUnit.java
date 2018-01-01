@@ -2,8 +2,8 @@ package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 import static software.wings.utils.KubernetesConvention.getKubernetesSecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;

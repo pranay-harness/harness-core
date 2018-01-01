@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.Constants;

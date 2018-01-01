@@ -18,7 +18,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

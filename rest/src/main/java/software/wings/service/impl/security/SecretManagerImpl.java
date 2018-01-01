@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;

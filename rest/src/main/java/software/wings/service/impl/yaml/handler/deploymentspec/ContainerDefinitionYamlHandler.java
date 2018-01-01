@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;

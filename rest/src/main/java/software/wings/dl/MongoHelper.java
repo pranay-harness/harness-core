@@ -1,6 +1,6 @@
 package software.wings.dl;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.SearchFilter.Operator.AND;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
@@ -9,7 +9,7 @@ import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
 import static software.wings.utils.Switch.unhandled;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.mapping.MappedClass;

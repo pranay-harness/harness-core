@@ -50,6 +50,16 @@
         <module name="IllegalImport">
             <!-- use com.google.inject instead -->
             <property name="illegalPkgs" value="javax.inject"/>
+
+            <!-- use org.apache.commons.lang.StringUtils instead -->
+            <property name="illegalPkgs" value="org.apache.commons.lang3.StringUtils,
+                                                org.apache.commons.codec.binary.StringUtils,
+                                                wiremock.org.apache.commons.lang.StringUtils"/>
+
+            <!-- use org.apache.commons.lang.ArrayUtils instead -->
+            <property name="illegalPkgs" value="org.apache.commons.lang3.ArrayUtils"/>
+
+            <!-- use org.assertj.core.api.Assertions.assertThat instead -->
             <property name="illegalClasses" value="com.google.common.truth.Truth.assertThat,
                                                    com.shazam.shazamcrest.MatcherAssert.assertThat,
                                                    org.assertj.core.api.AssertionsForClassTypes.assertThat,

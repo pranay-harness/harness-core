@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
