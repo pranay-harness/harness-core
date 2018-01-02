@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -35,7 +36,7 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -114,7 +115,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -445,7 +445,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                  .map(String::trim)
                                  .filter(StringUtils::isNotEmpty)
                                  .distinct()
-                                 .collect(Collectors.toList());
+                                 .collect(toList());
     if (hostNames.size() != pyInfraMapping.getHostNames().size()) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Host names must be unique");
     }
@@ -514,7 +514,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               return false;
             })
             .map(Workflow::getName)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (referencingWorkflowNames.size() > 0) {
       throw new WingsException(INVALID_REQUEST, "message",
@@ -557,15 +557,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                   .filter(host
                       -> !selectionParams.isSelectSpecificHosts()
                           || selectionParams.getHostNames().contains(host.getPublicDns()))
-                  .collect(Collectors.toList());
+                  .collect(toList());
     }
 
+    int count =
+        selectionParams.isSelectSpecificHosts() ? selectionParams.getHostNames().size() : selectionParams.getCount();
+    List<String> excludedServiceInstanceIds = selectionParams.getExcludedServiceInstanceIds();
     return syncHostsAndUpdateInstances(infrastructureMapping, hosts)
         .stream()
-        .filter(serviceInstance -> !selectionParams.getExcludedServiceInstanceIds().contains(serviceInstance.getUuid()))
-        .limit(selectionParams.isSelectSpecificHosts() ? selectionParams.getHostNames().size()
-                                                       : selectionParams.getCount())
-        .collect(Collectors.toList());
+        .filter(serviceInstance -> !excludedServiceInstanceIds.contains(serviceInstance.getUuid()))
+        .limit(count)
+        .collect(toList());
   }
 
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
@@ -576,10 +578,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                    .map(String::trim)
                                    .filter(StringUtils::isNotEmpty)
                                    .distinct()
-                                   .collect(Collectors.toList());
+                                   .collect(toList());
       return hostNames.stream()
           .map(hostName -> aHost().withHostName(hostName).withPublicDns(hostName).build())
-          .collect(Collectors.toList());
+          .collect(toList());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfraMapping = (AwsInfrastructureMapping) infrastructureMapping;
       AwsInfrastructureProvider infrastructureProvider =
@@ -613,7 +615,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                   host.setServiceTemplateId(infrastructureMapping.getServiceTemplateId());
                                   return infrastructureProvider.saveHost(host);
                                 })
-                                .collect(Collectors.toList());
+                                .collect(toList());
 
     return serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts);
   }

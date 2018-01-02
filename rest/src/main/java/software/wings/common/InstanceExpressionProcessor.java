@@ -1,11 +1,9 @@
-/**
- *
- */
-
 package software.wings.common;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -252,7 +250,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
     applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
     applyHostNamesFilter(app.getUuid(), pageRequest);
-    applyServiceInstanceIdsFilter(app.getUuid(), pageRequest);
+    applyServiceInstanceIdsFilter(pageRequest);
 
     PageRequest<ServiceInstance> req = pageRequest.build();
     // Just for safety
@@ -292,7 +290,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return elements;
   }
 
-  private void applyServiceInstanceIdsFilter(String appId, Builder pageRequest) {
+  private void applyServiceInstanceIdsFilter(Builder pageRequest) {
     ServiceInstanceIdsParam serviceInstanceIdsParam = getServiceInstanceIdsParam();
     if (serviceInstanceIdsParam != null) {
       if (ArrayUtils.isNotEmpty(instanceIds)) {
@@ -300,8 +298,13 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
             intersection(Arrays.asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
         instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
       } else {
-        instanceIds = serviceInstanceIdsParam.getInstanceIds().toArray(
-            new String[serviceInstanceIdsParam.getInstanceIds().size()]);
+        List<String> instanceIds = serviceInstanceIdsParam.getInstanceIds();
+        if (isNotEmpty(instanceIds)) {
+          this.instanceIds = instanceIds.toArray(new String[instanceIds.size()]);
+        } else {
+          pageRequest.addFilter(aSearchFilter().withField(ID_KEY, Operator.IN, emptyList()).build());
+          return;
+        }
       }
     }
 
