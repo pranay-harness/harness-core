@@ -8,6 +8,7 @@ import software.wings.api.InstanceChangeEvent;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -31,6 +32,12 @@ public class InstanceChangeEventListener extends AbstractQueueListener<InstanceC
   protected void onMessage(InstanceChangeEvent instanceChangeEvent) throws Exception {
     try {
       Validator.notNullCheck("InstanceChangeEvent", instanceChangeEvent);
+
+      // Stop gap solution until the rewrite is done
+      List<String> autoScalingGroupList = instanceChangeEvent.getAutoScalingGroupList();
+      if (!Util.isEmpty(autoScalingGroupList)) {
+        instanceService.deleteInstancesOfAutoScalingGroups(autoScalingGroupList, instanceChangeEvent.getAppId());
+      }
       List<Instance> instanceList = instanceChangeEvent.getInstanceList();
       if (instanceList != null) {
         instanceService.saveOrUpdate(instanceList);

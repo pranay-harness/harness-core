@@ -336,6 +336,14 @@ public class InstanceServiceImpl implements InstanceService {
     wingsPersistence.delete(query);
   }
 
+  @Override
+  public void deleteInstancesOfAutoScalingGroups(List<String> autoScalingGroupList, String appId) {
+    Query query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
+    query.field("appId").equal(appId);
+    query.field("instanceInfo.autoScalingGroupName").in(autoScalingGroupList);
+    wingsPersistence.delete(query);
+  }
+
   /**
    * returns if the instance in db needs to be updated or not.
    * This method returns true only if the task
