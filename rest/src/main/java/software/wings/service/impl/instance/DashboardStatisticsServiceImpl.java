@@ -435,15 +435,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private boolean compareEnvironment(InstanceStatsByEnvironment currentEnv, AggregationInfo.EnvInfo envInfo) {
-    return (currentEnv == null)
-        ? false
-        : (envInfo == null) ? false : envInfo.getId().equals(currentEnv.getEnvironmentSummary().getId());
+    return currentEnv != null && envInfo != null && envInfo.getId().equals(currentEnv.getEnvironmentSummary().getId());
   }
 
   private boolean compareService(InstanceStatsByService currentService, EntitySummary serviceInfo) {
-    return (currentService == null)
-        ? false
-        : (serviceInfo == null) ? false : serviceInfo.getId().equals(currentService.getServiceSummary().getId());
+    return currentService != null && serviceInfo != null
+        && serviceInfo.getId().equals(currentService.getServiceSummary().getId());
   }
 
   @Override
