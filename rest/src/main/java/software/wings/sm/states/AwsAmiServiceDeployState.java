@@ -325,80 +325,93 @@ public class AwsAmiServiceDeployState extends State {
                                                             .withInstanceElements(Collections.emptyList())
                                                             .build();
 
-    if (isRollback()) {
-      AmiServiceDeployElement amiServiceDeployElement =
-          context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
-      // TODO: old and new both should be present with 1 element atleast
-      ContainerServiceData oldContainerServiceData = amiServiceDeployElement.getOldInstanceData().get(0);
-      ContainerServiceData newContainerServiceData = amiServiceDeployElement.getNewInstanceData().get(0);
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    String errorMessage = null;
+    try {
+      if (isRollback()) {
+        AmiServiceDeployElement amiServiceDeployElement =
+            context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
+        // TODO: old and new both should be present with 1 element atleast
+        ContainerServiceData oldContainerServiceData = amiServiceDeployElement.getOldInstanceData().get(0);
+        ContainerServiceData newContainerServiceData = amiServiceDeployElement.getNewInstanceData().get(0);
 
-      resizeAsgs(region, awsConfig, encryptionDetails, oldContainerServiceData.getName(),
-          oldContainerServiceData.getPreviousCount(), newContainerServiceData.getName(),
-          newContainerServiceData.getPreviousCount(), executionLogCallback,
-          serviceSetupElement.getResizeStrategy() == ResizeStrategy.RESIZE_NEW_FIRST);
+        resizeAsgs(region, awsConfig, encryptionDetails, oldContainerServiceData.getName(),
+            oldContainerServiceData.getPreviousCount(), newContainerServiceData.getName(),
+            newContainerServiceData.getPreviousCount(), executionLogCallback,
+            serviceSetupElement.getResizeStrategy() == ResizeStrategy.RESIZE_NEW_FIRST,
+            serviceSetupElement.getAutoScalingSteadyStateTimeout());
 
-    } else {
-      boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
-      ContainerServiceData oldContainerServiceData = awsAmiDeployStateExecutionData.getOldInstanceData().get(0);
-      ContainerServiceData newContainerServiceData = awsAmiDeployStateExecutionData.getNewInstanceData().get(0);
+      } else {
+        boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
+        ContainerServiceData oldContainerServiceData = awsAmiDeployStateExecutionData.getOldInstanceData().get(0);
+        ContainerServiceData newContainerServiceData = awsAmiDeployStateExecutionData.getNewInstanceData().get(0);
 
-      Set<String> existingInstanceIds = new HashSet<>(awsHelperService.listInstanceIdsFromAutoScalingGroup(
-          awsConfig, encryptionDetails, region, newContainerServiceData.getName()));
+        Set<String> existingInstanceIds = new HashSet<>(awsHelperService.listInstanceIdsFromAutoScalingGroup(
+            awsConfig, encryptionDetails, region, newContainerServiceData.getName()));
 
-      resizeAsgs(region, awsConfig, encryptionDetails, newContainerServiceData.getName(),
-          newContainerServiceData.getDesiredCount(), oldContainerServiceData.getName(),
-          oldContainerServiceData.getDesiredCount(), executionLogCallback, resizeNewFirst);
+        resizeAsgs(region, awsConfig, encryptionDetails, newContainerServiceData.getName(),
+            newContainerServiceData.getDesiredCount(), oldContainerServiceData.getName(),
+            oldContainerServiceData.getDesiredCount(), executionLogCallback, resizeNewFirst,
+            serviceSetupElement.getAutoScalingSteadyStateTimeout());
 
-      DescribeInstancesResult describeInstancesResult = awsHelperService.describeAutoScalingGroupInstances(
-          awsConfig, encryptionDetails, region, newContainerServiceData.getName());
-      List<InstanceElement> instanceElements =
-          describeInstancesResult.getReservations()
-              .stream()
-              .flatMap(reservation -> reservation.getInstances().stream())
-              .filter(instance -> !existingInstanceIds.contains(instance.getInstanceId()))
-              .map(instance -> {
-                String hostName = awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName());
-                return anInstanceElement()
-                    .withUuid(instance.getInstanceId())
-                    .withHostName(hostName)
-                    .withDisplayName(instance.getPublicDnsName())
-                    .withHost(aHostElement()
-                                  .withHostName(hostName)
-                                  .withPublicDns(instance.getPublicDnsName())
-                                  .withEc2Instance(instance)
-                                  .withInstanceId(instance.getInstanceId())
-                                  .build())
-                    .withServiceTemplateElement(aServiceTemplateElement()
-                                                    .withUuid(serviceTemplateKey.getId().toString())
-                                                    .withServiceElement(phaseElement.getServiceElement())
-                                                    .build())
-                    .build();
-              })
-              .collect(Collectors.toList());
+        DescribeInstancesResult describeInstancesResult = awsHelperService.describeAutoScalingGroupInstances(
+            awsConfig, encryptionDetails, region, newContainerServiceData.getName());
+        List<InstanceElement> instanceElements =
+            describeInstancesResult.getReservations()
+                .stream()
+                .flatMap(reservation -> reservation.getInstances().stream())
+                .filter(instance -> !existingInstanceIds.contains(instance.getInstanceId()))
+                .map(instance -> {
+                  String hostName = awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName());
+                  return anInstanceElement()
+                      .withUuid(instance.getInstanceId())
+                      .withHostName(hostName)
+                      .withDisplayName(instance.getPublicDnsName())
+                      .withHost(aHostElement()
+                                    .withHostName(hostName)
+                                    .withPublicDns(instance.getPublicDnsName())
+                                    .withEc2Instance(instance)
+                                    .withInstanceId(instance.getInstanceId())
+                                    .build())
+                      .withServiceTemplateElement(aServiceTemplateElement()
+                                                      .withUuid(serviceTemplateKey.getId().toString())
+                                                      .withServiceElement(phaseElement.getServiceElement())
+                                                      .build())
+                      .build();
+                })
+                .collect(Collectors.toList());
 
-      int instancesAdded = newContainerServiceData.getDesiredCount() - newContainerServiceData.getPreviousCount();
-      if (instancesAdded > 0 && instancesAdded < instanceElements.size()) {
-        instanceElements = instanceElements.subList(0, instancesAdded); // Ignore old instances recycled
+        int instancesAdded = newContainerServiceData.getDesiredCount() - newContainerServiceData.getPreviousCount();
+        if (instancesAdded > 0 && instancesAdded < instanceElements.size()) {
+          instanceElements = instanceElements.subList(0, instancesAdded); // Ignore old instances recycled
+        }
+
+        List<InstanceStatusSummary> instanceStatusSummaries =
+            instanceElements.stream()
+                .map(instanceElement
+                    -> anInstanceStatusSummary()
+                           .withInstanceElement((InstanceElement) instanceElement.cloneMin())
+                           .withStatus(ExecutionStatus.SUCCESS)
+                           .build())
+                .collect(Collectors.toList());
+        awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+        instanceElementListParam.setInstanceElements(instanceElements);
       }
-
-      List<InstanceStatusSummary> instanceStatusSummaries =
-          instanceElements.stream()
-              .map(instanceElement
-                  -> anInstanceStatusSummary()
-                         .withInstanceElement((InstanceElement) instanceElement.cloneMin())
-                         .withStatus(ExecutionStatus.SUCCESS)
-                         .build())
-              .collect(Collectors.toList());
-      awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
-      instanceElementListParam.setInstanceElements(instanceElements);
+    } catch (Exception ex) {
+      logger.error("Ami deploy step failed with error ", ex);
+      executionStatus = ExecutionStatus.FAILED;
+      errorMessage = ex.getMessage();
     }
 
-    activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
+    activityService.updateStatus(activity.getUuid(), activity.getAppId(), executionStatus);
 
-    executionLogCallback.saveExecutionLog("Successfully completed resize operation", CommandExecutionStatus.SUCCESS);
-
+    executionLogCallback.saveExecutionLog("Successfully completed resize operation",
+        ExecutionStatus.SUCCESS.equals(executionStatus) ? CommandExecutionStatus.SUCCESS
+                                                        : CommandExecutionStatus.FAILURE);
     return anExecutionResponse()
         .withStateExecutionData(awsAmiDeployStateExecutionData)
+        .withExecutionStatus(executionStatus)
+        .withErrorMessage(errorMessage)
         .addContextElement(instanceElementListParam)
         .addNotifyElement(instanceElementListParam)
         .build();
@@ -406,10 +419,11 @@ public class AwsAmiServiceDeployState extends State {
 
   private void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
-      Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst) {
+      Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst,
+      Integer autoScalingSteadyStateTimeout) {
     if (resizeNewFirst) {
-      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-          awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
+      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
+          newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback, autoScalingSteadyStateTimeout);
       if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);

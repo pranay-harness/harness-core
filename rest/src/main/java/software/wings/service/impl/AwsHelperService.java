@@ -12,7 +12,6 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.utils.Misc.isNullOrEmpty;
-import static software.wings.utils.Misc.quietSleep;
 import static software.wings.utils.Misc.sleep;
 
 import com.google.common.base.Joiner;
@@ -221,8 +220,6 @@ import java.util.stream.Collectors;
 public class AwsHelperService {
   private static final String AWS_AVAILABILITY_ZONE_CHECK =
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
-  private static final int SLEEP_INTERVAL = 30;
-  private static final int RETRY_COUNTER = (10 * 60) / SLEEP_INTERVAL; // 10 minutes
   @Inject private EncryptionService encryptionService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -1162,7 +1159,7 @@ public class AwsHelperService {
 
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonAutoScalingClient amazonAutoScalingClient =
@@ -1175,11 +1172,18 @@ public class AwsHelperService {
                                                      .withDesiredCapacity(desiredCapacity));
       executionLogCallback.saveExecutionLog(
           "Successfully set desired size.\nWaiting for AutoScaling Group to reach at desired capacity");
-      waitForAllInstancesToBeReady(
-          awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity, executionLogCallback);
+      waitForAllInstancesToBeReady(awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity,
+          executionLogCallback, autoScalingSteadyStateTimeout);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
+  }
+
+  public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
+      ExecutionLogCallback executionLogCallback) {
+    setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+        awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity, executionLogCallback, 10);
   }
 
   public AttachLoadBalancersResult attachLoadBalancerToAutoScalingGroup(AwsConfig awsConfig,
@@ -1226,9 +1230,11 @@ public class AwsHelperService {
   }
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
-    quietSleep(1, TimeUnit.SECONDS);
-    int retryCount = RETRY_COUNTER;
+      String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback executionLogCallback,
+      Integer autoScalingSteadyStateTimeout) {
+    long sleepInterval = TimeUnit.SECONDS.toSeconds(30);
+    long retryCount = TimeUnit.SECONDS.convert(autoScalingSteadyStateTimeout, TimeUnit.MINUTES) / sleepInterval;
+    logger.info("Total #retries for stead state check", retryCount);
     List<String> instanceIds =
         listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
     while (instanceIds.size() != desiredCount
@@ -1242,7 +1248,7 @@ public class AwsHelperService {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
-      sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
+      sleep((int) sleepInterval, TimeUnit.SECONDS);
       instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
     }
     executionLogCallback.saveExecutionLog(

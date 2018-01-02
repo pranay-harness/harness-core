@@ -25,7 +25,6 @@ public class AmiServiceSetupElement implements ContextElement {
   private String uuid;
   private String name;
   private String commandName;
-  private InstanceUnitType instanceUnitType;
   private int instanceCount;
   private String newAutoScalingGroupName;
   private String oldAutoScalingGroupName;

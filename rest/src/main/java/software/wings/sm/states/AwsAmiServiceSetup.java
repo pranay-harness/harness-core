@@ -153,6 +153,7 @@ public class AwsAmiServiceSetup extends State {
             .oldAutoScalingGroupName(lastDeployedAsgName)
             .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
             .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+            .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
             .build();
 
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
