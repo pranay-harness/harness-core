@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
