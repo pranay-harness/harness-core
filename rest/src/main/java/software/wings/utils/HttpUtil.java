@@ -86,33 +86,34 @@ public class HttpUtil {
     return sc;
   }
 
+  static class SslTrustManager implements X509TrustManager {
+    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+      return new java.security.cert.X509Certificate[] {};
+    }
+    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+  }
+
   public static TrustManager[] getTrustManagers() {
-    return new TrustManager[] {new X509TrustManager(){public java.security.cert.X509Certificate[] getAcceptedIssuers(){
-        return new java.security.cert.X509Certificate[] {};
+    return new TrustManager[] {new SslTrustManager()};
   }
-  public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-  public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-}
-}
-;
-}
 
-public static OkHttpClient getUnsafeOkHttpClient() {
-  try {
-    OkHttpClient.Builder builder = new OkHttpClient.Builder();
-    builder.sslSocketFactory(HttpUtil.getSslContext().getSocketFactory());
-    HostnameVerifier allHostsValid = (s, sslSession) -> true;
-    builder.hostnameVerifier(allHostsValid);
-    builder.connectTimeout(15000, TimeUnit.SECONDS);
-    builder.readTimeout(15000, TimeUnit.SECONDS);
-    OkHttpClient okHttpClient = builder.build();
-    return okHttpClient;
-  } catch (Exception e) {
-    throw new RuntimeException(e);
+  public static OkHttpClient getUnsafeOkHttpClient() {
+    try {
+      OkHttpClient.Builder builder = new OkHttpClient.Builder();
+      builder.sslSocketFactory(HttpUtil.getSslContext().getSocketFactory());
+      HostnameVerifier allHostsValid = (s, sslSession) -> true;
+      builder.hostnameVerifier(allHostsValid);
+      builder.connectTimeout(15000, TimeUnit.SECONDS);
+      builder.readTimeout(15000, TimeUnit.SECONDS);
+      OkHttpClient okHttpClient = builder.build();
+      return okHttpClient;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
-}
 
-public static boolean validUrl(String url) {
-  return urlValidator.isValid(url);
-}
+  public static boolean validUrl(String url) {
+    return urlValidator.isValid(url);
+  }
 }

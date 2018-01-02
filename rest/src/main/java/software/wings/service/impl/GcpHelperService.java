@@ -19,6 +19,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
@@ -77,8 +78,8 @@ public class GcpHelperService {
   public GoogleCredential getGoogleCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException {
     encryptionService.decrypt(gcpConfig, encryptedDataDetails);
-    GoogleCredential credential =
-        GoogleCredential.fromStream(IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent())));
+    GoogleCredential credential = GoogleCredential.fromStream(
+        IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent()), Charset.defaultCharset()));
     if (credential.createScopedRequired()) {
       credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
     }

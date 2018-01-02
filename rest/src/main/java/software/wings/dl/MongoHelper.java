@@ -61,7 +61,7 @@ public class MongoHelper {
     PageResponse<T> response = new PageResponse<>(req);
 
     if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
-      long total = q.countAll();
+      long total = q.count();
       response.setTotal(total);
     }
 
