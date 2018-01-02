@@ -94,7 +94,7 @@ public interface YamlGitService {
 
   long getGitSyncErrorCount(String accountId);
 
-  RestResponse discardGitSyncErrors(String accountId, List<String> yamlFilePathList);
+  RestResponse discardGitSyncError(String accountId, String yamlFilePath);
 
   RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent);
 }

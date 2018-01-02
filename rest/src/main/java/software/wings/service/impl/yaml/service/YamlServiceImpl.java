@@ -46,6 +46,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -55,6 +56,7 @@ import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
@@ -79,6 +81,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private transient YamlGitService yamlGitService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -103,13 +106,14 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   @Override
   public RestResponse<B> update(YamlPayload yamlPayload, String accountId) {
-    Change change = Change.Builder.aFileChange()
-                        .withChangeType(ChangeType.MODIFY)
-                        .withFileContent(yamlPayload.getYaml())
-                        .withFilePath(yamlPayload.getPath())
-                        .withAccountId(accountId)
-                        .build();
+    GitFileChange change = GitFileChange.Builder.aGitFileChange()
+                               .withChangeType(ChangeType.MODIFY)
+                               .withFileContent(yamlPayload.getYaml())
+                               .withFilePath(yamlPayload.getPath())
+                               .withAccountId(accountId)
+                               .build();
     RestResponse rr = new RestResponse<>();
+    List<GitFileChange> gitFileChangeList = Arrays.asList(change);
 
     try {
       List<ChangeContext> changeContextList = processChangeSet(Arrays.asList(change));
@@ -121,14 +125,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         Object base = changeContext.getYamlSyncHandler().get(
             changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
         rr.setResource(base);
+        yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
 
       } else {
         software.wings.yaml.YamlHelper.addResponseMessage(
             rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update yaml failed. Reason: " + yamlPayload.getName());
       }
-    } catch (HarnessException e) {
+    } catch (YamlProcessingException ex) {
       software.wings.yaml.YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update failed. Reason:" + e.getMessage());
+          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update failed. Reason:" + ex.getMessage());
     }
 
     return rr;

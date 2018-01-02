@@ -31,7 +31,7 @@ public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml artifactStreamYaml = changeContext.getYaml();
     return !(isEmpty(artifactStreamYaml.getArtifactPaths()) || isEmpty(artifactStreamYaml.getPlanName())
-        || isEmpty(artifactStreamYaml.getArtifactServerName()));
+        || isEmpty(artifactStreamYaml.getServerName()));
   }
 
   @Override

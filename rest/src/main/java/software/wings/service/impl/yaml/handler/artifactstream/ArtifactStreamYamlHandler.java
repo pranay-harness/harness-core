@@ -61,7 +61,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   }
 
   protected void toYaml(Y yaml, B bean) {
-    yaml.setArtifactServerName(getSettingName(bean.getSettingId()));
+    yaml.setServerName(getSettingName(bean.getSettingId()));
     yaml.setMetadataOnly(bean.isMetadataOnly());
   }
 
@@ -94,7 +94,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     bean.setName(name);
     bean.setAutoPopulate(false);
-    bean.setSettingId(getSettingId(appId, yaml.getArtifactServerName()));
+    bean.setSettingId(getSettingId(appId, yaml.getServerName()));
     bean.setAutoApproveForProduction(true);
     bean.setMetadataOnly(yaml.isMetadataOnly());
   }
@@ -102,7 +102,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   @Override
   public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
     Yaml artifactStreamYaml = changeContext.getYaml();
-    return !(isEmpty(artifactStreamYaml.getArtifactServerName()));
+    return !(isEmpty(artifactStreamYaml.getServerName()));
   }
 
   protected abstract B getNewArtifactStreamObject();

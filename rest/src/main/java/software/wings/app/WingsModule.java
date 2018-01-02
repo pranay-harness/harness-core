@@ -17,7 +17,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -143,16 +142,6 @@ import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
 import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
-import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryDockerArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.BambooArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.DockerArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.EcrArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.GcrArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.JenkinsArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.NexusArtifactStreamYamlHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
@@ -370,24 +359,6 @@ public class WingsModule extends AbstractModule {
         .to(StaticInfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.DIRECT.name())
         .to(DirectInfrastructureProvider.class);
-
-    MapBinder<String, ArtifactStreamYamlHandler> artifactStreamHelperMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, ArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.AMAZON_S3.name())
-        .to(AmazonS3ArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.ARTIFACTORY.name())
-        .to(ArtifactoryArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.ARTIFACTORYDOCKER.name())
-        .to(ArtifactoryDockerArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.BAMBOO.name())
-        .to(BambooArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.DOCKER.name())
-        .to(DockerArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.ECR.name()).to(EcrArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.GCR.name()).to(GcrArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.JENKINS.name())
-        .to(JenkinsArtifactStreamYamlHandler.class);
-    artifactStreamHelperMapBinder.addBinding(ArtifactStreamType.NEXUS.name()).to(NexusArtifactStreamYamlHandler.class);
 
     MapBinder<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMapBinder =
         MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends SettingValue>>() {},

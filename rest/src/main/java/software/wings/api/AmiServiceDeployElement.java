@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import com.google.common.collect.Lists;
+
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.InstanceUnitType;
@@ -18,8 +20,8 @@ import java.util.Map;
 public class AmiServiceDeployElement implements ContextElement {
   private int instanceCount;
   private InstanceUnitType instanceUnitType;
-  private List<ContainerServiceData> newInstanceData;
-  private List<ContainerServiceData> oldInstanceData;
+  private List<ContainerServiceData> newInstanceData = Lists.newArrayList();
+  private List<ContainerServiceData> oldInstanceData = Lists.newArrayList();
 
   @Override
   public ContextElementType getElementType() {

@@ -376,15 +376,12 @@ public class EcrArtifactStream extends ArtifactStream {
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public static class Yaml extends ArtifactStream.Yaml {
-    private String awsCloudProviderName;
     private String imageName;
     private String region;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String awsCloudProviderName,
-        String imageName, String region) {
-      super(ECR.name(), harnessApiVersion, artifactServerName, metadataOnly);
-      this.awsCloudProviderName = awsCloudProviderName;
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String imageName, String region) {
+      super(ECR.name(), harnessApiVersion, serverName, metadataOnly);
       this.imageName = imageName;
       this.region = region;
     }

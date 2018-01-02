@@ -35,7 +35,7 @@ public class ArtifactoryDockerArtifactStreamYamlHandler
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml artifactStreamYaml = changeContext.getYaml();
     return !(isEmpty(artifactStreamYaml.getImageName()) || isEmpty(artifactStreamYaml.getRepositoryName())
-        || isEmpty(artifactStreamYaml.getArtifactServerName()));
+        || isEmpty(artifactStreamYaml.getServerName()));
   }
 
   @Override

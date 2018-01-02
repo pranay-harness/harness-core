@@ -402,9 +402,9 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
     private String imageName;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String repositoryName,
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
         String dockerImageName, String imageName) {
-      super(ARTIFACTORYDOCKER.name(), harnessApiVersion, artifactServerName, metadataOnly);
+      super(ARTIFACTORYDOCKER.name(), harnessApiVersion, serverName, metadataOnly);
       this.repositoryName = repositoryName;
       this.dockerImageName = dockerImageName;
       this.imageName = imageName;

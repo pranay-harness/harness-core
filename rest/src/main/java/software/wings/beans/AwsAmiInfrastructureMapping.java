@@ -3,6 +3,9 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -213,6 +216,28 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
 
     public AwsAmiInfrastructureMapping build() {
       return awsAmiInfrastructureMapping;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class Yaml extends InfrastructureMapping.Yaml {
+    private String region;
+    private String autoScalingGroupName;
+    private List<String> classicLoadBalancers;
+    private List<String> targetGroupArns;
+
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName, String region,
+        String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns) {
+      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+          computeProviderName);
+      this.region = region;
+      this.autoScalingGroupName = autoScalingGroupName;
+      this.classicLoadBalancers = classicLoadBalancers;
+      this.targetGroupArns = targetGroupArns;
     }
   }
 }

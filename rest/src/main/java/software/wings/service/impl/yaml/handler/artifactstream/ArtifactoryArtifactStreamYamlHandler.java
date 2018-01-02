@@ -37,7 +37,7 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml artifactStreamYaml = changeContext.getYaml();
-    return !(isEmpty(artifactStreamYaml.getArtifactServerName()) || isEmpty(artifactStreamYaml.getGroupId())
+    return !(isEmpty(artifactStreamYaml.getServerName()) || isEmpty(artifactStreamYaml.getGroupId())
         || isEmpty(artifactStreamYaml.getImageName()));
   }
 

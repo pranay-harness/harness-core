@@ -388,9 +388,9 @@ public class GcrArtifactStream extends ArtifactStream {
     private String dockerImageName;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String registryHostName,
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String registryHostName,
         String dockerImageName) {
-      super(GCR.name(), harnessApiVersion, artifactServerName, metadataOnly);
+      super(GCR.name(), harnessApiVersion, serverName, metadataOnly);
       this.registryHostName = registryHostName;
       this.dockerImageName = dockerImageName;
     }

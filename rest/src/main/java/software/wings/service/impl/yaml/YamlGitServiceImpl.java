@@ -20,6 +20,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
@@ -32,12 +33,14 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.YamlProcessingException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.CryptoUtil;
 import software.wings.utils.Util;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -72,6 +75,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private YamlService yamlService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private SecretManager secretManager;
@@ -355,11 +359,12 @@ public class YamlGitServiceImpl implements YamlGitService {
                                       .field("yamlFilePath")
                                       .equal(change.getFilePath());
       GitFileChange gitFileChange = (GitFileChange) change;
+      String commitId = gitFileChange.getCommitId() != null ? gitFileChange.getCommitId() : "";
       UpdateOperations<GitSyncError> updateOperations = wingsPersistence.createUpdateOperations(GitSyncError.class)
                                                             .set("accountId", change.getAccountId())
                                                             .set("yamlFilePath", change.getFilePath())
                                                             .set("yamlContent", change.getFileContent())
-                                                            .set("gitCommitId", gitFileChange.getCommitId())
+                                                            .set("gitCommitId", commitId)
                                                             .set("changeType", change.getChangeType().name())
                                                             .set("failureReason", errorMessage);
 
@@ -394,10 +399,10 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public RestResponse discardGitSyncErrors(String accountId, List<String> yamlFilePathList) {
+  public RestResponse discardGitSyncError(String accountId, String yamlFilePath) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.field("accountId").equal(accountId);
-    query.field("yamlFilePath").in(yamlFilePathList);
+    query.field("yamlFilePath").equal(yamlFilePath);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
@@ -430,16 +435,25 @@ public class YamlGitServiceImpl implements YamlGitService {
         yamlContent = syncError.getYamlContent();
       }
 
+      ChangeType changeType = Util.getEnumFromString(ChangeType.class, syncError.getChangeType());
       GitFileChange gitFileChange = Builder.aGitFileChange()
                                         .withAccountId(accountId)
                                         .withFilePath(syncError.getYamlFilePath())
                                         .withFileContent(yamlContent)
-                                        .withChangeType(ChangeType.ADD)
+                                        .withChangeType(changeType)
                                         .build();
       gitFileChangeList.add(gitFileChange);
     });
 
-    syncFiles(accountId, gitFileChangeList);
+    try {
+      List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
+      logger.info("Processed ChangeSet: [{}]", fileChangeContexts);
+      removeGitSyncErrors(accountId, gitFileChangeList);
+    } catch (YamlProcessingException ex) {
+      logger.error("Processing changeSet failed", ex);
+      processFailedOrUnprocessedChanges(gitFileChangeList, ex.getChange(), ex.getMessage());
+    }
+
     return RestResponse.Builder.aRestResponse().build();
   }
 }

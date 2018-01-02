@@ -26,7 +26,7 @@ public class JenkinsArtifactStreamYamlHandler
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml artifactStreamYaml = changeContext.getYaml();
     return !(isEmpty(artifactStreamYaml.getArtifactPaths()) || isEmpty(artifactStreamYaml.getJobName())
-        || isEmpty(artifactStreamYaml.getArtifactServerName()));
+        || isEmpty(artifactStreamYaml.getServerName()));
   }
 
   @Override

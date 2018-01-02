@@ -659,16 +659,16 @@ public class YamlResource {
   @Path("git-sync-errors")
   @Timed
   @ExceptionMetered
-  public RestResponse fixGitSyncError(
-      @QueryParam("accountId") String accountId, @QueryParam("yamlFilePath") String yamlFilePath, String yamlContent) {
-    return yamlGitService.fixGitSyncErrors(accountId, yamlFilePath, yamlContent);
+  public RestResponse fixGitSyncError(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
+    return yamlGitService.fixGitSyncErrors(accountId, yamlPayload.getPath(), yamlPayload.getYaml());
   }
 
   @POST
   @Path("git-sync-errors-discard")
   @Timed
   @ExceptionMetered
-  public RestResponse discardGitSyncErrors(@QueryParam("accountId") String accountId, List<String> yamlFilePathList) {
-    return yamlGitService.discardGitSyncErrors(accountId, yamlFilePathList);
+  public RestResponse discardGitSyncError(
+      @QueryParam("accountId") String accountId, @QueryParam("yamlFilePath") String yamlFilePath) {
+    return yamlGitService.discardGitSyncError(accountId, yamlFilePath);
   }
 }

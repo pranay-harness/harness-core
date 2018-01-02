@@ -45,7 +45,7 @@ public class DockerArtifactStreamYamlHandler
   @Override
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     DockerArtifactStream.Yaml artifactStreamYaml = changeContext.getYaml();
-    return !(isEmpty(artifactStreamYaml.getImageName()) || isEmpty(artifactStreamYaml.getArtifactServerName()));
+    return !(isEmpty(artifactStreamYaml.getImageName()) || isEmpty(artifactStreamYaml.getServerName()));
   }
 
   @Override
@@ -55,7 +55,7 @@ public class DockerArtifactStreamYamlHandler
 
   private void toBean(
       DockerArtifactStream.Builder builder, DockerArtifactStream.Yaml artifactStreamYaml, String appId) {
-    builder.withSettingId(getSettingId(appId, artifactStreamYaml.getArtifactServerName()))
+    builder.withSettingId(getSettingId(appId, artifactStreamYaml.getServerName()))
         .withImageName(artifactStreamYaml.getImageName())
         .build();
   }

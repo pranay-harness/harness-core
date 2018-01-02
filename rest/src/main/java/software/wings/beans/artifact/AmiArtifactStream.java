@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.beans.NameValuePair;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
 
@@ -137,16 +138,14 @@ public class AmiArtifactStream extends ArtifactStream {
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public static class Yaml extends ArtifactStream.Yaml {
-    private String awsCloudProviderName;
     private String platform;
-    private List<Tag> tags;
-
     private String region;
+    private List<NameValuePair.Yaml> tags = new ArrayList<>();
+
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String awsCloudProviderName,
-        List<Tag> tags, String region, String platform) {
-      super(AMI.name(), harnessApiVersion, artifactServerName, metadataOnly);
-      this.awsCloudProviderName = awsCloudProviderName;
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, List<NameValuePair.Yaml> tags,
+        String region, String platform) {
+      super(AMI.name(), harnessApiVersion, serverName, metadataOnly);
       this.tags = tags;
       this.region = region;
       this.platform = platform;
