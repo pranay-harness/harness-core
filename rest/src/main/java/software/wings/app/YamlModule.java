@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static software.wings.beans.InfrastructureMappingType.AWS_AMI;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
@@ -8,9 +9,11 @@ import static software.wings.beans.InfrastructureMappingType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORYDOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
@@ -48,6 +51,7 @@ import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
 import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.AmiArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryDockerArtifactStreamYamlHandler;
@@ -57,6 +61,7 @@ import software.wings.service.impl.yaml.handler.artifactstream.EcrArtifactStream
 import software.wings.service.impl.yaml.handler.artifactstream.GcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.JenkinsArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.NexusArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.command.AmiCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.AwsLambdaCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CodeDeployCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CommandRefCommandUnitYamlHandler;
@@ -79,6 +84,7 @@ import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecifi
 import software.wings.service.impl.yaml.handler.deploymentspec.EcsContainerTaskYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.KubernetesContainerTaskYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.LambdaSpecificationYamlHandler;
+import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsLambdaInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.CodeDeployInfraMappingYamlHandler;
@@ -110,6 +116,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Spl
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandler;
+import software.wings.service.impl.yaml.handler.workflow.BuildWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.MultiServiceWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
@@ -145,6 +152,7 @@ public class YamlModule extends AbstractModule {
     MapBinder<String, ArtifactStreamYamlHandler> artifactStreamYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(AMAZON_S3.name()).to(AmazonS3ArtifactStreamYamlHandler.class);
+    artifactStreamYamlHelperMapBinder.addBinding(AMI.name()).to(AmiArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(ARTIFACTORY.name()).to(ArtifactoryArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(ARTIFACTORYDOCKER.name())
         .to(ArtifactoryDockerArtifactStreamYamlHandler.class);
@@ -160,6 +168,7 @@ public class YamlModule extends AbstractModule {
     infraMappingYamlHelperMapBinder.addBinding(AWS_SSH.name()).to(AwsInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(AWS_AWS_CODEDEPLOY.name()).to(CodeDeployInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(AWS_AWS_LAMBDA.name()).to(AwsLambdaInfraMappingYamlHandler.class);
+    infraMappingYamlHelperMapBinder.addBinding(AWS_AMI.name()).to(AwsAmiInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(DIRECT_KUBERNETES.name())
         .to(DirectKubernetesInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(AWS_ECS.name()).to(EcsInfraMappingYamlHandler.class);
@@ -220,6 +229,7 @@ public class YamlModule extends AbstractModule {
     MapBinder<String, WorkflowYamlHandler> workflowYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, WorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(BASIC.name()).to(BasicWorkflowYamlHandler.class);
+    workflowYamlHelperMapBinder.addBinding(BUILD.name()).to(BuildWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(CANARY.name()).to(CanaryWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(MULTI_SERVICE.name()).to(MultiServiceWorkflowYamlHandler.class);
 
@@ -242,6 +252,7 @@ public class YamlModule extends AbstractModule {
         .to(PortCheckListeningCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(CODE_DEPLOY.name()).to(CodeDeployCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(AWS_LAMBDA.name()).to(AwsLambdaCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(AWS_AMI.name()).to(AmiCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(RESIZE.name()).to(ResizeCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(RESIZE_KUBERNETES.name())
         .to(KubernetesResizeCommandUnitYamlHandler.class);

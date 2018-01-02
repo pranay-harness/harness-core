@@ -35,7 +35,7 @@ public class NexusArtifactStreamYamlHandler
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml artifactStreamYaml = changeContext.getYaml();
     return !(isEmpty(artifactStreamYaml.getArtifactPaths()) || isEmpty(artifactStreamYaml.getGroupId())
-        || isEmpty(artifactStreamYaml.getRepositoryName()) || isEmpty(artifactStreamYaml.getArtifactServerName()));
+        || isEmpty(artifactStreamYaml.getRepositoryName()) || isEmpty(artifactStreamYaml.getServerName()));
   }
 
   @Override

@@ -529,9 +529,9 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private String artifactPattern;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String repositoryName,
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
         String groupId, String imageName, List<String> artifactPaths, String artifactPattern) {
-      super(ARTIFACTORY.name(), harnessApiVersion, artifactServerName, metadataOnly);
+      super(ARTIFACTORY.name(), harnessApiVersion, serverName, metadataOnly);
       this.repositoryName = repositoryName;
       this.groupId = groupId;
       this.imageName = imageName;

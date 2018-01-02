@@ -312,12 +312,12 @@ public abstract class ArtifactStream extends Base {
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public abstract static class Yaml extends BaseEntityYaml {
-    private String artifactServerName;
+    private String serverName;
     private boolean metadataOnly = false;
 
-    public Yaml(String type, String harnessApiVersion, String artifactServerName, boolean metadataOnly) {
+    public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly) {
       super(type, harnessApiVersion);
-      this.artifactServerName = artifactServerName;
+      this.serverName = serverName;
       this.metadataOnly = metadataOnly;
     }
   }

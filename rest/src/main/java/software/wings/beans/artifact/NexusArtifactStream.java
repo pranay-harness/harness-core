@@ -453,9 +453,9 @@ public class NexusArtifactStream extends ArtifactStream {
     private String imageName;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String repositoryName,
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
         String groupId, List<String> artifactPaths, String imageName) {
-      super(NEXUS.name(), harnessApiVersion, artifactServerName, metadataOnly);
+      super(NEXUS.name(), harnessApiVersion, serverName, metadataOnly);
       this.repositoryName = repositoryName;
       this.groupId = groupId;
       this.artifactPaths = artifactPaths;

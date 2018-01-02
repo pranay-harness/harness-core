@@ -31,7 +31,7 @@ public class GcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml artifactStreamYaml = changeContext.getYaml();
     return !(isEmpty(artifactStreamYaml.getDockerImageName()) || isEmpty(artifactStreamYaml.getRegistryHostName())
-        || isEmpty(artifactStreamYaml.getArtifactServerName()));
+        || isEmpty(artifactStreamYaml.getServerName()));
   }
 
   @Override

@@ -390,9 +390,9 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
     private List<String> artifactPaths;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String artifactServerName, boolean metadataOnly, String bucketName,
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String bucketName,
         List<String> artifactPaths) {
-      super(AMAZON_S3.name(), harnessApiVersion, artifactServerName, metadataOnly);
+      super(AMAZON_S3.name(), harnessApiVersion, serverName, metadataOnly);
       this.bucketName = bucketName;
       this.artifactPaths = artifactPaths;
     }
