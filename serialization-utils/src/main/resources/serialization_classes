@@ -249,3 +249,7 @@ software.wings.beans.VaultConfig, 5214
 software.wings.beans.yaml.GitPushResult$RefUpdate, 5215
 software.wings.service.impl.analysis.ElkConnector, 5216
 software.wings.service.impl.elk.ElkIndexTemplate, 5217
+software.wings.api.AmiServiceSetupElement, 5218
+software.wings.api.AmiStepExecutionSummary, 5219
+software.wings.api.AmiServiceDeployElement, 5220
+software.wings.beans.InstanceUnitType, 5221
