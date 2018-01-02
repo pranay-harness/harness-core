@@ -728,7 +728,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public boolean isStateValid(String appdId, String stateExecutionID) {
     StateExecutionInstance stateExecutionInstance =
         workflowExecutionService.getStateExecutionData(appdId, stateExecutionID);
-    return (stateExecutionInstance == null || stateExecutionInstance.getStatus().isFinalStatus()) ? false : true;
+    return stateExecutionInstance != null && !stateExecutionInstance.getStatus().isFinalStatus();
   }
 
   @Override

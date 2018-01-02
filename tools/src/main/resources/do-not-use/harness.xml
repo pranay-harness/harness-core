@@ -81,6 +81,10 @@
          where the developer forget to add braces -->
         <module name="NeedBraces"/>
 
+        <module name="com.github.sevntu.checkstyle.checks.coding.AvoidNotShortCircuitOperatorsForBooleanCheck"/>
+
+        <module name="com.github.sevntu.checkstyle.checks.coding.ReturnNullInsteadOfBooleanCheck"/>
+
         <!-- TODO: Shadowing field could be a source of bugs, very hard to figure out
         <module name="HiddenField">
             <property name="tokens" value="VARIABLE_DEF"/>
@@ -99,6 +103,17 @@
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
 
+        <!-- LOMBOK -->
+
+        <!--
+        TODO: Using the default builder name requires to use the class name to make the name unique. Using a(an)
+        builder name form makes it unique and shorter when imported statically.
+        <module name="com.github.sevntu.checkstyle.checks.annotation.RequiredParameterForAnnotationCheck">
+            <property name="annotationName" value="Builder"/>
+            <property name="requiredParameters" value="builderMethodName"/>
+        </module>
+        -->
+
         <!-- SWITCH -->
 
         <!-- Missing default switch action is error prone. Please make sure that you handle all possible cases with
@@ -112,11 +127,26 @@
         <!-- Not a big deal, but extremely easy to follow -->
         <module name="DefaultComesLast"/>
 
+        <!-- LOGGING -->
+
+        <!-- TODO: Every system handler should be responsible to handle all the exception in its execution threads.
+        When the thread is done or move to another task it should log or serialize the exception info to another
+        subsystem. If it is responsible to do so, this means that no one else should do it. This is why log and
+        rethrow pattern will either duplicate the logging or it is needed because the handler needs to be fixed.
+        In both cases having tis pattern in the code should be removed.
+        <module name="com.github.sevntu.checkstyle.checks.coding.EitherLogOrThrowCheck">
+            <property name="loggerFullyQualifiedClassName" value="org.slf4j.Logger"/>
+            <property name="loggingMethodNames" value="error, warn, info, debug"/>
+        </module>
+        -->
+
+
         <!-- *** -->
 
         <module name="EmptyStatement"/>
         <module name="ModifierOrder"/>
         <module name="RedundantModifier" />
         <module name="UnnecessaryParentheses"/>
+        <module name="com.github.sevntu.checkstyle.checks.coding.ReturnBooleanFromTernaryCheck"/>
     </module>
 </module>
