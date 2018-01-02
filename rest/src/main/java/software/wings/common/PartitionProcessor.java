@@ -102,10 +102,10 @@ public interface PartitionProcessor {
         }
       } catch (Exception e) {
         log().error(e.getMessage(), e);
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "messages",
-            "Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
-                + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts),
-            e);
+        throw new WingsException(ErrorCode.INVALID_REQUEST, e)
+            .addParam("messages",
+                "Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
+                    + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
       }
 
       List<PartitionElement> partLists = new ArrayList<>();

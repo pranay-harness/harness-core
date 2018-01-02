@@ -134,7 +134,7 @@ public abstract class NodeSelectState extends State {
       throw e;
     } catch (Exception e) {
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 

@@ -78,7 +78,7 @@ public class SettingsServiceImpl implements SettingsService {
       return wingsPersistence.query(SettingAttribute.class, req);
     } catch (Exception e) {
       logger.error("Error getting setting attributes. " + e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 

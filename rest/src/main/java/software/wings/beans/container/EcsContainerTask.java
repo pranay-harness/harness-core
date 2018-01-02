@@ -127,8 +127,8 @@ public class EcsContainerTask extends ContainerTask {
         if (e instanceof WingsException) {
           throw(WingsException) e;
         }
-        throw new WingsException(
-            ErrorCode.INVALID_ARGUMENT, "args", "Cannot create task definition from JSON: " + e.getMessage(), e);
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e)
+            .addParam("args", "Cannot create task definition from JSON: " + e.getMessage());
       }
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "ECS advanced configuration is empty.");
@@ -154,7 +154,7 @@ public class EcsContainerTask extends ContainerTask {
           .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
   }
 

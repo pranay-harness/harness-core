@@ -172,8 +172,8 @@ public class KubernetesContainerTask extends ContainerTask {
         if (e instanceof WingsException) {
           throw(WingsException) e;
         }
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-            "Cannot create controller from " + getAdvancedType().name() + ": " + e.getMessage(), e);
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e)
+            .addParam("args", "Cannot create controller from " + getAdvancedType().name() + ": " + e.getMessage());
       }
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Configuration is empty.");
@@ -202,7 +202,7 @@ public class KubernetesContainerTask extends ContainerTask {
     try {
       return type == JSON ? (HasMetadata) KubernetesHelper.loadJson(config) : KubernetesHelper.loadYaml(config);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
   }
 
@@ -213,7 +213,7 @@ public class KubernetesContainerTask extends ContainerTask {
           .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
   }
 
