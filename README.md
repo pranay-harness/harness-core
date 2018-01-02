@@ -1,4 +1,4 @@
-# Wings Project Dev environment setup instructions :
+# Portal Project Dev environment setup instructions :
 
 ## On MacOS
 
@@ -16,7 +16,7 @@
 4. Install and start mongodb :
 
     `brew install mongo && brew services start mongodb`
-5. Install npm :
+5. Install npm (used for front-end):
     `brew install npm`
 
 6. Set up JAVA_HOME: create ~/.bash_profile file and add following line:
@@ -39,7 +39,7 @@ sudo apt install oracle-java8-unlimited-jce-policy
 
 ### Build
 
-1) Clone form git repository: https://github.com/wings-software/wings
+1) Clone form git repository: https://github.com/wings-software/portal
 
    (Optional) Follow https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
    to setup your SSH keys. You can then use SSH to interact with git
@@ -52,7 +52,7 @@ sudo apt install oracle-java8-unlimited-jce-policy
    You can also do
    `sudo mkdir -p /data/db`
    `sudo chown -R <user name> /data`
-3) Go to wings directory and run
+3) Go to `portal` directory and run
 
     `mvn clean install`
 
@@ -91,7 +91,7 @@ helper shell scripts:
 ### IntelliJ Setup
 
 1) Install IntelliJ community edition
-2) Import wings portal as maven project
+2) Import `portal` as maven project
 3) Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
    (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
 
