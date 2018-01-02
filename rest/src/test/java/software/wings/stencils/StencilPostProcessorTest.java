@@ -1,6 +1,5 @@
 package software.wings.stencils;
 
-import static freemarker.template.utility.Collections12.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
@@ -20,6 +19,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.utils.JsonUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,20 +51,23 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Test
   public void shouldExpandStencilOnPostProcess() throws Exception {
     List<Stencil> processedStencils =
-        stencilPostProcessor.postProcess(singletonList(new StencilType(ExpandStencilObject.class)), APP_ID);
+        stencilPostProcessor.postProcess(Collections.singletonList(new StencilType(ExpandStencilObject.class)), APP_ID);
 
     assertThat(processedStencils)
         .hasSize(2)
         .extracting(Stencil::getName, Stencil::getJsonSchema, Stencil::getType)
-        .contains(
-            tuple("Value1",
-                JsonUtils.readTree(
-                    "{\"type\":\"object\",\"properties\":{\"expand\":{\"type\":\"string\",\"enum\":[\"Name1\",\"Name2\"],\"enumNames\":[\"Value1\",\"Value2\"],"
-                    + "\"default\":\"Name1\"}}}"),
-                "TYPE"),
+        .contains(tuple("Value1",
+                      JsonUtils.readTree("{\"type\":\"object\",\"properties\":{\"expand\":"
+                          + "{\"type\":\"string\","
+                          + "\"enum\":[\"Name1\",\"Name2\"],"
+                          + "\"enumNames\":[\"Value1\",\"Value2\"],"
+                          + "\"default\":\"Name1\"}}}"),
+                      "TYPE"),
             tuple("Value2",
-                JsonUtils.readTree(
-                    "{\"type\":\"object\",\"properties\":{\"expand\":{\"type\":\"string\",\"enum\":[\"Name1\",\"Name2\"],\"enumNames\":[\"Value1\",\"Value2\"],"
+                JsonUtils.readTree("{\"type\":\"object\",\"properties\":{\"expand\":"
+                    + "{\"type\":\"string\","
+                    + "\"enum\":[\"Name1\",\"Name2\"],"
+                    + "\"enumNames\":[\"Value1\",\"Value2\"],"
                     + "\"default\":\"Name2\"}}}"),
                 "TYPE"));
   }
@@ -77,7 +80,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Test
   public void shouldNotExpandForStencilEnumOnPostProcess() throws Exception {
     List<Stencil> processedStencils =
-        stencilPostProcessor.postProcess(singletonList(new StencilType(EnumStencilObject.class)), APP_ID);
+        stencilPostProcessor.postProcess(Collections.singletonList(new StencilType(EnumStencilObject.class)), APP_ID);
 
     assertThat(processedStencils)
         .hasSize(1)
@@ -95,8 +98,8 @@ public class StencilPostProcessorTest extends WingsBaseTest {
    */
   @Test
   public void shouldSetDefaultValueForTheField() throws Exception {
-    List<Stencil> processedStencils =
-        stencilPostProcessor.postProcess(singletonList(new StencilType(DefaultStencilObject.class)), APP_ID);
+    List<Stencil> processedStencils = stencilPostProcessor.postProcess(
+        Collections.singletonList(new StencilType(DefaultStencilObject.class)), APP_ID);
 
     assertThat(processedStencils)
         .hasSize(1)
@@ -114,8 +117,8 @@ public class StencilPostProcessorTest extends WingsBaseTest {
    */
   @Test
   public void shouldSetDefaultValueForTheAccessorMethod() throws Exception {
-    List<Stencil> processedStencils =
-        stencilPostProcessor.postProcess(singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID);
+    List<Stencil> processedStencils = stencilPostProcessor.postProcess(
+        Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID);
 
     assertThat(processedStencils)
         .hasSize(1)
