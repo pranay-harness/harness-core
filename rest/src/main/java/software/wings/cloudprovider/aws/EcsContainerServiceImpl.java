@@ -866,7 +866,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
     } catch (IOException ex) {
-      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
+      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult =
@@ -1035,7 +1035,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                    .build());
           } catch (Exception e) {
             logger.error("Unknown error fetching meta info ", e);
-            throw new WingsException(INVALID_REQUEST, "message", e.getMessage(), e);
+            throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
           }
         } else {
           logger.warn("Could not connect to {}", uri);
@@ -1059,7 +1059,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(e.getMessage(), LogLevel.ERROR);
       logger.error(e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST, "message", e.getMessage(), e);
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 
@@ -1107,7 +1107,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
         throw new WingsException(INVALID_REQUEST, "message", msg);
       }
-      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
+      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
     }
     executionLogCallback.saveExecutionLog("Service failed to reach a steady state", LogLevel.ERROR);
     throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach a steady state");

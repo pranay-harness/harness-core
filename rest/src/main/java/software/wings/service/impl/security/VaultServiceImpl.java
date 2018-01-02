@@ -63,7 +63,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .decrypt(data, vaultConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", e.getMessage(), e);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e).addParam("reason", e.getMessage());
     }
   }
 

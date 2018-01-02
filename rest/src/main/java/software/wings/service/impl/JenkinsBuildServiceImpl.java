@@ -70,7 +70,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), 50);
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching builds from jenkins server", ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
+          .addParam("message", "Error in fetching builds from jenkins server");
     }
   }
 
@@ -127,7 +128,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       return jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName());
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching build from jenkins server", ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
+          .addParam("message", "Error in fetching build from jenkins server");
     }
   }
 

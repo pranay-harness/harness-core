@@ -352,8 +352,8 @@ public class BambooServiceImpl implements BambooService {
         IOUtils.closeQuietly(response.errorBody());
       }
       logger.error("BambooService job keys fetch failed with exception", e);
-      throw new WingsException(
-          ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Failed to trigger bamboo plan " + buildResultKey, e);
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, e)
+          .addParam("message", "Failed to trigger bamboo plan " + buildResultKey);
     }
   }
 
@@ -402,8 +402,8 @@ public class BambooServiceImpl implements BambooService {
       } catch (IOException e) {
         String msg = "Failed to download the artifact from url [" + link + "]";
         logger.error(msg, e);
-        throw new WingsException(
-            ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), e);
+        throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, e)
+            .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
       }
     } else {
       // It is not matching  direct url, so just prepare the url
@@ -440,8 +440,8 @@ public class BambooServiceImpl implements BambooService {
           return ImmutablePair.of(artifactSourcePath, uc.getInputStream());
         } catch (IOException e) {
           logger.error("Failed to download the artifact from url {}", artifactUrl, e);
-          throw new WingsException(
-              ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), e);
+          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, e)
+              .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }
       } else {
         throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg);
