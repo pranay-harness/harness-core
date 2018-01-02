@@ -133,4 +133,6 @@ public interface InstanceService extends OwnedByApplication {
    */
   void deleteContainerDeploymentInfoAndInstances(
       Set<String> containerSvcNameSetToBeDeleted, InstanceType instanceType, String appId);
+
+  void deleteInstancesOfAutoScalingGroups(List<String> autoScalingGroupList, String appId);
 }

@@ -12,12 +12,14 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class Ec2InstanceInfo extends HostInstanceInfo {
   private Instance ec2Instance;
+  private String autoScalingGroupName;
 
   public static final class Builder {
     private Instance ec2Instance;
     private String hostId;
     private String hostName;
     private String hostPublicDns;
+    private String autoScalingGroupName;
 
     private Builder() {}
 
@@ -45,12 +47,18 @@ public class Ec2InstanceInfo extends HostInstanceInfo {
       return this;
     }
 
+    public Builder withAutoScalingGroupName(String autoScalingGroupName) {
+      this.autoScalingGroupName = autoScalingGroupName;
+      return this;
+    }
+
     public Builder but() {
       return anEc2InstanceInfo()
           .withEc2Instance(ec2Instance)
           .withHostId(hostId)
           .withHostName(hostName)
-          .withHostPublicDns(hostPublicDns);
+          .withHostPublicDns(hostPublicDns)
+          .withAutoScalingGroupName(autoScalingGroupName);
     }
 
     public Ec2InstanceInfo build() {
@@ -59,6 +67,7 @@ public class Ec2InstanceInfo extends HostInstanceInfo {
       ec2InstanceInfo.setHostId(hostId);
       ec2InstanceInfo.setHostName(hostName);
       ec2InstanceInfo.setHostPublicDns(hostPublicDns);
+      ec2InstanceInfo.setAutoScalingGroupName(autoScalingGroupName);
       return ec2InstanceInfo;
     }
   }

@@ -21,4 +21,6 @@ import java.util.List;
 @Builder
 public class InstanceChangeEvent extends Queuable {
   private List<Instance> instanceList;
+  private List<String> autoScalingGroupList;
+  private String appId;
 }

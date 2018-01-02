@@ -2,8 +2,6 @@ package software.wings.service.impl.instance;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.common.Constants.DEPLOY_SERVICE;
-import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP;
-import static software.wings.sm.ContextElementType.AMI_SERVICE_DEPLOY;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -14,7 +12,7 @@ import com.amazonaws.services.ec2.model.Reservation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.api.AmiServiceDeployElement;
+import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceChangeEvent;
@@ -112,10 +110,11 @@ public class InstanceHelper {
         containerInstanceHelper.extractContainerInfoAndSendEvent(
             stateExecutionInstanceId, phaseExecutionData, workflowExecution, infrastructureMapping);
       } else {
+        List<String> autoScalingGroupNames = null;
         List<Instance> totalInstanceList = Lists.newArrayList();
 
-        if (DeploymentType.AMI.equals(phaseExecutionData.getDeploymentType())) {
-          getInstancesFromAMIDeployment(
+        if (DeploymentType.AMI.name().equals(phaseExecutionData.getDeploymentType())) {
+          autoScalingGroupNames = getASGFromAMIDeploymentAndLoadInstances(
               infrastructureMapping, phaseExecutionData, workflowExecution, artifact, totalInstanceList);
         } else {
           for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
@@ -136,7 +135,11 @@ public class InstanceHelper {
           }
         }
 
-        InstanceChangeEvent instanceChangeEvent = InstanceChangeEvent.builder().instanceList(totalInstanceList).build();
+        InstanceChangeEvent instanceChangeEvent = InstanceChangeEvent.builder()
+                                                      .instanceList(totalInstanceList)
+                                                      .autoScalingGroupList(autoScalingGroupNames)
+                                                      .appId(appId)
+                                                      .build();
         instanceChangeEventQueue.send(instanceChangeEvent);
       }
 
@@ -146,9 +149,13 @@ public class InstanceHelper {
     }
   }
 
-  private void getInstancesFromAMIDeployment(InfrastructureMapping infrastructureMapping,
+  /**
+   * Returns the auto scaling group names and also loads the instances to the totalInstanceList
+   */
+  private List<String> getASGFromAMIDeploymentAndLoadInstances(InfrastructureMapping infrastructureMapping,
       PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution, Artifact artifact,
       List<Instance> totalInstanceList) throws HarnessException {
+    List<String> autoScalingGroupNames = Lists.newArrayList();
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
 
     Optional<PhaseStepExecutionSummary> phaseStepSummaryOptional =
@@ -164,38 +171,35 @@ public class InstanceHelper {
       Optional<StepExecutionSummary> stepExecutionSummaryOptional =
           phaseStepExecutionSummary.getStepExecutionSummaryList()
               .stream()
-              .filter(stepExecutionSummary -> UPGRADE_AUTOSCALING_GROUP.equals(stepExecutionSummary.getStepName()))
+              .filter(stepExecutionSummary -> stepExecutionSummary instanceof AmiStepExecutionSummary)
               .findFirst();
 
       if (stepExecutionSummaryOptional.isPresent()) {
         StepExecutionSummary stepExecutionSummary = stepExecutionSummaryOptional.get();
-        if (stepExecutionSummary.getElement().getElementType() == AMI_SERVICE_DEPLOY) {
-          AmiServiceDeployElement amiServiceDeployElement = (AmiServiceDeployElement) stepExecutionSummary.getElement();
 
-          // Capture the instances of the new revision
-          if (!isEmpty(amiServiceDeployElement.getNewInstanceData())) {
-            amiServiceDeployElement.getNewInstanceData().stream().forEach(containerServiceData -> {
-              List<Instance> instanceList = getInstancesFromAutoScalingGroup(awsAmiInfrastructureMapping.getRegion(),
-                  containerServiceData.getName(), phaseExecutionData, workflowExecution, artifact,
-                  infrastructureMapping.getInfraMappingType());
-              totalInstanceList.addAll(instanceList);
-            });
-          }
+        AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) stepExecutionSummary;
 
-          // Capture the instances of the old revision, note that the downsize operation need not bring the count
-          // to zero.
-          if (!isEmpty(amiServiceDeployElement.getOldInstanceData())) {
-            amiServiceDeployElement.getNewInstanceData().stream().forEach(containerServiceData -> {
-              List<Instance> instanceList = getInstancesFromAutoScalingGroup(awsAmiInfrastructureMapping.getRegion(),
-                  containerServiceData.getName(), phaseExecutionData, workflowExecution, artifact,
-                  infrastructureMapping.getInfraMappingType());
-              totalInstanceList.addAll(instanceList);
-            });
-          }
+        // Capture the instances of the new revision
+        if (!isEmpty(amiStepExecutionSummary.getNewInstanceData())) {
+          amiStepExecutionSummary.getNewInstanceData().stream().forEach(containerServiceData -> {
+            List<Instance> instanceList = getInstancesFromAutoScalingGroup(awsAmiInfrastructureMapping.getRegion(),
+                containerServiceData.getName(), phaseExecutionData, workflowExecution, artifact,
+                infrastructureMapping.getInfraMappingType());
+            totalInstanceList.addAll(instanceList);
+            autoScalingGroupNames.add(containerServiceData.getName());
+          });
+        }
 
-        } else {
-          throw new HarnessException("Invalid Context element for AMI Deploy:"
-              + stepExecutionSummary.getElement().getElementType() + " for workflow: " + workflowExecution.getName());
+        // Capture the instances of the old revision, note that the downsize operation need not bring the count
+        // to zero.
+        if (!isEmpty(amiStepExecutionSummary.getOldInstanceData())) {
+          amiStepExecutionSummary.getNewInstanceData().stream().forEach(containerServiceData -> {
+            List<Instance> instanceList = getInstancesFromAutoScalingGroup(awsAmiInfrastructureMapping.getRegion(),
+                containerServiceData.getName(), phaseExecutionData, workflowExecution, artifact,
+                infrastructureMapping.getInfraMappingType());
+            totalInstanceList.addAll(instanceList);
+            autoScalingGroupNames.add(containerServiceData.getName());
+          });
         }
       } else {
         throw new HarnessException(
@@ -206,6 +210,8 @@ public class InstanceHelper {
       throw new HarnessException(
           "Phase step execution summary null for AMI Deploy for workflow: " + workflowExecution.getName());
     }
+
+    return autoScalingGroupNames;
   }
 
   private List<Instance> getInstancesFromAutoScalingGroup(String region, String autoScalingGroupName,
@@ -214,6 +220,12 @@ public class InstanceHelper {
     String computeProviderId = phaseExecutionData.getComputeProviderId();
     SettingAttribute settingAttribute = settingsService.get(computeProviderId);
     Validator.notNullCheck("Aws config not found with the given id:" + computeProviderId, settingAttribute);
+    InfrastructureMapping infrastructureMapping =
+        infraMappingService.get(workflowExecution.getAppId(), phaseExecutionData.getInfraMappingId());
+    Validator.notNullCheck(
+        "Infrastructure mapping not found with the given id:" + phaseExecutionData.getInfraMappingId(),
+        infrastructureMapping);
+
     List<Instance> instanceList = Lists.newArrayList();
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, null, null);
@@ -223,7 +235,7 @@ public class InstanceHelper {
     describeInstancesResult.getReservations().stream().forEach(
         reservation -> reservation.getInstances().stream().forEach(ec2Instance -> {
           Instance instance = buildInstanceUsingEc2InstanceInfo(
-              workflowExecution, artifact, ec2Instance, phaseExecutionData, infraMappingType);
+              workflowExecution, artifact, ec2Instance, phaseExecutionData, infraMappingType, autoScalingGroupName);
           instanceList.add(instance);
         }));
     return instanceList;
@@ -268,7 +280,7 @@ public class InstanceHelper {
 
     if (hostUuid == null) {
       if (host.getEc2Instance() != null) {
-        setInstanceInfoAndKey(builder, host.getEc2Instance(), phaseExecutionData.getInfraMappingId());
+        setInstanceInfoAndKey(builder, host.getEc2Instance(), phaseExecutionData.getInfraMappingId(), null);
       } else if (host.getInstanceId() != null && region != null) {
         // TODO:: Avoid sequential fetch for Instance
         SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
@@ -288,7 +300,7 @@ public class InstanceHelper {
                 .findFirst()
                 .orElse(null);
         if (instance != null) {
-          setInstanceInfoAndKey(builder, instance, phaseExecutionData.getInfraMappingId());
+          setInstanceInfoAndKey(builder, instance, phaseExecutionData.getInfraMappingId(), null);
         } else {
           logger.warn(
               "Cannot build host based instance info since instanceId is not found in AWS wworkflowId:{}, instanceId:{}",
@@ -312,9 +324,9 @@ public class InstanceHelper {
 
   public Instance buildInstanceUsingEc2InstanceInfo(WorkflowExecution workflowExecution, Artifact artifact,
       com.amazonaws.services.ec2.model.Instance ec2Instance, PhaseExecutionData phaseExecutionData,
-      String infraMappingType) {
+      String infraMappingType, String autoScalingGroupName) {
     Instance.Builder builder = buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMappingType);
-    setInstanceInfoAndKey(builder, ec2Instance, phaseExecutionData.getInfraMappingId());
+    setInstanceInfoAndKey(builder, ec2Instance, phaseExecutionData.getInfraMappingId(), autoScalingGroupName);
     return builder.build();
   }
 
@@ -385,8 +397,8 @@ public class InstanceHelper {
     builder.withInstanceInfo(instanceInfo);
   }
 
-  private void setInstanceInfoAndKey(
-      Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId) {
+  private void setInstanceInfoAndKey(Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance,
+      String infraMappingId, String autoScalingGroupName) {
     String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
     String privateDnsName = privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf("."));
     HostInstanceKey hostInstanceKey =
@@ -396,6 +408,7 @@ public class InstanceHelper {
     InstanceInfo instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
                                     .withEc2Instance(ec2Instance)
                                     .withHostName(privateDnsName)
+                                    .withAutoScalingGroupName(autoScalingGroupName)
                                     .withHostPublicDns(ec2Instance.getPublicDnsName())
                                     .build();
 
