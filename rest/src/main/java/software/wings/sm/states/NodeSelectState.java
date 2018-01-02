@@ -122,11 +122,14 @@ public abstract class NodeSelectState extends State {
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =
           aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
-      return anExecutionResponse()
-          .addContextElement(serviceIdParamElement)
-          .addNotifyElement(serviceIdParamElement)
-          .withStateExecutionData(selectedNodeExecutionData)
-          .build();
+      ExecutionResponse.Builder executionResponse = anExecutionResponse()
+                                                        .addContextElement(serviceIdParamElement)
+                                                        .addNotifyElement(serviceIdParamElement)
+                                                        .withStateExecutionData(selectedNodeExecutionData);
+      if (isEmpty(serviceInstances)) {
+        executionResponse.withErrorMessage("No nodes selected");
+      }
+      return executionResponse.build();
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -161,10 +164,7 @@ public abstract class NodeSelectState extends State {
       } else {
         msg.append("This phase deploys to ");
         if (instanceUnitType == PERCENTAGE) {
-          msg.append(instanceCount)
-              .append("%, which evaluates to ")
-              .append(getCumulativeTotal(totalAvailableInstances))
-              .append(" instances (cumulative), ");
+          return null;
         } else {
           msg.append(instanceCount).append(" instance").append(instanceCount == 1 ? "" : "s").append(" (cumulative) ");
         }

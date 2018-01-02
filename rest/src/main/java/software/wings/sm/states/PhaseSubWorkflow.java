@@ -136,7 +136,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       if (stateExecutionData != null) {
         ContextElement element = stateExecutionData.getElement();
         if (element != null) {
-          if (ContextElementType.CONTAINER_SERVICE.name().equals(element.getElementType())) {
+          if (ContextElementType.CONTAINER_SERVICE == element.getElementType()) {
             ContainerServiceElement containerElement = (ContainerServiceElement) element;
             phaseExecutionData.setContainerServiceName(containerElement.getName());
           }

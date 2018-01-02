@@ -1,9 +1,7 @@
-/**
- *
- */
-
 package software.wings.sm.states;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
@@ -94,11 +92,11 @@ public class RepeatState extends State {
     }
     List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
     try {
-      if (repeatElements == null || repeatElements.size() == 0) {
+      if (isEmpty(repeatElements)) {
         if (repeatElementExpression != null) {
           repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
           repeatStateExecutionData.setRepeatElements(repeatElements);
-          if (repeatElements != null && !repeatElements.isEmpty()) {
+          if (isNotEmpty(repeatElements)) {
             repeatStateExecutionData.setRepeatElementType(repeatElements.get(0).getElementType());
           }
         }
@@ -108,12 +106,6 @@ public class RepeatState extends State {
       throw new WingsException(ex);
     }
 
-    if (repeatElements == null || repeatElements.size() == 0) {
-      ExecutionResponse executionResponse = new ExecutionResponse();
-      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      executionResponse.setErrorMessage("No repeat elements found for the expression: " + repeatElementExpression);
-      return executionResponse;
-    }
     if (repeatTransitionStateName == null) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
@@ -136,23 +128,26 @@ public class RepeatState extends State {
     repeatStateExecutionData.setExecutionStrategy(executionStrategy);
 
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-    List<String> correlationIds = new ArrayList<>();
 
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
 
-    if (executionStrategy == ExecutionStrategy.PARALLEL) {
-      for (ContextElement repeatElement : repeatElements) {
+    if (isNotEmpty(repeatElements)) {
+      List<String> correlationIds = new ArrayList<>();
+      if (executionStrategy == ExecutionStrategy.PARALLEL) {
+        for (ContextElement repeatElement : repeatElements) {
+          processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
+        }
+      } else {
+        Integer repeatElementIndex = 0;
+        repeatStateExecutionData.setRepeatElementIndex(0);
+        ContextElement repeatElement = repeatElements.get(repeatElementIndex);
         processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
       }
-    } else {
-      Integer repeatElementIndex = 0;
-      repeatStateExecutionData.setRepeatElementIndex(0);
-      ContextElement repeatElement = repeatElements.get(repeatElementIndex);
-      processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
+
+      executionResponse.setAsync(true);
+      executionResponse.setCorrelationIds(correlationIds);
     }
 
-    executionResponse.setAsync(true);
-    executionResponse.setCorrelationIds(correlationIds);
     executionResponse.setStateExecutionData(repeatStateExecutionData);
     return executionResponse;
   }
