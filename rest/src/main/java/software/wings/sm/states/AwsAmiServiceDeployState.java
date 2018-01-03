@@ -9,6 +9,7 @@ import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.Misc.isNotNullOrEmpty;
+import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.common.base.Objects;
@@ -28,7 +29,6 @@ import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -37,6 +37,7 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
@@ -51,6 +52,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -334,21 +336,24 @@ public class AwsAmiServiceDeployState extends State {
                          .withStatus(ExecutionStatus.SUCCESS)
                          .build())
               .collect(Collectors.toList());
-      awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
 
-      instanceElementListParam =
-          InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+      awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+      instanceElementListParam.setInstanceElements(instanceElements);
     } catch (Exception ex) {
       logger.error("Ami deploy step failed with error ", ex);
       executionStatus = ExecutionStatus.FAILED;
       errorMessage = ex.getMessage();
+      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
     }
 
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), executionStatus);
 
-    executionLogCallback.saveExecutionLog("Successfully completed resize operation",
+    executionLogCallback.saveExecutionLog(
+        String.format("AutoScaling Group resize operation completed with status:[%s]", executionStatus),
         ExecutionStatus.SUCCESS.equals(executionStatus) ? CommandExecutionStatus.SUCCESS
-                                                        : CommandExecutionStatus.FAILURE);
+                                                        : CommandExecutionStatus.FAILURE,
+        ExecutionStatus.SUCCESS.equals(executionStatus) ? LogLevel.INFO : LogLevel.ERROR);
+
     return anExecutionResponse()
         .withStateExecutionData(awsAmiDeployStateExecutionData)
         .withExecutionStatus(executionStatus)
@@ -433,20 +438,35 @@ public class AwsAmiServiceDeployState extends State {
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
       Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst,
       Integer autoScalingSteadyStateTimeout) {
+    if (isNullOrEmpty(newAutoScalingGroupName) && isNullOrEmpty(oldAutoScalingGroupName)) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "At least one AutoScaling Group must be present");
+    }
     if (resizeNewFirst) {
-      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
-          newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback, autoScalingSteadyStateTimeout);
+      if (isNotNullOrEmpty(newAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(String.format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
+            newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback, autoScalingSteadyStateTimeout);
+      }
       if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
       }
     } else {
       if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
       }
-      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-          awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
+
+      if (isNotNullOrEmpty(newAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(String.format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
+            newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
+      }
     }
   }
 
@@ -534,12 +554,24 @@ public class AwsAmiServiceDeployState extends State {
     }
 
     public void saveExecutionLog(String line) {
-      saveExecutionLog(line, CommandExecutionStatus.RUNNING);
+      saveExecutionLog(line, CommandExecutionStatus.RUNNING, LogLevel.INFO);
     }
 
     public void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
+      saveExecutionLog(line, commandExecutionStatus, LogLevel.INFO);
+    }
+
+    public void saveExecutionLog(String line, LogLevel logLevel) {
+      saveExecutionLog(line, CommandExecutionStatus.RUNNING, logLevel);
+    }
+
+    public void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus, LogLevel logLevel) {
       if (logService != null) {
-        Log log = logBuilder.but().withExecutionResult(commandExecutionStatus).withLogLine(line).build();
+        Log log = logBuilder.but()
+                      .withLogLevel(logLevel)
+                      .withExecutionResult(commandExecutionStatus)
+                      .withLogLine(line)
+                      .build();
         logService.batchedSaveCommandUnitLogs(activityId, log.getCommandUnitName(), log);
       } else {
         logger.warn("No logService injected. Couldn't save log [{}]", line);
