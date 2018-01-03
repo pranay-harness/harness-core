@@ -29,6 +29,7 @@ import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -81,6 +82,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -320,8 +322,9 @@ public class AwsAmiServiceDeployState extends State {
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(logService, logBuilder, activity.getUuid());
 
-    InstanceElementListParam instanceElementListParam = null;
-
+    InstanceElementListParam instanceElementListParam = InstanceElementListParamBuilder.anInstanceElementListParam()
+                                                            .withInstanceElements(Collections.emptyList())
+                                                            .build();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage = null;
     try {
