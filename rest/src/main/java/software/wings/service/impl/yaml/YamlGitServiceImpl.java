@@ -148,7 +148,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                           .build());
       logger.info("GitConfigValidation [{}]", gitCommandExecutionResponse);
       if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", gitCommandExecutionResponse.getErrorMessage());
+        throw new WingsException(ErrorCode.INVALID_REQUEST)
+            .addParam("message", gitCommandExecutionResponse.getErrorMessage());
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

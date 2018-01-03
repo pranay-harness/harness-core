@@ -82,8 +82,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
     if (!Arrays.asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.ENVIRONMENT, EntityType.HOST)
              .contains(serviceVariable.getEntityType())) {
-      throw new WingsException(
-          INVALID_ARGUMENT, "args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
 
     ExpressionEvaluator.isValidVariableName(serviceVariable.getName());

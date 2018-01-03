@@ -51,13 +51,15 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, EcrConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
@@ -75,18 +77,19 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, EcrConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public boolean validateArtifactServer(EcrConfig config) {
     if (!validUrl(config.getEcrUrl())) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Amazon EC2 Container Registry URL must be a valid URL");
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+          .addParam("message", "Amazon EC2 Container Registry URL must be a valid URL");
     }
     if (!connectableHttpUrl(config.getEcrUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
-          "Could not reach Amazon EC2 Container Registry at : " + config.getEcrUrl());
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+          .addParam("message", "Could not reach Amazon EC2 Container Registry at : " + config.getEcrUrl());
     }
     return ecrClassicService.validateCredentials(config, Collections.emptyList());
   }

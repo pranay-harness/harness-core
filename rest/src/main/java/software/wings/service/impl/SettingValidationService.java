@@ -69,8 +69,8 @@ public class SettingValidationService {
             .equal(settingValue.getType())
             .get()
         != null) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "The name " + settingAttribute.getName() + " already exists.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "The name " + settingAttribute.getName() + " already exists.");
     }
 
     if (settingValue instanceof GcpConfig) {

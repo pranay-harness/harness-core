@@ -128,16 +128,17 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   public void validate() {
     if (provisionInstances) {
       if (isEmpty(autoScalingGroupName)) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-            "Auto Scaling group must not be empty when provision instances is true.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
       }
       if (setDesiredCapacity && desiredCapacity <= 0) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Desired count must be greater than zero.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Desired count must be greater than zero.");
       }
     } else {
       if (awsInstanceFilter == null) {
-        throw new WingsException(
-            ErrorCode.INVALID_ARGUMENT, "args", "Instance filter must not be null when provision instances is false.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Instance filter must not be null when provision instances is false.");
       }
     }
   }

@@ -46,13 +46,15 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by GCR Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by GCR Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by GCR Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by GCR Artifact Stream");
   }
 
   @Override
@@ -70,7 +72,8 @@ public class GcrBuildServiceImpl implements GcrBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by GCR Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by GCR Artifact Stream");
   }
 
   @Override

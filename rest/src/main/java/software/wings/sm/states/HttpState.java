@@ -489,7 +489,7 @@ public class HttpState extends State {
     try {
       return URLEncoder.encode(queryString, "UTF-8");
     } catch (UnsupportedEncodingException ex) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Couldn't url-encode " + queryString);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Couldn't url-encode " + queryString);
     }
   }
 

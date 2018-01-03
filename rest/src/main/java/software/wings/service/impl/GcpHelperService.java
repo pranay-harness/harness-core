@@ -66,12 +66,12 @@ public class GcpHelperService {
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service", e);
-      throw new WingsException(
-          ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid Google Cloud Platform credentials.");
+      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+          .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       logger.error("Error getting Google container service", e);
-      throw new WingsException(
-          ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid Google Cloud Platform credentials.");
+      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+          .addParam("message", "Invalid Google Cloud Platform credentials.");
     }
   }
 

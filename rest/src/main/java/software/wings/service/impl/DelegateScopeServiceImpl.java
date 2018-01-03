@@ -55,7 +55,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   public DelegateScope update(DelegateScope delegateScope) {
     if (!delegateScope.isValid()) {
       logger.warn("Delegate scope cannot be empty.");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate scope cannot be empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
     UpdateOperations<DelegateScope> updateOperations = wingsPersistence.createUpdateOperations(DelegateScope.class);
     setUnset(updateOperations, "name", delegateScope.getName());
@@ -113,7 +113,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   public DelegateScope add(DelegateScope delegateScope) {
     if (!delegateScope.isValid()) {
       logger.warn("Delegate scope cannot be empty.");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate scope cannot be empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
     delegateScope.setAppId(GLOBAL_APP_ID);
     DelegateScope persistedScope = wingsPersistence.saveAndGet(DelegateScope.class, delegateScope);
@@ -154,7 +154,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       String message =
           String.format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
               delegateScope.getName(), Joiner.on(", ").join(delegateNames));
-      throw new WingsException(INVALID_REQUEST, "message", message);
+      throw new WingsException(INVALID_REQUEST).addParam("message", message);
     }
   }
 }

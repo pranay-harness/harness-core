@@ -255,7 +255,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     PageRequest<ServiceInstance> req = pageRequest.build();
     // Just for safety
     if (req.getFilters() == null || req.getFilters().isEmpty()) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "No Filter attached to filter service instances");
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("args", "No Filter attached to filter service instances");
     }
     req.addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
     return req;

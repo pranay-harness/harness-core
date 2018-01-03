@@ -60,7 +60,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         fileIds.add(Pair.of(appContainer.getFileUuid(), null));
         break;
       default:
-        throw new WingsException(INVALID_REQUEST, "message", "Unsupported file category for copy step");
+        throw new WingsException(INVALID_REQUEST).addParam("message", "Unsupported file category for copy step");
     }
     return context.copyGridFsFiles(destinationDirectoryPath, fileBucket, fileIds);
   }

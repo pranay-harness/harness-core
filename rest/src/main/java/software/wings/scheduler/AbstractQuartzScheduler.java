@@ -66,7 +66,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       }
       return scheduler;
     } catch (SchedulerException e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Could not initialize cron scheduler");
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR).addParam("message", "Could not initialize cron scheduler");
     }
   }
 

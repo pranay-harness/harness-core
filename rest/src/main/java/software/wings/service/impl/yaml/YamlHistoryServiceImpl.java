@@ -76,7 +76,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
     YamlVersion yamlVersion = wingsPersistence.get(YamlVersion.class, uuid);
 
     if (yamlVersion == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "YamlVersion - '" + uuid + "' doesn't exist!");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "YamlVersion - '" + uuid + "' doesn't exist!");
     }
 
     return yamlVersion;

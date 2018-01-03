@@ -152,19 +152,20 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<String> getGroupIds(
       String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(
-        ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Jenkins Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Jenkins Artifact Stream");
   }
 
   @Override
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig) {
     if (!validUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Jenkins URL must be a valid URL");
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+          .addParam("message", "Jenkins URL must be a valid URL");
     }
 
     if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
-          "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+          .addParam("message", "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
     encryptionService.decrypt(jenkinsConfig, Collections.emptyList());
     Jenkins jenkins =

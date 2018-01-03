@@ -352,7 +352,7 @@ public class JenkinsImpl implements Jenkins {
   public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "No job [" + jobname + "] found");
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER).addParam("message", "No job [" + jobname + "] found");
     }
     try {
       QueueReference queueReference;
@@ -462,9 +462,10 @@ public class JenkinsImpl implements Jenkins {
   private void jenkinsExceptionHandler(Exception e) {
     if (e instanceof HttpResponseException) {
       if (((HttpResponseException) e).getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Jenkins credentials");
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER).addParam("message", "Invalid Jenkins credentials");
       } else if (((HttpResponseException) e).getStatusCode() == 403) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access jenkins");
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+            .addParam("message", "User not authorized to access jenkins");
       }
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Jenkins server may not be running");
@@ -477,7 +478,7 @@ public class JenkinsImpl implements Jenkins {
       wingsException.addParam("jenkinsResponse", "Server Error");
       throw wingsException;
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", e.getMessage());
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER).addParam("message", e.getMessage());
     }
   }
 

@@ -1049,15 +1049,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // Infra not present
     envExpression.ifPresent(templateExpression -> {
       if (!infraExpression.isPresent()) {
-        throw new WingsException(INVALID_REQUEST, "message",
-            "Service Infrastructure cannot be de-templatized because Environment is templatized");
+        throw new WingsException(INVALID_REQUEST)
+            .addParam("message", "Service Infrastructure cannot be de-templatized because Environment is templatized");
       }
     });
     // Infra not present
     serviceExpression.ifPresent(templateExpression -> {
       if (!infraExpression.isPresent()) {
-        throw new WingsException(INVALID_REQUEST, "message",
-            "Service Infrastructure cannot be de-templatized because Service is templatized");
+        throw new WingsException(INVALID_REQUEST)
+            .addParam("message", "Service Infrastructure cannot be de-templatized because Service is templatized");
       }
     });
   }
@@ -1090,9 +1090,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         notNullCheck("service", newService);
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-          throw new WingsException(INVALID_REQUEST, "message",
-              "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName()
-                  + "]");
+          throw new WingsException(INVALID_REQUEST)
+              .addParam("message",
+                  "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName()
+                      + "]");
         }
       }
     }
@@ -1394,17 +1395,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "Service [" + serviceId + "] does not exist");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service [" + serviceId + "] does not exist");
     }
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, inframappingId);
     if (infrastructureMapping == null) {
-      throw new WingsException(
-          INVALID_REQUEST, "message", "Service Infrastructure [" + inframappingId + "] does not exist");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Service Infrastructure [" + inframappingId + "] does not exist");
     }
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
-      throw new WingsException(INVALID_REQUEST, "message",
-          "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service [" + service.getName()
-              + "]");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
+                  + service.getName() + "]");
     }
   }
 
@@ -1548,21 +1550,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
       Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
       if (service == null) {
-        throw new WingsException(
-            INVALID_REQUEST, "message", "Service [" + workflowPhase.getServiceId() + "] does not exist");
+        throw new WingsException(INVALID_REQUEST)
+            .addParam("message", "Service [" + workflowPhase.getServiceId() + "] does not exist");
       }
       InfrastructureMapping infrastructureMapping = null;
       if (!workflowPhase.checkInfraTemplatized()) {
         if (infraMappingId == null) {
-          throw new WingsException(INVALID_REQUEST, "message",
-              String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
+          throw new WingsException(INVALID_REQUEST)
+              .addParam("message", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
         }
         infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
         Validator.notNullCheck("InfraMapping", infrastructureMapping);
         if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
-          throw new WingsException(INVALID_REQUEST, "message",
-              "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
-                  + service.getName() + "]");
+          throw new WingsException(INVALID_REQUEST)
+              .addParam("message",
+                  "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
+                      + service.getName() + "]");
         }
       }
       if (infrastructureMapping != null) {
@@ -1622,7 +1625,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(INVALID_REQUEST, "message", "No matching Workflow Phase");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "No matching Workflow Phase");
     }
 
     orchestrationWorkflow =
@@ -1685,7 +1688,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(INVALID_REQUEST, "args", "node");
+      throw new WingsException(INVALID_REQUEST).addParam("args", "node");
     }
 
     orchestrationWorkflow =
@@ -1751,8 +1754,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping == null) {
-      throw new WingsException(
-          INVALID_REQUEST, "message", "At least one service mapping required to clone across applications");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "At least one service mapping required to clone across applications");
     }
     Set<String> serviceIds = serviceMapping.keySet();
     for (String serviceId : serviceIds) {
@@ -1764,9 +1767,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         notNullCheck("targetService", newService);
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-          throw new WingsException(INVALID_REQUEST, "message",
-              "Target service  [" + oldService.getName() + " ] is not compatible with service [" + newService.getName()
-                  + "]");
+          throw new WingsException(INVALID_REQUEST)
+              .addParam("message",
+                  "Target service  [" + oldService.getName() + " ] is not compatible with service ["
+                      + newService.getName() + "]");
         }
       }
     }
@@ -2132,7 +2136,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         : AWS_NODE_SELECT;
 
     if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
-      throw new WingsException(INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Unsupported state type: " + stateType);
     }
 
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());

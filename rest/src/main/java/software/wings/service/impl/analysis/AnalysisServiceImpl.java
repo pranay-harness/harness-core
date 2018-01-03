@@ -532,7 +532,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           throw new IllegalStateException("Invalid state type: " + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode, "reason", e.getMessage());
+      throw new WingsException(errorCode).addParam("reason", e.getMessage());
     }
   }
 

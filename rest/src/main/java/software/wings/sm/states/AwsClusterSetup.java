@@ -92,14 +92,14 @@ public class AwsClusterSetup extends State {
     String env = workflowStandardParams.getEnv().getName();
 
     if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId())) {
-      throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Runtime creation of clusters is not yet supported.");
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "Runtime creation of clusters is not yet supported.");
     }
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());

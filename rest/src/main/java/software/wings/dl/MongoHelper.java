@@ -173,7 +173,7 @@ public class MongoHelper {
 
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
     if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
     if (op == null) {

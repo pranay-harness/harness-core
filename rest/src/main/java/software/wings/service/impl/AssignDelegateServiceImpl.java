@@ -72,7 +72,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       DelegateScope delegateScope, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
     if (!delegateScope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate scope cannot be empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
     boolean match = true;
 

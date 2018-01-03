@@ -214,8 +214,9 @@ public abstract class OrchestrationWorkflow {
     // check if template variable contains special character
     if (entityType != null) {
       if (!matcher.matches()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-            "Template expression:" + templateExpression.getExpression() + " contains special characters");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam(
+                "args", "Template expression:" + templateExpression.getExpression() + " contains special characters");
       }
     } else if (stateType != null) {
       // TODO: Check if it can contain other expressions

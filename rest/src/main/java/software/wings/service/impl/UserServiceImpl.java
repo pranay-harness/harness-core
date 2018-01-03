@@ -424,7 +424,7 @@ public class UserServiceImpl implements UserService {
       return existingInvite;
     }
     if (userInvite.getName() == null || userInvite.getPassword() == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "User name/password");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("args", "User name/password");
     }
 
     Account account = accountService.get(existingInvite.getAccountId());
@@ -463,12 +463,12 @@ public class UserServiceImpl implements UserService {
     User user = getUserByEmail(email);
 
     if (user == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "Email doesn't exist");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Email doesn't exist");
     }
 
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     if (jwtPasswordSecret == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "incorrect portal setup");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
     }
 
     try {
@@ -481,7 +481,7 @@ public class UserServiceImpl implements UserService {
                          .sign(algorithm);
       sendResetPasswordEmail(user, token);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(UNKNOWN_ERROR, "message", "reset password link could not be generated");
+      throw new WingsException(UNKNOWN_ERROR).addParam("message", "reset password link could not be generated");
     }
     return true;
   }
@@ -490,7 +490,7 @@ public class UserServiceImpl implements UserService {
   public boolean updatePassword(String resetPasswordToken, char[] password) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     if (jwtPasswordSecret == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "incorrect portal setup");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
     }
 
     try {
@@ -501,7 +501,7 @@ public class UserServiceImpl implements UserService {
       String email = decode.getClaim("email").asString();
       resetUserPassword(email, password, decode.getIssuedAt().getTime());
     } catch (UnsupportedEncodingException exception) {
-      throw new WingsException(UNKNOWN_ERROR, "message", "Invalid reset password link");
+      throw new WingsException(UNKNOWN_ERROR).addParam("message", "Invalid reset password link");
     } catch (JWTVerificationException exception) {
       throw new WingsException(EXPIRED_TOKEN);
     }
@@ -517,7 +517,7 @@ public class UserServiceImpl implements UserService {
   private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {
     User user = getUserByEmail(email);
     if (user == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "Email doesn't exist");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Email doesn't exist");
     } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
       throw new WingsException(EXPIRED_TOKEN);
     }
@@ -761,8 +761,8 @@ public class UserServiceImpl implements UserService {
   public ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl) {
     String jwtZendeskSecret = configuration.getPortal().getJwtZendeskSecret();
     if (jwtZendeskSecret == null) {
-      throw new WingsException(
-          INVALID_REQUEST, "message", "Request can not be completed. No Zendesk SSO secret found.");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Request can not be completed. No Zendesk SSO secret found.");
     }
 
     User user = UserThreadLocal.get();
@@ -787,7 +787,7 @@ public class UserServiceImpl implements UserService {
       jwsObject.sign(signer);
     } catch (com.nimbusds.jose.JOSEException e) {
       logger.error("Error signing JWT: " + e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST, "message", "Error signing JWT: " + e.getMessage());
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Error signing JWT: " + e.getMessage());
     }
 
     // Serialise to JWT compact form
@@ -844,15 +844,15 @@ public class UserServiceImpl implements UserService {
 
   private Account setupAccount(String accountName, String companyName) {
     if (isBlank(companyName)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Company Name Can't be empty");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Company Name Can't be empty");
     }
 
     if (isBlank(accountName)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name Can't be empty");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Account Name Can't be empty");
     }
 
     if (accountService.exists(accountName)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name should be unique");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Account Name should be unique");
     }
 
     Account account = Account.Builder.anAccount().withAccountName(accountName).withCompanyName(companyName).build();

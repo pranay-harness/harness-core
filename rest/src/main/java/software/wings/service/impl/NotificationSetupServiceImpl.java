@@ -110,7 +110,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup existingGroup =
         wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroup.getUuid());
     if (!existingGroup.isEditable()) {
-      throw new WingsException(INVALID_REQUEST, "message", "Default Notification Group can not be updated");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Default Notification Group can not be updated");
     }
     return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
   }
@@ -120,7 +120,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup notificationGroup =
         wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
     if (!notificationGroup.isEditable()) {
-      throw new WingsException(INVALID_REQUEST, "message", "Default Notification group can not be deleted");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Default Notification group can not be deleted");
     }
 
     List<Workflow> workflows =
@@ -142,9 +142,10 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
                              .map(Workflow::getName)
                              .collect(Collectors.toList());
     if (!inUse.isEmpty()) {
-      throw new WingsException(INVALID_REQUEST, "message",
-          String.format("'%s' is in use by %s workflow%s: '%s'", notificationGroup.getName(), inUse.size(),
-              inUse.size() == 1 ? "" : "s", Joiner.on("', '").join(inUse)));
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              String.format("'%s' is in use by %s workflow%s: '%s'", notificationGroup.getName(), inUse.size(),
+                  inUse.size() == 1 ? "" : "s", Joiner.on("', '").join(inUse)));
     }
     return wingsPersistence.delete(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
   }

@@ -229,7 +229,7 @@ public class AwsHelperService {
       new AmazonEC2Client(new BasicAWSCredentials(accessKey, new String(secretKey))).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid AWS credentials.");
+        throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");
       }
     }
   }
@@ -588,7 +588,8 @@ public class AwsHelperService {
       SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (connectorConfig == null || connectorConfig.getValue() == null
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "connectorConfig is not of type AwsConfig");
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "connectorConfig is not of type AwsConfig");
     }
     encryptionService.decrypt((Encryptable) connectorConfig.getValue(), encryptedDataDetails);
     return (AwsConfig) connectorConfig.getValue();
@@ -597,23 +598,25 @@ public class AwsHelperService {
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
     logger.error("AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {
         logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
       }
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof ClusterNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND)
+          .addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND)
+          .addParam("message", amazonServiceException.getMessage());
     } else {
       logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     }
   }
 
@@ -1000,9 +1003,9 @@ public class AwsHelperService {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey()).listTasks(listTasksRequest);
     } catch (ClusterNotFoundException ex) {
-      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND, "message", ex.getMessage());
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", ex.getMessage());
     } catch (ServiceNotFoundException ex) {
-      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND, "message", ex.getMessage());
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", ex.getMessage());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1245,7 +1248,7 @@ public class AwsHelperService {
                 instanceIds.size(), desiredCount));
       }
       if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
+        throw new WingsException(INIT_TIMEOUT).addParam("message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
       sleep((int) sleepInterval, TimeUnit.SECONDS);

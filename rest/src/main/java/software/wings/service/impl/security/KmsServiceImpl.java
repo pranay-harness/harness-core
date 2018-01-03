@@ -60,7 +60,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
           .encrypt(accountId, value, kmsConfig);
     } catch (Exception e) {
       logger.error("Error while encrypting: ", e);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", e.getMessage());
     }
   }
 
@@ -74,7 +74,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
       logger.error("Error while decrypting: ", e);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", e.getMessage());
     }
   }
 
@@ -127,8 +127,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       validateKms(accountId, kmsConfig);
     } catch (Exception e) {
       logger.error("Error while saving kms config: ", e);
-      throw new WingsException(
-          ErrorCode.KMS_OPERATION_ERROR, "reason", "Validation failed. Please check your credentials");
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
+          .addParam("reason", "Validation failed. Please check your credentials");
     }
     return saveKmsConfigInternal(accountId, kmsConfig);
   }
@@ -233,7 +233,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (query.hasNext()) {
       String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", message);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", message);
     }
 
     wingsPersistence.delete(KmsConfig.class, kmsConfigId);

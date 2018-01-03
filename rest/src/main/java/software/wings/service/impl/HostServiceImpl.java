@@ -82,7 +82,7 @@ public class HostServiceImpl implements HostService {
     Host savedHost = get(host.getAppId(), envId, host.getUuid());
 
     if (savedHost == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Host doesn't exist");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Host doesn't exist");
     }
 
     ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder().put("hostConnAttr", host.getHostConnAttr());

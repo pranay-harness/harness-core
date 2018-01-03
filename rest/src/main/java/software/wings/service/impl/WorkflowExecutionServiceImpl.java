@@ -306,9 +306,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     notNullCheck("workflowExecution", workflowExecution);
 
     if (!isPipelineWaitingApproval(workflowExecution.getPipelineExecution(), approvalId)) {
-      throw new WingsException(INVALID_ARGUMENT, "args",
-          "No Pipeline execution [" + workflowExecutionId
-              + "] waiting for approval id: " + approvalDetails.getApprovalId());
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args",
+              "No Pipeline execution [" + workflowExecutionId
+                  + "] waiting for approval id: " + approvalDetails.getApprovalId());
     }
     User user = UserThreadLocal.get();
     if (user != null) {
@@ -422,8 +423,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             stageExecutionDataList.add(stageExecution);
 
           } else {
-            throw new WingsException(
-                ErrorCode.INVALID_REQUEST, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
+            throw new WingsException(ErrorCode.INVALID_REQUEST)
+                .addParam("message", "Unknown stateType " + stateExecutionInstance.getStateType());
           }
         });
 
@@ -672,7 +673,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (runningWorkflowExecutions != null) {
       for (WorkflowExecution workflowExecution : runningWorkflowExecutions) {
         if (workflowExecution.getStatus() == NEW) {
-          throw new WingsException(ErrorCode.PIPELINE_ALREADY_TRIGGERED, "pilelineName", pipeline.getName());
+          throw new WingsException(ErrorCode.PIPELINE_ALREADY_TRIGGERED).addParam("pipelineName", pipeline.getName());
         }
         if (workflowExecution.getStatus() == RUNNING) {
           // Analyze if pipeline is in initial stage
@@ -782,8 +783,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
 
     if (!workflow.getOrchestrationWorkflow().isValid()) {
-      throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Workflow requested for execution is not valid/complete.");
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "Workflow requested for execution is not valid/complete.");
     }
     StateMachine stateMachine = workflowService.readStateMachine(appId, workflowId, workflow.getDefaultVersion());
     if (stateMachine == null) {
@@ -855,8 +856,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           || executionArgs.getWorkflowVariables().isEmpty()
           || StringUtils.isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
         if (variable.isMandatory() && variable.getValue() == null) {
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-              "Workflow variable " + variable.getName() + " is mandatory for execution");
+          throw new WingsException(ErrorCode.INVALID_REQUEST)
+              .addParam("message", "Workflow variable " + variable.getName() + " is mandatory for execution");
         }
         setVariables(variable.getName(), variable.getValue(), variables);
         continue;
@@ -921,7 +922,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
           logger.error("Service instances argument and valid service instance retrieved size not matching");
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid service instances");
+          throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid service instances");
         }
         executionArgs.setServiceInstanceIdNames(
             serviceInstances.stream().collect(Collectors.toMap(ServiceInstance::getUuid,
@@ -939,7 +940,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         if (artifacts == null || artifacts.size() != artifactIds.size()) {
           logger.error("Artifact argument and valid artifact retrieved size not matching");
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact");
+          throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid artifact");
         }
 
         // TODO: get rid of artifactIdNames when UI moves to artifact list
@@ -1155,8 +1156,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         logger.debug("Received an pipeline execution request");
         if (executionArgs.getPipelineId() == null) {
           logger.error("pipelineId is null for an pipeline execution");
-          throw new WingsException(
-              ErrorCode.INVALID_REQUEST, "message", "pipelineId is null for an pipeline execution");
+          throw new WingsException(ErrorCode.INVALID_REQUEST)
+              .addParam("message", "pipelineId is null for an pipeline execution");
         }
         return triggerPipelineExecution(appId, executionArgs.getPipelineId(), executionArgs);
       }
@@ -1165,8 +1166,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         logger.debug("Received an orchestrated execution request");
         if (executionArgs.getOrchestrationId() == null) {
           logger.error("workflowId is null for an orchestrated execution");
-          throw new WingsException(
-              ErrorCode.INVALID_REQUEST, "message", "workflowId is null for an orchestrated execution");
+          throw new WingsException(ErrorCode.INVALID_REQUEST)
+              .addParam("message", "workflowId is null for an orchestrated execution");
         }
         return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs);
       }
@@ -1175,18 +1176,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         logger.debug("Received an simple execution request");
         if (executionArgs.getServiceId() == null) {
           logger.error("serviceId is null for a simple execution");
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
+          throw new WingsException(ErrorCode.INVALID_REQUEST)
+              .addParam("message", "serviceId is null for a simple execution");
         }
         if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
           logger.error("serviceInstances are empty for a simple execution");
-          throw new WingsException(
-              ErrorCode.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
+          throw new WingsException(ErrorCode.INVALID_REQUEST)
+              .addParam("message", "serviceInstances are empty for a simple execution");
         }
         return triggerSimpleExecution(appId, envId, executionArgs, workflowExecutionUpdate);
       }
 
       default:
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "workflowType");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "workflowType");
     }
   }
 
@@ -1264,13 +1266,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution =
         wingsPersistence.get(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
     if (workflowExecution == null) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "No WorkflowExecution for executionUuid:" + executionUuid);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "No WorkflowExecution for executionUuid:" + executionUuid);
     }
 
     if (workflowExecution.getStatus().isFinalStatus()) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "Workflow execution already completed. executionUuid:" + executionUuid);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Workflow execution already completed. executionUuid:" + executionUuid);
     }
 
     if (workflowExecution.getWorkflowType() != PIPELINE) {
@@ -1281,8 +1283,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!(executionInterrupt.getExecutionInterruptType() == PAUSE_ALL
             || executionInterrupt.getExecutionInterruptType() == RESUME_ALL
             || executionInterrupt.getExecutionInterruptType() == ABORT_ALL)) {
-      throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Invalid ExecutionInterrupt: " + executionInterrupt);
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "Invalid ExecutionInterrupt: " + executionInterrupt);
     }
 
     try {
@@ -1331,13 +1333,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
       if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "OrchestrationWorkflow not found");
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "OrchestrationWorkflow not found");
       }
 
       StateMachine stateMachine =
           workflowService.readStateMachine(appId, executionArgs.getOrchestrationId(), workflow.getDefaultVersion());
       if (stateMachine == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Associated state machine not found");
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Associated state machine not found");
       }
 
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
@@ -1348,12 +1350,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       logger.debug("Received an simple execution request");
       if (executionArgs.getServiceId() == null) {
         logger.error("serviceId is null for a simple execution");
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
+        throw new WingsException(ErrorCode.INVALID_REQUEST)
+            .addParam("message", "serviceId is null for a simple execution");
       }
       if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
         logger.error("serviceInstances are empty for a simple execution");
-        throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
+        throw new WingsException(ErrorCode.INVALID_REQUEST)
+            .addParam("message", "serviceInstances are empty for a simple execution");
       }
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
       if (StringUtils.isNotBlank(executionArgs.getCommandName())) {

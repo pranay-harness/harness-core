@@ -153,7 +153,7 @@ public class KubernetesContainerTask extends ContainerTask {
         }
 
         if (podTemplateSpec == null || podTemplateSpec.getMetadata() == null) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing valid pod template.");
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Missing valid pod template.");
         }
 
         boolean containerHasDockerPlaceholder = false;
@@ -164,9 +164,10 @@ public class KubernetesContainerTask extends ContainerTask {
           logger.error("Controller spec must have a container definition with ${DOCKER_IMAGE_NAME} placeholder.", e);
         }
         if (!containerHasDockerPlaceholder) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-              "Controller spec must have a container definition with "
-                  + "${DOCKER_IMAGE_NAME} placeholder.");
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+              .addParam("args",
+                  "Controller spec must have a container definition with "
+                      + "${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
         if (e instanceof WingsException) {
@@ -176,7 +177,7 @@ public class KubernetesContainerTask extends ContainerTask {
             .addParam("args", "Cannot create controller from " + getAdvancedType().name() + ": " + e.getMessage());
       }
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Configuration is empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Configuration is empty.");
     }
   }
 

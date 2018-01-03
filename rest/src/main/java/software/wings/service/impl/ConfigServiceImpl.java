@@ -159,10 +159,11 @@ public class ConfigServiceImpl implements ConfigService {
     } else if (EntityType.SERVICE_TEMPLATE.equals(entityType)) {
       entityExist = serviceTemplateService.exist(appId, entityId);
     } else {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Config upload not supported for entityType " + entityType);
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args", "Config upload not supported for entityType " + entityType);
     }
     if (!entityExist) {
-      throw new WingsException(INVALID_REQUEST, "message", "Node identifier and node type do not match");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Node identifier and node type do not match");
     }
   }
 
@@ -171,11 +172,11 @@ public class ConfigServiceImpl implements ConfigService {
     try {
       Path path = Paths.get(relativePath);
       if (path.isAbsolute()) {
-        throw new WingsException(INVALID_ARGUMENT, "args", "Relative path can not be absolute");
+        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Relative path can not be absolute");
       }
       return path.normalize().toString();
     } catch (InvalidPathException | NullPointerException ex) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Invalid relativePath");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid relativePath");
     }
   }
 
@@ -186,7 +187,7 @@ public class ConfigServiceImpl implements ConfigService {
   public ConfigFile get(String appId, String configId) {
     ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
     if (configFile == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "ConfigFile not found");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "ConfigFile not found");
     }
     return configFile;
   }

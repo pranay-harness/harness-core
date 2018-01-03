@@ -119,9 +119,10 @@ public class EcsContainerTask extends ContainerTask {
         boolean containerHasDockerPlaceholder = taskDefinition.getContainerDefinitions().stream().anyMatch(
             cd -> DUMMY_DOCKER_IMAGE_NAME.equals(cd.getImage()));
         if (!containerHasDockerPlaceholder) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-              "Task definition spec must have a container definition with "
-                  + "${DOCKER_IMAGE_NAME} placeholder.");
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+              .addParam("args",
+                  "Task definition spec must have a container definition with "
+                      + "${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
         if (e instanceof WingsException) {
@@ -131,7 +132,7 @@ public class EcsContainerTask extends ContainerTask {
             .addParam("args", "Cannot create task definition from JSON: " + e.getMessage());
       }
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "ECS advanced configuration is empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "ECS advanced configuration is empty.");
     }
   }
 

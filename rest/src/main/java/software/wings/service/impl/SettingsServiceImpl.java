@@ -209,10 +209,11 @@ public class SettingsServiceImpl implements SettingsService {
 
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
-      throw new WingsException(INVALID_REQUEST, "message",
-          String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].", connectorSetting.getName(),
-              infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
-              Joiner.on(", ").join(infraMappingNames)));
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].",
+                  connectorSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+                  Joiner.on(", ").join(infraMappingNames)));
     } else {
       List<ArtifactStream> artifactStreams =
           artifactStreamService.list(aPageRequest().addFilter("settingId", EQ, connectorSetting.getUuid()).build())
@@ -222,10 +223,11 @@ public class SettingsServiceImpl implements SettingsService {
                                               .map(ArtifactStream::getSourceName)
                                               .filter(java.util.Objects::nonNull)
                                               .collect(Collectors.toList());
-        throw new WingsException(INVALID_REQUEST, "message",
-            String.format("Connector [%s] is referenced by %s Artifact Source%s [%s].", connectorSetting.getName(),
-                artifactStreamName.size(), artifactStreamName.size() == 1 ? "" : "s",
-                Joiner.on(", ").join(artifactStreamName)));
+        throw new WingsException(INVALID_REQUEST)
+            .addParam("message",
+                String.format("Connector [%s] is referenced by %s Artifact Source%s [%s].", connectorSetting.getName(),
+                    artifactStreamName.size(), artifactStreamName.size() == 1 ? "" : "s",
+                    Joiner.on(", ").join(artifactStreamName)));
       }
     }
 
@@ -243,10 +245,11 @@ public class SettingsServiceImpl implements SettingsService {
     if (infrastructureMappings.size() > 0) {
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
-      throw new WingsException(INVALID_REQUEST, "message",
-          String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
-              clodProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
-              Joiner.on(", ").join(infraMappingNames)));
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
+                  clodProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+                  Joiner.on(", ").join(infraMappingNames)));
     }
     // TODO:: workflow scan for finding out usage in Steps ???
   }

@@ -39,35 +39,35 @@ public class AmiBuildServiceImpl implements AmiBuildService {
   @Override
   public List<JobDetails> getJobs(
       AwsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    throw new WingsException(INVALID_REQUEST, "message", "Operation not supported by Ami Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Ami Artifact Stream");
   }
 
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, "message", "Operation not supported by Ami Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Ami Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, "message", "Operation not supported by Ami Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Ami Artifact Stream");
   }
 
   @Override
   public Map<String, String> getPlans(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, "message", "Operation not supported by Ami Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Ami Artifact Stream");
   }
 
   @Override
   public Map<String, String> getPlans(
       AwsConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType) {
-    throw new WingsException(INVALID_REQUEST, "message", "Operation not supported by Ami Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Ami Artifact Stream");
   }
 
   @Override
   public List<String> getGroupIds(String repoType, AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, "message", "Operation not supported by Ami Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Ami Artifact Stream");
   }
 
   @Override

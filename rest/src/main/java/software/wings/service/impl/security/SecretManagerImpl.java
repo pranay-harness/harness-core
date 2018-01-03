@@ -466,7 +466,8 @@ public class SecretManagerImpl implements SecretManager {
     try {
       encryptedDataId = wingsPersistence.save(encryptedData);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", "Variable " + name + " already exists");
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
+          .addParam("reason", "Variable " + name + " already exists");
     }
 
     if (UserThreadLocal.get() != null) {
@@ -501,7 +502,8 @@ public class SecretManagerImpl implements SecretManager {
     try {
       wingsPersistence.save(savedData);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", "Variable " + name + " already exists");
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
+          .addParam("reason", "Variable " + name + " already exists");
     }
 
     if (UserThreadLocal.get() != null) {
@@ -533,7 +535,7 @@ public class SecretManagerImpl implements SecretManager {
         errorMessage += serviceVariable.getName() + ", ";
       }
 
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", errorMessage);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", errorMessage);
     }
 
     return wingsPersistence.delete(EncryptedData.class, uuId);
@@ -694,7 +696,7 @@ public class SecretManagerImpl implements SecretManager {
         errorMessage += configFile.getFileName() + ", ";
       }
 
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", errorMessage);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", errorMessage);
     }
 
     switch (encryptedData.getEncryptionType()) {

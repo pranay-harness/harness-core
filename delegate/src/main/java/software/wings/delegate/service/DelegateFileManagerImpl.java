@@ -97,7 +97,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       }
 
       logger.error("fileId[{}] could not be found", fileId);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "File couldn't be downloaded");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "File couldn't be downloaded");
     }
   }
 

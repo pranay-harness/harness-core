@@ -168,8 +168,8 @@ public abstract class ContainerServiceDeploy extends State {
                                                  .getServiceDesiredCount(containerServiceParams);
 
     if (!previousDesiredCount.isPresent()) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          "Service setup not done, service name: " + contextData.containerElement.getName());
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "Service setup not done, service name: " + contextData.containerElement.getName());
     }
 
     int previousCount = previousDesiredCount.get();
@@ -179,7 +179,7 @@ public abstract class ContainerServiceDeploy extends State {
       String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
           + previousCount + ", desired: " + desiredCount + "}";
       logger.error(msg);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", msg);
     }
 
     return ContainerServiceData.builder()

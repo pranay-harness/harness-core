@@ -74,7 +74,7 @@ public class GcrServiceImpl implements GcrService {
       return processBuildResponse(response.body());
     } catch (IOException e) {
       logger.error("Error occurred while getting builds from " + imageName, e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
     }
   }
 
@@ -115,12 +115,12 @@ public class GcrServiceImpl implements GcrService {
       if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
         logger.warn("Image name [" + imageName + "] does not exist in Google Container Registry.");
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-            "Image name [" + imageName + "] does not exist in Google Container Registry.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Image name [" + imageName + "] does not exist in Google Container Registry.");
       }
     } catch (IOException e) {
       logger.error(e.getMessage(), e);
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Registry server");
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", "Registry server");
     }
     return true;
   }
@@ -137,7 +137,7 @@ public class GcrServiceImpl implements GcrService {
     } catch (IOException e) {
       logger.error(
           "Error occurred while sending request to server " + artifactStreamAttributes.getRegistryHostName(), e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
     }
   }
 
@@ -150,7 +150,7 @@ public class GcrServiceImpl implements GcrService {
     } else {
       String msg = "Could not refresh token for google cloud provider";
       logger.warn(msg);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", msg);
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", msg);
     }
   }
 
@@ -161,8 +161,8 @@ public class GcrServiceImpl implements GcrService {
       case 400:
         return false;
       case 401:
-        throw new WingsException(
-            ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Google Container Registry credentials");
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+            .addParam("message", "Invalid Google Container Registry credentials");
       default:
         unhandled(code);
     }

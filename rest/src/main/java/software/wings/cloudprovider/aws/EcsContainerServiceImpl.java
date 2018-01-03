@@ -814,7 +814,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     int retryCount = RETRY_COUNTER;
     while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
       if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT, "message", "All instances didn't registered with cluster");
+        throw new WingsException(INIT_TIMEOUT).addParam("message", "All instances didn't registered with cluster");
       }
       Misc.quietSleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
     }
@@ -825,7 +825,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     int retryCount = RETRY_COUNTER;
     while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
       if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT, "message", "Not all instances ready to registered with cluster");
+        throw new WingsException(INIT_TIMEOUT)
+            .addParam("message", "Not all instances ready to registered with cluster");
       }
       Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
     }
@@ -885,7 +886,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     while (!allDesiredTaskRunning(
         region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
+        throw new WingsException(INIT_TIMEOUT).addParam("message", "Some tasks are still not in running state");
       }
       Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
     }
@@ -1105,12 +1106,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (ex instanceof InterruptedException) {
         String msg = "Timed out waiting for service to reach steady state.";
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-        throw new WingsException(INVALID_REQUEST, "message", msg);
+        throw new WingsException(INVALID_REQUEST).addParam("message", msg);
       }
       throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
     }
     executionLogCallback.saveExecutionLog("Service failed to reach a steady state", LogLevel.ERROR);
-    throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach a steady state");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Service failed to reach a steady state");
   }
 
   private void waitForServiceUpdateToComplete(UpdateServiceResult updateServiceResult, String region,
@@ -1133,7 +1134,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               service[0].getDesiredCount()),
           LogLevel.ERROR);
       executionLogCallback.saveExecutionLog("Service resize operation failed.", LogLevel.ERROR);
-      throw new WingsException(INVALID_REQUEST, "message", "Service update failed");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service update failed");
     }
   }
 

@@ -191,8 +191,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       } else if (controller instanceof StatefulSet) {
         statefulOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
       } else if (controller instanceof DaemonSet) {
-        throw new WingsException(
-            ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
       }
 
       logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
@@ -297,8 +297,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } else if (controller instanceof StatefulSet) {
       return ((StatefulSet) controller).getSpec().getReplicas();
     } else if (controller instanceof DaemonSet) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
     }
     return null;
   }
