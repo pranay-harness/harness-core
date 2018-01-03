@@ -193,7 +193,7 @@ public class InstanceHelper {
         // Capture the instances of the old revision, note that the downsize operation need not bring the count
         // to zero.
         if (!isEmpty(amiStepExecutionSummary.getOldInstanceData())) {
-          amiStepExecutionSummary.getNewInstanceData().stream().forEach(containerServiceData -> {
+          amiStepExecutionSummary.getOldInstanceData().stream().forEach(containerServiceData -> {
             List<Instance> instanceList = getInstancesFromAutoScalingGroup(awsAmiInfrastructureMapping.getRegion(),
                 containerServiceData.getName(), phaseExecutionData, workflowExecution, artifact,
                 infrastructureMapping.getInfraMappingType());
