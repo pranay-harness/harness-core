@@ -3,18 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>software.wings</groupId>
-        <artifactId>portal</artifactId>
+        <artifactId>tools</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>tools</artifactId>
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>config</module>
-        <module>checkstyle</module>
-    </modules>
+    <artifactId>config</artifactId>
+    <packaging>jar</packaging>
 
 </project>
 
