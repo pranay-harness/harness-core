@@ -83,6 +83,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -275,12 +276,13 @@ public abstract class ContainerServiceDeploy extends State {
     CommandExecutionContext commandExecutionContext =
         buildCommandExecutionContext(contextData, desiredCounts, executionData.getActivityId());
 
+    String waitId = UUID.randomUUID().toString();
     String delegateTaskId =
         delegateService.queueTask(aDelegateTask()
                                       .withAccountId(contextData.app.getAccountId())
                                       .withAppId(contextData.appId)
                                       .withTaskType(TaskType.COMMAND)
-                                      .withWaitId(executionData.getActivityId())
+                                      .withWaitId(waitId)
                                       .withParameters(new Object[] {contextData.command, commandExecutionContext})
                                       .withEnvId(contextData.env.getUuid())
                                       .withInfrastructureMappingId(contextData.infrastructureMappingId)
@@ -289,7 +291,7 @@ public abstract class ContainerServiceDeploy extends State {
 
     return anExecutionResponse()
         .withAsync(true)
-        .withCorrelationIds(singletonList(executionData.getActivityId()))
+        .withCorrelationIds(singletonList(waitId))
         .withStateExecutionData(executionData)
         .withDelegateTaskId(delegateTaskId)
         .build();

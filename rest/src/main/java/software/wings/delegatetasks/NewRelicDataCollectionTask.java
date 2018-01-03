@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
 
-import com.google.common.collect.Sets;
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
@@ -36,10 +35,8 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -102,13 +99,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     return PERIOD_MINS;
   }
 
-  private int getDurationToAskMinutes() {
-    return COLLECTION_PERIOD_MINS - APM_COLLECTION_BUFFER;
-  }
-
   private class NewRelicMetricCollector implements Runnable {
     private final NewRelicDataCollectionInfo dataCollectionInfo;
-    private final List<NewRelicApplicationInstance> instances;
+    private List<NewRelicApplicationInstance> instances;
     private long windowStartTimeManager;
     private Collection<NewRelicMetric> metrics;
     private int dataCollectionMinute;
@@ -120,8 +113,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult)
         throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
-      this.instances = newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
-          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
       this.managerAnalysisStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime());
       this.windowStartTimeManager = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime());
       this.analysisStartTimeDelegate = System.currentTimeMillis();
@@ -136,105 +127,129 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricData(
         NewRelicApplicationInstance node, Collection<String> metricNames, long endTime) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
-      try {
-        NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-            metricNames, windowStartTimeManager, endTime);
 
-        for (NewRelicMetricSlice metric : metricData.getMetrics()) {
-          for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
-            // set from time to the timestamp
-            long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
-            if (timeStamp < managerAnalysisStartTime) {
-              logger.debug("New relic sending us data in the past. request start time {}, received time {}",
-                  managerAnalysisStartTime, timeStamp);
-            }
-            final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
-            metricDataRecord.setName(metric.getName());
-            metricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
-            metricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
-            metricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
-            metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
-            metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
-            metricDataRecord.setStateType(getStateType());
+      getWebTransactionMetrics(node, metricNames, endTime, records);
+      getErrorMetrics(node, metricNames, endTime, records);
+      getApdexMetrics(node, metricNames, endTime, records);
 
-            metricDataRecord.setTimeStamp(timeStamp);
-            metricDataRecord.setHost(node.getHost());
-
-            metricDataRecord.setDataCollectionMinute(
-                (int) ((timeStamp - managerAnalysisStartTime) / TimeUnit.MINUTES.toMillis(1)));
-
-            final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
-            NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
-            if (webTransactions.getCall_count() > 0) {
-              metricDataRecord.setThroughput(webTransactions.getThroughput());
-              metricDataRecord.setAverageResponseTime(webTransactions.getAverage_response_time());
-              metricDataRecord.setCallCount(webTransactions.getCall_count());
-              metricDataRecord.setRequestsPerMinute(webTransactions.getRequests_per_minute());
-              records.put(metric.getName(), timeStamp, metricDataRecord);
-            }
-          }
-        }
-        logger.info("Step 1: Get NewRelic records finished");
-
-      } catch (Exception e) {
-        logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw e;
-      }
-
-      // get error metrics
-      try {
-        NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-            getErrorMetricNames(metricNames), windowStartTimeManager, endTime);
-        for (NewRelicMetricSlice metric : metricData.getMetrics()) {
-          for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
-            long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
-            String metricName = metric.getName().replace("Errors/", "");
-
-            NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
-            if (metricDataRecord != null) {
-              final String errorsJson = JsonUtils.asJson(timeslice.getValues());
-              NewRelicErrors errors = JsonUtils.asObject(errorsJson, NewRelicErrors.class);
-              metricDataRecord.setError(errors.getError_count());
-            }
-          }
-        }
-
-        logger.info("Step 2: Get NewRelic error records finished");
-
-      } catch (Exception e) {
-        logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw e;
-      }
-
-      // get apdex metrics
-      try {
-        NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-            getApdexMetricNames(metricNames), windowStartTimeManager, endTime);
-        for (NewRelicMetricSlice metric : metricData.getMetrics()) {
-          for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
-            long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
-            String metricName = metric.getName().replace("Apdex", "WebTransaction");
-
-            NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
-            if (metricDataRecord != null) {
-              final String apdexJson = JsonUtils.asJson(timeslice.getValues());
-              NewRelicApdex apdex = JsonUtils.asObject(apdexJson, NewRelicApdex.class);
-              metricDataRecord.setApdexScore(apdex.getScore());
-            }
-          }
-        }
-
-        logger.info("Step 3: Get NewRelic apdex records finished");
-
-      } catch (Exception e) {
-        logger.warn("Error fetching metrics for node: " + node + ", metrics: " + metricNames, e);
-        throw e;
-      }
       logger.debug(records.toString());
       return records;
+    }
+
+    private void getWebTransactionMetrics(NewRelicApplicationInstance node, Collection<String> metricNames,
+        long endTime, TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
+      int retry = 0;
+      while (retry < RETRIES) {
+        try {
+          NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
+              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+              metricNames, windowStartTimeManager, endTime);
+
+          for (NewRelicMetricSlice metric : metricData.getMetrics()) {
+            for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
+              // set from time to the timestamp
+              long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
+              if (timeStamp < managerAnalysisStartTime) {
+                logger.debug("New relic sending us data in the past. request start time {}, received time {}",
+                    managerAnalysisStartTime, timeStamp);
+              }
+              final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
+              metricDataRecord.setName(metric.getName());
+              metricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
+              metricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
+              metricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
+              metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
+              metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
+              metricDataRecord.setStateType(getStateType());
+
+              metricDataRecord.setTimeStamp(timeStamp);
+              metricDataRecord.setHost(node.getHost());
+
+              metricDataRecord.setDataCollectionMinute(
+                  (int) ((timeStamp - managerAnalysisStartTime) / TimeUnit.MINUTES.toMillis(1)));
+
+              final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
+              NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
+              if (webTransactions.getCall_count() > 0) {
+                metricDataRecord.setThroughput(webTransactions.getThroughput());
+                metricDataRecord.setAverageResponseTime(webTransactions.getAverage_response_time());
+                metricDataRecord.setCallCount(webTransactions.getCall_count());
+                metricDataRecord.setRequestsPerMinute(webTransactions.getRequests_per_minute());
+                records.put(metric.getName(), timeStamp, metricDataRecord);
+              }
+            }
+          }
+          break;
+        } catch (Exception e) {
+          logger.warn(
+              "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
+          retry++;
+        }
+      }
+    }
+
+    private void getErrorMetrics(NewRelicApplicationInstance node, Collection<String> metricNames, long endTime,
+        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
+      // get error metrics
+      int retry = 0;
+      while (retry < RETRIES) {
+        try {
+          NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
+              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+              getErrorMetricNames(metricNames), windowStartTimeManager, endTime);
+          for (NewRelicMetricSlice metric : metricData.getMetrics()) {
+            for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
+              long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
+              String metricName = metric.getName().replace("Errors/", "");
+
+              NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
+              if (metricDataRecord != null) {
+                final String errorsJson = JsonUtils.asJson(timeslice.getValues());
+                NewRelicErrors errors = JsonUtils.asObject(errorsJson, NewRelicErrors.class);
+                metricDataRecord.setError(errors.getError_count());
+              }
+            }
+          }
+
+          break;
+        } catch (Exception e) {
+          logger.warn(
+              "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
+          retry++;
+        }
+      }
+    }
+
+    private void getApdexMetrics(NewRelicApplicationInstance node, Collection<String> metricNames, long endTime,
+        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
+      // get apdex metrics
+      int retry = 0;
+      while (retry < RETRIES) {
+        try {
+          NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
+              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+              getApdexMetricNames(metricNames), windowStartTimeManager, endTime);
+          for (NewRelicMetricSlice metric : metricData.getMetrics()) {
+            for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
+              long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
+              String metricName = metric.getName().replace("Apdex", "WebTransaction");
+
+              NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
+              if (metricDataRecord != null) {
+                final String apdexJson = JsonUtils.asJson(timeslice.getValues());
+                NewRelicApdex apdex = JsonUtils.asObject(apdexJson, NewRelicApdex.class);
+                metricDataRecord.setApdexScore(apdex.getScore());
+              }
+            }
+          }
+
+          break;
+        } catch (Exception e) {
+          logger.warn(
+              "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
+          retry++;
+        }
+      }
     }
 
     private void getMetricsSet() {
@@ -265,6 +280,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         int retry = 0;
         while (!completed.get() && retry < RETRIES) {
           logger.info("Running new relic data collection");
+          long startTime = System.currentTimeMillis();
           try {
             getMetricsSet();
 
@@ -283,6 +299,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   COLLECTION_PERIOD_MINS);
               return;
             }
+            this.instances = newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
+                dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
+            logger.info("Got {} new relic nodes.", this.instances.size());
 
             lastCollectionTime = System.currentTimeMillis();
 
@@ -291,11 +310,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             final int collectionLength = timeDeltaInMins(windowEndTimeManager, windowStartTimeManager);
             int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
 
-            TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
-
             List<Collection<String>> metricBatches = batchMetricsToCollect();
             logger.info("Found total new relic metric batches " + metricBatches.size());
 
+            List<Callable<Boolean>> callables = new ArrayList<>();
             for (NewRelicApplicationInstance node : instances) {
               if (!dataCollectionInfo.getHosts().contains(node.getHost())) {
                 logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
@@ -303,24 +321,18 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 continue;
               }
 
-              for (Collection<String> metricNames : metricBatches) {
-                records.putAll(getMetricData(node, metricNames, windowEndTimeManager));
-              }
-
-              logger.info("Got NewRelic metric records {}", records.size());
-              List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
-              logger.info("Saving {} NewRelic metric records to harness manager", metricRecords.size());
-              if (!saveMetrics(metricRecords)) {
-                retry = RETRIES;
-                taskResult.setErrorMessage("Cannot save new relic metric records to Harness. Server returned error");
-                throw new RuntimeException("Cannot save new relic metric records to Harness. Server returned error");
-              }
-              logger.info("Sending " + records.cellSet().size() + " new relic metric records for " + node.getHost()
-                  + " to the server for : from minute " + dataCollectionMinute + ", to minute "
-                  + dataCollectionMinuteEnd);
-              records.clear();
+              callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }
 
+            List<Boolean> results = executeParrallel(callables);
+            for (boolean result : results) {
+              if (!result) {
+                retry = 0;
+                throw new RuntimeException("Cannot save new relic metric records. Server returned error");
+              }
+            }
+
+            TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
             // HeartBeat
             records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
                 NewRelicMetricDataRecord.builder()
@@ -345,6 +357,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             windowStartTimeManager = windowEndTimeManager;
 
             dataCollectionMinute = dataCollectionMinuteEnd + 1;
+            logger.info("Time take for data collection: " + (System.currentTimeMillis() - startTime));
             // dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
             break;
           } catch (Exception ex) {
@@ -389,6 +402,21 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
+    private boolean fetchAndSaveMetricsForNode(
+        NewRelicApplicationInstance node, List<Collection<String>> metricBatches, long endTime) throws Exception {
+      TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
+
+      final long startTime = System.currentTimeMillis();
+      for (Collection<String> metricNames : metricBatches) {
+        records.putAll(getMetricData(node, metricNames, endTime));
+      }
+
+      List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
+      logger.info("Sending {} new relic metric records for node {} for minute {}. Time taken: {}",
+          records.cellSet().size(), node.getHost(), dataCollectionMinute, System.currentTimeMillis() - startTime);
+      return saveMetrics(metricRecords);
+    }
+
     private boolean saveMetrics(List<NewRelicMetricDataRecord> records) {
       int retrySave = 0;
       do {
@@ -400,33 +428,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         Misc.sleep(RETRY_SLEEP_SECS, TimeUnit.SECONDS);
       } while (++retrySave != RETRIES);
       return false;
-    }
-
-    private Collection<NewRelicMetric> getMetricsWithDataIn24Hrs() throws IOException {
-      Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
-      for (NewRelicMetric metric : metrics) {
-        webTransactionMetrics.put(metric.getName(), metric);
-      }
-      List<Collection<String>> metricBatches = batchMetricsToCollect();
-      final long currentTime = System.currentTimeMillis();
-      for (Collection<String> metricNames : metricBatches) {
-        Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
-        for (NewRelicApplicationInstance node : instances) {
-          // find and remove metrics which have no data in last 24 hours
-          NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-              metricNames, currentTime - TimeUnit.DAYS.toMillis(1), currentTime);
-          metricsWithNoData.removeAll(metricData.getMetrics_found());
-
-          if (metricsWithNoData.isEmpty()) {
-            break;
-          }
-        }
-        for (String metricName : metricsWithNoData) {
-          webTransactionMetrics.remove(metricName);
-        }
-      }
-      return webTransactionMetrics.values();
     }
 
     private Collection<String> getApdexMetricNames(Collection<String> metricNames) {

@@ -74,15 +74,29 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Override
   public List<NewRelicApplicationInstance> getApplicationInstances(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId) throws IOException {
-    final Call<NewRelicApplicationInstancesResponse> request =
-        getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listAppInstances(newRelicApplicationId);
-    final Response<NewRelicApplicationInstancesResponse> response = request.execute();
-    if (response.isSuccessful()) {
-      return response.body().getApplication_instances();
+    List<NewRelicApplicationInstance> rv = new ArrayList<>();
+    int pageCount = 1;
+    while (true) {
+      final Call<NewRelicApplicationInstancesResponse> request =
+          getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
+              .listAppInstances(newRelicApplicationId, pageCount);
+      final Response<NewRelicApplicationInstancesResponse> response = request.execute();
+      if (response.isSuccessful()) {
+        List<NewRelicApplicationInstance> applicationInstances = response.body().getApplication_instances();
+        if (applicationInstances == null || applicationInstances.isEmpty()) {
+          break;
+        } else {
+          rv.addAll(applicationInstances);
+        }
+      } else {
+        JSONObject errorObject = new JSONObject(response.errorBody().string());
+        throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+      }
+
+      pageCount++;
     }
 
-    JSONObject errorObject = new JSONObject(response.errorBody().string());
-    throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+    return rv;
   }
 
   @Override

@@ -110,6 +110,7 @@ import software.wings.utils.message.MessengerType;
 
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -144,6 +145,10 @@ public class DelegateModule extends AbstractModule {
         .annotatedWith(Names.named("verificationExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(
             2, new ThreadFactoryBuilder().setNameFormat("Verification-Thread-%d").setPriority(7).build()));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("verificationDataCollector"))
+        .toInstance(Executors.newFixedThreadPool(
+            10, new ThreadFactoryBuilder().setNameFormat("Verification-Data-Collector-%d").setPriority(7).build()));
 
     int cores = Runtime.getRuntime().availableProcessors();
     bind(ExecutorService.class)
