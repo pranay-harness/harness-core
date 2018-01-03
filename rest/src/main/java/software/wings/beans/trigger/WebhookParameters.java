@@ -10,7 +10,7 @@ public class WebhookParameters {
   private List<String> params;
   private List<String> expressions = new ArrayList<>();
 
-  public static final String SOURCE_BRANCH_NAME = "${source.branch.name}";
+  public static final String SOURCE_BRANCH_NAME = "${pullsource.branch.name}";
   public static final String TARGET_BRANCH_NAME = "${destination.branch.name}";
   public static final String SOURCE_REPOSITORY_NAME = "${source.repository.name}";
   //  public static final String SOURCE_REPOSITORY_OWNER = "${sourceRepositoryOwner}";
