@@ -532,4 +532,9 @@ public interface Constants {
    * The constant DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR.
    */
   String DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR = "20";
+
+  /**
+   * The constant ASG_COMMAND_NAME.
+   */
+  String ASG_COMMAND_NAME = "Resize AutoScaling Group";
 }

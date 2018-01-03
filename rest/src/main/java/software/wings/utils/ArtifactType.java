@@ -18,6 +18,7 @@ import static software.wings.beans.command.CommandUnitType.RESIZE;
 import static software.wings.beans.command.CommandUnitType.RESIZE_KUBERNETES;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
+import static software.wings.common.Constants.ASG_COMMAND_NAME;
 
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
@@ -759,13 +760,13 @@ public enum ArtifactType {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
-                         .withGraphName("Resize AutoScaling Group")
+                         .withGraphName(ASG_COMMAND_NAME)
                          .addNodes(aNode()
                                        .withOrigin(true)
                                        .withX(50)
                                        .withY(50)
                                        .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withName("Resize AutoScaling Group")
+                                       .withName(ASG_COMMAND_NAME)
                                        .withType(AWS_AMI.name())
                                        .build())
                          .buildPipeline())
