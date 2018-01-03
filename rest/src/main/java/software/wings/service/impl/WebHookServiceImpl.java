@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.utils.Misc.isNullOrEmpty;
 
 import com.google.inject.Inject;
@@ -16,7 +15,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
-import software.wings.beans.trigger.WebhookEventType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -26,7 +24,6 @@ import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import javax.validation.executable.ValidateOnExecution;
@@ -103,24 +100,6 @@ public class WebHookServiceImpl implements WebHookService {
         return WebHookResponse.builder().error("Trigger not associated to the given token").build();
       }
       WebHookTriggerCondition webhookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
-      String pullRequestPrefix = "pullrequest.";
-      boolean bitBucketPullRequest = false;
-      if (webhookTriggerCondition.getWebhookSource() != null
-          && BITBUCKET.equals(webhookTriggerCondition.getWebhookSource())) {
-        List<WebhookEventType> eventTypes = webhookTriggerCondition.getEventTypes();
-        if (webhookEventPayload.contains("pullrequest") || webhookEventPayload.contains("pullRequest")) {
-          if (webhookEventPayload.contains("pullRequest")) {
-            pullRequestPrefix = "pullRequest.";
-          }
-          if (eventTypes.contains(WebhookEventType.PULL_REQUEST)) {
-            bitBucketPullRequest = true;
-          }
-        } else {
-          return WebHookResponse.builder().error("Only Pull Request supported for Bit Bucket.").build();
-        }
-      } else {
-        return WebHookResponse.builder().error("Invalid Webhook Source. Only Bit Bucket supported now.").build();
-      }
       Map<String, String> webhookParameters = webhookTriggerCondition.getParameters();
       Map<String, String> resolvedParameters = new HashMap<>();
       DocumentContext ctx = JsonUtils.parseJson(webhookEventPayload);
@@ -132,11 +111,6 @@ public class WebHookServiceImpl implements WebHookService {
             Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(param);
             if (matcher.matches()) {
               String paramVariable = matcher.group(0).substring(2, matcher.group(0).length() - 1);
-              if (bitBucketPullRequest) {
-                if (!paramVariable.startsWith("pullrequest") || !paramVariable.startsWith("pullRequest")) {
-                  paramVariable = pullRequestPrefix + paramVariable;
-                }
-              }
               logger.info("Param Variable {}", paramVariable);
               paramValue = JsonUtils.jsonPath(ctx, paramVariable);
             } else {
