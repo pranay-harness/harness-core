@@ -107,11 +107,7 @@
 
         <!--
         TODO: Using the default builder name requires to use the class name to make the name unique. Using a(an)
-        builder name form makes it unique and shorter when imported statically.
-        <module name="com.github.sevntu.checkstyle.checks.annotation.RequiredParameterForAnnotationCheck">
-            <property name="annotationName" value="Builder"/>
-            <property name="requiredParameters" value="builderMethodName"/>
-        </module>
+        <module name="io.harness.checks.RequiredBuilderMethodNameCheck" />
         -->
 
         <!-- SWITCH -->
