@@ -5,17 +5,17 @@ import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import software.wings.category.FastTests;
-import software.wings.category.IntegrationTests;
-import software.wings.category.SlowTests;
-import software.wings.category.UnitTests;
+import software.wings.category.speed.FastTests;
+import software.wings.category.speed.SlowTests;
+import software.wings.category.element.IntegrationTests;
+import software.wings.category.element.UnitTests;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class CategoryTimeoutRule extends Timeout {
   public CategoryTimeoutRule() {
-    super(builder());
+    super(Timeout.builder());
   }
 
   public Statement apply(Statement statement, Description description) {
