@@ -214,4 +214,4 @@ The admin username and password are in BaseIntegrationTest.java.
 * Refer to the readme under python/splunk_intelligence
 
 ### Troubleshooting
-https://github.com/wings-software/wings/wiki/Troubleshooting-running-java-process
+https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-process
