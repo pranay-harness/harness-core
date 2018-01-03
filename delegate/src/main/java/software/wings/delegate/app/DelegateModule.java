@@ -169,7 +169,8 @@ public class DelegateModule extends AbstractModule {
     bind(BambooService.class).to(BambooServiceImpl.class);
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(AsyncHttpClient.class)
-        .toInstance(new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAcceptAnyCertificate(true).build()));
+        .toInstance(new AsyncHttpClient(
+            new AsyncHttpClientConfig.Builder().setUseProxyProperties(true).setAcceptAnyCertificate(true).build()));
     bind(AwsClusterService.class).to(AwsClusterServiceImpl.class);
     bind(EcsContainerService.class).to(EcsContainerServiceImpl.class);
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
