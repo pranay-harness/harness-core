@@ -90,21 +90,6 @@ public class WingsException extends WingsApiException {
    * Instantiates a new wings exception.
    *
    * @param errorCode the error code
-<<<<<<< HEAD
-   * @param key       the key
-   * @param value     the value
-   */
-  public WingsException(ErrorCode errorCode, String key, Object value) {
-    this(errorCode, (Throwable) null);
-    params.put(key, value);
-  }
-
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param errorCode the error code
-=======
->>>>>>> george/remove_wings_key_ctor
    * @param cause     the cause
    */
   public WingsException(ErrorCode errorCode, Throwable cause) {

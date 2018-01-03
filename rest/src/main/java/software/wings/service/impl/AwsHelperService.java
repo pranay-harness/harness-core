@@ -601,11 +601,13 @@ public class AwsHelperService {
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof ClusterNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND)
+          .addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND)
+          .addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
       logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
       throw amazonServiceException;
@@ -615,7 +617,7 @@ public class AwsHelperService {
         logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
       }
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else {
       logger.error("Unhandled aws exception");
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
