@@ -2,11 +2,21 @@ package software.wings.delegatetasks;
 
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -23,6 +33,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   private Object[] parameters;
   private Consumer<NotifyResponseData> consumer;
   private Supplier<Boolean> preExecute;
+
+  @Inject @Named("verificationDataCollector") protected ExecutorService dataCollectionService;
 
   public AbstractDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
       Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
@@ -54,6 +66,24 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         }
       }
     }
+  }
+
+  protected <T> List<T> executeParrallel(List<Callable<T>> callables) throws IOException {
+    CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
+    for (Callable<T> callable : callables) {
+      completionService.submit(callable);
+    }
+
+    List<T> rv = new ArrayList<>();
+    for (int i = 0; i < callables.size(); i++) {
+      try {
+        rv.add(completionService.take().get());
+      } catch (Exception e) {
+        throw new IOException(e);
+      }
+    }
+
+    return rv;
   }
 
   public String getDelegateId() {

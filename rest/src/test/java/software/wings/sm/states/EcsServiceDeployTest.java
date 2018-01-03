@@ -207,7 +207,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     ExecutionResponse response = ecsServiceDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
+    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
     verify(activityService).save(any(Activity.class));
     verify(delegateService).queueTask(any(DelegateTask.class));
   }
@@ -259,7 +259,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
     ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
+    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
     assertThat(response.getStateExecutionData()).isNotNull().isEqualTo(commandStateExecutionData);
     verify(delegateService).queueTask(any(DelegateTask.class));
   }

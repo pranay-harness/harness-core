@@ -216,7 +216,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
+    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
     verify(activityService).save(any(Activity.class));
     verify(delegateService).queueTask(any(DelegateTask.class));
   }
@@ -274,7 +274,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
 
     ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
+    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
     assertThat(response.getStateExecutionData()).isNotNull().isEqualTo(commandStateExecutionData);
     verify(delegateService).queueTask(any(DelegateTask.class));
   }

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -76,25 +77,40 @@ public class NewRelicMetricNameCollectionTask extends AbstractDelegateRunnableTa
       webTransactionMetrics.put(metric.getName(), metric);
     }
     List<Collection<String>> metricBatches = batchMetricsToCollect();
-    final long currentTime = System.currentTimeMillis();
+    List<Callable<Set<String>>> metricBatchCallable = new ArrayList<>();
     for (Collection<String> metricNames : metricBatches) {
-      Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
-      for (NewRelicApplicationInstance node : instances) {
-        // find and remove metrics which have no data in last 24 hours
-        NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-            metricNames, currentTime - TimeUnit.DAYS.toMillis(1), currentTime);
-        metricsWithNoData.removeAll(metricData.getMetrics_found());
-
-        if (metricsWithNoData.isEmpty()) {
-          break;
-        }
-      }
-      for (String metricName : metricsWithNoData) {
+      metricBatchCallable.add(() -> getMetricsWithNoData(metricNames));
+    }
+    List<Set<String>> metricsWithNoData = executeParrallel(metricBatchCallable);
+    for (Set<String> metricSet : metricsWithNoData) {
+      for (String metricName : metricSet) {
         webTransactionMetrics.remove(metricName);
       }
     }
     return webTransactionMetrics.values();
+  }
+
+  private Set<String> getMetricsWithNoData(Collection<String> metricNames) throws IOException {
+    final long currentTime = System.currentTimeMillis();
+    List<Callable<NewRelicMetricData>> metricDataCallabels = new ArrayList<>();
+    Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
+    for (NewRelicApplicationInstance node : instances) {
+      // find and remove metrics which have no data in last 24 hours
+      metricDataCallabels.add(
+          ()
+              -> newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
+                  dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+                  metricNames, currentTime - TimeUnit.DAYS.toMillis(1), currentTime));
+    }
+
+    List<NewRelicMetricData> metricDatas = executeParrallel(metricDataCallabels);
+    for (NewRelicMetricData metricData : metricDatas) {
+      metricsWithNoData.removeAll(metricData.getMetrics_found());
+      if (metricsWithNoData.isEmpty()) {
+        break;
+      }
+    }
+    return metricsWithNoData;
   }
 
   protected void setService(

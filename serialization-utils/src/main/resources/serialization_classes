@@ -253,3 +253,4 @@ software.wings.api.AmiServiceSetupElement, 5218
 software.wings.api.AmiStepExecutionSummary, 5219
 software.wings.api.AmiServiceDeployElement, 5220
 software.wings.beans.InstanceUnitType, 5221
+software.wings.beans.container.PortMapping, 5222
