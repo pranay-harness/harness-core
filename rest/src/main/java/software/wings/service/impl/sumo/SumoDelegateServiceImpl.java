@@ -1,7 +1,6 @@
 package software.wings.service.impl.sumo;
 
 import com.google.inject.Inject;
-
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
@@ -21,9 +20,11 @@ import java.util.List;
 public class SumoDelegateServiceImpl implements SumoDelegateService {
   @Inject private EncryptionService encryptionService;
   @Override
-  public void validateConfig(SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
+  public boolean validateConfig(SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails)
+      throws IOException {
     try {
       getSumoClient(sumoConfig, encryptedDataDetails).search("*exception*");
+      return true;
     } catch (Throwable t) {
       if (t instanceof MalformedURLException) {
         throw new WingsException(sumoConfig.getSumoUrl() + " is not a valid url. ", t);

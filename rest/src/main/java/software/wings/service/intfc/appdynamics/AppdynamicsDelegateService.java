@@ -31,7 +31,7 @@ public interface AppdynamicsDelegateService {
       List<EncryptedDataDetail> encryptionDetails) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
-  void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException;
+  boolean validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_BUSINESS_TRANSACTION_TASK)
   List<AppdynamicsBusinessTransaction> getBusinessTransactions(AppDynamicsConfig appDynamicsConfig,

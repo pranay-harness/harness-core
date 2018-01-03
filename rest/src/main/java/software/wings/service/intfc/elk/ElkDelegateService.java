@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
  */
 public interface ElkDelegateService {
   @DelegateTaskType(TaskType.ELK_CONFIGURATION_VALIDATE_TASK)
-  void validateConfig(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  boolean validateConfig(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.ELK_COLLECT_LOG_DATA)
   Object search(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,

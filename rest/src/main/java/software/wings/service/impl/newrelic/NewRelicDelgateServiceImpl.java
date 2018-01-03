@@ -39,8 +39,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Inject private EncryptionService encryptionService;
 
   @Override
-  public void validateConfig(NewRelicConfig newRelicConfig) throws IOException {
+  public boolean validateConfig(NewRelicConfig newRelicConfig) throws IOException {
     getAllApplications(newRelicConfig, Collections.emptyList());
+    return true;
   }
 
   @Override

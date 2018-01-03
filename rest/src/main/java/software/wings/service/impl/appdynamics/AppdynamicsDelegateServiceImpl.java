@@ -202,7 +202,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
+  public boolean validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
     if (!validUrl(appDynamicsConfig.getControllerUrl())) {
       throw new WingsException("AppDynamics Controller URL must be a valid URL");
     }
@@ -213,7 +213,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
               .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, Collections.emptyList()));
       response = request.execute();
       if (response.isSuccessful()) {
-        return;
+        return true;
       }
     } catch (Throwable t) {
       throw new WingsException("Could not reach AppDynamics server. " + t.getMessage(), t);
