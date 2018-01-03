@@ -195,6 +195,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -1173,12 +1174,11 @@ public class AwsHelperService {
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
       executionLogCallback.saveExecutionLog(
-          String.format("Set AutoScaling Group: [%s] desired size to [%s]", autoScalingGroupName, desiredCapacity));
+          String.format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
       amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
                                                      .withAutoScalingGroupName(autoScalingGroupName)
                                                      .withDesiredCapacity(desiredCapacity));
-      executionLogCallback.saveExecutionLog(
-          "Successfully set desired size.\nWaiting for AutoScaling Group to reach at desired capacity");
+      executionLogCallback.saveExecutionLog("Successfully set desired capacity");
       waitForAllInstancesToBeReady(awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity,
           executionLogCallback, autoScalingSteadyStateTimeout);
     } catch (AmazonServiceException amazonServiceException) {
@@ -1246,20 +1246,20 @@ public class AwsHelperService {
         listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
     while (instanceIds.size() != desiredCount
         || !allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, executionLogCallback)) {
-      if (instanceIds.size() != desiredCount) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Waiting for AutoScaling group to meet desired count. %s/%s instances registered ...",
-                instanceIds.size(), desiredCount));
-      }
+      executionLogCallback.saveExecutionLog(
+          String.format("Waiting for AutoScaling group to meet desired count. %s/%s instances registered ...",
+              instanceIds.size(), desiredCount));
       if (retryCount-- <= 0) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Request timeout. AutoScaling group couldn't reach in steady state"),
+            CommandExecutionStatus.FAILURE);
         throw new WingsException(INIT_TIMEOUT).addParam("message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
       sleep((int) sleepInterval, TimeUnit.SECONDS);
       instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
     }
-    executionLogCallback.saveExecutionLog(
-        String.format("AutoScaling reached to steady state", instanceIds.size(), desiredCount));
+    executionLogCallback.saveExecutionLog(String.format("AutoScaling reached to steady state"));
   }
 
   private boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -1277,8 +1277,8 @@ public class AwsHelperService {
               .stream()
               .flatMap(reservation -> reservation.getInstances().stream())
               .collect(groupingBy(instance -> instance.getState().getName(), counting()));
-      executionLogCallback.saveExecutionLog("Waiting for instances to be in running state");
-      executionLogCallback.saveExecutionLog(Joiner.on(",").withKeyValueSeparator("=").join(instanceStateCountMap));
+      executionLogCallback.saveExecutionLog("Waiting for instances to be in running state. "
+          + Joiner.on(",").withKeyValueSeparator("=").join(instanceStateCountMap));
     }
     return allRunning;
   }

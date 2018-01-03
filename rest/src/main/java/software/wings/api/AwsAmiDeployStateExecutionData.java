@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+import static software.wings.utils.Misc.isNotNullOrEmpty;
 
 import com.google.common.collect.Maps;
 
@@ -68,7 +69,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
     }
     putNotNull(executionDetails, "newAutoScalingGroupName",
         anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New ASG").build());
-    if (newInstanceData != null && !newInstanceData.isEmpty()) {
+    if (newInstanceData != null && !newInstanceData.isEmpty() && isNotNullOrEmpty(newAutoScalingGroupName)) {
       int desiredCapacity =
           rollback ? newInstanceData.get(0).getPreviousCount() : newInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "newInstanceDataDesiredCapacity",
@@ -76,7 +77,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
     }
     putNotNull(executionDetails, "oldAutoScalingGroupName",
         anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old ASG").build());
-    if (oldInstanceData != null && !oldInstanceData.isEmpty()) {
+    if (oldInstanceData != null && !oldInstanceData.isEmpty() && isNotNullOrEmpty(oldAutoScalingGroupName)) {
       int desiredCapacity =
           rollback ? oldInstanceData.get(0).getPreviousCount() : oldInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "oldInstanceDataDesiredCapacity",
