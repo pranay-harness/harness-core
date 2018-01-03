@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
@@ -86,7 +87,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (setupParams.isUseLoadBalancer()) {
       List<LoadBalancer> loadBalancers =
-          ecsContainerTask.getContainerDefinitions()
+          taskDefinition.getContainerDefinitions()
               .stream()
               .flatMap(containerDefinition
                   -> Optional.ofNullable(containerDefinition.getPortMappings())
@@ -97,7 +98,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                                     .withContainerName(containerName)
                                     .withContainerPort(portMapping.getContainerPort())
                                     .withTargetGroupArn(setupParams.getTargetGroupArn())))
-              .collect(Collectors.toList());
+              .collect(toList());
       createServiceRequest.withLoadBalancers(loadBalancers).withRole(setupParams.getRoleArn());
     }
 
@@ -170,7 +171,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
           .stream()
           .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
-          .collect(Collectors.toList())
+          .collect(toList())
           .forEach(s -> {
             String oldServiceName = s.getServiceName();
             if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
