@@ -23,9 +23,9 @@
     </modules>
 
     <scm>
-        <url>https://github.com/wings-software/wings</url>
-        <connection>scm:git:git://github.com/wings-software/wings.git</connection>
-        <developerConnection>scm:git:git@github.com:wings-software/wings.git</developerConnection>
+        <url>https://github.com/wings-software/portal</url>
+        <connection>scm:git:git://github.com/wings-software/portal.git</connection>
+        <developerConnection>scm:git:git@github.com:wings-software/portal.git</developerConnection>
     </scm>
 
     <properties>
