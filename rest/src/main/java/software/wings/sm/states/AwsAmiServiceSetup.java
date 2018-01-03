@@ -376,9 +376,12 @@ public class AwsAmiServiceSetup extends State {
               .filter(asg
                   -> asg.getDesiredCapacity() == 0 && !asg.getAutoScalingGroupName().equals(oldAutoScalingGroupName))
               .collect(toList());
-      if (emptyHarnessAsgToBeDeleted.size() > MAX_OLD_ASG_VERSION_TO_KEEP) {
-        emptyHarnessAsgToBeDeleted =
-            emptyHarnessAsgToBeDeleted.subList(MAX_OLD_ASG_VERSION_TO_KEEP, emptyHarnessAsgToBeDeleted.size());
+      if (emptyHarnessAsgToBeDeleted.size() >= MAX_OLD_ASG_VERSION_TO_KEEP) {
+        int startIdx = MAX_OLD_ASG_VERSION_TO_KEEP;
+        if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+          startIdx--; // one is already counted as oldAutoScalingGroup
+        }
+        emptyHarnessAsgToBeDeleted = emptyHarnessAsgToBeDeleted.subList(startIdx, emptyHarnessAsgToBeDeleted.size());
         logger.info("ASG Cleanup. Deleting following ASG [{}]", Joiner.on(",").join(emptyHarnessAsgToBeDeleted));
         List<AutoScalingGroup> finalEmptyHarnessAsgToBeDeleted = emptyHarnessAsgToBeDeleted;
         executorService.submit(()
