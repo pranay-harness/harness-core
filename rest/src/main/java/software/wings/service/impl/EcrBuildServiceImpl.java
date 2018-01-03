@@ -54,7 +54,8 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by ECR Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by ECR Artifact Stream");
   }
 
   @Override
@@ -72,12 +73,14 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by ECR Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by ECR Artifact Stream");
   }
 
   @Override
   public boolean validateArtifactServer(AwsConfig config) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by ECR Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by ECR Artifact Stream");
   }
 
   @Override

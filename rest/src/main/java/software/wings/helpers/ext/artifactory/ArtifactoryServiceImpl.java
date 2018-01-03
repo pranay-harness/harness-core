@@ -300,7 +300,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                        .build())
             .collect(toList());
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Artifact path can not be empty");
+        throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Artifact path can not be empty");
       }
     } catch (Exception e) {
       if (e instanceof HttpResponseException) {
@@ -384,7 +384,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         artifactPaths = artifactPaths.stream().limit(maxVersions).collect(Collectors.toList());
         Collections.reverse(artifactPaths);
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Artifact path can not be empty");
+        throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Artifact path can not be empty");
       }
       logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
       return artifactPaths;
@@ -694,7 +694,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             artifactoryConfig, encryptionDetails, repoType, metadata, delegateId, taskId, accountId);
       }
       if (artifactPattern == null) {
-        throw new WingsException(ARTIFACT_SERVER_ERROR, "message", "Artifct pattern is Empty");
+        throw new WingsException(ARTIFACT_SERVER_ERROR).addParam("message", "Artifact pattern is Empty");
       }
       logger.info("Downloading artifact file maven repo style");
       Pattern pattern = Pattern.compile(artifactPattern.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
@@ -757,8 +757,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
     } catch (Exception e) {
       String msg = "Failed to download the latest artifacts  of repo [" + repoType + "] groupId [" + groupId;
-      throw new WingsException(
-          ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
+      throw new WingsException(ARTIFACT_SERVER_ERROR)
+          .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
     return res;
   }
@@ -791,8 +791,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         prepareAndThrowException("Invalid artifact path");
       }
       if (artifactPaths.length < 4) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, "message",
-            "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
+        throw new WingsException(INVALID_ARTIFACT_SERVER)
+            .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
       }
       String groupId =
           getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(Collectors.toList()));
@@ -842,8 +842,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       String msg =
           "Failed to download the latest artifacts  of repository [" + repoKey + "] file path [" + artifactPath;
-      throw new WingsException(
-          ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
+      throw new WingsException(ARTIFACT_SERVER_ERROR)
+          .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
     logger.info(
         "Downloading artifacts from artifactory for repository  {} and file path {} success", repoKey, artifactPath);

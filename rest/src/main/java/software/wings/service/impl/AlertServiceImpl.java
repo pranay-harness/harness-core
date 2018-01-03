@@ -155,7 +155,7 @@ public class AlertServiceImpl implements AlertService {
       String errorMsg = String.format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
           alertType.getAlertDataClass().getName(), alertData.getClass().getName());
       logger.error(errorMsg);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", errorMsg);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }
     injector.injectMembers(alertData);
     Query<Alert> query =

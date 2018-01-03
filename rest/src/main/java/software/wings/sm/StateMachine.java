@@ -150,7 +150,7 @@ public class StateMachine extends Base {
       throw e;
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "StateMachine transformation error");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "StateMachine transformation error");
     }
   }
 
@@ -206,7 +206,7 @@ public class StateMachine extends Base {
       PipelineStage pipelineStage, Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
     if (pipelineStage == null || pipelineStage.getPipelineStageElements() == null
         || pipelineStage.getPipelineStageElements().isEmpty()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Pipeline Stage: pipelineStage");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Pipeline Stage: pipelineStage");
     }
     if (pipelineStage.getPipelineStageElements().size() == 1) {
       return convertToState(pipelineStage.getPipelineStageElements().get(0), pipeline, stencilMap);
@@ -276,17 +276,17 @@ public class StateMachine extends Base {
       logger.info("node : {}", node);
 
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Unknown stencil type");
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Unknown stencil type");
       }
 
       if (node.getName() == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Node name null");
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Node name null");
       }
 
       if (node.isOrigin()) {
         if (originStateName != null) {
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-              "Duplicate origin state: " + originStateName + " and " + node.getName());
+          throw new WingsException(ErrorCode.INVALID_REQUEST)
+              .addParam("message", "Duplicate origin state: " + originStateName + " and " + node.getName());
         }
 
         originStateName = node.getName();
@@ -328,7 +328,7 @@ public class StateMachine extends Base {
     }
 
     if (originStateName == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Origin state missing");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Origin state missing");
     }
 
     try {
@@ -494,7 +494,7 @@ public class StateMachine extends Base {
       }
     }
     if (dupNames.size() > 0) {
-      throw new WingsException(ErrorCode.DUPLICATE_STATE_NAMES, "dupStateNames", dupNames.toString());
+      throw new WingsException(ErrorCode.DUPLICATE_STATE_NAMES).addParam("dupStateNames", dupNames.toString());
     }
 
     cachedStatesMap = statesMap;
@@ -659,18 +659,18 @@ public class StateMachine extends Base {
       }
     }
     if (invalidStateNames.size() > 0) {
-      throw new WingsException(
-          ErrorCode.TRANSITION_TO_INCORRECT_STATE, "invalidStateNames", invalidStateNames.toString());
+      throw new WingsException(ErrorCode.TRANSITION_TO_INCORRECT_STATE)
+          .addParam("invalidStateNames", invalidStateNames.toString());
     }
     if (nonForkStates.size() > 0) {
-      throw new WingsException(ErrorCode.NON_FORK_STATES, "nonForkStates", nonForkStates.toString());
+      throw new WingsException(ErrorCode.NON_FORK_STATES).addParam("nonForkStates", nonForkStates.toString());
     }
     if (nonRepeatStates.size() > 0) {
-      throw new WingsException(ErrorCode.NON_REPEAT_STATES, "nonRepeatStates", nonRepeatStates.toString());
+      throw new WingsException(ErrorCode.NON_REPEAT_STATES).addParam("nonRepeatStates", nonRepeatStates.toString());
     }
     if (statesWithDupTransitions.size() > 0) {
-      throw new WingsException(
-          ErrorCode.STATES_WITH_DUP_TRANSITIONS, "statesWithDupTransitions", statesWithDupTransitions.toString());
+      throw new WingsException(ErrorCode.STATES_WITH_DUP_TRANSITIONS)
+          .addParam("statesWithDupTransitions", statesWithDupTransitions.toString());
     }
     for (String forkStateName : forkStateNamesMap.keySet()) {
       ForkState forkFromState = (ForkState) statesMap.get(forkStateName);

@@ -52,7 +52,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", e.getMessage());
     }
   }
 
@@ -122,7 +122,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     try {
       validateVaultConfig(accountId, vaultConfig);
     } catch (WingsException e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", "Validation failed. Please check your token");
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR)
+          .addParam("reason", "Validation failed. Please check your token");
     }
 
     vaultConfig.setAccountId(accountId);
@@ -151,8 +152,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     try {
       vaultConfigId = wingsPersistence.save(vaultConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(
-          ErrorCode.VAULT_OPERATION_ERROR, "reason", "Another configuration with the same name exists");
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR)
+          .addParam("reason", "Another configuration with the same name exists");
     }
 
     encryptedData.setAccountId(accountId);
@@ -200,7 +201,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     if (query.hasNext()) {
       String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", message);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", message);
     }
 
     VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -276,7 +277,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .deleteVaultSecret(path, vaultConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", e.getMessage());
     }
   }
 

@@ -121,7 +121,7 @@ public class SettingResource {
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     if (uploadedInputStream == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing file.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Missing file.");
     }
 
     SettingValue value = null;

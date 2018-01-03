@@ -219,7 +219,8 @@ public class ExpressionEvaluator {
     }
     Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);
     if (!matcher.matches()) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Special characters are not allowed in variable name");
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args", "Special characters are not allowed in variable name");
     }
   }
 }

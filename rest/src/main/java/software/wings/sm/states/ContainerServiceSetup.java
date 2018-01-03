@@ -142,7 +142,7 @@ public abstract class ContainerServiceSetup extends State {
           infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
       if (infrastructureMapping == null || !(infrastructureMapping instanceof ContainerInfrastructureMapping)
           || !isValidInfraMapping(infrastructureMapping)) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
       }
 
       ContainerInfrastructureMapping containerInfrastructureMapping =
@@ -157,8 +157,8 @@ public abstract class ContainerServiceSetup extends State {
                    && featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId()))) {
           clusterName = getClusterNameFromContextElement(context);
         } else {
-          throw new WingsException(
-              ErrorCode.INVALID_REQUEST, "message", "Runtime creation of clusters is not yet supported.");
+          throw new WingsException(ErrorCode.INVALID_REQUEST)
+              .addParam("message", "Runtime creation of clusters is not yet supported.");
         }
       }
 
@@ -372,8 +372,9 @@ public abstract class ContainerServiceSetup extends State {
           .username(nexusConfig.getUsername())
           .password(new String(nexusConfig.getPassword()));
     } else {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam(
+              "message", artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
     }
     return imageDetails.build();
   }

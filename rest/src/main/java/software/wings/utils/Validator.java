@@ -31,7 +31,7 @@ public class Validator {
    */
   public static void notNullCheck(String name, Object value) {
     if (value == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", name);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", name);
     }
   }
 
@@ -43,7 +43,7 @@ public class Validator {
    */
   public static void nullCheck(String name, Object value) {
     if (value != null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", name);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", name);
     }
   }
 
@@ -55,15 +55,15 @@ public class Validator {
    */
   public static void equalCheck(Object value1, Object value2) {
     if (!Objects.equals(value1, value2)) {
-      throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Not equal -  value1: " + value1 + ", value2: " + value2);
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "Not equal -  value1: " + value1 + ", value2: " + value2);
     }
   }
 
   public static void validateUuid(UuidAware base, String fieldName, String fieldValue) {
     notNullCheck(fieldValue, fieldName);
     if (!fieldValue.equals(base.getUuid())) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", fieldName + " mismatch with object uuid");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", fieldName + " mismatch with object uuid");
     }
   }
 

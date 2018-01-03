@@ -69,7 +69,7 @@ public class ActivityServiceImpl implements ActivityService {
   public Activity get(String id, String appId) {
     Activity activity = wingsPersistence.get(Activity.class, appId, id);
     if (activity == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Activity doesn't exist");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Activity doesn't exist");
     }
     return activity;
   }

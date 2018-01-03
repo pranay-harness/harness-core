@@ -222,7 +222,7 @@ public class AuthServiceImpl implements AuthService {
   public void validateExternalServiceToken(String accountId, String externalServiceToken) {
     String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
     if (StringUtils.isBlank(jwtExternalServiceSecret)) {
-      throw new WingsException(INVALID_REQUEST, "message", "incorrect portal setup");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
     }
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);

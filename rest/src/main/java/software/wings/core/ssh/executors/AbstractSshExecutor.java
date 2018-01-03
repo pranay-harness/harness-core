@@ -232,7 +232,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                              fileBucket, fileNamesId.getKey(), config.getAccountId(), false)) {
                       IOUtils.copy(inputStream, outputStream);
                     } catch (ExecutionException e) {
-                      throw new WingsException(INVALID_REQUEST, "message", e.getMessage());
+                      throw new WingsException(INVALID_REQUEST).addParam("message", e.getMessage());
                     }
                   }
                 }))
@@ -259,7 +259,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                  configFileMetaData.getFileId(), config.getAccountId(), configFileMetaData.isEncrypted())) {
           IOUtils.copy(inputStream, outputStream);
         } catch (ExecutionException e) {
-          throw new WingsException(INVALID_REQUEST, "message", e.getMessage());
+          throw new WingsException(INVALID_REQUEST).addParam("message", e.getMessage());
         }
       }
     });

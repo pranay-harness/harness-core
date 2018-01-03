@@ -19,7 +19,5 @@ public class WingsExceptionTest extends BasicTest {
     assertThat(new WingsException(ErrorCode.UNKNOWN_ERROR, new Exception()).getResponseMessageList().size())
         .isEqualTo(1);
     assertThat(new WingsException(ErrorCode.UNKNOWN_ERROR).getResponseMessageList().size()).isEqualTo(1);
-    assertThat(new WingsException(ErrorCode.UNKNOWN_ERROR, "key", new Object()).getResponseMessageList().size())
-        .isEqualTo(1);
   }
 }

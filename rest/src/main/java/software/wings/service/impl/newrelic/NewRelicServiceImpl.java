@@ -56,7 +56,7 @@ public class NewRelicServiceImpl implements NewRelicService {
           throw new IllegalStateException("Invalid state" + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode, "reason", e.getMessage());
+      throw new WingsException(errorCode).addParam("reason", e.getMessage());
     }
   }
 
@@ -83,7 +83,8 @@ public class NewRelicServiceImpl implements NewRelicService {
       }
 
     } catch (Exception e) {
-      throw new WingsException(errorCode, "message", "Error in getting new relic applications. " + e.getMessage());
+      throw new WingsException(errorCode).addParam(
+          "message", "Error in getting new relic applications. " + e.getMessage());
     }
   }
 }

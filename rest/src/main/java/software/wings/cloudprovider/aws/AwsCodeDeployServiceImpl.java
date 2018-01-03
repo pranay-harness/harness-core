@@ -193,7 +193,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
     while (!deploymentCompleted(awsConfig, encryptedDataDetails, region, deploymentId, finalDeploymentStatus)) {
       if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT, "message", "All instances didn't registered with cluster");
+        throw new WingsException(INIT_TIMEOUT).addParam("message", "All instances didn't registered with cluster");
       }
       Misc.quietSleep(SLEEP_INTERVAL);
     }

@@ -241,8 +241,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
         msg.append(message);
       }
-      throw new WingsException(
-          ErrorCode.DEFAULT_ERROR_CODE, "message", "DaemonSet pods failed to reach desired count. " + msg.toString());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE)
+          .addParam("message", "DaemonSet pods failed to reach desired count. " + msg.toString());
     }
     containerInfos.forEach(info
         -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));

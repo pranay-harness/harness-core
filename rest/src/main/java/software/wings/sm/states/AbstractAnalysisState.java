@@ -185,7 +185,7 @@ public abstract class AbstractAnalysisState extends State {
 
   public static String generateAuthToken(final String secret) throws UnsupportedEncodingException {
     if (secret == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "No secret present for external service");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "No secret present for external service");
     }
 
     Algorithm algorithm = Algorithm.HMAC256(secret);

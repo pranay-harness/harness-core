@@ -298,7 +298,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // don't allow cloning of Docker commands
     Service service = getServiceWithServiceCommands(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      throw new WingsException(INVALID_REQUEST, "message", "Docker commands can not be cloned");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Docker commands can not be cloned");
     }
     ServiceCommand oldServiceCommand = service.getServiceCommands()
                                            .stream()
@@ -496,7 +496,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
                   + workflowNames + "]",
               service.getName());
-      throw new WingsException(INVALID_REQUEST, "message", message);
+      throw new WingsException(INVALID_REQUEST).addParam("message", message);
     }
   }
 
@@ -588,7 +588,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       String message = String.format(
           "Command [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
           serviceCommand.getName());
-      throw new WingsException(INVALID_REQUEST, "message", message);
+      throw new WingsException(INVALID_REQUEST).addParam("message", message);
     }
   }
 
@@ -618,7 +618,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced) {
     boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
     if (!exist) {
-      throw new WingsException(INVALID_REQUEST, "message", "Service doesn't exists");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exists");
     }
     ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
     if (advanced) {
@@ -927,16 +927,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> duplicateFunctionName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
     if (!Misc.isNullOrEmpty(duplicateFunctionName)) {
-      throw new WingsException(INVALID_REQUEST, "message",
-          "Function name should be unique. Duplicate function names: [" + Joiner.on(",").join(duplicateFunctionName)
-              + "]");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              "Function name should be unique. Duplicate function names: [" + Joiner.on(",").join(duplicateFunctionName)
+                  + "]");
     }
     List<String> duplicateHandlerName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getHandler);
     if (!Misc.isNullOrEmpty(duplicateHandlerName)) {
-      throw new WingsException(INVALID_REQUEST, "message",
-          "Function Handler name should be unique. Duplicate function handlers: ["
-              + Joiner.on(",").join(duplicateHandlerName) + "]");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              "Function Handler name should be unique. Duplicate function handlers: ["
+                  + Joiner.on(",").join(duplicateHandlerName) + "]");
     }
   }
 

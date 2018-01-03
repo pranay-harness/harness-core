@@ -97,7 +97,8 @@ public class AppContainerServiceImpl implements AppContainerService {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
     Validator.notNullCheck("App Stack", storedAppContainer);
     if (storedAppContainer.isSystemCreated()) {
-      throw new WingsException(INVALID_REQUEST, "message", "System created Application Stack can not be updated.");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "System created Application Stack can not be updated.");
     }
     if (newPlatformSoftwareBinaryUploaded(storedAppContainer, appContainer)) {
       uploadAppContainerFile(appContainer, in, fileBucket);
@@ -154,9 +155,10 @@ public class AppContainerServiceImpl implements AppContainerService {
             .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(), false, true)
             .getResponse();
     if (services.size() > 0) {
-      throw new WingsException(INVALID_REQUEST, "message",
-          String.format(
-              "Application Stack is in use by %s service%s.", services.size(), services.size() == 1 ? "" : "s"));
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              String.format(
+                  "Application Stack is in use by %s service%s.", services.size(), services.size() == 1 ? "" : "s"));
     }
   }
 

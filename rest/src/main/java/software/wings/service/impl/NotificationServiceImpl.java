@@ -69,15 +69,15 @@ public class NotificationServiceImpl implements NotificationService {
       @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationActionType actionType) {
     Notification notification = get(appId, notificationId);
     if (notification == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "Notification doesn't exist");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Notification doesn't exist");
     }
     if (!(notification instanceof ActionableNotification)) {
-      throw new WingsException(INVALID_REQUEST, "message", "Notification not actionable");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Notification not actionable");
     }
     ActionableNotification actionableNotification = (ActionableNotification) notification;
     if (actionableNotification.getNotificationActions().stream().noneMatch(
             notificationAction -> notificationAction.getType() == actionType)) {
-      throw new WingsException(INVALID_REQUEST, "message", "Action not supported for NotificationType");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Action not supported for NotificationType");
     }
     injector.injectMembers(actionableNotification);
     boolean actionCompleted = actionableNotification.performAction(actionType);

@@ -85,8 +85,8 @@ public abstract class NodeSelectState extends State {
       if (specificHosts) {
         if (infrastructureMapping instanceof AwsInfrastructureMapping
             && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
-          throw new WingsException(
-              ErrorCode.INVALID_ARGUMENT, "args", "Cannot specify hosts when using an auto scale group");
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+              .addParam("args", "Cannot specify hosts when using an auto scale group");
         }
         selectionParams.withHostNames(hostNames);
         instancesToAdd = hostNames.size();

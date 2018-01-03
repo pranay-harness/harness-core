@@ -160,9 +160,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (accountId == null) {
       if (emptyAppIdsInReq) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "appId not specified");
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "appId not specified");
       }
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "accountId not specified");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "accountId not specified");
     }
 
     if (user != null) {
@@ -171,7 +171,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         String loggerMsg = "User: " + user.getName() + " is not authorized to access account: " + accountId;
         logger.error(loggerMsg);
         String msg = "User not authorized to access the given account";
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", msg);
       }
     }
 
@@ -207,7 +207,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         if (!invalidAppIdList.isEmpty()) {
           String msg = "The appIds from request %s do not belong to the given account :" + accountId;
           String formattedMsg = String.format(msg, (Object[]) invalidAppIdList.toArray());
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", formattedMsg);
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", formattedMsg);
         }
       }
     }

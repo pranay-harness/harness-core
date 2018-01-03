@@ -151,7 +151,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
     }
 
     return (AwsConfig) computeProviderSetting.getValue();
@@ -303,12 +303,14 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
+          .addParam("message", amazonServiceException.getErrorMessage());
     } else if (amazonServiceException instanceof AmazonECSException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
+          .addParam("message", amazonServiceException.getErrorMessage());
     }
     logger.error("Unhandled aws exception");
-    throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+    throw new WingsException(ErrorCode.ACCESS_DENIED).addParam("message", amazonServiceException.getErrorMessage());
   }
 
   public Set<String> listTags(SettingAttribute computeProviderSetting, String region) {

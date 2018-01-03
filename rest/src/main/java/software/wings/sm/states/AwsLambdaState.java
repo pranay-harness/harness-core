@@ -507,8 +507,8 @@ public class AwsLambdaState extends State {
         vpcConfig.setSubnetIds(subnetIds);
         vpcConfig.setSecurityGroupIds(securityGroupIds);
       } else {
-        throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "At least one security group and one subnet must be provided");
+        throw new WingsException(ErrorCode.INVALID_REQUEST)
+            .addParam("message", "At least one security group and one subnet must be provided");
       }
     }
     return vpcConfig;

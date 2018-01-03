@@ -133,7 +133,7 @@ public class UserResource {
   public RestResponse<Account> addAccount(Account account) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid User");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid User");
     }
     return new RestResponse<>(userService.addAccount(account, existingUser));
   }

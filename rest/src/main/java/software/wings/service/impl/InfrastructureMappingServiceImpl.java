@@ -277,8 +277,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
     if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
       if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
-        throw new WingsException(
-            ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for ECS.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Creating a cluster at runtime is not yet supported for ECS.");
       }
     }
   }
@@ -287,8 +287,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       GcpKubernetesInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
     if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
       if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
-        throw new WingsException(
-            ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
       }
     }
     // TODO - Validate via delegate sync task to KubernetesHelperService::validateCredential
@@ -447,17 +447,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                  .distinct()
                                  .collect(toList());
     if (hostNames.size() != pyInfraMapping.getHostNames().size()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Host names must be unique");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
     }
   }
 
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
     if (lambdaInfraStructureMapping.getVpcId() != null) {
       if (lambdaInfraStructureMapping.getSubnetIds().size() == 0) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "At least one subnet must be provided");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "At least one subnet must be provided");
       }
       if (lambdaInfraStructureMapping.getSecurityGroupIds().size() == 0) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "At least one security group must be provided");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "At least one security group must be provided");
       }
     }
   }
@@ -517,9 +518,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .collect(toList());
 
     if (referencingWorkflowNames.size() > 0) {
-      throw new WingsException(INVALID_REQUEST, "message",
-          String.format("Service Infrastructure is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),
-              referencingWorkflowNames.size() == 1 ? "" : "s", Joiner.on(", ").join(referencingWorkflowNames)));
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              String.format("Service Infrastructure is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),
+                  referencingWorkflowNames.size() == 1 ? "" : "s", Joiner.on(", ").join(referencingWorkflowNames)));
     }
   }
 
@@ -594,8 +596,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               new PageRequest<>())
           .getResponse();
     } else {
-      throw new WingsException(INVALID_REQUEST, "message",
-          "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
     }
   }
 
@@ -890,7 +892,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (!PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
-      throw new WingsException(INVALID_REQUEST, "message", "Invalid infrastructure provider");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid infrastructure provider");
     }
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
@@ -1060,8 +1062,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
           appId, workflowExecutionId, awsInfrastructureMapping, computeProviderSetting);
     } else {
-      throw new WingsException(
-          INVALID_REQUEST, "message", "Auto Scale groups are only supported for AWS infrastructure mapping");
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Auto Scale groups are only supported for AWS infrastructure mapping");
     }
   }
 

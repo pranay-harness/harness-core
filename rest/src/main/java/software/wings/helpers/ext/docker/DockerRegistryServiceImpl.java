@@ -130,11 +130,11 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
         logger.warn("Image name [" + imageName + "] does not exist in Docker registry.");
-        throw new WingsException(
-            ErrorCode.INVALID_ARGUMENT, "args", "Image name [" + imageName + "] does not exist in Docker registry.");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Image name [" + imageName + "] does not exist in Docker registry.");
       }
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Registry server");
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", "Registry server");
     }
     return true;
   }
@@ -155,7 +155,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       return isSuccessful(response);
     } catch (IOException e) {
       logger.error("Error occurred while sending request to server " + dockerConfig.getDockerRegistryUrl(), e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
     }
   }
 
@@ -224,7 +224,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       case 400:
         return false;
       case 401:
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Docker Registry credentials");
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+            .addParam("message", "Invalid Docker Registry credentials");
       default:
         unhandled(code);
     }

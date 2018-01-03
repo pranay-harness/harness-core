@@ -79,38 +79,38 @@ public class ExecutionInterruptManager {
         || executionInterruptType == ExecutionInterruptType.RETRY || executionInterruptType == ABORT
         || executionInterruptType == RESUME) {
       if (executionInterrupt.getStateExecutionInstanceId() == null) {
-        throw new WingsException(INVALID_ARGUMENT, "args", "null stateExecutionInstanceId");
+        throw new WingsException(INVALID_ARGUMENT).addParam("args", "null stateExecutionInstanceId");
       }
 
       stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, executionInterrupt.getAppId(),
           executionInterrupt.getStateExecutionInstanceId());
       if (stateExecutionInstance == null) {
-        throw new WingsException(INVALID_ARGUMENT, "args",
-            "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
+        throw new WingsException(INVALID_ARGUMENT)
+            .addParam("args", "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
       }
 
       if (executionInterruptType == RESUME && stateExecutionInstance.getStatus() != PAUSED) {
-        throw new WingsException(STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
+        throw new WingsException(STATE_NOT_FOR_RESUME).addParam("stateName", stateExecutionInstance.getStateName());
       }
 
       if (executionInterruptType == IGNORE && stateExecutionInstance.getStatus() != PAUSED
           && stateExecutionInstance.getStatus() != WAITING) {
-        throw new WingsException(STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
+        throw new WingsException(STATE_NOT_FOR_RESUME).addParam("stateName", stateExecutionInstance.getStateName());
       }
 
       if (executionInterruptType == ExecutionInterruptType.RETRY && stateExecutionInstance.getStatus() != WAITING
           && stateExecutionInstance.getStatus() != ExecutionStatus.ERROR) {
-        throw new WingsException(STATE_NOT_FOR_RETRY, "stateName", stateExecutionInstance.getStateName());
+        throw new WingsException(STATE_NOT_FOR_RETRY).addParam("stateName", stateExecutionInstance.getStateName());
       }
 
       if (executionInterruptType == ABORT && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
           && stateExecutionInstance.getStatus() != STARTING && stateExecutionInstance.getStatus() != RUNNING
           && stateExecutionInstance.getStatus() != PAUSED && stateExecutionInstance.getStatus() != WAITING) {
-        throw new WingsException(STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
+        throw new WingsException(STATE_NOT_FOR_ABORT).addParam("stateName", stateExecutionInstance.getStateName());
       }
       if (executionInterruptType == PAUSE && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
           && stateExecutionInstance.getStatus() != STARTING && stateExecutionInstance.getStatus() != RUNNING) {
-        throw new WingsException(STATE_NOT_FOR_PAUSE, "stateName", stateExecutionInstance.getStateName());
+        throw new WingsException(STATE_NOT_FOR_PAUSE).addParam("stateName", stateExecutionInstance.getStateName());
       }
     }
 

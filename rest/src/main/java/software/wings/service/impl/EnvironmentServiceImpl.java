@@ -140,7 +140,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public Environment get(String appId, String envId, boolean withSummary) {
     Environment environment = wingsPersistence.get(Environment.class, appId, envId);
     if (environment == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Environment doesn't exist");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Environment doesn't exist");
     }
     if (withSummary) {
       addServiceTemplates(environment);
@@ -315,9 +315,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     if (pipelines.size() > 0) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
-      throw new WingsException(INVALID_REQUEST, "message",
-          String.format("Environment is referenced by %s pipeline%s [%s].", pipelines.size(),
-              pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message",
+              String.format("Environment is referenced by %s pipeline%s [%s].", pipelines.size(),
+                  pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
     }
   }
 
@@ -645,9 +646,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           Validator.notNullCheck("targetService", newService);
           if (oldService.getArtifactType() != null
               && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-            throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-                "Target service  [" + oldService.getName() + " ] is not compatible with service ["
-                    + newService.getName() + "]");
+            throw new WingsException(ErrorCode.INVALID_REQUEST)
+                .addParam("message",
+                    "Target service  [" + oldService.getName() + " ] is not compatible with service ["
+                        + newService.getName() + "]");
           }
         }
       }

@@ -92,7 +92,7 @@ public class NotificationMessageResolver {
    */
   public static String getDecoratedNotificationMessage(String templateText, Map<String, String> params) {
     if (templateText == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Template text can not be null");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Template text can not be null");
     }
     templateText = StrSubstitutor.replace(templateText, params);
     validate(templateText);
@@ -101,7 +101,7 @@ public class NotificationMessageResolver {
 
   private static void validate(String templateText) {
     if (placeHolderPattern.matcher(templateText).find()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Incomplete placeholder replacement.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Incomplete placeholder replacement.");
     }
   }
 

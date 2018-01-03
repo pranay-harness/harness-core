@@ -47,7 +47,7 @@ public class ExpressionBuilderResource {
           stateType = StateType.valueOf(strStateType);
         }
       } catch (IllegalArgumentException e) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid state type " + strStateType);
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid state type " + strStateType);
       }
     }
     return new RestResponse(

@@ -109,7 +109,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
       delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext).validateConfig(appDynamicsConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR).addParam("reason", e.getMessage());
     }
   }
 }

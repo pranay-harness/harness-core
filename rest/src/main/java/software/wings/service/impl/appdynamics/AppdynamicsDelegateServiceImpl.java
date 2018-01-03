@@ -47,7 +47,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics applications");
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason", "could not fetch Appdynamics applications");
     }
   }
 
@@ -62,7 +63,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tiers");
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR).addParam("reason", "could not fetch Appdynamics tiers");
     }
   }
 
@@ -77,8 +78,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(
-          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics nodes : " + response);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason", "could not fetch Appdynamics nodes : " + response);
     }
   }
 
@@ -93,8 +94,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(
-          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics business transactions : " + response);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason", "could not fetch Appdynamics business transactions : " + response);
     }
   }
 
@@ -111,8 +112,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final Response<List<AppdynamicsMetric>> tierBTResponse = tierBTMetricRequest.execute();
     if (!tierBTResponse.isSuccessful()) {
       logger.error("Request not successful. Reason: {}", tierBTResponse);
-      throw new WingsException(
-          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier BTs : " + tierBTResponse);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason", "could not fetch Appdynamics tier BTs : " + tierBTResponse);
     }
 
     List<AppdynamicsMetric> rv = tierBTResponse.body();
@@ -143,8 +144,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return tierBTMResponse.body();
     } else {
       logger.error("Request not successful. Reason: {}", tierBTMResponse);
-      throw new WingsException(
-          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics metric data : " + tierBTMResponse);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason", "could not fetch Appdynamics metric data : " + tierBTMResponse);
     }
   }
 
@@ -156,8 +157,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
     if (!tierResponse.isSuccessful()) {
       logger.error("Request not successful. Reason: {}", tierResponse);
-      throw new WingsException(
-          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier details : " + tierResponse);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason", "could not fetch Appdynamics tier details : " + tierResponse);
     }
 
     return tierResponse.body().get(0);

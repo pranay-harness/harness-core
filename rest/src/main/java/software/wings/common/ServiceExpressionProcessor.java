@@ -197,7 +197,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     if (selectedServices == null) {
       WorkflowStandardParams stdParams = context.getContextElement(ContextElementType.STANDARD);
       if (stdParams == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Standard params is null");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Standard params is null");
       }
       selectedServices = stdParams.getServices();
     }

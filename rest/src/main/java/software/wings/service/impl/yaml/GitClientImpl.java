@@ -87,7 +87,7 @@ public class GitClientImpl implements GitClient {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
       logger.error("Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in cloning repo");
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
     }
   }
 
@@ -172,7 +172,7 @@ public class GitClientImpl implements GitClient {
       }
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in getting commit diff");
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
     return diffResult;
   }
@@ -192,7 +192,7 @@ public class GitClientImpl implements GitClient {
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in getting commit diff");
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
   }
 
@@ -225,7 +225,8 @@ public class GitClientImpl implements GitClient {
               //              gitFileChange.getFilePath()));
             } catch (IOException | GitAPIException ex) {
               logger.error("Exception in adding/modifying file to git " + ex);
-              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in ADD/MODIFY git operation");
+              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
+                  .addParam("message", "Error in ADD/MODIFY git operation");
             }
             break;
           //          case COPY:
@@ -253,7 +254,8 @@ public class GitClientImpl implements GitClient {
             } catch (IOException | GitAPIException ex) {
               logger.error("Exception in moving file", ex);
               // TODO:: check before moving and then uncomment this exception
-              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in RENAME git operation");
+              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
+                  .addParam("message", "Error in RENAME git operation");
             }
             break;
           case DELETE:
@@ -269,7 +271,8 @@ public class GitClientImpl implements GitClient {
               }
             } catch (GitAPIException ex) {
               logger.error("Exception in deleting file" + ex);
-              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in DELETE git operation");
+              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
+                  .addParam("message", "Error in DELETE git operation");
             }
             break;
           default:
@@ -298,7 +301,7 @@ public class GitClientImpl implements GitClient {
 
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in writing commit");
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in writing commit");
     }
   }
 
@@ -327,7 +330,7 @@ public class GitClientImpl implements GitClient {
       if (ex instanceof InvalidRemoteException | ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
       }
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", errorMsg);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
     }
   }
 
@@ -360,7 +363,7 @@ public class GitClientImpl implements GitClient {
           .call();
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Error in getting commit diff");
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
   }
 

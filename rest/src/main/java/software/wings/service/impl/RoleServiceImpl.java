@@ -73,7 +73,7 @@ public class RoleServiceImpl implements RoleService {
 
   private void ensureNonAdminRole(Role role) {
     if (role.getRoleType() == RoleType.ACCOUNT_ADMIN) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Administrator role can not be modified");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Administrator role can not be modified");
     }
   }
 

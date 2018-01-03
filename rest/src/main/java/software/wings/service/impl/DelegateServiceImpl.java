@@ -461,7 +461,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (responseData == null) {
       logger.warn("Task [{}] timed out. remove it from cache", task.toString());
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", Constants.DELEGATE_NAME);
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", Constants.DELEGATE_NAME);
     }
     return responseData;
   }
@@ -469,7 +469,7 @@ public class DelegateServiceImpl implements DelegateService {
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
     if (task == null) {
       logger.warn("Delegate task is null");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate task is null");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate task is null");
     }
     List<Key<Delegate>> activeDelegates = wingsPersistence.createQuery(Delegate.class)
                                               .field("accountId")

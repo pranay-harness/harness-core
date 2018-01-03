@@ -212,9 +212,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     List<String> triggerNames =
         triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
-    throw new WingsException(INVALID_REQUEST, "message",
-        String.format(
-            "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+    throw new WingsException(INVALID_REQUEST)
+        .addParam("message",
+            String.format(
+                "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
   }
 
   @Override

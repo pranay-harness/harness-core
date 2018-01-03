@@ -205,12 +205,13 @@ public class PipelineServiceImpl implements PipelineService {
         return;
       }
       List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
-      throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message",
-          String.format(
-              "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+      throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS)
+          .addParam("message",
+              String.format(
+                  "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
     }
-    throw new WingsException(
-        INVALID_REQUEST, "message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
+    throw new WingsException(INVALID_REQUEST)
+        .addParam("message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
   }
 
   @Override
@@ -446,11 +447,11 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void validatePipeline(Pipeline pipeline) {
     if (Collections.isEmpty(pipeline.getPipelineStages())) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "At least one pipeline stage required");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "At least one pipeline stage required");
     }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().size() == 0) {
-        throw new WingsException(INVALID_ARGUMENT, "args", "Invalid pipeline stage");
+        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid pipeline stage");
       }
 
       for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
@@ -458,16 +459,17 @@ public class PipelineServiceImpl implements PipelineService {
           continue;
         }
         if (isNullOrEmpty((String) stageElement.getProperties().get("workflowId"))) {
-          throw new WingsException(INVALID_ARGUMENT, "args", "Workflow can not be null for Environment state");
+          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Workflow can not be null for Environment state");
         }
         Workflow workflow =
             workflowService.readWorkflow(pipeline.getAppId(), (String) stageElement.getProperties().get("workflowId"));
         if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-          throw new WingsException(INVALID_ARGUMENT, "args", "Workflow can not be null for Environment state");
+          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Workflow can not be null for Environment state");
         }
         if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != OrchestrationWorkflowType.BUILD
             && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
-          throw new WingsException(INVALID_ARGUMENT, "args", "Environment can not be null for non-build state");
+          throw new WingsException(INVALID_ARGUMENT)
+              .addParam("args", "Environment can not be null for non-build state");
         }
       }
     }

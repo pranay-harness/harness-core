@@ -43,24 +43,28 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public List<JobDetails> getJobs(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public Map<String, String> getPlans(DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
@@ -71,17 +75,19 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST)
+        .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public boolean validateArtifactServer(DockerConfig config) {
     if (!validUrl(config.getDockerRegistryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Docker Registry URL must be a valid URL");
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+          .addParam("message", "Docker Registry URL must be a valid URL");
     }
     if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
-          "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+          .addParam("message", "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());
     }
     return dockerRegistryService.validateCredentials(config, Collections.emptyList());
   }

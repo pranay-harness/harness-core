@@ -66,11 +66,12 @@ public class NexusServiceImpl implements NexusService {
         case 404:
           return false;
         case 401:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Invalid Nexus credentials");
+          throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Invalid Nexus credentials");
         case 405:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Method not allowed" + response.message());
+          throw new WingsException(INVALID_ARTIFACT_SERVER)
+              .addParam("message", "Method not allowed" + response.message());
         default:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, "message", response.message());
+          throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", response.message());
       }
     }
     return true;
@@ -102,13 +103,14 @@ public class NexusServiceImpl implements NexusService {
             if (!DOCKER.equals(artifactType)) {
               return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
             }
-            throw new WingsException(
-                INVALID_ARTIFACT_SERVER, "message", "Nexus 2.x does not support Docker artifact type");
+            throw new WingsException(INVALID_ARTIFACT_SERVER)
+                .addParam("message", "Nexus 2.x does not support Docker artifact type");
           } else {
             if (DOCKER.equals(artifactType)) {
               return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
             } else {
-              throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Not supported for Nexus 3.x version");
+              throw new WingsException(INVALID_ARTIFACT_SERVER)
+                  .addParam("message", "Not supported for Nexus 3.x version");
             }
           }
         } catch (WingsException e) {
@@ -117,16 +119,16 @@ public class NexusServiceImpl implements NexusService {
           logger.error(
               "Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
           if (e.getCause() != null || e.getCause() instanceof XMLStreamException) {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Nexus may not be running");
+            throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
           }
-          throw new WingsException(
-              INVALID_ARTIFACT_SERVER, "message", e.getMessage() == null ? "Unknown error" : e.getMessage());
+          throw new WingsException(INVALID_ARTIFACT_SERVER)
+              .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
         }
       }, notNullValue());
 
     } catch (ConditionTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Nexus server took too long to respond");
+      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus server took too long to respond");
     }
   }
 
@@ -148,16 +150,16 @@ public class NexusServiceImpl implements NexusService {
               "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
               e);
           if (e.getCause() != null || e.getCause() instanceof XMLStreamException) {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Nexus may not be running");
+            throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
           }
-          throw new WingsException(
-              INVALID_ARTIFACT_SERVER, "message", e.getMessage() == null ? "Unknown error" : e.getMessage());
+          throw new WingsException(INVALID_ARTIFACT_SERVER)
+              .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
         }
       }, notNullValue());
 
     } catch (ConditionTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "Nexus server took too long to respond");
+      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus server took too long to respond");
     }
   }
 

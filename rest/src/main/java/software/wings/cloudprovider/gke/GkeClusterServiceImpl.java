@@ -121,7 +121,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   private GcpConfig validateAndGetCredentials(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
     }
     return (GcpConfig) computeProviderSetting.getValue();
   }

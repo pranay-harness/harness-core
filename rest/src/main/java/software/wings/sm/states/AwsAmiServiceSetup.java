@@ -200,11 +200,12 @@ public class AwsAmiServiceSetup extends State {
         awsConfig, encryptionDetails, region, baseAutoScalingGroup.getLaunchConfigurationName());
 
     if (baseAutoScalingGroupLaunchConfiguration == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          String.format(
-              "LaunchConfiguration [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
-              baseAutoScalingGroup.getAutoScalingGroupName(), infrastructureMapping.getAutoScalingGroupName(),
-              infrastructureMapping.getRegion()));
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message",
+              String.format(
+                  "LaunchConfiguration [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
+                  baseAutoScalingGroup.getAutoScalingGroupName(), infrastructureMapping.getAutoScalingGroupName(),
+                  infrastructureMapping.getRegion()));
     }
     return baseAutoScalingGroupLaunchConfiguration;
   }
@@ -216,10 +217,11 @@ public class AwsAmiServiceSetup extends State {
         awsHelperService.getAutoScalingGroup(awsConfig, encryptionDetails, region, baseAutoScalingGroupName);
     if (baseAutoScalingGroup == null) {
       logger.error("Couldn't find reference AutoScalingGroup: {}", infrastructureMapping.getAutoScalingGroupName());
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          String.format(
-              "Reference AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
-              infrastructureMapping.getAutoScalingGroupName(), infrastructureMapping.getRegion()));
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message",
+              String.format(
+                  "Reference AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
+                  infrastructureMapping.getAutoScalingGroupName(), infrastructureMapping.getRegion()));
     }
     return baseAutoScalingGroup;
   }
