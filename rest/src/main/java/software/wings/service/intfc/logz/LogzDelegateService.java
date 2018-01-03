@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
  */
 public interface LogzDelegateService {
   @DelegateTaskType(TaskType.LOGZ_CONFIGURATION_VALIDATE_TASK)
-  void validateConfig(@NotNull LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  boolean validateConfig(@NotNull LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
   Object search(@NotNull LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails,

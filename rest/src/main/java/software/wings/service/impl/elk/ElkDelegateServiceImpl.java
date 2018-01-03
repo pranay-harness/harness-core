@@ -45,7 +45,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   @Inject private EncryptionService encryptionService;
 
   @Override
-  public void validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public boolean validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       if (!StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
         throw new WingsException("User name is given but password is empty");
@@ -59,6 +59,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       } else {
         getIndices(elkConfig, encryptedDataDetails);
       }
+      return true;
     } catch (Throwable t) {
       throw new WingsException(t.getMessage(), t);
     }

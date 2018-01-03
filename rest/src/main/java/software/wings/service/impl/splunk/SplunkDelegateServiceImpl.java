@@ -1,7 +1,6 @@
 package software.wings.service.impl.splunk;
 
 import com.google.inject.Inject;
-
 import com.splunk.HttpService;
 import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
@@ -24,7 +23,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
   @Inject private EncryptionService encryptionService;
   @Override
-  public void validateConfig(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public boolean validateConfig(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       encryptionService.decrypt(splunkConfig, encryptedDataDetails);
       final ServiceArgs loginArgs = new ServiceArgs();
@@ -43,6 +42,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       service.setReadTimeout(HTTP_TIMEOUT);
 
       Service.connect(loginArgs);
+      return true;
     } catch (Throwable t) {
       if (t instanceof MalformedURLException) {
         throw new WingsException(splunkConfig.getSplunkUrl() + " is not a valid url", t);

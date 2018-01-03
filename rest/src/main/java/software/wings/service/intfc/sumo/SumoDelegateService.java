@@ -14,6 +14,6 @@ import javax.validation.constraints.NotNull;
  */
 public interface SumoDelegateService {
   @DelegateTaskType(TaskType.SUMO_VALIDATE_CONFIGURATION_TASK)
-  void validateConfig(@NotNull SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails)
+  boolean validateConfig(@NotNull SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException;
 }

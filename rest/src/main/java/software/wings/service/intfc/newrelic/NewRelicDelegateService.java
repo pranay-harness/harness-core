@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
  */
 public interface NewRelicDelegateService {
   @DelegateTaskType(TaskType.NEWRELIC_VALIDATE_CONFIGURATION_TASK)
-  void validateConfig(@NotNull NewRelicConfig newRelicConfig) throws IOException;
+  boolean validateConfig(@NotNull NewRelicConfig newRelicConfig) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_APP_TASK)
   List<NewRelicApplication> getAllApplications(

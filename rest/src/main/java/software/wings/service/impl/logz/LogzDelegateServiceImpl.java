@@ -29,12 +29,12 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       Object.class);
   @Inject private EncryptionService encryptionService;
   @Override
-  public void validateConfig(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public boolean validateConfig(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       final Call<Object> request = getLogzRestClient(logzConfig, encryptedDataDetails).search(logzQuery);
       final Response<Object> response = request.execute();
       if (response.isSuccessful()) {
-        return;
+        return true;
       }
       throw new WingsException(response.errorBody().string());
     } catch (Throwable t) {

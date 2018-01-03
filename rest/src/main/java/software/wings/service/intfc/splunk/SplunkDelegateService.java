@@ -13,5 +13,5 @@ import javax.validation.constraints.NotNull;
  */
 public interface SplunkDelegateService {
   @DelegateTaskType(TaskType.SPLUNK_CONFIGURATION_VALIDATE_TASK)
-  void validateConfig(@NotNull SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  boolean validateConfig(@NotNull SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 }
