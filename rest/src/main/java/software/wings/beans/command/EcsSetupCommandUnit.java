@@ -84,22 +84,20 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
 
-    List<LoadBalancer> loadBalancers =
-        ecsContainerTask.getContainerDefinitions()
-            .stream()
-            .flatMap(containerDefinition
-                -> Optional.ofNullable(containerDefinition.getPortMappings())
-                       .orElse(emptyList())
-                       .stream()
-                       .map(portMapping
-                           -> new LoadBalancer()
-                                  .withLoadBalancerName(setupParams.getLoadBalancerName())
-                                  .withContainerName(containerDefinition.getName())
-                                  .withContainerPort(portMapping.getContainerPort())
-                                  .withTargetGroupArn(setupParams.getTargetGroupArn())))
-            .collect(Collectors.toList());
-
     if (setupParams.isUseLoadBalancer()) {
+      List<LoadBalancer> loadBalancers =
+          ecsContainerTask.getContainerDefinitions()
+              .stream()
+              .flatMap(containerDefinition
+                  -> Optional.ofNullable(containerDefinition.getPortMappings())
+                         .orElse(emptyList())
+                         .stream()
+                         .map(portMapping
+                             -> new LoadBalancer()
+                                    .withContainerName(containerName)
+                                    .withContainerPort(portMapping.getContainerPort())
+                                    .withTargetGroupArn(setupParams.getTargetGroupArn())))
+              .collect(Collectors.toList());
       createServiceRequest.withLoadBalancers(loadBalancers).withRole(setupParams.getRoleArn());
     }
 
