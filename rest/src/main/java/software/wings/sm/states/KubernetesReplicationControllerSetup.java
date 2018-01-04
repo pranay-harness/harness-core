@@ -141,19 +141,24 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   @Override
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
-    ContainerSetupCommandUnitExecutionData setupExecutionData =
-        (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    return aContainerServiceElement()
-        .withUuid(executionData.getServiceId())
-        .withName(setupExecutionData.getContainerServiceName())
-        .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-        .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-        .withClusterName(executionData.getClusterName())
-        .withNamespace(setupParams.getNamespace())
-        .withDeploymentType(DeploymentType.KUBERNETES)
-        .withInfraMappingId(setupParams.getInfraMappingId())
-        .build();
+    ContainerServiceElement.ContainerServiceElementBuilder containerServiceElementBuilder =
+        aContainerServiceElement()
+            .withUuid(executionData.getServiceId())
+            .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+            .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+            .withClusterName(executionData.getClusterName())
+            .withNamespace(setupParams.getNamespace())
+            .withDeploymentType(DeploymentType.KUBERNETES)
+            .withInfraMappingId(setupParams.getInfraMappingId());
+    if (executionResult != null) {
+      ContainerSetupCommandUnitExecutionData setupExecutionData =
+          (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
+      if (setupExecutionData != null) {
+        containerServiceElementBuilder.withName(setupExecutionData.getContainerServiceName());
+      }
+    }
+    return containerServiceElementBuilder.build();
   }
 
   @Override

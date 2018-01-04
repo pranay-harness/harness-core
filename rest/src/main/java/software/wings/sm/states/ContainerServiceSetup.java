@@ -234,7 +234,7 @@ public abstract class ContainerServiceSetup extends State {
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
 
       if (commandExecutionResult == null || commandExecutionResult.getStatus() != SUCCESS) {
-        return buildEndStateExecution(executionData, null, ExecutionStatus.FAILED);
+        return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.FAILED);
       }
 
       return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.SUCCESS);
