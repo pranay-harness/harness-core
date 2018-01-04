@@ -932,14 +932,9 @@ public class AwsHelperService {
 
   public RegisterTaskDefinitionResult registerTaskDefinition(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
-      return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-          .registerTaskDefinition(registerTaskDefinitionRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new RegisterTaskDefinitionResult();
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+        .registerTaskDefinition(registerTaskDefinitionRequest);
   }
 
   public ListServicesResult listServices(String region, AwsConfig awsConfig,
@@ -968,14 +963,9 @@ public class AwsHelperService {
 
   public CreateServiceResult createService(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, CreateServiceRequest createServiceRequest) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
-      return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-          .createService(createServiceRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new CreateServiceResult();
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+        .createService(createServiceRequest);
   }
 
   public UpdateServiceResult updateService(String region, AwsConfig awsConfig,
