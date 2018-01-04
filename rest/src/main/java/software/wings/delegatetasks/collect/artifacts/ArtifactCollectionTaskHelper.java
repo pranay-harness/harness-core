@@ -3,6 +3,7 @@ package software.wings.delegatetasks.collect.artifacts;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import java.io.InputStream;
  * Helper class that has common collection logic that's used by all the artifact collection tasks.
  * @author rktummala
  */
+@Singleton
 public class ArtifactCollectionTaskHelper {
   private final Logger logger = LoggerFactory.getLogger(ArtifactCollectionTaskHelper.class);
   @Inject private DelegateFileManager delegateFileManager;
@@ -28,7 +30,6 @@ public class ArtifactCollectionTaskHelper {
     if (fileInfo == null) {
       throw new FileNotFoundException("Unable to get artifact for path " + artifactPath);
     }
-
     InputStream in = fileInfo.getValue();
     logger.info("Uploading the file {} ", fileInfo.getKey());
     DelegateFile delegateFile = aDelegateFile()
@@ -38,7 +39,7 @@ public class ArtifactCollectionTaskHelper {
                                     .withAccountId(accountId)
                                     .build(); // TODO: more about delegate and task info
     DelegateFile fileRes = delegateFileManager.upload(delegateFile, in);
-    logger.info("Uploaded the file {} ", fileInfo.getKey());
+    logger.info("Uploaded the file name {} and fileUuid {}", fileInfo.getKey(), fileRes.getFileId());
     ArtifactFile artifactFile = new ArtifactFile();
     artifactFile.setFileUuid(fileRes.getFileId());
     artifactFile.setName(fileInfo.getKey());

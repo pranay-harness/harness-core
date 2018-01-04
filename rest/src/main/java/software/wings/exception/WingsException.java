@@ -122,7 +122,7 @@ public class WingsException extends WingsApiException {
   /**
    * Instantiates a new wings exception.
    *
-   * @param message     the message
+   * @param responseMessage     the message
    */
   public WingsException(@NotNull ResponseMessage responseMessage) {
     super(responseMessage.getMessage() == null ? responseMessage.getCode().name() : responseMessage.getMessage(), null);
