@@ -17,6 +17,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -344,8 +345,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       upsertGitSyncErrors(Arrays.asList(failedChange), errorMessage);
     }
 
-    //    alertService.openAlert(failedChange.getAccountId(), GLOBAL_APP_ID, AlertType.GitSyncError,
-    //        getGitSyncErrorAlert(failedChange.getAccountId()));
+    alertService.openAlert(failedChange.getAccountId(), GLOBAL_APP_ID, AlertType.GitSyncError,
+        getGitSyncErrorAlert(failedChange.getAccountId()));
   }
 
   private GitSyncErrorAlert getGitSyncErrorAlert(String accountId) {
@@ -410,9 +411,9 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private void closeAlertIfApplicable(String accountId) {
-    //    if (getGitSyncErrorCount(accountId) == 0) {
-    //      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
-    //    }
+    if (getGitSyncErrorCount(accountId) == 0) {
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
+    }
   }
 
   @Override
