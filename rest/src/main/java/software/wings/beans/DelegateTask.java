@@ -332,7 +332,7 @@ public class DelegateTask extends Base {
     return DelegateTaskEvent.Builder.aDelegateTaskEvent()
         .withAccountId(delegateTask.getAccountId())
         .withDelegateTaskId(delegateTask.getUuid())
-        .withSync(delegateTask.isAsync())
+        .withSync(!delegateTask.isAsync())
         .build();
   }
 
