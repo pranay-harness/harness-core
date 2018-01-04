@@ -18,6 +18,7 @@ import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.common.Constants;
@@ -301,5 +302,25 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(delegateService.checkForUpgrade(
         accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("{delegateId}/task-events")
+  @Timed
+  @ExceptionMetered
+  public List<DelegateTaskEvent> getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("syncOnly") boolean syncOnly) {
+    return delegateService.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("{delegateId}/heartbeat")
+  @Timed
+  @ExceptionMetered
+  public Delegate updateDelegateHB(
+      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return delegateService.updateHB(accountId, delegateId);
   }
 }

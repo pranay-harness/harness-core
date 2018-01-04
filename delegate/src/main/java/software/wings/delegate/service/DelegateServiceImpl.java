@@ -34,6 +34,7 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -138,6 +139,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
+  @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
   @Inject private ExecutorService executorService;
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -145,6 +147,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
   @Inject private Clock clock;
+  @Inject private TimeLimiter timeLimiter;
 
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
@@ -215,71 +218,76 @@ public class DelegateServiceImpl implements DelegateService {
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
 
-      Client client = ClientFactory.getDefault().newClient();
-      ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
+      if (delegateConfiguration.isPollForTasks()) {
+        startTaskPolling();
+        startHeartbeat();
+      } else {
+        Client client = ClientFactory.getDefault().newClient();
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
 
-      URI uri = new URI(delegateConfiguration.getManagerUrl());
-      // Stream the request body
-      RequestBuilder reqBuilder =
-          client.newRequestBuilder()
-              .method(METHOD.GET)
-              .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
-              .queryString("delegateId", delegateId)
-              .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
-              .header("Version", getVersion());
-      if (delegateConfiguration.isProxy()) {
-        reqBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
+        URI uri = new URI(delegateConfiguration.getManagerUrl());
+        // Stream the request body
+        RequestBuilder reqBuilder =
+            client.newRequestBuilder()
+                .method(METHOD.GET)
+                .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
+                .queryString("delegateId", delegateId)
+                .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
+                .header("Version", getVersion());
+        if (delegateConfiguration.isProxy()) {
+          reqBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
+        }
+
+        request = reqBuilder
+                      .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
+                        @Override
+                        public Reader encode(Delegate s) {
+                          return new StringReader(JsonUtils.asJson(s));
+                        }
+                      })
+                      .transport(TRANSPORT.WEBSOCKET);
+
+        Options clientOptions =
+            client.newOptionsBuilder()
+                .runtime(asyncHttpClient, true)
+                .reconnect(true)
+                .reconnectAttempts(new File("delegate.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
+                .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
+                .build();
+        socket = client.create(clientOptions);
+        socket
+            .on(Event.MESSAGE,
+                new Function<String>() { // Do not change this, wasync doesn't like lambdas
+                  @Override
+                  public void on(String message) {
+                    handleMessageSubmit(message, fixedThreadPool);
+                  }
+                })
+            .on(Event.ERROR,
+                new Function<Exception>() { // Do not change this, wasync doesn't like lambdas
+                  @Override
+                  public void on(Exception e) {
+                    handleError(e);
+                  }
+                })
+            .on(Event.REOPENED,
+                new Function<Object>() { // Do not change this, wasync doesn't like lambdas
+                  @Override
+                  public void on(Object o) {
+                    handleReopened(o, builder);
+                  }
+                })
+            .on(Event.CLOSE, new Function<Object>() { // Do not change this, wasync doesn't like lambdas
+              @Override
+              public void on(Object o) {
+                handleClose(o);
+              }
+            });
+
+        socket.open(request.build());
+
+        startHeartbeat(builder, socket);
       }
-
-      request = reqBuilder
-                    .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
-                      @Override
-                      public Reader encode(Delegate s) {
-                        return new StringReader(JsonUtils.asJson(s));
-                      }
-                    })
-                    .transport(TRANSPORT.WEBSOCKET);
-
-      Options clientOptions =
-          client.newOptionsBuilder()
-              .runtime(asyncHttpClient, true)
-              .reconnect(true)
-              .reconnectAttempts(new File("delegate.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
-              .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
-              .build();
-      socket = client.create(clientOptions);
-      socket
-          .on(Event.MESSAGE,
-              new Function<String>() { // Do not change this, wasync doesn't like lambdas
-                @Override
-                public void on(String message) {
-                  handleMessageSubmit(message, fixedThreadPool);
-                }
-              })
-          .on(Event.ERROR,
-              new Function<Exception>() { // Do not change this, wasync doesn't like lambdas
-                @Override
-                public void on(Exception e) {
-                  handleError(e);
-                }
-              })
-          .on(Event.REOPENED,
-              new Function<Object>() { // Do not change this, wasync doesn't like lambdas
-                @Override
-                public void on(Object o) {
-                  handleReopened(o, builder);
-                }
-              })
-          .on(Event.CLOSE, new Function<Object>() { // Do not change this, wasync doesn't like lambdas
-            @Override
-            public void on(Object o) {
-              handleClose(o);
-            }
-          });
-
-      socket.open(request.build());
-
-      startHeartbeat(builder, socket);
 
       startUpgradeCheck(getVersion());
 
@@ -514,12 +522,47 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
+  private void startTaskPolling() {
+    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, 3, TimeUnit.SECONDS);
+  }
+
+  private void pollForTask() {
+    try {
+      timeLimiter.callWithTimeout(() -> {
+        List<DelegateTaskEvent> taskEvents = execute(managerClient.pollTaskEvents(delegateId, accountId));
+        for (DelegateTaskEvent taskEvent : taskEvents) {
+          if (taskEvent instanceof DelegateTaskAbortEvent) {
+            abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
+          } else {
+            dispatchDelegateTask(taskEvent);
+          }
+        }
+        return true;
+      }, 15L, TimeUnit.SECONDS, true);
+    } catch (Exception e) {
+      logger.error("Exception while decoding task", e);
+    }
+  }
+
   private void startHeartbeat(Builder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(()
                                               -> executorService.submit(() -> {
       try {
         sendHeartbeat(builder, socket);
+      } catch (Exception ex) {
+        logger.error("Exception while sending heartbeat", ex);
+      }
+    }),
+        0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+  }
+
+  private void startHeartbeat() {
+    logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
+    heartbeatExecutor.scheduleAtFixedRate(()
+                                              -> executorService.submit(() -> {
+      try {
+        sendHeartbeat();
       } catch (Exception ex) {
         logger.error("Exception while sending heartbeat", ex);
       }
@@ -625,6 +668,15 @@ public class DelegateServiceImpl implements DelegateService {
               .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
               .build()));
       lastHeartbeatSentAt.set(clock.millis());
+    }
+  }
+
+  private void sendHeartbeat() throws IOException {
+    logger.debug("sending heartbeat...");
+    Delegate response = execute(managerClient.delegateHeartbeat(delegateId, accountId));
+    if (delegateId.equals(response.getUuid())) {
+      lastHeartbeatSentAt.set(clock.millis());
+      lastHeartbeatReceivedAt.set(clock.millis());
     }
   }
 

@@ -255,3 +255,4 @@ software.wings.api.AmiServiceDeployElement, 5220
 software.wings.beans.InstanceUnitType, 5221
 software.wings.beans.container.PortMapping, 5222
 software.wings.beans.container.LogConfiguration$LogOption, 5223
+software.wings.beans.RestResponse, 5224

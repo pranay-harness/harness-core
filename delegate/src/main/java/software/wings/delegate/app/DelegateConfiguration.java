@@ -20,6 +20,8 @@ public class DelegateConfiguration {
 
   private boolean proxy;
 
+  private boolean pollForTasks;
+
   /**
    * Getter for property 'managerUrl'.
    *
@@ -92,5 +94,13 @@ public class DelegateConfiguration {
 
   public void setProxy(boolean proxy) {
     this.proxy = proxy;
+  }
+
+  public boolean isPollForTasks() {
+    return pollForTasks;
+  }
+
+  public void setPollForTasks(boolean pollForTasks) {
+    this.pollForTasks = pollForTasks;
   }
 }

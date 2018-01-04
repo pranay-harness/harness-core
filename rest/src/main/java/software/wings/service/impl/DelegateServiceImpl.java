@@ -52,6 +52,7 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
+import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
@@ -80,6 +81,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +89,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.cache.Cache;
 import javax.cache.Caching;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -141,6 +144,19 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Updating delegate : {}", delegate.getUuid());
     return updateDelegate(delegate, updateOperations);
+  }
+
+  @Override
+  public Delegate updateHB(String accountId, String delegateId) {
+    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
+                                .field("accountId")
+                                .equal(accountId)
+                                .field(ID_KEY)
+                                .equal(delegateId),
+        wingsPersistence.createUpdateOperations(Delegate.class)
+            .set("lastHeartBeat", System.currentTimeMillis())
+            .set("connected", true));
+    return get(accountId, delegateId);
   }
 
   @Override
@@ -831,5 +847,32 @@ public class DelegateServiceImpl implements DelegateService {
       broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
           .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
     }
+  }
+
+  @Override
+  public List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly) {
+    List<DelegateTask> unassignedTasks = new ArrayList<>();
+    try {
+      Cache<String, DelegateTask> delegateSyncCache =
+          cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
+      delegateSyncCache.iterator().forEachRemaining(dt -> {
+        if (dt.getValue().getStatus().equals(DelegateTask.Status.QUEUED) && dt.getValue().getDelegateId() == null) {
+          unassignedTasks.add(dt.getValue());
+        }
+      });
+    } catch (Exception ex) {
+      logger.error("Error in reading sync task from DELEGATE_SYNC_CACHE", ex);
+    }
+
+    if (!syncOnly) {
+      unassignedTasks.addAll(wingsPersistence.createQuery(DelegateTask.class)
+                                 .field("status")
+                                 .equal(DelegateTask.Status.QUEUED)
+                                 .field("delegateId")
+                                 .doesNotExist()
+                                 .asList());
+    }
+
+    return unassignedTasks.stream().map(DelegateTask::getDelegateTaskEvent).collect(toList());
   }
 }

@@ -91,6 +91,7 @@ then
   echo "localDiskPath: /tmp" >> config-delegate.yml
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
   echo "proxy: false" >> config-delegate.yml
+  echo "pollForTasks: false" >> config-delegate.yml
 fi
 
 export HOSTNAME

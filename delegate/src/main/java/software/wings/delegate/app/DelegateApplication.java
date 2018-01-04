@@ -111,6 +111,7 @@ public class DelegateApplication {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("localHeartbeatExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("inputExecutor"))).shutdownNow();
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("verificationExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ExecutorService.class, Names.named("verificationDataCollector"))).shutdownNow();
     injector.getInstance(ExecutorService.class).shutdown();
