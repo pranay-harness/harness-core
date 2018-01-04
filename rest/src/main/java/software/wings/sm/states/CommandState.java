@@ -357,7 +357,7 @@ public class CommandState extends State {
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
-        .withStateExecutionData(executionDataBuilder.build())
+        .withStateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
         .withDelegateTaskId(delegateTaskId)
         .build();
   }
