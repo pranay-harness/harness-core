@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -48,6 +49,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -104,8 +106,7 @@ public class HttpState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
-    ExecutionResponse response = executeInternal(context, activityId);
-    return response;
+    return executeInternal(context, activityId);
   }
 
   /**
@@ -167,7 +168,7 @@ public class HttpState extends State {
    * @param body the body
    */
   public void setBody(String body) {
-    this.body = body;
+    this.body = trim(body);
   }
 
   /**
@@ -288,7 +289,7 @@ public class HttpState extends State {
         }
       }
     }
-    String evaluatedUrl = context.renderExpression(finalUrl);
+    String evaluatedUrl = trim(context.renderExpression(finalUrl));
     logger.info("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = null;
     try {
@@ -300,7 +301,7 @@ public class HttpState extends State {
       e.printStackTrace();
     }
     if (evaluatedBody != null) {
-      evaluatedBody = context.renderExpression(evaluatedBody);
+      evaluatedBody = trim(context.renderExpression(evaluatedBody));
       logger.info("evaluatedBody: {}", evaluatedBody);
     }
 
@@ -309,17 +310,17 @@ public class HttpState extends State {
       if (headerExpression != null) {
         evaluatedHeader = headerExpression;
       }
-      evaluatedHeader = context.renderExpression(evaluatedHeader);
+      evaluatedHeader = trim(context.renderExpression(evaluatedHeader));
       logger.info("evaluatedHeader: {}", evaluatedHeader);
     }
 
     String evaluatedMethod = getFinalMethod(context);
     if (methodExpression != null) {
-      evaluatedMethod = context.renderExpression(evaluatedMethod);
+      evaluatedMethod = trim(context.renderExpression(evaluatedMethod));
     }
 
     if (assertionExpression != null) {
-      assertion = context.renderExpression(assertionExpression);
+      assertion = trim(context.renderExpression(assertionExpression));
     }
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
@@ -369,50 +370,55 @@ public class HttpState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    HttpStateExecutionData executionData = (HttpStateExecutionData) response.values().iterator().next();
-    String errorMessage = executionData.getErrorMsg();
-    executionData.setAssertionStatement(assertion);
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    boolean assertionStatus = true;
-    if (StringUtils.isNotBlank(assertion)) {
-      // check if the request failed
-      if (!executionData.getStatus().equals(ExecutionStatus.ERROR)) {
-        try {
-          assertionStatus = (boolean) context.evaluateExpression(assertion, executionData);
-          logger.info("assertion status: {}", assertionStatus);
+    NotifyResponseData notifyResponseData = response.values().iterator().next();
+    ExecutionResponse executionResponse = new ExecutionResponse();
+    if (notifyResponseData instanceof ErrorNotifyResponseData) {
+      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+      executionResponse.setErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+    } else {
+      HttpStateExecutionData executionData = (HttpStateExecutionData) notifyResponseData;
+      String errorMessage = executionData.getErrorMsg();
+      executionData.setAssertionStatement(assertion);
+      ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+      boolean assertionStatus = true;
+      if (StringUtils.isNotBlank(assertion)) {
+        // check if the request failed
+        if (!executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+          try {
+            assertionStatus = (boolean) context.evaluateExpression(assertion, executionData);
+            logger.info("assertion status: {}", assertionStatus);
 
-        } catch (ClassCastException e) {
-          logger.error("Invalid assertion " + e.getMessage(), e);
-          executionData.setErrorMsg(ASSERTION_ERROR_MSG);
-        } catch (JexlException e) {
-          logger.error("Error in httpStateAssertion", e);
-          assertionStatus = false;
-          if (e instanceof Parsing) {
-            Parsing p = (Parsing) e;
-            executionData.setErrorMsg("Parsing error '" + p.getDetail() + "' in assertion.");
-          } else if (e instanceof Property) {
-            Property pr = (Property) e;
-            executionData.setErrorMsg("Unresolvable property '" + pr.getProperty() + "' in assertion.");
-          } else {
+          } catch (ClassCastException e) {
+            logger.error("Invalid assertion " + e.getMessage(), e);
+            executionData.setErrorMsg(ASSERTION_ERROR_MSG);
+          } catch (JexlException e) {
+            logger.error("Error in httpStateAssertion", e);
+            assertionStatus = false;
+            if (e instanceof Parsing) {
+              Parsing p = (Parsing) e;
+              executionData.setErrorMsg("Parsing error '" + p.getDetail() + "' in assertion.");
+            } else if (e instanceof Property) {
+              Property pr = (Property) e;
+              executionData.setErrorMsg("Unresolvable property '" + pr.getProperty() + "' in assertion.");
+            } else {
+              executionData.setErrorMsg(getMessage(e));
+            }
+          } catch (Exception e) {
+            logger.error("Error in httpStateAssertion", e);
             executionData.setErrorMsg(getMessage(e));
+            assertionStatus = false;
           }
-        } catch (Exception e) {
-          logger.error("Error in httpStateAssertion", e);
-          executionData.setErrorMsg(getMessage(e));
-          assertionStatus = false;
         }
       }
-    }
-    if (!assertionStatus || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
-      executionStatus = ExecutionStatus.FAILED;
-    }
-    ExecutionResponse executionResponse = new ExecutionResponse();
-    executionResponse.setExecutionStatus(executionStatus);
+      if (!assertionStatus || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+        executionStatus = ExecutionStatus.FAILED;
+      }
+      executionResponse.setExecutionStatus(executionStatus);
 
-    executionData.setAssertionStatus(executionStatus.name());
-    executionResponse.setStateExecutionData(executionData);
-    executionResponse.setErrorMessage(errorMessage);
-
+      executionData.setAssertionStatus(executionStatus.name());
+      executionResponse.setStateExecutionData(executionData);
+      executionResponse.setErrorMessage(errorMessage);
+    }
     String activityId = null;
 
     for (String key : response.keySet()) {
