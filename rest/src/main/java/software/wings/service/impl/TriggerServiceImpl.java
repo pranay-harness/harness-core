@@ -726,7 +726,7 @@ public class TriggerServiceImpl implements TriggerService {
     }
     WebhookParameters webhookParameters = new WebhookParameters();
     webhookParameters.setParams(parameters);
-    webhookParameters.setExpressions(new ArrayList<>());
+    webhookParameters.setExpressions(webhookParameters.pullRequestExpressions());
     return webhookParameters;
   }
 
