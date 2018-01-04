@@ -95,7 +95,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                          .stream()
                          .map(portMapping
                              -> new LoadBalancer()
-                                    .withContainerName(containerName)
+                                    .withContainerName(containerDefinition.getName())
                                     .withContainerPort(portMapping.getContainerPort())
                                     .withTargetGroupArn(setupParams.getTargetGroupArn())))
               .collect(toList());
@@ -118,8 +118,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     if (setupParams.isUseLoadBalancer()) {
       executionLogCallback.saveExecutionLog(
           "Load Balancer Name: " + setupParams.getLoadBalancerName(), Log.LogLevel.INFO);
-      executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), Log.LogLevel.INFO);
       executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), Log.LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), Log.LogLevel.INFO);
     }
 
     return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
