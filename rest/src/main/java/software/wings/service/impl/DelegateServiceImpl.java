@@ -873,6 +873,9 @@ public class DelegateServiceImpl implements DelegateService {
                                  .asList());
     }
 
+    logger.info("Dispatched delegateTaskIds:[{}] to delegate:[{}]",
+        Joiner.on(",").join(unassignedTasks.stream().map(DelegateTask::getUuid).collect(toList())), delegateId);
+
     return unassignedTasks.stream().map(DelegateTask::getDelegateTaskEvent).collect(toList());
   }
 }

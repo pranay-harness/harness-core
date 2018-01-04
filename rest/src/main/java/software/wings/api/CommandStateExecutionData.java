@@ -38,6 +38,7 @@ import java.util.Map;
 public class CommandStateExecutionData extends StateExecutionData {
   @Transient private static final Logger logger = LoggerFactory.getLogger(CommandStateExecutionData.class);
   private String appId;
+  private String delegateTaskId;
   private String hostName;
   private String publicDns;
   private String hostId;
@@ -157,7 +158,9 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String errorMsg;
     private Integer waitInterval;
     private ContextElement element;
+    private Map<String, Object> stateParams;
     private String appId;
+    private String delegateTaskId;
     private String hostName;
     private String publicDns;
     private String hostId;
@@ -178,6 +181,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private CodeDeployParams codeDeployParams;
     private CodeDeployParams oldCodeDeployParams;
     private ContainerSetupParams containerSetupParams;
+    private String containerServiceName;
     private transient ActivityService activityService;
 
     private Builder() {}
@@ -226,8 +230,18 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withStateParams(Map<String, Object> stateParams) {
+      this.stateParams = stateParams;
+      return this;
+    }
+
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public Builder withDelegateTaskId(String delegateTaskId) {
+      this.delegateTaskId = delegateTaskId;
       return this;
     }
 
@@ -331,6 +345,11 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withContainerServiceName(String containerServiceName) {
+      this.containerServiceName = containerServiceName;
+      return this;
+    }
+
     public Builder withActivityService(ActivityService activityService) {
       this.activityService = activityService;
       return this;
@@ -346,7 +365,9 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withErrorMsg(errorMsg)
           .withWaitInterval(waitInterval)
           .withElement(element)
+          .withStateParams(stateParams)
           .withAppId(appId)
+          .withDelegateTaskId(delegateTaskId)
           .withHostName(hostName)
           .withPublicDns(publicDns)
           .withHostId(hostId)
@@ -358,15 +379,16 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withActivityId(activityId)
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
+          .withCountsByStatuses(countsByStatuses)
           .withNewInstanceData(newInstanceData)
           .withOldInstanceData(oldInstanceData)
           .withDownsize(downsize)
-          .withCountsByStatuses(countsByStatuses)
           .withClusterName(clusterName)
           .withNewInstanceStatusSummaries(newInstanceStatusSummaries)
           .withCodeDeployParams(codeDeployParams)
           .withOldCodeDeployParams(oldCodeDeployParams)
           .withContainerSetupParams(containerSetupParams)
+          .withContainerServiceName(containerServiceName)
           .withActivityService(activityService);
     }
 
@@ -380,7 +402,9 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setErrorMsg(errorMsg);
       commandStateExecutionData.setWaitInterval(waitInterval);
       commandStateExecutionData.setElement(element);
+      commandStateExecutionData.setStateParams(stateParams);
       commandStateExecutionData.setAppId(appId);
+      commandStateExecutionData.setDelegateTaskId(delegateTaskId);
       commandStateExecutionData.setHostName(hostName);
       commandStateExecutionData.setPublicDns(publicDns);
       commandStateExecutionData.setHostId(hostId);
@@ -401,6 +425,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setCodeDeployParams(codeDeployParams);
       commandStateExecutionData.setOldCodeDeployParams(oldCodeDeployParams);
       commandStateExecutionData.setContainerSetupParams(containerSetupParams);
+      commandStateExecutionData.setContainerServiceName(containerServiceName);
       commandStateExecutionData.setActivityService(activityService);
       return commandStateExecutionData;
     }
