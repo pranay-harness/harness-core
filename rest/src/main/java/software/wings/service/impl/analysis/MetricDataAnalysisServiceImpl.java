@@ -178,7 +178,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public List<NewRelicMetricDataRecord> getRecords(StateType stateType, String workflowExecutionId,
-      String stateExecutionId, String workflowId, String serviceId, Set<String> nodes, int analysisMinute) {
+      String stateExecutionId, String workflowId, String serviceId, Set<String> nodes, int analysisMinute,
+      int analysisStartMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                 .field("stateType")
                                                 .equal(stateType)
@@ -195,13 +196,15 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("level")
                                                 .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
-                                                .lessThanOrEq(analysisMinute);
+                                                .lessThanOrEq(analysisMinute)
+                                                .field("dataCollectionMinute")
+                                                .greaterThanOrEq(analysisStartMinute);
     return query.asList();
   }
 
   @Override
-  public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      StateType stateType, String workflowId, String workflowExecutionID, String serviceId, int analysisMinute) {
+  public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String workflowId,
+      String workflowExecutionID, String serviceId, int analysisMinute, int analysisStartMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                 .field("stateType")
                                                 .equal(stateType)
@@ -214,13 +217,15 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("level")
                                                 .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
-                                                .lessThanOrEq(analysisMinute);
+                                                .lessThanOrEq(analysisMinute)
+                                                .field("dataCollectionMinute")
+                                                .greaterThanOrEq(analysisStartMinute);
     return query.asList();
   }
 
   @Override
   public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      StateType stateType, String workflowId, String serviceId, int analysisMinute) {
+      StateType stateType, String workflowId, String serviceId, int analysisMinute, int analysisStartMinute) {
     final String astSuccessfulWorkflowExecutionIdWithData =
         getLastSuccessfulWorkflowExecutionIdWithData(stateType, workflowId, serviceId);
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
@@ -235,7 +240,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("level")
                                                 .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
-                                                .lessThanOrEq(analysisMinute);
+                                                .lessThanOrEq(analysisMinute)
+                                                .field("dataCollectionMinute")
+                                                .greaterThanOrEq(analysisStartMinute);
     return query.asList();
   }
 

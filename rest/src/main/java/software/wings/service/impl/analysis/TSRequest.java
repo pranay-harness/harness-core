@@ -22,4 +22,5 @@ public class TSRequest {
   private String serviceId;
   private Set<String> nodes;
   private int analysisMinute;
+  private int analysisStartMinute;
 }

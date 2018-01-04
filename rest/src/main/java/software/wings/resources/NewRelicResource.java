@@ -108,14 +108,15 @@ public class NewRelicResource implements MetricAnalysisResource {
     if (compareCurrent) {
       return new RestResponse<>(metricDataAnalysisService.getRecords(StateType.NEW_RELIC,
           request.getWorkflowExecutionId(), request.getStateExecutionId(), request.getWorkflowId(),
-          request.getServiceId(), request.getNodes(), request.getAnalysisMinute()));
+          request.getServiceId(), request.getNodes(), request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     } else {
       if (workFlowExecutionId == null || workFlowExecutionId.equals("-1")) {
         return new RestResponse<>(new ArrayList<>());
       }
 
       return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(StateType.NEW_RELIC,
-          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute()));
+          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute(),
+          request.getAnalysisStartMinute()));
     }
   }
 
