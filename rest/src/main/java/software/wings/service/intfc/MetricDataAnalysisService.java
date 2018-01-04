@@ -48,13 +48,13 @@ public interface MetricDataAnalysisService {
       String applicationId, String workflowId, int analysisMinute, int limit);
 
   List<NewRelicMetricDataRecord> getRecords(StateType stateType, String workflowExecutionId, String stateExecutionId,
-      String workflowId, String serviceId, Set<String> nodes, int analysisMinute);
+      String workflowId, String serviceId, Set<String> nodes, int analysisMinute, int analysisStartMinute);
 
   List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      StateType stateType, String workflowId, String serviceId, int analysisMinute);
+      StateType stateType, String workflowId, String serviceId, int analysisMinute, int analysisStartMinute);
 
-  List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      StateType stateType, String workflowId, String workflowExecutionID, String serviceId, int analysisMinute);
+  List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String workflowId,
+      String workflowExecutionID, String serviceId, int analysisMinute, int analysisStartMinute);
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId);
 

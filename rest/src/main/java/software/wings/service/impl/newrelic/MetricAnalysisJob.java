@@ -86,6 +86,7 @@ public class MetricAnalysisJob implements Job {
 
   public static class MetricAnalysisGenerator implements Runnable {
     public static final int PYTHON_JOB_RETRIES = 3;
+    public static final int ANALYSIS_DURATION = 30;
     public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
     protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
     private static final int APM_BUFFER_MINUTES = 2;
@@ -132,17 +133,18 @@ public class MetricAnalysisJob implements Job {
 
     private NewRelicMetricAnalysisRecord analyzeLocal(int analysisMinute) {
       logger.info("running " + context.getStateType().name() + " for minute {}", analysisMinute);
+      int analysisStartMin = analysisMinute > ANALYSIS_DURATION ? analysisMinute - ANALYSIS_DURATION : 0;
       final List<NewRelicMetricDataRecord> controlRecords =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-          ? analysisService.getPreviousSuccessfulRecords(
-                context.getStateType(), context.getWorkflowId(), context.getServiceId(), analysisMinute)
+          ? analysisService.getPreviousSuccessfulRecords(context.getStateType(), context.getWorkflowId(),
+                context.getServiceId(), analysisMinute, analysisStartMin)
           : analysisService.getRecords(context.getStateType(), context.getWorkflowExecutionId(),
                 context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(),
-                context.getControlNodes(), analysisMinute);
+                context.getControlNodes(), analysisMinute, analysisStartMin);
 
       final List<NewRelicMetricDataRecord> testRecords = analysisService.getRecords(context.getStateType(),
           context.getWorkflowExecutionId(), context.getStateExecutionId(), context.getWorkflowId(),
-          context.getServiceId(), context.getTestNodes(), analysisMinute);
+          context.getServiceId(), context.getTestNodes(), analysisMinute, analysisStartMin);
 
       Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
       Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
@@ -205,6 +207,7 @@ public class MetricAnalysisJob implements Job {
     }
 
     private void timeSeriesML(int analysisMinute) throws InterruptedException, TimeoutException, IOException {
+      int analysisStartMin = analysisMinute > ANALYSIS_DURATION ? analysisMinute - ANALYSIS_DURATION : 0;
       String protocol = context.isSSL() ? "https" : "http";
       String serverUrl = protocol + "://localhost:" + context.getAppPort();
 
@@ -240,6 +243,8 @@ public class MetricAnalysisJob implements Job {
       command.add("--workflow_id=" + context.getWorkflowId());
       command.add("--workflow_execution_id=" + context.getWorkflowExecutionId());
       command.add("--service_id=" + context.getServiceId());
+      command.add("--analysis_start_minute");
+      command.add(String.valueOf(analysisStartMin));
       command.add("--analysis_minute");
       command.add(String.valueOf(analysisMinute));
       command.add("--state_execution_id=" + context.getStateExecutionId());

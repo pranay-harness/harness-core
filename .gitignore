@@ -33,3 +33,5 @@ rest/harness-delegate/
 rest/wingsui
 target
 wingsui
+node_modules/
+package-lock.json

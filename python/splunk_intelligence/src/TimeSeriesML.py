@@ -82,11 +82,11 @@ class TSAnomlyDetector(object):
         :return: the grouped dictionary
         """
         result = {}
-        data_len = (self._options.analysis_minute + 1)
+        data_len = (self._options.analysis_minute - self._options.analysis_start_minute)+1
         for transaction in transactions:
             txn_name = transaction.get('name')
             host = transaction.get('host')
-            data_collection_minute = transaction.get('dataCollectionMinute')
+            data_collection_minute = transaction.get('dataCollectionMinute') - self._options.analysis_start_minute
 
             if txn_name not in result:
                 result[txn_name] = OrderedDict({})
@@ -267,13 +267,13 @@ class TSAnomlyDetector(object):
                                        abs(dist_2d_data) < min_ratio * np.minimum(test_data_2d, base_array))] = 0
             # normalizing distances
             dist_2d_data = dist_2d_data/std_array
-            # clipping distances at threshold
-            dist_2d_data[dist_2d_data > 3 * self._options.tolerance] = 3 * self._options.tolerance
             # for points where baseline is Nan but test has a value, distance is set to maximum.
             dist_2d_data[np.logical_and(~np.isnan(test_data_2d), np.isnan(base_array))] = \
                 3 * self._options.tolerance + 0.1
             metric_deviation_type = self.metric_template.get_deviation_type(metric_name)
             adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, dist_2d_data)
+            # clipping distances at threshold
+            adjusted_dist[adjusted_dist > 3 * self._options.tolerance] = 3 * self._options.tolerance
             w_dist = []
             # weights has value just at points that test has a value
             cum_weight = np.sum(~np.isnan(test_data_2d), 1)
@@ -305,10 +305,10 @@ class TSAnomlyDetector(object):
                 analysis_output = self.fast_analysis_metric(self._options.smooth_window, metric_name, control_data_dict,
                                                             test_data_dict)
             else:
-                data_len = (self._options.analysis_minute + 1)
+                data_len = (self._options.analysis_minute - self._options.analysis_start_minute) + 1
                 if data_len % self._options.smooth_window > 0:
-                    pad_len = self._options.smooth_window - (
-                            self._options.analysis_minute + 1) % self._options.smooth_window
+                    pad_len = self._options.smooth_window - (data_len % self._options.smooth_window)
+                    print(data_len, pad_len)
                     control_data_dict['data'] = np.pad(control_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
                                                        constant_values=np.nan)
                     test_data_dict['data'] = np.pad(test_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
@@ -498,6 +498,7 @@ def load_from_harness_server(url, nodes, options):
                                                                     stateExecutionId=options.state_execution_id,
                                                                     serviceId=options.service_id,
                                                                     analysisMinute=options.analysis_minute,
+                                                                    analysisStartMinute=options.analysis_start_minute,
                                                                     nodes=nodes))['resource']
     return raw_events
 
@@ -564,6 +565,7 @@ def parse(cli_args):
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--analysis_save_url", required=True)
     parser.add_argument("--analysis_minute", type=int, required=True)
+    parser.add_argument("--analysis_start_minute", type=int, required=True)
     parser.add_argument("--tolerance", type=int, required=True)
     parser.add_argument("--smooth_window", type=int, required=True)
     parser.add_argument("--min_rpm", type=int, required=True)
@@ -701,7 +703,7 @@ def main(args):
     #
 
     result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
-    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/result_new_test3.json',
+    #write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/result_new_test3.json',
     #               result)
     post_to_wings_server(options, result)
 
