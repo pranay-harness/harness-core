@@ -6,6 +6,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
+import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
@@ -65,4 +66,8 @@ public interface DelegateService {
   boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent);
 
   void abortTask(String accountId, String delegateTaskId);
+
+  List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly);
+
+  Delegate updateHB(String accountId, String delegateId);
 }

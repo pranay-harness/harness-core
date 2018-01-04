@@ -328,6 +328,14 @@ public class DelegateTask extends Base {
         + ", delegateRunnableTask=" + delegateRunnableTask + '}';
   }
 
+  public static DelegateTaskEvent getDelegateTaskEvent(DelegateTask delegateTask) {
+    return DelegateTaskEvent.Builder.aDelegateTaskEvent()
+        .withAccountId(delegateTask.getAccountId())
+        .withDelegateTaskId(delegateTask.getUuid())
+        .withSync(delegateTask.isAsync())
+        .build();
+  }
+
   /**
    * The type Context.
    */

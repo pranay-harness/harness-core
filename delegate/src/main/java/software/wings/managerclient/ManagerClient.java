@@ -17,6 +17,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
@@ -148,4 +149,11 @@ public interface ManagerClient {
   @PUT("delegates/{delegateId}/tasks/{taskId}/start")
   Call<DelegateTask> startTask(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
+
+  @GET("delegates/{delegateId}/task-events")
+  Call<List<DelegateTaskEvent>> pollTaskEvents(
+      @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+
+  @GET("delegates/{delegateId}/heartbeat")
+  Call<Delegate> delegateHeartbeat(@Path("delegateId") String delegateId, @Query("accountId") String accountId);
 }

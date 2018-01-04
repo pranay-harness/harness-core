@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType", include = As.PROPERTY)
 @JsonTypeName("DelegateTaskEvent")
 public class DelegateTaskEvent {
+  private String accountId;
   private String delegateTaskId;
   private boolean sync;
 
@@ -32,8 +33,6 @@ public class DelegateTaskEvent {
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }
-
-  private String accountId;
 
   /**
    * Getter for property 'delegateTaskId'.
