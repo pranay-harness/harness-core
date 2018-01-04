@@ -570,7 +570,7 @@ def parse(cli_args):
     parser.add_argument("--comparison_unit_window", type=int, required=True)
     parser.add_argument("--parallel_processes", type=int, required=True)
     parser.add_argument("--metric_template_url", type=str, required=True)
-    parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int)
+    parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int, default=19)
     return parser.parse_args(cli_args)
 
 
