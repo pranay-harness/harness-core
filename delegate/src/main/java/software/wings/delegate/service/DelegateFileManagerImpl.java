@@ -1,6 +1,5 @@
 package software.wings.delegate.service;
 
-import static java.lang.System.currentTimeMillis;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
@@ -21,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
+import software.wings.common.UUIDGenerator;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -184,15 +184,14 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   @Override
   public DelegateFile upload(DelegateFile delegateFile, InputStream contentSource) {
-    File file = new File(delegateConfiguration.getLocalDiskPath(), String.valueOf(currentTimeMillis()));
-
+    File file = new File(delegateConfiguration.getLocalDiskPath(), UUIDGenerator.getUuid());
+    logger.info("File {} created", file.getName());
     try {
       FileOutputStream fout = new FileOutputStream(file);
       IOUtils.copy(contentSource, fout);
       fout.close();
-
       upload(delegateFile, file);
-
+      logger.info("File name {} with file id {} uploaded successfully", file.getName(), delegateFile.getFileId());
     } catch (Exception e) {
       logger.warn("Error uploading file: " + file.getName(), e);
     } finally {

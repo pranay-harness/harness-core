@@ -15,13 +15,16 @@ import static org.jfrog.artifactory.client.model.PackageType.rpm;
 import static org.jfrog.artifactory.client.model.PackageType.yum;
 import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
+import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.utils.Validator.prepareWingsException;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
@@ -40,6 +43,8 @@ import org.jfrog.artifactory.client.model.Repository;
 import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage.Acuteness;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
@@ -75,6 +80,7 @@ import java.util.stream.Collectors;
 /**
  * Created by sgurubelli on 6/27/17.
  */
+@Singleton
 public class ArtifactoryServiceImpl implements ArtifactoryService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -757,8 +763,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
     } catch (Exception e) {
       String msg = "Failed to download the latest artifacts  of repo [" + repoType + "] groupId [" + groupId;
-      throw new WingsException(ARTIFACT_SERVER_ERROR)
-          .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
+      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ALERTING);
     }
     return res;
   }
@@ -788,10 +793,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       // First get the groupId
       String[] artifactPaths = artifactPath.split("/");
       if (artifactPaths == null || artifactPaths.length == 0) {
-        prepareAndThrowException("Invalid artifact path");
+        prepareAndThrowException("Invalid artifact path", HARMLESS);
       }
       if (artifactPaths.length < 4) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER)
+        prepareAndThrowException(
+            "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war", HARMLESS);
+        throw new WingsException(aResponseMessage().code(ErrorCode.INVALID_ARTIFACT_SERVER).acuteness(HARMLESS).build())
             .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
       }
       String groupId =
@@ -818,7 +825,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   private void prepareAndThrowException(String message) {
-    throw prepareWingsException(INVALID_ARTIFACT_SERVER, "message", message);
+    prepareAndThrowException(message, HARMLESS);
+  }
+
+  private void prepareAndThrowException(String message, Acuteness acuteness) {
+    throw new WingsException(aResponseMessage().code(ErrorCode.INVALID_ARTIFACT_SERVER).acuteness(acuteness).build())
+        .addParam("message", message);
   }
 
   private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
@@ -885,7 +897,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return builder.build();
     } catch (Exception ex) {
       logger.error("Error occurred while trying to initialize artifactory", ex);
-      prepareAndThrowException("Invalid Artifactory credentials");
+      prepareAndThrowException("Invalid Artifactory credentials", ALERTING);
     }
     return null;
   }
@@ -903,9 +915,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       if (httpResponseException.getStatusCode() == 401) {
-        prepareAndThrowException("Invalid Artifactory credentials");
+        prepareAndThrowException("Invalid Artifactory credentials", ALERTING);
       } else if (httpResponseException.getStatusCode() == 403) {
-        prepareAndThrowException("User not authorized to access artifactory");
+        prepareAndThrowException("User not authorized to access artifactory", ALERTING);
       }
     }
     throw new WingsException(ARTIFACT_SERVER_ERROR, e).addParam("message", e.getMessage());
