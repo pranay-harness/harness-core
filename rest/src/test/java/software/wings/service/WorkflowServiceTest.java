@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
-import static software.wings.beans.BuildOrchestrationWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
+import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -87,7 +87,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.BasicOrchestrationWorkflow;
-import software.wings.beans.BuildOrchestrationWorkflow;
+import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ErrorCode;
@@ -2969,8 +2969,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = workflowService.createWorkflow(workflow);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
-    BuildOrchestrationWorkflow orchestrationWorkflow =
-        (BuildOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    BuildWorkflow orchestrationWorkflow = (BuildWorkflow) workflow2.getOrchestrationWorkflow();
     assertThat(orchestrationWorkflow)
         .isNotNull()
         .hasFieldOrProperty("preDeploymentSteps")

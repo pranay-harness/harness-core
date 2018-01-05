@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.BuildOrchestrationWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
+import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 
@@ -18,8 +18,8 @@ import java.util.Set;
  * Created by sgurubelli on 11/14/17.
  */
 @JsonTypeName("BUILD")
-public class BuildOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
-  public BuildOrchestrationWorkflow() {
+public class BuildWorkflow extends CanaryOrchestrationWorkflow {
+  public BuildWorkflow() {
     setOrchestrationWorkflowType(BUILD);
   }
 
@@ -160,8 +160,8 @@ public class BuildOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       return this;
     }
 
-    public BuildOrchestrationWorkflow build() {
-      BuildOrchestrationWorkflow workflow = new BuildOrchestrationWorkflow();
+    public BuildWorkflow build() {
+      BuildWorkflow workflow = new BuildWorkflow();
       workflow.setGraph(graph);
       workflow.setPreDeploymentSteps(preDeploymentSteps);
       workflow.setWorkflowPhaseIds(workflowPhaseIds);
