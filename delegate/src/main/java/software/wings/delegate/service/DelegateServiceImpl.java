@@ -777,8 +777,8 @@ public class DelegateServiceImpl implements DelegateService {
             logger.info("Task {} validated but was not assigned", taskId);
           } else {
             logger.info(
-                "Waiting 2 seconds to give other delegates a chance to register as validators for task {}", taskId);
-            Misc.sleep(2, TimeUnit.SECONDS);
+                "Waiting six seconds to give other delegates a chance to register as validators for task {}", taskId);
+            Misc.sleep(6, TimeUnit.SECONDS);
             try {
               logger.info("Checking whether all delegates failed for task {}", taskId);
               DelegateTask delegateTask2 = execute(
