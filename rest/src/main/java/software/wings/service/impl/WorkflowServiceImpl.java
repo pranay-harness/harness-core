@@ -1549,19 +1549,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      boolean serviceRepeat = false;
-      if (canaryOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
-        for (String phaseId : canaryOrchestrationWorkflow.getWorkflowPhaseIds()) {
-          WorkflowPhase existingPhase = canaryOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
-          if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
-              && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-              && (existingPhase.getInfraMappingId() != null
-                     && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
-            serviceRepeat = true;
-            break;
-          }
-        }
-      }
+      boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase);
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
       canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
@@ -1577,19 +1565,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-      boolean serviceRepeat = false;
-      if (multiServiceOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
-        for (String phaseId : multiServiceOrchestrationWorkflow.getWorkflowPhaseIds()) {
-          WorkflowPhase existingPhase = multiServiceOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
-          if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
-              && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-              && (existingPhase.getInfraMappingId() != null
-                     && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
-            serviceRepeat = true;
-            break;
-          }
-        }
-      }
+      boolean serviceRepeat = multiServiceOrchestrationWorkflow.serviceRepeat(workflowPhase);
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
       multiServiceOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 

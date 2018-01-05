@@ -480,6 +480,22 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
+  public boolean serviceRepeat(WorkflowPhase workflowPhase) {
+    if (workflowPhaseIds == null) {
+      return false;
+    }
+    for (String phaseId : workflowPhaseIds) {
+      WorkflowPhase existingPhase = workflowPhaseIdMap.get(phaseId);
+      if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+          && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
+          && existingPhase.getInfraMappingId() != null
+          && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public OrchestrationWorkflow clone() {
     return aCanaryOrchestrationWorkflow()
