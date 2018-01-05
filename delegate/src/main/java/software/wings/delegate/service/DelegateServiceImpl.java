@@ -385,12 +385,16 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void pause() {
-    socket.close();
+    if (!delegateConfiguration.isPollForTasks()) {
+      socket.close();
+    }
   }
 
   private void resume() {
     try {
-      ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+      if (!delegateConfiguration.isPollForTasks()) {
+        ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+      }
       upgradePending.set(false);
       upgradeNeeded.set(false);
       restartNeeded.set(false);
