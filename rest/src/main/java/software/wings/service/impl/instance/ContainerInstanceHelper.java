@@ -1,15 +1,18 @@
 package software.wings.service.impl.instance;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.hazelcast.util.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentEvent;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -36,11 +39,13 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
 
@@ -141,6 +146,98 @@ public class ContainerInstanceHelper {
         }
       }
     }
+  }
+
+  public Set<String> getContainerServiceNames(ExecutionContext context, String serviceId, String infraMappingId) {
+    Set<String> containerSvcNameSet = Sets.newHashSet();
+    List<StateExecutionInstance> executionDataList = workflowExecutionService.getStateExecutionData(context.getAppId(),
+        context.getWorkflowExecutionId(), serviceId, infraMappingId, StateType.PHASE_STEP, Constants.DEPLOY_CONTAINERS);
+    executionDataList.forEach(stateExecutionData -> {
+      List<StateExecutionData> deployPhaseStepList =
+          stateExecutionData.getStateExecutionMap()
+              .entrySet()
+              .stream()
+              .filter(entry -> entry.getKey().equals(Constants.DEPLOY_CONTAINERS))
+              .map(entry -> entry.getValue())
+              .collect(Collectors.toList());
+      deployPhaseStepList.stream().forEach(phaseStep -> {
+        PhaseStepExecutionSummary phaseStepExecutionSummary =
+            ((PhaseStepExecutionData) phaseStep).getPhaseStepExecutionSummary();
+        Preconditions.checkNotNull(
+            phaseStepExecutionSummary, "PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + phaseStep);
+        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+        Preconditions.checkNotNull(
+            stepExecutionSummaryList, "stepExecutionSummaryList null for " + phaseStepExecutionSummary);
+
+        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+          if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
+            CommandStepExecutionSummary commandStepExecutionSummary =
+                (CommandStepExecutionSummary) stepExecutionSummary;
+            if (commandStepExecutionSummary.getOldInstanceData() != null) {
+              containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                             .stream()
+                                             .map(ContainerServiceData::getName)
+                                             .collect(Collectors.toList()));
+            }
+
+            if (commandStepExecutionSummary.getNewInstanceData() != null) {
+              List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
+                                                      .stream()
+                                                      .map(ContainerServiceData::getName)
+                                                      .collect(Collectors.toList());
+              containerSvcNameSet.addAll(newcontainerSvcNames);
+            }
+
+            Preconditions.checkState(!containerSvcNameSet.isEmpty(),
+                "Both old and new container services are empty. Cannot proceed for phase step "
+                    + commandStepExecutionSummary.getServiceId());
+          }
+        }
+      });
+    });
+
+    return containerSvcNameSet;
+  }
+
+  public List<ContainerInfo> getContainerInfoForService(
+      Set<String> containerSvcNames, ExecutionContext context, String infrastructureMappingId, String serviceId) {
+    Preconditions.checkState(!containerSvcNames.isEmpty(), "empty for " + context);
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
+    InstanceType instanceType = instanceUtil.getInstanceType(infrastructureMapping.getInfraMappingType());
+    Preconditions.checkNotNull(instanceType, "Null for " + infrastructureMappingId);
+
+    String containerSvcNameNoRevision =
+        getcontainerSvcNameNoRevision(instanceType, containerSvcNames.iterator().next());
+    Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap = Maps.newHashMap();
+
+    List<ContainerDeploymentInfo> currentContainerDeploymentsInDB =
+        instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, context.getAppId());
+
+    currentContainerDeploymentsInDB.stream().forEach(currentContainerDeploymentInDB
+        -> containerSvcNameDeploymentInfoMap.put(
+            currentContainerDeploymentInDB.getContainerSvcName(), currentContainerDeploymentInDB));
+
+    for (String containerSvcName : containerSvcNames) {
+      ContainerDeploymentInfo containerDeploymentInfo = containerSvcNameDeploymentInfoMap.get(containerSvcName);
+      if (containerDeploymentInfo == null) {
+        containerDeploymentInfo = ContainerDeploymentInfo.Builder.aContainerDeploymentInfo()
+                                      .withAppId(context.getAppId())
+                                      .withContainerSvcName(containerSvcName)
+                                      .withInfraMappingId(infrastructureMappingId)
+                                      .withWorkflowId(context.getWorkflowId())
+                                      .withWorkflowExecutionId(context.getWorkflowExecutionId())
+                                      .withServiceId(serviceId)
+                                      .build();
+
+        containerSvcNameDeploymentInfoMap.put(containerSvcName, containerDeploymentInfo);
+      }
+    }
+    ContainerSyncResponse instanceSyncResponse =
+        getLatestInstancesFromContainerServer(containerSvcNameDeploymentInfoMap.values(), instanceType);
+    Preconditions.checkNotNull(instanceSyncResponse, "InstanceSyncResponse");
+
+    return instanceSyncResponse.getContainerInfoList();
   }
 
   private ContainerDeploymentEvent buildContainerDeploymentEvent(String stateExecutionInstanceId,

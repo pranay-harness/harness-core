@@ -19,6 +19,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -89,6 +90,7 @@ public class ContainerSyncImpl implements ContainerSync {
         Application app = appService.get(infrastructureMapping.getAppId());
 
         SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+        syncTaskContext.setTimeOut(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
         ContainerServiceParams containerServiceParams =
             ContainerServiceParams.builder()
                 .settingAttribute(settingAttribute)
