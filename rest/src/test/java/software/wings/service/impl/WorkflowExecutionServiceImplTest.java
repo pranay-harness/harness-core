@@ -26,7 +26,6 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TemplateExpression.Builder.aTemplateExpression;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -1941,11 +1940,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
-                                          .withServiceId(service.getUuid())
-                                          .withDeploymentType(SSH)
-                                          .withInfraMappingId(infrastructureMapping.getUuid())
+                    .addWorkflowPhase(WorkflowPhase.builder()
+                                          .name("Phase1")
+                                          .serviceId(service.getUuid())
+                                          .deploymentType(SSH)
+                                          .infraMappingId(infrastructureMapping.getUuid())
                                           .build())
                     .withPostDeploymentSteps(
                         aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -2020,12 +2019,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
-                                          .withServiceId(service.getUuid())
-                                          .withDeploymentType(SSH)
-                                          .withInfraMappingId(infrastructureMapping.getUuid())
-                                          .withTemplateExpressions(asList(infraExpression, serviceExpression))
+                    .addWorkflowPhase(WorkflowPhase.builder()
+                                          .name("Phase1")
+                                          .serviceId(service.getUuid())
+                                          .deploymentType(SSH)
+                                          .infraMappingId(infrastructureMapping.getUuid())
+                                          .templateExpressions(asList(infraExpression, serviceExpression))
                                           .build())
                     .withPostDeploymentSteps(
                         aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())

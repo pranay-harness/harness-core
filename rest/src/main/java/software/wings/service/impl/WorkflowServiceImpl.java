@@ -44,7 +44,6 @@ import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
@@ -494,9 +493,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
         WorkflowPhase workflowPhase;
         if (Util.isEmpty(basicOrchestrationWorkflow.getWorkflowPhases())) {
-          workflowPhase = aWorkflowPhase()
-                              .withInfraMappingId(workflow.getInfraMappingId())
-                              .withServiceId(workflow.getServiceId())
+          workflowPhase = WorkflowPhase.builder()
+                              .infraMappingId(workflow.getInfraMappingId())
+                              .serviceId(workflow.getServiceId())
                               .build();
           attachWorkflowPhase(workflow, workflowPhase);
         }
@@ -510,7 +509,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-        WorkflowPhase workflowPhase = aWorkflowPhase().build();
+        WorkflowPhase workflowPhase = WorkflowPhase.builder().build();
         attachWorkflowPhase(workflow, workflowPhase);
       }
       createDefaultNotificationRule(workflow);
@@ -2247,105 +2246,105 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase generateRollbackWorkflowPhaseForAwsAmi(
       WorkflowPhase workflowPhase, String containerServiceType) {
-    return aWorkflowPhase()
-        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-        .withRollback(true)
-        .withServiceId(workflowPhase.getServiceId())
-        .withComputeProviderId(workflowPhase.getComputeProviderId())
-        .withInfraMappingName(workflowPhase.getInfraMappingName())
-        .withPhaseNameForRollback(workflowPhase.getName())
-        .withDeploymentType(workflowPhase.getDeploymentType())
-        .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
-                          .addStep(aNode()
-                                       .withId(getUuid())
-                                       .withType(containerServiceType)
-                                       .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
-                                       .addProperty("rollback", true)
-                                       .build())
-                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                          .withStatusForRollback(ExecutionStatus.SUCCESS)
-                          .withRollback(true)
-                          .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+    return WorkflowPhase.builder()
+        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .rollback(true)
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraMappingName(workflowPhase.getInfraMappingName())
+        .phaseNameForRollback(workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .infraMappingId(workflowPhase.getInfraMappingId())
+        .phaseSteps(Arrays.asList(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
+                                      .addStep(aNode()
+                                                   .withId(getUuid())
+                                                   .withType(containerServiceType)
+                                                   .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
+                                                   .addProperty("rollback", true)
+                                                   .build())
+                                      .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                      .withRollback(true)
+                                      .build(),
+            aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForAwsLambda(
       WorkflowPhase workflowPhase, String containerServiceType) {
-    return aWorkflowPhase()
-        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-        .withRollback(true)
-        .withServiceId(workflowPhase.getServiceId())
-        .withComputeProviderId(workflowPhase.getComputeProviderId())
-        .withInfraMappingName(workflowPhase.getInfraMappingName())
-        .withPhaseNameForRollback(workflowPhase.getName())
-        .withDeploymentType(workflowPhase.getDeploymentType())
-        .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
-                          .addStep(aNode()
-                                       .withId(getUuid())
-                                       .withType(containerServiceType)
-                                       .withName(Constants.ROLLBACK_AWS_LAMBDA)
-                                       .addProperty("rollback", true)
-                                       .build())
-                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                          .withStatusForRollback(ExecutionStatus.SUCCESS)
-                          .withRollback(true)
-                          .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+    return WorkflowPhase.builder()
+        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .rollback(true)
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraMappingName(workflowPhase.getInfraMappingName())
+        .phaseNameForRollback(workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .infraMappingId(workflowPhase.getInfraMappingId())
+        .phaseSteps(Arrays.asList(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
+                                      .addStep(aNode()
+                                                   .withId(getUuid())
+                                                   .withType(containerServiceType)
+                                                   .withName(Constants.ROLLBACK_AWS_LAMBDA)
+                                                   .addProperty("rollback", true)
+                                                   .build())
+                                      .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                      .withRollback(true)
+                                      .build(),
+            aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForContainerService(
       WorkflowPhase workflowPhase, String containerServiceType) {
-    return aWorkflowPhase()
-        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-        .withRollback(true)
-        .withServiceId(workflowPhase.getServiceId())
-        .withComputeProviderId(workflowPhase.getComputeProviderId())
-        .withInfraMappingName(workflowPhase.getInfraMappingName())
-        .withPhaseNameForRollback(workflowPhase.getName())
-        .withDeploymentType(workflowPhase.getDeploymentType())
-        .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                          .addStep(aNode()
-                                       .withId(getUuid())
-                                       .withType(containerServiceType)
-                                       .withName(Constants.ROLLBACK_CONTAINERS)
-                                       .addProperty("rollback", true)
-                                       .build())
-                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
-                          .withStatusForRollback(ExecutionStatus.SUCCESS)
-                          .withRollback(true)
-                          .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+    return WorkflowPhase.builder()
+        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .rollback(true)
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraMappingName(workflowPhase.getInfraMappingName())
+        .phaseNameForRollback(workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .infraMappingId(workflowPhase.getInfraMappingId())
+        .phaseSteps(Arrays.asList(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                      .addStep(aNode()
+                                                   .withId(getUuid())
+                                                   .withType(containerServiceType)
+                                                   .withName(Constants.ROLLBACK_CONTAINERS)
+                                                   .addProperty("rollback", true)
+                                                   .build())
+                                      .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                      .withRollback(true)
+                                      .build(),
+            aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForAwsCodeDeploy(
       WorkflowPhase workflowPhase, String containerServiceType) {
-    return aWorkflowPhase()
-        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-        .withRollback(true)
-        .withServiceId(workflowPhase.getServiceId())
-        .withComputeProviderId(workflowPhase.getComputeProviderId())
-        .withInfraMappingName(workflowPhase.getInfraMappingName())
-        .withPhaseNameForRollback(workflowPhase.getName())
-        .withDeploymentType(workflowPhase.getDeploymentType())
-        .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
-                          .addStep(aNode()
-                                       .withId(getUuid())
-                                       .withType(containerServiceType)
-                                       .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
-                                       .addProperty("rollback", true)
-                                       .build())
-                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                          .withStatusForRollback(ExecutionStatus.SUCCESS)
-                          .withRollback(true)
-                          .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+    return WorkflowPhase.builder()
+        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .rollback(true)
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraMappingName(workflowPhase.getInfraMappingName())
+        .phaseNameForRollback(workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .infraMappingId(workflowPhase.getInfraMappingId())
+        .phaseSteps(Arrays.asList(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
+                                      .addStep(aNode()
+                                                   .withId(getUuid())
+                                                   .withType(containerServiceType)
+                                                   .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
+                                                   .addProperty("rollback", true)
+                                                   .build())
+                                      .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                      .withRollback(true)
+                                      .build(),
+            aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
 
@@ -2379,40 +2378,40 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     WorkflowPhase rollbackWorkflowPhase =
-        aWorkflowPhase()
-            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-            .withRollback(true)
-            .withServiceId(workflowPhase.getServiceId())
-            .withComputeProviderId(workflowPhase.getComputeProviderId())
-            .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withPhaseNameForRollback(workflowPhase.getName())
-            .withDeploymentType(workflowPhase.getDeploymentType())
-            .withInfraMappingId(workflowPhase.getInfraMappingId())
-            .addPhaseStep(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
-                              .addAllSteps(disableServiceSteps)
-                              .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            .addPhaseStep(aPhaseStep(STOP_SERVICE, Constants.STOP_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
-                              .withRollback(true)
-                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .build())
-            .addPhaseStep(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
-                              .withRollback(true)
-                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .build())
-            .addPhaseStep(aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE)
-                              .addAllSteps(enableServiceSteps)
-                              .withRollback(true)
-                              .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .build())
-            .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        WorkflowPhase.builder()
+            .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .rollback(true)
+            .serviceId(workflowPhase.getServiceId())
+            .computeProviderId(workflowPhase.getComputeProviderId())
+            .infraMappingName(workflowPhase.getInfraMappingName())
+            .phaseNameForRollback(workflowPhase.getName())
+            .deploymentType(workflowPhase.getDeploymentType())
+            .infraMappingId(workflowPhase.getInfraMappingId())
+            .phaseSteps(Arrays.asList(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
+                                          .addAllSteps(disableServiceSteps)
+                                          .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
+                                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                          .withRollback(true)
+                                          .build(),
+                aPhaseStep(STOP_SERVICE, Constants.STOP_SERVICE)
+                    .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
+                    .withRollback(true)
+                    .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                    .withStatusForRollback(ExecutionStatus.SUCCESS)
+                    .build(),
+                aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+                    .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
+                    .withRollback(true)
+                    .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                    .withStatusForRollback(ExecutionStatus.SUCCESS)
+                    .build(),
+                aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE)
+                    .addAllSteps(enableServiceSteps)
+                    .withRollback(true)
+                    .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
+                    .withStatusForRollback(ExecutionStatus.SUCCESS)
+                    .build(),
+                aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
             .build();
 
     // get provision NODE
@@ -2438,27 +2437,27 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForDaemonSets(WorkflowPhase workflowPhase) {
-    return aWorkflowPhase()
-        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-        .withRollback(true)
-        .withServiceId(workflowPhase.getServiceId())
-        .withComputeProviderId(workflowPhase.getComputeProviderId())
-        .withInfraMappingName(workflowPhase.getInfraMappingName())
-        .withPhaseNameForRollback(workflowPhase.getName())
-        .withDeploymentType(workflowPhase.getDeploymentType())
-        .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                          .addStep(aNode()
-                                       .withId(getUuid())
-                                       .withType(KUBERNETES_DAEMON_SET_ROLLBACK.name())
-                                       .withName(Constants.ROLLBACK_CONTAINERS)
-                                       .addProperty("rollback", true)
-                                       .build())
-                          .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
-                          .withStatusForRollback(ExecutionStatus.SUCCESS)
-                          .withRollback(true)
-                          .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+    return WorkflowPhase.builder()
+        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .rollback(true)
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraMappingName(workflowPhase.getInfraMappingName())
+        .phaseNameForRollback(workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .infraMappingId(workflowPhase.getInfraMappingId())
+        .phaseSteps(Arrays.asList(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                      .addStep(aNode()
+                                                   .withId(getUuid())
+                                                   .withType(KUBERNETES_DAEMON_SET_ROLLBACK.name())
+                                                   .withName(Constants.ROLLBACK_CONTAINERS)
+                                                   .addProperty("rollback", true)
+                                                   .build())
+                                      .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                      .withRollback(true)
+                                      .build(),
+            aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
 

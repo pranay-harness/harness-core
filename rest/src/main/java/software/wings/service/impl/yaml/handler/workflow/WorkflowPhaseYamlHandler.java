@@ -111,19 +111,18 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       computeProviderId = computeProvider.getUuid();
     }
 
-    WorkflowPhase.WorkflowPhaseBuilder phase = WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, deploymentTypeString);
-    phase.withComputeProviderId(computeProviderId)
-        .withDeploymentType(deploymentType)
-        .withInfraMappingId(infraMappingId)
-        .withInfraMappingName(infraMappingName)
-        .withName(yaml.getName())
-        .withPhaseNameForRollback(yaml.getPhaseNameForRollback())
-        .withPhaseSteps(phaseSteps)
-        .withServiceId(serviceId)
-        .withTemplateExpressions(templateExpressions)
+    return WorkflowPhase.builder()
+        .computeProviderId(computeProviderId)
+        .deploymentType(deploymentType)
+        .infraMappingId(infraMappingId)
+        .infraMappingName(infraMappingName)
+        .name(yaml.getName())
+        .phaseNameForRollback(yaml.getPhaseNameForRollback())
+        .phaseSteps(phaseSteps)
+        .serviceId(serviceId)
+        .templateExpressions(templateExpressions)
         .build();
-    return phase.build();
   }
 
   @Override
