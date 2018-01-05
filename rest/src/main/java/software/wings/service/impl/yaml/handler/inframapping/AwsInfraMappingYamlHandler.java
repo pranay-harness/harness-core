@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/15/17
  */
-public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, AwsInfrastructureMapping> {
+public class AwsInfraMappingYamlHandler
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsInfrastructureMapping> {
   @Override
   public Yaml toYaml(AwsInfrastructureMapping bean, String appId) {
     AwsInstanceFilter awsInstanceFilter = bean.getAwsInstanceFilter();
@@ -82,9 +83,9 @@ public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Aw
     AwsInfrastructureMapping current = new AwsInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     AwsInfrastructureMapping previous =
-        (AwsInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
+        (AwsInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -112,7 +113,7 @@ public class AwsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Aw
   }
 
   private void toBean(AwsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) {
+      String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
     AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();

@@ -354,11 +354,10 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String namespace;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
-        String username, String password, String caCert, String clientCert, String clientKey, String namespace) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster);
+    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
+        String deploymentType, String cluster, String masterUrl, String username, String password, String caCert,
+        String clientCert, String clientKey, String namespace) {
+      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, cluster);
       this.masterUrl = masterUrl;
       this.username = username;
       this.password = password;

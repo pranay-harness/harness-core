@@ -334,19 +334,30 @@ public abstract class InfrastructureMapping extends Base {
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public abstract static class Yaml extends BaseEntityYaml {
-    private String computeProviderType;
     private String serviceName;
     private String infraMappingType;
     private String deploymentType;
-    private String computeProviderName;
 
-    protected Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName) {
+    public Yaml(
+        String type, String harnessApiVersion, String serviceName, String infraMappingType, String deploymentType) {
       super(type, harnessApiVersion);
-      this.computeProviderType = computeProviderType;
       this.serviceName = serviceName;
       this.infraMappingType = infraMappingType;
       this.deploymentType = deploymentType;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public abstract static class YamlWithComputeProvider extends Yaml {
+    private String computeProviderType;
+    private String computeProviderName;
+
+    public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
+        String deploymentType, String computeProviderType, String computeProviderName) {
+      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType);
+      this.computeProviderType = computeProviderType;
       this.computeProviderName = computeProviderName;
     }
   }

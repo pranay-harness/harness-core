@@ -14,7 +14,8 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
-public class EcsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, EcsInfrastructureMapping> {
+public class EcsInfraMappingYamlHandler
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, EcsInfrastructureMapping> {
   @Override
   public Yaml toYaml(EcsInfrastructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();
@@ -44,9 +45,9 @@ public class EcsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Ec
     EcsInfrastructureMapping current = new EcsInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     EcsInfrastructureMapping previous =
-        (EcsInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
+        (EcsInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -57,7 +58,7 @@ public class EcsInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, Ec
   }
 
   private void toBean(EcsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) {
+      String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
     bean.setRegion(yaml.getRegion());

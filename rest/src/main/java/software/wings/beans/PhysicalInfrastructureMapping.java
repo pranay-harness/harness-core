@@ -46,7 +46,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends InfrastructureMapping.Yaml {
+  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
     // maps to hostConnectionAttrs
     // This would either be a username/password / ssh key id
     private String connection;

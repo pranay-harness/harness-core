@@ -54,9 +54,22 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   public abstract static class Yaml extends InfrastructureMapping.Yaml {
     private String cluster;
 
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
+        String deploymentType, String cluster) {
+      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType);
+      this.cluster = cluster;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public abstract static class YamlWithComputeProvider extends InfrastructureMapping.YamlWithComputeProvider {
+    private String cluster;
+
+    public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
+        String deploymentType, String computeProviderType, String computeProviderName, String cluster) {
+      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
           computeProviderName);
       this.cluster = cluster;
     }

@@ -83,23 +83,18 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   }
 
   protected void toYaml(Y yaml, B infraMapping) {
-    yaml.setComputeProviderType(infraMapping.getComputeProviderType());
     yaml.setServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()));
     yaml.setInfraMappingType(infraMapping.getInfraMappingType());
     yaml.setDeploymentType(infraMapping.getDeploymentType());
-    yaml.setComputeProviderName(getSettingName(infraMapping.getComputeProviderSettingId()));
     yaml.setHarnessApiVersion("1.0");
   }
 
-  protected void toBean(
-      ChangeContext<Y> context, B bean, String appId, String envId, String computeProviderId, String serviceId) {
+  protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String serviceId)
+      throws HarnessException {
     Y yaml = context.getYaml();
     bean.setAutoPopulate(false);
     bean.setInfraMappingType(yaml.getInfraMappingType());
     bean.setServiceTemplateId(getServiceTemplateId(appId, serviceId));
-    bean.setComputeProviderSettingId(computeProviderId);
-    bean.setComputeProviderName(yaml.getComputeProviderName());
-    bean.setComputeProviderType(yaml.getComputeProviderType());
     bean.setEnvId(envId);
     bean.setServiceId(serviceId);
     bean.setDeploymentType(yaml.getDeploymentType());
