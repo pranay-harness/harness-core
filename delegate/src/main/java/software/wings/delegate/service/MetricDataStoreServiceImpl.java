@@ -41,6 +41,9 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
   @Override
   public boolean saveNewRelicMetrics(String accountId, String applicationId, String stateExecutionId,
       String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
+    if (metricData.isEmpty()) {
+      return true;
+    }
     try {
       return execute(
           managerClient.saveNewRelicMetrics(accountId, applicationId, stateExecutionId, delegateTaskId, metricData))
