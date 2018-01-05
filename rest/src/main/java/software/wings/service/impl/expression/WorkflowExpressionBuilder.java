@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 
 import com.google.inject.Inject;
@@ -58,7 +59,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
     SortedSet<String> expressions = new TreeSet<>();
     expressions.addAll(getExpressions(appId, entityId));
     expressions.addAll(serviceExpressionBuilder.getDynamicExpressions(appId, serviceId));
-    expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, serviceId, SERVICE));
+    expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, serviceId, ENVIRONMENT));
     return expressions;
   }
 
