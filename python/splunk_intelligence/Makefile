@@ -8,6 +8,10 @@ clean:
 init:
 	if [ ! -d ".pyenv" ]; then echo "Setting up virtualenv"; virtualenv --python=/usr/bin/python2.7 .pyenv; fi
 	source .pyenv/bin/activate ; pip install --upgrade pip; pip install -r requirements.txt;
+
+init-docker:
+	if [ ! -d ".pyenv" ]; then echo "Setting up virtualenv"; virtualenv --python=/usr/local/bin/python2.7 .pyenv; fi
+	source .pyenv/bin/activate ; pip install --upgrade pip; pip install -r requirements.txt;
 test:
 	source .pyenv/bin/activate ; cd tests; nosetests -vv --nocapture .; deactivate
 

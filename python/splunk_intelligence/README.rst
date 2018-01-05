@@ -19,6 +19,12 @@ Notes:
 Everything under notebooks is for internal use and not for production. Treat this as work in progress.
 
 
+Docker
+To build for docker, need to run the following commands:
+# `make init-docker` to create a Docker-friendly `dist/` folder that is used when creating a Docker image
+# `docker build -t <image-name:tag> .` to build the Docker image.
+The image is `passive` right now, doesn't do anything; so will need to add code to read from a queue and process events; and wait otherwise.
+
 Troubleshooting:
 
 1.  "make init"
