@@ -328,12 +328,17 @@ public class DelegateTask extends Base {
         + ", delegateRunnableTask=" + delegateRunnableTask + '}';
   }
 
-  public static DelegateTaskEvent getDelegateTaskEvent(DelegateTask delegateTask) {
-    return DelegateTaskEvent.Builder.aDelegateTaskEvent()
-        .withAccountId(delegateTask.getAccountId())
-        .withDelegateTaskId(delegateTask.getUuid())
-        .withSync(!delegateTask.isAsync())
-        .build();
+  public DelegateTaskEvent getDelegateTaskEvent() {
+    return getStatus().equals(Status.ABORTED) ? DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent()
+                                                    .withAccountId(getAccountId())
+                                                    .withDelegateTaskId(getUuid())
+                                                    .withSync(!isAsync())
+                                                    .build()
+                                              : DelegateTaskEvent.Builder.aDelegateTaskEvent()
+                                                    .withAccountId(getAccountId())
+                                                    .withDelegateTaskId(getUuid())
+                                                    .withSync(!isAsync())
+                                                    .build();
   }
 
   /**
