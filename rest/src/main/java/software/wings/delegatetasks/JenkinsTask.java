@@ -176,7 +176,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                       .build();
         logService.save(getAccountId(), log);
       }
-      for (int i = NUM_OF_LOGS_TO_KEEP > consoleLines.length ? 0 : consoleLines.length - NUM_OF_LOGS_TO_KEEP;
+      for (int i = NUM_OF_LOGS_TO_KEEP > consoleLines.length ? consoleLogsAlreadySent.get()
+                                                             : consoleLines.length - NUM_OF_LOGS_TO_KEEP;
            i < consoleLines.length; i++) {
         Log log = aLog()
                       .withActivityId(activityId)
