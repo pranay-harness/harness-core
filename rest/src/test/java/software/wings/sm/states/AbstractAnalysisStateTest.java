@@ -2,13 +2,18 @@ package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
 import org.joor.Reflect;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -27,6 +32,8 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
+import software.wings.service.impl.instance.ContainerInstanceHelper;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -47,11 +54,20 @@ import java.util.UUID;
 public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Mock private ContainerInstanceHelper containerInstanceHelper;
+  @Mock private InfrastructureMappingService infraMappingService;
   private final String workflowId = UUID.randomUUID().toString();
   private final String appId = UUID.randomUUID().toString();
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
 
   @Mock ExecutionContext context;
+
+  @Before
+  public void setup() {
+    initMocks(this);
+    when(containerInstanceHelper.isContainerDeployment(anyObject())).thenReturn(false);
+    when(infraMappingService.get(anyString(), anyString())).thenReturn(null);
+  }
 
   @Test
   @RealMongo
@@ -96,6 +112,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
+    setInternalState(splunkV2State, "containerInstanceHelper", containerInstanceHelper);
+    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertEquals(nodes.size(), 10);

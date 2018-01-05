@@ -1430,6 +1430,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,
+      String infraMappingId, StateType stateType, String stateName) {
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .addFilter("appId", EQ, appId)
+            .addFilter("executionUuid", EQ, executionUuid)
+            .addFilter("stateType", EQ, stateType)
+            .addFilter("stateName", EQ, stateName)
+            .addFilter("contextElement.serviceElement.uuid", EQ, serviceId)
+            .addFilter("contextElement.infraMappingId", EQ, infraMappingId)
+            .build();
+
+    PageResponse<StateExecutionInstance> query =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest, true);
+    return query.getResponse();
+  }
+
+  @Override
   public void deleteByWorkflow(String appId, String workflowId) {
     wingsPersistence.createQuery(WorkflowExecution.class)
         .field("appId")

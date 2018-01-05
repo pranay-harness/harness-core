@@ -17,6 +17,7 @@ import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -221,6 +222,9 @@ public interface WorkflowExecutionService {
    * @return
    */
   StateExecutionInstance getStateExecutionData(String appId, String stateExecutionInstanceId);
+
+  List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,
+      String infraMappingId, StateType stateType, String stateName);
 
   /**
    * Delete by workflow.

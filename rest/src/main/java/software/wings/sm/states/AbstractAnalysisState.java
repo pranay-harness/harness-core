@@ -21,14 +21,19 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.infrastructure.instance.info.ContainerInfo;
+import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
+import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.instance.ContainerInstanceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -43,6 +48,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -72,6 +78,10 @@ public abstract class AbstractAnalysisState extends State {
 
   @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
 
+  @Transient @Inject @SchemaIgnore protected ContainerInstanceHelper containerInstanceHelper;
+
+  @Transient @Inject @SchemaIgnore protected InfrastructureMappingService infraMappingService;
+
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -98,7 +108,27 @@ public abstract class AbstractAnalysisState extends State {
   protected Set<String> getLastExecutionNodes(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
+    String infraMappingId = phaseElement.getInfraMappingId();
 
+    if (containerInstanceHelper.isContainerDeployment(infraMappingService.get(context.getAppId(), infraMappingId))) {
+      Set<String> containerServiceNames =
+          containerInstanceHelper.getContainerServiceNames(context, serviceId, infraMappingId);
+      List<ContainerInfo> containerInfoForService =
+          containerInstanceHelper.getContainerInfoForService(containerServiceNames, context, infraMappingId, serviceId);
+      return containerInfoForService.stream()
+          .map(containerInfo -> {
+            if (containerInfo instanceof KubernetesContainerInfo) {
+              return ((KubernetesContainerInfo) containerInfo).getPodName();
+            }
+
+            if (containerInfo instanceof EcsContainerInfo) {
+              return ((EcsContainerInfo) containerInfo).getServiceName();
+            }
+
+            throw new IllegalStateException("Invalid type " + containerInfo);
+          })
+          .collect(Collectors.toSet());
+    }
     final PageRequest<WorkflowExecution> pageRequest =
         PageRequest.Builder.aPageRequest()
             .addFilter("appId", Operator.EQ, context.getAppId())
