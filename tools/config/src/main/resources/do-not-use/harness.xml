@@ -54,6 +54,7 @@
             <!-- use org.apache.commons.lang.StringUtils instead -->
             <property name="illegalPkgs" value="org.apache.commons.lang3.StringUtils,
                                                 org.apache.commons.codec.binary.StringUtils,
+                                                ro.fortsoft.pf4j.util.StringUtils,
                                                 wiremock.org.apache.commons.lang.StringUtils"/>
 
             <!-- use org.apache.commons.lang.ArrayUtils instead -->
