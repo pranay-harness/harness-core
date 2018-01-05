@@ -96,7 +96,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
-import software.wings.beans.BuildWorkflow;
+import software.wings.beans.BuildOrchestrationWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -1543,8 +1543,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow.needCloudProvider()) {
+      setCloudProvider(workflow.getAppId(), workflowPhase);
+    }
+
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
-      setCloudProvider(workflow, workflowPhase);
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       boolean serviceRepeat = false;
       if (canaryOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
@@ -1565,7 +1568,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-      setCloudProvider(workflow, workflowPhase);
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false);
       basicOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
@@ -1573,7 +1575,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-      setCloudProvider(workflow, workflowPhase);
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
       boolean serviceRepeat = false;
@@ -1596,16 +1597,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
           workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-      BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
+      BuildOrchestrationWorkflow buildWorkflow = (BuildOrchestrationWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseStepsForArtifactCollection(workflowPhase);
       buildWorkflow.getWorkflowPhases().add(workflowPhase);
     }
   }
 
-  private void setCloudProvider(Workflow workflow, WorkflowPhase workflowPhase) {
+  private void setCloudProvider(String appId, WorkflowPhase workflowPhase) {
     if (!workflowPhase.checkInfraTemplatized()) {
       InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(workflow.getAppId(), workflowPhase.getInfraMappingId());
+          infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       notNullCheck("InfraMapping", infrastructureMapping);
 
       workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
@@ -2587,7 +2588,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
       multiServiceOrchestrationWorkflow.setNotificationRules(notificationRules);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-      BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
+      BuildOrchestrationWorkflow buildWorkflow = (BuildOrchestrationWorkflow) orchestrationWorkflow;
       buildWorkflow.setNotificationRules(notificationRules);
     }
   }
