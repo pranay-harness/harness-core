@@ -246,7 +246,7 @@ public class JenkinsImpl implements Jenkins {
         return URLDecoder.decode(jobName, Charset.defaultCharset().name());
       }
     } catch (UnsupportedEncodingException e) {
-      logger.warn("Failed to decode jobName" + jobName, e);
+      logger.warn(String.format("Failed to decode jobName %s", jobName), e);
     }
     return jobName;
   }
@@ -280,12 +280,7 @@ public class JenkinsImpl implements Jenkins {
       name += "/" + parts[idx];
     }
     name = name.startsWith("/") ? name.substring(1) : name;
-    /**
-     * HAR-2708 - todo have to verify 1 testcase.
-     */
-    // String normalizedName = getNormalizedName(name);
-    // return normalizedName;
-    return name;
+    return getNormalizedName(name);
   }
 
   private boolean isFolderJob(Job job) {
