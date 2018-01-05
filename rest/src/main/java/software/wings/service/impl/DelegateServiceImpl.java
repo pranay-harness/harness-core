@@ -852,17 +852,18 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly) {
     List<DelegateTask> unassignedTasks = new ArrayList<>();
-    try {
-      Cache<String, DelegateTask> delegateSyncCache =
-          cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
-      delegateSyncCache.iterator().forEachRemaining(dt -> {
-        if (dt.getValue().getStatus().equals(QUEUED) && dt.getValue().getDelegateId() == null) {
-          unassignedTasks.add(dt.getValue());
+    Cache<String, DelegateTask> delegateSyncCache =
+        cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
+    delegateSyncCache.forEach(stringDelegateTaskEntry -> {
+      try {
+        DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
+        if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
+          unassignedTasks.add(syncDelegateTask);
         }
-      });
-    } catch (Exception ex) {
-      logger.error("Error in reading sync task from DELEGATE_SYNC_CACHE", ex);
-    }
+      } catch (Exception ex) {
+        logger.error("Error in reading sync task from DELEGATE_SYNC_CACHE", ex);
+      }
+    });
 
     if (!syncOnly) {
       Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
