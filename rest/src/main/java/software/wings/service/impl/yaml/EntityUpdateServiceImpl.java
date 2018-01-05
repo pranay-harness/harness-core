@@ -68,7 +68,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       yaml = appYamlResourceService.getApp(app.getUuid()).getResource().getYaml();
     }
     return createGitFileChange(
-        app.getAccountId(), yamlDirectoryService.getRootPathByApp(app), "Entity", yaml, changeType, true);
+        app.getAccountId(), yamlDirectoryService.getRootPathByApp(app), YamlConstants.INDEX, yaml, changeType, true);
   }
 
   @Override
@@ -78,7 +78,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       yaml = yamlResourceService.getService(service.getAppId(), service.getUuid()).getResource().getYaml();
     }
     return createGitFileChange(
-        accountId, yamlDirectoryService.getRootPathByService(service), "Entity", yaml, changeType, true);
+        accountId, yamlDirectoryService.getRootPathByService(service), YamlConstants.INDEX, yaml, changeType, true);
   }
 
   @Override
@@ -144,8 +144,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     if (!changeType.equals(ChangeType.DELETE)) {
       yaml = yamlResourceService.getEnvironment(environment.getAppId(), environment.getUuid()).getResource().getYaml();
     }
-    return createGitFileChange(
-        accountId, yamlDirectoryService.getRootPathByEnvironment(environment), "Entity", yaml, changeType, true);
+    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
+        YamlConstants.INDEX, yaml, changeType, true);
   }
 
   @Override
