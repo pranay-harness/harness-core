@@ -122,7 +122,7 @@ import javax.net.ssl.SSLException;
 import javax.validation.constraints.NotNull;
 
 /**
- * Created by peeyushaggarwal on 11/29/16.
+ * Created by peeyushaggarwal on 11/29/16
  */
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
@@ -132,6 +132,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
+  public static final int POLL_INTERVAL = 3;
 
   private static String hostName;
 
@@ -529,7 +530,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void startTaskPolling() {
-    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, 3, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL, TimeUnit.SECONDS);
   }
 
   private void pollForTask() {
@@ -776,9 +777,10 @@ public class DelegateServiceImpl implements DelegateService {
           if (validated) {
             logger.info("Task {} validated but was not assigned", taskId);
           } else {
+            int delay = POLL_INTERVAL + 2;
             logger.info(
-                "Waiting six seconds to give other delegates a chance to register as validators for task {}", taskId);
-            Misc.sleep(6, TimeUnit.SECONDS);
+                "Waiting {} to give other delegates a chance to register as validators for task {}", delay, taskId);
+            Misc.sleep(delay, TimeUnit.SECONDS);
             try {
               logger.info("Checking whether all delegates failed for task {}", taskId);
               DelegateTask delegateTask2 = execute(
