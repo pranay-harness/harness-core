@@ -86,6 +86,9 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
+  public void setNotificationRules(List<NotificationRule> notificationRules) {}
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
