@@ -49,10 +49,9 @@ fi
 for file in `git diff-index --cached --name-only $against | grep "\.java$"`
 do
     "$format" -i "$file"
+    git diff --exit-code -- $file
+    if [ "$?" -ne "0" ]
+    then
+        git add $file
+    fi
 done
-
-git diff --exit-code || \
-    (echo '****************' && \
-    echo "your code was not properly formatted, now it is. Please use the following command to amend the changes." && \
-    echo git commit --all --amend --no-edit && \
-    echo '****************')
