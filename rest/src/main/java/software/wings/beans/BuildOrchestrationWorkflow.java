@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.BuildWorkflow.BuildWorkflowBuilder.aBuildWorkflow;
+import static software.wings.beans.BuildOrchestrationWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 
@@ -18,9 +18,14 @@ import java.util.Set;
  * Created by sgurubelli on 11/14/17.
  */
 @JsonTypeName("BUILD")
-public class BuildWorkflow extends CanaryOrchestrationWorkflow {
-  public BuildWorkflow() {
+public class BuildOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
+  public BuildOrchestrationWorkflow() {
     setOrchestrationWorkflowType(BUILD);
+  }
+
+  @Override
+  public boolean needCloudProvider() {
+    return false;
   }
 
   @Override
@@ -47,7 +52,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
 
   @Override
   public OrchestrationWorkflow clone() {
-    return aBuildWorkflow()
+    return aBuildOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
@@ -64,7 +69,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
         .build();
   }
 
-  public static final class BuildWorkflowBuilder {
+  public static final class BuildOrchestrationWorkflowBuilder {
     private Graph graph;
     private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
     private List<String> workflowPhaseIds = new ArrayList<>();
@@ -79,97 +84,98 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
 
-    private BuildWorkflowBuilder() {}
-    public static BuildWorkflowBuilder aBuildWorkflow() {
-      return new BuildWorkflowBuilder();
+    private BuildOrchestrationWorkflowBuilder() {}
+    public static BuildOrchestrationWorkflowBuilder aBuildOrchestrationWorkflow() {
+      return new BuildOrchestrationWorkflowBuilder();
     }
 
-    public BuildWorkflowBuilder withGraph(Graph graph) {
+    public BuildOrchestrationWorkflowBuilder withGraph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
-    public BuildWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
+    public BuildOrchestrationWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
       this.preDeploymentSteps = preDeploymentSteps;
       return this;
     }
 
-    public BuildWorkflowBuilder withWorkflowPhaseIds(List<String> workflowPhaseIds) {
+    public BuildOrchestrationWorkflowBuilder withWorkflowPhaseIds(List<String> workflowPhaseIds) {
       this.workflowPhaseIds = workflowPhaseIds;
       return this;
     }
 
-    public BuildWorkflowBuilder withWorkflowPhaseIdMap(Map<String, WorkflowPhase> workflowPhaseIdMap) {
+    public BuildOrchestrationWorkflowBuilder withWorkflowPhaseIdMap(Map<String, WorkflowPhase> workflowPhaseIdMap) {
       this.workflowPhaseIdMap = workflowPhaseIdMap;
       return this;
     }
 
-    public BuildWorkflowBuilder withRollbackWorkflowPhaseIdMap(Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap) {
+    public BuildOrchestrationWorkflowBuilder withRollbackWorkflowPhaseIdMap(
+        Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap) {
       this.rollbackWorkflowPhaseIdMap = rollbackWorkflowPhaseIdMap;
       return this;
     }
 
-    public BuildWorkflowBuilder addWorkflowPhase(WorkflowPhase workflowPhase) {
+    public BuildOrchestrationWorkflowBuilder addWorkflowPhase(WorkflowPhase workflowPhase) {
       this.workflowPhases.add(workflowPhase);
       return this;
     }
 
-    public BuildWorkflowBuilder withPostDeploymentSteps(PhaseStep postDeploymentSteps) {
+    public BuildOrchestrationWorkflowBuilder withPostDeploymentSteps(PhaseStep postDeploymentSteps) {
       this.postDeploymentSteps = postDeploymentSteps;
       return this;
     }
 
-    public BuildWorkflowBuilder withNotificationRules(List<NotificationRule> notificationRules) {
+    public BuildOrchestrationWorkflowBuilder withNotificationRules(List<NotificationRule> notificationRules) {
       this.notificationRules = notificationRules;
       return this;
     }
 
-    public BuildWorkflowBuilder withFailureStrategies(List<FailureStrategy> failureStrategies) {
+    public BuildOrchestrationWorkflowBuilder withFailureStrategies(List<FailureStrategy> failureStrategies) {
       this.failureStrategies = failureStrategies;
       return this;
     }
 
-    public BuildWorkflowBuilder withSystemVariables(List<Variable> systemVariables) {
+    public BuildOrchestrationWorkflowBuilder withSystemVariables(List<Variable> systemVariables) {
       this.systemVariables = systemVariables;
       return this;
     }
 
-    public BuildWorkflowBuilder withUserVariables(List<Variable> userVariables) {
+    public BuildOrchestrationWorkflowBuilder withUserVariables(List<Variable> userVariables) {
       this.userVariables = userVariables;
       return this;
     }
 
-    public BuildWorkflowBuilder withDerivedVariables(List<Variable> derivedVariables) {
+    public BuildOrchestrationWorkflowBuilder withDerivedVariables(List<Variable> derivedVariables) {
       this.derivedVariables = derivedVariables;
       return this;
     }
 
-    public BuildWorkflowBuilder withRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {
+    public BuildOrchestrationWorkflowBuilder withRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {
       this.requiredEntityTypes = requiredEntityTypes;
       return this;
     }
 
-    public BuildWorkflowBuilder withWorkflowPhases(List<WorkflowPhase> workflowPhases) {
+    public BuildOrchestrationWorkflowBuilder withWorkflowPhases(List<WorkflowPhase> workflowPhases) {
       this.workflowPhases = workflowPhases;
       return this;
     }
 
-    public BuildWorkflow build() {
-      BuildWorkflow BuildWorkflow = new BuildWorkflow();
-      BuildWorkflow.setGraph(graph);
-      BuildWorkflow.setPreDeploymentSteps(preDeploymentSteps);
-      BuildWorkflow.setWorkflowPhaseIds(workflowPhaseIds);
-      BuildWorkflow.setWorkflowPhaseIdMap(workflowPhaseIdMap);
-      BuildWorkflow.setRollbackWorkflowPhaseIdMap(rollbackWorkflowPhaseIdMap);
-      BuildWorkflow.setWorkflowPhases(workflowPhases);
-      BuildWorkflow.setPostDeploymentSteps(postDeploymentSteps);
-      BuildWorkflow.setNotificationRules(notificationRules);
-      BuildWorkflow.setFailureStrategies(failureStrategies);
-      BuildWorkflow.setSystemVariables(systemVariables);
-      BuildWorkflow.setUserVariables(userVariables);
-      BuildWorkflow.setDerivedVariables(derivedVariables);
-      BuildWorkflow.setRequiredEntityTypes(requiredEntityTypes);
-      return BuildWorkflow;
+    public BuildOrchestrationWorkflow build() {
+      BuildOrchestrationWorkflow workflow = new BuildOrchestrationWorkflow();
+      workflow.setGraph(graph);
+      workflow.setPreDeploymentSteps(preDeploymentSteps);
+      workflow.setWorkflowPhaseIds(workflowPhaseIds);
+      workflow.setWorkflowPhaseIdMap(workflowPhaseIdMap);
+      workflow.setRollbackWorkflowPhaseIdMap(rollbackWorkflowPhaseIdMap);
+      workflow.setWorkflowPhases(workflowPhases);
+      workflow.setPostDeploymentSteps(postDeploymentSteps);
+      workflow.setNotificationRules(notificationRules);
+      workflow.setFailureStrategies(failureStrategies);
+      workflow.setSystemVariables(systemVariables);
+      workflow.setUserVariables(userVariables);
+      workflow.setDerivedVariables(derivedVariables);
+      workflow.setRequiredEntityTypes(requiredEntityTypes);
+      return workflow;
     }
   }
 }

@@ -81,6 +81,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
+  public boolean needCloudProvider() {
+    return true;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

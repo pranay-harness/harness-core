@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
   , @JsonSubTypes.Type(value = CustomOrchestrationWorkflow.class, name = "CUSTOM"),
       @JsonSubTypes.Type(value = BasicOrchestrationWorkflow.class, name = "BASIC"),
       @JsonSubTypes.Type(value = MultiServiceOrchestrationWorkflow.class, name = "MULTI_SERVICE"),
-      @JsonSubTypes.Type(value = BuildWorkflow.class, name = "BUILD"),
+      @JsonSubTypes.Type(value = BuildOrchestrationWorkflow.class, name = "BUILD"),
 })
 public abstract class OrchestrationWorkflow {
   private OrchestrationWorkflowType orchestrationWorkflowType;
@@ -86,6 +86,8 @@ public abstract class OrchestrationWorkflow {
   public abstract void setCloneMetadata(Map<String, String> serviceIdMapping);
 
   public abstract List<String> getInfraMappingIds();
+
+  public abstract boolean needCloudProvider();
 
   @JsonIgnore
   public List<String> getTemplateVariables() {

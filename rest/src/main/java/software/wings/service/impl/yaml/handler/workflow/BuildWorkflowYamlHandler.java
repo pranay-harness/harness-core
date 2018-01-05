@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import software.wings.beans.BuildWorkflow.BuildWorkflowBuilder;
+import software.wings.beans.BuildOrchestrationWorkflow.BuildOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
@@ -15,7 +15,8 @@ import java.util.List;
 public class BuildWorkflowYamlHandler extends WorkflowYamlHandler<BuildWorkflowYaml> {
   @Override
   protected void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflow) {
-    BuildWorkflowBuilder buildWorkflowBuilder = BuildWorkflowBuilder.aBuildWorkflow();
+    BuildOrchestrationWorkflowBuilder buildWorkflowBuilder =
+        BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow();
 
     List<WorkflowPhase> phaseList = workflowInfo.getPhaseList();
     if (!Util.isEmpty(phaseList)) {
