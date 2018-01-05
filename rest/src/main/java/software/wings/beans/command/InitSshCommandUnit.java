@@ -17,6 +17,8 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.Constants;
 import software.wings.utils.Validator;
@@ -56,6 +58,11 @@ public class InitSshCommandUnit extends SshCommandUnit {
   @JsonIgnore @Transient @SchemaIgnore private String executionStagingDir;
 
   @JsonIgnore private String launcherScriptFileName;
+
+  @JsonIgnore
+  @Transient
+  @SchemaIgnore
+  protected static final Logger logger = LoggerFactory.getLogger(InitSshCommandUnit.class);
 
   /**
    * Instantiates a new Init command unit.
@@ -104,7 +111,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
           ? context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()))
           : commandExecutionStatus;
     } catch (IOException | TemplateException e) {
-      e.printStackTrace();
+      logger.error("Error in InitCommandUnit", e);
     }
     try {
       List<String> commandUnitFiles = getCommandUnitFiles();
@@ -115,7 +122,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       }
     } catch (IOException | TemplateException e) {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      e.printStackTrace();
+      logger.error("Error in InitCommandUnit", e);
     }
     commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
         ? context.executeCommandString("chmod 0744 " + executionStagingDir + "/*")
@@ -130,8 +137,8 @@ public class InitSshCommandUnit extends SshCommandUnit {
       context.addEnvVariables(
           properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
     } catch (IOException e) {
+      logger.error("Error in InitCommandUnit", e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      e.printStackTrace();
     }
     context.addEnvVariables(envVariables);
     return commandExecutionStatus;

@@ -11,6 +11,8 @@ import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.DelegateTask.Status.ABORTED;
+import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -644,7 +646,7 @@ public class DelegateServiceImpl implements DelegateService {
                                             .field("accountId")
                                             .equal(delegateTask.getAccountId())
                                             .field("status")
-                                            .equal(DelegateTask.Status.QUEUED)
+                                            .equal(QUEUED)
                                             .field("delegateId")
                                             .doesNotExist()
                                             .field(ID_KEY)
@@ -668,7 +670,7 @@ public class DelegateServiceImpl implements DelegateService {
                                             .field("accountId")
                                             .equal(delegateTask.getAccountId())
                                             .field("status")
-                                            .equal(DelegateTask.Status.QUEUED)
+                                            .equal(QUEUED)
                                             .field("delegateId")
                                             .doesNotExist()
                                             .field(ID_KEY)
@@ -695,7 +697,7 @@ public class DelegateServiceImpl implements DelegateService {
                          .field("accountId")
                          .equal(accountId)
                          .field("status")
-                         .equal(DelegateTask.Status.QUEUED)
+                         .equal(QUEUED)
                          .field("delegateId")
                          .doesNotExist()
                          .field(ID_KEY)
@@ -725,7 +727,7 @@ public class DelegateServiceImpl implements DelegateService {
                                             .field("accountId")
                                             .equal(delegateTask.getAccountId())
                                             .field("status")
-                                            .equal(DelegateTask.Status.QUEUED)
+                                            .equal(QUEUED)
                                             .field("delegateId")
                                             .doesNotExist()
                                             .field(ID_KEY)
@@ -751,7 +753,7 @@ public class DelegateServiceImpl implements DelegateService {
                                       .field("accountId")
                                       .equal(accountId)
                                       .field("status")
-                                      .equal(DelegateTask.Status.QUEUED)
+                                      .equal(QUEUED)
                                       .field("delegateId")
                                       .equal(delegateId)
                                       .field(ID_KEY)
@@ -837,10 +839,8 @@ public class DelegateServiceImpl implements DelegateService {
                                                           .field("accountId")
                                                           .equal(accountId)
                                                           .field("status")
-                                                          .equal(DelegateTask.Status.QUEUED),
-            wingsPersistence.createUpdateOperations(DelegateTask.class)
-                .set("status", DelegateTask.Status.ABORTED)
-                .unset("delegateId"));
+                                                          .equal(QUEUED),
+            wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED).unset("delegateId"));
 
     if (updatedTask == null) {
       logger.info("Updated task null");
@@ -856,7 +856,7 @@ public class DelegateServiceImpl implements DelegateService {
       Cache<String, DelegateTask> delegateSyncCache =
           cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
       delegateSyncCache.iterator().forEachRemaining(dt -> {
-        if (dt.getValue().getStatus().equals(DelegateTask.Status.QUEUED) && dt.getValue().getDelegateId() == null) {
+        if (dt.getValue().getStatus().equals(QUEUED) && dt.getValue().getDelegateId() == null) {
           unassignedTasks.add(dt.getValue());
         }
       });
@@ -865,12 +865,11 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (!syncOnly) {
-      unassignedTasks.addAll(wingsPersistence.createQuery(DelegateTask.class)
-                                 .field("status")
-                                 .equal(DelegateTask.Status.QUEUED)
-                                 .field("delegateId")
-                                 .doesNotExist()
-                                 .asList());
+      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class);
+      query.or(query.and(query.criteria("status").equal(QUEUED), query.criteria("delegateId").doesNotExist()),
+          query.criteria("status").equal(ABORTED), query.criteria("delegateId").equal(delegateId));
+
+      unassignedTasks.addAll(query.asList());
     }
 
     logger.info("Dispatched delegateTaskIds:[{}] to delegate:[{}]",
