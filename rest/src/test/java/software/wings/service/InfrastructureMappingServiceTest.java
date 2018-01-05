@@ -66,7 +66,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -328,11 +328,10 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     Workflow workflow =
         aWorkflow()
             .withName(WORKFLOW_NAME)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withWorkflowPhaseIdMap(ImmutableMap.of(
-                        "PHASE_ID", WorkflowPhaseBuilder.aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).build()))
-                    .build())
+            .withOrchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                           .withWorkflowPhaseIdMap(ImmutableMap.of("PHASE_ID",
+                                               WorkflowPhase.builder().infraMappingId(INFRA_MAPPING_ID).build()))
+                                           .build())
             .build();
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(workflow)).build());
