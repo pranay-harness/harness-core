@@ -84,41 +84,41 @@ public class DelegateTaskEvent {
         .toString();
   }
 
-  public static final class Builder {
+  public static final class DelegateTaskEventBuilder {
+    private String accountId;
     private String delegateTaskId;
     private boolean sync;
-    private String accountId;
 
-    private Builder() {}
+    private DelegateTaskEventBuilder() {}
 
-    public static Builder aDelegateTaskEvent() {
-      return new Builder();
+    public static DelegateTaskEventBuilder aDelegateTaskEvent() {
+      return new DelegateTaskEventBuilder();
     }
 
-    public Builder withDelegateTaskId(String delegateTaskId) {
-      this.delegateTaskId = delegateTaskId;
-      return this;
-    }
-
-    public Builder withSync(boolean sync) {
-      this.sync = sync;
-      return this;
-    }
-
-    public Builder withAccountId(String accountId) {
+    public DelegateTaskEventBuilder withAccountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public Builder but() {
-      return aDelegateTaskEvent().withDelegateTaskId(delegateTaskId).withSync(sync).withAccountId(accountId);
+    public DelegateTaskEventBuilder withDelegateTaskId(String delegateTaskId) {
+      this.delegateTaskId = delegateTaskId;
+      return this;
+    }
+
+    public DelegateTaskEventBuilder withSync(boolean sync) {
+      this.sync = sync;
+      return this;
+    }
+
+    public DelegateTaskEventBuilder but() {
+      return aDelegateTaskEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).withSync(sync);
     }
 
     public DelegateTaskEvent build() {
       DelegateTaskEvent delegateTaskEvent = new DelegateTaskEvent();
+      delegateTaskEvent.setAccountId(accountId);
       delegateTaskEvent.setDelegateTaskId(delegateTaskId);
       delegateTaskEvent.setSync(sync);
-      delegateTaskEvent.setAccountId(accountId);
       return delegateTaskEvent;
     }
   }

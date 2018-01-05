@@ -1,6 +1,6 @@
 package software.wings.app;
 
-import static software.wings.beans.DelegateTaskEvent.Builder.aDelegateTaskEvent;
+import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 
 import com.google.inject.Inject;
 
