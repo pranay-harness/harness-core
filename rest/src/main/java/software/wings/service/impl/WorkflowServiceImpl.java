@@ -2543,30 +2543,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           account.getAccountName());
       return;
     }
-    List<ExecutionStatus> conditions = new ArrayList<>();
-    conditions.add(ExecutionStatus.FAILED);
+    List<ExecutionStatus> conditions = Arrays.asList(ExecutionStatus.FAILED);
     NotificationRule notificationRule = aNotificationRule()
                                             .withConditions(conditions)
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
                                             .withNotificationGroups(notificationGroups)
                                             .build();
-    List<NotificationRule> notificationRules = new ArrayList<>();
-    notificationRules.add(notificationRule);
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
-      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      canaryOrchestrationWorkflow.setNotificationRules(notificationRules);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-      BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
-      basicOrchestrationWorkflow.setNotificationRules(notificationRules);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-      MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
-          (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-      multiServiceOrchestrationWorkflow.setNotificationRules(notificationRules);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-      BuildOrchestrationWorkflow buildWorkflow = (BuildOrchestrationWorkflow) orchestrationWorkflow;
-      buildWorkflow.setNotificationRules(notificationRules);
-    }
+
+    List<NotificationRule> notificationRules = Arrays.asList(notificationRule);
+    workflow.getOrchestrationWorkflow().setNotificationRules(notificationRules);
   }
 
   private void createDefaultFailureStrategy(Workflow workflow) {
