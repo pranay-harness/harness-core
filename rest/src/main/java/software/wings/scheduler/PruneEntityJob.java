@@ -34,6 +34,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,6 +59,7 @@ public class PruneEntityJob implements Job {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private WorkflowService workflowService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -138,6 +140,8 @@ public class PruneEntityJob implements Job {
         pipelineService.pruneDescendingEntities(appId, entityId);
       } else if (className.equals(Service.class.getCanonicalName())) {
         serviceResourceService.pruneDescendingEntities(appId, entityId);
+      } else if (className.equals(WorkflowService.class.getCanonicalName())) {
+        workflowService.pruneDescendingEntities(appId, entityId);
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }

@@ -1465,7 +1465,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       List<Service> services;
       if (isServiceTemplatized(workflow)) {
-        services = resolveTemplateServices(workflow, workflowExecution);
+        Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
+            ? workflowExecution.getExecutionArgs().getWorkflowVariables()
+            : null;
+        services = workflowService.resolveServices(workflow, workflowVariables);
       } else {
         services = workflow.getServices();
       }
@@ -1523,58 +1526,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             workflowExecution.getServiceExecutionSummaries());
       }
     }
-  }
-
-  private List<Service> resolveTemplateServices(Workflow workflow, WorkflowExecution workflowExecution) {
-    // Lookup service
-    List<String> workflowServiceIds = workflow.getOrchestrationWorkflow().getServiceIds();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    List<Variable> userVariables = canaryOrchestrationWorkflow.getUserVariables();
-    List<String> serviceNames = new ArrayList<>();
-    if (userVariables != null) {
-      serviceNames =
-          userVariables.stream()
-              .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
-              .map(Variable::getName)
-              .collect(Collectors.toList());
-    }
-    List<String> serviceIds = new ArrayList<>();
-    Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
-        ? workflowExecution.getExecutionArgs().getWorkflowVariables()
-        : null;
-    if (workflowVariables != null) {
-      Set<String> workflowVariableNames = workflowVariables.keySet();
-      for (String variableName : workflowVariableNames) {
-        if (serviceNames.contains(variableName)) {
-          serviceIds.add(workflowVariables.get(variableName));
-        }
-      }
-    }
-    List<String> templatizedServiceIds = canaryOrchestrationWorkflow.getTemplatizedServiceIds();
-    if (workflowServiceIds != null) {
-      for (String workflowServiceId : workflowServiceIds) {
-        if (!templatizedServiceIds.contains(workflowServiceId)) {
-          serviceIds.add(workflowServiceId);
-        }
-      }
-    }
-    if (serviceIds.size() != 0) {
-      return getServices(workflow, serviceIds);
-    } else {
-      logger.info("No services resolved for templatized workflow id {} and workflow execution {}", workflow.getUuid(),
-          workflowExecution);
-      return null;
-    }
-  }
-
-  private List<Service> getServices(Workflow workflow, List<String> serviceIds) {
-    PageRequest<Service> pageRequest = aPageRequest()
-                                           .withLimit(PageRequest.UNLIMITED)
-                                           .addFilter("appId", EQ, workflow.getAppId())
-                                           .addFilter("uuid", IN, serviceIds.toArray())
-                                           .build();
-    return serviceResourceService.list(pageRequest, false, false);
   }
 
   private List<InfrastructureMapping> resolveTemplateInfraMappings(
