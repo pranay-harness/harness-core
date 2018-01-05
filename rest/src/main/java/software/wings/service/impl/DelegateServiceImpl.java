@@ -865,7 +865,10 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (!syncOnly) {
-      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class);
+      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                      .project("accountId", true)
+                                      .project("status", true)
+                                      .project("async", true);
       query.or(query.and(query.criteria("status").equal(QUEUED), query.criteria("delegateId").doesNotExist()),
           query.criteria("status").equal(ABORTED), query.criteria("delegateId").equal(delegateId));
 
@@ -875,6 +878,20 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Dispatched delegateTaskIds:[{}] to delegate:[{}]",
         Joiner.on(",").join(unassignedTasks.stream().map(DelegateTask::getUuid).collect(toList())), delegateId);
 
-    return unassignedTasks.stream().map(DelegateTask::createDelegateTaskEvent).collect(toList());
+    return unassignedTasks.stream().map(this ::getDelegateTaskEvent).collect(toList());
+  }
+
+  private DelegateTaskEvent getDelegateTaskEvent(DelegateTask delegateTask) {
+    return delegateTask.getStatus().equals(DelegateTask.Status.ABORTED)
+        ? DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent()
+              .withAccountId(delegateTask.getAccountId())
+              .withDelegateTaskId(delegateTask.getUuid())
+              .withSync(!delegateTask.isAsync())
+              .build()
+        : DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent()
+              .withAccountId(delegateTask.getAccountId())
+              .withDelegateTaskId(delegateTask.getUuid())
+              .withSync(!delegateTask.isAsync())
+              .build();
   }
 }
