@@ -14,7 +14,8 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
-public class CodeDeployInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, CodeDeployInfrastructureMapping> {
+public class CodeDeployInfraMappingYamlHandler
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, CodeDeployInfrastructureMapping> {
   @Override
   public Yaml toYaml(CodeDeployInfrastructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();
@@ -47,9 +48,9 @@ public class CodeDeployInfraMappingYamlHandler extends InfraMappingYamlHandler<Y
     CodeDeployInfrastructureMapping current = new CodeDeployInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     CodeDeployInfrastructureMapping previous =
-        (CodeDeployInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
+        (CodeDeployInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -60,7 +61,7 @@ public class CodeDeployInfraMappingYamlHandler extends InfraMappingYamlHandler<Y
   }
 
   private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<Yaml> context, String appId, String envId,
-      String computeProviderId, String serviceId) {
+      String computeProviderId, String serviceId) throws HarnessException {
     Yaml infraMappingYaml = context.getYaml();
     super.toBean(context, bean, appId, envId, computeProviderId, serviceId);
 

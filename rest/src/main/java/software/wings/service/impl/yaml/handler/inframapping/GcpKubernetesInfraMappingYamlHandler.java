@@ -15,7 +15,7 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 public class GcpKubernetesInfraMappingYamlHandler
-    extends InfraMappingYamlHandler<Yaml, GcpKubernetesInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, GcpKubernetesInfrastructureMapping> {
   @Override
   public Yaml toYaml(GcpKubernetesInfrastructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();
@@ -46,9 +46,9 @@ public class GcpKubernetesInfraMappingYamlHandler
     GcpKubernetesInfrastructureMapping current = new GcpKubernetesInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     GcpKubernetesInfrastructureMapping previous =
-        (GcpKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
+        (GcpKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -59,7 +59,7 @@ public class GcpKubernetesInfraMappingYamlHandler
   }
 
   private void toBean(GcpKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) {
+      String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
     bean.setNamespace(yaml.getNamespace());

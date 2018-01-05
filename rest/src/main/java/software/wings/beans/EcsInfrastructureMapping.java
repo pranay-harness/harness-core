@@ -497,7 +497,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
+  public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
     private String region = "us-east-1";
 
     @lombok.Builder

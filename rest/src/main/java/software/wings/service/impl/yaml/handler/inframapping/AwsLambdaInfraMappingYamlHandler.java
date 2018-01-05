@@ -14,7 +14,8 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
-public class AwsLambdaInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, AwsLambdaInfraStructureMapping> {
+public class AwsLambdaInfraMappingYamlHandler
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsLambdaInfraStructureMapping> {
   @Override
   public Yaml toYaml(AwsLambdaInfraStructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();
@@ -49,9 +50,9 @@ public class AwsLambdaInfraMappingYamlHandler extends InfraMappingYamlHandler<Ya
 
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     AwsLambdaInfraStructureMapping previous =
-        (AwsLambdaInfraStructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
+        (AwsLambdaInfraStructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -62,7 +63,7 @@ public class AwsLambdaInfraMappingYamlHandler extends InfraMappingYamlHandler<Ya
   }
 
   private void toBean(AwsLambdaInfraStructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) {
+      String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
@@ -80,9 +81,7 @@ public class AwsLambdaInfraMappingYamlHandler extends InfraMappingYamlHandler<Ya
     return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
         || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
         || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
-        || isEmpty(infraMappingYaml.getRegion()) || isEmpty(infraMappingYaml.getRole())
-        || isEmpty(infraMappingYaml.getSecurityGroupIds()) || isEmpty(infraMappingYaml.getSubnetIds())
-        || isEmpty(infraMappingYaml.getVpcId()));
+        || isEmpty(infraMappingYaml.getRegion()));
   }
 
   @Override

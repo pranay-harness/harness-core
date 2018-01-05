@@ -15,7 +15,8 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
-public class PhysicalInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, PhysicalInfrastructureMapping> {
+public class PhysicalInfraMappingYamlHandler
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, PhysicalInfrastructureMapping> {
   @Override
   public Yaml toYaml(PhysicalInfrastructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();
@@ -47,9 +48,9 @@ public class PhysicalInfraMappingYamlHandler extends InfraMappingYamlHandler<Yam
     PhysicalInfrastructureMapping current = new PhysicalInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     PhysicalInfrastructureMapping previous =
-        (PhysicalInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
+        (PhysicalInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -60,7 +61,7 @@ public class PhysicalInfraMappingYamlHandler extends InfraMappingYamlHandler<Yam
   }
 
   private void toBean(PhysicalInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) {
+      String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
     if (!Misc.isNullOrEmpty(yaml.getLoadBalancer())) {

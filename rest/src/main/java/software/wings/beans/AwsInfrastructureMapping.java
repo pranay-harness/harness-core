@@ -78,7 +78,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion", "connectionType"})
   @NoArgsConstructor
-  public static final class Yaml extends InfrastructureMapping.Yaml {
+  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
     // maps to restrictionType
     private String restrictions;
     // maps to restrictionExpression

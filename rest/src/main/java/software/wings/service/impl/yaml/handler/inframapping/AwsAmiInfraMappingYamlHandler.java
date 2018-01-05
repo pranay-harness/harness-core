@@ -14,7 +14,8 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
-public class AwsAmiInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml, AwsAmiInfrastructureMapping> {
+public class AwsAmiInfraMappingYamlHandler
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsAmiInfrastructureMapping> {
   @Override
   public Yaml toYaml(AwsAmiInfrastructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();
@@ -48,9 +49,9 @@ public class AwsAmiInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml,
 
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     AwsAmiInfrastructureMapping previous =
-        (AwsAmiInfrastructureMapping) infraMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
+        (AwsAmiInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
@@ -61,7 +62,7 @@ public class AwsAmiInfraMappingYamlHandler extends InfraMappingYamlHandler<Yaml,
   }
 
   private void toBean(AwsAmiInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) {
+      String computeProviderId, String serviceId) throws HarnessException {
     Yaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);

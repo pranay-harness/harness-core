@@ -384,7 +384,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends ContainerInfrastructureMapping.Yaml {
+  public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
     private String namespace;
 
     @lombok.Builder

@@ -553,29 +553,4 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(serviceInstanceService)
         .updateInstanceMappings(serviceTemplate, awsInfrastructureMapping, singletonList(provisionedHost));
   }
-
-  @Test
-  public void shouldGetInfraMappingByComputeProviderAndServiceId() {
-    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
-        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
-    PhysicalInfrastructureMapping physicalInfrastructureMapping =
-        aPhysicalInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build();
-    when(query.get()).thenReturn(physicalInfrastructureMapping);
-
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.getInfraMappingByComputeProviderAndServiceId(
-            APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
-
-    assertThat(infrastructureMapping).isEqualTo(physicalInfrastructureMapping);
-    verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field("serviceTemplateId");
-    verify(end).equal(TEMPLATE_ID);
-    verify(query).field("computeProviderSettingId");
-    verify(end).equal(COMPUTE_PROVIDER_ID);
-    verify(query).get();
-  }
 }

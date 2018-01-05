@@ -364,7 +364,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends InfrastructureMapping.Yaml {
+  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
     private String region;
     private String vpcId;
     private List<String> subnetIds = new ArrayList<>();

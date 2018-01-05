@@ -1028,23 +1028,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public InfrastructureMapping getInfraMappingByComputeProviderAndServiceId(
-      String appId, String envId, String serviceId, String computeProviderId) {
-    Object serviceTemplateId =
-        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
-    return wingsPersistence.createQuery(InfrastructureMapping.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field("serviceTemplateId")
-        .equal(serviceTemplateId)
-        .field("computeProviderSettingId")
-        .equal(computeProviderId)
-        .get();
-  }
-
-  @Override
   public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     notNullCheck("Infra Mapping", infrastructureMapping);
