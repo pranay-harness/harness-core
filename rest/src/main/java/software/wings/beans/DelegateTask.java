@@ -1,9 +1,10 @@
 package software.wings.beans;
 
+import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
+import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
@@ -329,18 +330,14 @@ public class DelegateTask extends Base {
         + ", delegateRunnableTask=" + delegateRunnableTask + '}';
   }
 
-  @JsonIgnore
-  public DelegateTaskEvent getDelegateTaskEvent() {
-    return getStatus().equals(Status.ABORTED) ? DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent()
-                                                    .withAccountId(getAccountId())
-                                                    .withDelegateTaskId(getUuid())
-                                                    .withSync(!isAsync())
-                                                    .build()
-                                              : DelegateTaskEvent.Builder.aDelegateTaskEvent()
-                                                    .withAccountId(getAccountId())
-                                                    .withDelegateTaskId(getUuid())
-                                                    .withSync(!isAsync())
-                                                    .build();
+  public DelegateTaskEvent createDelegateTaskEvent() {
+    return getStatus().equals(Status.ABORTED)
+        ? aDelegateTaskAbortEvent()
+              .withAccountId(getAccountId())
+              .withDelegateTaskId(getUuid())
+              .withSync(!isAsync())
+              .build()
+        : aDelegateTaskEvent().withAccountId(getAccountId()).withDelegateTaskId(getUuid()).withSync(!isAsync()).build();
   }
 
   /**
