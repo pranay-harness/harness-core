@@ -477,8 +477,8 @@ public class DelegateServiceImpl implements DelegateService {
         while (currentlyExecutingTasks.size() > 0 && now - started < UPGRADE_TIMEOUT) {
           Misc.sleep(1, TimeUnit.SECONDS);
           now = clock.millis();
-          logger.info("[Old] Completing {} tasks... ({} seconds elapsed)", currentlyExecutingTasks.size(),
-              (now - started) / 1000L);
+          logger.info("[Old] Completing {} tasks... ({} seconds elapsed): {}", currentlyExecutingTasks.size(),
+              (now - started) / 1000L, currentlyExecutingTasks.keySet());
         }
         logger.info(now - started < UPGRADE_TIMEOUT ? "[Old] Delegate finished with tasks. Pausing"
                                                     : "[Old] Timed out waiting to complete tasks. Pausing");
