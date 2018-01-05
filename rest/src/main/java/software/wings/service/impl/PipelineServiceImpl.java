@@ -8,6 +8,8 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
+import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -205,12 +207,13 @@ public class PipelineServiceImpl implements PipelineService {
         return;
       }
       List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
-      throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS)
+
+      throw new WingsException(aResponseMessage().code(INVALID_REQUEST).acuteness(HARMLESS).build())
           .addParam("message",
               String.format(
                   "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
     }
-    throw new WingsException(INVALID_REQUEST)
+    throw new WingsException(aResponseMessage().code(PIPELINE_EXECUTION_IN_PROGRESS).acuteness(HARMLESS).build())
         .addParam("message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
   }
 
@@ -243,11 +246,7 @@ public class PipelineServiceImpl implements PipelineService {
     // First lets make sure that we have persisted a job that will prone the descendant objects
     PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId);
 
-    if (!wingsPersistence.delete(pipeline)) {
-      return false;
-    }
-
-    return true;
+    return wingsPersistence.delete(pipeline);
   }
 
   @Override

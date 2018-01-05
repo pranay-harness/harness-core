@@ -10,6 +10,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
@@ -42,6 +43,7 @@ import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
@@ -79,6 +81,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
@@ -133,6 +136,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
@@ -140,6 +144,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.PruneEntityJob;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
 import software.wings.service.intfc.AccountService;
@@ -153,8 +158,10 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -239,6 +246,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
+  @Inject private TriggerService triggerService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -646,6 +654,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     setUnset(ops, "name", workflow.getName());
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
 
+    String workflowName = workflow.getName();
     String serviceId = workflow.getServiceId();
     String envId = workflow.getEnvId();
     String inframappingId = workflow.getInfraMappingId();
@@ -711,6 +720,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     });
+    if (workflowName != null) {
+      if (!workflowName.equals(workflow.getName())) {
+        executorService.submit(() -> triggerService.updateByApp(finalWorkflow.getAppId()));
+      }
+    }
     return workflow;
   }
 
@@ -1204,6 +1218,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new WingsException(aResponseMessage().code(WORKFLOW_EXECUTION_IN_PROGRESS).acuteness(HARMLESS).build())
           .addParam("message", String.format("Workflow: [%s] couldn't be deleted", workflow.getName()));
     }
+
+    List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
+    if (CollectionUtils.isEmpty(triggers)) {
+      return;
+    }
+    List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
+
+    throw new WingsException(aResponseMessage().code(INVALID_REQUEST).acuteness(HARMLESS).build())
+        .addParam("message",
+            String.format(
+                "Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
   }
 
   /**
@@ -1461,6 +1486,59 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         unhandled(stateType);
     }
     return Collections.emptyMap();
+  }
+
+  @Override
+  public List<Service> resolveServices(Workflow workflow, Map<String, String> workflowVariables) {
+    // Lookup service
+    List<String> workflowServiceIds = workflow.getOrchestrationWorkflow().getServiceIds();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    List<Variable> userVariables = canaryOrchestrationWorkflow.getUserVariables();
+    List<String> serviceNames = new ArrayList<>();
+    if (userVariables != null) {
+      serviceNames =
+          userVariables.stream()
+              .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
+              .map(Variable::getName)
+              .collect(Collectors.toList());
+    }
+    List<String> serviceIds = new ArrayList<>();
+    if (workflowVariables != null) {
+      Set<String> workflowVariableNames = workflowVariables.keySet();
+      for (String variableName : workflowVariableNames) {
+        if (serviceNames.contains(variableName)) {
+          serviceIds.add(workflowVariables.get(variableName));
+        }
+      }
+    }
+    List<String> templatizedServiceIds = canaryOrchestrationWorkflow.getTemplatizedServiceIds();
+    if (workflowServiceIds != null) {
+      for (String workflowServiceId : workflowServiceIds) {
+        if (!templatizedServiceIds.contains(workflowServiceId)) {
+          serviceIds.add(workflowServiceId);
+        }
+      }
+    }
+    if (serviceIds.size() != 0) {
+      PageRequest<Service> pageRequest = aPageRequest()
+                                             .withLimit(PageRequest.UNLIMITED)
+                                             .addFilter("appId", EQ, workflow.getAppId())
+                                             .addFilter("uuid", IN, serviceIds.toArray())
+                                             .build();
+      return serviceResourceService.list(pageRequest, false, false);
+    } else {
+      logger.info("No services resolved for templatized workflow id {}", workflow.getUuid());
+      return null;
+    }
+  }
+
+  @Override
+  public void pruneDescendingEntities(String appId, String workflowId) {
+    List<OwnedByWorkflow> services =
+        ServiceClassLocator.descendingServices(this, WorkflowServiceImpl.class, OwnedByWorkflow.class);
+    PruneEntityJob.pruneDescendingEntities(
+        services, appId, workflowId, descending -> descending.pruneByWorkflow(appId, workflowId));
   }
 
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {

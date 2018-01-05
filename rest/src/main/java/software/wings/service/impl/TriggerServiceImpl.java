@@ -200,6 +200,17 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
+  public void pruneByWorkflow(String appId, String workflowId) {
+    List<Trigger> triggers = wingsPersistence.createQuery(Trigger.class)
+                                 .field(Trigger.APP_ID_KEY)
+                                 .equal(appId)
+                                 .field("workflowId")
+                                 .equal(workflowId)
+                                 .asList();
+    triggers.forEach(trigger -> deleteTrigger(trigger.getUuid()));
+  }
+
+  @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     List<Trigger> triggers = getTriggersByApp(appId);
 
@@ -248,8 +259,15 @@ public class TriggerServiceImpl implements TriggerService {
     } else if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
       Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       services = workflow.getServices();
+      Map<String, String> workflowVariables = trigger.getWorkflowVariables();
+      if (workflowVariables != null || workflowVariables.size() != 0) {
+        if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+          if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
+            services = workflowService.resolveServices(workflow, workflowVariables);
+          }
+        }
+      }
     }
-
     WebHookToken webHookToken =
         WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtil.secureRandAlphaNumString(40)).build();
     Map<String, Object> payload = new HashMap<>();
@@ -294,8 +312,12 @@ public class TriggerServiceImpl implements TriggerService {
       String appId, String webHookToken, Map<String, String> serviceBuildNumbers, Map<String, String> parameters) {
     List<Artifact> artifacts = new ArrayList<>();
     Trigger trigger = getTrigger(appId, webHookToken);
+    if (trigger == null) {
+      throw new WingsException("No Trigger associated to the given token");
+    }
+    logger.info("Triggering  the execution for the Trigger {} by webhook", trigger.getName());
     addArtifactsFromVersionsOfWebHook(trigger, serviceBuildNumbers, artifacts);
-    addArtifactsFromSelections(appId, trigger.getArtifactSelections(), artifacts);
+    addArtifactsFromSelections(appId, trigger, artifacts);
     return triggerExecution(artifacts, trigger, parameters);
   }
 
@@ -303,6 +325,10 @@ public class TriggerServiceImpl implements TriggerService {
   public WorkflowExecution triggerExecutionByWebHook(
       String appId, String webHookToken, Artifact artifact, Map<String, String> parameters) {
     Trigger trigger = getTrigger(appId, webHookToken);
+    if (trigger == null) {
+      throw new WingsException("No Trigger associated to the given token");
+    }
+    logger.info("Triggering  the execution for the Trigger {} by webhook", trigger.getName());
     List<Artifact> artifacts = new ArrayList<>();
     if (artifact != null) {
       artifacts.add(artifact);
@@ -312,12 +338,17 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public List<Trigger> getTriggersHasPipelineAction(String appId, String pipelineId) {
+    return getTriggersHasWorkflowAction(appId, pipelineId);
+  }
+
+  @Override
+  public List<Trigger> getTriggersHasWorkflowAction(String appId, String workflowId) {
     return getTriggersByApp(appId)
         .stream()
         .filter(trigger
             -> trigger.getArtifactSelections().stream().anyMatch(artifactSelection
                 -> artifactSelection.getType().equals(LAST_DEPLOYED)
-                    && artifactSelection.getWorkflowId().equals(pipelineId)))
+                    && artifactSelection.getWorkflowId().equals(workflowId)))
         .collect(toList());
   }
 
@@ -359,18 +390,46 @@ public class TriggerServiceImpl implements TriggerService {
     if (serviceBuildNumbers == null || serviceBuildNumbers.size() == 0) {
       return;
     }
-    Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
-    if (pipeline == null) {
-      throw new WingsException("Pipeline does not exist any more");
+    Map<String, String> services = new HashMap<>();
+    if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
+      List<Service> workflowServices = null;
+      Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
+      try {
+        workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
+        workflowServices = workflow.getServices();
+      } catch (Exception e) {
+        logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
+      }
+      if (workflow == null) {
+        throw new WingsException("Workflow " + trigger.getWorkflowName() + "does not exist.");
+      }
+      if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+        if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
+          workflowServices = workflowService.resolveServices(workflow, trigger.getWorkflowVariables());
+        }
+      }
+      if (workflowServices != null) {
+        services = workflowServices.stream().collect(Collectors.toMap(o -> o.getUuid(), o -> o.getName()));
+      }
+    } else {
+      Pipeline pipeline = null;
+      try {
+        pipeline = validatePipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
+      } catch (WingsException e) {
+        logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
+      }
+      if (pipeline == null) {
+        throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.");
+      }
+      services = pipeline.getServices().stream().collect(Collectors.toMap(o -> o.getUuid(), o -> o.getName()));
     }
-    Map<String, String> services =
-        pipeline.getServices().stream().collect(Collectors.toMap(o -> o.getUuid(), o -> o.getName()));
+    Map<String, String> finalServices = services;
     trigger.getArtifactSelections()
         .stream()
         .filter(artifactSelection -> artifactSelection.getType().equals(WEBHOOK_VARIABLE))
         .forEach((ArtifactSelection artifactSelection) -> {
           Artifact artifact;
-          String serviceName = services.get(artifactSelection.getServiceId());
+          String serviceName = finalServices.get(artifactSelection.getServiceId());
           String buildNumber = serviceBuildNumbers.get(serviceName);
           if (Misc.isNullOrEmpty(buildNumber)) {
             ArtifactStream artifactStream =
@@ -428,7 +487,7 @@ public class TriggerServiceImpl implements TriggerService {
             continue;
           }
         }
-        addArtifactsFromSelections(trigger1.getAppId(), artifactSelections, artifacts);
+        addArtifactsFromSelections(trigger1.getAppId(), trigger1, artifacts);
       }
       triggerExecution(artifacts, trigger1);
     }
@@ -455,21 +514,23 @@ public class TriggerServiceImpl implements TriggerService {
           if (CollectionUtils.isEmpty(artifactSelections)) {
             logger.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",
                 trigger.getWorkflowId(), sourcePipelineId);
-            triggerExecution(getLastDeployedArtifacts(appId, sourcePipelineId, null), trigger);
+            triggerExecution(
+                getLastDeployedArtifacts(appId, sourcePipelineId, trigger.getWorkflowType(), null), trigger);
           } else {
             List<Artifact> artifacts = new ArrayList<>();
             if (artifactSelections.stream().anyMatch(
                     artifactSelection -> artifactSelection.getType().equals(PIPELINE_SOURCE))) {
-              addLastDeployedArtifacts(appId, sourcePipelineId, null, artifacts);
+              addLastDeployedArtifacts(appId, sourcePipelineId, trigger.getWorkflowType(), null, artifacts);
             }
-            addArtifactsFromSelections(trigger.getAppId(), artifactSelections, artifacts);
+            addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
             triggerExecution(artifacts, trigger);
           }
         });
   }
 
   private void triggerScheduledExecution(Trigger trigger) {
-    List<Artifact> lastDeployedArtifacts = getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), null);
+    List<Artifact> lastDeployedArtifacts =
+        getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), trigger.getWorkflowType(), null);
 
     ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
@@ -480,7 +541,7 @@ public class TriggerServiceImpl implements TriggerService {
       }
     } else {
       List<Artifact> artifacts = new ArrayList<>();
-      addArtifactsFromSelections(trigger.getAppId(), artifactSelections, artifacts);
+      addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
       if (CollectionUtils.isNotEmpty(artifacts)) {
         if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
           triggerExecution(artifacts, trigger);
@@ -500,13 +561,13 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void addArtifactsFromSelections(
-      String appId, List<ArtifactSelection> artifactSelections, List<Artifact> artifacts) {
-    for (ArtifactSelection artifactSelection : artifactSelections) {
+  private void addArtifactsFromSelections(String appId, Trigger trigger, List<Artifact> artifacts) {
+    for (ArtifactSelection artifactSelection : trigger.getArtifactSelections()) {
       if (artifactSelection.getType().equals(LAST_COLLECTED)) {
         addLastCollectedArtifact(appId, artifactSelection, artifacts);
       } else if (artifactSelection.getType().equals(LAST_DEPLOYED)) {
-        addLastDeployedArtifacts(appId, artifactSelection.getWorkflowId(), artifactSelection.getServiceId(), artifacts);
+        addLastDeployedArtifacts(appId, artifactSelection.getWorkflowId(), trigger.getWorkflowType(),
+            artifactSelection.getServiceId(), artifacts);
       }
     }
   }
@@ -534,27 +595,32 @@ public class TriggerServiceImpl implements TriggerService {
    * Last successfully deployed or last deployed
    *
    * @param appId
-   * @param pipelineId
+   * @param workflowId
+   * @param workflowType
+   * @param serviceId
    * @return List<Artifact></Artifact>
    */
-  private void addLastDeployedArtifacts(String appId, String pipelineId, String serviceId, List<Artifact> artifacts) {
-    artifacts.addAll(getLastDeployedArtifacts(appId, pipelineId, serviceId));
+  private void addLastDeployedArtifacts(
+      String appId, String workflowId, WorkflowType workflowType, String serviceId, List<Artifact> artifacts) {
+    artifacts.addAll(getLastDeployedArtifacts(appId, workflowId, workflowType, serviceId));
   }
 
   /**
    * Last successfully deployed or last deployed
    *
    * @param appId
-   * @param pipelineId
+   * @param workflowId
+   * @param workflowType
    * @param serviceId
    * @return List<Artifact></Artifact>
    */
-  private List<Artifact> getLastDeployedArtifacts(String appId, String pipelineId, String serviceId) {
+  private List<Artifact> getLastDeployedArtifacts(
+      String appId, String workflowId, WorkflowType workflowType, String serviceId) {
     List<Artifact> lastDeployedArtifacts = new ArrayList<>();
     PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                      .withLimit("1")
-                                                     .addFilter("workflowType", EQ, PIPELINE)
-                                                     .addFilter("workflowId", EQ, pipelineId)
+                                                     .addFilter("workflowType", EQ, workflowType)
+                                                     .addFilter("workflowId", EQ, workflowId)
                                                      .addFilter("appId", EQ, appId)
                                                      .addFilter("status", EQ, SUCCESS)
                                                      .addOrder(aSortOrder().withField("createdAt", DESC).build())
@@ -627,10 +693,25 @@ public class TriggerServiceImpl implements TriggerService {
           trigger.getWorkflowId());
       Workflow workflow = wingsPersistence.get(Workflow.class, trigger.getAppId(), trigger.getWorkflowId());
       Validator.notNullCheck("Workflow", workflow);
+      Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
+      Map<String, String> triggerWorkflowVariables = trigger.getWorkflowVariables();
+      if (triggerWorkflowVariables != null) {
+        if (workflowVariables != null) {
+          for (String s : triggerWorkflowVariables.keySet()) {
+            if (!workflowVariables.containsKey(s)) {
+              workflowVariables.put(s, triggerWorkflowVariables.get(s));
+            }
+          }
+        } else {
+          workflowVariables = triggerWorkflowVariables;
+        }
+      }
+      executionArgs.setWorkflowVariables(workflowVariables);
       workflowExecution =
           workflowExecutionService.triggerEnvExecution(trigger.getAppId(), workflow.getEnvId(), executionArgs);
       logger.info("Trigger workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
           trigger.getWorkflowId());
+
     } else {
       logger.info(
           "Triggering  execution of appId {} with stream pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
@@ -723,6 +804,17 @@ public class TriggerServiceImpl implements TriggerService {
           }
         }
       }
+    } else if (ORCHESTRATION.equals(workflowType)) {
+      Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+      notNullCheck("workflow", workflow);
+      notNullCheck("orchestrationWorkflow", workflow.getOrchestrationWorkflow());
+      workflow.getOrchestrationWorkflow().getUserVariables().forEach(uservariable -> {
+        if (!uservariable.getType().equals(VariableType.ENTITY)) {
+          if (!parameters.contains(uservariable.getName())) {
+            parameters.add(uservariable.getName());
+          }
+        }
+      });
     }
     WebhookParameters webhookParameters = new WebhookParameters();
     webhookParameters.setParams(parameters);
@@ -827,7 +919,13 @@ public class TriggerServiceImpl implements TriggerService {
         default:
           throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid artifact selection type");
       }
-      artifactSelection.setServiceName(serviceIdNames.get(artifactSelection.getServiceId()));
+      if (serviceIdNames.get(artifactSelection.getServiceId()) == null) {
+        service = serviceResourceService.get(trigger.getAppId(), artifactSelection.getServiceId(), false);
+        notNullCheck("Service", service);
+        artifactSelection.setServiceName(service.getName());
+      } else {
+        artifactSelection.setServiceName(serviceIdNames.get(artifactSelection.getServiceId()));
+      }
     });
   }
 
@@ -840,7 +938,11 @@ public class TriggerServiceImpl implements TriggerService {
       validateAndSetArtifactSelections(trigger, services);
     } else if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
       Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
-      trigger.setWorkflowName(workflow.getName());
+      if (workflow.isTemplatized()) {
+        trigger.setWorkflowName(workflow.getName() + " (TEMPLATE)");
+      } else {
+        trigger.setWorkflowName(workflow.getName());
+      }
       services = workflow.getServices();
       validateAndSetArtifactSelections(trigger, services);
     } else {

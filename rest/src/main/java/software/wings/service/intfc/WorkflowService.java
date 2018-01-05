@@ -5,6 +5,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
@@ -193,4 +194,15 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
   WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
 
   Map<String, String> getStateDefaults(@NotNull String appId, @NotNull String serviceId, @NotNull StateType stateType);
+
+  List<Service> resolveServices(Workflow workflow, Map<String, String> workflowVariables);
+
+  /**
+   * Prune workflow descending objects.
+   *
+   * @param appId      the app id
+   * @param workflowId the workflow id
+   */
+  void pruneDescendingEntities(@org.hibernate.validator.constraints.NotEmpty String appId,
+      @org.hibernate.validator.constraints.NotEmpty String workflowId);
 }

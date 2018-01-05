@@ -13,6 +13,7 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
+import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -23,7 +24,7 @@ import javax.validation.Valid;
 /**
  * Created by sgurubelli on 10/26/17.
  */
-public interface TriggerService extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream {
+public interface TriggerService extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow {
   /**
    * List.
    *
@@ -128,6 +129,15 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    * @return List<Trigger></Trigger>
    */
   List<Trigger> getTriggersHasPipelineAction(String appId, String pipelineId);
+
+  /**
+   * Triggers that have actions on Pipeline
+   *
+   * @param appId
+   * @param workflowId
+   * @return List<Trigger></Trigger>
+   */
+  List<Trigger> getTriggersHasWorkflowAction(String appId, String workflowId);
 
   /**
    * Triggers that have actions on Artifact Stream
