@@ -96,7 +96,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
-import software.wings.beans.BuildOrchestrationWorkflow;
+import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -1573,7 +1573,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
           workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-      BuildOrchestrationWorkflow buildWorkflow = (BuildOrchestrationWorkflow) orchestrationWorkflow;
+      BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseStepsForArtifactCollection(workflowPhase);
       buildWorkflow.getWorkflowPhases().add(workflowPhase);
     }

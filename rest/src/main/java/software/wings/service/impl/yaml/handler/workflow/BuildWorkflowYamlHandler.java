@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import software.wings.beans.BuildOrchestrationWorkflow.BuildOrchestrationWorkflowBuilder;
+import software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
