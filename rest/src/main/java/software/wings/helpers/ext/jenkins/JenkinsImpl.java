@@ -25,6 +25,7 @@ import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
@@ -40,9 +41,11 @@ import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -237,6 +240,17 @@ public class JenkinsImpl implements Jenkins {
     }
   }
 
+  protected String getNormalizedName(String jobName) {
+    try {
+      if (!StringUtils.isEmpty(jobName)) {
+        return URLDecoder.decode(jobName, Charset.defaultCharset().name());
+      }
+    } catch (UnsupportedEncodingException e) {
+      logger.warn("Failed to decode jobName" + jobName, e);
+    }
+    return jobName;
+  }
+
   /**
    * This method generates the ui display name from the jenkins url.
    * The jenkins url looks like &lt;jenkins_base_url&gt;/job/job1/job/job2/job/job3
@@ -265,7 +279,9 @@ public class JenkinsImpl implements Jenkins {
     for (int idx = 1; idx <= parts.length - 1; idx = idx + 2) {
       name += "/" + parts[idx];
     }
-    return name.startsWith("/") ? name.substring(1) : name;
+    name = name.startsWith("/") ? name.substring(1) : name;
+    String normalizedName = getNormalizedName(name);
+    return normalizedName;
   }
 
   private boolean isFolderJob(Job job) {
