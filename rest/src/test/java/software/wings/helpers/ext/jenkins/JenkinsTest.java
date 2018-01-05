@@ -5,6 +5,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
@@ -194,5 +196,13 @@ public class JenkinsTest {
   public void shouldTriggerJobWithoutParameters() throws URISyntaxException, IOException {
     QueueReference queueItem = jenkins.trigger("todolist_war", Collections.emptyMap());
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
+  }
+
+  @Test
+  public void testJobNormalizedNames() throws Exception {
+    JenkinsImpl jenkins = new JenkinsImpl("http://localhost:8080");
+    assertEquals("TestJob", jenkins.getNormalizedName("TestJob"));
+    assertNull(jenkins.getNormalizedName(null));
+    assertEquals("Test Job", jenkins.getNormalizedName("Test%20Job"));
   }
 }
