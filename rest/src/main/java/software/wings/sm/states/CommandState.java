@@ -343,6 +343,7 @@ public class CommandState extends State {
                                                      .withEnvId(envId)
                                                      .withInfrastructureMappingId(infrastructureMappingId)
                                                      .build());
+      logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
       logger.error("Exception in command execution", e);
       handleCommandException(context, activityId, appId);
