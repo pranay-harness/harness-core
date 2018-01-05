@@ -308,7 +308,6 @@ class TSAnomlyDetector(object):
                 data_len = (self._options.analysis_minute - self._options.analysis_start_minute) + 1
                 if data_len % self._options.smooth_window > 0:
                     pad_len = self._options.smooth_window - (data_len % self._options.smooth_window)
-                    print(data_len, pad_len)
                     control_data_dict['data'] = np.pad(control_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
                                                        constant_values=np.nan)
                     test_data_dict['data'] = np.pad(test_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
