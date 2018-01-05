@@ -17,6 +17,9 @@ import software.wings.annotation.Encrypted;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Util;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 /**
  * Created by brett on 2/27/17
  */
@@ -68,7 +71,27 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(getClusterName() + " (Direct Kubernetes)");
+    StringBuilder nameBuilder = new StringBuilder();
+    try {
+      URL url = new URL(getMasterUrl());
+      if (url.getHost() != null) {
+        String hostName = url.getHost().replace('.', '_');
+        nameBuilder.append(hostName);
+      } else {
+        nameBuilder.append(getMasterUrl());
+      }
+    } catch (MalformedURLException e) {
+      nameBuilder.append(getMasterUrl());
+    }
+
+    if (getUsername() != null) {
+      nameBuilder.append("_");
+      nameBuilder.append(getUsername());
+    }
+
+    nameBuilder.append(" (Direct Kubernetes)");
+
+    return Util.normalize(nameBuilder.toString());
   }
 
   @SchemaIgnore

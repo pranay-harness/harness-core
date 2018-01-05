@@ -373,8 +373,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         processYamlChange(changeContext, changeContextList);
         logger.info("Processing done for change [{}]", changeContext.getChange());
       } catch (Exception ex) {
-        logger.error("Exception while processing yaml change {}", yamlFilePath, ex);
-        throw new YamlProcessingException(ex.getMessage(), ex, changeContext.getChange());
+        logger.error("Exception while processing yaml file {}", yamlFilePath, ex);
+        String message = ex instanceof WingsException ? ((WingsException) ex).getMessagesAsString() : ex.getMessage();
+        throw new YamlProcessingException(message, ex, changeContext.getChange());
       }
     }
   }

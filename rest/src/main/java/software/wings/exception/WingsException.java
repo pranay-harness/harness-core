@@ -15,6 +15,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.Level;
 import software.wings.common.cache.ResponseCodeCache;
+import software.wings.utils.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -198,5 +199,18 @@ public class WingsException extends WingsApiException {
           }
         });
     return responseMessages;
+  }
+
+  public String getMessagesAsString() {
+    List<ResponseMessage> responseMessageList = processMessages();
+    StringBuilder errorMsgBuilder = new StringBuilder();
+    if (Util.isNotEmpty(responseMessageList)) {
+      responseMessageList.stream().forEach(responseMessage -> {
+        errorMsgBuilder.append(responseMessage.getMessage());
+        errorMsgBuilder.append(".");
+      });
+    }
+
+    return errorMsgBuilder.toString();
   }
 }

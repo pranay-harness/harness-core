@@ -1,6 +1,7 @@
 package software.wings.utils;
 
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
@@ -31,7 +32,7 @@ public class Validator {
    */
   public static void notNullCheck(String name, Object value) {
     if (value == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", name);
+      throw new WingsException(GENERAL_ERROR).addParam("args", name);
     }
   }
 
@@ -43,7 +44,7 @@ public class Validator {
    */
   public static void nullCheck(String name, Object value) {
     if (value != null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", name);
+      throw new WingsException(GENERAL_ERROR).addParam("args", name);
     }
   }
 
@@ -55,7 +56,7 @@ public class Validator {
    */
   public static void equalCheck(Object value1, Object value2) {
     if (!Objects.equals(value1, value2)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam("message", "Not equal -  value1: " + value1 + ", value2: " + value2);
     }
   }
@@ -63,7 +64,7 @@ public class Validator {
   public static void validateUuid(UuidAware base, String fieldName, String fieldValue) {
     notNullCheck(fieldValue, fieldName);
     if (!fieldValue.equals(base.getUuid())) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", fieldName + " mismatch with object uuid");
+      throw new WingsException(INVALID_REQUEST).addParam("message", fieldName + " mismatch with object uuid");
     }
   }
 
@@ -71,7 +72,7 @@ public class Validator {
     try {
       runnable.run();
     } catch (DuplicateKeyException e) {
-      throw prepareWingsException(INVALID_ARGUMENT, "arg", "Duplicate " + field + " " + value);
+      throw prepareWingsException(GENERAL_ERROR, "arg", "Duplicate " + field + " " + value);
     }
   }
 
@@ -85,12 +86,12 @@ public class Validator {
       params.put("args", "hello");
       throw new WingsException(responseMessages, "hello", params);*/
       //      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
-      throw prepareWingsException(INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+      throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
-        throw prepareWingsException(INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+        throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
       }
-      throw prepareWingsException(INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+      throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
     }
   }
 

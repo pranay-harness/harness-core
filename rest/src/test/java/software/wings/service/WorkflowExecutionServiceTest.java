@@ -503,7 +503,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.getCode());
+      assertThat(exception).hasMessage(ErrorCode.GENERAL_ERROR.getCode());
       assertThat(exception.getParams()).containsEntry("args", "workflowType");
     }
   }
@@ -520,7 +520,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.getCode());
+      assertThat(exception).hasMessage(ErrorCode.GENERAL_ERROR.getCode());
       assertThat(exception.getParams()).containsEntry("args", "orchestrationId");
     }
   }

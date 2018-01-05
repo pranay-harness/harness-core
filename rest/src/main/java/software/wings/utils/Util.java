@@ -27,6 +27,10 @@ public class Util {
     return collection == null || collection.isEmpty();
   }
 
+  public static boolean isNotEmpty(Collection collection) {
+    return !isEmpty(collection);
+  }
+
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();
     for (String element : elements) {

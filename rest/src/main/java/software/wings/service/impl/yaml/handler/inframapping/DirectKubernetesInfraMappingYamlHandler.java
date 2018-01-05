@@ -15,7 +15,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Validator;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -118,37 +117,6 @@ public class DirectKubernetesInfraMappingYamlHandler
 
     // TODO, UI generates this field internally. Its not exposed as a field. Need to find out why.
     bean.setClusterName("clusterName");
-
-    char[] decryptedValue;
-    String encryptedRef = null;
-    try {
-      encryptedRef = infraMappingYaml.getPassword();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setPassword(decryptedValue);
-      }
-
-      encryptedRef = infraMappingYaml.getCaCert();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setCaCert(decryptedValue);
-      }
-
-      encryptedRef = infraMappingYaml.getClientCert();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setClientCert(decryptedValue);
-      }
-
-      encryptedRef = infraMappingYaml.getClientKey();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setClientKey(decryptedValue);
-      }
-
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the encrypted ref: " + encryptedRef);
-    }
   }
 
   @Override
