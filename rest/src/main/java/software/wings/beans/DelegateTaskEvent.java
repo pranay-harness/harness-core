@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType", include = As.PROPERTY)
 @JsonTypeName("DelegateTaskEvent")
 @JsonSubTypes({
-  @JsonSubTypes.Type(name = "DelegateTaskEvent", value = DelegateTask.class)
+  @JsonSubTypes.Type(name = "DelegateTaskEvent", value = DelegateTaskEvent.class)
   , @JsonSubTypes.Type(name = "DelegateTaskAbortEvent", value = DelegateTaskAbortEvent.class)
 })
 public class DelegateTaskEvent {
