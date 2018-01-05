@@ -11,6 +11,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
+import static software.wings.utils.Misc.isNotNullOrEmpty;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -535,7 +536,10 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       List<DelegateTaskEvent> taskEvents = new ArrayList<>();
       timeLimiter.callWithTimeout(() -> {
-        taskEvents.addAll(execute(managerClient.pollTaskEvents(delegateId, accountId)));
+        List<DelegateTaskEvent> delegateTaskEvents = execute(managerClient.pollTaskEvents(delegateId, accountId));
+        if (isNotNullOrEmpty(delegateTaskEvents)) {
+          taskEvents.addAll(delegateTaskEvents);
+        }
         return true;
       }, 15L, TimeUnit.SECONDS, true);
       logger.info("Processing DelegateTaskEvents [{}]", taskEvents);

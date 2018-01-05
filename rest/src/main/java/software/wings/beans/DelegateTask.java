@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
-import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
@@ -328,16 +326,6 @@ public class DelegateTask extends Base {
         + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
         + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
         + ", delegateRunnableTask=" + delegateRunnableTask + '}';
-  }
-
-  public DelegateTaskEvent createDelegateTaskEvent() {
-    return getStatus().equals(Status.ABORTED)
-        ? aDelegateTaskAbortEvent()
-              .withAccountId(getAccountId())
-              .withDelegateTaskId(getUuid())
-              .withSync(!isAsync())
-              .build()
-        : aDelegateTaskEvent().withAccountId(getAccountId()).withDelegateTaskId(getUuid()).withSync(!isAsync()).build();
   }
 
   /**
