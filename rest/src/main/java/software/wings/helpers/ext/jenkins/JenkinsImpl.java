@@ -280,8 +280,12 @@ public class JenkinsImpl implements Jenkins {
       name += "/" + parts[idx];
     }
     name = name.startsWith("/") ? name.substring(1) : name;
-    String normalizedName = getNormalizedName(name);
-    return normalizedName;
+    /**
+     * HAR-2708 - todo have to verify 1 testcase.
+     */
+    // String normalizedName = getNormalizedName(name);
+    // return normalizedName;
+    return name;
   }
 
   private boolean isFolderJob(Job job) {
