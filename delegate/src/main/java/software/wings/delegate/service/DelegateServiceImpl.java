@@ -35,6 +35,7 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -528,17 +529,21 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void pollForTask() {
     try {
+      List<DelegateTaskEvent> taskEvents = new ArrayList<>();
       timeLimiter.callWithTimeout(() -> {
-        List<DelegateTaskEvent> taskEvents = execute(managerClient.pollTaskEvents(delegateId, accountId));
-        for (DelegateTaskEvent taskEvent : taskEvents) {
-          if (taskEvent instanceof DelegateTaskAbortEvent) {
-            abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
-          } else {
-            dispatchDelegateTask(taskEvent);
-          }
-        }
+        taskEvents.addAll(execute(managerClient.pollTaskEvents(delegateId, accountId)));
         return true;
       }, 15L, TimeUnit.SECONDS, true);
+      logger.info("Processing DelegateTaskEvents [{}]", taskEvents);
+      for (DelegateTaskEvent taskEvent : taskEvents) {
+        if (taskEvent instanceof DelegateTaskAbortEvent) {
+          abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
+        } else {
+          dispatchDelegateTask(taskEvent);
+        }
+      }
+    } catch (UncheckedTimeoutException tex) {
+      logger.warn("Fetch delegateTaskEvents timed out");
     } catch (Exception e) {
       logger.error("Exception while decoding task", e);
     }
