@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.DeploymentExecutionContext;
@@ -121,7 +122,7 @@ public class EnvState extends State {
       return workflowVariables;
     }
     Map<String, String> variables = workflowStandardParams.getWorkflowVariables();
-    if (workflowVariables == null || workflowVariables.isEmpty()) {
+    if (MapUtils.isEmpty(workflowVariables)) {
       return variables;
     }
     workflowVariables.keySet().forEach(s -> {

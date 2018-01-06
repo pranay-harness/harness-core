@@ -16,6 +16,7 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
@@ -771,7 +772,7 @@ public class Graph {
     }
 
     public boolean validate() {
-      if (inValidFieldMessages == null || inValidFieldMessages.isEmpty()) {
+      if (MapUtils.isEmpty(inValidFieldMessages)) {
         valid = true;
         validationMessage = null;
       } else {

@@ -5,6 +5,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -62,21 +63,21 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     AnalysisContext analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
-    if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
+    if (CollectionUtils.isEmpty(canaryNewHostNames)) {
       getLogger().error("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
     }
 
     Set<String> lastExecutionNodes = analysisContext.getControlNodes();
-    if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
+    if (CollectionUtils.isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
             "Skipping analysis due to lack of baseline data (First time deployment).");
       }
 
-      getLogger().warn(
-          "It seems that there is no successful run for this workflow yet. Metric data will be collected to be analyzed for next deployment run");
+      getLogger().warn("It seems that there is no successful run for this workflow yet. "
+          + "Metric data will be collected to be analyzed for next deployment run");
     }
 
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT

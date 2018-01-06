@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
 
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.SelectNodeStepExecutionSummary;
@@ -34,7 +35,7 @@ public class CanaryUtils {
                 -> stateExecutionData.getStateType().equals(StateType.PHASE.name())
                     && !stateExecutionData.getStateName().equals(phaseElement.getName()))
             .collect(toList());
-    if (previousPhaseExecutionData == null || previousPhaseExecutionData.isEmpty()) {
+    if (CollectionUtils.isEmpty(previousPhaseExecutionData)) {
       return hostExclusionList;
     }
 

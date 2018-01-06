@@ -12,6 +12,7 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,7 @@ public class StateMachineExecutionSimulator {
                                                    .build();
 
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);
-    if (res == null || res.isEmpty()) {
+    if (CollectionUtils.isEmpty(res)) {
       logger.error("No service instance found for the ids: {}", serviceInstanceIds);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
@@ -181,7 +182,7 @@ public class StateMachineExecutionSimulator {
     if (state instanceof RepeatState) {
       String repeatElementExpression = ((RepeatState) state).getRepeatElementExpression();
       List<ContextElement> repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
-      if (repeatElements == null || repeatElements.isEmpty()) {
+      if (CollectionUtils.isEmpty(repeatElements)) {
         logger.warn("No repeatElements found for the expression: {}", repeatElementExpression);
         return;
       }
@@ -257,7 +258,7 @@ public class StateMachineExecutionSimulator {
   private Map<String, StateExecutionInstance> prepareStateExecutionInstanceMap(
       List<StateExecutionInstance> stateExecutionInstances) {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap = new HashMap<>();
-    if (stateExecutionInstances == null || stateExecutionInstances.isEmpty()) {
+    if (CollectionUtils.isEmpty(stateExecutionInstances)) {
       return stateExecutionInstanceMap;
     }
 

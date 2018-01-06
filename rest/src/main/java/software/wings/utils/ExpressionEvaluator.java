@@ -13,6 +13,7 @@ import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ro.fortsoft.pf4j.util.StringUtils;
 import software.wings.exception.WingsException;
 
 import java.util.Map;
@@ -214,7 +215,7 @@ public class ExpressionEvaluator {
 
   public static void isValidVariableName(String name) {
     // Verify Service variable name should not contain any special character
-    if (name == null || name.isEmpty()) {
+    if (StringUtils.isEmpty(name)) {
       return;
     }
     Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);

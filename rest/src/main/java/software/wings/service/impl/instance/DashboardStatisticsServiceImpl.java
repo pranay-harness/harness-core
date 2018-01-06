@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
 import org.mongodb.morphia.annotations.Id;
@@ -616,7 +617,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<DeploymentHistory> getDeploymentHistory(String appId, String serviceId) {
     List<DeploymentHistory> deploymentExecutionHistoryList = new ArrayList<>();
     List<Environment> environments = environmentService.getEnvByApp(appId);
-    if (environments == null || environments.isEmpty()) {
+    if (CollectionUtils.isEmpty(environments)) {
       return deploymentExecutionHistoryList;
     }
     List<String> envIds = environments.stream()
@@ -636,7 +637,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<WorkflowExecution> workflowExecutionList =
         workflowExecutionService.listExecutions(pageRequest, false).getResponse();
 
-    if (workflowExecutionList == null || workflowExecutionList.isEmpty()) {
+    if (CollectionUtils.isEmpty(workflowExecutionList)) {
       return deploymentExecutionHistoryList;
     }
 
@@ -715,7 +716,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         }
 
         List<String> serviceIds = artifact.getServiceIds();
-        if (serviceIds == null || serviceIds.isEmpty()) {
+        if (CollectionUtils.isEmpty(serviceIds)) {
           continue;
         }
 

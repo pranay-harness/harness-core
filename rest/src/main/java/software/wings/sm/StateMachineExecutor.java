@@ -36,6 +36,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -406,7 +407,7 @@ public class StateMachineExecutor {
 
   private ExecutionEventAdvice invokeAdvisors(ExecutionContextImpl context, State state) {
     List<ExecutionEventAdvisor> advisors = context.getStateExecutionInstance().getExecutionEventAdvisors();
-    if (advisors == null || advisors.isEmpty()) {
+    if (CollectionUtils.isEmpty(advisors)) {
       return null;
     }
 
@@ -1155,7 +1156,7 @@ public class StateMachineExecutor {
               .build();
 
       List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-      if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+      if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
         logger.warn(
             "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
             workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
@@ -1258,7 +1259,7 @@ public class StateMachineExecutor {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
       logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
@@ -1304,7 +1305,7 @@ public class StateMachineExecutor {
             .map(StateExecutionInstance::getUuid)
             .collect(Collectors.toList());
 
-    if (parentInstanceIds == null || parentInstanceIds.isEmpty()) {
+    if (CollectionUtils.isEmpty(parentInstanceIds)) {
       return allInstanceIds;
     }
 

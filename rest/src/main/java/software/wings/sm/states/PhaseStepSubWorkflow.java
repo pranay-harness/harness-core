@@ -26,6 +26,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
@@ -299,7 +301,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
     List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
-    if (contextElements == null || contextElements.isEmpty()) {
+    if (CollectionUtils.isEmpty(contextElements)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Setup not done");
     }
     Optional<ContextElement> containerServiceElement =
@@ -342,7 +344,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void handleElementNotifyResponseData(
       PhaseElement phaseElement, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
-    if (response == null || response.isEmpty()) {
+    if (MapUtils.isEmpty(response)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Missing response");
     }
     NotifyResponseData notifiedResponseData = response.values().iterator().next();
@@ -395,7 +397,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private ContextElement notifiedElement(
       ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls, String message) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-    if (elements == null || elements.isEmpty()) {
+    if (CollectionUtils.isEmpty(elements)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", message);
     }
     if (!(cls.isInstance(elements.get(0)))) {

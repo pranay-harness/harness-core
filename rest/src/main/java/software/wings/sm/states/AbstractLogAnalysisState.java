@@ -8,6 +8,7 @@ import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
@@ -81,21 +82,21 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
 
     Set<String> canaryNewHostNames = context.getTestNodes();
-    if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
+    if (CollectionUtils.isEmpty(canaryNewHostNames)) {
       getLogger().error("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find hosts to analyze!");
     }
 
     Set<String> lastExecutionNodes = context.getControlNodes();
-    if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
+    if (CollectionUtils.isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
             "Skipping analysis due to lack of baseline hosts. Rerun workflow after this succeeds.");
       }
 
-      getLogger().warn(
-          "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
+      getLogger().warn("It seems that there is no successful run for this workflow yet. "
+          + "Log data will be collected to be analyzed for next deployment run");
     }
 
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT

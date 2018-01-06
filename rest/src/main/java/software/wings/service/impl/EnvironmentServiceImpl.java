@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -263,7 +264,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       return services;
     }
     List<ServiceTemplate> serviceTemplates = environment.getServiceTemplates();
-    if (serviceTemplates == null || serviceTemplates.isEmpty()) {
+    if (CollectionUtils.isEmpty(serviceTemplates)) {
       return services;
     }
     List<String> serviceIds = new ArrayList<>();

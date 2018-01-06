@@ -13,6 +13,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import software.wings.api.InstanceElement;
@@ -226,7 +227,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   private PartitionElement getInstancesPartition() {
     List<ContextElement> partitions = context.getContextElementList(ContextElementType.PARTITION);
-    if (partitions == null || partitions.isEmpty()) {
+    if (CollectionUtils.isEmpty(partitions)) {
       return null;
     }
 

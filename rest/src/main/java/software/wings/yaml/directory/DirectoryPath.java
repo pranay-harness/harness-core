@@ -1,5 +1,7 @@
 package software.wings.yaml.directory;
 
+import ro.fortsoft.pf4j.util.StringUtils;
+
 public class DirectoryPath {
   private String path;
   private final String delimiter = "/";
@@ -9,7 +11,7 @@ public class DirectoryPath {
   }
 
   public DirectoryPath add(String pathPart) {
-    if (path == null || path.isEmpty()) {
+    if (StringUtils.isEmpty(path)) {
       this.path = pathPart;
     } else {
       this.path += this.delimiter + pathPart;

@@ -4,6 +4,7 @@ import com.google.common.math.Stats;
 
 import lombok.Builder;
 import lombok.Data;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.WordUtils;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
@@ -263,7 +264,7 @@ public class NewRelicMetricValueDefinition {
 
   private double getValueForComparison(List<NewRelicMetricDataRecord> records) {
     double value;
-    if (records == null || records.isEmpty()) {
+    if (CollectionUtils.isEmpty(records)) {
       value = -1;
     } else {
       List<Double> testValues;

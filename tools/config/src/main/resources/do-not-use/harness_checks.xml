@@ -4,25 +4,31 @@
           "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 
 <!--
-    Checkstyle configuration that checks the Harness coding style.
+    Checkstyle module configuration for Harness coding style.
 
-    Harness uses clang-format for checking indentation and code organization enforced with other means.
-    There is no point of duplicating this effort with providing checks from here.
+    Harness uses clang-format for checking for indentation and similar code organization.
+    Checkstyle does not duplicate this effort but provides additional checks that clang-format
+    is incapable to enforce.
 
-    There are many reasons a particular code style to be enforced.
-    There are few though that make a lot of practical sense. Lets limit this file to those:
+    Enforcing code style is a controversial topic and as many benefits it offers if overdone it
+    might have negative effect on moral and performance. The rules to follow should be evaluated
+    for ROI and should be committed to only after thorough consideration. The following are the
+    major factor for check to be enforced:
 
-    1. Good practices preventing errors or error prone code.
-    2. Consistency for thing that make no sense to involve innovative approach ... or are so simple to
-       follow, there are no reason not to. After some initial learning curve those should be saving time.
+    1. Good practices preventing errors or error prone code - there are checks that could identify
+       code written in a way that has proven error prone outcome. Either for the person writhing the
+       code or for the reader.
+    2. Consistency in expressing statements with the same meaning - innovation is a big part of
+       what we do as software engineers. It has to have the right place. More routine and templatized
+       the simple patterns in the code are, less energy is spend to write and read the code. This
+       will allow for innovation where it belongs - creating features that excite the customers.
 
-    The most important aspect of these checks is to never ever do style comment in a code review, which is
-    pointlessly time consuming and contributes to demoralization of both sides involved in it.
+    The purpose of these checks is minimize the amount of work is put into the code review process
+    on both sides - producer and reviewer.
 
-    If a style requirement cannot be expressed with this configuration it is probably not worth having.
-
-    If you would like to add new rule or improve a current one, please make sure that you resolve all the
-    preexisting issues. If you cannot find to do so, it is probably not worth having it.
+    This tool has for goal to eliminates the need of code style paper. It is under constant development.
+    If there is a style that you find important for the team to follow, you should start from trying to
+    implement check for it.
  -->
 
 <module name = "Checker">
@@ -45,8 +51,11 @@
         <!-- DEPENDENCIES -->
 
         <!-- Committing to a single class to do particular job could reduce the memory footprint, startup time,
-         eliminate conflicts when copy/paste, allow for auto import. This rule banns classes and packages that
-         are we have alternatives to do the same job. -->
+        eliminate conflicts when copy/paste, allow for auto import. This rule banns classes and packages that
+        are alternatives to each other, enforcing the use of only one.
+        Black listing all the alternatives is tedious and constant process. Please keep adding to the banning list
+        if you spot a missed alternative.
+         -->
         <module name="IllegalImport">
             <!-- use com.google.inject instead -->
             <property name="illegalPkgs" value="javax.inject"/>
@@ -82,6 +91,12 @@
          where the developer forget to add braces -->
         <module name="NeedBraces"/>
 
+        <!-- Using (var == null || var.isEmpty()) can be replaced from utility call XyzUtil.isEmpty(var). This is
+        mostly for better readability, but it has same element of reducing the potential risk of using different
+        variables for the two statements.
+        -->
+        <module name="io.harness.checks.UseIsEmptyCheck"/>
+
         <module name="com.github.sevntu.checkstyle.checks.coding.AvoidNotShortCircuitOperatorsForBooleanCheck"/>
 
         <module name="com.github.sevntu.checkstyle.checks.coding.ReturnNullInsteadOfBooleanCheck"/>
@@ -114,11 +129,12 @@
         <!-- SWITCH -->
 
         <!-- Missing default switch action is error prone. Please make sure that you handle all possible cases with
-        default value or throwing exception if the value is unexpected. Note that even you are extremely careful to
-        caver all options someone could add more cases in the future. -->
+        default value or throwing exception if the value is unexpected. Note that even if you are extremely careful
+        to caver all options, in the future someone else could add more cases to the switch. -->
         <module name="MissingSwitchDefault"/>
 
-        <!-- Fall through is most likely a mistake. It is a good thing such cases to be under monitoring -->
+        <!-- Fall through is most likely by mistake. It should be avoided, in order such mistakes to be detected
+        from tool like this. -->
         <module name="FallThrough"/>
 
         <!-- Not a big deal, but extremely easy to follow -->
