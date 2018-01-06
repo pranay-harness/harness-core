@@ -13,6 +13,12 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
+import static software.wings.common.Constants.BACKUP_PATH;
+import static software.wings.common.Constants.DEFAULT_BACKUP_PATH;
+import static software.wings.common.Constants.DEFAULT_RUNTIME_PATH;
+import static software.wings.common.Constants.DEFAULT_STAGING_PATH;
+import static software.wings.common.Constants.RUNTIME_PATH;
+import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -279,36 +285,28 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void createDefaultApplicationSettings(String appId, String accountId) {
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("RUNTIME_PATH")
-            .withValue(
-                aStringValue().withValue("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime").build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("BACKUP_PATH")
-            .withValue(aStringValue()
-                           .withValue("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}")
-                           .build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("STAGING_PATH")
-            .withValue(
-                aStringValue()
-                    .withValue("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}")
-                    .build())
-            .build());
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(appId)
+                              .withAccountId(accountId)
+                              .withEnvId(GLOBAL_ENV_ID)
+                              .withName(RUNTIME_PATH)
+                              .withValue(aStringValue().withValue(DEFAULT_RUNTIME_PATH).build())
+                              .build());
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(appId)
+                              .withAccountId(accountId)
+                              .withEnvId(GLOBAL_ENV_ID)
+                              .withName(STAGING_PATH)
+                              .withValue(aStringValue().withValue(DEFAULT_STAGING_PATH).build())
+                              .build());
+
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(appId)
+                              .withAccountId(accountId)
+                              .withEnvId(GLOBAL_ENV_ID)
+                              .withName(BACKUP_PATH)
+                              .withValue(aStringValue().withValue(DEFAULT_BACKUP_PATH).build())
+                              .build());
   }
 
   @Override

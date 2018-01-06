@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -26,6 +27,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Inject private ServiceExpressionBuilder serviceExpressionsBuilder;
   @Inject private EnvironmentExpressionBuilder envExpressionBuilder;
   @Inject private WorkflowExpressionBuilder workflowExpressionBuilder;
+  @Inject private ApplicationExpressionBuilder applicationExpressionBuilder;
 
   @Override
   public Set<String> listExpressions(String appId, String entityId, EntityType entityType) {
@@ -51,8 +53,8 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(envExpressionBuilder.getExpressions(appId, entityId, serviceId));
     } else if (entityType.equals(WORKFLOW)) {
       expressions.addAll(workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType));
-    } else {
-      return new TreeSet<>();
+    } else if (entityType.equals(APPLICATION)) {
+      expressions.addAll(applicationExpressionBuilder.getExpressions(appId, entityId));
     }
     return expressions;
   }

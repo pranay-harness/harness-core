@@ -537,4 +537,21 @@ public interface Constants {
    * The constant ASG_COMMAND_NAME.
    */
   String ASG_COMMAND_NAME = "Resize AutoScaling Group";
+
+  String DEFAULT_RUNTIME_PATH = "$HOME/${app.name}/${service.name}/${env.name}/runtime";
+  String DEFAULT_BACKUP_PATH = "$HOME/${app.name}/${service.name}/${env.name}/backup/${timestampId}";
+  String DEFAULT_STAGING_PATH = "$HOME/${app.name}/${service.name}/${env.name}/staging/${timestampId}";
+
+  /**
+   * The constant RUNTIME_PATH.
+   */
+  String RUNTIME_PATH = "RUNTIME_PATH";
+  /**
+   * The constant BACKUP_PATH.
+   */
+  String BACKUP_PATH = "BACKUP_PATH";
+  /**
+   * The constant STAGING_PATH.
+   */
+  String STAGING_PATH = "STAGING_PATH";
 }
