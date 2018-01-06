@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -73,7 +74,7 @@ public class ContainerSyncJob implements Job {
 
     Set<String> containerSvcNameNoRevisionSet =
         instanceService.getLeastRecentSyncedContainerDeployments(appId, System.currentTimeMillis() - SYNC_INTERVAL);
-    if (containerSvcNameNoRevisionSet == null || containerSvcNameNoRevisionSet.isEmpty()) {
+    if (CollectionUtils.isEmpty(containerSvcNameNoRevisionSet)) {
       logger.info("No Container deployments to process for appId:" + appId);
       // This is making the job self pruning. This allow to simplify the logic in deletion of the application.
       Application application = wingsPersistence.get(Application.class, appId);

@@ -24,6 +24,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ro.fortsoft.pf4j.util.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
@@ -381,7 +382,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public String getAccountIdByAppId(String appId) {
-    if (appId == null || appId.isEmpty()) {
+    if (StringUtils.isEmpty(appId)) {
       return null;
     }
 

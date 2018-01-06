@@ -6,6 +6,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -253,20 +254,21 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private void getMetricsSet() {
-      if (metrics == null || metrics.isEmpty()) {
-        logger.info("fetching new relic metric names from harness manager");
-        NewRelicMetricNames newRelicMetricNames = metricStoreService.getNewRelicMetricNames(getAccountId(),
-            String.valueOf(dataCollectionInfo.getNewRelicAppId()), dataCollectionInfo.getSettingAttributeId());
-        if (newRelicMetricNames != null && newRelicMetricNames.getMetrics() != null
-            && newRelicMetricNames.getMetrics().size() > 0) {
-          logger.info("found new relic metric names {} from harness manager", newRelicMetricNames.getMetrics().size());
-          metrics = newRelicMetricNames.getMetrics();
-        } else {
-          logger.info("fetching new relic metrics with data in the last 24 hours");
-          metricNameCollectionTask.run(new Object[] {dataCollectionInfo});
-          metrics = metricNameCollectionTask.getMetrics();
-          logger.info("total available metrics for new relic " + metrics.size());
-        }
+      if (CollectionUtils.isNotEmpty(metrics)) {
+        return;
+      }
+      logger.info("fetching new relic metric names from harness manager");
+      NewRelicMetricNames newRelicMetricNames = metricStoreService.getNewRelicMetricNames(getAccountId(),
+          String.valueOf(dataCollectionInfo.getNewRelicAppId()), dataCollectionInfo.getSettingAttributeId());
+      if (newRelicMetricNames != null && newRelicMetricNames.getMetrics() != null
+          && newRelicMetricNames.getMetrics().size() > 0) {
+        logger.info("found new relic metric names {} from harness manager", newRelicMetricNames.getMetrics().size());
+        metrics = newRelicMetricNames.getMetrics();
+      } else {
+        logger.info("fetching new relic metrics with data in the last 24 hours");
+        metricNameCollectionTask.run(new Object[] {dataCollectionInfo});
+        metrics = metricNameCollectionTask.getMetrics();
+        logger.info("total available metrics for new relic " + metrics.size());
       }
     }
 

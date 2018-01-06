@@ -8,6 +8,7 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -199,15 +200,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     WorkflowStandardParams workflowStandardParams =
         (WorkflowStandardParams) getContextElement(ContextElementType.STANDARD);
     List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
-    if (contextElementList == null || contextElementList.isEmpty()) {
+    if (CollectionUtils.isEmpty(contextElementList)) {
       return workflowStandardParams.getArtifacts();
-    } else {
-      List<Artifact> list = new ArrayList<>();
-      for (ContextElement contextElement : contextElementList) {
-        list.add(artifactService.get(workflowStandardParams.getAppId(), contextElement.getUuid()));
-      }
-      return list;
     }
+    List<Artifact> list = new ArrayList<>();
+    for (ContextElement contextElement : contextElementList) {
+      list.add(artifactService.get(workflowStandardParams.getAppId(), contextElement.getUuid()));
+    }
+    return list;
   }
 
   /**

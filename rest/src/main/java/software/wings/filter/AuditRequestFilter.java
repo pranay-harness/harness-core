@@ -6,6 +6,7 @@ import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,25 +110,25 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   }
 
   private String getHeaderString(MultivaluedMap<String, String> headers) {
-    if (headers == null || headers.isEmpty()) {
+    if (MapUtils.isEmpty(headers)) {
       return "";
-    } else {
-      StringBuilder headerString = new StringBuilder();
-      for (String key : headers.keySet()) {
-        headerString.append(key).append("=");
-        for (String value : headers.get(key)) {
-          headerString.append(";");
-          headerString.append(key.equalsIgnoreCase("Authorization") ? "********" : value);
-        }
-        headerString.substring(1);
-        headerString.append(",");
-      }
-      String headerStr = headerString.toString();
-      if (headerStr.length() > 0) {
-        headerStr = headerStr.substring(0, headerStr.length() - 1);
-      }
-      return headerStr;
     }
+
+    StringBuilder headerString = new StringBuilder();
+    for (String key : headers.keySet()) {
+      headerString.append(key).append("=");
+      for (String value : headers.get(key)) {
+        headerString.append(";");
+        headerString.append(key.equalsIgnoreCase("Authorization") ? "********" : value);
+      }
+      headerString.substring(1);
+      headerString.append(",");
+    }
+    String headerStr = headerString.toString();
+    if (headerStr.length() > 0) {
+      headerStr = headerStr.substring(0, headerStr.length() - 1);
+    }
+    return headerStr;
   }
 
   private String getQueryParams(MultivaluedMap<String, String> queryParameters) {

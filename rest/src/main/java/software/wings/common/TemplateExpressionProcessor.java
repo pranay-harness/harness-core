@@ -7,6 +7,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -55,7 +56,7 @@ public class TemplateExpressionProcessor {
       PageRequest<InfrastructureMapping> pageRequest =
           aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("serviceId", EQ, serviceId).build();
       List<InfrastructureMapping> infraMappings = infrastructureMappingService.list(pageRequest);
-      if (infraMappings == null || infraMappings.isEmpty()) {
+      if (CollectionUtils.isEmpty(infraMappings)) {
         return null;
       }
       Optional<InfrastructureMapping> infraMapping =
@@ -122,7 +123,7 @@ public class TemplateExpressionProcessor {
                                                     .build();
 
     List<SettingAttribute> settingAttributes = settingsService.list(pageRequest);
-    if (settingAttributes == null || settingAttributes.isEmpty()) {
+    if (CollectionUtils.isEmpty(settingAttributes)) {
       return null;
     }
     Optional<SettingAttribute> settingAttribute = settingAttributes.stream().findAny();

@@ -607,7 +607,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                     .addFieldsExcluded("contextElements", "callback")
                                                     .build();
       List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
-      if (allInstances == null || allInstances.isEmpty()) {
+      if (CollectionUtils.isEmpty(allInstances)) {
         return;
       }
       Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
@@ -1058,7 +1058,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (lockAcquired) {
         List<WorkflowExecution> runningWorkflowExecutions = getRunningWorkflowExecutions(
             ORCHESTRATION, workflowExecution.getAppId(), workflowExecution.getWorkflowId());
-        if (runningWorkflowExecutions == null || runningWorkflowExecutions.isEmpty()) {
+        if (CollectionUtils.isEmpty(runningWorkflowExecutions)) {
           boolean started = stateMachineExecutor.startQueuedExecution(appId, workflowExecution.getUuid());
           ExecutionStatus status = RUNNING;
           if (!started) {
@@ -1646,7 +1646,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PageResponse<StateExecutionInstance> pageResponse =
         wingsPersistence.query(StateExecutionInstance.class, pageRequest);
 
-    if (pageResponse == null || pageResponse.isEmpty()) {
+    if (CollectionUtils.isEmpty(pageResponse)) {
       return;
     }
 
@@ -1795,7 +1795,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
       return null;
     }
 
@@ -1893,7 +1893,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
       return null;
     }
 
@@ -1929,7 +1929,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .build();
 
       List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-      if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+      if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
         return null;
       }
 
@@ -1967,7 +1967,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (allStateExecutionInstances == null || allStateExecutionInstances.isEmpty()) {
+    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
       return null;
     }
 

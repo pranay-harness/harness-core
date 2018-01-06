@@ -602,7 +602,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           return buildDetails;
         }
       }
-      if (latestVersion == null || latestVersion.isEmpty()) {
+      if (StringUtils.isEmpty(latestVersion)) {
         logger.error("Failed to {}", msg);
         return null;
       }
@@ -785,7 +785,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       } catch (Exception e) {
         prepareAndThrowException("Invalid artifact path");
       }
-      if (filePaths == null || filePaths.isEmpty()) {
+      if (CollectionUtils.isEmpty(filePaths)) {
         prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]");
       }
       logger.info("Validating whether directory exists or not for Generic repository type by fetching file paths");

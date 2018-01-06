@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       final Response<NewRelicApplicationsResponse> response = request.execute();
       if (response.isSuccessful()) {
         List<NewRelicApplication> applications = response.body().getApplications();
-        if (applications == null || applications.isEmpty()) {
+        if (CollectionUtils.isEmpty(applications)) {
           break;
         } else {
           rv.addAll(applications);
@@ -83,7 +84,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       final Response<NewRelicApplicationInstancesResponse> response = request.execute();
       if (response.isSuccessful()) {
         List<NewRelicApplicationInstance> applicationInstances = response.body().getApplication_instances();
-        if (applicationInstances == null || applicationInstances.isEmpty()) {
+        if (CollectionUtils.isEmpty(applicationInstances)) {
           break;
         } else {
           rv.addAll(applicationInstances);

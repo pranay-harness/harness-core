@@ -1129,7 +1129,7 @@
                         <logViolationsToConsole>true</logViolationsToConsole>
                         <failOnViolation>true</failOnViolation>
                         <failsOnError>true</failsOnError>
-                        <configLocation>do-not-use/harness.xml</configLocation>
+                        <configLocation>do-not-use/harness_checks.xml</configLocation>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     </configuration>
                     <dependencies>

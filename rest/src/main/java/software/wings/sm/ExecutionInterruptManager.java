@@ -34,6 +34,7 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
@@ -246,7 +247,7 @@ public class ExecutionInterruptManager {
 
     PageResponse<StateExecutionInstance> pageResponse =
         wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (pageResponse == null || pageResponse.isEmpty()) {
+    if (CollectionUtils.isEmpty(pageResponse)) {
       logger.error("No StateExecutionInstance found for sendNotification");
       return;
     }

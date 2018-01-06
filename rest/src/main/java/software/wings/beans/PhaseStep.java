@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
@@ -194,7 +195,7 @@ public class PhaseStep {
 
   public Graph generateSubworkflow(DeploymentType deploymentType) {
     Builder graphBuilder = aGraph().withGraphName(name);
-    if (steps == null || steps.isEmpty()) {
+    if (CollectionUtils.isEmpty(steps)) {
       return graphBuilder.build();
     }
     for (Node step : getSteps()) {

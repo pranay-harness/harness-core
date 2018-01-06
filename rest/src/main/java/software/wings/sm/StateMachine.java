@@ -9,6 +9,7 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -784,7 +785,7 @@ public class StateMachine extends Base {
         continue;
       }
       List<Transition> transitionsToOldState = getTransitionsTo(state);
-      if (transitionsToOldState == null || transitionsToOldState.isEmpty()) {
+      if (CollectionUtils.isEmpty(transitionsToOldState)) {
         if (!initialStateName.equals(stateName)) {
           throw new WingsException("Inconsistent state");
         }
@@ -835,7 +836,7 @@ public class StateMachine extends Base {
   private void buildAvailableContextsByTransition(State state, Set<ContextElementType> previousContexts,
       Map<Transition, Set<ContextElementType>> availableContextsByTransition) {
     List<Transition> transitionFrom = getTransitionFrom(state);
-    if (transitionFrom == null || transitionFrom.isEmpty()) {
+    if (CollectionUtils.isEmpty(transitionFrom)) {
       return;
     }
     transitionFrom.forEach(transition -> {
@@ -851,7 +852,7 @@ public class StateMachine extends Base {
 
   private void buildStateNamesInOrderByAppearance(State state, List<String> stateNamesInOrder) {
     List<State> nextStates = getNextStates(state.getName());
-    if (nextStates == null || nextStates.isEmpty()) {
+    if (CollectionUtils.isEmpty(nextStates)) {
       stateNamesInOrder.add(state.getName());
       return;
     }

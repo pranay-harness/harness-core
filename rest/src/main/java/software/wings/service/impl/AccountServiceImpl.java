@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -204,7 +205,7 @@ public class AccountServiceImpl implements AccountService {
     // check if the notification group name exists
     List<NotificationGroup> existingGroups =
         notificationSetupService.listNotificationGroups(account.getUuid(), role, name);
-    if (existingGroups == null || existingGroups.isEmpty()) {
+    if (CollectionUtils.isEmpty(existingGroups)) {
       logger.info("Creating default {} notification group {} for account {}", ACCOUNT_ADMIN.getDisplayName(), name,
           account.getAccountName());
       NotificationGroup notificationGroup = aNotificationGroup()

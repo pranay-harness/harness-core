@@ -226,7 +226,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           int waitInterval = 0;
           List<Integer> retryIntervals = failureStrategy.getRetryIntervals();
           if (retryIntervals != null && !retryIntervals.isEmpty()) {
-            if (stateExecutionDataHistory == null || stateExecutionDataHistory.isEmpty()) {
+            if (CollectionUtils.isEmpty(stateExecutionDataHistory)) {
               waitInterval = retryIntervals.get(0);
             } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {
               waitInterval = retryIntervals.get(retryIntervals.size() - 1);
@@ -298,7 +298,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   private FailureStrategy rollbackStrategy(List<FailureStrategy> failureStrategies, State state) {
-    if (failureStrategies == null || failureStrategies.isEmpty()) {
+    if (CollectionUtils.isEmpty(failureStrategies)) {
       return null;
     }
 

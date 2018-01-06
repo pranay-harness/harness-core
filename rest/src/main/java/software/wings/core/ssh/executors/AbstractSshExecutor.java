@@ -24,6 +24,7 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -208,7 +209,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   @Override
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
-    if (fileNamesIds == null || fileNamesIds.isEmpty()) {
+    if (CollectionUtils.isEmpty(fileNamesIds)) {
       saveExecutionLog("There are no artifacts to copy.");
       return CommandExecutionStatus.SUCCESS;
     }

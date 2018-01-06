@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
@@ -95,7 +96,7 @@ public class ExecutionResource {
                                                             .withLimit(PageRequest.UNLIMITED)
                                                             .build();
       PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
-      if (res == null || res.isEmpty()) {
+      if (CollectionUtils.isEmpty(res)) {
         return new RestResponse<>(new PageResponse<>());
       }
       authorizedAppIds = res.stream().map(Application::getUuid).collect(Collectors.toList());

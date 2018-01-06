@@ -8,6 +8,7 @@ import static software.wings.beans.SetupAction.Builder.aSetupAction;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter.Operator;
@@ -78,7 +79,7 @@ public class SetupServiceImpl implements SetupService {
     PageRequest<ArtifactStream> req =
         PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
     PageResponse<ArtifactStream> res = artifactStreamService.list(req);
-    if (res == null || res.isEmpty()) {
+    if (CollectionUtils.isEmpty(res)) {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_STREAM_FOUND")
           .withDisplayText("Setup complete: now you can add artifact stream and deployment.")
@@ -93,7 +94,7 @@ public class SetupServiceImpl implements SetupService {
                                            .withLimit("1")
                                            .build();
     PageResponse<Artifact> artRes = artifactService.list(pageReques, false);
-    if (artRes == null || artRes.isEmpty()) {
+    if (CollectionUtils.isEmpty(artRes)) {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_FOUND")
           .withDisplayText("Setup complete: Please add an artifact")

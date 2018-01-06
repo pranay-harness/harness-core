@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.exception.WingsException;
 import software.wings.utils.ExpressionEvaluator;
 
@@ -143,7 +144,7 @@ public abstract class OrchestrationWorkflow {
    */
 
   public void addToUserVariables(List<TemplateExpression> templateExpressions, String stateType, String name) {
-    if (templateExpressions == null || templateExpressions.isEmpty()) {
+    if (CollectionUtils.isEmpty(templateExpressions)) {
       return;
     }
     for (TemplateExpression templateExpression : templateExpressions) {

@@ -1270,7 +1270,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .build();
 
     PageResponse<Workflow> workflows = listWorkflows(req);
-    if (workflows == null || workflows.isEmpty()) {
+    if (CollectionUtils.isEmpty(workflows)) {
       return createDefaultSimpleWorkflow(appId, envId);
     }
     return workflows.get(0);
@@ -2509,7 +2509,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String name = RoleType.ACCOUNT_ADMIN.getDisplayName();
     List<NotificationGroup> notificationGroups =
         notificationSetupService.listNotificationGroups(app.getAccountId(), name);
-    if (notificationGroups == null || notificationGroups.isEmpty()) {
+    if (CollectionUtils.isEmpty(notificationGroups)) {
       logger.warn("Default notification group not created for account {}. Ignoring adding notification group",
           account.getAccountName());
       return;
