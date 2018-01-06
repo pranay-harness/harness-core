@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -19,7 +20,6 @@ import software.wings.exception.WingsException;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,12 +111,12 @@ public abstract class OrchestrationWorkflow {
 
   @JsonIgnore
   public List<String> getTemplatizedServiceIds() {
-    return Arrays.asList();
+    return asList();
   }
 
   @JsonIgnore
   public List<String> getTemplatizedInfraMappingIds() {
-    return Arrays.asList();
+    return asList();
   }
 
   public void updateUserVariables() {}

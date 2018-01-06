@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -39,8 +40,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
-import java.util.Arrays;
-
 /**
  * Created by sgurubelli on 11/28/17.
  */
@@ -61,7 +60,7 @@ public class ArtifactCollectionStateTest {
                                                             .withSettingId(SETTING_ID)
                                                             .withJobname("JOB")
                                                             .withServiceId(SERVICE_ID)
-                                                            .withArtifactPaths(Arrays.asList("*WAR"))
+                                                            .withArtifactPaths(asList("*WAR"))
                                                             .build();
 
   @Before

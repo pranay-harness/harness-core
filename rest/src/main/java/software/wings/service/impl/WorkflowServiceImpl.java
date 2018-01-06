@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -773,7 +774,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .filter(templateExpression -> templateExpression.getFieldName().equals("envId"))
             .findAny();
     if (envExpression.isPresent()) {
-      basicOrchestrationWorkflow.addToUserVariables(Arrays.asList(envExpression.get()));
+      basicOrchestrationWorkflow.addToUserVariables(asList(envExpression.get()));
     }
     if (basicOrchestrationWorkflow.getWorkflowPhases() != null) {
       for (WorkflowPhase phase : basicOrchestrationWorkflow.getWorkflowPhases()) {
@@ -2160,7 +2161,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ? DC_NODE_SELECT
         : AWS_NODE_SELECT;
 
-    if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
+    if (!asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
       throw new WingsException(INVALID_REQUEST).addParam("message", "Unsupported state type: " + stateType);
     }
 
@@ -2255,17 +2256,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .phaseNameForRollback(workflowPhase.getName())
         .deploymentType(workflowPhase.getDeploymentType())
         .infraMappingId(workflowPhase.getInfraMappingId())
-        .phaseSteps(Arrays.asList(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
-                                      .addStep(aNode()
-                                                   .withId(getUuid())
-                                                   .withType(containerServiceType)
-                                                   .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
-                                                   .addProperty("rollback", true)
-                                                   .build())
-                                      .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                      .withRollback(true)
-                                      .build(),
+        .phaseSteps(asList(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
+                               .addStep(aNode()
+                                            .withId(getUuid())
+                                            .withType(containerServiceType)
+                                            .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
+                                            .addProperty("rollback", true)
+                                            .build())
+                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build(),
             aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
@@ -2281,17 +2282,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .phaseNameForRollback(workflowPhase.getName())
         .deploymentType(workflowPhase.getDeploymentType())
         .infraMappingId(workflowPhase.getInfraMappingId())
-        .phaseSteps(Arrays.asList(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
-                                      .addStep(aNode()
-                                                   .withId(getUuid())
-                                                   .withType(containerServiceType)
-                                                   .withName(Constants.ROLLBACK_AWS_LAMBDA)
-                                                   .addProperty("rollback", true)
-                                                   .build())
-                                      .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                      .withRollback(true)
-                                      .build(),
+        .phaseSteps(asList(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
+                               .addStep(aNode()
+                                            .withId(getUuid())
+                                            .withType(containerServiceType)
+                                            .withName(Constants.ROLLBACK_AWS_LAMBDA)
+                                            .addProperty("rollback", true)
+                                            .build())
+                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build(),
             aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
@@ -2307,17 +2308,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .phaseNameForRollback(workflowPhase.getName())
         .deploymentType(workflowPhase.getDeploymentType())
         .infraMappingId(workflowPhase.getInfraMappingId())
-        .phaseSteps(Arrays.asList(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                      .addStep(aNode()
-                                                   .withId(getUuid())
-                                                   .withType(containerServiceType)
-                                                   .withName(Constants.ROLLBACK_CONTAINERS)
-                                                   .addProperty("rollback", true)
-                                                   .build())
-                                      .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
-                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                      .withRollback(true)
-                                      .build(),
+        .phaseSteps(asList(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                               .addStep(aNode()
+                                            .withId(getUuid())
+                                            .withType(containerServiceType)
+                                            .withName(Constants.ROLLBACK_CONTAINERS)
+                                            .addProperty("rollback", true)
+                                            .build())
+                               .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build(),
             aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
@@ -2333,17 +2334,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .phaseNameForRollback(workflowPhase.getName())
         .deploymentType(workflowPhase.getDeploymentType())
         .infraMappingId(workflowPhase.getInfraMappingId())
-        .phaseSteps(Arrays.asList(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
-                                      .addStep(aNode()
-                                                   .withId(getUuid())
-                                                   .withType(containerServiceType)
-                                                   .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
-                                                   .addProperty("rollback", true)
-                                                   .build())
-                                      .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                      .withRollback(true)
-                                      .build(),
+        .phaseSteps(asList(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
+                               .addStep(aNode()
+                                            .withId(getUuid())
+                                            .withType(containerServiceType)
+                                            .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
+                                            .addProperty("rollback", true)
+                                            .build())
+                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build(),
             aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
@@ -2387,12 +2388,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .phaseNameForRollback(workflowPhase.getName())
             .deploymentType(workflowPhase.getDeploymentType())
             .infraMappingId(workflowPhase.getInfraMappingId())
-            .phaseSteps(Arrays.asList(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
-                                          .addAllSteps(disableServiceSteps)
-                                          .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
-                                          .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                          .withRollback(true)
-                                          .build(),
+            .phaseSteps(asList(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
+                                   .addAllSteps(disableServiceSteps)
+                                   .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
+                                   .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                   .withRollback(true)
+                                   .build(),
                 aPhaseStep(STOP_SERVICE, Constants.STOP_SERVICE)
                     .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
                     .withRollback(true)
@@ -2446,17 +2447,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .phaseNameForRollback(workflowPhase.getName())
         .deploymentType(workflowPhase.getDeploymentType())
         .infraMappingId(workflowPhase.getInfraMappingId())
-        .phaseSteps(Arrays.asList(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                      .addStep(aNode()
-                                                   .withId(getUuid())
-                                                   .withType(KUBERNETES_DAEMON_SET_ROLLBACK.name())
-                                                   .withName(Constants.ROLLBACK_CONTAINERS)
-                                                   .addProperty("rollback", true)
-                                                   .build())
-                                      .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
-                                      .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                      .withRollback(true)
-                                      .build(),
+        .phaseSteps(asList(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                               .addStep(aNode()
+                                            .withId(getUuid())
+                                            .withType(KUBERNETES_DAEMON_SET_ROLLBACK.name())
+                                            .withName(Constants.ROLLBACK_CONTAINERS)
+                                            .addProperty("rollback", true)
+                                            .build())
+                               .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build(),
             aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
         .build();
   }
@@ -2513,14 +2514,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           account.getAccountName());
       return;
     }
-    List<ExecutionStatus> conditions = Arrays.asList(ExecutionStatus.FAILED);
+    List<ExecutionStatus> conditions = asList(ExecutionStatus.FAILED);
     NotificationRule notificationRule = aNotificationRule()
                                             .withConditions(conditions)
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
                                             .withNotificationGroups(notificationGroups)
                                             .build();
 
-    List<NotificationRule> notificationRules = Arrays.asList(notificationRule);
+    List<NotificationRule> notificationRules = asList(notificationRule);
     workflow.getOrchestrationWorkflow().setNotificationRules(notificationRules);
   }
 

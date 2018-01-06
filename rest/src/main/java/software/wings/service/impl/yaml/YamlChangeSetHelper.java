@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
@@ -29,7 +30,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -72,7 +72,7 @@ public class YamlChangeSetHelper {
   private void applicationYamlChange(String accountId, GitFileChange gitFileChange) {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      yamlChangeSetService.saveChangeSet(ygs, Arrays.asList(gitFileChange));
+      yamlChangeSetService.saveChangeSet(ygs, asList(gitFileChange));
     }
   }
 
@@ -276,7 +276,7 @@ public class YamlChangeSetHelper {
     String accountId = newSettingAttribute.getAccountId();
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      yamlChangeSetService.saveChangeSet(ygs, Arrays.asList(settingAttributeGitSyncFile));
+      yamlChangeSetService.saveChangeSet(ygs, asList(settingAttributeGitSyncFile));
     }
   }
 

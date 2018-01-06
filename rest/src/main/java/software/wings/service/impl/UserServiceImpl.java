@@ -92,7 +92,6 @@ import software.wings.utils.KryoUtils;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -716,8 +715,7 @@ public class UserServiceImpl implements UserService {
 
     } else if (user.isAllAppAdmin(accountId)) {
       ImmutableList.Builder<ImmutablePair<ResourceType, Action>> builder = ImmutableList.builder();
-      for (ResourceType resourceType :
-          Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+      for (ResourceType resourceType : asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
         for (Action action : Action.values()) {
           builder.add(ImmutablePair.of(resourceType, action));
         }
@@ -738,8 +736,7 @@ public class UserServiceImpl implements UserService {
     User user = get(userId);
     if (user.isAccountAdmin(application.getAccountId()) || user.isAppAdmin(application.getAccountId(), appId)) {
       ImmutableList.Builder<ImmutablePair<ResourceType, Action>> builder = ImmutableList.builder();
-      for (ResourceType resourceType :
-          Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+      for (ResourceType resourceType : asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
         for (Action action : Action.values()) {
           builder.add(ImmutablePair.of(resourceType, action));
         }

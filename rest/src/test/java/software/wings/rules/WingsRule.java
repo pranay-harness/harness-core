@@ -1,5 +1,6 @@
 package software.wings.rules;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.core.maintenance.MaintenanceController.forceMaintenanceOff;
@@ -91,7 +92,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -129,8 +129,8 @@ public class WingsRule implements MethodRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        List<Annotation> annotations = Lists.newArrayList(Arrays.asList(frameworkMethod.getAnnotations()));
-        annotations.addAll(Arrays.asList(target.getClass().getAnnotations()));
+        List<Annotation> annotations = Lists.newArrayList(asList(frameworkMethod.getAnnotations()));
+        annotations.addAll(asList(target.getClass().getAnnotations()));
         WingsRule.this.before(annotations, target instanceof BaseIntegrationTest,
             target.getClass().getSimpleName() + "." + frameworkMethod.getName());
         injector.injectMembers(target);
@@ -407,7 +407,7 @@ public class WingsRule implements MethodRule {
               kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
                   FieldSerializer.CachedFieldNameStrategy.EXTENDED);
               kryo.getFieldSerializerConfig().setCopyTransient(false);
-              kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer());
+              kryo.register(asList("").getClass(), new ArraysAsListSerializer());
               kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer());
               kryo.register(InvocationHandler.class, new JdkProxySerializer());
               UnmodifiableCollectionsSerializer.registerSerializers(kryo);

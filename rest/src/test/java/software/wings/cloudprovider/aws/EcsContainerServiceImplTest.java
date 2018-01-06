@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -44,7 +45,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.AwsHelperService;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,19 +73,19 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldCreadAutoScalingGroupAndProvisionNodes() {
     DescribeAutoScalingGroupsResult autoScalingGroupsResult =
-        new DescribeAutoScalingGroupsResult().withAutoScalingGroups(new AutoScalingGroup().withInstances(Arrays.asList(
-            new Instance().withLifecycleState("InService"), new Instance().withLifecycleState("InService"))));
+        new DescribeAutoScalingGroupsResult().withAutoScalingGroups(new AutoScalingGroup().withInstances(
+            asList(new Instance().withLifecycleState("InService"), new Instance().withLifecycleState("InService"))));
 
     DescribeClustersResult describeClustersResult = new DescribeClustersResult().withClusters(
-        Arrays.asList(new Cluster().withClusterName(CLUSTER_NAME).withRegisteredContainerInstancesCount(2)));
+        asList(new Cluster().withClusterName(CLUSTER_NAME).withRegisteredContainerInstancesCount(2)));
     when(awsHelperService.describeAutoScalingGroups(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
-             new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(Arrays.asList(AUTO_SCALING_GROUP_NAME))))
+             new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asList(AUTO_SCALING_GROUP_NAME))))
         .thenReturn(autoScalingGroupsResult);
 
     Map<String, Object> params = new HashMap<>();
     params.put("autoScalingGroupName", AUTO_SCALING_GROUP_NAME);
     params.put("clusterName", CLUSTER_NAME);
-    params.put("availabilityZones", Arrays.asList("AZ1", "AZ2"));
+    params.put("availabilityZones", asList("AZ1", "AZ2"));
     params.put("vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
 
     when(awsHelperService.describeClusters(Regions.US_EAST_1.getName(), awsConfig, Collections.emptyList(),
@@ -102,11 +102,11 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                 .withMaxSize(2 * DESIRED_COUNT)
                 .withMinSize(DESIRED_COUNT / 2)
                 .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
-                .withAvailabilityZones(Arrays.asList("AZ1", "AZ2"))
+                .withAvailabilityZones(asList("AZ1", "AZ2"))
                 .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"));
     verify(awsHelperService)
         .describeAutoScalingGroups(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
-            new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(Arrays.asList(AUTO_SCALING_GROUP_NAME)));
+            new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asList(AUTO_SCALING_GROUP_NAME)));
   }
 
   @Test
@@ -121,7 +121,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     Service service =
         new Service().withDesiredCount(DESIRED_COUNT).withRunningCount(DESIRED_COUNT).withServiceArn("SERVICE_ARN");
     when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), anyObject(), any()))
-        .thenReturn(new DescribeServicesResult().withServices(Arrays.asList(service)));
+        .thenReturn(new DescribeServicesResult().withServices(asList(service)));
 
     when(awsHelperService.createService(
              Regions.US_EAST_1.getName(), awsConfig, Collections.emptyList(), createServiceRequest))
@@ -148,7 +148,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   public void shouldProvisionTasks() {
     when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), any(), any()))
         .thenReturn(new DescribeServicesResult().withServices(
-            Arrays.asList(new Service().withDesiredCount(DESIRED_COUNT).withRunningCount(DESIRED_COUNT))));
+            asList(new Service().withDesiredCount(DESIRED_COUNT).withRunningCount(DESIRED_COUNT))));
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(),

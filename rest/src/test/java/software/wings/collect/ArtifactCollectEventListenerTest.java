@@ -1,5 +1,6 @@
 package software.wings.collect;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,8 +46,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.waitnotify.WaitNotifyEngine;
-
-import java.util.Arrays;
 
 /**
  * Created by peeyushaggarwal on 5/11/16.
@@ -100,7 +99,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                          .withAppId(APP_ID)
                                          .withSettingId(SETTING_ID)
                                          .withJobname(JOB_NAME)
-                                         .withArtifactPaths(Arrays.asList(ARTIFACT_PATH))
+                                         .withArtifactPaths(asList(ARTIFACT_PATH))
                                          .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
 
@@ -138,7 +137,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                          .withAppId(APP_ID)
                                          .withSettingId(SETTING_ID)
                                          .withJobname(JOB_NAME)
-                                         .withArtifactPaths(Arrays.asList(ARTIFACT_PATH))
+                                         .withArtifactPaths(asList(ARTIFACT_PATH))
                                          .build();
 
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);

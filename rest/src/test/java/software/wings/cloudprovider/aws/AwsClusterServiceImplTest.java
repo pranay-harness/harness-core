@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -25,7 +26,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -44,7 +44,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
                                                              .withLauncherConfiguration(LAUNCHER_TEMPLATE_NAME)
                                                              .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
                                                              .withVpcZoneIdentifiers("VPC_ZONE_1, VPC_ZONE_2")
-                                                             .withAvailabilityZones(Arrays.asList("AZ1", "AZ2"))
+                                                             .withAvailabilityZones(asList("AZ1", "AZ2"))
                                                              .build();
 
   @Test
@@ -54,7 +54,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
 
     ImmutableMap<String, Object> params =
         ImmutableMap.of("autoScalingGroupName", AUTO_SCALING_GROUP_NAME, "clusterName", CLUSTER_NAME,
-            "availabilityZones", Arrays.asList("AZ1", "AZ2"), "vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
+            "availabilityZones", asList("AZ1", "AZ2"), "vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
 
     verify(ecsContainerService)
         .provisionNodes(Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), 5,

@@ -1,6 +1,7 @@
 package software.wings.service.impl.splunk;
 
 import com.google.inject.Inject;
+
 import com.splunk.HttpService;
 import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;

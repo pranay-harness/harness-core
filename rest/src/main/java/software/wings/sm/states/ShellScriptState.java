@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -48,7 +49,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -189,10 +189,10 @@ public class ShellScriptState extends State {
             .commandType(getStateType())
             .workflowExecutionId(executionContext.getWorkflowExecutionId())
             .workflowId(executionContext.getWorkflowId())
-            .commandUnits(Arrays.asList(Command.Builder.aCommand()
-                                            .withName(ShellScriptParameters.CommandUnit)
-                                            .withCommandType(CommandType.OTHER)
-                                            .build()))
+            .commandUnits(asList(Command.Builder.aCommand()
+                                     .withName(ShellScriptParameters.CommandUnit)
+                                     .withCommandType(CommandType.OTHER)
+                                     .build()))
             .serviceVariables(Maps.newHashMap())
             .status(ExecutionStatus.RUNNING);
 

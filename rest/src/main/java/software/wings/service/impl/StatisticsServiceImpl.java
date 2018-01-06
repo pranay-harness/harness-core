@@ -78,7 +78,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -172,7 +171,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   @Override
   public AppKeyStatistics getSingleApplicationKeyStats(String appId, int numOfDays) {
-    Map<String, AppKeyStatistics> appKeyStatisticsMap = getApplicationKeyStats(Arrays.asList(appId), numOfDays);
+    Map<String, AppKeyStatistics> appKeyStatisticsMap = getApplicationKeyStats(asList(appId), numOfDays);
     return appKeyStatisticsMap.get(appId);
   }
 

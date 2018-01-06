@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import static java.util.Arrays.asList;
+
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -24,7 +26,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -110,9 +111,9 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       GitFileChange configFileChange =
           createConfigFileChange(accountId, yamlDirectoryService.getRootPathByConfigFile(service),
               configFile.getRelativeFilePath(), fileContent, changeType);
-      return Arrays.asList(gitFileChange, configFileChange);
+      return asList(gitFileChange, configFileChange);
     } else {
-      return Arrays.asList(gitFileChange);
+      return asList(gitFileChange);
     }
   }
 
@@ -133,9 +134,9 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       GitFileChange configFileChange =
           createConfigFileChange(accountId, yamlDirectoryService.getRootPathByConfigFileOverride(environment),
               configFile.getRelativeFilePath(), fileContent, changeType);
-      return Arrays.asList(gitFileChange, configFileChange);
+      return asList(gitFileChange, configFileChange);
     } else {
-      return Arrays.asList(gitFileChange);
+      return asList(gitFileChange);
     }
   }
 

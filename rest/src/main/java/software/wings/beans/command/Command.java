@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.command.Command.Builder.aCommand;
 
 import com.google.common.base.MoreObjects;
@@ -26,7 +27,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.MapperUtils;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -419,7 +419,7 @@ public class Command extends Base implements CommandUnit {
      * @return the builder
      */
     public Builder addCommandUnits(CommandUnit... commandUnits) {
-      this.commandUnits.addAll(Arrays.asList(commandUnits));
+      this.commandUnits.addAll(asList(commandUnits));
       return this;
     }
 

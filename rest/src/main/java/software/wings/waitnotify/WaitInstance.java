@@ -1,10 +1,11 @@
 package software.wings.waitnotify;
 
+import static java.util.Arrays.asList;
+
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.sm.ExecutionStatus;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,7 +49,7 @@ public class WaitInstance extends Base {
   public WaitInstance(long timeoutMsec, NotifyCallback callback, String[] correlationIds) {
     this.timeoutMsec = timeoutMsec;
     this.callback = callback;
-    this.correlationIds = Arrays.asList(correlationIds);
+    this.correlationIds = asList(correlationIds);
   }
 
   /**

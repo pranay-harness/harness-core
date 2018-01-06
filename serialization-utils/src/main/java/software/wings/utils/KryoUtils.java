@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static java.util.Arrays.asList;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
@@ -43,7 +45,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -114,7 +115,7 @@ public class KryoUtils {
             kryo.register(Charset.class, 44);
             kryo.register(URL.class, 45);
             kryo.register(Optional.class, 46);
-            kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer(), 47);
+            kryo.register(asList("").getClass(), new ArraysAsListSerializer(), 47);
             kryo.register(java.util.Vector.class, 48);
             kryo.register(java.util.HashSet.class, 49);
             kryo.register(java.util.LinkedHashMap.class, 50);
@@ -131,7 +132,7 @@ public class KryoUtils {
             kryo.register(
                 Lists.reverse(Lists.newArrayList()).getClass(), ReverseListSerializer.forRandomAccessReverseList(), 59);
 
-            kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer(), 60);
+            kryo.register(asList("").getClass(), new ArraysAsListSerializer(), 60);
             kryo.register(InvocationHandler.class, new JdkProxySerializer(), 61);
             kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer(), 62);
             // register CGLibProxySerializer, works in combination with the appropriate action in

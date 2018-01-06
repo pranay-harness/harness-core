@@ -1,6 +1,7 @@
 package software.wings.metrics.appdynamics;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,5 +32,5 @@ public class AppdynamicsConstants {
   }
 
   public static final Set<String> METRICS_TO_TRACK = Collections.unmodifiableSet(
-      new HashSet<>(Arrays.asList(RESPONSE_TIME_95, ERRORS_PER_MINUTE, STALL_COUNT, NUMBER_OF_SLOW_CALLS)));
+      new HashSet<>(asList(RESPONSE_TIME_95, ERRORS_PER_MINUTE, STALL_COUNT, NUMBER_OF_SLOW_CALLS)));
 }

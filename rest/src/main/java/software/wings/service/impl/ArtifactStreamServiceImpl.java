@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -55,7 +56,6 @@ import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -271,7 +271,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public List<Stencil> getArtifactStreamSchema(String appId, String serviceId) {
-    return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId, serviceId);
+    return stencilPostProcessor.postProcess(asList(ArtifactStreamType.values()), appId, serviceId);
   }
 
   @Override

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Service.Builder.aService;
@@ -22,7 +23,6 @@ import software.wings.rules.RealMongo;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,7 +36,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
                                                                   .withJobname("job1")
                                                                   .withSettingId("JENKINS_SETTING_ID")
                                                                   .withServiceId(SERVICE_ID)
-                                                                  .withArtifactPaths(Arrays.asList("dist/svr-*.war"))
+                                                                  .withArtifactPaths(asList("dist/svr-*.war"))
                                                                   .build();
 
   @Mock private JobScheduler jobScheduler;

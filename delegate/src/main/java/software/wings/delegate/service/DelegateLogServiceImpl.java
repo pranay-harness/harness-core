@@ -1,5 +1,6 @@
 package software.wings.delegate.service;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
@@ -22,7 +23,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.managerclient.ManagerClient;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -81,7 +81,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
       CommandExecutionStatus commandUnitStatus = commandLogs.stream()
                                                      .filter(Objects::nonNull)
                                                      .map(Log::getCommandExecutionStatus)
-                                                     .filter(Arrays.asList(SUCCESS, FAILURE)::contains)
+                                                     .filter(asList(SUCCESS, FAILURE)::contains)
                                                      .findFirst()
                                                      .orElse(RUNNING);
 

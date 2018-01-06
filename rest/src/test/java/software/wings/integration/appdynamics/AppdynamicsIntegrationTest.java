@@ -1,5 +1,6 @@
 package software.wings.integration.appdynamics;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -21,7 +22,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.utils.JsonUtils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
@@ -36,7 +36,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(SettingAttribute.class));
+    deleteAllDocuments(asList(SettingAttribute.class));
     SettingAttribute appdSettingAttribute =
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)

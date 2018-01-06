@@ -106,7 +106,6 @@ import software.wings.utils.BoundedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -812,31 +811,30 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
     when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(
-                    Workflow.WorkflowBuilder.aWorkflow()
-                        .withName(WORKFLOW_NAME)
-                        .withServices(asList(Service.Builder.aService()
-                                                 .withUuid(SERVICE_ID)
-                                                 .withAppId(APP_ID)
-                                                 .withCommands(asList(serviceCommand))
-                                                 .build()))
-                        .withOrchestrationWorkflow(
-                            aCanaryOrchestrationWorkflow()
-                                .withWorkflowPhases(asList(
-                                    WorkflowPhase.builder()
-                                        .serviceId(SERVICE_ID)
-                                        .phaseSteps(Arrays.asList(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                                      .addStep(aNode()
-                                                                                   .withType("COMMAND")
-                                                                                   .addProperty("commandName", "START")
-                                                                                   .build())
-                                                                      .build()))
-                                        .build()))
-                                .build())
-                        .build()))
-                .build());
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(
+                            Workflow.WorkflowBuilder.aWorkflow()
+                                .withName(WORKFLOW_NAME)
+                                .withServices(asList(Service.Builder.aService()
+                                                         .withUuid(SERVICE_ID)
+                                                         .withAppId(APP_ID)
+                                                         .withCommands(asList(serviceCommand))
+                                                         .build()))
+                                .withOrchestrationWorkflow(
+                                    aCanaryOrchestrationWorkflow()
+                                        .withWorkflowPhases(asList(
+                                            WorkflowPhase.builder()
+                                                .serviceId(SERVICE_ID)
+                                                .phaseSteps(asList(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
+                                                                       .addStep(aNode()
+                                                                                    .withType("COMMAND")
+                                                                                    .addProperty("commandName", "START")
+                                                                                    .build())
+                                                                       .build()))
+                                                .build()))
+                                        .build())
+                                .build()))
+                        .build());
     assertThatThrownBy(() -> srs.deleteCommand(APP_ID, SERVICE_ID, SERVICE_COMMAND_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.INVALID_REQUEST.name());
@@ -849,31 +847,30 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldNotThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
     when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(
-                    Workflow.WorkflowBuilder.aWorkflow()
-                        .withName(WORKFLOW_NAME)
-                        .withServices(asList(Service.Builder.aService()
-                                                 .withUuid(SERVICE_ID_CHANGED)
-                                                 .withAppId(APP_ID)
-                                                 .withCommands(asList(serviceCommand))
-                                                 .build()))
-                        .withOrchestrationWorkflow(
-                            aCanaryOrchestrationWorkflow()
-                                .withWorkflowPhases(asList(
-                                    WorkflowPhase.builder()
-                                        .serviceId(SERVICE_ID_CHANGED)
-                                        .phaseSteps(Arrays.asList(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                                      .addStep(aNode()
-                                                                                   .withType("COMMAND")
-                                                                                   .addProperty("commandName", "START")
-                                                                                   .build())
-                                                                      .build()))
-                                        .build()))
-                                .build())
-                        .build()))
-                .build());
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(
+                            Workflow.WorkflowBuilder.aWorkflow()
+                                .withName(WORKFLOW_NAME)
+                                .withServices(asList(Service.Builder.aService()
+                                                         .withUuid(SERVICE_ID_CHANGED)
+                                                         .withAppId(APP_ID)
+                                                         .withCommands(asList(serviceCommand))
+                                                         .build()))
+                                .withOrchestrationWorkflow(
+                                    aCanaryOrchestrationWorkflow()
+                                        .withWorkflowPhases(asList(
+                                            WorkflowPhase.builder()
+                                                .serviceId(SERVICE_ID_CHANGED)
+                                                .phaseSteps(asList(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
+                                                                       .addStep(aNode()
+                                                                                    .withType("COMMAND")
+                                                                                    .addProperty("commandName", "START")
+                                                                                    .build())
+                                                                       .build()))
+                                                .build()))
+                                        .build())
+                                .build()))
+                        .build());
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(wingsPersistence.delete(any(ServiceCommand.class))).thenReturn(true);
 

@@ -5,6 +5,7 @@
 package software.wings.beans;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -22,7 +23,6 @@ import software.wings.common.UUIDGenerator;
 import software.wings.sm.InstanceStatusSummary;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -1433,7 +1433,7 @@ public class Graph {
      * @return the builder
      */
     public Builder addNodes(Node... nodes) {
-      this.nodes.addAll(Arrays.asList(nodes));
+      this.nodes.addAll(asList(nodes));
       return this;
     }
 
@@ -1478,7 +1478,7 @@ public class Graph {
      * @return the builder
      */
     public Builder addLinks(Link... links) {
-      this.links.addAll(Arrays.asList(links));
+      this.links.addAll(asList(links));
       return this;
     }
 

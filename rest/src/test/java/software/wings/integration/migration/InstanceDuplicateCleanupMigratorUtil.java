@@ -1,5 +1,6 @@
 package software.wings.integration.migration;
 
+import static java.util.Arrays.asList;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -22,7 +23,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class InstanceDuplicateCleanupMigratorUtil extends WingsBaseTest {
     List<Instance> instances = query.field("serviceId")
                                    .equal(serviceId)
                                    .field("instanceType")
-                                   .in(Arrays.asList("KUBERNETES_CONTAINER_INSTANCE"))
+                                   .in(asList("KUBERNETES_CONTAINER_INSTANCE"))
                                    .project("containerInstanceKey.containerId", true)
                                    .project("_id", true)
                                    .asList();

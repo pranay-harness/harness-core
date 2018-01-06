@@ -97,7 +97,6 @@ import software.wings.utils.CacheHelper;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -536,7 +535,7 @@ public class UserServiceTest extends WingsBaseTest {
         .extracting("accountId", "accountName", "allApps")
         .containsExactly(ACCOUNT_ID, ACCOUNT_NAME, true);
     assertThat(userAccountRole.getResourceAccess()).isNotNull();
-    for (ResourceType resourceType : Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+    for (ResourceType resourceType : asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
       for (Action action : Action.values()) {
         assertThat(userAccountRole.getResourceAccess()).contains(ImmutablePair.of(resourceType, action));
       }
@@ -560,7 +559,7 @@ public class UserServiceTest extends WingsBaseTest {
         .extracting("appId", "appName", "allEnvironments")
         .containsExactly(APP_ID, APP_NAME, true);
     assertThat(applicationRole.getResourceAccess()).isNotNull();
-    for (ResourceType resourceType : Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+    for (ResourceType resourceType : asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
       for (Action action : Action.values()) {
         assertThat(applicationRole.getResourceAccess()).contains(ImmutablePair.of(resourceType, action));
       }

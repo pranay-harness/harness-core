@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
 
@@ -18,7 +19,6 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
 import software.wings.service.impl.AwsHelperService;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +64,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
         .withLauncherConfiguration(params.get("LAUNCH_CONFIG") + "_" + params.get("SERVICE_VERSION"))
         .withAutoScalingGroupName(params.get("LAUNCH_CONFIG") + "Asg_" + params.get("SERVICE_VERSION"))
         .withVpcZoneIdentifiers("subnet-9725a6bd,subnet-42ddaf34,subnet-64d99b59,subnet-fbe268a3")
-        .withAvailabilityZones(Arrays.asList("us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e")) // optional
+        .withAvailabilityZones(asList("us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e")) // optional
         .build();
   }
 

@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec;
 
+import static java.util.Arrays.asList;
+
 import com.google.inject.Inject;
 
 import software.wings.beans.ObjectType;
@@ -18,7 +20,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -55,7 +56,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, yaml.getContainerDefinition());
         ContainerDefinition containerDefinition =
             (ContainerDefinition) containerDefYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
-        containerTask.setContainerDefinitions(Arrays.asList(containerDefinition));
+        containerTask.setContainerDefinitions(asList(containerDefinition));
       } catch (HarnessException e) {
         throw new WingsException(e);
       }

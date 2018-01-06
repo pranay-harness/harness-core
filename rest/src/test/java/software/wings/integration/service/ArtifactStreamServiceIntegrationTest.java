@@ -1,5 +1,6 @@
 package software.wings.integration.service;
 
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
@@ -26,7 +27,6 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.Arrays;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -48,7 +48,7 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
                                                             .withSettingId(SETTING_ID)
                                                             .withJobname("JOB")
                                                             .withServiceId(SERVICE_ID)
-                                                            .withArtifactPaths(Arrays.asList("*WAR"))
+                                                            .withArtifactPaths(asList("*WAR"))
                                                             .build();
   private DockerArtifactStream dockerArtifactStream = aDockerArtifactStream()
                                                           .withAppId(APP_ID)
@@ -83,7 +83,7 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
                                 .withSettingId(settingAttribute.getUuid())
                                 .withJobname("toddolistwar")
                                 .withServiceId(serviceId)
-                                .withArtifactPaths(Arrays.asList("target/todolistwar"))
+                                .withArtifactPaths(asList("target/todolistwar"))
                                 .build();
     RestResponse<ArtifactStream> response = getRequestBuilder(target).post(
         Entity.entity(jenkinsArtifactStream, APPLICATION_JSON), new GenericType<RestResponse<ArtifactStream>>() {

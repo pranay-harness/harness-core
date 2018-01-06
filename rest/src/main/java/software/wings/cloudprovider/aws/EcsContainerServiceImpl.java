@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.aws;
 
 import static com.google.common.collect.Iterables.isEmpty;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -65,7 +66,6 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -850,7 +850,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AutoScalingGroup autoScalingGroup =
         awsHelperService
             .describeAutoScalingGroups(awsConfig, encryptedDataDetails, region,
-                new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(Arrays.asList(name)))
+                new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asList(name)))
             .getAutoScalingGroups()
             .get(0);
     List<Instance> instances = autoScalingGroup.getInstances();

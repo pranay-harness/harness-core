@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
@@ -45,7 +46,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -162,7 +162,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       String appId, String envId, String serviceTemplateId, boolean withDetails, boolean maskEncryptedFields) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
     if (serviceTemplate != null) {
-      setArtifactTypeAndInfraMappings(Arrays.asList(serviceTemplate));
+      setArtifactTypeAndInfraMappings(asList(serviceTemplate));
       if (withDetails) {
         populateServiceAndOverrideConfigFiles(serviceTemplate);
         populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);

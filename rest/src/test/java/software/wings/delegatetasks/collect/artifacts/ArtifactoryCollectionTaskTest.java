@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyList;
@@ -23,8 +24,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.util.Arrays;
-
 /**
  * Created by sgurubelli on 10/1/17.
  */
@@ -44,7 +43,7 @@ public class ArtifactoryCollectionTaskTest {
           .withAppId(APP_ID)
           .withWaitId("123456789")
           .withParameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
-              artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", Arrays.asList("todolist"), "",
+              artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
               ImmutableMap.of("buildNo", "1.1")})
           .build();
 

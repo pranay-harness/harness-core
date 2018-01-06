@@ -52,7 +52,6 @@ import software.wings.utils.BoundedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -204,7 +203,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setName(FILE_NAME);
     configFile.setFileName(FILE_NAME);
 
-    when(query.asList()).thenReturn(Arrays.asList(configFile));
+    when(query.asList()).thenReturn(asList(configFile));
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     List<ConfigFile> configFiles = configService.getConfigFileByTemplate(APP_ID, ENV_ID, serviceTemplate);
 

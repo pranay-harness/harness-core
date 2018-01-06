@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
+
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
@@ -9,7 +11,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.PermissionScope;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -200,7 +201,7 @@ public class Role extends Base {
         || roleType == RoleType.PROD_SUPPORT || roleType == RoleType.NON_PROD_SUPPORT) {
       setDescription(roleType.getDescription());
       if (roleType.getPermissions() != null) {
-        permissions = Arrays.asList(roleType.getPermissions());
+        permissions = asList(roleType.getPermissions());
 
         permissions.forEach(permission -> {
           permission.setAccountId(getAccountId());

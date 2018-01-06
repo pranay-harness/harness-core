@@ -1,5 +1,6 @@
 package software.wings.common;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
@@ -296,7 +297,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     if (serviceInstanceIdsParam != null) {
       if (ArrayUtils.isNotEmpty(instanceIds)) {
         Collection<String> commonInstanceIds =
-            intersection(Arrays.asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
+            intersection(asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
         instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
       } else {
         List<String> instanceIds = serviceInstanceIdsParam.getInstanceIds();

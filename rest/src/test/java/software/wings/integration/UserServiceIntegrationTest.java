@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -32,7 +33,6 @@ import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
@@ -50,8 +50,8 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(KmsConfig.class));
-    deleteAllDocuments(Arrays.asList(EncryptedData.class));
+    deleteAllDocuments(asList(KmsConfig.class));
+    deleteAllDocuments(asList(EncryptedData.class));
   }
 
   @Test
