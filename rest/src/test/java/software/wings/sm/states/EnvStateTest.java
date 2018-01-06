@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -23,8 +24,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Arrays;
-
 /**
  * Created by anubhaw on 11/2/16.
  */
@@ -34,7 +33,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private ExecutionContextImpl context;
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
-      aWorkflowStandardParams().withArtifactIds(Arrays.asList(ARTIFACT_ID)).build();
+      aWorkflowStandardParams().withArtifactIds(asList(ARTIFACT_ID)).build();
 
   @InjectMocks private EnvState envState = new EnvState("ENV_STATE");
 
@@ -56,7 +55,7 @@ public class EnvStateTest extends WingsBaseTest {
   //    verify(workflowExecutionService).triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID),
   //    eq(PIPELINE_WORKFLOW_EXECUTION_ID), any()); verify(pipelineService).refreshPipelineExecutionAsync(APP_ID,
   //    PIPELINE_WORKFLOW_EXECUTION_ID);
-  //    assertThat(executionResponse.getCorrelationIds()).hasSameElementsAs(Arrays.asList(WORKFLOW_EXECUTION_ID));
+  //    assertThat(executionResponse.getCorrelationIds()).hasSameElementsAs(asList(WORKFLOW_EXECUTION_ID));
   //    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   //    assertThat(executionResponse.isAsync()).isTrue();
   //    EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();

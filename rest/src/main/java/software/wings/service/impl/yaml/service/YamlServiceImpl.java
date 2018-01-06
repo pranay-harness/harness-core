@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
@@ -63,7 +64,6 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -113,10 +113,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                                .withAccountId(accountId)
                                .build();
     RestResponse rr = new RestResponse<>();
-    List<GitFileChange> gitFileChangeList = Arrays.asList(change);
+    List<GitFileChange> gitFileChangeList = asList(change);
 
     try {
-      List<ChangeContext> changeContextList = processChangeSet(Arrays.asList(change));
+      List<ChangeContext> changeContextList = processChangeSet(asList(change));
       Validator.notNullCheck("Change Context List is null", changeContextList);
       boolean empty = isEmpty(changeContextList);
       if (!empty) {

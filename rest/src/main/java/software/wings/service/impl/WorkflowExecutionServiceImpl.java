@@ -15,7 +15,6 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
-import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SIMPLE_DEPLOYMENT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;

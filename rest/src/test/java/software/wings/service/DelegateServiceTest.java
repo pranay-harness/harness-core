@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -64,7 +65,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -230,7 +230,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/start.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
+          .flatExtracting(input -> asList((ZipExtraField[]) input))
           .extracting(o -> ((AsiExtraField) o).getMode())
           .containsExactly(0755 | AsiExtraField.FILE_FLAG);
 
@@ -244,7 +244,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/delegate.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
+          .flatExtracting(input -> asList((ZipExtraField[]) input))
           .extracting(o -> ((AsiExtraField) o).getMode())
           .containsExactly(0755 | AsiExtraField.FILE_FLAG);
 
@@ -258,7 +258,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/stop.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
+          .flatExtracting(input -> asList((ZipExtraField[]) input))
           .extracting(o -> ((AsiExtraField) o).getMode())
           .containsExactly(0755 | AsiExtraField.FILE_FLAG);
 

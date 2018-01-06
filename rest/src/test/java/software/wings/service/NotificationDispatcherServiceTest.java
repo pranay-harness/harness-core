@@ -60,7 +60,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -271,7 +270,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SLACK.name()))
         .thenReturn(asList(SettingAttribute.Builder.aSettingAttribute().withValue(slackConfig).build()));
 
-    notificationDispatcherService.dispatchNotification(notification, Arrays.asList(notificationRule));
+    notificationDispatcherService.dispatchNotification(notification, asList(notificationRule));
     channels.forEach(channel
         -> verify(slackNotificationService)
                .sendMessage(slackConfig, channel, "harness", ENTITY_CREATE_NOTIFICATION.name()));

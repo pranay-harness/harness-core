@@ -195,7 +195,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
             .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
             .build();
     PageResponse<ServiceVariable> resp = new PageResponse<>();
-    resp.setResponse(Arrays.asList(SERVICE_VARIABLE));
+    resp.setResponse(asList(SERVICE_VARIABLE));
     when(wingsPersistence.query(ServiceVariable.class, request)).thenReturn(resp);
     when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(SERVICE_VARIABLE);
     List<ServiceVariable> serviceVariables =

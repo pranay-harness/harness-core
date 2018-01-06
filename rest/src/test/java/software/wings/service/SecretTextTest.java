@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -69,7 +70,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -111,7 +111,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Parameters
   public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] {{EncryptionType.LOCAL}, {EncryptionType.VAULT}, {EncryptionType.KMS}});
+    return asList(new Object[][] {{EncryptionType.LOCAL}, {EncryptionType.VAULT}, {EncryptionType.KMS}});
   }
 
   @Before

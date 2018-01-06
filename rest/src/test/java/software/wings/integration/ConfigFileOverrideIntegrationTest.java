@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -167,7 +168,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     template = templateService.get(template.getAppId(), template.getEnvId(), template.getUuid(), false, false);
 
     // add hosts and tags to template
-    List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
+    List<String> selectedHosts = asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
   }
 
   /**

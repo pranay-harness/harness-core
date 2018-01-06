@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
@@ -102,7 +103,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -874,12 +874,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName) {
-    return stencilPostProcessor.postProcess(Arrays.asList(CommandUnitType.values()), appId, serviceId, commandName);
+    return stencilPostProcessor.postProcess(asList(CommandUnitType.values()), appId, serviceId, commandName);
   }
 
   @Override
   public List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
-    return stencilPostProcessor.postProcess(Arrays.asList(ContainerTaskType.values()), appId, serviceId);
+    return stencilPostProcessor.postProcess(asList(ContainerTaskType.values()), appId, serviceId);
   }
 
   @Override

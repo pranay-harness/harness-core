@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -28,14 +29,12 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Arrays;
-
 /**
  * Created by anubhaw on 11/3/16.
  */
 public class ApprovalStateTest extends WingsBaseTest {
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
-      aWorkflowStandardParams().withArtifactIds(Arrays.asList(ARTIFACT_ID)).build();
+      aWorkflowStandardParams().withArtifactIds(asList(ARTIFACT_ID)).build();
 
   @Mock private ExecutionContextImpl context;
   @Mock private AlertService alertService;
@@ -52,7 +51,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Test
   public void shouldExecute() {
     PageResponse pageResponse = new PageResponse();
-    pageResponse.setResponse(Arrays.asList(User.Builder.anUser().build()));
+    pageResponse.setResponse(asList(User.Builder.anUser().build()));
 
     ExecutionResponse executionResponse = approvalState.execute(context);
     verify(alertService)

@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
@@ -27,7 +28,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -145,7 +145,7 @@ public class ArtifactoryServiceTest {
   @Test
   public void shouldDownloadArtifacts() {
     ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig, null,
-        "harness-maven-snapshots", "io.harness.todolist", Arrays.asList("todolist"), "io/harness/todolist",
+        "harness-maven-snapshots", "io.harness.todolist", asList("todolist"), "io/harness/todolist",
         ImmutableMap.of("buildNo", "1.1"), "delegateId", "taskId", "ACCOUNT_ID");
 
     assertThat(listNotifyResponseData).isNotNull();
@@ -154,7 +154,7 @@ public class ArtifactoryServiceTest {
   @Test(expected = WingsException.class)
   public void shouldDownloadRpmArtifacts() {
     ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig, null,
-        "harness-rpm", "io.harness.todolist", Arrays.asList("todolist"), "io/harness/todolist",
+        "harness-rpm", "io.harness.todolist", asList("todolist"), "io/harness/todolist",
         ImmutableMap.of(
             ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm", ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"),
         "delegateId", "taskId", "ACCOUNT_ID");

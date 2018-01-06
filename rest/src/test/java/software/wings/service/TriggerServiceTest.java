@@ -88,7 +88,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -191,7 +190,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                                                             .withSettingId(SETTING_ID)
                                                             .withJobname("JOB")
                                                             .withServiceId(SERVICE_ID)
-                                                            .withArtifactPaths(Arrays.asList("*WAR"))
+                                                            .withArtifactPaths(asList("*WAR"))
                                                             .build();
 
   @Before

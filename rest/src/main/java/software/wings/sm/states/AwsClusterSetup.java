@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static software.wings.api.AwsClusterExecutionData.AwsClusterExecutionDataBuilder.anAwsClusterExecutionData;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
@@ -43,7 +44,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -109,7 +109,7 @@ public class AwsClusterSetup extends State {
     AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
 
     if (StringUtils.isNotEmpty(availabilityZones)) {
-      clusterConfiguration.setAvailabilityZones(Arrays.asList(availabilityZones.split(",")));
+      clusterConfiguration.setAvailabilityZones(asList(availabilityZones.split(",")));
     }
     if (StringUtils.isNotEmpty(vpcZoneIdentifiers)) {
       clusterConfiguration.setVpcZoneIdentifiers(vpcZoneIdentifiers);

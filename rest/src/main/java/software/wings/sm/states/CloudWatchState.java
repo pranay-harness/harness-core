@@ -145,8 +145,7 @@ public class CloudWatchState extends State {
 
     getMetricRequest.setNamespace(namespace);
     getMetricRequest.setMetricName(metricName);
-    List<String> statistics =
-        new ArrayList<>(asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name()));
+    List<String> statistics = asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name());
     if (!Strings.isNullOrEmpty(percentile)) {
       getMetricRequest.setExtendedStatistics(asList(percentile));
     }

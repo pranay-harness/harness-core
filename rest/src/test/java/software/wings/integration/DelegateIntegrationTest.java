@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -22,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -161,7 +161,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
     4. Let delegate register and upgrade to a different version
    */
 
-  deleteAllDocuments(Arrays.asList(Delegate.class));
+  deleteAllDocuments(asList(Delegate.class));
 
   new ProcessExecutor()
       .command("/bin/sh", "-c",

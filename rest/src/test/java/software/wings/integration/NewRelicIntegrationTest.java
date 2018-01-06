@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,7 +54,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -78,9 +78,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(NewRelicMetricDataRecord.class));
-    deleteAllDocuments(Arrays.asList(NewRelicMetricAnalysisRecord.class));
-    deleteAllDocuments(Arrays.asList(SettingAttribute.class));
+    deleteAllDocuments(asList(NewRelicMetricDataRecord.class));
+    deleteAllDocuments(asList(NewRelicMetricAnalysisRecord.class));
+    deleteAllDocuments(asList(SettingAttribute.class));
     hosts.clear();
     hosts.add("ip-172-31-2-144");
     hosts.add("ip-172-31-4-253");

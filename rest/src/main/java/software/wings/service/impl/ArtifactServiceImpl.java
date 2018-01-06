@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -66,7 +67,6 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -139,7 +139,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     Validator.notNullCheck("Artifact Stream", artifactStream);
 
     artifact.setArtifactSourceName(artifactStream.getSourceName());
-    artifact.setServiceIds(Arrays.asList(artifactStream.getServiceId()));
+    artifact.setServiceIds(asList(artifactStream.getServiceId()));
     Status status = getArtifactStatus(artifactStream);
     if (artifactType != null) {
       status = getArtifactStatus(artifactStream, artifactType);
@@ -318,7 +318,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .equal(artifactSourceName)
         .order("-createdAt")
         .field("status")
-        .hasAnyOf(Arrays.asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
+        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
         .get();
   }
 
@@ -334,7 +334,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .equal(artifactSourceName)
         .order("-createdAt")
         .field("status")
-        .hasAnyOf(Arrays.asList(READY, APPROVED))
+        .hasAnyOf(asList(READY, APPROVED))
         .get();
   }
 

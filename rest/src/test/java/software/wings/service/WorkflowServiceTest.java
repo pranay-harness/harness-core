@@ -151,7 +151,6 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -766,11 +765,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
                     .withUuid(ROLE_ID)
                     .withAccountId(application.getAccountId())
                     .build();
-    List<NotificationGroup> notificationGroups = Arrays.asList(aNotificationGroup()
-                                                                   .withUuid(NOTIFICATION_GROUP_ID)
-                                                                   .withAccountId(application.getAccountId())
-                                                                   .withRole(role)
-                                                                   .build());
+    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
+                                                            .withUuid(NOTIFICATION_GROUP_ID)
+                                                            .withAccountId(application.getAccountId())
+                                                            .withRole(role)
+                                                            .build());
     when(notificationSetupService.listNotificationGroups(
              application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
         .thenReturn(notificationGroups);
@@ -849,11 +848,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
                     .withUuid(ROLE_ID)
                     .withAccountId(application.getAccountId())
                     .build();
-    List<NotificationGroup> notificationGroups = Arrays.asList(aNotificationGroup()
-                                                                   .withUuid(NOTIFICATION_GROUP_ID)
-                                                                   .withAccountId(application.getAccountId())
-                                                                   .withRole(role)
-                                                                   .build());
+    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
+                                                            .withUuid(NOTIFICATION_GROUP_ID)
+                                                            .withAccountId(application.getAccountId())
+                                                            .withRole(role)
+                                                            .build());
     when(notificationSetupService.listNotificationGroups(
              application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
         .thenReturn(notificationGroups);
@@ -2959,11 +2958,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
                     .withUuid(ROLE_ID)
                     .withAccountId(application.getAccountId())
                     .build();
-    List<NotificationGroup> notificationGroups = Arrays.asList(aNotificationGroup()
-                                                                   .withUuid(NOTIFICATION_GROUP_ID)
-                                                                   .withAccountId(application.getAccountId())
-                                                                   .withRole(role)
-                                                                   .build());
+    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
+                                                            .withUuid(NOTIFICATION_GROUP_ID)
+                                                            .withAccountId(application.getAccountId())
+                                                            .withRole(role)
+                                                            .build());
     when(notificationSetupService.listNotificationGroups(
              application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
         .thenReturn(notificationGroups);

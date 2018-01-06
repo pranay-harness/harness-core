@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -20,7 +21,6 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.NexusConfig;
 import software.wings.rules.RepeatRule.Repeat;
 
-import java.util.Arrays;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -33,7 +33,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(SettingAttribute.class));
+    deleteAllDocuments(asList(SettingAttribute.class));
   }
 
   @Test

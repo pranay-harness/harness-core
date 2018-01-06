@@ -1,6 +1,7 @@
 package software.wings.common;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class AlphanumComparator implements Comparator<String> {
    * Feel free to delete this in your own code!
    */
   public static void main(String[] args) {
-    List<String> values = Arrays.asList("todolist-1.0-10.x86_64 .rpm", "todolist-1.0-1.x86_64.rpm",
+    List<String> values = asList("todolist-1.0-10.x86_64 .rpm", "todolist-1.0-1.x86_64.rpm",
         "todolist-1.0-3.x86_64.rpm", "todolist-1.0-2.x86_64.rpm");
     System.out.println(values.stream().sorted(new AlphanumComparator()).collect(Collectors.joining(" ")));
   }

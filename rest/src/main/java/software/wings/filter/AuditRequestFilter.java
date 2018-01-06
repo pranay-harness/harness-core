@@ -1,5 +1,6 @@
 package software.wings.filter;
 
+import static java.util.Arrays.asList;
 import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 
 import com.google.inject.Inject;
@@ -21,7 +22,6 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Arrays;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -104,7 +104,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   }
 
   private boolean isAuditExemptedHttpMethod(ContainerRequestContext requestContext) {
-    return Arrays.asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
+    return asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
         .contains(requestContext.getMethod());
   }
 

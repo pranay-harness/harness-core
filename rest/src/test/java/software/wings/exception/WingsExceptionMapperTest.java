@@ -1,5 +1,6 @@
 package software.wings.exception;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.matches;
@@ -19,11 +20,10 @@ import org.slf4j.Logger;
 import software.wings.BasicTest;
 import software.wings.beans.ResponseMessage;
 import software.wings.category.FastUnitTests;
-import software.wings.category.feature.CoreTests;
 import software.wings.category.element.UnitTests;
+import software.wings.category.feature.CoreTests;
 import software.wings.common.cache.ResponseCodeCache;
 
-import java.util.Arrays;
 import javax.ws.rs.core.Response;
 
 public class WingsExceptionMapperTest extends BasicTest {
@@ -68,7 +68,7 @@ public class WingsExceptionMapperTest extends BasicTest {
   public void overrideMessage() {
     final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).message("Override message").build();
 
-    final WingsException exception = new WingsException(Arrays.asList(message), "Dummy message", (Throwable) null);
+    final WingsException exception = new WingsException(asList(message), "Dummy message", (Throwable) null);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
@@ -88,7 +88,7 @@ public class WingsExceptionMapperTest extends BasicTest {
   public void shouldNotLogHarmless() {
     final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).acuteness(HARMLESS).build();
 
-    final WingsException exception = new WingsException(Arrays.asList(message), "Dummy message", (Throwable) null);
+    final WingsException exception = new WingsException(asList(message), "Dummy message", (Throwable) null);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);

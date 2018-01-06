@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
@@ -124,7 +125,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                        .field("logCollectionMinute")
                                        .equal(logCollectionMinute)
                                        .field("clusterLevel")
-                                       .in(Arrays.asList(clusterLevels));
+                                       .in(asList(clusterLevels));
     wingsPersistence.delete(records);
   }
 

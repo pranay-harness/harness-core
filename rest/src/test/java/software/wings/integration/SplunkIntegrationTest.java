@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
@@ -23,7 +24,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -42,8 +42,8 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(LogDataRecord.class));
-    deleteAllDocuments(Arrays.asList(WorkflowExecution.class));
+    deleteAllDocuments(asList(LogDataRecord.class));
+    deleteAllDocuments(asList(WorkflowExecution.class));
   }
 
   @Test

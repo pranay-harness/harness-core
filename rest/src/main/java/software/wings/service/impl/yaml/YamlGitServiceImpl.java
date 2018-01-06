@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -53,7 +54,6 @@ import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -342,7 +342,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       upsertGitSyncErrors(failedOrUnprocessedChanges, errorMessage);
     } else {
       logger.error("Failed yaml not found in the result set, only adding it to the list of failures");
-      upsertGitSyncErrors(Arrays.asList(failedChange), errorMessage);
+      upsertGitSyncErrors(asList(failedChange), errorMessage);
     }
 
     alertService.openAlert(failedChange.getAccountId(), GLOBAL_APP_ID, AlertType.GitSyncError,

@@ -105,7 +105,6 @@ import software.wings.utils.Util;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -241,7 +240,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
       yamlChangeSetService.saveChangeSet(
-          ygs, Arrays.asList(entityUpdateService.getInfraMappingGitSyncFile(accountId, infraMapping, crudType)));
+          ygs, asList(entityUpdateService.getInfraMappingGitSyncFile(accountId, infraMapping, crudType)));
     }
   }
 

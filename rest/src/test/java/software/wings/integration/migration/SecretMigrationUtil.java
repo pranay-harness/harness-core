@@ -349,7 +349,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
 
   //  @Test
   //  public void test() throws InterruptedException, IllegalAccessException {
-  //    List<String> ids = Arrays.asList("5qBdkRoRSMyUDXFk64_t4g", "TsN2TvImTUWRIU-J1tC85A", "XP-HW0H8Sb2nNxUVoB-a6g",
+  //    List<String> ids = asList("5qBdkRoRSMyUDXFk64_t4g", "TsN2TvImTUWRIU-J1tC85A", "XP-HW0H8Sb2nNxUVoB-a6g",
   //    "Z3NSq6fqTwSj3QgC88cwiA", "s_YVIj9ERFm6ab-rZEY5ww", "yYbYQkJuToOOP7Tq1Fvq8w", "MlkJA6LhQkyFaSLAIdBnlQ");
   //    for(String id : ids) {
   //      SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, id);

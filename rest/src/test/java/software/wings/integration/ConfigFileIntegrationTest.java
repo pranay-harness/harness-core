@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -45,7 +46,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -70,7 +70,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(Application.class, ConfigFile.class, Service.class));
+    deleteAllDocuments(asList(Application.class, ConfigFile.class, Service.class));
 
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
         .thenReturn(new SecretManagementDelegateServiceImpl());

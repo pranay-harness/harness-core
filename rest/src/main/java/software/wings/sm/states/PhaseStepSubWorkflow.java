@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
@@ -68,7 +69,6 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -205,7 +205,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return null;
       }
       AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) first.get();
-      return Arrays.asList(amiStepExecutionSummary.getRollbackAmiServiceElement());
+      return asList(amiStepExecutionSummary.getRollbackAmiServiceElement());
     } else if (phaseStepType == CONTAINER_SETUP) {
       Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                  .stream()

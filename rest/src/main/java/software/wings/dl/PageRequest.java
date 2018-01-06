@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.common.base.MoreObjects;
@@ -20,7 +21,6 @@ import software.wings.utils.Misc;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.DefaultValue;
@@ -302,7 +302,7 @@ public class PageRequest<T> {
             filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
           }
         } else {
-          if (Arrays.asList(Boolean.TYPE).contains(mappedClass.getMappedField(key).getType())) {
+          if (asList(Boolean.TYPE).contains(mappedClass.getMappedField(key).getType())) {
             filters.add(aSearchFilter()
                             .withField(key, Operator.IN, map.get(key).stream().map(Boolean::parseBoolean).toArray())
                             .build());
@@ -322,9 +322,9 @@ public class PageRequest<T> {
       if (map.containsKey(key + "[value]")) {
         MappedField mappedField = mappedClass.getMappedField(filter.getFieldName());
         if (mappedField != null
-            && Arrays.asList(Long.TYPE, Integer.TYPE, Short.TYPE, Byte.TYPE).contains(mappedField.getType())) {
+            && asList(Long.TYPE, Integer.TYPE, Short.TYPE, Byte.TYPE).contains(mappedField.getType())) {
           filter.setFieldValues(Long.parseLong(map.getFirst(key + "[value]")));
-        } else if (mappedField != null && Arrays.asList(Boolean.TYPE).contains(mappedField.getType())) {
+        } else if (mappedField != null && asList(Boolean.TYPE).contains(mappedField.getType())) {
           filter.setFieldValues(Boolean.parseBoolean(map.getFirst(key + "[value]")));
         } else {
           filter.setFieldValues(map.get(key + "[value]").toArray());
@@ -577,7 +577,7 @@ public class PageRequest<T> {
      * @return the builder
      */
     public Builder addFieldsIncluded(String... fieldsIncluded) {
-      this.fieldsIncluded.addAll(Arrays.asList(fieldsIncluded));
+      this.fieldsIncluded.addAll(asList(fieldsIncluded));
       return this;
     }
 
@@ -588,7 +588,7 @@ public class PageRequest<T> {
      * @return the builder
      */
     public Builder addFieldsExcluded(String... fieldsExcluded) {
-      this.fieldsExcluded.addAll(Arrays.asList(fieldsExcluded));
+      this.fieldsExcluded.addAll(asList(fieldsExcluded));
       return this;
     }
 

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -43,7 +44,6 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -72,7 +72,7 @@ public class AppdynamicsTest extends WingsBaseTest {
 
   @Parameters
   public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] {{true}, {false}});
+    return asList(new Object[][] {{true}, {false}});
   }
 
   @Before

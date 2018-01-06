@@ -1,6 +1,7 @@
 package software.wings.service.impl.sumo;
 
 import com.google.inject.Inject;
+
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;

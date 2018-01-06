@@ -48,8 +48,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
-import java.util.Arrays;
-
 /**
  * Created by anubhaw on 11/4/16.
  */
@@ -78,7 +76,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                             .withSettingId(SETTING_ID)
                                                             .withJobname("JOB")
                                                             .withServiceId(SERVICE_ID)
-                                                            .withArtifactPaths(Arrays.asList("*WAR"))
+                                                            .withArtifactPaths(asList("*WAR"))
                                                             .build();
   private DockerArtifactStream dockerArtifactStream = aDockerArtifactStream()
                                                           .withAppId(APP_ID)

@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -59,7 +60,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -93,9 +93,9 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(LogDataRecord.class));
-    deleteAllDocuments(Arrays.asList(WorkflowExecution.class));
-    deleteAllDocuments(Arrays.asList(Workflow.class));
+    deleteAllDocuments(asList(LogDataRecord.class));
+    deleteAllDocuments(asList(WorkflowExecution.class));
+    deleteAllDocuments(asList(Workflow.class));
     hosts.clear();
     hosts.add("ip-172-31-2-144");
     hosts.add("ip-172-31-4-253");

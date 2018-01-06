@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -81,7 +82,6 @@ import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -232,11 +232,11 @@ public class AwsAmiServiceDeployState extends State {
     Integer newAutoScalingGroupDesiredCapacity = newAutoScalingGroup.getDesiredCapacity();
     Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
     Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
-    List<ContainerServiceData> newInstanceData = Arrays.asList(ContainerServiceData.builder()
-                                                                   .name(newAutoScalingGroupName)
-                                                                   .desiredCount(newAsgFinalDesiredCount)
-                                                                   .previousCount(newAutoScalingGroupDesiredCapacity)
-                                                                   .build());
+    List<ContainerServiceData> newInstanceData = asList(ContainerServiceData.builder()
+                                                            .name(newAutoScalingGroupName)
+                                                            .desiredCount(newAsgFinalDesiredCount)
+                                                            .previousCount(newAutoScalingGroupDesiredCapacity)
+                                                            .build());
 
     String oldAutoScalingGroupName = serviceSetupElement.getOldAutoScalingGroupName();
     AutoScalingGroup oldAutoScalingGroup =
@@ -244,11 +244,11 @@ public class AwsAmiServiceDeployState extends State {
 
     Integer oldAutoScalingGroupDesiredCapacity = oldAutoScalingGroup.getDesiredCapacity();
     Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
-    List<ContainerServiceData> oldInstanceData = Arrays.asList(ContainerServiceData.builder()
-                                                                   .name(oldAutoScalingGroupName)
-                                                                   .desiredCount(oldAsgFinalDesiredCount)
-                                                                   .previousCount(oldAutoScalingGroupDesiredCapacity)
-                                                                   .build());
+    List<ContainerServiceData> oldInstanceData = asList(ContainerServiceData.builder()
+                                                            .name(oldAutoScalingGroupName)
+                                                            .desiredCount(oldAsgFinalDesiredCount)
+                                                            .previousCount(oldAutoScalingGroupDesiredCapacity)
+                                                            .build());
 
     awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(), serviceSetupElement,
         getInstanceCount(), getInstanceUnitType(), newInstanceData, oldInstanceData);

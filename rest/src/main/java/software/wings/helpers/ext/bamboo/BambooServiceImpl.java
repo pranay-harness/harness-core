@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.bamboo;
 
+import static java.util.Arrays.asList;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -35,7 +36,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -371,7 +371,7 @@ public class BambooServiceImpl implements BambooService {
   }
 
   private String extractRelativePath(String path) {
-    List<String> strings = Arrays.asList(path.split("/"));
+    List<String> strings = asList(path.split("/"));
     int artifactIdx = strings.indexOf("artifact");
     if (artifactIdx >= 0 && artifactIdx + 2 < strings.size()) {
       artifactIdx += 2; // skip next path element jobShortId as well: "baseUrl/.../../artifact/jobShortId/{relativePath}

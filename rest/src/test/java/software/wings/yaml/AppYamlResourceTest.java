@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -18,8 +19,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -77,10 +76,8 @@ public class AppYamlResourceTest {
   private final Service testService3 = aService().withName(TEST_SERVICE3).build();
   private final Service testService4 = aService().withName(TEST_SERVICE4).build();
 
-  private final List<Service> testServices1 =
-      new ArrayList<Service>(Arrays.asList(testService1, testService2, testService3));
-  private final List<Service> testServices2 =
-      new ArrayList<Service>(Arrays.asList(testService1, testService2, testService3, testService4));
+  private final List<Service> testServices1 = asList(testService1, testService2, testService3);
+  private final List<Service> testServices2 = asList(testService1, testService2, testService3, testService4);
 
   //=============================================================================================================
   // TODO - these tests (or their equivalent) need to be rewritten given the extensive refactoring that was done

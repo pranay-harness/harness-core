@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
@@ -22,7 +23,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.NotificationService;
 
-import java.util.Arrays;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -57,8 +57,8 @@ public class NotificationResource {
     if (!Strings.isNullOrEmpty(appId)) {
       pageRequest.addFilter("appId", appId, EQ);
     }
-    pageRequest.setOrders(Arrays.asList(
-        aSortOrder().withField("complete", ASC).build(), aSortOrder().withField("createdAt", DESC).build()));
+    pageRequest.setOrders(
+        asList(aSortOrder().withField("complete", ASC).build(), aSortOrder().withField("createdAt", DESC).build()));
     return new RestResponse<>(notificationService.list(pageRequest));
   }
 

@@ -1,5 +1,7 @@
 package software.wings.yaml;
 
+import static java.util.Arrays.asList;
+
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
@@ -10,7 +12,6 @@ import software.wings.utils.Util;
 
 import java.beans.Transient;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -57,7 +58,7 @@ public class YamlRepresenter extends Representer {
   }
 
   public static void getFieldsOfClassHierarchy(@Nonnull Class<?> currentClass, List<Field> fieldList) {
-    fieldList.addAll(Arrays.asList(currentClass.getDeclaredFields()));
+    fieldList.addAll(asList(currentClass.getDeclaredFields()));
 
     Class<?> parentClass = currentClass.getSuperclass();
     if (parentClass != null) {

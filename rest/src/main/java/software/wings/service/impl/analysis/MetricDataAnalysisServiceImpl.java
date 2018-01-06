@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
@@ -37,7 +38,6 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -194,7 +194,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("host")
                                                 .hasAnyOf(nodes)
                                                 .field("level")
-                                                .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute)
                                                 .field("dataCollectionMinute")
@@ -215,7 +215,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("serviceId")
                                                 .equal(serviceId)
                                                 .field("level")
-                                                .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute)
                                                 .field("dataCollectionMinute")
@@ -238,7 +238,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("serviceId")
                                                 .equal(serviceId)
                                                 .field("level")
-                                                .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute)
                                                 .field("dataCollectionMinute")
@@ -259,7 +259,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("serviceId")
                                                             .equal(serviceId)
                                                             .field("level")
-                                                            .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                             .order("-dataCollectionMinute")
                                                             .get(new FindOptions().limit(1));
 
@@ -279,7 +279,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("serviceId")
                                                             .equal(serviceId)
                                                             .field("level")
-                                                            .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                             .order("dataCollectionMinute")
                                                             .get(new FindOptions().limit(1));
 
@@ -301,7 +301,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
               .field("serviceId")
               .equal(serviceId)
               .field("level")
-              .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+              .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
               .asList(new FindOptions().limit(1));
       if (isNotEmpty(lastSuccessfulRecords)) {
         return successfulExecution;

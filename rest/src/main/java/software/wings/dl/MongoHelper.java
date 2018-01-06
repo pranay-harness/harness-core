@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.SearchFilter.Operator.AND;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -28,7 +29,6 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.exception.WingsException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -199,13 +199,13 @@ public class MongoHelper {
         return fieldEnd.startsWithIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
 
       case HAS:
-        return fieldEnd.hasAnyOf(Arrays.asList(filter.getFieldValues()));
+        return fieldEnd.hasAnyOf(asList(filter.getFieldValues()));
 
       case IN:
-        return fieldEnd.hasAnyOf(Arrays.asList(filter.getFieldValues()));
+        return fieldEnd.hasAnyOf(asList(filter.getFieldValues()));
 
       case NOT_IN:
-        return fieldEnd.hasNoneOf(Arrays.asList(filter.getFieldValues()));
+        return fieldEnd.hasNoneOf(asList(filter.getFieldValues()));
 
       case EXISTS:
         return fieldEnd.exists();

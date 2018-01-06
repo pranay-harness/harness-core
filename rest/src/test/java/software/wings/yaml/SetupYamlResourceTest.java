@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -13,8 +14,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 // import software.wings.resources.yaml.SetupYamlResource;
@@ -75,15 +74,11 @@ public class SetupYamlResourceTest {
                                            .withName(TEST_APP_NAME3)
                                            .build();
 
-  private final List<String> testApps1 =
-      new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3));
-  private final List<String> testApps2 =
-      new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3, TEST_APP_NAME4));
-  private final List<String> testApps3 =
-      new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME4));
+  private final List<String> testApps1 = asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3);
+  private final List<String> testApps2 = asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3, TEST_APP_NAME4);
+  private final List<String> testApps3 = asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME4);
 
-  private final List<Application> testApplications =
-      new ArrayList<Application>(Arrays.asList(testApp1, testApp2, testApp3));
+  private final List<Application> testApplications = asList(testApp1, testApp2, testApp3);
 
   //=============================================================================================================
   // TODO - these tests (or their equivalent) need to be rewritten given the extensive refactoring that was done

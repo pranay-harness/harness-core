@@ -1,11 +1,12 @@
 package software.wings.rules;
 
+import static java.util.Arrays.asList;
+
 import org.apache.sshd.common.util.GenericUtils;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.shell.InvertedShell;
 import org.apache.sshd.server.shell.ProcessShellFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class FileSystemAwareProcessShellFactory extends ProcessShellFactory {
    * @param command the command
    */
   public FileSystemAwareProcessShellFactory(String... command) {
-    this(GenericUtils.isEmpty(command) ? Collections.<String>emptyList() : Arrays.asList(command));
+    this(GenericUtils.isEmpty(command) ? Collections.<String>emptyList() : asList(command));
   }
 
   /**

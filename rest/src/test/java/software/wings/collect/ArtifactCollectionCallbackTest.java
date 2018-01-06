@@ -1,5 +1,6 @@
 package software.wings.collect;
 
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -40,8 +41,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
 
-import java.util.Arrays;
-
 /**
  * Created by rishi on 12/21/16.
  */
@@ -65,7 +64,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
                                                      .withSettingId(SETTING_ID)
                                                      .withJobname(JOB_NAME)
                                                      .withServiceId(SERVICE_ID)
-                                                     .withArtifactPaths(Arrays.asList(ARTIFACT_PATH))
+                                                     .withArtifactPaths(asList(ARTIFACT_PATH))
                                                      .withAutoApproveForProduction(false)
                                                      .build();
 

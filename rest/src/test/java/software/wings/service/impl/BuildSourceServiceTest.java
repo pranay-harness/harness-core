@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -73,7 +74,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -119,8 +119,8 @@ public class BuildSourceServiceTest extends WingsBaseTest {
 
   @Parameters
   public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] {{true, SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "",
-                                             "todolist_war", "", "target/todolist.war", WAR},
+    return asList(new Object[][] {{true, SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "", "todolist_war",
+                                      "", "target/todolist.war", WAR},
         {false, SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "", "todolist_war", "", "target/todolist.war",
             WAR},
         {true, SettingVariableTypes.BAMBOO, ArtifactStreamType.BAMBOO, "", "TOD-TOD", "", "artifacts/todolist.war",

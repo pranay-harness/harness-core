@@ -5,10 +5,10 @@ import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import software.wings.category.speed.FastTests;
-import software.wings.category.speed.SlowTests;
 import software.wings.category.element.IntegrationTests;
 import software.wings.category.element.UnitTests;
+import software.wings.category.speed.FastTests;
+import software.wings.category.speed.SlowTests;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;

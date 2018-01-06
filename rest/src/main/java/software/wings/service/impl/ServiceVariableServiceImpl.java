@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -43,7 +44,6 @@ import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -80,7 +80,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
-    if (!Arrays.asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.ENVIRONMENT, EntityType.HOST)
+    if (!asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.ENVIRONMENT, EntityType.HOST)
              .contains(serviceVariable.getEntityType())) {
       throw new WingsException(INVALID_ARGUMENT)
           .addParam("args", "Service setting not supported for entityType " + serviceVariable.getEntityType());

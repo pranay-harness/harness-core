@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -64,7 +65,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -370,8 +370,7 @@ public class AppServiceImpl implements AppService {
 
     if (overview) {
       application.setNotifications(getIncompleteActionableApplicationNotifications(appId));
-      application.setAppKeyStatistics(
-          statisticsService.getApplicationKeyStats(Arrays.asList(appId), overviewDays).get(appId));
+      application.setAppKeyStatistics(statisticsService.getApplicationKeyStats(asList(appId), overviewDays).get(appId));
     }
 
     if (status == INCOMPLETE) {
