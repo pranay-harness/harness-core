@@ -10,10 +10,13 @@ import software.wings.category.element.UnitTests;
 import software.wings.category.speed.FastTests;
 import software.wings.category.speed.SlowTests;
 
+import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class CategoryTimeoutRule extends Timeout {
+  public static class RunMode {}
+
   public CategoryTimeoutRule() {
     super(Timeout.builder());
   }
@@ -21,6 +24,18 @@ public class CategoryTimeoutRule extends Timeout {
   public Statement apply(Statement statement, Description description) {
     Category category = description.getAnnotation(Category.class);
     if (category == null) {
+      return statement;
+    }
+
+    boolean isDebug = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+
+    // Do not timeout when someone is debugging
+    if (isDebug) {
+      // This provides proof that in running mode we did not wrongfully detect a debugging mode
+      if (Arrays.stream(category.value()).anyMatch(cls -> RunMode.class.isAssignableFrom(cls))) {
+        throw new RuntimeException("You should not be debugging the running test");
+      }
+
       return statement;
     }
 
