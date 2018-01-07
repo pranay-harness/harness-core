@@ -1638,7 +1638,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
             .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
                 StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), StateType.PHASE_STEP.name())
-            .addFilter("parentInstanceId", Operator.NOT_EXISTS, null)
+            .addFilter("parentInstanceId", Operator.NOT_EXISTS)
             .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addOrder("createdAt", OrderType.ASC)
             .build();
