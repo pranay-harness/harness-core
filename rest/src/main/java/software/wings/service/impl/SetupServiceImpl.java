@@ -157,7 +157,7 @@ public class SetupServiceImpl implements SetupService {
   private SetupAction fetchIncompleteMandatoryEnvironmentAction(Environment environment) {
     List<Host> hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
 
-    if (hosts.size() == 0) {
+    if (hosts.isEmpty()) {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
           .withDisplayText("Setup required: Please add at least one host to the environment.")
@@ -168,7 +168,7 @@ public class SetupServiceImpl implements SetupService {
   }
 
   private SetupAction fetchIncompleteMandatoryApplicationAction(Application app) {
-    if (app.getServices() == null || app.getServices().size() == 0) {
+    if (app.getServices() == null || app.getServices().isEmpty()) {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one service.")
@@ -176,7 +176,7 @@ public class SetupServiceImpl implements SetupService {
           .build();
     }
 
-    if (app.getEnvironments() == null || app.getEnvironments().size() == 0) {
+    if (app.getEnvironments() == null || app.getEnvironments().isEmpty()) {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one environment.")

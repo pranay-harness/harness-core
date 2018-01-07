@@ -268,7 +268,7 @@ public class ExecutionInterruptManager {
 
   private ExecutionInterrupt getExecutionInterrupt(
       PageResponse<ExecutionInterrupt> res, ExecutionInterruptType eventType) {
-    if (res == null || res.size() == 0) {
+    if (CollectionUtils.isEmpty(res)) {
       return null;
     }
     for (ExecutionInterrupt evt : res) {

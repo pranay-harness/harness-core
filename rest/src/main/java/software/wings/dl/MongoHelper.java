@@ -146,7 +146,7 @@ public class MongoHelper {
 
     if (req.getOrders() != null) {
       // Add default sorting if none present
-      if (req.getOrders().size() == 0) {
+      if (req.getOrders().isEmpty()) {
         SortOrder sortOrder = new SortOrder();
         sortOrder.setFieldName("createdAt");
         sortOrder.setOrderType(OrderType.DESC);

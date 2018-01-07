@@ -142,7 +142,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       }
       logger.info("inserting " + logData.size() + " pieces of log data");
 
-      if (logData.size() == 0) {
+      if (logData.isEmpty()) {
         return true;
       }
 
@@ -411,9 +411,9 @@ public class AnalysisServiceImpl implements AnalysisService {
     RiskLevel riskLevel = RiskLevel.NA;
     String analysisSummaryMsg =
         analysisRecord.getAnalysisSummaryMessage() == null || analysisRecord.getAnalysisSummaryMessage().isEmpty()
-        ? analysisSummary.getControlClusters().size() == 0
+        ? analysisSummary.getControlClusters().isEmpty()
             ? "No baseline data for the given queries. This will be baseline for the next run."
-            : analysisSummary.getTestClusters().size() == 0
+            : analysisSummary.getTestClusters().isEmpty()
                 ? "No new data for the given queries. Showing baseline data if any."
                 : "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();

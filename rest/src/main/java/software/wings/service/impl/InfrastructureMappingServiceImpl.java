@@ -452,10 +452,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
     if (lambdaInfraStructureMapping.getVpcId() != null) {
-      if (lambdaInfraStructureMapping.getSubnetIds().size() == 0) {
+      if (lambdaInfraStructureMapping.getSubnetIds().isEmpty()) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "At least one subnet must be provided");
       }
-      if (lambdaInfraStructureMapping.getSecurityGroupIds().size() == 0) {
+      if (lambdaInfraStructureMapping.getSecurityGroupIds().isEmpty()) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
             .addParam("args", "At least one security group must be provided");
       }

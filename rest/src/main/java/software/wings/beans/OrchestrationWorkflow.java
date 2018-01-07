@@ -104,7 +104,7 @@ public abstract class OrchestrationWorkflow {
   @JsonIgnore
   public boolean isTemplatized() {
     List<Variable> userVariables = getUserVariables();
-    if (userVariables == null || userVariables.size() == 0) {
+    if (CollectionUtils.isEmpty(userVariables)) {
       return false;
     }
     return userVariables.stream().anyMatch(variable -> !variable.isFixed());

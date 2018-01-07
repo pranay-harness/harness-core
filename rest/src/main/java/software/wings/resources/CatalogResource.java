@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
@@ -114,7 +115,7 @@ public class CatalogResource {
   private Map<String, Object> getCatalogs(List<String> catalogTypes, String appId) throws IOException {
     Map<String, Object> catalogs = new HashMap<>();
 
-    if (catalogTypes == null || catalogTypes.size() == 0) {
+    if (CollectionUtils.isEmpty(catalogTypes)) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
       catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
       catalogs.putAll(catalogService.getCatalogs());

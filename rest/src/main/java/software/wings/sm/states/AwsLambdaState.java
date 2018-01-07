@@ -242,7 +242,7 @@ public class AwsLambdaState extends State {
                                                                  .withActivityId(activity.getUuid());
 
     LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
-    if (specification.getFunctions() == null || specification.getFunctions().size() == 0) {
+    if (specification.getFunctions() == null || specification.getFunctions().isEmpty()) {
       logService.save(logBuilder.but().withLogLine("No Lambda function to deploy.").build());
     } else {
       for (FunctionSpecification functionSpecification : specification.getFunctions()) {

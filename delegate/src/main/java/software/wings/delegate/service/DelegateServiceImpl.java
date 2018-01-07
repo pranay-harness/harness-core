@@ -11,7 +11,6 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
-import static software.wings.utils.Misc.isNotNullOrEmpty;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -44,6 +43,7 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
@@ -538,7 +538,7 @@ public class DelegateServiceImpl implements DelegateService {
       List<DelegateTaskEvent> taskEvents = new ArrayList<>();
       timeLimiter.callWithTimeout(() -> {
         List<DelegateTaskEvent> delegateTaskEvents = execute(managerClient.pollTaskEvents(delegateId, accountId));
-        if (isNotNullOrEmpty(delegateTaskEvents)) {
+        if (CollectionUtils.isNotEmpty(delegateTaskEvents)) {
           taskEvents.addAll(delegateTaskEvents);
         }
         return true;

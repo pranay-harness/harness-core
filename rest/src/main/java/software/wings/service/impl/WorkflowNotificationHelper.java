@@ -19,6 +19,7 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -62,7 +63,7 @@ public class WorkflowNotificationHelper {
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
         getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW, status);
-    if (notificationRules == null || notificationRules.size() == 0) {
+    if (CollectionUtils.isEmpty(notificationRules)) {
       return;
     }
 
@@ -163,7 +164,7 @@ public class WorkflowNotificationHelper {
 
     List<NotificationRule> notificationRules =
         getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW_PHASE, status);
-    if (notificationRules == null || notificationRules.size() == 0) {
+    if (CollectionUtils.isEmpty(notificationRules)) {
       return;
     }
 

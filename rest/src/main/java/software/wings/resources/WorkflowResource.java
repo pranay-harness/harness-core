@@ -12,6 +12,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.Api;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
@@ -82,7 +83,7 @@ public class WorkflowResource {
       @BeanParam PageRequest<Workflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
       @QueryParam("workflowType") List<String> workflowTypes) {
-    if ((workflowTypes == null || workflowTypes.isEmpty())
+    if ((CollectionUtils.isEmpty(workflowTypes))
         && (pageRequest.getFilters() == null
                || pageRequest.getFilters().stream().noneMatch(
                       searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {

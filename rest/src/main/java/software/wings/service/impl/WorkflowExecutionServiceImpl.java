@@ -231,7 +231,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest,
       boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
-    if (res == null || res.size() == 0) {
+    if (CollectionUtils.isEmpty(res)) {
       return res;
     }
     for (int i = 0; i < res.size(); i++) {
@@ -874,7 +874,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private boolean isEmpty(String string) {
-    return string == null || string.isEmpty() || string.equals("null");
+    return StringUtils.isEmpty(string) || string.equals("null");
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
@@ -1178,7 +1178,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           throw new WingsException(ErrorCode.INVALID_REQUEST)
               .addParam("message", "serviceId is null for a simple execution");
         }
-        if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
+        if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().isEmpty()) {
           logger.error("serviceInstances are empty for a simple execution");
           throw new WingsException(ErrorCode.INVALID_REQUEST)
               .addParam("message", "serviceInstances are empty for a simple execution");
@@ -1352,7 +1352,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         throw new WingsException(ErrorCode.INVALID_REQUEST)
             .addParam("message", "serviceId is null for a simple execution");
       }
-      if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
+      if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().isEmpty()) {
         logger.error("serviceInstances are empty for a simple execution");
         throw new WingsException(ErrorCode.INVALID_REQUEST)
             .addParam("message", "serviceInstances are empty for a simple execution");
@@ -1389,7 +1389,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                      .build();
 
     PageResponse<WorkflowExecution> pageResponse = wingsPersistence.query(WorkflowExecution.class, pageRequest);
-    if (pageResponse == null || pageResponse.size() == 0) {
+    if (CollectionUtils.isEmpty(pageResponse)) {
       return false;
     }
     return true;
@@ -1990,7 +1990,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<BuildExecutionSummary> buildExecutionSummaries = workflowExecution.getBuildExecutionSummaries();
-    if (buildExecutionSummaries == null || buildExecutionSummaries.size() == 0) {
+    if (CollectionUtils.isEmpty(buildExecutionSummaries)) {
       buildExecutionSummaries = new ArrayList<>();
     }
     buildExecutionSummaries.add(buildExecutionSummary);

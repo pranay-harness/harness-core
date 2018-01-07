@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import okhttp3.Credentials;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,7 +113,7 @@ public class NexusTwoServiceImpl {
       final Response<IndexBrowserTreeViewResponse> response = request.execute();
       if (isSuccessful(response)) {
         final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
-        if (Misc.isNullOrEmpty(treeNodes)) {
+        if (CollectionUtils.isEmpty(treeNodes)) {
           return groupIds;
         }
         treeNodes.forEach(treeNode -> {

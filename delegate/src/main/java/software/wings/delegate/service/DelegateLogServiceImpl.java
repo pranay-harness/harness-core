@@ -61,7 +61,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   }
 
   private void dispatchCommandExecutionLogs(String accountId, List<Log> logs, RemovalCause removalCause) {
-    if (accountId == null || logs.size() == 0) {
+    if (accountId == null || logs.isEmpty()) {
       logger.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
       return;
     }

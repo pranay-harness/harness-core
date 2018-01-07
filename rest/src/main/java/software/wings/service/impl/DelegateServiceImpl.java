@@ -517,11 +517,11 @@ public class DelegateServiceImpl implements DelegateService {
             .filter(delegateKey -> assignDelegateService.canAssign(delegateKey.getId().toString(), task))
             .collect(toList());
 
-    if (activeDelegates.size() == 0) {
+    if (activeDelegates.isEmpty()) {
       logger.warn("No delegates are active for the account: {}", task.getAccountId());
       alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
           NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
-    } else if (eligibleDelegates.size() == 0) {
+    } else if (eligibleDelegates.isEmpty()) {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,

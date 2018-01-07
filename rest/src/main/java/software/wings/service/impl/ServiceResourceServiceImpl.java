@@ -32,6 +32,7 @@ import com.google.inject.name.Named;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -95,7 +96,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -926,7 +926,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void validateLambdaSpecification(LambdaSpecification lambdaSpecification) {
     List<String> duplicateFunctionName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
-    if (!Misc.isNullOrEmpty(duplicateFunctionName)) {
+    if (CollectionUtils.isNotEmpty(duplicateFunctionName)) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               "Function name should be unique. Duplicate function names: [" + Joiner.on(",").join(duplicateFunctionName)
@@ -934,7 +934,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     List<String> duplicateHandlerName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getHandler);
-    if (!Misc.isNullOrEmpty(duplicateHandlerName)) {
+    if (CollectionUtils.isNotEmpty(duplicateHandlerName)) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               "Function Handler name should be unique. Duplicate function handlers: ["

@@ -563,7 +563,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private void getTopServicesDeployed(List<TopConsumer> topConsumers, List<WorkflowExecution> wflExecutions) {
     Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-    if (wflExecutions == null || wflExecutions.size() == 0) {
+    if (CollectionUtils.isEmpty(wflExecutions)) {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
@@ -627,7 +627,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     Map<String, String> serviceIdNames = new HashMap<>();
     Map<String, String> serviceAppIdMap = new HashMap<>();
     Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-    if (wflExecutions == null || wflExecutions.size() == 0) {
+    if (CollectionUtils.isEmpty(wflExecutions)) {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {

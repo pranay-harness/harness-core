@@ -668,7 +668,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
-    if (templateExpressions == null || templateExpressions.size() == 0) {
+    if (CollectionUtils.isEmpty(templateExpressions)) {
       templateExpressions = new ArrayList<>();
     }
     orchestrationWorkflow = propagateWorkflowDataToPhases(orchestrationWorkflow, templateExpressions,
@@ -895,7 +895,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowPhase workflowPhase, List<TemplateExpression> templateExpressions,
       List<TemplateExpression> phaseTemplateExpressions) {
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
-    if (userVariables == null || userVariables.size() == 0) {
+    if (CollectionUtils.isEmpty(userVariables)) {
       return;
     }
     List<Variable> entityVariables =

@@ -30,7 +30,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
     RestResponse<T> restResponse = new RestResponse<>();
 
     // No known exception or error code
-    if (restResponse.getResponseMessages().size() == 0) {
+    if (restResponse.getResponseMessages().isEmpty()) {
       restResponse.getResponseMessages().add(
           aResponseMessage()
               .code(DEFAULT_ERROR_CODE)

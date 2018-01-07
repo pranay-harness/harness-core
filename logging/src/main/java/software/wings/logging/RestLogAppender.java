@@ -68,7 +68,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         batchSize++; // increment unconditionally to break the loop
       }
 
-      if (logLines.size() == 0) {
+      if (logLines.isEmpty()) {
         return;
       }
       Request.Post(String.format(LOGDNA_INGEST_URL, localhostName))
@@ -213,13 +213,12 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       }
     }
 
-    /**
-     * Size int.
-     *
-     * @return the int
-     */
     public int size() {
       return lines.size();
+    }
+
+    public boolean isEmpty() {
+      return lines.isEmpty();
     }
   }
 

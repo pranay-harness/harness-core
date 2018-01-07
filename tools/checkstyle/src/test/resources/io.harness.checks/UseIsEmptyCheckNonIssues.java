@@ -7,5 +7,8 @@ public class UseIsEmptyCheckIssues {
 
     if (list == list2 || list.isEmpty()) {
     }
+
+    if (list.form() == 0) {
+    }
   }
 }

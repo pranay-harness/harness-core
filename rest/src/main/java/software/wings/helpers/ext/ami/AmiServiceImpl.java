@@ -56,7 +56,7 @@ public class AmiServiceImpl implements AmiService {
         .filter(image -> image != null && !isNullOrEmpty(image.getName()))
         .forEach(image
             -> buildDetails.add(aBuildDetails().withNumber(image.getName()).withRevision(image.getImageId()).build()));
-    if (buildDetails.size() == 0) {
+    if (buildDetails.isEmpty()) {
       logger.info("No images found matching with the given Region {}, and filters {}", region, filters);
     } else {
       logger.info("Images found of size {}", buildDetails.size());

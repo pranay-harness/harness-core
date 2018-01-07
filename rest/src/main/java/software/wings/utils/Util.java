@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import software.wings.beans.NameValuePair;
 import software.wings.exception.WingsException;
 
@@ -15,20 +17,24 @@ import java.util.stream.Collectors;
 public class Util {
   private static final String FIRST_REVISION = ".1";
 
+  // TODO: remove this helper method or commit to it everywhere
   public static boolean isEmpty(String value) {
-    return value == null || value.isEmpty();
+    return StringUtils.isEmpty(value);
   }
 
+  // TODO: remove this helper method or commit to it everywhere
   public static boolean isNotEmpty(String value) {
-    return value != null && !value.isEmpty();
+    return StringUtils.isNotEmpty(value);
   }
 
+  // TODO: remove this helper method or commit to it everywhere
   public static boolean isEmpty(Collection collection) {
-    return collection == null || collection.isEmpty();
+    return CollectionUtils.isEmpty(collection);
   }
 
+  // TODO: remove this helper method or commit to it everywhere
   public static boolean isNotEmpty(Collection collection) {
-    return !isEmpty(collection);
+    return CollectionUtils.isNotEmpty(collection);
   }
 
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {

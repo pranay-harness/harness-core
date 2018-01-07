@@ -37,6 +37,7 @@ import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.TriggerKey;
@@ -387,7 +388,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void addArtifactsFromVersionsOfWebHook(
       Trigger trigger, Map<String, String> serviceBuildNumbers, List<Artifact> artifacts) {
-    if (serviceBuildNumbers == null || serviceBuildNumbers.size() == 0) {
+    if (MapUtils.isEmpty(serviceBuildNumbers)) {
       return;
     }
     Map<String, String> services = new HashMap<>();
@@ -534,7 +535,7 @@ public class TriggerServiceImpl implements TriggerService {
 
     ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
-    if (artifactSelections == null || artifactSelections.size() == 0) {
+    if (CollectionUtils.isEmpty(artifactSelections)) {
       logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
       if (!CollectionUtils.isEmpty(lastDeployedArtifacts)) {
         triggerExecution(lastDeployedArtifacts, trigger, null);
