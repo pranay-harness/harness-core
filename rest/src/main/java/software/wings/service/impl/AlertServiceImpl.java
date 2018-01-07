@@ -45,7 +45,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
@@ -217,9 +216,8 @@ public class AlertServiceImpl implements AlertService {
             return true;
           }
           logger.info("Deleting {} alerts", alerts.size());
-          List<String> alertIds = alerts.stream().map(Alert::getUuid).collect(Collectors.toList());
           wingsPersistence.getCollection("alerts").remove(
-              new BasicDBObject("_id", new BasicDBObject("$in", alertIds.toArray())));
+              new BasicDBObject("_id", new BasicDBObject("$in", alerts.stream().map(Alert::getUuid).toArray())));
         } catch (Exception ex) {
           logger.warn("Failed to delete {} alerts", alerts.size(), ex);
         }
