@@ -195,6 +195,7 @@ public class AlertServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
   }
+
   @Test
   public void shouldDeleteOldAlerts() {
     when(query.asList(any())).thenReturn(asList(noActive, noEligible));

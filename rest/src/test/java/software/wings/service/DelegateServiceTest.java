@@ -27,6 +27,7 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import freemarker.template.TemplateException;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -64,6 +65,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
@@ -92,6 +94,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
   @InjectMocks @Inject private DelegateService delegateService;
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Before
@@ -117,19 +120,19 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldList() throws Exception {
+  public void shouldList() {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
     assertThat(delegateService.list(aPageRequest().build())).hasSize(1).containsExactly(delegate);
   }
 
   @Test
-  public void shouldGet() throws Exception {
+  public void shouldGet() {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
     assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
   }
 
   @Test
-  public void shouldUpdate() throws Exception {
+  public void shouldUpdate() {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
     delegate.setLastHeartBeat(System.currentTimeMillis());
     delegate.setStatus(Status.DISABLED);
@@ -141,7 +144,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldAdd() throws Exception {
+  public void shouldAdd() {
     Delegate delegate = delegateService.add(BUILDER.but().build());
     assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
     verify(eventEmitter)
@@ -150,27 +153,27 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDelete() throws Exception {
+  public void shouldDelete() {
     String id = wingsPersistence.save(BUILDER.but().build());
     delegateService.delete(ACCOUNT_ID, id);
     assertThat(wingsPersistence.list(Delegate.class)).hasSize(0);
   }
 
   @Test
-  public void shouldRegister() throws Exception {
+  public void shouldRegister() {
     Delegate delegate = delegateService.register(BUILDER.but().build());
     assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
   }
 
   @Test
-  public void shouldRegisterExistingDelegate() throws Exception {
+  public void shouldRegisterExistingDelegate() {
     Delegate delegate = delegateService.add(BUILDER.but().build());
     delegateService.register(delegate);
     assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
   }
 
   @Test
-  public void shouldGetDelegateTasks() throws Exception {
+  public void shouldGetDelegateTasks() {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -185,7 +188,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldSaveDelegateTask() throws Exception {
+  public void shouldSaveDelegateTask() {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -198,7 +201,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldProcessDelegateTaskResponse() throws Exception {
+  public void shouldProcessDelegateTaskResponse() {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -219,7 +222,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDownloadWatcher() throws Exception {
+  public void shouldDownloadWatcher() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     File zipFile = delegateService.download("localhost:9090", ACCOUNT_ID);
@@ -271,7 +274,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws Exception {
+  public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
@@ -281,7 +284,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldNotSignalForDelegateUpgradeWhenDelegateIsLatest() throws Exception {
+  public void shouldNotSignalForDelegateUpgradeWhenDelegateIsLatest() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
@@ -292,7 +295,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Cache
   @Test
-  public void shouldAcquireTaskWhenQueued() throws Exception {
+  public void shouldAcquireTaskWhenQueued() {
     when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(true);
     when(assignDelegateService.canAssign(any(String.class), any(DelegateTask.class))).thenReturn(true);
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
@@ -309,7 +312,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Cache
   @Test
-  public void shouldNotAcquireTaskWhenAlreadyAcquired() throws Exception {
+  public void shouldNotAcquireTaskWhenAlreadyAcquired() {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
@@ -325,7 +328,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldFilterTaskForAccount() throws Exception {
+  public void shouldFilterTaskForAccount() {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID + "1")
@@ -339,7 +342,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldFilterTaskWhenDelegateIsDisabled() throws Exception {
+  public void shouldFilterTaskWhenDelegateIsDisabled() {
     wingsPersistence.saveAndGet(
         Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
     DelegateTask delegateTask = aDelegateTask()
@@ -356,7 +359,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() throws Exception {
+  public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
@@ -370,7 +373,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldFilterTaskWhenDelegateIsNotCapable() throws Exception {
+  public void shouldFilterTaskWhenDelegateIsNotCapable() {
     wingsPersistence.saveAndGet(
         Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
     DelegateTask delegateTask = aDelegateTask()

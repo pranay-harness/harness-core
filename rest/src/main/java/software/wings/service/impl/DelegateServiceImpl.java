@@ -8,12 +8,16 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
+import static org.awaitility.Awaitility.with;
+import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Status.ABORTED;
+import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
+import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -31,9 +35,11 @@ import com.google.inject.Singleton;
 import com.github.zafarkhaja.semver.Version;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IQueue;
+import com.mongodb.BasicDBObject;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -42,6 +48,7 @@ import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -851,14 +858,14 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly) {
-    List<DelegateTask> unassignedTasks = new ArrayList<>();
+    List<DelegateTask> unassignedOrAbortedTasks = new ArrayList<>();
     Cache<String, DelegateTask> delegateSyncCache =
         cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
     delegateSyncCache.forEach(stringDelegateTaskEntry -> {
       try {
         DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
         if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
-          unassignedTasks.add(syncDelegateTask);
+          unassignedOrAbortedTasks.add(syncDelegateTask);
         }
       } catch (Exception ex) {
         logger.error("Error in reading sync task from DELEGATE_SYNC_CACHE", ex);
@@ -871,28 +878,63 @@ public class DelegateServiceImpl implements DelegateService {
                                       .project("status", true)
                                       .project("async", true);
       query.or(query.and(query.criteria("status").equal(QUEUED), query.criteria("delegateId").doesNotExist()),
-          query.criteria("status").equal(ABORTED), query.criteria("delegateId").equal(delegateId));
+          query.and(query.criteria("status").equal(ABORTED), query.criteria("delegateId").equal(delegateId)));
 
-      unassignedTasks.addAll(query.asList());
+      unassignedOrAbortedTasks.addAll(query.asList());
     }
 
     logger.info("Dispatched delegateTaskIds:[{}] to delegate:[{}]",
-        Joiner.on(",").join(unassignedTasks.stream().map(DelegateTask::getUuid).collect(toList())), delegateId);
+        Joiner.on(",").join(unassignedOrAbortedTasks.stream().map(DelegateTask::getUuid).collect(toList())),
+        delegateId);
 
-    return unassignedTasks.stream().map(this ::getDelegateTaskEvent).collect(toList());
+    return unassignedOrAbortedTasks.stream().map(this ::getDelegateTaskEvent).collect(toList());
   }
 
   private DelegateTaskEvent getDelegateTaskEvent(DelegateTask delegateTask) {
-    return delegateTask.getStatus().equals(DelegateTask.Status.ABORTED)
-        ? DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent()
-              .withAccountId(delegateTask.getAccountId())
-              .withDelegateTaskId(delegateTask.getUuid())
-              .withSync(!delegateTask.isAsync())
-              .build()
-        : DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent()
-              .withAccountId(delegateTask.getAccountId())
-              .withDelegateTaskId(delegateTask.getUuid())
-              .withSync(!delegateTask.isAsync())
-              .build();
+    return delegateTask.getStatus().equals(ABORTED) ? aDelegateTaskAbortEvent()
+                                                          .withAccountId(delegateTask.getAccountId())
+                                                          .withDelegateTaskId(delegateTask.getUuid())
+                                                          .withSync(!delegateTask.isAsync())
+                                                          .build()
+                                                    : aDelegateTaskEvent()
+                                                          .withAccountId(delegateTask.getAccountId())
+                                                          .withDelegateTaskId(delegateTask.getUuid())
+                                                          .withSync(!delegateTask.isAsync())
+                                                          .build();
+  }
+
+  @Override
+  public void deleteOldTasks(long retentionMillis) {
+    final int batchSize = 1000;
+    final int limit = 5000;
+    final long hours = retentionMillis / (60 * 60 * 1000L);
+    try {
+      logger.info("Start: Deleting delegate tasks older than {} hours", hours);
+      with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {
+        List<DelegateTask> delegateTasks = new ArrayList<>();
+        try {
+          Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                          .field("createdAt")
+                                          .lessThan(clock.millis() - retentionMillis);
+          query.or(query.criteria("status").equal(ABORTED), query.criteria("status").equal(ERROR));
+          delegateTasks.addAll(query.asList(new FindOptions().limit(limit).batchSize(batchSize)));
+          if (CollectionUtils.isEmpty(delegateTasks)) {
+            logger.info("No more delegate tasks older than {} hours", hours);
+            return true;
+          }
+          logger.info("Deleting {} delegate tasks", delegateTasks.size());
+          wingsPersistence.getCollection("delegateTasks")
+              .remove(new BasicDBObject(
+                  "_id", new BasicDBObject("$in", delegateTasks.stream().map(DelegateTask::getUuid).toArray())));
+        } catch (Exception ex) {
+          logger.warn("Failed to delete {} delegate tasks", delegateTasks.size(), ex);
+        }
+        logger.info("Successfully deleted {} delegate tasks", delegateTasks.size());
+        return delegateTasks.size() < limit;
+      });
+    } catch (Exception ex) {
+      logger.warn("Failed to delete delegate tasks older than {} hours within 10 minutes.", hours, ex);
+    }
+    logger.info("Deleted delegate tasks older than {} hours", hours);
   }
 }
