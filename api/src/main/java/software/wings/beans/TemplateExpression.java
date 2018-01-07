@@ -152,7 +152,6 @@ public class TemplateExpression {
     private boolean expressionAllowed = true;
     private String description;
     private boolean mandatory;
-    private EntityType entityType;
     private Map<String, Object> metadata = Maps.newHashMap();
 
     private Builder() {}
@@ -183,11 +182,6 @@ public class TemplateExpression {
 
     public Builder withMandatory(boolean mandatory) {
       this.mandatory = mandatory;
-      return this;
-    }
-
-    public Builder withEntityType(EntityType entityType) {
-      this.entityType = entityType;
       return this;
     }
 

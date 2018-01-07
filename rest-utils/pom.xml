@@ -33,8 +33,5 @@
             <artifactId>lombok</artifactId>
             <scope>compile</scope>
         </dependency>
-
     </dependencies>
-
-
 </project>

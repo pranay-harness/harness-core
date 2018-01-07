@@ -2,7 +2,6 @@ package software.wings.jersey;
 
 import com.google.common.io.ByteStreams;
 
-import com.esotericsoftware.kryo.io.Output;
 import software.wings.utils.KryoUtils;
 
 import java.io.IOException;
@@ -46,7 +45,6 @@ public class KryoMessageBodyProvider implements MessageBodyWriter<Object>, Messa
   public void writeTo(final Object object, final Class<?> type, final Type genericType, final Annotation[] annotations,
       final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream)
       throws IOException, WebApplicationException {
-    final Output output = new Output(entityStream);
     KryoUtils.writeBytes(object, entityStream);
   }
 

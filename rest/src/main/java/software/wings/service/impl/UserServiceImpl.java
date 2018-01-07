@@ -92,6 +92,7 @@ import software.wings.utils.KryoUtils;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -794,7 +795,11 @@ public class UserServiceImpl implements UserService {
         + "harnesssupport.zendesk.com/access/jwt?jwt=" + jwtString;
 
     if (returnToUrl != null) {
-      redirectUrl += "&return_to=" + encode(redirectUrl);
+      try {
+        redirectUrl += "&return_to=" + encode(redirectUrl, Charset.defaultCharset().name());
+      } catch (UnsupportedEncodingException e) {
+        throw new WingsException(e);
+      }
     }
     return ZendeskSsoLoginResponse.builder().redirectUrl(redirectUrl).userId(user.getUuid()).build();
   }
