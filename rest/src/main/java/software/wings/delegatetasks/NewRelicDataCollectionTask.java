@@ -129,9 +129,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         NewRelicApplicationInstance node, Collection<String> metricNames, long endTime) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
+      logger.info("Fetching for host {} for stateExecutionId {} for metrics {}", node.getHost(),
+          dataCollectionInfo.getStateExecutionId(), metricNames);
       getWebTransactionMetrics(node, metricNames, endTime, records);
       getErrorMetrics(node, metricNames, endTime, records);
       getApdexMetrics(node, metricNames, endTime, records);
+      logger.info("Fetching done for host {} for stateExecutionId {} for metrics {}", node.getHost(),
+          dataCollectionInfo.getStateExecutionId(), metricNames);
 
       logger.debug(records.toString());
       return records;
@@ -323,6 +327,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 continue;
               }
 
+              logger.info("Going to collect for host {} for stateExecutionId {}, for metrics ", node.getHost(),
+                  dataCollectionInfo.getStateExecutionId(), metricBatches);
               callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }
 
