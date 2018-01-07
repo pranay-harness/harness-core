@@ -113,7 +113,7 @@ public class ApprovalDetails {
     }
 
     public Builder withApprovedBy(EmbeddedUser user) {
-      this.approvedBy = approvedBy;
+      this.approvedBy = user;
       return this;
     }
 
