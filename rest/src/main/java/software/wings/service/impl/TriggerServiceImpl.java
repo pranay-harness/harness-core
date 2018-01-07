@@ -260,7 +260,7 @@ public class TriggerServiceImpl implements TriggerService {
       Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       services = workflow.getServices();
       Map<String, String> workflowVariables = trigger.getWorkflowVariables();
-      if (workflowVariables != null || workflowVariables.size() != 0) {
+      if (workflowVariables != null && workflowVariables.size() != 0) {
         if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
           if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
             services = workflowService.resolveServices(workflow, workflowVariables);
