@@ -23,6 +23,7 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -88,7 +89,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     try {
       if (headerString.contains("multipart/form-data")) {
         // don't store file content in audit logs
-        auditHelper.create(header, RequestType.REQUEST, IOUtils.toInputStream(FILE_CONTENT_NOT_STORED));
+        auditHelper.create(
+            header, RequestType.REQUEST, IOUtils.toInputStream(FILE_CONTENT_NOT_STORED, Charset.defaultCharset()));
       } else {
         BoundedInputStream inputStream = new BoundedInputStream(
             requestContext.getEntityStream(), configuration.getFileUploadLimits().getAppContainerLimit());

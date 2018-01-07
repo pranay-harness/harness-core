@@ -41,13 +41,4 @@ public enum ErrorStrategy {
   public String getDisplayName() {
     return displayName;
   }
-
-  /**
-   * Sets display name.
-   *
-   * @param displayName the display name
-   */
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
-  }
 }
