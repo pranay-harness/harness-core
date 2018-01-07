@@ -434,7 +434,7 @@ public class StateMachineExecutor {
 
     ExecutionStatus status = executionResponse.getExecutionStatus();
     if (executionResponse.isAsync()) {
-      if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().size() == 0) {
+      if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().isEmpty()) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
             + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
         status = ERROR;

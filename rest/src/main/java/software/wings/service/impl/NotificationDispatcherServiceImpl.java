@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -110,7 +111,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private void dispatch(List<Notification> notifications, List<NotificationGroup> notificationGroups) {
-    if (notificationGroups == null || notifications == null || notifications.size() == 0) {
+    if (notificationGroups == null || notifications == null || notifications.isEmpty()) {
       return;
     }
     String appId = notifications.get(0).getAppId();
@@ -151,13 +152,13 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private void dispatchSlackMessage(List<Notification> notifications, List<String> channels) {
-    if (channels == null || channels.size() == 0) {
+    if (CollectionUtils.isEmpty(channels)) {
       return;
     }
 
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
         notifications.get(0).getAccountId(), SettingVariableTypes.SLACK.name());
-    if (settingAttributes == null || settingAttributes.size() == 0) {
+    if (CollectionUtils.isEmpty(settingAttributes)) {
       logger.error("No slack configuration found ");
       return;
     }
@@ -181,7 +182,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private void dispatchEmail(List<Notification> notifications, List<String> toAddress) {
-    if (toAddress == null || toAddress.size() == 0) {
+    if (CollectionUtils.isEmpty(toAddress)) {
       return;
     }
 
@@ -200,7 +201,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
           getDecoratedNotificationMessage(emailTemplate.getSubject(), notification.getNotificationTemplateVariables()));
     });
 
-    if (emailBodyList.size() == 0 || emailSubjectList.size() == 0) {
+    if (emailBodyList.isEmpty() || emailSubjectList.isEmpty()) {
       return;
     }
 

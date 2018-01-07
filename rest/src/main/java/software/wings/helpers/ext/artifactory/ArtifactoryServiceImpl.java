@@ -139,7 +139,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           logger.warn("Failed to get repository settings for repo {}, Reason {}", repoKey, e.getMessage());
         }
       }
-      if (repositories.size() == 0) {
+      if (repositories.isEmpty()) {
         // Better way of handling Unauthorized access
         logger.info("Repositories are not available of package types {} or User not authorized to access artifactory",
             packageTypes);

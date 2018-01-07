@@ -25,6 +25,7 @@ import com.google.inject.name.Named;
 
 import de.danielbechler.util.Collections;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -121,7 +122,7 @@ public class PipelineServiceImpl implements PipelineService {
           if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
             try {
               if (pipelineStageElement.getWorkflowVariables() == null
-                  || pipelineStageElement.getWorkflowVariables().size() == 0) {
+                  || pipelineStageElement.getWorkflowVariables().isEmpty()) {
                 // No need to validate pipeline
               } else {
                 pipeline.setTemplatized(true);
@@ -329,7 +330,7 @@ public class PipelineServiceImpl implements PipelineService {
           try {
             Workflow workflow =
                 workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-            if (pse.getWorkflowVariables() == null || pse.getWorkflowVariables().size() == 0) {
+            if (pse.getWorkflowVariables() == null || pse.getWorkflowVariables().isEmpty()) {
               workflow.getServices().forEach(service -> {
                 if (!serviceIds.contains(service.getUuid())) {
                   services.add(service);
@@ -393,7 +394,7 @@ public class PipelineServiceImpl implements PipelineService {
   private void validatePipelineEnvState(
       Workflow workflow, PipelineStageElement pipelineStageElement, List<String> invalidWorkflows) {
     Map<String, String> pseWorkflowVariables = pipelineStageElement.getWorkflowVariables();
-    if (pseWorkflowVariables == null || pseWorkflowVariables.size() == 0) {
+    if (MapUtils.isEmpty(pseWorkflowVariables)) {
       return;
     }
     Set<String> pseWkflwVariableNames = pseWorkflowVariables.keySet();
@@ -449,7 +450,7 @@ public class PipelineServiceImpl implements PipelineService {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "At least one pipeline stage required");
     }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-      if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().size() == 0) {
+      if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().isEmpty()) {
         throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid pipeline stage");
       }
 

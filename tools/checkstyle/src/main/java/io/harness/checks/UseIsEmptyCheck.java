@@ -6,12 +6,14 @@ import com.puppycrawl.tools.checkstyle.api.FullIdent;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 public class UseIsEmptyCheck extends AbstractCheck {
-  private static final String MSG_KEY = "code.readability.use.is_empty";
+  private static final String UTIL_NULL_OR_EMPTY_MSG_KEY = "code.readability.util.null_or_empty";
+  private static final String SIZE_TO_IS_EMPTY_MSG_KEY = "code.readability.size_to_is_empty";
 
   @Override
   public int[] getDefaultTokens() {
     return new int[] {
-        TokenTypes.EXPR,
+        TokenTypes.LOR,
+        TokenTypes.EQUAL,
     };
   }
 
@@ -25,28 +27,7 @@ public class UseIsEmptyCheck extends AbstractCheck {
     return getDefaultTokens();
   }
 
-  FullIdent equalNull(DetailAST ast) {
-    if (ast.getType() != TokenTypes.EQUAL) {
-      return null;
-    }
-
-    DetailAST ident = ast.getFirstChild();
-    DetailAST nil = ident.getNextSibling();
-
-    if (ident.getType() == TokenTypes.LITERAL_NULL) {
-      DetailAST temp = ident;
-      ident = nil;
-      nil = temp;
-    }
-
-    if (ident.getType() != TokenTypes.IDENT || nil.getType() != TokenTypes.LITERAL_NULL) {
-      return null;
-    }
-
-    return FullIdent.createFullIdent(ident);
-  }
-
-  FullIdent isEmptyCall(DetailAST ast) {
+  DetailAST methodCall(DetailAST ast, String name) {
     if (ast.getType() != TokenTypes.METHOD_CALL) {
       return null;
     }
@@ -55,14 +36,63 @@ public class UseIsEmptyCheck extends AbstractCheck {
       return null;
     }
 
-    DetailAST ident = dot.getFirstChild();
-    DetailAST method = ident.getNextSibling();
+    DetailAST identifier = dot.getFirstChild();
+    DetailAST method = identifier.getNextSibling();
 
-    if (method.getType() != TokenTypes.IDENT || !method.getText().equals("isEmpty")) {
+    if (method.getType() != TokenTypes.IDENT || !method.getText().equals(name)) {
       return null;
     }
 
-    return FullIdent.createFullIdent(ident);
+    return identifier;
+  }
+
+  interface AstPredicate {
+    boolean check(DetailAST ast);
+  }
+
+  DetailAST equalTo(DetailAST ast, AstPredicate object, AstPredicate something) {
+    if (ast.getType() != TokenTypes.EQUAL) {
+      return null;
+    }
+
+    DetailAST first = ast.getFirstChild();
+    DetailAST second = first.getNextSibling();
+
+    if (object.check(first) && something.check(second)) {
+      return first;
+    }
+
+    if (object.check(second) && something.check(first)) {
+      return second;
+    }
+
+    return null;
+  }
+
+  DetailAST identifierEqualNull(DetailAST ast) {
+    return equalTo(ast,
+        identifier
+        -> identifier.getType() == TokenTypes.IDENT,
+        constant -> constant.getType() == TokenTypes.LITERAL_NULL);
+  }
+
+  DetailAST methodEqualZero(DetailAST ast) {
+    return equalTo(ast,
+        method
+        -> method.getType() == TokenTypes.METHOD_CALL,
+        constant -> constant.getType() == TokenTypes.NUM_INT && constant.getText().equals("0"));
+  }
+
+  void checkForSizeEqualZero(DetailAST ast) {
+    final DetailAST method = methodEqualZero(ast);
+    if (method == null) {
+      return;
+    }
+    final DetailAST identifier = methodCall(method, "size");
+    if (identifier == null) {
+      return;
+    }
+    log(ast, SIZE_TO_IS_EMPTY_MSG_KEY);
   }
 
   void checkForNullOrIsEmpty(DetailAST ast) {
@@ -70,30 +100,26 @@ public class UseIsEmptyCheck extends AbstractCheck {
       return;
     }
     final DetailAST left = ast.getFirstChild();
-    final FullIdent leftIdent = equalNull(left);
-    if (leftIdent == null) {
+    final DetailAST leftIdentifier = identifierEqualNull(left);
+    if (leftIdentifier == null) {
       return;
     }
     final DetailAST right = left.getNextSibling();
-    final FullIdent rightIdent = isEmptyCall(right);
-    if (rightIdent == null) {
+    final DetailAST rightIdentifier = methodCall(right, "isEmpty");
+    if (rightIdentifier == null) {
       return;
     }
 
-    if (leftIdent.getText().equals(rightIdent.getText())) {
-      log(ast, MSG_KEY);
+    if (FullIdent.createFullIdent(leftIdentifier)
+            .getText()
+            .equals(FullIdent.createFullIdent(rightIdentifier).getText())) {
+      log(ast, UTIL_NULL_OR_EMPTY_MSG_KEY);
     }
   }
 
   @Override
   public void visitToken(DetailAST ast) {
-    if (ast.getParent().getType() != TokenTypes.LITERAL_IF) {
-      return;
-    }
-    if (ast.getChildCount() == 0) {
-      return;
-    }
-
-    checkForNullOrIsEmpty(ast.getFirstChild());
+    checkForSizeEqualZero(ast);
+    checkForNullOrIsEmpty(ast);
   }
 }

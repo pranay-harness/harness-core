@@ -280,7 +280,7 @@ public class GitClientImpl implements GitClient {
         }
       });
       Status status = git.status().call();
-      if (status.getAdded().size() == 0 && status.getChanged().size() == 0 && status.getRemoved().size() == 0) {
+      if (status.getAdded().isEmpty() && status.getChanged().isEmpty() && status.getRemoved().isEmpty()) {
         logger.warn("No git change to commit. GitCommitRequest: [{}]", gitCommitRequest);
         return GitCommitResult.builder().build(); // do nothing
       } else {

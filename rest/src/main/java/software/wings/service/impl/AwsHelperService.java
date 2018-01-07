@@ -1256,7 +1256,7 @@ public class AwsHelperService {
       String region, List<String> instanceIds, ExecutionLogCallback executionLogCallback) {
     DescribeInstancesResult describeInstancesResult = describeEc2Instances(
         awsConfig, encryptionDetails, region, new DescribeInstancesRequest().withInstanceIds(instanceIds));
-    boolean allRunning = instanceIds.size() == 0
+    boolean allRunning = instanceIds.isEmpty()
         || describeInstancesResult.getReservations()
                .stream()
                .flatMap(reservation -> reservation.getInstances().stream())
@@ -1280,7 +1280,7 @@ public class AwsHelperService {
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       List<String> instanceIds =
           listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
-      return instanceIds.size() == 0
+      return instanceIds.isEmpty()
           ? new DescribeInstancesResult()
           : amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds));
     } catch (AmazonServiceException amazonServiceException) {

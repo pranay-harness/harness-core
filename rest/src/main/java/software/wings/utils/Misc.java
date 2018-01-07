@@ -3,7 +3,6 @@ package software.wings.utils;
 import org.apache.commons.lang.ArrayUtils;
 import software.wings.common.Constants;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,14 +86,6 @@ public class Misc {
 
   public static boolean isNotNullOrEmpty(String str) {
     return !isNullOrEmpty(str);
-  }
-
-  public static boolean isNullOrEmpty(List list) {
-    return list == null || list.size() == 0;
-  }
-
-  public static boolean isNotNullOrEmpty(List list) {
-    return !isNullOrEmpty(list);
   }
 
   /**

@@ -10,8 +10,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.NameValuePair;
-import software.wings.utils.Misc;
 import software.wings.utils.Util;
 
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class AmiArtifactStream extends ArtifactStream {
 
   @Override
   public String getArtifactDisplayName(String amiName) {
-    if (Misc.isNullOrEmpty(tags)) {
+    if (CollectionUtils.isEmpty(tags)) {
       return String.format("%s_%s", getRegion(), amiName);
     }
     return String.format("%s_%s", getSourceName(), amiName);
@@ -54,7 +54,7 @@ public class AmiArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    if (tags == null || tags.size() == 0) {
+    if (CollectionUtils.isEmpty(tags)) {
       return region;
     }
     List<String> tagFields = new ArrayList<>();

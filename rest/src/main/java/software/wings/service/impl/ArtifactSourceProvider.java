@@ -7,13 +7,13 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.DataProvider;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +31,7 @@ public class ArtifactSourceProvider implements DataProvider {
   public Map<String, String> getData(String appId, String... params) {
     List<ArtifactStream> artifactStreams = artifactStreamService.list(
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, appId).build());
-    if (Misc.isNullOrEmpty(artifactStreams)) {
+    if (CollectionUtils.isEmpty(artifactStreams)) {
       return new HashMap<>();
     }
     List<Service> services = serviceResourceService.list(

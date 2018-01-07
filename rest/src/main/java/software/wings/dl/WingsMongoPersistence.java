@@ -18,6 +18,7 @@ import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -154,7 +155,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     req.setLimit("1");
     PageResponse<T> res = query(cls, req, readPref);
-    if (isEmpty(res)) {
+    if (CollectionUtils.isEmpty(res)) {
       return null;
     }
     T data = res.get(0);
@@ -570,9 +571,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
     if (userRequestInfo.isAppIdFilterRequired()) {
       // TODO: field name should be dynamic
-      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+      boolean emptyAppIdsInUserReq = CollectionUtils.isEmpty(userRequestInfo.getAppIds());
       if (emptyAppIdsInUserReq) {
-        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+        if (CollectionUtils.isEmpty(userRequestInfo.getAllowedAppIds())) {
           return false;
         } else {
           pageRequest.addFilter(
@@ -588,10 +589,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return true;
   }
 
-  private boolean isEmpty(List list) {
-    return list == null || list.isEmpty();
-  }
-
   private boolean authFilters(Query query) {
     if (UserThreadLocal.get() == null || UserThreadLocal.get().getUserRequestInfo() == null) {
       return true;
@@ -599,10 +596,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
     if (userRequestInfo.isAppIdFilterRequired()) {
       // TODO: field name should be dynamic
-      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+      boolean emptyAppIdsInUserReq = CollectionUtils.isEmpty(userRequestInfo.getAppIds());
 
       if (emptyAppIdsInUserReq) {
-        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+        if (CollectionUtils.isEmpty(userRequestInfo.getAllowedAppIds())) {
           return false;
         } else {
           query.field("appId").in(userRequestInfo.getAllowedAppIds());

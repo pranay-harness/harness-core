@@ -16,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.Query;
@@ -104,7 +105,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   private void setArtifactTypeAndInfraMappings(List<ServiceTemplate> serviceTemplates) {
-    if (serviceTemplates == null || serviceTemplates.size() == 0) {
+    if (CollectionUtils.isEmpty(serviceTemplates)) {
       return;
     }
     String appId = serviceTemplates.get(0).getAppId();

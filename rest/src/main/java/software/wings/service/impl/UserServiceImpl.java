@@ -223,7 +223,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private boolean domainAllowedToRegister(String email) {
-    return configuration.getPortal().getAllowedDomainsList().size() == 0
+    return configuration.getPortal().getAllowedDomainsList().isEmpty()
         || configuration.getPortal().getAllowedDomains().contains(email.split("@")[1]);
   }
 

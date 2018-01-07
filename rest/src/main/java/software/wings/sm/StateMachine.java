@@ -525,7 +525,7 @@ public class StateMachine extends Base {
    */
   public State getNextState(String fromStateName, TransitionType transitionType) {
     List<State> nextStates = getNextStates(fromStateName, transitionType);
-    if (nextStates == null || nextStates.size() == 0) {
+    if (CollectionUtils.isEmpty(nextStates)) {
       return null;
     }
     return nextStates.get(0);

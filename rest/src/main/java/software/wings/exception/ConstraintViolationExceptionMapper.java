@@ -162,7 +162,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     ImmutableList<String> errors = ImmutableList.copyOf(
         exception.getConstraintViolations().stream().map(v -> processMessage(v, getMessage(v))).collect(toList()));
 
-    if (errors.size() == 0) {
+    if (errors.isEmpty()) {
       errors = ImmutableList.of(Strings.nullToEmpty(exception.getMessage()));
     }
 

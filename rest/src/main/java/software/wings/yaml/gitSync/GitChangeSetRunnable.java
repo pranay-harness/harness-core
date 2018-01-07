@@ -47,7 +47,7 @@ public class GitChangeSetRunnable implements Runnable {
       logger.info("queuedAccountIdList:[{}], runningAccountIdList:[{}], waitingAccountIdList:[{}]", queuedAccountIdList,
           runningAccountIdList, waitingAccountIdList);
 
-      if (waitingAccountIdList.size() == 0) {
+      if (waitingAccountIdList.isEmpty()) {
         logger.info("No changeSet can be processed");
         // check and reset/expire if needed
       } else {

@@ -1163,7 +1163,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
     do {
       listServicesResult = awsHelperService.listServices(region, awsConfig, encryptedDataDetails, listServicesRequest);
-      if (listServicesResult.getServiceArns() == null || listServicesResult.getServiceArns().size() == 0) {
+      if (listServicesResult.getServiceArns() == null || listServicesResult.getServiceArns().isEmpty()) {
         break;
       }
       services.addAll(awsHelperService

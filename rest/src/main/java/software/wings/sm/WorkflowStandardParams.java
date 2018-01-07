@@ -8,6 +8,7 @@ import static software.wings.common.Constants.PHASE_PARAM;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -118,8 +119,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
-      if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
-          || templateRefKeysByService.get(0).getId() == null) {
+      if (CollectionUtils.isEmpty(templateRefKeysByService) || templateRefKeysByService.get(0).getId() == null) {
         map.put(SERVICE_VARIABLE, new HashMap<>());
         map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
         return map;

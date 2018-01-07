@@ -150,7 +150,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
-    boolean emptyAppIdsInReq = isEmpty(appIdsFromRequest);
+    boolean emptyAppIdsInReq = CollectionUtils.isEmpty(appIdsFromRequest);
     String envId = getRequestParamFromContext("envId", pathParameters, queryParameters);
 
     if (!emptyAppIdsInReq && accountId == null) {
@@ -196,7 +196,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private List<String> getValidAppsFromAccount(
       String accountId, List<String> appIdsFromRequest, boolean emptyAppIdsInReq) {
     List<String> appIdsOfAccount = appService.getAppIdsByAccountId(accountId);
-    if (!isEmpty(appIdsOfAccount)) {
+    if (!CollectionUtils.isEmpty(appIdsOfAccount)) {
       if (!emptyAppIdsInReq) {
         List<String> invalidAppIdList = Lists.newArrayList();
         for (String appId : appIdsFromRequest) {
@@ -266,10 +266,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
       userRequestInfoBuilder.withAllAppsAllowed(false).withAllowedAppIds(allowedAppIds);
     }
-  }
-
-  private boolean isEmpty(List list) {
-    return list == null || list.isEmpty();
   }
 
   private boolean isPresent(List<PermissionAttribute> requiredPermissionAttributes, PermissionScope permissionScope) {

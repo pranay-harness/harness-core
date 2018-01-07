@@ -196,6 +196,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getVerificationUrl()).thenReturn(VERIFICATION_PATH);
+    when(configuration.getPortal().getAllowedDomainsList().isEmpty()).thenReturn(true);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
@@ -237,6 +238,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getVerificationUrl()).thenReturn(VERIFICATION_PATH);
+    when(configuration.getPortal().getAllowedDomainsList().isEmpty()).thenReturn(true);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(accountService.save(any(Account.class)))
         .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
