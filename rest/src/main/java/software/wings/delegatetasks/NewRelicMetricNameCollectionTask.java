@@ -153,7 +153,7 @@ public class NewRelicMetricNameCollectionTask extends AbstractDelegateRunnableTa
 
       logger.info("total available metrics for new relic " + getMetrics().size());
     } catch (Exception e) {
-      logger.error("Unable to fetch NewRelic metrics {}", dataCollectionInfo.toString());
+      logger.error("Unable to fetch NewRelic metrics {}", dataCollectionInfo.toString(), e);
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskStatus.FAILURE)
           .stateType(StateType.NEW_RELIC)
