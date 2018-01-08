@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -115,7 +114,6 @@ public class DelegateApplication {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("verificationExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ExecutorService.class, Names.named("verificationDataCollector"))).shutdownNow();
     injector.getInstance(ExecutorService.class).shutdown();
-    injector.getInstance(ExecutorService.class).awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
     injector.getInstance(AsyncHttpClient.class).close();
     logger.info("Flushing logs");
     LogManager.shutdown();
