@@ -543,7 +543,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
         return true;
       }, 15L, TimeUnit.SECONDS, true);
-      logger.info("Processing DelegateTaskEvents [{}]", taskEvents);
+      logger.info("Processing DelegateTaskEvents {}", taskEvents);
       for (DelegateTaskEvent taskEvent : taskEvents) {
         if (taskEvent instanceof DelegateTaskAbortEvent) {
           abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
