@@ -66,6 +66,8 @@ public class PhysicalInfraMappingYamlHandler
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
     if (!Misc.isNullOrEmpty(yaml.getLoadBalancer())) {
       bean.setLoadBalancerId(getSettingId(appId, yaml.getLoadBalancer()));
+    } else {
+      bean.setLoadBalancerId("");
     }
     bean.setHostConnectionAttrs(yaml.getConnection());
     bean.setHostNames(yaml.getHostNames());

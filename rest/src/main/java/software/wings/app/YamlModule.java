@@ -81,9 +81,10 @@ import software.wings.service.impl.yaml.handler.command.ResizeCommandUnitYamlHan
 import software.wings.service.impl.yaml.handler.command.ScpCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.SetupEnvCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
-import software.wings.service.impl.yaml.handler.deploymentspec.EcsContainerTaskYamlHandler;
-import software.wings.service.impl.yaml.handler.deploymentspec.KubernetesContainerTaskYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.container.EcsContainerTaskYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.container.KubernetesContainerTaskYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.LambdaSpecificationYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.userdata.UserDataSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsLambdaInfraMappingYamlHandler;
@@ -183,6 +184,7 @@ public class YamlModule extends AbstractModule {
         .to(KubernetesContainerTaskYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AWS_LAMBDA.name())
         .to(LambdaSpecificationYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AMI.name()).to(UserDataSpecificationYamlHandler.class);
 
     MapBinder<String, ArtifactServerYamlHandler> artifactServerYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactServerYamlHandler.class);

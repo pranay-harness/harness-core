@@ -208,7 +208,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       for (VariableOverrideYaml cv : latestVariableOverrideList) {
         configVarsToDelete.remove(cv);
 
-        if (previousVariableOverrideList.contains(cv)) {
+        if (previousVariableOverrideList != null && previousVariableOverrideList.contains(cv)) {
           VariableOverrideYaml beforeCV = null;
           for (VariableOverrideYaml bcv : previousVariableOverrideList) {
             if (bcv.equals(cv)) {
@@ -292,7 +292,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
           serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false);
       Optional<ServiceVariable> variableOptional =
           serviceVariablesList.stream()
-              .filter(serviceVariable -> serviceVariable.getName().equals(serviceVariable.getName()))
+              .filter(serviceVariable -> serviceVariable.getName().equals(overrideYaml.getName()))
               .findFirst();
       if (variableOptional.isPresent()) {
         ServiceVariable parentServiceVariable = variableOptional.get();

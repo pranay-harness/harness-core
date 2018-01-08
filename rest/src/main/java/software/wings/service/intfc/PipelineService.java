@@ -44,7 +44,7 @@ public interface PipelineService extends OwnedByApplication {
    */
   Pipeline readPipeline(String appId, String pipelineId, boolean withServices);
 
-  Pipeline getPipelineByName(String accountId, String pipelineName);
+  Pipeline getPipelineByName(String appId, String pipelineName);
 
   /**
    * Create pipeline pipeline.

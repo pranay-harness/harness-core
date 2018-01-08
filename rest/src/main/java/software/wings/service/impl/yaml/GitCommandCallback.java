@@ -109,7 +109,7 @@ public class GitCommandCallback implements NotifyCallback {
                                         .build());
           yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
         } catch (YamlProcessingException ex) {
-          logger.error("Processing changeSet failed", ex);
+          logger.error("Unable to process git changeSet. Failed at {}", ex.getChange().getFilePath(), ex);
           yamlGitService.processFailedOrUnprocessedChanges(gitFileChangeList, ex.getChange(), ex.getMessage());
         }
       } else {

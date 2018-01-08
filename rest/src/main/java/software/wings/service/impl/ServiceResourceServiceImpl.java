@@ -905,6 +905,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public UserDataSpecification getUserDataSpecificationById(String appId, String userDataSpecificationId) {
+    return wingsPersistence.get(UserDataSpecification.class, appId, userDataSpecificationId);
+  }
+
+  @Override
   public Map<String, String> getData(String appId, String... params) {
     Service service = wingsPersistence.get(Service.class, appId, params[0]);
     List<ServiceCommand> serviceCommands = getServiceCommands(service.getAppId(), service.getUuid(), false);

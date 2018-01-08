@@ -63,6 +63,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -265,9 +266,12 @@ public class AppServiceImpl implements AppService {
   public Application update(Application app) {
     Application savedApp = get(app.getUuid());
     Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
-    UpdateOperations<Application> operations = wingsPersistence.createUpdateOperations(Application.class)
-                                                   .set("name", app.getName())
-                                                   .set("description", app.getDescription());
+    UpdateOperations<Application> operations =
+        wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName());
+    if (Util.isNotEmpty(app.getDescription())) {
+      operations.set("description", app.getDescription());
+    }
+
     wingsPersistence.update(query, operations);
     Application updatedApp = get(app.getUuid());
 

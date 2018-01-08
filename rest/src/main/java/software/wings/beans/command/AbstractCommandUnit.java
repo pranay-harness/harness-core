@@ -197,6 +197,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
         @Type(value = ResizeCommandUnit.Yaml.class, name = "RESIZE"),
         @Type(value = CodeDeployCommandUnit.Yaml.class, name = "CODE_DEPLOY"),
         @Type(value = AwsLambdaCommandUnit.Yaml.class, name = "AWS_LAMBDA"),
+        @Type(value = AmiCommandUnit.Yaml.class, name = "AWS_AMI"),
         @Type(value = KubernetesResizeCommandUnit.Yaml.class, name = "RESIZE_KUBERNETES"),
         @Type(value = KubernetesSetupCommandUnit.Yaml.class, name = "KUBERNETES_SETUP"),
         @Type(value = EcsSetupCommandUnit.Yaml.class, name = "ECS_SETUP")

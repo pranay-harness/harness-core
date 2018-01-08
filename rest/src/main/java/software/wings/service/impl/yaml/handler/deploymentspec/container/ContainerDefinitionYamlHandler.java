@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.handler.deploymentspec;
+package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.utils.Util.isEmpty;

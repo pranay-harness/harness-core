@@ -25,6 +25,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.WingsException;
@@ -319,6 +320,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             .toYaml(lambdaSpecification, appId);
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, lambdaSpecification.getUuid(), accountId, yaml,
         YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getUserDataSpec(String accountId, String appId, String userDataSpecId) {
+    UserDataSpecification userDataSpecification =
+        serviceResourceService.getUserDataSpecificationById(appId, userDataSpecId);
+
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, DeploymentType.AMI.name())
+                        .toYaml(userDataSpecification, appId);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, userDataSpecification.getUuid(), accountId, yaml,
+        YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
   }
 
   @Override

@@ -92,7 +92,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Override
   public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    Pipeline previous = getPrevious(changeContext, changeSetContext);
+    Pipeline previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Pipeline current = toBean(changeContext, changeSetContext, Builder.aPipeline());
     if (previous != null) {
       current.setUuid(previous.getUuid());
