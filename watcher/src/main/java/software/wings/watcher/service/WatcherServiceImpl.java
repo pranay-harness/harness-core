@@ -303,6 +303,7 @@ public class WatcherServiceImpl implements WatcherService {
             logger.info("Obsolete processes {} no longer tracked", obsolete);
             runningDelegates.removeAll(obsolete);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
+            obsolete.forEach(this ::shutdownDelegate);
           }
 
           if (shutdownPendingList.containsAll(runningDelegates)) {
