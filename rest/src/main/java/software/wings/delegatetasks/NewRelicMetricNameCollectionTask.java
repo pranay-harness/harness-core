@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -24,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -81,9 +81,12 @@ public class NewRelicMetricNameCollectionTask extends AbstractDelegateRunnableTa
     for (Collection<String> metricNames : metricBatches) {
       metricBatchCallable.add(() -> getMetricsWithNoData(metricNames));
     }
-    List<Set<String>> metricsWithNoData = executeParrallel(metricBatchCallable);
-    for (Set<String> metricSet : metricsWithNoData) {
-      for (String metricName : metricSet) {
+    List<Optional<Set<String>>> metricsWithNoData = executeParrallel(metricBatchCallable);
+    for (Optional<Set<String>> metricSet : metricsWithNoData) {
+      if (!metricSet.isPresent()) {
+        throw new WingsException("Unable to get NewRelic metrics with data in 24 hrs");
+      }
+      for (String metricName : metricSet.get()) {
         webTransactionMetrics.remove(metricName);
       }
     }
@@ -103,9 +106,12 @@ public class NewRelicMetricNameCollectionTask extends AbstractDelegateRunnableTa
                   metricNames, currentTime - TimeUnit.DAYS.toMillis(1), currentTime));
     }
 
-    List<NewRelicMetricData> metricDatas = executeParrallel(metricDataCallabels);
-    for (NewRelicMetricData metricData : metricDatas) {
-      metricsWithNoData.removeAll(metricData.getMetrics_found());
+    List<Optional<NewRelicMetricData>> metricDatas = executeParrallel(metricDataCallabels);
+    for (Optional<NewRelicMetricData> metricData : metricDatas) {
+      if (!metricData.isPresent()) {
+        throw new WingsException("Unable to get NewRelic metric data");
+      }
+      metricsWithNoData.removeAll(metricData.get().getMetrics_found());
       if (metricsWithNoData.isEmpty()) {
         break;
       }

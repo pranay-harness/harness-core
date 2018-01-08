@@ -37,6 +37,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -333,12 +334,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
 
             logger.info("submitting parallel tasks {}", callables.size());
-            List<Boolean> results = executeParrallel(callables);
-            /* TODO retrying this way keeps fetching each time even if
-             * the problem is in posting to the harness manager
-             */
-            for (boolean result : results) {
-              if (!result) {
+            List<Optional<Boolean>> results = executeParrallel(callables);
+            for (Optional<Boolean> result : results) {
+              if (!result.isPresent() || !result.get()) {
+                retry = RETRIES;
                 throw new WingsException("Cannot save new relic metric records. Server returned error");
               }
             }
@@ -362,13 +361,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             logger.info(
                 "Sending heartbeat new relic metric record to the server for minute " + dataCollectionMinuteEnd);
 
-            boolean result = metricStoreService.saveNewRelicMetrics(
-                dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
-                dataCollectionInfo.getStateExecutionId(), getTaskId(), getAllMetricRecords(records));
-            /* TODO retrying this way keeps fetching each time even if
-             * the problem is in posting to the harness manager
-             */
+            boolean result = saveMetrics(getAllMetricRecords(records));
             if (!result) {
+              retry = RETRIES;
               throw new WingsException("Cannot save new relic metric records. Server returned error");
             }
             records.clear();
@@ -414,7 +409,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
 
       if (completed.get()) {
-        logger.info("Shutting down new relic data collection");
+        logger.info("Shutting down new relic data collection for {}", dataCollectionInfo);
         shutDownCollection();
         return;
       }
@@ -436,6 +431,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private boolean saveMetrics(List<NewRelicMetricDataRecord> records) {
+      if (records.isEmpty()) {
+        return true;
+      }
       int retrySave = 0;
       do {
         boolean response = metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
@@ -443,6 +441,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         if (response) {
           return true;
         }
+        logger.warn("Unable to save NewRelic metrics to Harness manger {}. Retrying in {} ",
+            dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP_SECS);
         Misc.sleep(RETRY_SLEEP_SECS, TimeUnit.SECONDS);
       } while (++retrySave != RETRIES);
       return false;

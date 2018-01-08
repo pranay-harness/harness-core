@@ -13,6 +13,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -68,17 +69,25 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     }
   }
 
-  protected <T> List<T> executeParrallel(List<Callable<T>> callables) throws IOException {
+  protected <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) throws IOException {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
     logger.info("Parallelizing callables {} ", callables.size());
     for (Callable<T> callable : callables) {
-      completionService.submit(callable);
+      completionService.submit(() -> {
+        try {
+          return callable.call();
+        } catch (Throwable t) {
+          logger.error("Error in executing parallel callable ", t);
+          return null;
+        }
+      });
     }
 
-    List<T> rv = new ArrayList<>();
+    List<Optional<T>> rv = new ArrayList<>();
     for (int i = 0; i < callables.size(); i++) {
       try {
-        rv.add(completionService.take().get());
+        T result = completionService.take().get();
+        rv.add(result == null ? Optional.empty() : Optional.of(result));
       } catch (Exception e) {
         throw new IOException(e);
       }
