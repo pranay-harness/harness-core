@@ -1916,7 +1916,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
 
     List<String> parentInstanceIds = asList(stateExecutionInstanceId);
-    while (parentInstanceIds != null && !parentInstanceIds.isEmpty()) {
+    while (CollectionUtils.isNotEmpty(parentInstanceIds)) {
       PageRequest<StateExecutionInstance> pageRequest =
           aPageRequest()
               .withReadPref(CRITICAL)

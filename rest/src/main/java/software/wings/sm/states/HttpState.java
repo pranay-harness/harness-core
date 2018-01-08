@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
@@ -271,7 +272,7 @@ public class HttpState extends State {
     String methodExpression = null;
     String assertionExpression = null;
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (templateExpressions != null && !templateExpressions.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(templateExpressions)) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {

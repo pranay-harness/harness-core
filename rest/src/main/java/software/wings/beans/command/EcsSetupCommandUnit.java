@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Log;
@@ -133,7 +134,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     taskDefinition.setFamily(taskFamily);
 
     // Set service variables as environment variables
-    if (serviceVariables != null && !serviceVariables.isEmpty()) {
+    if (MapUtils.isNotEmpty(serviceVariables)) {
       Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey, entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue())));
       for (ContainerDefinition containerDefinition : taskDefinition.getContainerDefinitions()) {

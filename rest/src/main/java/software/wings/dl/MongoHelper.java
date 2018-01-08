@@ -10,6 +10,7 @@ import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
 import static software.wings.utils.Switch.unhandled;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;
@@ -162,9 +163,9 @@ public class MongoHelper {
     List<String> fieldsIncluded = req.getFieldsIncluded();
     List<String> fieldsExcluded = req.getFieldsExcluded();
 
-    if (fieldsIncluded != null && !fieldsIncluded.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(fieldsIncluded)) {
       query.retrievedFields(true, fieldsIncluded.toArray(new String[] {}));
-    } else if (fieldsExcluded != null && !fieldsExcluded.isEmpty()) {
+    } else if (CollectionUtils.isNotEmpty(fieldsExcluded)) {
       query.retrievedFields(false, fieldsExcluded.toArray(new String[] {}));
     }
 

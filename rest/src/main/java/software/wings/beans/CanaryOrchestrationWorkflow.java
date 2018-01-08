@@ -432,7 +432,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
                                          .filter(workflowPhase -> !workflowPhase.validate())
                                          .map(WorkflowPhase::getName)
                                          .collect(toList());
-      if (invalidChildren != null && !invalidChildren.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(invalidChildren)) {
         setValid(false);
         invalid += invalidChildren.toString();
       }

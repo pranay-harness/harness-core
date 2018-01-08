@@ -87,7 +87,7 @@ public class ExecutionResource {
     filter.setFieldName("appId");
 
     List<String> authorizedAppIds = null;
-    if (appIds != null && !appIds.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(appIds)) {
       authorizedAppIds = appIds; //(List<String>) CollectionUtils.intersection(authorizedAppIds, appIds);
     } else {
       PageRequest<Application> applicationPageRequest = aPageRequest()
@@ -109,7 +109,7 @@ public class ExecutionResource {
       pageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
     }
 
-    if (workflowTypes != null && !workflowTypes.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(workflowTypes)) {
       pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.IN, workflowTypes.toArray()).build());
     }
 

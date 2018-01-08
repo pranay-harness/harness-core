@@ -94,7 +94,7 @@ public class TemplateExpressionProcessor {
       PageRequest<Service> pageRequest =
           aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("name", EQ, serviceNameOrId).build();
       List<Service> services = serviceResourceService.list(pageRequest, false, false);
-      if (services != null && !services.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(services)) {
         return services.get(0);
       }
       throw new WingsException("Service expression " + templateExpression.getExpression() + " resolved as"

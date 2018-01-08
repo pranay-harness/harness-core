@@ -119,12 +119,12 @@ public class SetupServiceImpl implements SetupService {
                                              .withLimit("1")
                                              .build();
     PageResponse<WorkflowExecution> res = workflowExecutionService.listExecutions(req, false);
-    if (res != null && !res.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(res)) {
       return null;
     }
     for (Environment env : application.getEnvironments()) {
       List<Host> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
-      if (hosts != null && !hosts.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(hosts)) {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
             .withDisplayText("Setup complete: you can create a deployment.")

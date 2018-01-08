@@ -12,6 +12,7 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
 
       PageResponse<WorkflowExecution> runningWorkflowExecutions =
           wingsPersistence.query(WorkflowExecution.class, pageRequest);
-      if (runningWorkflowExecutions != null && !runningWorkflowExecutions.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(runningWorkflowExecutions)) {
         return;
       }
 

@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.sm.InstanceStatusSummary;
@@ -69,7 +70,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
     }
     putNotNull(executionDetails, "newAutoScalingGroupName",
         anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New ASG").build());
-    if (newInstanceData != null && !newInstanceData.isEmpty() && isNotNullOrEmpty(newAutoScalingGroupName)) {
+    if (CollectionUtils.isNotEmpty(newInstanceData) && isNotNullOrEmpty(newAutoScalingGroupName)) {
       int desiredCapacity =
           rollback ? newInstanceData.get(0).getPreviousCount() : newInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "newInstanceDataDesiredCapacity",
@@ -77,7 +78,7 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
     }
     putNotNull(executionDetails, "oldAutoScalingGroupName",
         anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old ASG").build());
-    if (oldInstanceData != null && !oldInstanceData.isEmpty() && isNotNullOrEmpty(oldAutoScalingGroupName)) {
+    if (CollectionUtils.isNotEmpty(oldInstanceData) && isNotNullOrEmpty(oldAutoScalingGroupName)) {
       int desiredCapacity =
           rollback ? oldInstanceData.get(0).getPreviousCount() : oldInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "oldInstanceDataDesiredCapacity",

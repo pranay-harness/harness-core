@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EnvStateExecutionData;
@@ -152,7 +153,7 @@ public class EnvState extends State {
     if (stateExecutionData.getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
       List<Artifact> artifacts =
           executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
-      if (artifacts != null && !artifacts.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(artifacts)) {
         List<ContextElement> artifactElements = new ArrayList<>();
         artifacts.forEach(artifact
             -> artifactElements.add(aServiceArtifactElement()
