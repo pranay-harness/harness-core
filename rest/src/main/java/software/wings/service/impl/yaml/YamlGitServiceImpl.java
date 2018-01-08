@@ -388,7 +388,7 @@ public class YamlGitServiceImpl implements YamlGitService {
               .set("yamlContent", change.getFileContent())
               .set("gitCommitId", commitId)
               .set("changeType", change.getChangeType().name())
-              .set("failureReason", "Blocked due to failure in the prior order");
+              .set("failureReason", "Blocked due to the other yaml processing failure");
 
       wingsPersistence.upsert(query, updateOperations);
     });

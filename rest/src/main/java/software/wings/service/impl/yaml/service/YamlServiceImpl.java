@@ -372,6 +372,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       try {
         logger.info("Processing change [{}]", changeContext.getChange());
         processYamlChange(changeContext, changeContextList);
+        yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
         logger.info("Processing done for change [{}]", changeContext.getChange());
       } catch (Exception ex) {
         logger.error("Exception while processing yaml file {}", yamlFilePath, ex);
