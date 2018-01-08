@@ -24,6 +24,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -77,7 +78,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
@@ -823,14 +823,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .withOrchestrationWorkflow(
                                     aCanaryOrchestrationWorkflow()
                                         .withWorkflowPhases(asList(
-                                            WorkflowPhase.builder()
-                                                .serviceId(SERVICE_ID)
-                                                .phaseSteps(asList(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                                       .addStep(aNode()
-                                                                                    .withType("COMMAND")
-                                                                                    .addProperty("commandName", "START")
-                                                                                    .build())
-                                                                       .build()))
+                                            aWorkflowPhase()
+                                                .withServiceId(SERVICE_ID)
+                                                .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
+                                                                  .addStep(aNode()
+                                                                               .withType("COMMAND")
+                                                                               .addProperty("commandName", "START")
+                                                                               .build())
+                                                                  .build())
                                                 .build()))
                                         .build())
                                 .build()))
@@ -859,14 +859,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .withOrchestrationWorkflow(
                                     aCanaryOrchestrationWorkflow()
                                         .withWorkflowPhases(asList(
-                                            WorkflowPhase.builder()
-                                                .serviceId(SERVICE_ID_CHANGED)
-                                                .phaseSteps(asList(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                                       .addStep(aNode()
-                                                                                    .withType("COMMAND")
-                                                                                    .addProperty("commandName", "START")
-                                                                                    .build())
-                                                                       .build()))
+                                            aWorkflowPhase()
+                                                .withServiceId(SERVICE_ID_CHANGED)
+                                                .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
+                                                                  .addStep(aNode()
+                                                                               .withType("COMMAND")
+                                                                               .addProperty("commandName", "START")
+                                                                               .build())
+                                                                  .build())
                                                 .build()))
                                         .build())
                                 .build()))
