@@ -53,8 +53,20 @@ public interface YamlGitService {
    */
   void fullSync(@NotEmpty String accountId);
 
+  /**
+   * Sync files.
+   *
+   * @param accountId         the account id
+   * @param gitFileChangeList the git file change list
+   */
   void syncFiles(String accountId, List<GitFileChange> gitFileChangeList);
 
+  /**
+   * Perform full sync dry run list.
+   *
+   * @param accountId the account id
+   * @return the list
+   */
   List<GitFileChange> performFullSyncDryRun(String accountId);
 
   /**
@@ -75,6 +87,15 @@ public interface YamlGitService {
   void processWebhookPost(String accountId, String webhookToken, YamlWebHookPayload yamlWebHookPayload);
 
   /**
+   * Is commit already processed boolean.
+   *
+   * @param accountId  the account id
+   * @param headCommit the head commit
+   * @return the boolean
+   */
+  boolean isCommitAlreadyProcessed(String accountId, String headCommit);
+
+  /**
    * Gets webhook.
    *
    * @param entityId  the entity id
@@ -83,18 +104,64 @@ public interface YamlGitService {
    */
   GitSyncWebhook getWebhook(String entityId, String accountId);
 
+  /**
+   * Save commit git commit.
+   *
+   * @param gitCommit the git commit
+   * @return the git commit
+   */
   GitCommit saveCommit(GitCommit gitCommit);
 
+  /**
+   * Process failed or unprocessed changes.
+   *
+   * @param failedOrPendingChanges the failed or pending changes
+   * @param failedChange           the failed change
+   * @param errorMessage           the error message
+   */
   void processFailedOrUnprocessedChanges(
       List<GitFileChange> failedOrPendingChanges, Change failedChange, String errorMessage);
 
+  /**
+   * Remove git sync errors.
+   *
+   * @param accountId         the account id
+   * @param gitFileChangeList the git file change list
+   */
   void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList);
 
+  /**
+   * List git sync errors rest response.
+   *
+   * @param accountId the account id
+   * @return the rest response
+   */
   RestResponse<List<GitSyncError>> listGitSyncErrors(String accountId);
 
+  /**
+   * Gets git sync error count.
+   *
+   * @param accountId the account id
+   * @return the git sync error count
+   */
   long getGitSyncErrorCount(String accountId);
 
+  /**
+   * Discard git sync error rest response.
+   *
+   * @param accountId    the account id
+   * @param yamlFilePath the yaml file path
+   * @return the rest response
+   */
   RestResponse discardGitSyncError(String accountId, String yamlFilePath);
 
+  /**
+   * Fix git sync errors rest response.
+   *
+   * @param accountId      the account id
+   * @param yamlFilePath   the yaml file path
+   * @param newYamlContent the new yaml content
+   * @return the rest response
+   */
   RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent);
 }

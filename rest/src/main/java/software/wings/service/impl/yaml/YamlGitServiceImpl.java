@@ -286,7 +286,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
   }
 
-  private boolean isCommitAlreadyProcessed(String accountId, String headCommit) {
+  @Override
+  public boolean isCommitAlreadyProcessed(String accountId, String headCommit) {
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
                               .field("accountId")
                               .equal(accountId)
