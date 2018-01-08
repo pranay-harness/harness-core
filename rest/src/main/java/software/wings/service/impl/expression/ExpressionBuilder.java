@@ -139,6 +139,9 @@ public abstract class ExpressionBuilder {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(START_TS, END_TS, STATUS, ERROR_MSG));
     switch (stateType) {
+      case SHELL_SCRIPT:
+        expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
+        break;
       case HTTP:
         expressions.addAll(asList(HTTP_URL, HTTP_RESPONSE_METHOD, HTTP_RESPONSE_CODE, HTTP_RESPONSE_BODY,
             ASSERTION_STATEMENT, ASSERTION_STATUS, XPATH, JSONPATH));
