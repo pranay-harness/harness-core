@@ -362,9 +362,15 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             logger.info(
                 "Sending heartbeat new relic metric record to the server for minute " + dataCollectionMinuteEnd);
 
-            metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
-                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(),
-                getAllMetricRecords(records));
+            boolean result = metricStoreService.saveNewRelicMetrics(
+                dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
+                dataCollectionInfo.getStateExecutionId(), getTaskId(), getAllMetricRecords(records));
+            /* TODO retrying this way keeps fetching each time even if
+             * the problem is in posting to the harness manager
+             */
+            if (!result) {
+              throw new WingsException("Cannot save new relic metric records. Server returned error");
+            }
             records.clear();
             windowStartTimeManager = windowEndTimeManager;
 
