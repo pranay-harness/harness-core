@@ -22,6 +22,7 @@ public class EcsInfraMappingYamlHandler
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.AWS_ECS.name());
     yaml.setRegion(bean.getRegion());
+    yaml.setCluster(bean.getClusterName());
     return yaml;
   }
 
@@ -62,6 +63,7 @@ public class EcsInfraMappingYamlHandler
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
     bean.setRegion(yaml.getRegion());
+    bean.setClusterName(yaml.getCluster());
   }
 
   @Override

@@ -48,6 +48,7 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -307,7 +308,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           } else {
             throw new YamlProcessingException("Unsupported type: " + yamlType, change);
           }
-        } else {
+        } else if (yamlFilePath.contains(YamlConstants.CONFIG_FILES_FOLDER)) {
           // Special handling for config files
           YamlType yamlType = findYamlType(yamlFilePath);
           if (YamlType.CONFIG_FILE_CONTENT == yamlType || YamlType.CONFIG_FILE_OVERRIDE_CONTENT == yamlType) {
@@ -341,11 +342,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           logger.error(error, ex);
           throw new YamlProcessingException(error, ex, change);
         } else {
-          logger.error("Unable to de-serialize yaml from string", ex);
+          logger.error("Unable to load yaml from string for file: " + yamlFilePath, ex);
           throw new YamlProcessingException(ex.getMessage(), ex, change);
         }
       } catch (Exception ex) {
-        logger.error("Unable to de-serialize yaml from string", ex);
+        logger.error("Unable to load yaml from string for file: " + yamlFilePath, ex);
         throw new YamlProcessingException(ex.getMessage(), ex, change);
       }
     }
@@ -421,8 +422,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   private final class FilePathComparator implements Comparator<Change> {
     @Override
-    public int compare(Change o1, Change o2) {
-      return findOrdinal(o1.getFilePath()) - findOrdinal(o2.getFilePath());
+    public int compare(Change lhs, Change rhs) {
+      return findOrdinal(lhs.getFilePath()) - findOrdinal(rhs.getFilePath());
     }
   }
 

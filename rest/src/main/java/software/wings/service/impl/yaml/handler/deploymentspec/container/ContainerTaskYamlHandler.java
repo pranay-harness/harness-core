@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.handler.deploymentspec;
+package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static java.util.Arrays.asList;
 
@@ -15,6 +15,7 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Util;

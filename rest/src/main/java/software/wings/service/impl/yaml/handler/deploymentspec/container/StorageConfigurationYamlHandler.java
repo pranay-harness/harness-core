@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.handler.deploymentspec;
+package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.container.StorageConfiguration;

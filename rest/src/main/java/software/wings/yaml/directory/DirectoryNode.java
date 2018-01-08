@@ -42,6 +42,8 @@ public class DirectoryNode {
       this.restName = "container-tasks";
     } else if (this.shortClassName.equals("LambdaSpecification")) {
       this.restName = "lambda-specs";
+    } else if (this.shortClassName.equals("UserDataSpecification")) {
+      this.restName = "user-data-specs";
     } else if (this.shortClassName.equals("Account")) {
       this.restName = "setup";
     } else {

@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.Yaml;
+import software.wings.beans.yaml.ChangeContext;
 
 /**
  * @author rktummala on 10/09/17
@@ -24,5 +25,12 @@ public class AmazonS3ArtifactStreamYamlHandler extends ArtifactStreamYamlHandler
   @Override
   protected AmazonS3ArtifactStream getNewArtifactStreamObject() {
     return new AmazonS3ArtifactStream();
+  }
+
+  protected void toBean(AmazonS3ArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+    super.toBean(bean, changeContext, appId);
+    Yaml yaml = changeContext.getYaml();
+    bean.setArtifactPaths(yaml.getArtifactPaths());
+    bean.setJobname(yaml.getBucketName());
   }
 }

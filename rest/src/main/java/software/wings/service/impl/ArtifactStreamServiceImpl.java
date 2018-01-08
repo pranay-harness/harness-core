@@ -100,7 +100,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .equal(appId)
         .field("serviceId")
         .equal(serviceId)
-        .field("sourceName")
+        .field("name")
         .equal(artifactStreamName)
         .get();
   }

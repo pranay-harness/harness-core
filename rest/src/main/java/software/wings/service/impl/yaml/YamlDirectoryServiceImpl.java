@@ -43,6 +43,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
@@ -181,6 +182,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             break;
           case "SettingAttribute":
             yaml = yamlResourceService.getSettingAttribute(accountId, entityId).getResource().getYaml();
+            break;
+          case "ContainerTask":
+            appId = ((ServiceLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getContainerTask(accountId, appId, entityId).getResource().getYaml();
+            break;
+          case "LambdaSpecification":
+            appId = ((ServiceLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getLambdaSpec(accountId, appId, entityId).getResource().getYaml();
+            break;
+          case "UserDataSpecification":
+            appId = ((ServiceLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getUserDataSpec(accountId, appId, entityId).getResource().getYaml();
             break;
           default:
             logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
@@ -424,6 +437,19 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, lambdaSpecification.getUuid(),
                 lambdaSpecification.getAppId(), service.getUuid(), lambdaSpecFileName, LambdaSpecification.class,
                 deploymentSpecsPath.clone().add(lambdaSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+          }
+        } else if (service.getArtifactType() == ArtifactType.AMI) {
+          FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
+              UserDataSpecification.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+          serviceFolder.addChild(deploymentSpecsFolder);
+
+          UserDataSpecification userDataSpecification =
+              serviceResourceService.getUserDataSpecification(service.getAppId(), service.getUuid());
+          if (userDataSpecification != null) {
+            String userDataSpecFileName = YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME + YAML_EXTENSION;
+            deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, userDataSpecification.getUuid(),
+                userDataSpecification.getAppId(), service.getUuid(), userDataSpecFileName, UserDataSpecification.class,
+                deploymentSpecsPath.clone().add(userDataSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
           }
         }
 

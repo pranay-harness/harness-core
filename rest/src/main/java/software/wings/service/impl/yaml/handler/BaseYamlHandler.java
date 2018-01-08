@@ -37,12 +37,6 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
     }
   }
 
-  public B getPrevious(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    String accountId = changeContext.getChange().getAccountId();
-    String yamlFilePath = changeContext.getChange().getFilePath();
-    return get(accountId, yamlFilePath);
-  }
-
   protected Builder cloneFileChangeContext(ChangeContext<Y> context, BaseYaml yaml) {
     Change change = context.getChange();
     Change.Builder clonedChange = change.clone();

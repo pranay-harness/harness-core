@@ -308,6 +308,8 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   LambdaSpecification getLambdaSpecificationById(String appId, String lambdaSpecificationId);
 
+  UserDataSpecification getUserDataSpecificationById(String appId, String userDataSpecificationId);
+
   /**
    * Create lambda specification lambda specification.
    *

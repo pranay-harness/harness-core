@@ -129,6 +129,8 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getLambdaSpec(String accountId, String appId, String lambdaSpecId);
 
+  RestResponse<YamlPayload> getUserDataSpec(String accountId, String appId, String userDataSpecId);
+
   RestResponse<YamlPayload> getSettingAttribute(String accountId, String uuid);
 
   RestResponse<ConfigFile> updateConfigFile(String accountId, YamlPayload yamlPayload);

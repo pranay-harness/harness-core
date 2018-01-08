@@ -165,7 +165,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
       for (NameValuePair.Yaml cv : configVars) {
         configVarsToDelete.remove(cv);
 
-        if (beforeConfigVars.contains(cv)) {
+        if (beforeConfigVars != null && beforeConfigVars.contains(cv)) {
           NameValuePair.Yaml beforeCV = null;
           for (NameValuePair.Yaml bcv : beforeConfigVars) {
             if (bcv.equals(cv)) {

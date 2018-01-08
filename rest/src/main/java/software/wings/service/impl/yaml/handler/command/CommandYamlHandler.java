@@ -57,15 +57,16 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     Validator.notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId);
     CommandYaml commandYaml = changeContext.getYaml();
     List<Node> nodeList = Lists.newArrayList();
-    List<Yaml> commandUnits = commandYaml.getCommandUnits();
+    List<Yaml> commandUnitYamlList = commandYaml.getCommandUnits();
     List<CommandUnit> commandUnitList = Lists.newArrayList();
     List<Link> linkList = Lists.newArrayList();
     String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(name);
 
-    if (!Util.isEmpty(commandUnits)) {
+    if (!Util.isEmpty(commandUnitYamlList)) {
       Node previousGraphNode = null;
-      for (Yaml commandUnitYaml : commandUnits) {
+
+      for (Yaml commandUnitYaml : commandUnitYamlList) {
         CommandUnitYamlHandler commandUnitYamlHandler = (CommandUnitYamlHandler) yamlHandlerFactory.getYamlHandler(
             YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
@@ -197,9 +198,9 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     ServiceCommand previous = get(accountId, changeContext.getChange().getFilePath());
     if (previous != null) {
-      return toBean(changeContext, changeSetContext, true);
-    } else {
       return toBean(changeContext, changeSetContext, false);
+    } else {
+      return toBean(changeContext, changeSetContext, true);
     }
   }
 

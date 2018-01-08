@@ -500,6 +500,25 @@ public class YamlResource {
   }
 
   @PUT
+  @Path("/user-data-specs/{userDataSpecId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Base> updateUserDataSpec(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  @GET
+  @Path("/user-data-specs/{userDataSpecId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getUserDataSpec(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @PathParam("userDataSpecId") String userDataSpecId) {
+    return yamlResourceService.getUserDataSpec(accountId, appId, userDataSpecId);
+  }
+
+  @PUT
   @Path("/lambda-specs/{lambdaSpecId}")
   @Timed
   @ExceptionMetered

@@ -315,8 +315,13 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public Pipeline getPipelineByName(String accountId, String pipelineName) {
-    return wingsPersistence.createQuery(Pipeline.class).field("name").equal(pipelineName).get();
+  public Pipeline getPipelineByName(String appId, String pipelineName) {
+    return wingsPersistence.createQuery(Pipeline.class)
+        .field("appId")
+        .equal(appId)
+        .field("name")
+        .equal(pipelineName)
+        .get();
   }
 
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {

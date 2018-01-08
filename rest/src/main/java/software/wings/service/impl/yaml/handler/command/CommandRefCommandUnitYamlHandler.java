@@ -8,20 +8,25 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Validator;
 import software.wings.yaml.command.CommandRefYaml;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author rktummala on 11/13/17
  */
 public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<CommandRefYaml, Command> {
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;
   @Inject private CommandService commandService;
 
@@ -35,7 +40,9 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
     return new Command();
   }
 
-  protected Command toBean(ChangeContext<CommandRefYaml> changeContext) throws HarnessException {
+  @Override
+  public Command upsertFromYaml(ChangeContext<CommandRefYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
     Command commandRef = super.toBean(changeContext);
     CommandRefYaml yaml = changeContext.getYaml();
     commandRef.setReferenceId(yaml.getName());
@@ -46,8 +53,45 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
     String serviceId = yamlHelper.getServiceId(appId, filePath);
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + filePath, serviceId);
 
-    ServiceCommand serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, yaml.getName());
-    Validator.notNullCheck("Couldn't retrieve service command with the given name: " + yaml.getName(), serviceCommand);
+    String commandName = yaml.getName();
+    ServiceCommand serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, commandName);
+
+    // This can happen when the command is the same changeset but not yet processed. So we extract it from the changeSet
+    // and process it first.
+    if (serviceCommand == null) {
+      // Get all the commands for the current service
+      Optional<ChangeContext> commandContextOptional =
+          changeSetContext.stream()
+              .filter(context -> {
+                if (!context.getYamlType().equals(YamlType.COMMAND)) {
+                  return false;
+                }
+
+                String commandFilePath = context.getChange().getFilePath();
+                String appIdOfCommand = yamlHelper.getAppId(context.getChange().getAccountId(), commandFilePath);
+                String serviceIdOfCommand = yamlHelper.getServiceId(appIdOfCommand, commandFilePath);
+
+                if (!(appId.equals(appIdOfCommand) && serviceId.equals(serviceIdOfCommand))) {
+                  return false;
+                }
+
+                String commandNameFromYamlPath = yamlHelper.getNameFromYamlFilePath(commandFilePath);
+                return commandNameFromYamlPath.equals(commandName);
+              })
+              .findFirst();
+
+      if (commandContextOptional.isPresent()) {
+        ChangeContext commandContext = commandContextOptional.get();
+        CommandYamlHandler commandYamlHandler =
+            (CommandYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.COMMAND, null);
+        commandYamlHandler.upsertFromYaml(commandContext, changeSetContext);
+        serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, commandName);
+        Validator.notNullCheck("No command found with the given name:" + commandName, serviceCommand);
+
+      } else {
+        throw new HarnessException("No command with the given name: " + yaml.getName());
+      }
+    }
 
     Command commandFromDB =
         commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion());
