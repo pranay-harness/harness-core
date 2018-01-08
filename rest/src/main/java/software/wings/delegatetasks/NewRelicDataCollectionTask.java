@@ -332,14 +332,17 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }
 
+            logger.info("submitting parallel tasks {}", callables.size());
             List<Boolean> results = executeParrallel(callables);
             for (boolean result : results) {
               if (!result) {
+                // TODO why is this set to 0???
                 retry = 0;
-                throw new RuntimeException("Cannot save new relic metric records. Server returned error");
+                throw new WingsException("Cannot save new relic metric records. Server returned error");
               }
             }
 
+            logger.info("done processing parallel tasks {}", callables.size());
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
             // HeartBeat
             records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
