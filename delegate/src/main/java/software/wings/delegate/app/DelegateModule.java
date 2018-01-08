@@ -7,7 +7,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
-
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import software.wings.api.DeploymentType;
@@ -151,8 +150,11 @@ public class DelegateModule extends AbstractModule {
             2, new ThreadFactoryBuilder().setNameFormat("Verification-Thread-%d").setPriority(7).build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))
-        .toInstance(Executors.newFixedThreadPool(
-            10, new ThreadFactoryBuilder().setNameFormat("Verification-Data-Collector-%d").setPriority(7).build()));
+        .toInstance(Executors.newFixedThreadPool(10,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Verification-Data-Collector-%d")
+                .setPriority(Thread.MAX_PRIORITY)
+                .build()));
 
     int cores = Runtime.getRuntime().availableProcessors();
     bind(ExecutorService.class)

@@ -70,6 +70,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   protected <T> List<T> executeParrallel(List<Callable<T>> callables) throws IOException {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
+    logger.info("Parallelizing callables {} ", callables.size());
     for (Callable<T> callable : callables) {
       completionService.submit(callable);
     }
@@ -82,7 +83,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         throw new IOException(e);
       }
     }
-
+    logger.info("Done parallelizing callables {} ", callables.size());
     return rv;
   }
 
