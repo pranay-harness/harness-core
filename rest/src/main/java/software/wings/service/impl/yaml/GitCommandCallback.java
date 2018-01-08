@@ -91,6 +91,15 @@ public class GitCommandCallback implements NotifyCallback {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
         List<GitFileChange> gitFileChangeList = gitDiffResult.getGitFileChanges();
         try {
+          // ensure gitCommit is not already processed
+          boolean commitAlreadyProcessed =
+              yamlGitService.isCommitAlreadyProcessed(accountId, gitDiffResult.getCommitId());
+          if (commitAlreadyProcessed) {
+            // do nothing
+            logger.warn("Commit already processed [{}]", gitDiffResult.getCommitId());
+            return;
+          }
+
           List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
           logger.info("Processed ChangeSet: [{}]", fileChangeContexts);
           yamlGitService.saveCommit(GitCommit.builder()
