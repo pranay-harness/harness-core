@@ -847,7 +847,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                           .equal(accountId)
                                                           .field("status")
                                                           .equal(QUEUED),
-            wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED).unset("delegateId"));
+            wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED));
 
     if (updatedTask == null) {
       logger.info("Updated task null");
@@ -858,49 +858,83 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly) {
-    List<DelegateTask> unassignedOrAbortedTasks = new ArrayList<>();
+    List<DelegateTaskEvent> delegateTaskEvents = new ArrayList<>(getSyncEvents());
+    if (!syncOnly) {
+      delegateTaskEvents.addAll(getQueuedEvents());
+      delegateTaskEvents.addAll(getAbortedEvents(delegateId));
+    }
+
+    logger.info("Dispatched delegateTaskIds:{} to delegate:[{}]",
+        Joiner.on(",").join(delegateTaskEvents.stream().map(DelegateTaskEvent::getDelegateTaskId).collect(toList())),
+        delegateId);
+
+    return delegateTaskEvents;
+  }
+
+  private List<DelegateTaskEvent> getSyncEvents() {
+    List<DelegateTaskEvent> syncTaskEvents = new ArrayList<>();
     Cache<String, DelegateTask> delegateSyncCache =
         cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
     delegateSyncCache.forEach(stringDelegateTaskEntry -> {
       try {
         DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
         if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
-          unassignedOrAbortedTasks.add(syncDelegateTask);
+          syncTaskEvents.add(aDelegateTaskEvent()
+                                 .withAccountId(syncDelegateTask.getAccountId())
+                                 .withDelegateTaskId(syncDelegateTask.getUuid())
+                                 .withSync(!syncDelegateTask.isAsync())
+                                 .build());
         }
       } catch (Exception ex) {
         logger.error("Error in reading sync task from DELEGATE_SYNC_CACHE", ex);
       }
     });
-
-    if (!syncOnly) {
-      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                      .project("accountId", true)
-                                      .project("status", true)
-                                      .project("async", true);
-      query.or(query.and(query.criteria("status").equal(QUEUED), query.criteria("delegateId").doesNotExist()),
-          query.and(query.criteria("status").equal(ABORTED), query.criteria("delegateId").equal(delegateId)));
-
-      unassignedOrAbortedTasks.addAll(query.asList());
-    }
-
-    logger.info("Dispatched delegateTaskIds:[{}] to delegate:[{}]",
-        Joiner.on(",").join(unassignedOrAbortedTasks.stream().map(DelegateTask::getUuid).collect(toList())),
-        delegateId);
-
-    return unassignedOrAbortedTasks.stream().map(this ::getDelegateTaskEvent).collect(toList());
+    return syncTaskEvents;
   }
 
-  private DelegateTaskEvent getDelegateTaskEvent(DelegateTask delegateTask) {
-    return delegateTask.getStatus().equals(ABORTED) ? aDelegateTaskAbortEvent()
-                                                          .withAccountId(delegateTask.getAccountId())
-                                                          .withDelegateTaskId(delegateTask.getUuid())
-                                                          .withSync(!delegateTask.isAsync())
-                                                          .build()
-                                                    : aDelegateTaskEvent()
-                                                          .withAccountId(delegateTask.getAccountId())
-                                                          .withDelegateTaskId(delegateTask.getUuid())
-                                                          .withSync(!delegateTask.isAsync())
-                                                          .build();
+  private List<DelegateTaskEvent> getQueuedEvents() {
+    Query<DelegateTask> queuedQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                          .field("status")
+                                          .equal(QUEUED)
+                                          .field("delegateId")
+                                          .doesNotExist()
+                                          .project("accountId", true)
+                                          .project("status", true)
+                                          .project("async", true);
+    return queuedQuery.asList()
+        .stream()
+        .map(delegateTask
+            -> aDelegateTaskEvent()
+                   .withAccountId(delegateTask.getAccountId())
+                   .withDelegateTaskId(delegateTask.getUuid())
+                   .withSync(!delegateTask.isAsync())
+                   .build())
+        .collect(toList());
+  }
+
+  private List<DelegateTaskEvent> getAbortedEvents(String delegateId) {
+    Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                           .field("status")
+                                           .equal(ABORTED)
+                                           .field("delegateId")
+                                           .equal(delegateId);
+
+    List<DelegateTaskEvent> delegateTaskAbortEvents = abortedQuery.project("accountId", true)
+                                                          .project("status", true)
+                                                          .project("async", true)
+                                                          .asList()
+                                                          .stream()
+                                                          .map(delegateTask
+                                                              -> aDelegateTaskAbortEvent()
+                                                                     .withAccountId(delegateTask.getAccountId())
+                                                                     .withDelegateTaskId(delegateTask.getUuid())
+                                                                     .withSync(!delegateTask.isAsync())
+                                                                     .build())
+                                                          .collect(toList());
+    UpdateOperations<DelegateTask> updateOperations =
+        wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId");
+    wingsPersistence.update(abortedQuery, updateOperations);
+    return delegateTaskAbortEvents;
   }
 
   @Override
