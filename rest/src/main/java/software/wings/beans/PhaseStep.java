@@ -280,7 +280,7 @@ public class PhaseStep {
     if (steps != null) {
       List<String> invalidChildren =
           steps.stream().filter(step -> !step.validate()).map(Node::getName).collect(Collectors.toList());
-      if (invalidChildren != null && !invalidChildren.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(invalidChildren)) {
         valid = false;
         validationMessage = String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());
       }

@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.api.BambooExecutionData.Builder.aBambooExecutionData;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -148,7 +147,7 @@ public class BambooState extends State {
     String planNameExpression = null;
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (templateExpressions != null && !templateExpressions.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(templateExpressions)) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {
@@ -183,7 +182,7 @@ public class BambooState extends State {
       evaluatedPlanName = planName;
     }
     List<ParameterEntry> evaluatedParameters = new ArrayList<>();
-    if (isNotEmpty(parameters)) {
+    if (CollectionUtils.isNotEmpty(parameters)) {
       parameters.forEach(parameterEntry -> {
         String evaluatedValue;
         try {
@@ -198,7 +197,7 @@ public class BambooState extends State {
       });
     }
     List<FilePathAssertionEntry> evaluatedFilePathsForAssertion = new ArrayList<>();
-    if (isNotEmpty(filePathsForAssertion)) {
+    if (CollectionUtils.isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> {
         String evaluatedFilePath = filePathAssertionEntry.getFilePath();
         try {

@@ -14,8 +14,10 @@ public class UseIsEmptyCheckTest extends AbstractModuleTestSupport {
   public void testNullOrIsEmptyDetectIssues() throws Exception {
     final DefaultConfiguration checkConfig = createModuleConfig(UseIsEmptyCheck.class);
 
-    final String[] expected1 = {
-        "7:22: Use isEmpty utility method instead.", "9:22: Use isEmpty utility method instead."};
+    final String[] expected1 = {"7:22: Use isEmpty utility method instead.",
+        "9:22: Use isEmpty utility method instead.", "12:22: Use isNotEmpty utility method instead.",
+        "14:22: Use isNotEmpty utility method instead.", "16:22: Use isNotEmpty utility method instead.",
+        "18:22: Use isNotEmpty utility method instead."};
 
     verify(checkConfig, getPath("UseIsEmptyCheckIssues.java"), expected1);
   }

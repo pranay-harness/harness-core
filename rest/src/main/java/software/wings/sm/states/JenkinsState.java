@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -201,7 +200,7 @@ public class JenkinsState extends State {
     String jobNameExpression = null;
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (templateExpressions != null && !templateExpressions.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(templateExpressions)) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {
@@ -254,7 +253,7 @@ public class JenkinsState extends State {
     });
 
     Map<String, String> evaluatedFilePathsForAssertion = Maps.newHashMap();
-    if (isNotEmpty(filePathsForAssertion)) {
+    if (CollectionUtils.isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionMap -> {
         String evaluatedKey;
         try {

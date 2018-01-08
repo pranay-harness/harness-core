@@ -6,6 +6,7 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -197,7 +198,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     response.values().forEach(notifyResponseData -> {
       if (notifyResponseData instanceof ElementNotifyResponseData) {
         List<ContextElement> notifyElements = ((ElementNotifyResponseData) notifyResponseData).getContextElements();
-        if (notifyElements != null && !notifyElements.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(notifyElements)) {
           if (executionResponse.getContextElements() == null) {
             executionResponse.setContextElements(new ArrayList<>());
           }

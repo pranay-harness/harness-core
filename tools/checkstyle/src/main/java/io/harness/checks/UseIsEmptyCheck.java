@@ -7,12 +7,14 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 public class UseIsEmptyCheck extends AbstractCheck {
   private static final String UTIL_NULL_OR_EMPTY_MSG_KEY = "code.readability.util.null_or_empty";
+  private static final String UTIL_NOT_NULL_AND_NOT_EMPTY_MSG_KEY = "code.readability.util.not_null_and_not_empty";
   private static final String SIZE_TO_IS_EMPTY_MSG_KEY = "code.readability.size_to_is_empty";
 
   @Override
   public int[] getDefaultTokens() {
     return new int[] {
         TokenTypes.LOR,
+        TokenTypes.LAND,
         TokenTypes.EQUAL,
     };
   }
@@ -50,8 +52,8 @@ public class UseIsEmptyCheck extends AbstractCheck {
     boolean check(DetailAST ast);
   }
 
-  DetailAST equalTo(DetailAST ast, AstPredicate object, AstPredicate something) {
-    if (ast.getType() != TokenTypes.EQUAL) {
+  DetailAST transitiveOperation(DetailAST ast, int operation, AstPredicate object, AstPredicate something) {
+    if (ast.getType() != operation) {
       return null;
     }
 
@@ -70,14 +72,20 @@ public class UseIsEmptyCheck extends AbstractCheck {
   }
 
   DetailAST identifierEqualNull(DetailAST ast) {
-    return equalTo(ast,
+    return transitiveOperation(ast, TokenTypes.EQUAL,
+        identifier
+        -> identifier.getType() == TokenTypes.IDENT,
+        constant -> constant.getType() == TokenTypes.LITERAL_NULL);
+  }
+  DetailAST identifierNotEqualNull(DetailAST ast) {
+    return transitiveOperation(ast, TokenTypes.NOT_EQUAL,
         identifier
         -> identifier.getType() == TokenTypes.IDENT,
         constant -> constant.getType() == TokenTypes.LITERAL_NULL);
   }
 
   DetailAST methodEqualZero(DetailAST ast) {
-    return equalTo(ast,
+    return transitiveOperation(ast, TokenTypes.EQUAL,
         method
         -> method.getType() == TokenTypes.METHOD_CALL,
         constant -> constant.getType() == TokenTypes.NUM_INT && constant.getText().equals("0"));
@@ -117,9 +125,33 @@ public class UseIsEmptyCheck extends AbstractCheck {
     }
   }
 
+  void checkForNotNullAndIsNotEmpty(DetailAST ast) {
+    if (ast.getType() != TokenTypes.LAND) {
+      return;
+    }
+    final DetailAST left = ast.getFirstChild();
+    final DetailAST leftIdentifier = identifierNotEqualNull(left);
+    if (leftIdentifier == null) {
+      return;
+    }
+    final DetailAST right = left.getNextSibling();
+    DetailAST rightIdentifier = right.getType() != TokenTypes.LNOT ? methodCall(right, "isNotEmpty")
+                                                                   : methodCall(right.getFirstChild(), "isEmpty");
+    if (rightIdentifier == null) {
+      return;
+    }
+
+    if (FullIdent.createFullIdent(leftIdentifier)
+            .getText()
+            .equals(FullIdent.createFullIdent(rightIdentifier).getText())) {
+      log(ast, UTIL_NOT_NULL_AND_NOT_EMPTY_MSG_KEY);
+    }
+  }
+
   @Override
   public void visitToken(DetailAST ast) {
     checkForSizeEqualZero(ast);
     checkForNullOrIsEmpty(ast);
+    checkForNotNullAndIsNotEmpty(ast);
   }
 }

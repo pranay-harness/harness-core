@@ -252,7 +252,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                    .addFilter("artifactId", EXISTS)
                                    .build());
 
-      if (pageResponse != null && !pageResponse.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(pageResponse)) {
         serviceInstanceArtifactParam.getInstanceArtifactMap().put(
             serviceInstanceId, pageResponse.getResponse().get(0).getArtifactId());
       }

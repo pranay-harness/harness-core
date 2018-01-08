@@ -44,6 +44,7 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.collections.MapUtils;
 import org.awaitility.core.ConditionTimeoutException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -424,7 +425,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (podSpec != null) {
       // Set service variables as environment variables
-      if (serviceVariables != null && !serviceVariables.isEmpty()) {
+      if (MapUtils.isNotEmpty(serviceVariables)) {
         Map<String, EnvVar> serviceEnvVars =
             serviceVariables.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build()));

@@ -8,6 +8,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Activity;
 import software.wings.beans.DeploymentExecutionContext;
@@ -38,7 +39,7 @@ public class AwsLambdaRollback extends AwsLambdaState {
                                  .addFilter("workflowExecutionId", NOT_EQ, workflowExecutionId)
                                  .addFilter("artifactId", EXISTS)
                                  .build());
-    if (pageResponse != null && !pageResponse.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(pageResponse)) {
       return artifactService.get(appId, pageResponse.getResponse().get(0).getArtifactId());
     }
     return null;

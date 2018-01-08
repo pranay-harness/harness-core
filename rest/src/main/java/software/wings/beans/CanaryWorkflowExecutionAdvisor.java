@@ -225,7 +225,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         if (stateExecutionDataHistory == null || stateExecutionDataHistory.size() < failureStrategy.getRetryCount()) {
           int waitInterval = 0;
           List<Integer> retryIntervals = failureStrategy.getRetryIntervals();
-          if (retryIntervals != null && !retryIntervals.isEmpty()) {
+          if (CollectionUtils.isNotEmpty(retryIntervals)) {
             if (CollectionUtils.isEmpty(stateExecutionDataHistory)) {
               waitInterval = retryIntervals.get(0);
             } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {

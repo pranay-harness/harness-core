@@ -6,6 +6,7 @@ import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.common.Constants;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
                                          .filter(workflowPhase -> !workflowPhase.validate())
                                          .map(WorkflowPhase::getName)
                                          .collect(toList());
-      if (invalidChildren != null && !invalidChildren.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(invalidChildren)) {
         setValid(false);
         invalid += invalidChildren.toString();
       }

@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -302,7 +301,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
         instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
       } else {
         List<String> instanceIds = serviceInstanceIdsParam.getInstanceIds();
-        if (isNotEmpty(instanceIds)) {
+        if (CollectionUtils.isNotEmpty(instanceIds)) {
           this.instanceIds = instanceIds.toArray(new String[instanceIds.size()]);
         } else {
           pageRequest.addFilter(aSearchFilter().withField(ID_KEY, Operator.IN, emptyList()).build());
@@ -343,7 +342,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       }
     }
 
-    if (serviceTemplates != null && !serviceTemplates.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(serviceTemplates)) {
       pageRequest.withLimit(UNLIMITED).addFilter(
           aSearchFilter()
               .withField(
@@ -388,7 +387,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
             .withLimit(UNLIMITED)
             .addFilter(aSearchFilter().withField("envId", Operator.EQ, envId).build())
             .addOrder(SortOrder.Builder.aSortOrder().withField("createdAt", OrderType.ASC).build());
-    if (services != null && !services.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(services)) {
       pageRequestBuilder.addFilter(
           aSearchFilter()
               .withField("serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray())

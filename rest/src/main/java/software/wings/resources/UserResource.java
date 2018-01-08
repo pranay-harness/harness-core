@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.auth.Auth;
 import io.swagger.annotations.Api;
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
@@ -87,7 +88,7 @@ public class UserResource {
     Account account = accountService.get(accountId);
     pageRequest.addFilter("accounts", account, Operator.HAS);
     PageResponse<User> pageResponse = userService.list(pageRequest);
-    if (pageResponse != null && !pageResponse.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(pageResponse)) {
       pageResponse.forEach(user -> {
         int i = 0;
         while (i < user.getAccounts().size()) {

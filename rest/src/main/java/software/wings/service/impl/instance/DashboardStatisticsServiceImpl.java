@@ -665,12 +665,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       EntitySummary infraMappingEntitySummary = null;
       List<ElementExecutionSummary> serviceExecutionSummaries = workflowExecution.getServiceExecutionSummaries();
 
-      if (serviceExecutionSummaries != null && !serviceExecutionSummaries.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(serviceExecutionSummaries)) {
         // we always have one execution summary per workflow
         ElementExecutionSummary elementExecutionSummary = serviceExecutionSummaries.get(0);
         instancesCount = elementExecutionSummary.getInstancesCount();
         List<InfraMappingSummary> infraMappingSummaries = elementExecutionSummary.getInfraMappingSummaries();
-        if (infraMappingSummaries != null && !infraMappingSummaries.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(infraMappingSummaries)) {
           InfraMappingSummary infraMappingSummary = infraMappingSummaries.get(0);
           infraMappingEntitySummary = getEntitySummary(infraMappingSummary.getDisplayName(),
               infraMappingSummary.getInfraMappingId(), EntityType.INFRASTRUCTURE_MAPPING.name());
@@ -758,7 +758,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private Query<Instance> getQuery(List<String> appIds) throws Exception {
     Query query = wingsPersistence.createAuthorizedQuery(Instance.class);
-    if (appIds != null && !appIds.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
     }
 
