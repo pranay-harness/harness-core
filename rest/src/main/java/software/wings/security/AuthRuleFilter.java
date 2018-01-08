@@ -8,6 +8,8 @@ import static org.apache.commons.lang.StringUtils.substringAfter;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
+import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anUserRequestInfo;
 
 import com.google.common.collect.ImmutableList;
@@ -381,7 +383,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private String extractToken(ContainerRequestContext requestContext) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      throw new WingsException(INVALID_TOKEN);
+      throw new WingsException(aResponseMessage().code(INVALID_TOKEN).acuteness(ALERTING).build());
     }
     return authorizationHeader.substring("Bearer".length()).trim();
   }

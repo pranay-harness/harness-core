@@ -9,6 +9,8 @@ import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
@@ -97,9 +99,9 @@ public class AuthServiceImpl implements AuthService {
     AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
 
     if (authToken == null) {
-      throw new WingsException(INVALID_TOKEN);
+      throw new WingsException(aResponseMessage().code(INVALID_TOKEN).acuteness(ALERTING).build());
     } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
-      throw new WingsException(EXPIRED_TOKEN);
+      throw new WingsException(aResponseMessage().code(EXPIRED_TOKEN).acuteness(ALERTING).build());
     }
     User user = getUserFromCacheOrDB(authToken);
     if (user == null) {
@@ -230,7 +232,7 @@ public class AuthServiceImpl implements AuthService {
       verifier.verify(externalServiceToken);
       JWT decode = JWT.decode(externalServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
-        throw new WingsException(EXPIRED_TOKEN);
+        throw new WingsException(aResponseMessage().code(EXPIRED_TOKEN).acuteness(ALERTING).build());
       }
     } catch (Exception ex) {
       logger.warn("Error in verifying JWT token ", ex);
