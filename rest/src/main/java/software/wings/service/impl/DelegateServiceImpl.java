@@ -847,7 +847,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                           .equal(accountId)
                                                           .field("status")
                                                           .equal(QUEUED),
-            wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED));
+            wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED).unset("delegateId"));
 
     if (updatedTask == null) {
       logger.info("Updated task null");
