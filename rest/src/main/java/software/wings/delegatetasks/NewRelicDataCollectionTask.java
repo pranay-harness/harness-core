@@ -334,10 +334,11 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             logger.info("submitting parallel tasks {}", callables.size());
             List<Boolean> results = executeParrallel(callables);
+            /* TODO retrying this way keeps fetching each time even if
+             * the problem is in posting to the harness manager
+             */
             for (boolean result : results) {
               if (!result) {
-                // TODO why is this set to 0???
-                retry = 0;
                 throw new WingsException("Cannot save new relic metric records. Server returned error");
               }
             }
