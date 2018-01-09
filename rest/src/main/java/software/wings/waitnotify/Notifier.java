@@ -68,7 +68,7 @@ public class Notifier implements Runnable {
               .build());
 
       if (isEmpty(waitQueuesResponse)) {
-        logger.warn("No entry in the waitQueue found for the correlationIds: {} skipping ...", correlationIds);
+        logger.warn("No entry in the waitQueue found for {} correlationIds", correlationIds.size());
         return;
       }
 
