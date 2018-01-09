@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -184,12 +185,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> List<String> save(List<T> ts) {
-    for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
-      T t = iterator.next();
-      if (t == null) {
-        iterator.remove();
-      }
-    }
+    ts.removeIf(Objects::isNull);
     List<String> ids = new ArrayList<>();
     for (T t : ts) {
       ids.add(save(t));
@@ -206,6 +202,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       T t = iterator.next();
       if (t == null) {
         iterator.remove();
+        continue;
       }
       this.encryptIfNecessary(t);
     }
