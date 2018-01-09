@@ -264,13 +264,15 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#getByName(java.lang.String, java.lang.String)
    */
   @Override
-  public SettingAttribute getByName(String appId, String attributeName) {
-    return getByName(appId, GLOBAL_ENV_ID, attributeName);
+  public SettingAttribute getByName(String accountId, String appId, String attributeName) {
+    return getByName(accountId, appId, GLOBAL_ENV_ID, attributeName);
   }
 
   @Override
-  public SettingAttribute getByName(String appId, String envId, String attributeName) {
+  public SettingAttribute getByName(String accountId, String appId, String envId, String attributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
+        .field("accountId")
+        .equal(accountId)
         .field("appId")
         .in(asList(appId, GLOBAL_APP_ID))
         .field("envId")

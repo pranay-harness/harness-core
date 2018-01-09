@@ -38,7 +38,7 @@ public class GcpKubernetesInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
+    String computeProviderId = getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
     Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);

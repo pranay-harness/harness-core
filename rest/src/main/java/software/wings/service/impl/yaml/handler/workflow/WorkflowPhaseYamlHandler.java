@@ -45,8 +45,8 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       throws HarnessException {
     Yaml yaml = context.getYaml();
     Change change = context.getChange();
-
-    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
+    String accountId = change.getAccountId();
+    String appId = yamlHelper.getAppId(accountId, change.getFilePath());
     Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
 
     String envId = context.getEntityIdMap().get(EntityType.ENVIRONMENT.name());
@@ -103,7 +103,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                                 .collect(Collectors.toList());
     }
 
-    SettingAttribute computeProvider = settingsService.getByName(appId, yaml.getComputeProviderName());
+    SettingAttribute computeProvider = settingsService.getByName(accountId, appId, yaml.getComputeProviderName());
     String computeProviderId;
     if (computeProvider == null) {
       computeProviderId = yaml.getComputeProviderName();

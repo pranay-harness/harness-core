@@ -88,14 +88,12 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     Validator.notNullCheck("No account found for appId:" + appId, accountId);
 
     ServiceCommand serviceCommand = commandService.getServiceCommand(appId, serviceCommandId);
-    Validator.notNullCheck("No service command with the given id:" + serviceCommandId, serviceCommand);
-
-    Command command = commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion());
-    Validator.notNullCheck("No command with the given service command id:" + serviceCommandId, command);
-
-    serviceCommand.setCommand(command);
-
     if (serviceCommand != null) {
+      Command command = commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion());
+      Validator.notNullCheck("No command with the given service command id:" + serviceCommandId, command);
+
+      serviceCommand.setCommand(command);
+
       CommandYaml commandYaml =
           (CommandYaml) yamlHandlerFactory.getYamlHandler(YamlType.COMMAND, null).toYaml(serviceCommand, appId);
       return YamlHelper.getYamlRestResponse(yamlGitSyncService, serviceCommand.getUuid(), accountId, commandYaml,
