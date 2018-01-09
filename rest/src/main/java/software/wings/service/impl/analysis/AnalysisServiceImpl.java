@@ -509,11 +509,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType) {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
     ErrorCode errorCode = null;
     try {
       switch (stateType) {

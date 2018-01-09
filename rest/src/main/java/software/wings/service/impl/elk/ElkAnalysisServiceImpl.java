@@ -31,11 +31,12 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
   @Override
   public Map<String, ElkIndexTemplate> getIndices(String accountId, String analysisServerConfigId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
     if (settingAttribute == null) {
       throw new WingsException("No elk setting with id: " + analysisServerConfigId + " found");
     }
+
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
 
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     SyncTaskContext elkTaskContext =
