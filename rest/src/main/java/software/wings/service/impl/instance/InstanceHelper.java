@@ -303,8 +303,8 @@ public class InstanceHelper {
           setInstanceInfoAndKey(builder, instance, phaseExecutionData.getInfraMappingId(), null);
         } else {
           logger.warn(
-              "Cannot build host based instance info since instanceId is not found in AWS wworkflowId:{}, instanceId:{}",
-              workflowExecution.getUuid(), instance.getInstanceId());
+              "Cannot build host based instance info since instanceId is not found in AWS workflowId:{}, instanceId:{}",
+              workflowExecution.getUuid(), host.getInstanceId());
           return null;
         }
       } else {
