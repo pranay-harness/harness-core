@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -77,16 +78,9 @@ public class NewRelicMetricNameCollectionTask extends AbstractDelegateRunnableTa
       webTransactionMetrics.put(metric.getName(), metric);
     }
     List<Collection<String>> metricBatches = batchMetricsToCollect();
-    List<Callable<Set<String>>> metricBatchCallable = new ArrayList<>();
     for (Collection<String> metricNames : metricBatches) {
-      metricBatchCallable.add(() -> getMetricsWithNoData(metricNames));
-    }
-    List<Optional<Set<String>>> metricsWithNoData = executeParrallel(metricBatchCallable);
-    for (Optional<Set<String>> metricSet : metricsWithNoData) {
-      if (!metricSet.isPresent()) {
-        throw new WingsException("Unable to get NewRelic metrics with data in 24 hrs");
-      }
-      for (String metricName : metricSet.get()) {
+      Set<String> metricsWithNoData = getMetricsWithNoData(metricNames);
+      for (String metricName : metricsWithNoData) {
         webTransactionMetrics.remove(metricName);
       }
     }
