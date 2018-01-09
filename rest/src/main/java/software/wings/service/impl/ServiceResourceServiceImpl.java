@@ -653,7 +653,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     } else {
       containerTask.setAdvancedType(advancedPayload.getAdvancedType());
       containerTask.setAdvancedConfig(advancedPayload.getAdvancedConfig());
-      containerTask.validateAdvanced();
+      // Disabling advanced validation since it doesn't work when service variable expressions are used.
+      // containerTask.validateAdvanced();
     }
     return createContainerTask(containerTask, false);
   }
