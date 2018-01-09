@@ -842,7 +842,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     logger.info("Waiting for instances to register with cluster. {}/{} registered...",
         cluster.getRegisteredContainerInstancesCount(), clusterSize);
 
-    return cluster.getRegisteredContainerInstancesCount() == clusterSize;
+    return cluster.getRegisteredContainerInstancesCount().equals(clusterSize);
   }
 
   private boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
