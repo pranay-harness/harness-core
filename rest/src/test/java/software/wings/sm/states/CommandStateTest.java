@@ -102,6 +102,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 6/10/16.
@@ -265,6 +266,7 @@ public class CommandStateTest extends WingsBaseTest {
                        .withAccountId(ACCOUNT_ID)
                        .withTaskType(TaskType.COMMAND)
                        .withWaitId(ACTIVITY_ID)
+                       .withTimeout(TimeUnit.MINUTES.toMillis(30))
                        .withParameters(new Object[] {COMMAND,
                            aCommandExecutionContext()
                                .withAppId(APP_ID)
@@ -382,6 +384,7 @@ public class CommandStateTest extends WingsBaseTest {
                        .withAccountId(ACCOUNT_ID)
                        .withTaskType(TaskType.COMMAND)
                        .withWaitId(ACTIVITY_ID)
+                       .withTimeout(TimeUnit.MINUTES.toMillis(30))
                        .withParameters(new Object[] {command,
                            aCommandExecutionContext()
                                .withAppId(APP_ID)
