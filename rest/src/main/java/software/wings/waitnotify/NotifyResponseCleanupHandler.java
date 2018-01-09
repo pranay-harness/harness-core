@@ -72,7 +72,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
 
       for (NotifyResponse notifyResponse : notifyPageResponses) {
         if (waitQueueMap.get(notifyResponse.getUuid()) != null) {
-          logger.info("Some wait queues still present .. skiping notifyResponse : " + notifyResponse.getUuid());
+          logger.info("Some wait queues still present .. skipping notifyResponse : " + notifyResponse.getUuid());
           continue;
         }
 
