@@ -341,10 +341,7 @@ public class StateMachineExecutor {
     boolean updated =
         updateStartStatus(stateExecutionInstance, STARTING, Lists.newArrayList(NEW, QUEUED, PAUSED, WAITING));
     if (!updated) {
-      WingsException ex =
-          new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
-      logger.error(ex.getMessage(), ex);
-      throw ex;
+      throw new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
     }
     State currentState =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
@@ -434,7 +431,7 @@ public class StateMachineExecutor {
 
     ExecutionStatus status = executionResponse.getExecutionStatus();
     if (executionResponse.isAsync()) {
-      if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().isEmpty()) {
+      if (CollectionUtils.isEmpty(executionResponse.getCorrelationIds())) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
             + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
         status = ERROR;

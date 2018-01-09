@@ -100,7 +100,7 @@ public class NewRelicDeploymentMarkerState extends State {
     // String waitId = UUID.randomUUID().toString();
     String correlationId = UUID.randomUUID().toString();
 
-    String delegateTaksId =
+    String delegateTaskId =
         delegateService.queueTask(aDelegateTask()
                                       .withTaskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER)
                                       .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
@@ -128,7 +128,7 @@ public class NewRelicDeploymentMarkerState extends State {
         .withExecutionStatus(ExecutionStatus.RUNNING)
         .withErrorMessage("Sending deployment marker to NewRelic")
         .withStateExecutionData(executionData)
-        .withDelegateTaskId(delegateTaksId)
+        .withDelegateTaskId(delegateTaskId)
         .build();
   }
 
