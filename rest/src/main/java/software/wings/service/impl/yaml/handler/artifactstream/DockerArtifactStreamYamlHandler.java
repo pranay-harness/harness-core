@@ -33,7 +33,7 @@ public class DockerArtifactStreamYamlHandler
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     Builder builder = Builder.aDockerArtifactStream().withServiceId(serviceId).withAppId(appId);
-    toBean(builder, changeContext.getYaml(), appId);
+    toBean(accountId, builder, changeContext.getYaml(), appId);
     if (previous != null) {
       builder.withUuid(previous.getUuid());
       return (DockerArtifactStream) artifactStreamService.update(builder.build());
@@ -53,9 +53,8 @@ public class DockerArtifactStreamYamlHandler
     return new DockerArtifactStream();
   }
 
-  private void toBean(
-      DockerArtifactStream.Builder builder, DockerArtifactStream.Yaml artifactStreamYaml, String appId) {
-    builder.withSettingId(getSettingId(appId, artifactStreamYaml.getServerName()))
+  private void toBean(String accountId, Builder builder, Yaml artifactStreamYaml, String appId) {
+    builder.withSettingId(getSettingId(accountId, appId, artifactStreamYaml.getServerName()))
         .withImageName(artifactStreamYaml.getImageName())
         .build();
   }

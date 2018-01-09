@@ -40,7 +40,7 @@ public class PhysicalInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
-    String computeProviderId = getSettingId(appId, infraMappingYaml.getComputeProviderName());
+    String computeProviderId = getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
     Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
@@ -65,7 +65,7 @@ public class PhysicalInfraMappingYamlHandler
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
     if (!Misc.isNullOrEmpty(yaml.getLoadBalancer())) {
-      bean.setLoadBalancerId(getSettingId(appId, yaml.getLoadBalancer()));
+      bean.setLoadBalancerId(getSettingId(bean.getAccountId(), appId, yaml.getLoadBalancer()));
     } else {
       bean.setLoadBalancerId("");
     }

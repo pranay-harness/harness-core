@@ -200,11 +200,11 @@ public class CommandStateTest extends WingsBaseTest {
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
 
     when(activityService.get(ACTIVITY_ID, APP_ID)).thenReturn(ACTIVITY_WITH_ID);
-    when(settingsService.getByName(APP_ID, ENV_ID, CommandState.RUNTIME_PATH))
+    when(settingsService.getByName(ACCOUNT_ID, APP_ID, ENV_ID, CommandState.RUNTIME_PATH))
         .thenReturn(aSettingAttribute().withValue(aStringValue().withValue(RUNTIME_PATH).build()).build());
-    when(settingsService.getByName(APP_ID, ENV_ID, CommandState.BACKUP_PATH))
+    when(settingsService.getByName(ACCOUNT_ID, APP_ID, ENV_ID, CommandState.BACKUP_PATH))
         .thenReturn(aSettingAttribute().withValue(aStringValue().withValue(BACKUP_PATH).build()).build());
-    when(settingsService.getByName(APP_ID, ENV_ID, CommandState.STAGING_PATH))
+    when(settingsService.getByName(ACCOUNT_ID, APP_ID, ENV_ID, CommandState.STAGING_PATH))
         .thenReturn(aSettingAttribute().withValue(aStringValue().withValue(STAGING_PATH).build()).build());
     when(settingsService.get(HOST.getHostConnAttr()))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute()
@@ -311,7 +311,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(context, times(4)).renderExpression(anyString());
 
-    verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(3)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(2)).get(anyString());
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
@@ -431,7 +431,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
-    verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(3)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(2)).get(anyString());
 
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
@@ -478,7 +478,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(context, times(4)).renderExpression(anyString());
 
-    verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(3)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(2)).get(anyString());
     verify(context, times(1)).getWorkflowId();
     verify(context, times(2)).getAppId();

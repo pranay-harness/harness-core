@@ -239,6 +239,7 @@ public class CommandState extends State {
       }
 
       Application application = appService.get(serviceInstance.getAppId());
+      String accountId = application.getAccountId();
 
       Map<String, String> serviceVariables = context.getServiceVariables();
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
@@ -269,9 +270,9 @@ public class CommandState extends State {
               .serviceVariables(serviceVariables)
               .status(ExecutionStatus.RUNNING);
 
-      String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
-      String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
-      String stagingPath = getEvaluatedSettingValue(context, appId, envId, STAGING_PATH).replace(" ", "\\ ");
+      String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
+      String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
+      String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH).replace(" ", "\\ ");
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
@@ -286,7 +287,7 @@ public class CommandState extends State {
               .withHost(host)
               .withServiceTemplateId(serviceTemplateId)
               .withAppContainer(service.getAppContainer())
-              .withAccountId(application.getAccountId());
+              .withAccountId(accountId);
 
       if (isNotEmpty(host.getHostConnAttr())) {
         SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
@@ -335,7 +336,7 @@ public class CommandState extends State {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
       delegateTaskId = delegateService.queueTask(aDelegateTask()
-                                                     .withAccountId(application.getAccountId())
+                                                     .withAccountId(accountId)
                                                      .withAppId(appId)
                                                      .withTaskType(TaskType.COMMAND)
                                                      .withWaitId(activityId)
@@ -486,8 +487,9 @@ public class CommandState extends State {
     }
   }
 
-  private String getEvaluatedSettingValue(ExecutionContext context, String appId, String envId, String variable) {
-    SettingAttribute settingAttribute = settingsService.getByName(appId, envId, variable);
+  private String getEvaluatedSettingValue(
+      ExecutionContext context, String accountId, String appId, String envId, String variable) {
+    SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, envId, variable);
     StringValue stringValue = (StringValue) settingAttribute.getValue();
     String settingValue = stringValue.getValue();
     try {

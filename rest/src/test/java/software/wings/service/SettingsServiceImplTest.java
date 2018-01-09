@@ -243,8 +243,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetByName() {
-    settingsService.getByName(APP_ID, "NAME");
+    settingsService.getByName(ACCOUNT_ID, APP_ID, "NAME");
     verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
+    verify(spyQuery).field("accountId");
     verify(spyQuery).field("appId");
     verify(spyQuery).field("envId");
     verify(spyQuery).field("name");

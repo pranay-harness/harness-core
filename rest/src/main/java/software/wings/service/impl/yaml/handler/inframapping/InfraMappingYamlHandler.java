@@ -33,8 +33,8 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ServiceTemplateService serviceTemplateService;
 
-  protected String getSettingId(String appId, String settingName) {
-    SettingAttribute settingAttribute = settingsService.getByName(appId, settingName);
+  protected String getSettingId(String accountId, String appId, String settingName) {
+    SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, settingName);
     Validator.notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute);
     return settingAttribute.getUuid();
   }

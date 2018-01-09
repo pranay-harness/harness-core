@@ -26,8 +26,8 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   @Inject ArtifactStreamService artifactStreamService;
   @Inject YamlHelper yamlHelper;
 
-  protected String getSettingId(String appId, String settingName) {
-    SettingAttribute settingAttribute = settingsService.getByName(appId, settingName);
+  protected String getSettingId(String accountId, String appId, String settingName) {
+    SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, settingName);
     Validator.notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute);
     return settingAttribute.getUuid();
   }
@@ -94,7 +94,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     bean.setName(name);
     bean.setAutoPopulate(false);
-    bean.setSettingId(getSettingId(appId, yaml.getServerName()));
+    bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
     bean.setAutoApproveForProduction(true);
     bean.setMetadataOnly(yaml.isMetadataOnly());
   }

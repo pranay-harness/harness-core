@@ -79,21 +79,22 @@ public interface SettingsService extends OwnedByAccount {
   /**
    * Gets the by name.
    *
+   * @param accountId     the account id
    * @param appId         the app id
    * @param attributeName the attribute name
    * @return the by name
    */
-  SettingAttribute getByName(String appId, String attributeName);
+  SettingAttribute getByName(String accountId, String appId, String attributeName);
 
   /**
    * Gets by name.
    *
-   * @param appId         the app id
+   * @param accountId     the account id
    * @param envId         the env id
    * @param attributeName the attribute name
    * @return the by name
    */
-  SettingAttribute getByName(String appId, String envId, String attributeName);
+  SettingAttribute getByName(String accountId, String appId, String envId, String attributeName);
 
   /**
    * Create default application settings.
