@@ -46,11 +46,8 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
     if (stateType == null) {
       return getExpressions(appId, entityId);
     }
-    SortedSet<String> expressions = new TreeSet<>();
-    expressions.addAll(getExpressions(appId, entityId));
-    if (stateType != null) {
-      expressions.addAll(getStateTypeExpressions(stateType));
-    }
+    SortedSet<String> expressions = new TreeSet<>(getExpressions(appId, entityId));
+    expressions.addAll(getStateTypeExpressions(stateType));
     return expressions;
   }
 
