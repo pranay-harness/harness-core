@@ -87,6 +87,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -342,6 +343,7 @@ public class CommandState extends State {
                                                      .withWaitId(activityId)
                                                      .withParameters(new Object[] {command, commandExecutionContext})
                                                      .withEnvId(envId)
+                                                     .withTimeout(TimeUnit.MINUTES.toMillis(30))
                                                      .withInfrastructureMappingId(infrastructureMappingId)
                                                      .build());
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
