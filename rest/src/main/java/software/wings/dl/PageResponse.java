@@ -352,7 +352,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
       return false;
     }
     PageResponse<?> that = (PageResponse<?>) obj;
-    return total == that.total && Objects.equal(response, that.response);
+    return total.equals(that.total) && Objects.equal(response, that.response);
   }
 
   /* (non-Javadoc)
