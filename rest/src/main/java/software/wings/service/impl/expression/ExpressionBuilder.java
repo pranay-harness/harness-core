@@ -136,8 +136,7 @@ public abstract class ExpressionBuilder {
   }
 
   protected Set<String> getStateTypeExpressions(StateType stateType) {
-    Set<String> expressions = new TreeSet<>();
-    expressions.addAll(asList(START_TS, END_TS, STATUS, ERROR_MSG));
+    Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG));
     switch (stateType) {
       case SHELL_SCRIPT:
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
@@ -157,6 +156,9 @@ public abstract class ExpressionBuilder {
         break;
       case AWS_CODEDEPLOY_STATE:
         expressions.addAll(asList(ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_BUCKET_URL));
+        break;
+      case KUBERNETES_REPLICATION_CONTROLLER_SETUP:
+      case ECS_SERVICE_SETUP:
         break;
       default:
         unhandled(stateType);
