@@ -1,46 +1,17 @@
 package software.wings.service.impl;
 
-import static java.net.URLEncoder.encode;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static org.mindrot.jbcrypt.BCrypt.hashpw;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
-import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
-import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
-import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
-import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
-import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
-import static software.wings.beans.User.Builder.anUser;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
-import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
-import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
-import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
-import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
-import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -91,6 +62,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.KryoUtils;
 
+import javax.cache.Cache;
+import javax.validation.executable.ValidateOnExecution;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -103,8 +76,34 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.cache.Cache;
-import javax.validation.executable.ValidateOnExecution;
+
+import static java.net.URLEncoder.encode;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
+import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
+import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
+import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
+import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
+import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
+import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
+import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 
 /**
  * Created by anubhaw on 3/9/16.
@@ -337,7 +336,7 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       user = anUser()
                  .withAccounts(Lists.newArrayList(account))
-                 .withEmail(userInvite.getEmail())
+                 .withEmail(userInvite.getEmail().trim().toLowerCase())
                  .withEmailVerified(true)
                  .withName(Constants.NOT_REGISTERED)
                  .withRoles(userInvite.getRoles())
