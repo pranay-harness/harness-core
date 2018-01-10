@@ -51,7 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
@@ -73,6 +73,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
+  private static final int steadyStateTimeout = 15;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
@@ -178,7 +179,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       int desiredCount, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
                                               controllerName, clusterName, previousCount, desiredCount),
-        Log.LogLevel.INFO);
+        LogLevel.INFO);
 
     if (previousCount != desiredCount) {
       HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
@@ -199,14 +200,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           previousCount, desiredCount);
     }
     return getContainerInfosWhenReady(
-        kubernetesConfig, encryptedDataDetails, controllerName, desiredCount, executionLogCallback);
+        kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount, executionLogCallback);
   }
 
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int desiredCount,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       ExecutionLogCallback executionLogCallback) {
-    logger.info("Waiting for pods to be ready...");
-    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, desiredCount);
+    List<Pod> pods = waitForPodsToBeRunning(
+        kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount, executionLogCallback);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     for (Pod pod : pods) {
@@ -216,37 +217,81 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       containerInfo.setContainerId(!pod.getStatus().getContainerStatuses().isEmpty()
               ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
               : "");
-      String phase = pod.getStatus().getPhase();
-      if (phase.equals(RUNNING)) {
+      Set<String> images = getControllerImages(getController(kubernetesConfig, encryptedDataDetails, controllerName));
+
+      if (!podHasImages(pod, images)) {
+        hasErrors = true;
+        String msg = String.format("Pod %s does not have image(s) %s", podName, images);
+        logger.error(msg);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      }
+
+      if (!isRunning(pod)) {
+        hasErrors = true;
+        String msg = String.format("Pod %s failed to start", podName);
+        logger.error(msg);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      }
+
+      if (!inSteadyState(pod)) {
+        hasErrors = true;
+        String msg = String.format("Pod %s failed to reach steady state", podName);
+        logger.error(msg);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      }
+
+      if (!hasErrors) {
         containerInfo.setStatus(Status.SUCCESS);
         logger.info("Pod {} started successfully", podName);
         executionLogCallback.saveExecutionLog(String.format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
                                                   pod.getStatus().getHostIP(), pod.getStatus().getPodIP()),
-            Log.LogLevel.INFO);
+            LogLevel.INFO);
       } else {
         containerInfo.setStatus(Status.FAILURE);
-        hasErrors = true;
         String containerMessage = Joiner.on("], [").join(
             pod.getStatus().getContainerStatuses().stream().map(this ::getContainerStatusMessage).collect(toList()));
         String conditionMessage = Joiner.on("], [").join(
             pod.getStatus().getConditions().stream().map(this ::getPodConditionMessage).collect(toList()));
-        logger.error("Pod {} failed to start. Current status: {}. Container status: [{}]. Condition: [{}].", podName,
-            phase, containerMessage, conditionMessage);
-        executionLogCallback.saveExecutionLog(
-            String.format("Pod [%s] failed to start. Current status: %s. Container status: [%s]. Condition: [%s].",
-                podName, phase, containerMessage, conditionMessage),
-            Log.LogLevel.ERROR);
+        String reason = Joiner.on("], [").join(pod.getStatus()
+                                                   .getContainerStatuses()
+                                                   .stream()
+                                                   .map(containerStatus
+                                                       -> containerStatus.getState().getTerminated() != null
+                                                           ? containerStatus.getState().getTerminated().getReason()
+                                                           : containerStatus.getState().getWaiting() != null
+                                                               ? containerStatus.getState().getWaiting().getReason()
+                                                               : RUNNING)
+                                                   .collect(toList()));
+        String msg = String.format(
+            "Pod [%s] has state [%s]. Current status: phase - %s. Container status: [%s]. Condition: [%s].", podName,
+            reason, pod.getStatus().getPhase(), containerMessage, conditionMessage);
+        logger.error(msg);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
       containerInfos.add(containerInfo);
     }
+
     if (hasErrors) {
       logger.error("Completed operation with errors");
-      executionLogCallback.saveExecutionLog("Completed operation with errors.", Log.LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog("Completed operation with errors.", LogLevel.ERROR);
     } else {
       logger.info("Successfully completed operation");
-      executionLogCallback.saveExecutionLog("Successfully completed operation.", Log.LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Successfully completed operation.", LogLevel.INFO);
     }
+
     return containerInfos;
+  }
+
+  private boolean inSteadyState(Pod pod) {
+    return pod.getStatus().getConditions().stream().allMatch(podCondition -> "True".equals(podCondition.getStatus()));
+  }
+
+  private boolean isRunning(Pod pod) {
+    return pod.getStatus().getPhase().equals(RUNNING);
+  }
+
+  private boolean podHasImages(Pod pod, Set<String> images) {
+    return pod.getSpec().getContainers().stream().map(Container::getImage).collect(toList()).containsAll(images);
   }
 
   private String getContainerStatusMessage(ContainerStatus status) {
@@ -453,33 +498,72 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void waitForPodsToStop(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
+  public void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      Map<String, String> labels, ExecutionLogCallback executionLogCallback) {
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    String waitingMsg = "Waiting for pods to stop...";
+    logger.info(waitingMsg);
     try {
-      with()
-          .pollInterval(1, TimeUnit.SECONDS)
-          .await()
-          .atMost(10, TimeUnit.MINUTES)
-          .until(()
-                     -> kubernetesClient.pods()
-                            .inNamespace(kubernetesConfig.getNamespace())
-                            .withLabels(labels)
-                            .list()
-                            .getItems()
-                            .size()
-                  <= 0);
+      with().pollInterval(5, TimeUnit.SECONDS).await().atMost(steadyStateTimeout, TimeUnit.MINUTES).until(() -> {
+        executionLogCallback.saveExecutionLog(waitingMsg, LogLevel.INFO);
+        int size = kubernetesClient.pods()
+                       .inNamespace(kubernetesConfig.getNamespace())
+                       .withLabels(labels)
+                       .list()
+                       .getItems()
+                       .size();
+        return size <= 0;
+      });
     } catch (ConditionTimeoutException e) {
-      logger.warn("Timed out waiting for pods to stop.", e);
+      String msg = "Timed out waiting for pods to stop";
+      logger.error(msg, e);
+      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
     }
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int number) {
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
+      ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    Set<String> images = getControllerImages(controller);
     Map<String, String> labels = controller.getMetadata().getLabels();
+    KubernetesClient kubernetesClient =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    logger.info("Waiting for pods to be ready...");
+    try {
+      with().pollInterval(5, TimeUnit.SECONDS).await().atMost(steadyStateTimeout, TimeUnit.MINUTES).until(() -> {
+        List<Pod> pods =
+            kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
+        int running = (int) pods.stream().filter(pod -> podHasImages(pod, images) && isRunning(pod)).count();
+        int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
+        if (running != desiredCount) {
+          executionLogCallback.saveExecutionLog(
+              String.format("Waiting for desired number of pods to be running. [%d/%d]", running, desiredCount),
+              LogLevel.INFO);
+        } else if (previousCount < desiredCount) {
+          executionLogCallback.saveExecutionLog(
+              String.format("Waiting for pods to reach steady state. [%d/%d]", steadyState, desiredCount),
+              LogLevel.INFO);
+        }
 
+        return running == desiredCount && (previousCount >= desiredCount || steadyState == desiredCount);
+      });
+    } catch (ConditionTimeoutException e) {
+      String msg = "Timed out waiting for pods to be ready";
+      logger.error(msg, e);
+      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+    }
+
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .pods()
+        .inNamespace(kubernetesConfig.getNamespace())
+        .withLabels(labels)
+        .list()
+        .getItems();
+  }
+
+  private Set<String> getControllerImages(HasMetadata controller) {
     PodTemplateSpec template = null;
     if (controller instanceof ReplicationController) {
       template = ((ReplicationController) controller).getSpec().getTemplate();
@@ -493,40 +577,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       template = ((DaemonSet) controller).getSpec().getTemplate();
     }
 
-    Set<String> images = template != null
+    return template != null
         ? template.getSpec().getContainers().stream().map(Container::getImage).collect(Collectors.toSet())
         : emptySet();
-
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
-    try {
-      with().pollInterval(1, TimeUnit.SECONDS).await().atMost(10, TimeUnit.MINUTES).until(() -> {
-        List<Pod> pods =
-            kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
-        if (pods.size() != number) {
-          return false;
-        }
-        boolean allRunning = pods.stream().allMatch(pod -> pod.getStatus().getPhase().equals(RUNNING));
-        boolean allHaveImages = pods.stream().allMatch(pod
-            -> pod.getSpec()
-                   .getContainers()
-                   .stream()
-                   .map(Container::getImage)
-                   .collect(Collectors.toList())
-                   .containsAll(images));
-
-        return allRunning && allHaveImages;
-      });
-    } catch (ConditionTimeoutException e) {
-      logger.warn("Timed out waiting for pods to be ready.", e);
-    }
-
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-        .pods()
-        .inNamespace(kubernetesConfig.getNamespace())
-        .withLabels(labels)
-        .list()
-        .getItems();
   }
 
   public void checkStatus(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,

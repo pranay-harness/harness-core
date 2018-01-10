@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -218,32 +219,29 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig, String containerServiceName) {
     int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
-    executionLogCallback.saveExecutionLog("Waiting for pods to be ready", LogLevel.INFO);
-    List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(
-        kubernetesConfig, encryptedDataDetails, containerServiceName, desiredCount, executionLogCallback);
+    int previousCount =
+        kubernetesContainerService.getControllerPodCount(kubernetesConfig, encryptedDataDetails, containerServiceName)
+            .orElse(0);
+    List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
+        encryptedDataDetails, containerServiceName, previousCount, desiredCount, executionLogCallback);
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
     if (containerInfos.size() != desiredCount || !allContainersSuccess) {
-      StringBuilder msg = new StringBuilder();
       if (containerInfos.size() != desiredCount) {
         String message = String.format("Expected data for %d container%s but got %d", desiredCount,
             containerInfos.size() == 1 ? "" : "s", containerInfos.size());
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
-        msg.append(message);
       }
       if (!allContainersSuccess) {
-        List<ContainerInfo> failed = containerInfos.stream()
-                                         .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
-                                         .collect(Collectors.toList());
-        String message =
-            String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
-                failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList()));
+        List<ContainerInfo> failed =
+            containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
+        String message = String.format("The following container%s did not have success status: %s",
+            failed.size() == 1 ? "" : "s", failed.stream().map(ContainerInfo::getContainerId).collect(toList()));
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
-        msg.append(message);
       }
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE)
-          .addParam("message", "DaemonSet pods failed to reach desired count. " + msg.toString());
+          .addParam("message", "DaemonSet pods failed to reach desired count");
     }
     containerInfos.forEach(info
         -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
@@ -266,7 +264,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .getContainers()
                       .stream()
                       .map(Container::getImage)
-                      .collect(Collectors.toList()),
+                      .collect(toList()),
             LogLevel.INFO);
         listContainerInfosWhenReady(encryptedDataDetails, executionLogCallback, kubernetesConfig, daemonSetName);
       } catch (IOException e) {
@@ -279,8 +277,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, daemonSetName);
       Map<String, String> labels = daemonSet.getMetadata().getLabels();
       kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, daemonSetName);
-      executionLogCallback.saveExecutionLog("Waiting for pods to stop", LogLevel.INFO);
-      kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels);
+      kubernetesContainerService.waitForPodsToStop(
+          kubernetesConfig, encryptedDataDetails, labels, executionLogCallback);
     }
     return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(daemonSetName).build();
   }
@@ -474,8 +472,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (isNotEmpty(setupParams.getExternalIPs())) {
-      spec.withExternalIPs(
-          Arrays.stream(setupParams.getExternalIPs().split(",")).map(String::trim).collect(Collectors.toList()));
+      spec.withExternalIPs(Arrays.stream(setupParams.getExternalIPs().split(",")).map(String::trim).collect(toList()));
     }
 
     return new ServiceBuilder()
