@@ -62,7 +62,12 @@ public class Notifier implements Runnable {
               .build());
 
       if (isEmpty(waitQueuesResponse)) {
-        logger.warn("No entry in the waitQueue found for {} correlationIds", correlationIds.size());
+        if (correlationIds.size() > 200) {
+          logger.warn("No entry in the waitQueue found for {} correlationIds", correlationIds.size());
+        } else if (correlationIds.size() > 750) {
+          logger.error(
+              "No entry in the waitQueue found for dangerously big number {} of correlationIds", correlationIds.size());
+        }
         return;
       }
 
