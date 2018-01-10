@@ -44,6 +44,29 @@ import javax.ws.rs.QueryParam;
 
 /**
  * Created by rsingh on 09/05/17.
+ *
+ * We are versioning the Learning engine apis using the Accept Header. Clients can
+ * request a specific version of the api by sending the version in the Accept header
+ * as follows:
+ *
+ * Accept: application/v1+json, application/json
+ *
+ * This requests for version v1 of the api, and if that is not available it asks the server
+ * to send the default api response. This is indicated by appending application/json to the
+ * Accept header.
+ *
+ * Created 2 test apis test1 and test2 to show how to create versioned apis. Note that test1 serves
+ * v1 and test2 serves v2 of the same api /test. Note that only the latest version v2 has 2 entries
+ * in produces - one with a version and another with just application/json. The application/json
+ * without the api version makes it the default implementation for /test api. So clients with no Accept
+ * header and clients requesting just application/json will be served by the default api.
+ *
+ * IMPORTANT: Make sure that the latest version that is added is made the default api. There should
+ * only be one default api.
+ *
+ *
+ * For now, only apis used by the learning engine are versioned.
+ *
  */
 @Api("newrelic")
 @Path("/newrelic")
@@ -53,6 +76,26 @@ public class NewRelicResource implements MetricAnalysisResource {
   @Inject private NewRelicService newRelicService;
 
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
+
+  @Produces({"application/json", "application/v2+json"})
+  @GET
+  @Path("/test")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> test2(@QueryParam("accountId") String accountId) throws IOException {
+    Map<String, Object> metaData = new HashMap<>();
+    metaData.put("version", "v2");
+    return RestResponse.Builder.aRestResponse().withResource("v2").withMetaData(metaData).build();
+  }
+
+  @Produces("application/v1+json")
+  @GET
+  @Path("/test")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> test1(@QueryParam("accountId") String accountId) throws IOException {
+    return new RestResponse<>("v1");
+  }
 
   @GET
   @Path("/applications")
@@ -97,6 +140,7 @@ public class NewRelicResource implements MetricAnalysisResource {
         metricDataAnalysisService.getMetricNames(metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId()));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/get-metrics")
   @Timed
@@ -132,6 +176,7 @@ public class NewRelicResource implements MetricAnalysisResource {
         metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/save-analysis")
   @Timed
@@ -193,6 +238,7 @@ public class NewRelicResource implements MetricAnalysisResource {
     return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(mlAnalysisResponse));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/get-scores")
   @Timed
@@ -219,6 +265,7 @@ public class NewRelicResource implements MetricAnalysisResource {
         stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/get-metric-template")
   @Timed

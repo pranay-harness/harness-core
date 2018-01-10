@@ -31,6 +31,8 @@ import javax.ws.rs.QueryParam;
 
 /**
  * Created by rsingh on 4/14/17.
+ *
+ * For api versioning see documentation of {@link NewRelicResource}.
  */
 @Api(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL)
 @Path("/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL)
@@ -53,6 +55,7 @@ public class SplunkResource implements LogAnalysisResource {
         workflowId, workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL)
   @Timed
@@ -66,6 +69,7 @@ public class SplunkResource implements LogAnalysisResource {
         analysisService.getLogData(logRequest, compareCurrent, workflowExecutionId, clusterLevel, StateType.SPLUNKV2));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
   @Timed
@@ -83,6 +87,7 @@ public class SplunkResource implements LogAnalysisResource {
     return new RestResponse<>(analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.SPLUNKV2));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL)
   @Timed

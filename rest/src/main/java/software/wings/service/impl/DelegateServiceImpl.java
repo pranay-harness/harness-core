@@ -792,7 +792,9 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
       if (delegateTask != null) {
         String waitId = delegateTask.getWaitId();
-        waitNotifyEngine.notify(waitId, response.getResponse());
+        if (waitId != null) {
+          waitNotifyEngine.notify(waitId, response.getResponse());
+        }
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                     .field("accountId")
                                     .equal(response.getAccountId())
