@@ -22,7 +22,11 @@ public class BasicTest {
    */
   @Before
   public void logTestCaseName() {
-    System.out.println(String.format("Running test %s - %s", testName.getMethodName(), repeatRule.getRepetition()));
+    if (repeatRule.getRepetition() == 0) {
+      System.out.println(String.format("Running test %s", testName.getMethodName()));
+    } else {
+      System.out.println(String.format("Running test %s - %s", testName.getMethodName(), repeatRule.getRepetition()));
+    }
   }
 
   /**

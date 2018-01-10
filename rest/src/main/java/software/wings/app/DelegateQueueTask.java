@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Status;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -53,14 +54,7 @@ public class DelegateQueueTask implements Runnable {
       return;
     }
 
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(DelegateQueueTask.class, DelegateQueueTask.class.getName());
-      if (!lockAcquired) {
-        logger.warn("Persistent lock could not be acquired for the DelegateQueue");
-        return;
-      }
-
+    try (AcquiredLock lock = persistentLocker.acquireLock(DelegateQueueTask.class, DelegateQueueTask.class.getName())) {
       // Release tasks acquired by delegate but not started execution. Introduce "ACQUIRED" status may be ?
       Query<DelegateTask> releaseLongQueuedTasks =
           wingsPersistence.createQuery(DelegateTask.class)
@@ -235,10 +229,6 @@ public class DelegateQueueTask implements Runnable {
 
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(DelegateQueueTask.class, DelegateQueueTask.class.getName());
-      }
     }
   }
 }

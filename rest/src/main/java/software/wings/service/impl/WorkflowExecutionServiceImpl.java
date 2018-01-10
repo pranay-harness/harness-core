@@ -109,6 +109,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
@@ -1052,27 +1053,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution == null) {
       return;
     }
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(Workflow.class, workflowExecution.getWorkflowId());
-      if (lockAcquired) {
-        List<WorkflowExecution> runningWorkflowExecutions = getRunningWorkflowExecutions(
-            ORCHESTRATION, workflowExecution.getAppId(), workflowExecution.getWorkflowId());
-        if (CollectionUtils.isEmpty(runningWorkflowExecutions)) {
-          boolean started = stateMachineExecutor.startQueuedExecution(appId, workflowExecution.getUuid());
-          ExecutionStatus status = RUNNING;
-          if (!started) {
-            status = ERROR;
-          }
-          logger.error("WorkflowExecution could not be started from QUEUED state- appId:{}, WorkflowExecution:{}",
-              appId, workflowExecution.getUuid());
-          updateStartStatus(workflowExecution, status);
-        }
+    try (AcquiredLock lock = persistentLocker.acquireLock(Workflow.class, workflowExecution.getWorkflowId())) {
+      List<WorkflowExecution> runningWorkflowExecutions =
+          getRunningWorkflowExecutions(ORCHESTRATION, workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+      if (CollectionUtils.isNotEmpty(runningWorkflowExecutions)) {
+        return;
       }
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(Workflow.class, workflowExecution.getWorkflowId());
+      boolean started = stateMachineExecutor.startQueuedExecution(appId, workflowExecution.getUuid());
+      ExecutionStatus status = RUNNING;
+      if (!started) {
+        status = ERROR;
       }
+      logger.error("WorkflowExecution could not be started from QUEUED state- appId:{}, WorkflowExecution:{}", appId,
+          workflowExecution.getUuid());
+      updateStartStatus(workflowExecution, status);
     }
   }
 

@@ -3,6 +3,7 @@ package software.wings.exception;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ResponseMessage.Acuteness.SERIOUS;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.Level.INFO;
 import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.utils.Switch.unhandled;
@@ -175,8 +176,10 @@ public class WingsException extends WingsApiException {
         logger.error(msg, this);
       } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == WARN)) {
         logger.warn(msg, this);
-      } else {
+      } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == INFO)) {
         logger.info(msg, this);
+      } else {
+        logger.debug(msg, this);
       }
     }
 
@@ -185,6 +188,9 @@ public class WingsException extends WingsApiException {
         .forEach(responseMessage -> {
           final Level errorType = responseMessage.getLevel();
           switch (errorType) {
+            case DEBUG:
+              logger.debug(responseMessage.toString());
+              break;
             case INFO:
               logger.info(responseMessage.toString());
               break;

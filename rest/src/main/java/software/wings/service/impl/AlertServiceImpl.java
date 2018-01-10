@@ -35,6 +35,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
@@ -81,33 +82,24 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    boolean lockAcquired = false;
     String lockName = alertType.name() + "-" + (appId == null || appId.equals(GLOBAL_APP_ID) ? accountId : appId);
-    try {
-      lockAcquired = persistentLocker.acquireLock(AlertType.class, lockName);
-      if (!lockAcquired) {
-        logger.warn("Persistent lock could not be acquired for alert {}", lockName);
+    try (AcquiredLock lock = persistentLocker.acquireLock(AlertType.class, lockName)) {
+      if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
         return;
       }
-      if (!findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
-        injector.injectMembers(alertData);
-        Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
-            anAlert()
-                .withAppId(appId)
-                .withAccountId(accountId)
-                .withType(alertType)
-                .withStatus(Open)
-                .withAlertData(alertData)
-                .withTitle(alertData.buildTitle())
-                .withCategory(alertType.getCategory())
-                .withSeverity(alertType.getSeverity())
-                .build());
-        logger.warn("Alert opened: {}", persistedAlert);
-      }
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(AlertType.class, lockName);
-      }
+      injector.injectMembers(alertData);
+      Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
+          anAlert()
+              .withAppId(appId)
+              .withAccountId(accountId)
+              .withType(alertType)
+              .withStatus(Open)
+              .withAlertData(alertData)
+              .withTitle(alertData.buildTitle())
+              .withCategory(alertType.getCategory())
+              .withSeverity(alertType.getSeverity())
+              .build());
+      logger.info("Alert opened: {}", persistedAlert);
     }
   }
 

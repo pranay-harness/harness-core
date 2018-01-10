@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class ResponseMessage implements Serializable {
   private static final long serialVersionUID = 7669895652860634550L;
 
-  public enum Level { INFO, WARN, ERROR }
+  public enum Level { DEBUG, INFO, WARN, ERROR }
 
   public enum Acuteness {
     /*
