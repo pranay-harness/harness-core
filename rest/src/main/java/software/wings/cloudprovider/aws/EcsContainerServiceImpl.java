@@ -1053,14 +1053,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       });
       logger.info("Docker container ids = " + containerInfos);
       return containerInfos;
-    } catch (WingsException e) {
-      executionLogCallback.saveExecutionLog(e.getMessage(), LogLevel.ERROR);
-      logger.error(e.getMessage(), e);
-      throw e;
-    } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(e.getMessage(), LogLevel.ERROR);
-      logger.error(e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+    } catch (Exception ex) {
+      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
     }
   }
 
