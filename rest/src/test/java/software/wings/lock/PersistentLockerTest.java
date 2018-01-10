@@ -14,14 +14,12 @@ import com.google.inject.Inject;
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
 import software.wings.MockTest;
-import software.wings.category.FastUnitTests;
 
 /**
  * The Class PersistentLockerTest.
@@ -32,7 +30,6 @@ public class PersistentLockerTest extends MockTest {
   @Inject @InjectMocks private PersistentLocker persistentLocker;
 
   @Test
-  @Category(FastUnitTests.class)
   public void testAcquireLockDoLock() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(true);
@@ -48,7 +45,6 @@ public class PersistentLockerTest extends MockTest {
   }
 
   @Test
-  @Category(FastUnitTests.class)
   public void testAcquireLockDoNotRunTheBody() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
@@ -69,7 +65,6 @@ public class PersistentLockerTest extends MockTest {
   }
 
   @Test
-  @Category(FastUnitTests.class)
   public void testAcquireLockNonLockedAtRelease() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(true);
