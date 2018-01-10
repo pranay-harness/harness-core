@@ -220,8 +220,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig, String containerServiceName) {
     int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
     int previousCount =
-        kubernetesContainerService.getControllerPodCount(kubernetesConfig, encryptedDataDetails, containerServiceName)
-            .orElse(0);
+        kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName) != null
+        ? desiredCount
+        : 0;
     List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
         encryptedDataDetails, containerServiceName, previousCount, desiredCount, executionLogCallback);
 
