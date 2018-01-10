@@ -8,12 +8,12 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Map;
@@ -46,8 +46,8 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
           context.getServiceVariables(), executionLogCallback));
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
-      executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
       logger.error(ex.getMessage(), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
       if (ex instanceof WingsException) {
         throw ex;
       }
