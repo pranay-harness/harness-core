@@ -19,6 +19,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,8 +81,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         }
       }
     } catch (Exception ex) {
-      executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
       logger.error(ex.getMessage(), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
       if (ex instanceof WingsException) {
         throw ex;
       }

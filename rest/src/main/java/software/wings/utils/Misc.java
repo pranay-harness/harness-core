@@ -1,6 +1,8 @@
 package software.wings.utils;
 
 import org.apache.commons.lang.ArrayUtils;
+import software.wings.beans.Log;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
 
 import java.util.concurrent.TimeUnit;
@@ -15,6 +17,7 @@ import java.util.regex.Pattern;
 public class Misc {
   private static final Pattern wildCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   public static final Pattern commaCharPattern = Pattern.compile("\\s*,\\s*");
+  public static final int MAX_CAUSES = 10;
 
   /**
    * Normalize expression string.
@@ -163,6 +166,15 @@ public class Misc {
 
   public static String trim(String key) {
     return key != null ? key.trim() : key;
+  }
+
+  public static void logAllMessages(Exception ex, ExecutionLogCallback executionLogCallback) {
+    int i = 0;
+    Throwable t = ex;
+    while (t != null && i++ < MAX_CAUSES) {
+      executionLogCallback.saveExecutionLog(t.getMessage(), Log.LogLevel.ERROR);
+      t = t.getCause();
+    }
   }
 
   /**
