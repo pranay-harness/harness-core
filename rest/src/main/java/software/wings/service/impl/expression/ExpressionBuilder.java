@@ -17,6 +17,7 @@ import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
 import static software.wings.common.Constants.XPATH;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
@@ -157,8 +158,12 @@ public abstract class ExpressionBuilder {
       case AWS_CODEDEPLOY_STATE:
         expressions.addAll(asList(ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_BUCKET_URL));
         break;
-      case KUBERNETES_REPLICATION_CONTROLLER_SETUP:
+      case AWS_LAMBDA_STATE:
       case ECS_SERVICE_SETUP:
+      case JENKINS:
+      case KUBERNETES_REPLICATION_CONTROLLER_SETUP:
+      case NEW_RELIC_DEPLOYMENT_MARKER:
+        noop();
         break;
       default:
         unhandled(stateType);
