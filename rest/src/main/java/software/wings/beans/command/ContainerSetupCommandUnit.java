@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -20,6 +22,8 @@ import java.util.Map;
  * Created by brett on 11/18/17
  */
 public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   static final int KEEP_N_REVISIONS = 3;
 
   @Inject @Transient private transient DelegateLogService logService;
@@ -43,10 +47,11 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
+      logger.error(ex.getMessage(), ex);
       if (ex instanceof WingsException) {
         throw ex;
       }
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage());
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
   }
 

@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
  * Created by peeyushaggarwal on 2/1/17.
  */
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject @Transient private transient DelegateLogService logService;
 
   /**
@@ -77,6 +81,10 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       }
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), LogLevel.ERROR);
+      logger.error(ex.getMessage(), ex);
+      if (ex instanceof WingsException) {
+        throw ex;
+      }
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
     return commandExecutionStatus;
