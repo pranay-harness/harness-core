@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -56,10 +57,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @Override
   public synchronized YamlChangeSet getQueuedChangeSet(String accountId) {
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(YamlChangeSet.class, accountId);
-
+    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId)) {
       Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
                                            .field("accountId")
                                            .equal(accountId)
@@ -76,10 +74,6 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       return modifiedChangeSet;
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(YamlChangeSet.class, accountId);
-      }
     }
     return null;
   }

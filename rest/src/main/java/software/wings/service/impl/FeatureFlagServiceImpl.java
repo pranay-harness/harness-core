@@ -42,7 +42,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     if (isEmpty(accountId)) {
       // we don't want to throw an exception - we just want to log the error
       logger.error(
-          "FeatureFlag isEnabled check without accountId\n{}", Throwables.getStackTraceAsString(new Exception()));
+          "FeatureFlag isEnabled check without accountId\n{}", Throwables.getStackTraceAsString(new Exception("")));
       return false;
     }
 

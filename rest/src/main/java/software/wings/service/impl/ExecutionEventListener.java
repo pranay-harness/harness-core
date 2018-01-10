@@ -25,6 +25,7 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutor;
@@ -39,13 +40,7 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
 
   @Override
   protected void onMessage(ExecutionEvent message) throws Exception {
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(Workflow.class, message.getWorkflowId());
-      if (!lockAcquired) {
-        return;
-      }
-
+    try (AcquiredLock lock = persistentLocker.acquireLock(Workflow.class, message.getWorkflowId())) {
       PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                        .addFilter("appId", EQ, message.getAppId())
                                                        .addFilter("workflowId", EQ, message.getWorkflowId())
@@ -92,10 +87,6 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
                                                           .set("status", status)
                                                           .set("startTs", System.currentTimeMillis());
       wingsPersistence.update(query, updateOps);
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(Workflow.class, message.getWorkflowId());
-      }
     }
   }
 }

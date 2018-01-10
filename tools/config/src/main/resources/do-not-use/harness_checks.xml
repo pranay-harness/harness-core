@@ -69,6 +69,9 @@
             <!-- use org.apache.commons.lang.ArrayUtils instead -->
             <property name="illegalPkgs" value="org.apache.commons.lang3.ArrayUtils"/>
 
+            <!-- use org.slf4j.Logger instead -->
+            <property name="illegalPkgs" value="java.util.logging.Logger"/>
+
             <!-- use org.assertj.core.api.Assertions.assertThat instead -->
             <property name="illegalClasses" value="com.google.common.truth.Truth.assertThat,
                                                    com.shazam.shazamcrest.MatcherAssert.assertThat,

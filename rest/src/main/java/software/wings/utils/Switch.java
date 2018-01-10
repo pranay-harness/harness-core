@@ -16,7 +16,7 @@ public class Switch {
    */
   public static void unhandled(Object value) {
     logger.error("Unhandled switch value {}: {}\n{}", value.getClass().getCanonicalName(), value,
-        Throwables.getStackTraceAsString(new Exception()));
+        Throwables.getStackTraceAsString(new Exception("")));
   }
 
   /**

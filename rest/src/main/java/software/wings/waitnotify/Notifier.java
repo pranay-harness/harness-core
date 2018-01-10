@@ -17,6 +17,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
 import java.util.List;
@@ -42,14 +43,7 @@ public class Notifier implements Runnable {
       return;
     }
 
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(Notifier.class, Notifier.class.getName());
-      if (!lockAcquired) {
-        logger.warn("Persistent lock could not be acquired for the Notifier");
-        return;
-      }
-
+    try (AcquiredLock lock = persistentLocker.acquireLock(Notifier.class, Notifier.class.getName())) {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
           NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build());
 
@@ -82,10 +76,6 @@ public class Notifier implements Runnable {
 
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(Notifier.class, Notifier.class.getName());
-      }
     }
   }
 }

@@ -11,9 +11,9 @@ public interface Locker {
    *
    * @param entityClass the entity class
    * @param entityId    the entity id
-   * @return true, if successful
+   * @return AcquiredLock object
    */
-  boolean acquireLock(Class entityClass, String entityId);
+  AcquiredLock acquireLock(Class entityClass, String entityId);
 
   /**
    * Acquire lock.
@@ -22,23 +22,5 @@ public interface Locker {
    * @param entityId   the entity id
    * @return true, if successful
    */
-  boolean acquireLock(String entityType, String entityId);
-
-  /**
-   * Release lock.
-   *
-   * @param entityClass the entity class
-   * @param entityId    the entity id
-   * @return true, if successful
-   */
-  boolean releaseLock(Class entityClass, String entityId);
-
-  /**
-   * Release lock.
-   *
-   * @param entityType the entity type
-   * @param entityId   the entity id
-   * @return true, if successful
-   */
-  boolean releaseLock(String entityType, String entityId);
+  AcquiredLock acquireLock(String entityType, String entityId);
 }

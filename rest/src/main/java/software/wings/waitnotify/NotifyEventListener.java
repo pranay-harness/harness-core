@@ -21,6 +21,7 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 
@@ -120,14 +121,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
     boolean isError = notifyResponses.stream().filter(NotifyResponse::isError).findFirst().isPresent();
 
-    boolean lockAcquired = false;
-    try {
-      lockAcquired = persistentLocker.acquireLock(WaitInstance.class, waitInstanceId);
-      if (!lockAcquired) {
-        logger.warn("Persistent lock could not be acquired for the waitInstanceId: " + waitInstanceId);
-        return;
-      }
-
+    try (AcquiredLock lock = persistentLocker.acquireLock(WaitInstance.class, waitInstanceId)) {
       ExecutionStatus status = ExecutionStatus.SUCCESS;
       NotifyCallback callback = waitInstance.getCallback();
       injector.injectMembers(callback);
@@ -172,10 +166,6 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
         } catch (Exception exception) {
           logger.error("Error in waitQueue cleanup", exception);
         }
-      }
-    } finally {
-      if (lockAcquired) {
-        persistentLocker.releaseLock(WaitInstance.class, waitInstanceId);
       }
     }
     logger.trace("Done processing message {}", message);
