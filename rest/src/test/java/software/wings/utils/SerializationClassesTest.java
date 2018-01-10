@@ -1,8 +1,12 @@
 package software.wings.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class SerializationClassesTest {
   @Test
@@ -11,5 +15,16 @@ public class SerializationClassesTest {
     for (String s : classIds.keySet()) {
       Class.forName(s);
     }
+  }
+
+  @Test
+  public void serializationClassesUniqueIds() {
+    Map<String, Integer> classIds = SerializationClasses.serializationClasses();
+    Set<Integer> ids = new HashSet<>();
+
+    classIds.forEach((cls, id) -> {
+      assertThat(ids.contains(id)).as("Class %s has duplicate id %d", cls, id).isFalse();
+      ids.add(id);
+    });
   }
 }

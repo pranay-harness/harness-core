@@ -214,7 +214,6 @@ software.wings.beans.container.KubernetesContainerTask, 5179
 software.wings.beans.command.KubernetesResizeParams, 5180
 software.wings.beans.command.EcsResizeParams, 5181
 software.wings.beans.UserInvite, 5182
-software.wings.sm.WorkflowStandardParams, 5182
 software.wings.beans.KmsConfig, 5183
 software.wings.service.impl.analysis.DataCollectionTaskResult, 5184
 software.wings.service.impl.analysis.DataCollectionTaskResult$DataCollectionTaskStatus, 5185
@@ -258,3 +257,5 @@ software.wings.beans.container.LogConfiguration$LogOption, 5223
 software.wings.beans.RestResponse, 5224
 software.wings.service.impl.newrelic.MetricAnalysisExecutionData, 5225
 software.wings.beans.NameValuePair, 5226
+software.wings.sm.WorkflowStandardParams, 5227
+
