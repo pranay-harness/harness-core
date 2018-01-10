@@ -1,14 +1,6 @@
 package software.wings.sm;
 
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
-import static software.wings.sm.StateType.REPEAT;
-import static software.wings.sm.Transition.Builder.aTransition;
-import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
-
 import com.google.common.collect.Lists;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
@@ -44,6 +36,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static java.util.stream.Collectors.toList;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
+import static software.wings.sm.StateType.REPEAT;
+import static software.wings.sm.Transition.Builder.aTransition;
+import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 /**
  * Describes a StateMachine.
@@ -896,11 +895,6 @@ public class StateMachine extends Base {
                 && (pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE)
                        || pattern.contains(EXPRESSION_PREFIX + ContextElement.HOST)))) {
       return ContextElementType.INSTANCE;
-    }
-
-    if (patternsForRequiredContextElementType.stream().anyMatch(
-            pattern -> pattern != null && pattern.contains(EXPRESSION_PREFIX + ContextElement.SERVICE))) {
-      return ContextElementType.SERVICE;
     }
 
     return null;
