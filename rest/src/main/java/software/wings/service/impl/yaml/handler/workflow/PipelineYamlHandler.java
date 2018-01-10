@@ -64,8 +64,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
       pipeline.withAppId(appId)
           .withDescription(yaml.getDescription())
           .withName(name)
-          .withPipelineStages(pipelineStages)
-          .build();
+          .withPipelineStages(pipelineStages);
       return pipeline.build();
 
     } catch (WingsException ex) {
