@@ -6,6 +6,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
 import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
+import static software.wings.utils.WingsReflectionUtils.isSetByYaml;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -735,19 +736,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       }
       return true;
     }
-    return false;
-  }
-
-  private boolean isSetByYaml(Encryptable object, Field encryptedField) throws IllegalAccessException {
-    String encryptedFieldValue = (String) encryptedField.get(object);
-    if (encryptedFieldValue != null) {
-      for (EncryptionType encryptionType : EncryptionType.values()) {
-        if (encryptedFieldValue.startsWith(encryptionType.getYamlName())) {
-          return true;
-        }
-      }
-    }
-
     return false;
   }
 
