@@ -211,6 +211,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount, executionLogCallback);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
+    if (pods.size() != desiredCount) {
+      hasErrors = true;
+      String msg = String.format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
+      logger.error(msg);
+      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+    }
     for (Pod pod : pods) {
       String podName = pod.getMetadata().getName();
       ContainerInfo containerInfo = ContainerInfo.builder().build();
@@ -539,11 +545,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         List<Pod> pods =
             kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
 
+        if (pods.size() != desiredCount) {
+          executionLogCallback.saveExecutionLog(
+              String.format("Waiting for desired number of pods. [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
+          return false;
+        }
+
         int running = (int) pods.stream().filter(this ::isRunning).count();
         if (running != desiredCount) {
           executionLogCallback.saveExecutionLog(
-              String.format("Waiting for desired number of pods to be running. [%d/%d]", running, desiredCount),
-              LogLevel.INFO);
+              String.format("Waiting for pods to be running. [%d/%d]", running, desiredCount), LogLevel.INFO);
           return false;
         }
 
