@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * Created by peeyushaggarwal on 2/1/17.
  */
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ContainerResizeCommandUnit.class);
 
   @Inject @Transient private transient DelegateLogService logService;
 
