@@ -226,7 +226,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               : "");
       Set<String> images = getControllerImages(getController(kubernetesConfig, encryptedDataDetails, controllerName));
 
-      if (!isRunning(pod)) {
+      if (desiredCount >= previousCount && !isRunning(pod)) {
         hasErrors = true;
         String msg = String.format("Pod %s failed to start", podName);
         logger.error(msg);
@@ -240,7 +240,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
-      if (desiredCount > previousCount && !inSteadyState(pod)) {
+      if (desiredCount >= previousCount && !inSteadyState(pod)) {
         hasErrors = true;
         String msg = String.format("Pod %s failed to reach steady state", podName);
         logger.error(msg);
