@@ -1,11 +1,14 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
@@ -32,8 +35,11 @@ import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
+import software.wings.utils.WingsReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by anubhaw on 5/1/17.
@@ -106,6 +112,22 @@ public class SettingValidationService {
       analysisService.validateConfig(settingAttribute, StateType.SUMO);
     } else if (settingValue instanceof NewRelicConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.NEW_RELIC);
+    }
+
+    if (Encryptable.class.isInstance(settingValue)) {
+      Encryptable encryptable = (Encryptable) settingValue;
+      List<Field> encryptedFields = WingsReflectionUtils.getEncryptedFields(settingValue.getClass());
+      encryptedFields.forEach(encryptedField -> {
+        Field encryptedFieldRef = getEncryptedRefField(encryptedField, encryptable);
+        try {
+          if (WingsReflectionUtils.isSetByYaml(encryptable, encryptedFieldRef)) {
+            encryptedField.setAccessible(true);
+            encryptedField.set(encryptable, null);
+          }
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      });
     }
 
     return true;

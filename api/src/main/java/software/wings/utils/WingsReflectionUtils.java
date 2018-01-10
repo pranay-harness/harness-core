@@ -3,6 +3,7 @@ package software.wings.utils;
 import org.apache.commons.lang.StringUtils;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.security.EncryptionType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -68,5 +69,19 @@ public class WingsReflectionUtils {
       }
     }
     throw new IllegalStateException("No field with " + decryptedFieldName + " found in class " + object.getClass());
+  }
+
+  public static boolean isSetByYaml(Encryptable object, Field encryptedField) throws IllegalAccessException {
+    encryptedField.setAccessible(true);
+    String encryptedFieldValue = (String) encryptedField.get(object);
+    if (encryptedFieldValue != null) {
+      for (EncryptionType encryptionType : EncryptionType.values()) {
+        if (encryptedFieldValue.startsWith(encryptionType.getYamlName())) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }
