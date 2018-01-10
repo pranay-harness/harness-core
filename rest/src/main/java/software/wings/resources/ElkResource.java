@@ -38,6 +38,8 @@ import javax.ws.rs.QueryParam;
 
 /**
  * Created by rsingh on 08/04/17.
+ *
+ * For api versioning see documentation of {@link NewRelicResource}.
  */
 @Api(LogAnalysisResource.ELK_RESOURCE_BASE_URL)
 @Path("/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL)
@@ -63,6 +65,7 @@ public class ElkResource implements LogAnalysisResource {
         workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL)
   @Timed
@@ -76,6 +79,7 @@ public class ElkResource implements LogAnalysisResource {
         analysisService.getLogData(logRequest, compareCurrent, workflowExecutionId, clusterLevel, StateType.ELK));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
   @Timed
@@ -93,6 +97,7 @@ public class ElkResource implements LogAnalysisResource {
     return new RestResponse<>(analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.ELK));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL)
   @Timed

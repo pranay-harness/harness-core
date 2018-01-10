@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.TaskType;
-import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
@@ -71,7 +70,6 @@ public class NewRelicMetricNameCollectionJob implements Job {
                           secretManager.getEncryptionDetails(newRelicConfig, workflowInfo.getAppId(), ""))
                       .settingAttributeId(metricNames.getNewRelicConfigId())
                       .build();
-              String waitId = UUIDGenerator.getUuid();
               logger.info("Scheduling new relic metric name collection task {}", dataCollectionInfo);
               DelegateTask delegateTask =
                   aDelegateTask()
@@ -79,7 +77,6 @@ public class NewRelicMetricNameCollectionJob implements Job {
                       .withAccountId(newRelicConfig.getAccountId())
                       .withAppId(workflowInfo.getAppId())
                       .withParameters(new Object[] {dataCollectionInfo})
-                      .withWaitId(waitId)
                       .withEnvId(workflowInfo.getEnvId())
                       .withInfrastructureMappingId(workflowInfo.getInfraMappingId())
                       .withTimeout(TimeUnit.MINUTES.toMillis(DEFAULT_NEWRELIC_COLLECTION_TIMEOUT_MINS))

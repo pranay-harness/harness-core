@@ -47,6 +47,9 @@ import javax.ws.rs.QueryParam;
 
 /**
  * Created by rsingh on 4/14/17.
+ *
+ * For api versioning see documentation of {@link NewRelicResource}.
+ *
  */
 @Api("appdynamics")
 @Path("/appdynamics")
@@ -120,6 +123,7 @@ public class AppdynamicsResource implements MetricAnalysisResource {
         accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/get-metrics")
   @Timed
@@ -155,6 +159,7 @@ public class AppdynamicsResource implements MetricAnalysisResource {
         metricDataAnalysisService.getMetricsAnalysis(StateType.APP_DYNAMICS, stateExecutionId, workflowExecutionId));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/save-analysis")
   @Timed
@@ -231,6 +236,7 @@ public class AppdynamicsResource implements MetricAnalysisResource {
         stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/get-metric-template")
   @Timed

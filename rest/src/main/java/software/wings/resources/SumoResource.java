@@ -31,6 +31,8 @@ import javax.ws.rs.QueryParam;
 
 /**
  * Created by sriram_parthasarathy on 9/13/17.
+ *
+ * For api versioning see documentation of {@link NewRelicResource}.
  */
 @Api(LogAnalysisResource.SUMO_RESOURCE_BASE_URL)
 @Path("/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL)
@@ -55,6 +57,7 @@ public class SumoResource implements LogAnalysisResource {
         workflowId, workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL)
   @Timed
@@ -69,6 +72,7 @@ public class SumoResource implements LogAnalysisResource {
         analysisService.getLogData(logRequest, compareCurrent, workflowExecutionId, clusterLevel, StateType.SUMO));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
   @Timed
@@ -87,6 +91,7 @@ public class SumoResource implements LogAnalysisResource {
     return new RestResponse<>(analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.SUMO));
   }
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL)
   @Timed
