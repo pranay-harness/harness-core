@@ -163,6 +163,20 @@ public class JenkinsTest {
             tuple("63", "1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3"));
   }
 
+  @Test
+  public void shouldGetLastSuccessfulBuildForGitJob() throws IOException {
+    BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler");
+    assertThat(buildDetails).isNotNull();
+    assertEquals("67", buildDetails.getNumber());
+    assertEquals("1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3", buildDetails.getRevision());
+  }
+
+  @Test
+  public void shouldGetNullLastSuccessfulBuildForNonExistingGitJob() throws IOException {
+    BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler1");
+    assertThat(buildDetails).isNull();
+  }
+
   /**
    * Should get last n build details for svn jobs.
    *
