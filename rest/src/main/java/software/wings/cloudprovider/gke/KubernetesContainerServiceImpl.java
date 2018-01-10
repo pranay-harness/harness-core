@@ -551,11 +551,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           return false;
         }
 
-        int running = (int) pods.stream().filter(this ::isRunning).count();
-        if (running != desiredCount) {
-          executionLogCallback.saveExecutionLog(
-              String.format("Waiting for pods to be running. [%d/%d]", running, desiredCount), LogLevel.INFO);
-          return false;
+        if (desiredCount >= previousCount) {
+          int running = (int) pods.stream().filter(this ::isRunning).count();
+          if (running != desiredCount) {
+            executionLogCallback.saveExecutionLog(
+                String.format("Waiting for pods to be running. [%d/%d]", running, desiredCount), LogLevel.INFO);
+            return false;
+          }
         }
 
         if (desiredCount > 0) {
@@ -569,7 +571,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
         }
 
-        if (desiredCount > previousCount) {
+        if (desiredCount >= previousCount) {
           int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
           if (steadyState != desiredCount) {
             executionLogCallback.saveExecutionLog(
