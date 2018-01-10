@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 
@@ -219,13 +220,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               : "");
       Set<String> images = getControllerImages(getController(kubernetesConfig, encryptedDataDetails, controllerName));
 
-      if (!podHasImages(pod, images)) {
-        hasErrors = true;
-        String msg = String.format("Pod %s does not have image(s) %s", podName, images);
-        logger.error(msg);
-        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      }
-
       if (!isRunning(pod)) {
         hasErrors = true;
         String msg = String.format("Pod %s failed to start", podName);
@@ -233,7 +227,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
-      if (!inSteadyState(pod)) {
+      if (desiredCount > 0 && !podHasImages(pod, images)) {
+        hasErrors = true;
+        String msg = String.format("Pod %s does not have image(s) %s", podName, images);
+        logger.error(msg);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      }
+
+      if (desiredCount > previousCount && !inSteadyState(pod)) {
         hasErrors = true;
         String msg = String.format("Pod %s failed to reach steady state", podName);
         logger.error(msg);
@@ -283,7 +284,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private boolean inSteadyState(Pod pod) {
-    return pod.getStatus().getConditions().stream().allMatch(podCondition -> "True".equals(podCondition.getStatus()));
+    List<PodCondition> conditions = pod.getStatus().getConditions();
+    return isNotEmpty(conditions)
+        && conditions.stream().allMatch(podCondition -> "True".equals(podCondition.getStatus()));
   }
 
   private boolean isRunning(Pod pod) {
@@ -535,19 +538,37 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       with().pollInterval(5, TimeUnit.SECONDS).await().atMost(steadyStateTimeout, TimeUnit.MINUTES).until(() -> {
         List<Pod> pods =
             kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
-        int running = (int) pods.stream().filter(pod -> podHasImages(pod, images) && isRunning(pod)).count();
-        int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
+
+        int running = (int) pods.stream().filter(this ::isRunning).count();
         if (running != desiredCount) {
           executionLogCallback.saveExecutionLog(
               String.format("Waiting for desired number of pods to be running. [%d/%d]", running, desiredCount),
               LogLevel.INFO);
-        } else if (previousCount < desiredCount) {
-          executionLogCallback.saveExecutionLog(
-              String.format("Waiting for pods to reach steady state. [%d/%d]", steadyState, desiredCount),
-              LogLevel.INFO);
+          return false;
         }
 
-        return running == desiredCount && (previousCount >= desiredCount || steadyState == desiredCount);
+        if (desiredCount > 0) {
+          int haveImages = (int) pods.stream().filter(pod -> podHasImages(pod, images)).count();
+          if (haveImages != desiredCount) {
+            executionLogCallback.saveExecutionLog(
+                String.format(
+                    "Waiting for pods to be updated with image(s). %s [%d/%d]", images, haveImages, desiredCount),
+                LogLevel.INFO);
+            return false;
+          }
+        }
+
+        if (desiredCount > previousCount) {
+          int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
+          if (steadyState != desiredCount) {
+            executionLogCallback.saveExecutionLog(
+                String.format("Waiting for pods to reach steady state. [%d/%d]", steadyState, desiredCount),
+                LogLevel.INFO);
+            return false;
+          }
+        }
+
+        return true;
       });
     } catch (ConditionTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
