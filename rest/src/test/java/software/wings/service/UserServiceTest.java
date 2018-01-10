@@ -45,13 +45,19 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.USER_PASSWORD;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import freemarker.template.TemplateException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.cache.Cache;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
@@ -94,14 +100,6 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.cache.Cache;
 
 /**
  * Created by anubhaw on 3/9/16.
@@ -421,7 +419,6 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn(userBuilder.withUuid(USER_ID).build());
 
     userService.inviteUsers(userInvite);
-
     verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).save(userInvite);
     verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
@@ -442,6 +439,33 @@ public class UserServiceTest extends WingsBaseTest {
     userService.inviteUsers(userInvite);
     verify(emailDataNotificationService, times(2)).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
+  }
+
+  /**
+   * Should invite new user - mixed case email.
+   */
+  @Test
+  public void shouldInviteNewUserMixedCaseEmail() throws EmailException, TemplateException, IOException {
+    String mixedEmail = "UseR@wings.software ";
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAppId(GLOBAL_APP_ID)
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmails(asList(mixedEmail))
+                                .withRoles(asList(aRole().withUuid(ROLE_ID).build()))
+                                .build();
+
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+    when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
+        .thenReturn(userBuilder.withUuid(USER_ID).build());
+
+    userService.inviteUsers(userInvite);
+
+    verify(accountService).get(ACCOUNT_ID);
+    verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
+    assertThat(userArgumentCaptor.getValue()).hasFieldOrPropertyWithValue("email", mixedEmail.trim().toLowerCase());
   }
 
   /**
