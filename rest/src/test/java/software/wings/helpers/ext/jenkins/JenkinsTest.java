@@ -15,7 +15,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -56,7 +55,6 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Ignore
   public void shouldGetJobsFromJenkins() throws URISyntaxException, IOException {
     wireMockRule.stubFor(
         get(urlEqualTo("/job/parentJob/api/json"))
