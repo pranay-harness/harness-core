@@ -22,7 +22,7 @@ import java.util.Map;
  * Created by brett on 11/18/17
  */
 public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ContainerSetupCommandUnit.class);
 
   static final int KEEP_N_REVISIONS = 3;
 
