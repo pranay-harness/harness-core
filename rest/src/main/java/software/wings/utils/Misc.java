@@ -1,9 +1,12 @@
 package software.wings.utils;
 
+import com.google.common.base.Joiner;
+
 import org.apache.commons.lang.ArrayUtils;
 import software.wings.beans.Log;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -172,7 +175,9 @@ public class Misc {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < MAX_CAUSES) {
-      executionLogCallback.saveExecutionLog(t.getMessage(), Log.LogLevel.ERROR);
+      String msg = t instanceof WingsException ? Joiner.on(". ").join(((WingsException) t).getParams().values())
+                                               : t.getMessage();
+      executionLogCallback.saveExecutionLog(msg, Log.LogLevel.ERROR);
       t = t.getCause();
     }
   }

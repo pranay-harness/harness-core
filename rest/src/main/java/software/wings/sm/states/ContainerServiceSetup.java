@@ -90,6 +90,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -209,6 +210,7 @@ public abstract class ContainerServiceSetup extends State {
                                         .withParameters(new Object[] {command, commandExecutionContext})
                                         .withEnvId(env.getUuid())
                                         .withInfrastructureMappingId(infrastructureMapping.getUuid())
+                                        .withTimeout(TimeUnit.HOURS.toMillis(1))
                                         .build());
 
       return anExecutionResponse()
