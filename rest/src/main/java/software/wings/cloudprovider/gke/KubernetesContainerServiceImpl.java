@@ -66,6 +66,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -226,13 +227,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               : "");
       Set<String> images = getControllerImages(getController(kubernetesConfig, encryptedDataDetails, controllerName));
 
-      if (desiredCount >= previousCount && !isRunning(pod)) {
-        hasErrors = true;
-        String msg = String.format("Pod %s failed to start", podName);
-        logger.error(msg);
-        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      }
-
       if (desiredCount > 0 && !podHasImages(pod, images)) {
         hasErrors = true;
         String msg = String.format("Pod %s does not have image(s) %s", podName, images);
@@ -240,11 +234,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
-      if (desiredCount >= previousCount && !inSteadyState(pod)) {
-        hasErrors = true;
-        String msg = String.format("Pod %s failed to reach steady state", podName);
-        logger.error(msg);
-        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      if (desiredCount >= previousCount) {
+        if (!isRunning(pod)) {
+          hasErrors = true;
+          String msg = String.format("Pod %s failed to start", podName);
+          logger.error(msg);
+          executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+        }
+
+        if (!inSteadyState(pod)) {
+          hasErrors = true;
+          String msg = String.format("Pod %s failed to reach steady state", podName);
+          logger.error(msg);
+          executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+        }
       }
 
       if (!hasErrors) {
@@ -540,6 +543,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     logger.info("Waiting for pods to be ready...");
+    AtomicBoolean countReached = new AtomicBoolean(false);
+    AtomicBoolean haveImagesCountReached = new AtomicBoolean(false);
+    AtomicBoolean runningCountReached = new AtomicBoolean(false);
+    AtomicBoolean steadyStateCountReached = new AtomicBoolean(false);
     try {
       with().pollInterval(5, TimeUnit.SECONDS).await().atMost(steadyStateTimeout, TimeUnit.MINUTES).until(() -> {
         List<Pod> pods =
@@ -547,17 +554,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
         if (pods.size() != desiredCount) {
           executionLogCallback.saveExecutionLog(
-              String.format("Waiting for desired number of pods. [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
+              String.format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
           return false;
         }
-
-        if (desiredCount >= previousCount) {
-          int running = (int) pods.stream().filter(this ::isRunning).count();
-          if (running != desiredCount) {
-            executionLogCallback.saveExecutionLog(
-                String.format("Waiting for pods to be running. [%d/%d]", running, desiredCount), LogLevel.INFO);
-            return false;
-          }
+        if (!countReached.getAndSet(true)) {
+          executionLogCallback.saveExecutionLog(
+              String.format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
         }
 
         if (desiredCount > 0) {
@@ -565,19 +567,39 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           if (haveImages != desiredCount) {
             executionLogCallback.saveExecutionLog(
                 String.format(
-                    "Waiting for pods to be updated with image(s). %s [%d/%d]", images, haveImages, desiredCount),
+                    "Waiting for pods to be updated with image(s) %s [%d/%d]", images, haveImages, desiredCount),
                 LogLevel.INFO);
             return false;
+          }
+          if (!haveImagesCountReached.getAndSet(true)) {
+            executionLogCallback.saveExecutionLog(
+                String.format("Pods are updated with image(s) %s [%d/%d]", images, haveImages, desiredCount),
+                LogLevel.INFO);
           }
         }
 
         if (desiredCount >= previousCount) {
+          int running = (int) pods.stream().filter(this ::isRunning).count();
+          if (running != desiredCount) {
+            executionLogCallback.saveExecutionLog(
+                String.format("Waiting for pods to be running [%d/%d]", running, desiredCount), LogLevel.INFO);
+            return false;
+          }
+          if (!runningCountReached.getAndSet(true)) {
+            executionLogCallback.saveExecutionLog(
+                String.format("Pods are running [%d/%d]", running, desiredCount), LogLevel.INFO);
+          }
+
           int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
           if (steadyState != desiredCount) {
             executionLogCallback.saveExecutionLog(
-                String.format("Waiting for pods to reach steady state. [%d/%d]", steadyState, desiredCount),
+                String.format("Waiting for pods to reach steady state [%d/%d]", steadyState, desiredCount),
                 LogLevel.INFO);
             return false;
+          }
+          if (!steadyStateCountReached.getAndSet(true)) {
+            executionLogCallback.saveExecutionLog(
+                String.format("Pods have reached steady state [%d/%d]", steadyState, desiredCount), LogLevel.INFO);
           }
         }
 
