@@ -25,7 +25,7 @@ public abstract class Notification extends Base {
 
   @NotNull private NotificationType notificationType;
   @Indexed @NotNull private boolean complete = true;
-  @Indexed @NotNull private boolean actionable = false;
+  @Indexed @NotNull private boolean actionable;
 
   private String notificationTemplateId;
   private Map<String, String> notificationTemplateVariables = new HashMap<>();

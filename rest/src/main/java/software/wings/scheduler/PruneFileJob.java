@@ -18,7 +18,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 public class PruneFileJob implements Job {
-  protected static Logger logger = LoggerFactory.getLogger(PruneFileJob.class);
+  private static Logger logger = LoggerFactory.getLogger(PruneFileJob.class);
 
   public static final String GROUP = "PRUNE_FILE_GROUP";
 

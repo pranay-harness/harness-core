@@ -181,7 +181,7 @@ public class ScpCommandUnit extends SshCommandUnit {
     private String name;
     private CommandUnitType commandUnitType;
     private CommandExecutionStatus commandExecutionStatus;
-    private boolean artifactNeeded = false;
+    private boolean artifactNeeded;
 
     private Builder() {}
 

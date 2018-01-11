@@ -174,7 +174,7 @@ public class Artifact extends Base {
       return finalStatus;
     }
 
-    private boolean finalStatus = false;
+    private boolean finalStatus;
   }
 
   /**

@@ -21,7 +21,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
-  @SchemaIgnore private boolean artifactNeeded = false;
+  @SchemaIgnore private boolean artifactNeeded;
   @SchemaIgnore private String deploymentType;
 
   /**

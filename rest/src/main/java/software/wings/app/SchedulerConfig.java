@@ -15,7 +15,7 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "automation_scheduler") private String schedulerName = "automation_scheduler";
   @JsonProperty(defaultValue = "automation") private String instanceId = "automation";
   @JsonProperty(defaultValue = "quartz") private String tablePrefix = "quartz";
-  @JsonProperty(defaultValue = "true") private boolean isClustered = false;
+  @JsonProperty(defaultValue = "true") private boolean isClustered;
 
   public String getJobstoreclass() {
     return jobstoreclass;

@@ -107,12 +107,12 @@ public class NotifyEvent extends Queuable {
     private List<String> correlationIds;
     private boolean error;
     private String id;
-    private boolean running = false;
+    private boolean running;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
     private Date earliestGet = new Date();
-    private double priority = 0.0;
+    private double priority;
     private Date created = new Date();
-    private int retries = 0;
+    private int retries;
 
     private Builder() {}
 

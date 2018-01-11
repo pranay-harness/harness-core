@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MaintenanceController implements Managed {
   private static final Logger logger = LoggerFactory.getLogger(MaintenanceController.class);
 
-  private static boolean forceMaintenanceOff = false;
+  private static boolean forceMaintenanceOff;
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);
 
   public static void forceMaintenanceOff() {

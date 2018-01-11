@@ -155,8 +155,8 @@ public class EcrArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean autoDownload = false;
-    private boolean autoApproveForProduction = false;
+    private boolean autoDownload;
+    private boolean autoApproveForProduction;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
     private Builder() {}

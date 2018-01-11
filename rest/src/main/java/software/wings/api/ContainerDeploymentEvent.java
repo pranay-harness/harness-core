@@ -53,16 +53,16 @@ public class ContainerDeploymentEvent extends Queuable {
     private String workflowExecutionId;
     private String id;
     private String pipelineExecutionId;
-    private boolean running = false;
+    private boolean running;
     private String stateExecutionInstanceId;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
     private String clusterName;
     private Date earliestGet = new Date();
     private InstanceType instanceType;
-    private double priority = 0.0;
+    private double priority;
     private String containerSvcNameNoRevision;
     private Date created = new Date();
-    private int retries = 0;
+    private int retries;
     private Set<String> containerSvcNameSet;
 
     private Builder() {}

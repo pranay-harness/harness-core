@@ -47,7 +47,7 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
 
-  @SchemaIgnore private boolean artifactNeeded = false;
+  @SchemaIgnore private boolean artifactNeeded;
   @SchemaIgnore private String deploymentType;
 
   @SchemaIgnore private String originEntityId;

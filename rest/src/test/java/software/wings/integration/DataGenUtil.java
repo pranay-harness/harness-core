@@ -106,7 +106,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   private List<String> appNames = new ArrayList<>(seedNames);
   private List<String> serviceNames;
   private List<String> configFileNames;
-  private SettingAttribute envAttr = null;
+  private SettingAttribute envAttr;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private MainConfiguration configuration;

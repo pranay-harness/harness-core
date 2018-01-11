@@ -7,7 +7,7 @@ import org.mongodb.morphia.logging.slf4j.SLF4JLoggerImplFactory;
  * Created by peeyushaggarwal on 6/16/16.
  */
 public class LoggingInitializer {
-  private static boolean initialized = false;
+  private static boolean initialized;
 
   /**
    * Initialize logging.

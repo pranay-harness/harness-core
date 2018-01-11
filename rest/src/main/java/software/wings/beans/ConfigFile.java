@@ -94,7 +94,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
 
   @Transient private ConfigFile overriddenConfigFile;
 
-  @FormDataParam("encrypted") private boolean encrypted = false;
+  @FormDataParam("encrypted") private boolean encrypted;
 
   @FormDataParam("encryptedFileId") private String encryptedFileId;
 
@@ -190,7 +190,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
   @NoArgsConstructor
   public static class Yaml extends BaseEntityYaml {
     private String targetFilePath;
-    private boolean encrypted = false;
+    private boolean encrypted;
     private String fileName;
     private String description;
     private String checksum;
@@ -226,7 +226,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
     private String fileName;
     private String checksum;
     private String checksumType;
-    private boolean encrypted = false;
+    private boolean encrypted;
 
     public OverrideYaml(String harnessApiVersion) {
       super(YamlType.CONFIG_FILE_OVERRIDE.name(), harnessApiVersion);

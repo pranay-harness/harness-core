@@ -14,7 +14,7 @@ public class TestJobListener implements JobListener {
     jobKey = jk;
   }
 
-  private boolean satisfied = false;
+  private boolean satisfied;
 
   @Override
   public String getName() {

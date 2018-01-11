@@ -72,6 +72,7 @@ public class LoggerCheck extends AbstractCheck {
 
     if (previousSibling == null) {
       log(ast, NON_STATIC_LOGGER_MSG_KEY);
+      return;
     }
 
     DetailAST modifier = previousSibling.getFirstChild();

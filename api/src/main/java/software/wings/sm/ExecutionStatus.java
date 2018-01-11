@@ -63,7 +63,7 @@ public enum ExecutionStatus {
    */
   RESUMED;
 
-  private boolean finalStatus = false;
+  private boolean finalStatus;
 
   ExecutionStatus() {}
 

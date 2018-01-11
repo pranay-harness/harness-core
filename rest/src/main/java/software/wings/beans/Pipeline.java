@@ -36,7 +36,7 @@ public class Pipeline extends Base {
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private boolean valid = true;
   @Transient private String validationMessage;
-  @Transient private boolean templatized = false;
+  @Transient private boolean templatized;
 
   /**
    * Gets state eta map.

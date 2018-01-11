@@ -47,7 +47,7 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   private int analysisMinute;
 
-  private boolean showTimeSeries = false;
+  private boolean showTimeSeries;
 
   public void addNewRelicMetricAnalysis(NewRelicMetricAnalysis analysis) {
     metricAnalyses.add(analysis);

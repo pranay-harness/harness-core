@@ -22,12 +22,12 @@ import java.util.Date;
 })
 public abstract class Queuable {
   @Id private String id;
-  @Indexed private boolean running = false;
+  @Indexed private boolean running;
   private Date resetTimestamp = new Date(Long.MAX_VALUE);
   private Date earliestGet = new Date();
-  private double priority = 0.0;
+  private double priority;
   private Date created = new Date();
-  private int retries = 0;
+  private int retries;
 
   /**
    * Instantiates a new queuable.

@@ -46,7 +46,7 @@ public class User extends Base implements Principal {
   @Transient private char[] password;
   @Transient private String token;
 
-  private boolean emailVerified = false;
+  private boolean emailVerified;
 
   private long statsFetchedOn;
 
@@ -423,7 +423,7 @@ public class User extends Base implements Principal {
     private long lastLogin;
     private char[] password;
     private String token;
-    private boolean emailVerified = false;
+    private boolean emailVerified;
     private long statsFetchedOn;
     private String uuid;
     private String appId;

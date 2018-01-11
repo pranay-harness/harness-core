@@ -167,9 +167,9 @@ public class BambooArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean autoApproveForProduction = false;
+    private boolean autoApproveForProduction;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
-    private boolean metadataOnly = false;
+    private boolean metadataOnly;
 
     private Builder() {}
 

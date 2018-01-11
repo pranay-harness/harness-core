@@ -116,7 +116,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
     private final Service splunkService;
     private final LogAnalysisStoreService logAnalysisStoreService;
     private long collectionStartTime;
-    private int logCollectionMinute = 0;
+    private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
 
     private SplunkDataCollector(String delegateTaskId, SplunkDataCollectionInfo dataCollectionInfo,

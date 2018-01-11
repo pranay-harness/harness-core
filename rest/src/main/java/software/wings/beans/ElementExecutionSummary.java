@@ -175,7 +175,7 @@ public class ElementExecutionSummary {
     this.status = status;
   }
 
-  public static Comparator<? super ElementExecutionSummary> startTsComparator =
+  public static final Comparator<? super ElementExecutionSummary> startTsComparator =
       new Comparator<ElementExecutionSummary>() {
         @Override
         public int compare(ElementExecutionSummary o1, ElementExecutionSummary o2) {

@@ -323,7 +323,7 @@ public class ArtifactStreamAction {
     private String workflowName;
     private String envId;
     private String envName;
-    private boolean customAction = false;
+    private boolean customAction;
     private String cronExpression;
     private String cronDescription;
     private String actionSummary; // TODO:: remove once UI stops using it.

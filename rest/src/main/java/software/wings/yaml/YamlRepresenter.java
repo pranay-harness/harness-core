@@ -19,7 +19,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 public class YamlRepresenter extends Representer {
-  private boolean removeEmptyValues = false;
+  private boolean removeEmptyValues;
 
   public YamlRepresenter(boolean removeEmptyValues) {
     this.removeEmptyValues = removeEmptyValues;

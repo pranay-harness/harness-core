@@ -68,7 +68,7 @@ public class PageRequest<T> {
 
   @JsonIgnore @Context private ContainerRequestContext requestContext; // TODO: remove UriInfo
 
-  @JsonIgnore private boolean isOr = false;
+  @JsonIgnore private boolean isOr;
 
   @JsonIgnore private ReadPref readPref;
 

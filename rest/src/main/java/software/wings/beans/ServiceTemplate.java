@@ -36,7 +36,7 @@ public class ServiceTemplate extends Base {
   @Transient private List<ConfigFile> configFilesOverrides = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
-  private boolean defaultServiceTemplate = false;
+  private boolean defaultServiceTemplate;
 
   public ServiceTemplate clone() {
     return aServiceTemplate()
@@ -301,7 +301,7 @@ public class ServiceTemplate extends Base {
     private String uuid;
     private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
     private String appId;
-    private boolean defaultServiceTemplate = false;
+    private boolean defaultServiceTemplate;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
