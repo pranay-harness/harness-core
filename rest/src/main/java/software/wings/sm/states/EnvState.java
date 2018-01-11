@@ -7,6 +7,7 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -22,6 +23,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -101,21 +103,40 @@ public class EnvState extends State {
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("Invalid Workflow")
+          .withErrorMessage("Workflow does not exist")
           .withStateExecutionData(envStateExecutionData)
           .build();
     }
 
     envStateExecutionData.setOrchestrationWorkflowType(
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-    WorkflowExecution execution = executionService.triggerOrchestrationExecution(
-        appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs);
-    envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(asList(execution.getUuid()))
-        .withStateExecutionData(envStateExecutionData)
-        .build();
+    try {
+      WorkflowExecution execution = executionService.triggerOrchestrationExecution(
+          appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs);
+      envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(asList(execution.getUuid()))
+          .withStateExecutionData(envStateExecutionData)
+          .build();
+    } catch (Exception e) {
+      String message;
+      if (e instanceof WingsException) {
+        WingsException wingsException = (WingsException) e;
+        if (wingsException.getParams() != null) {
+          message = Joiner.on(". ").join(((WingsException) e).getParams().values());
+        } else {
+          message = e.getMessage();
+        }
+      } else {
+        message = e.getMessage();
+      }
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage(message)
+          .withStateExecutionData(envStateExecutionData)
+          .build();
+    }
   }
 
   private Map<String, String> populatePipelineVariables(WorkflowStandardParams workflowStandardParams) {
