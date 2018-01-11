@@ -22,7 +22,7 @@ import java.util.function.Supplier;
  * Created by rktummala on 7/30/17.
  */
 public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
-  private final Logger logger = LoggerFactory.getLogger(AmazonS3CollectionTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(AmazonS3CollectionTask.class);
 
   @Inject private AmazonS3Service amazonS3Service;
 

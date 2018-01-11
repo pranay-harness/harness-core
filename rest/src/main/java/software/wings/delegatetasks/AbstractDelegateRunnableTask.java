@@ -25,7 +25,7 @@ import java.util.function.Supplier;
  * Created by peeyushaggarwal on 12/7/16.
  */
 public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTask {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateRunnableTask.class);
 
   private String delegateId;
   private String accountId;

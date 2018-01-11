@@ -52,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private MainConfiguration configuration;
 
-  private Logger logger = LoggerFactory.getLogger(getClass());
+  private static Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
   @Override
   public PageResponse<Notification> list(PageRequest<Notification> pageRequest) {

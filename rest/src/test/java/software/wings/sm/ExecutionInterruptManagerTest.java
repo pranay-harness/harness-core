@@ -32,7 +32,7 @@ import software.wings.exception.WingsException;
  * @author Rishi
  */
 public class ExecutionInterruptManagerTest extends WingsBaseTest {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ExecutionInterruptManagerTest.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @InjectMocks @Inject private ExecutionInterruptManager executionInterruptManager;

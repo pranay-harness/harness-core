@@ -23,7 +23,7 @@ import software.wings.service.intfc.AppService;
 @Integration
 @Ignore
 public class SmExecutionCleanupSchedulerUtil extends WingsBaseTest {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(SmExecutionCleanupSchedulerUtil.class);
   @Inject AppService appService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 

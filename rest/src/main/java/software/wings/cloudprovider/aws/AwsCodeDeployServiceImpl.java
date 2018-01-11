@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   private static final int SLEEP_INTERVAL = 10 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceImpl.class);
 
   @Inject private AwsHelperService awsHelperService;
 

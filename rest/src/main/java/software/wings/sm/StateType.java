@@ -320,7 +320,7 @@ public enum StateType implements StateTypeDescriptor {
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(StateType.class);
   private final Class<? extends State> stateClass;
   private final Object jsonSchema;
   private Object uiSchema;

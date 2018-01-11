@@ -46,7 +46,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
 
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
 
   public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
       Supplier<Boolean> preExecute) {

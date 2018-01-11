@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  * Created by peeyushaggarwal on 4/6/17.
  */
 public class UISchemaProcessor {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(UISchemaProcessor.class);
 
   public static <T> Map<String, Object> generate(Class<T> stencilClass) throws IntrospectionException {
     List<String> order = processFieldOrder(stencilClass);

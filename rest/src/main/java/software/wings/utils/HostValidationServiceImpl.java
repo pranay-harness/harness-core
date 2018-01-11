@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class HostValidationServiceImpl implements HostValidationService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(HostValidationServiceImpl.class);
   @Inject private EncryptionService encryptionService;
 
   public List<HostValidationResponse> validateHost(List<String> hostNames, SettingAttribute connectionSetting,

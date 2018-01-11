@@ -43,7 +43,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Priority(1)
 public class AuditRequestFilter implements ContainerRequestFilter {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AuditRequestFilter.class);
   @Context private ResourceContext resourceContext;
   @Context private ResourceInfo resourceInfo;
 

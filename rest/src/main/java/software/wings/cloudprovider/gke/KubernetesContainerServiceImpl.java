@@ -76,7 +76,7 @@ import java.util.stream.Collectors;
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerServiceImpl.class);
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
 
   @Override

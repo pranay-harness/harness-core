@@ -50,7 +50,7 @@ import javax.ws.rs.core.StreamingOutput;
 @Produces("application/json")
 @AuthRule(ResourceType.DELEGATE)
 public class DelegateFileResource {
-  private final Logger logger = LoggerFactory.getLogger(DelegateFileResource.class);
+  private static final Logger logger = LoggerFactory.getLogger(DelegateFileResource.class);
 
   @Inject private FileService fileService;
   @Inject private MainConfiguration configuration;

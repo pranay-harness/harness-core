@@ -15,8 +15,7 @@ import software.wings.exception.WingsException;
 
 @Singleton
 public class PersistentLocker implements Locker {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
+  private static final Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
   @Inject private DistributedLockSvc distributedLockSvc;
 
   @Override

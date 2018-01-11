@@ -37,7 +37,7 @@ public void checkServerTrusted(java.security.cert.X509Certificate[] certs, Strin
 }
 ;
 
-private final Logger logger = LoggerFactory.getLogger("http");
+private static final Logger logger = LoggerFactory.getLogger("http");
 private String baseUrl;
 private TokenGenerator tokenGenerator;
 

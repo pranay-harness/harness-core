@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class GcrServiceImpl implements GcrService {
   private GcpHelperService gcpHelperService;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GcrServiceImpl.class);
 
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
 

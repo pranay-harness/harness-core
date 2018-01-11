@@ -173,7 +173,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private static final String COMMAND_NAME_PREF = "Command: ";
   private static final String WORKFLOW_NAME_PREF = "Workflow: ";
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionServiceImpl.class);
 
   @Inject private MainConfiguration mainConfiguration;
   @Inject private WingsPersistence wingsPersistence;

@@ -33,7 +33,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
   private Injector injector;
   private Scheduler scheduler;
   private MainConfiguration configuration;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AbstractQuartzScheduler.class);
 
   /**
    * Instantiates a new Cron scheduler.

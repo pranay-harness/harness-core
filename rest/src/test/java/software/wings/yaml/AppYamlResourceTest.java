@@ -27,7 +27,7 @@ import java.util.List;
  * @author bsollish
  */
 public class AppYamlResourceTest {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AppYamlResourceTest.class);
 
   // create mocks
   private static final AppService appService = mock(AppService.class);

@@ -24,7 +24,7 @@ import javax.ws.rs.core.GenericType;
  * The Class AppResourceTest.
  */
 public class AppResourceTest {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AppResourceTest.class);
   private static final AppService appService = mock(AppService.class);
 
   /**

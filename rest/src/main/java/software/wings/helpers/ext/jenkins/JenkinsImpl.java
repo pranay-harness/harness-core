@@ -72,7 +72,7 @@ public class JenkinsImpl implements Jenkins {
   private JenkinsServer jenkinsServer;
   private JenkinsHttpClient jenkinsHttpClient;
   private String jenkinsBaseUrl;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(JenkinsImpl.class);
   @Inject private ExecutorService executorService;
 
   /**

@@ -93,7 +93,7 @@ import javax.ws.rs.Path;
  * @author Rishi
  */
 public class WingsApplication extends Application<MainConfiguration> {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(WingsApplication.class);
   private final MetricRegistry metricRegistry = new MetricRegistry();
 
   /**

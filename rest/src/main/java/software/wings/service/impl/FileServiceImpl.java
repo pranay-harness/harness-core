@@ -47,7 +47,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class FileServiceImpl implements FileService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileBucketHelper fileBucketHelper;
 

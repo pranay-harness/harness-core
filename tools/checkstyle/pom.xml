@@ -38,12 +38,6 @@
         <plugins>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <includes>
-                        <include>**/*.java</include>
-                    </includes>
-                    <forkMode>always</forkMode>
-                </configuration>
             </plugin>
         </plugins>
     </build>

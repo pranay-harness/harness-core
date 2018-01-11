@@ -31,7 +31,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetServiceImpl.class);
 
   @Override
   public YamlChangeSet save(YamlChangeSet yamlChangeSet) {

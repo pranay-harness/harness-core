@@ -61,7 +61,7 @@ import javax.ws.rs.core.MultivaluedMap;
 @Singleton
 @Priority(AUTHENTICATION)
 public class AuthRuleFilter implements ContainerRequestFilter {
-  private final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
 
   @Context private ResourceInfo resourceInfo;
 

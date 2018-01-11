@@ -22,7 +22,7 @@ import java.io.InputStream;
  */
 @Singleton
 public class ArtifactCollectionTaskHelper {
-  private final Logger logger = LoggerFactory.getLogger(ArtifactCollectionTaskHelper.class);
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionTaskHelper.class);
   @Inject private DelegateFileManager delegateFileManager;
 
   public void addDataToResponse(Pair<String, InputStream> fileInfo, String artifactPath, ListNotifyResponseData res,

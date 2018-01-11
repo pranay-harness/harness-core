@@ -28,7 +28,7 @@ import java.util.List;
  * @author Rishi
  */
 public class Notifier implements Runnable {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(Notifier.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;

@@ -31,7 +31,7 @@ import software.wings.service.intfc.EntityVersionService;
  */
 @Singleton
 public class EntityVersionServiceImpl implements EntityVersionService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(EntityVersionServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

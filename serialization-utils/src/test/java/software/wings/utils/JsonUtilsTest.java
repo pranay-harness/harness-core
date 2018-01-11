@@ -30,7 +30,7 @@ public class JsonUtilsTest {
       + "\"author\":\"HermanMelville\",\"title\":\"MobyDick\",\"isbn\":\"0-553-21311-3\",\"price\":8.99},{\"category\":\"fiction\""
       + ",\"author\":\"J.R.R.Tolkien\",\"title\":\"TheLordoftheRings\",\"isbn\":\"0-395-19395-8\",\"price\":22.99}]"
       + ",\"bicycle\":{\"color\":\"red\",\"price\":19.95}},\"expensive\":10}";
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(JsonUtilsTest.class);
 
   /**
    * Should get authors.

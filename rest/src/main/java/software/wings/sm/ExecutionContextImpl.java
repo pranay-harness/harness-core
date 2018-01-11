@@ -53,7 +53,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final String CURRENT_STATE = "currentState";
   private static final Pattern wildCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   private static final Pattern argsCharPattern = Pattern.compile("[(|)|\"|\']");
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
   @Inject @Transient private ExpressionEvaluator evaluator;
   @Inject @Transient private ExpressionProcessorFactory expressionProcessorFactory;
   @Inject @Transient private VariableProcessor variableProcessor;

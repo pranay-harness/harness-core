@@ -26,7 +26,7 @@ import java.util.Map;
 @Singleton
 public class AwsClusterServiceImpl implements AwsClusterService {
   @Inject private EcsContainerService ecsContainerService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AwsClusterServiceImpl.class);
   private static final String DASH_STRING = "----------";
 
   @Override

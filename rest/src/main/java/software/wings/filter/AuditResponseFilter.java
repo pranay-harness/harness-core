@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 @Singleton
 public class AuditResponseFilter implements Filter {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AuditResponseFilter.class);
 
   @Inject private AuditHelper auditHelper;
 

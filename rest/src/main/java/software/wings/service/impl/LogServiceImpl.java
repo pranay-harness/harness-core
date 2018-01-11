@@ -58,7 +58,7 @@ public class LogServiceImpl implements LogService {
   public static final int NUM_OF_LOGS_TO_KEEP = 200;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ActivityService activityService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(LogServiceImpl.class);
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.LogService#list(software.wings.dl.PageRequest)

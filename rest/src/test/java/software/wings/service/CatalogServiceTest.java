@@ -21,7 +21,7 @@ import java.util.Map;
  * @author Rishi.
  */
 public class CatalogServiceTest extends WingsBaseTest {
-  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   @Inject private CatalogService catalogService;
 
   /**

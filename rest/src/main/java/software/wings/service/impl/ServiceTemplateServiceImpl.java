@@ -60,7 +60,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ServiceTemplateServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
   @Inject private ServiceVariableService serviceVariableService;

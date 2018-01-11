@@ -29,7 +29,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GitCommandTask.class);
 
   public GitCommandTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
       Supplier<Boolean> preExecute) {

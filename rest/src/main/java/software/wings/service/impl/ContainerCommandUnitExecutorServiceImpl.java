@@ -28,7 +28,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ContainerCommandUnitExecutorServiceImpl.class);
 
   @Inject private DelegateLogService logService;
   @Inject private Injector injector;

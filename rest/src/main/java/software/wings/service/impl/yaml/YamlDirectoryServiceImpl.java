@@ -91,7 +91,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class YamlDirectoryServiceImpl implements YamlDirectoryService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(YamlDirectoryServiceImpl.class);
 
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;

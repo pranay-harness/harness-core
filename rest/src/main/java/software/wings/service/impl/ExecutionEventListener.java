@@ -31,7 +31,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutor;
 
 public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent> {
-  private final Logger logger = LoggerFactory.getLogger(ExecutionEventListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExecutionEventListener.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

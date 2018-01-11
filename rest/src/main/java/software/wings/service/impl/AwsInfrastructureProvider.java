@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class AwsInfrastructureProvider implements InfrastructureProvider {
-  private final Logger logger = LoggerFactory.getLogger(AwsInfrastructureProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(AwsInfrastructureProvider.class);
   @Inject private AwsHelperService awsHelperService;
   @Inject private HostService hostService;
   @Inject private MainConfiguration mainConfiguration;

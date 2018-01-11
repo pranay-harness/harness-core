@@ -31,7 +31,7 @@ import java.util.List;
  * @author Rishi
  */
 public class RepeatStateTest {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(RepeatStateTest.class);
 
   /**
    * Should execute serial.

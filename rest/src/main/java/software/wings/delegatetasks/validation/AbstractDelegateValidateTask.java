@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  * Created by brett on 11/1/17
  */
 public abstract class AbstractDelegateValidateTask implements DelegateValidateTask {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateValidateTask.class);
 
   private String accountId;
   private String delegateId;

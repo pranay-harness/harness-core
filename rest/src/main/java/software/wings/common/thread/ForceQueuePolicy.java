@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author Rishi
  */
 public class ForceQueuePolicy implements RejectedExecutionHandler {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ForceQueuePolicy.class);
 
   /* (non-Javadoc)
    * @see java.util.concurrent.RejectedExecutionHandler#rejectedExecution(java.lang.Runnable,

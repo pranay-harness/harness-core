@@ -80,7 +80,7 @@ import java.util.stream.IntStream;
 public class EcsContainerServiceImpl implements EcsContainerService {
   private static final int SLEEP_INTERVAL = 10;
   private static final int RETRY_COUNTER = (10 * 60) / SLEEP_INTERVAL; // 10 minutes
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(EcsContainerServiceImpl.class);
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 

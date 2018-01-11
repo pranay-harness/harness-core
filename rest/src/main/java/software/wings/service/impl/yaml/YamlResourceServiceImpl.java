@@ -74,7 +74,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private YamlService yamlService;
   @Inject private SecretManager secretManager;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(YamlResourceServiceImpl.class);
 
   /**
    * Find by app, service and service command ids.

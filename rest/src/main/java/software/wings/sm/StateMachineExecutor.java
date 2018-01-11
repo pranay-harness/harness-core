@@ -90,7 +90,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class StateMachineExecutor {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
   @Inject private ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;

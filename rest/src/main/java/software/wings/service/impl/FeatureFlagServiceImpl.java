@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 public class FeatureFlagServiceImpl implements FeatureFlagService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(FeatureFlagServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

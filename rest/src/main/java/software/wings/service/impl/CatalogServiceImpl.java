@@ -31,7 +31,7 @@ import java.util.Map;
  */
 @Singleton
 public class CatalogServiceImpl implements CatalogService {
-  private final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
   private Map<String, List<CatalogItem>> catalogs;
 
   /**

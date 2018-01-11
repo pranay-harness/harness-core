@@ -36,7 +36,7 @@ import javax.cache.Caching;
  * @author Rishi
  */
 public class DelegateQueueTask implements Runnable {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DelegateQueueTask.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;

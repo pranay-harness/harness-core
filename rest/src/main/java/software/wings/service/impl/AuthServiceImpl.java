@@ -72,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
   private CacheHelper cacheHelper;
   private MainConfiguration configuration;
 
-  private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
   /**
    * Instantiates a new Auth service.

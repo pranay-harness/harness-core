@@ -35,7 +35,7 @@ import java.util.Map;
  * Created by peeyushaggarwal on 5/25/16.
  */
 public class DatabaseModule extends AbstractModule {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DatabaseModule.class);
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;

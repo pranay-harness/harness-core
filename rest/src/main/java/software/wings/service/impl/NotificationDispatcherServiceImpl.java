@@ -59,7 +59,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   private static final ImmutableMap<ExecutionScope, List<NotificationMessageType>> BATCH_END_TEMPLATES =
       ImmutableMap.of(WORKFLOW, asList(WORKFLOW_FAILED_NOTIFICATION, WORKFLOW_SUCCESSFUL_NOTIFICATION), WORKFLOW_PHASE,
           asList(WORKFLOW_PHASE_FAILED_NOTIFICATION, WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION));
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(NotificationDispatcherServiceImpl.class);
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private SlackNotificationService slackNotificationService;

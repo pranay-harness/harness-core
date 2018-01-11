@@ -28,7 +28,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   private static final int SLEEP_INTERVAL = 30 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
 
-  private final Logger logger = LoggerFactory.getLogger(GcpInfrastructureProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(GcpInfrastructureProvider.class);
 
   @Inject private GkeClusterService gkeClusterService;
   @Inject private HostService hostService;

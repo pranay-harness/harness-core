@@ -26,7 +26,7 @@ import java.util.List;
 public class EcrClassicServiceImpl implements EcrClassicService {
   @Inject private AwsHelperService awsHelperService;
   @Inject private EncryptionService encryptionService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(EcrClassicServiceImpl.class);
 
   @Override
   public List<BuildDetails> getBuilds(
