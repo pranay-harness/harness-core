@@ -8,6 +8,7 @@ import software.wings.exception.HarnessException;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.utils.Util;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -32,6 +33,14 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
     config.setElkUrl(yaml.getElkUrl());
     config.setEncryptedPassword(yaml.getPassword());
 
+    char[] decryptedPassword;
+    try {
+      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
+    } catch (IllegalAccessException | IOException e) {
+      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
+    }
+
+    config.setPassword(decryptedPassword);
     config.setUsername(yaml.getUsername());
     ElkConnector elkConnector = Util.getEnumFromString(ElkConnector.class, yaml.getConnectorType());
     config.setElkConnector(elkConnector);

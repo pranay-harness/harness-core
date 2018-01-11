@@ -511,12 +511,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-        WorkflowPhase workflowPhase = aWorkflowPhase().build();
-        attachWorkflowPhase(workflow, workflowPhase);
+        BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
+
+        if (CollectionUtils.isEmpty(buildWorkflow.getWorkflowPhases())) {
+          WorkflowPhase workflowPhase = aWorkflowPhase().build();
+          attachWorkflowPhase(workflow, workflowPhase);
+        }
       }
-      createDefaultNotificationRule(workflow);
-      if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-        createDefaultFailureStrategy(workflow);
+      if (CollectionUtils.isEmpty(orchestrationWorkflow.getNotificationRules())) {
+        createDefaultNotificationRule(workflow);
+      }
+
+      if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)
+          && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+        if (CollectionUtils.isEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
+          createDefaultFailureStrategy(workflow);
+        }
       }
       orchestrationWorkflow.onSave();
       updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
@@ -1515,6 +1526,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow.needCloudProvider()) {
       setCloudProvider(workflow.getAppId(), workflowPhase);
+    }
+
+    // No need to generate phase steps if it's already created
+    if (CollectionUtils.isNotEmpty(workflowPhase.getPhaseSteps())
+        && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
+      return;
     }
 
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {

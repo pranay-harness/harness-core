@@ -6,6 +6,7 @@ import software.wings.beans.config.LogzConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -27,6 +28,15 @@ public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
     LogzConfig config = new LogzConfig();
     config.setAccountId(accountId);
     config.setEncryptedToken(yaml.getToken());
+
+    char[] decryptedToken;
+    try {
+      decryptedToken = secretManager.decryptYamlRef(yaml.getToken());
+    } catch (IllegalAccessException | IOException e) {
+      throw new HarnessException("Exception while decrypting the token ref:" + yaml.getToken());
+    }
+
+    config.setToken(decryptedToken);
     config.setLogzUrl(yaml.getLogzUrl());
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);

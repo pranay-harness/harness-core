@@ -5,6 +5,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureStrategy.FailureStrategyBuilder;
 import software.wings.beans.FailureStrategy.Yaml;
+import software.wings.beans.FailureType;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -25,13 +26,21 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
     RepairActionCode repairActionCodeAfterRetry =
         Util.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCodeAfterRetry());
-    return FailureStrategyBuilder.aFailureStrategy()
-        .withExecutionScope(executionScope)
-        .withRepairActionCode(repairActionCode)
-        .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)
-        .withRetryCount(yaml.getRetryCount())
-        .withRetryIntervals(yaml.getRetryIntervals())
-        .build();
+
+    FailureStrategyBuilder failureStrategyBuilder = FailureStrategyBuilder.aFailureStrategy()
+                                                        .withExecutionScope(executionScope)
+                                                        .withRepairActionCode(repairActionCode)
+                                                        .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)
+                                                        .withRetryCount(yaml.getRetryCount())
+                                                        .withRetryIntervals(yaml.getRetryIntervals());
+
+    if (Util.isNotEmpty(yaml.getFailureTypes())) {
+      yaml.getFailureTypes().stream().forEach(failureTypeString -> {
+        FailureType failureType = Util.getEnumFromString(FailureType.class, failureTypeString);
+        failureStrategyBuilder.addFailureTypes(failureType);
+      });
+    }
+    return failureStrategyBuilder.build();
   }
 
   @Override

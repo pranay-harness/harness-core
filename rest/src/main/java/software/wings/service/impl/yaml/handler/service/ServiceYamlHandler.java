@@ -102,7 +102,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
-      current = serviceResourceService.update(current);
+      current = serviceResourceService.update(current, true);
       Service.Yaml previousYaml = toYaml(previous, previous.getAppId());
       saveOrUpdateServiceVariables(
           previousYaml, yaml, previous.getServiceVariables(), current.getAppId(), current.getUuid());

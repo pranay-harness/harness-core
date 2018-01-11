@@ -70,6 +70,15 @@ public interface ServiceResourceService extends OwnedByApplication {
   @ValidationGroups(Update.class) Service update(@Valid Service service);
 
   /**
+   * Update.
+   *
+   * @param service the service
+   * @param fromYaml if the update is from yaml
+   * @return the service
+   */
+  Service update(Service service, boolean fromYaml);
+
+  /**
    * Gets the.
    *
    * @param appId     the app id

@@ -5,6 +5,7 @@ import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrati
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,6 +84,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   @Override
   public boolean needCloudProvider() {
     return true;
+  }
+
+  @Override
+  public List<NotificationRule> getNotificationRules() {
+    return Collections.emptyList();
   }
 
   @Override

@@ -6,6 +6,7 @@ import software.wings.beans.SumoConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -25,10 +26,26 @@ public class SumoConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
+    char[] decryptedAccessId;
+    try {
+      decryptedAccessId = secretManager.decryptYamlRef(yaml.getAccessId());
+    } catch (IllegalAccessException | IOException e) {
+      throw new HarnessException("Exception while decrypting the access id ref:" + yaml.getAccessId());
+    }
+
+    char[] decryptedAccessKey;
+    try {
+      decryptedAccessKey = secretManager.decryptYamlRef(yaml.getAccessKey());
+    } catch (IllegalAccessException | IOException e) {
+      throw new HarnessException("Exception while decrypting the access key ref:" + yaml.getAccessKey());
+    }
+
     SumoConfig config = new SumoConfig();
     config.setAccountId(accountId);
     config.setSumoUrl(yaml.getSumoUrl());
+    config.setAccessId(decryptedAccessId);
     config.setEncryptedAccessId(yaml.getAccessId());
+    config.setAccessKey(decryptedAccessKey);
     config.setEncryptedAccessKey(yaml.getAccessKey());
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
