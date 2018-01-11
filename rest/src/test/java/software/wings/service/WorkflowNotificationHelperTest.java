@@ -32,6 +32,7 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.NotificationService;
@@ -71,9 +72,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(((ExecutionContextImpl) executionContext).getStateMachine().getOrchestrationWorkflow())
         .thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
-        .thenReturn(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution()
-                        .withStartTs(System.currentTimeMillis())
-                        .build());
+        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
 
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
 
@@ -102,9 +101,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(((ExecutionContextImpl) executionContext).getStateMachine().getOrchestrationWorkflow())
         .thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
-        .thenReturn(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution()
-                        .withStartTs(System.currentTimeMillis())
-                        .build());
+        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
 
     PhaseSubWorkflow phaseSubWorkflow = Mockito.mock(PhaseSubWorkflow.class);
     when(phaseSubWorkflow.getName()).thenReturn("Phase1");

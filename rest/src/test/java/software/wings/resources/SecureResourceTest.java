@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -105,7 +106,7 @@ public class SecureResourceTest {
   /**
    * The constant ENTITY.
    */
-  public static final Entity<Base> ENTITY = Entity.entity(new Base(), APPLICATION_JSON);
+  public static final Entity<Base> ENTITY = entity(new Base(), APPLICATION_JSON);
 
   private static AuditService auditService = mock(AuditService.class);
   private static AuditHelper auditHelper = mock(AuditHelper.class);

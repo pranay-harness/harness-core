@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.when;
@@ -61,7 +62,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK);
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      Assert.assertEquals("User name is given but password is empty", e.getParams().get("reason"));
+      assertEquals("User name is given but password is empty", e.getParams().get("reason"));
     }
   }
 
@@ -78,7 +79,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK);
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      Assert.assertEquals("User name is empty but password is given", e.getParams().get("reason"));
+      assertEquals("User name is empty but password is given", e.getParams().get("reason"));
     }
   }
 
@@ -94,7 +95,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK);
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      Assert.assertEquals("Illegal URL: some url/", e.getParams().get("reason"));
+      assertEquals("Illegal URL: some url/", e.getParams().get("reason"));
     }
   }
 

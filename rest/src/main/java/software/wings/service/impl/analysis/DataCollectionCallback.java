@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionData.StateExecutionDataBuilder;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -54,7 +54,7 @@ public class DataCollectionCallback implements NotifyCallback {
       } else {
         MetricDataAnalysisResponse metricDataAnalysisResponse =
             MetricDataAnalysisResponse.builder()
-                .stateExecutionData(StateExecutionData.StateExecutionDataBuilder.aStateExecutionData()
+                .stateExecutionData(StateExecutionDataBuilder.aStateExecutionData()
                                         .withStatus(ExecutionStatus.FAILED)
                                         .withErrorMsg(result.getErrorMessage())
                                         .build())

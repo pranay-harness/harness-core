@@ -8,6 +8,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
@@ -27,7 +28,6 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.yaml.Change;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -136,7 +136,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     ConfigFile configFileFromDB = get(configFile.getAppId(), id);
-    yamlChangeSetHelper.configFileYamlChangeAsync(configFileFromDB, Change.ChangeType.ADD);
+    yamlChangeSetHelper.configFileYamlChangeAsync(configFileFromDB, ADD);
     return id;
   }
 

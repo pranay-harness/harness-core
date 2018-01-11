@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,7 +89,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -281,22 +281,21 @@ protected void createLicenseAndDefaultUser() {
 private void addAdminUser() {
   WebTarget target = client.target(API_BASE + "/users/");
   RestResponse<User> response = target.request().post(
-      Entity.entity(
-          anUser()
-              .withName("Admin")
-              .withEmail(adminUserName)
-              .withPassword(adminPassword)
-              .withRoles(
-                  wingsPersistence
-                      .query(Role.class,
-                          aPageRequest()
-                              .addFilter(
-                                  aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                              .build())
-                      .getResponse())
-              .withAccountName("Harness Inc")
-              .withCompanyName("Harness Inc")
-              .build(),
+      entity(anUser()
+                 .withName("Admin")
+                 .withEmail(adminUserName)
+                 .withPassword(adminPassword)
+                 .withRoles(
+                     wingsPersistence
+                         .query(Role.class,
+                             aPageRequest()
+                                 .addFilter(
+                                     aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                 .build())
+                         .getResponse())
+                 .withAccountName("Harness Inc")
+                 .withCompanyName("Harness Inc")
+                 .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});
   assertThat(response.getResource()).isInstanceOf(User.class);
@@ -306,7 +305,7 @@ private void addAdminUser() {
 protected Application createApp(String appName) {
   WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
   RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
-      Entity.entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
+      entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<Application>>() {});
   assertThat(response.getResource()).isInstanceOf(Application.class);
@@ -318,7 +317,7 @@ protected Service createService(String appId, Map<String, Object> serviceMap) {
   WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
 
   RestResponse<Service> response = getRequestBuilderWithAuthHeader(target).post(
-      Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+      entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
   assertThat(response.getResource()).isInstanceOf(Service.class);
   String serviceId = response.getResource().getUuid();
   Service service = wingsPersistence.get(Service.class, serviceId);
@@ -389,7 +388,7 @@ protected void enableKmsFeatureFlag() {
 
   WebTarget target = client.target(API_BASE + "/kms/save-global-kms?accountId=" + accountId);
   RestResponse<String> response = getRequestBuilderWithAuthHeader(target).post(
-      Entity.entity(kmsConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+      entity(kmsConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
 
   assertNotNull(response.getResource());
   FeatureFlag kmsFeatureFlag =

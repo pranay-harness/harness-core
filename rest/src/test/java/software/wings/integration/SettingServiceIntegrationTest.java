@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -21,7 +22,6 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.NexusConfig;
 import software.wings.rules.RepeatRule.Repeat;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -40,17 +40,17 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Repeat(times = 5)
   public void shouldSaveJenkinsConfig() {
     RestResponse<SettingAttribute> restResponse = getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-                                                      .post(Entity.entity(aSettingAttribute()
-                                                                              .withName("Wings Jenkins")
-                                                                              .withCategory(Category.CONNECTOR)
-                                                                              .withAccountId(accountId)
-                                                                              .withValue(JenkinsConfig.builder()
-                                                                                             .accountId(accountId)
-                                                                                             .jenkinsUrl(JENKINS_URL)
-                                                                                             .username(JENKINS_USERNAME)
-                                                                                             .password(JENKINS_PASSWORD)
-                                                                                             .build())
-                                                                              .build(),
+                                                      .post(entity(aSettingAttribute()
+                                                                       .withName("Wings Jenkins")
+                                                                       .withCategory(Category.CONNECTOR)
+                                                                       .withAccountId(accountId)
+                                                                       .withValue(JenkinsConfig.builder()
+                                                                                      .accountId(accountId)
+                                                                                      .jenkinsUrl(JENKINS_URL)
+                                                                                      .username(JENKINS_USERNAME)
+                                                                                      .password(JENKINS_PASSWORD)
+                                                                                      .build())
+                                                                       .build(),
                                                                 APPLICATION_JSON),
                                                           new GenericType<RestResponse<SettingAttribute>>() {});
 
@@ -64,17 +64,17 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void shouldThrowExceptionForUnreachableJenkinsUrl() {
     Response response = getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-                            .post(Entity.entity(aSettingAttribute()
-                                                    .withName("Wings Jenkins")
-                                                    .withCategory(Category.CONNECTOR)
-                                                    .withAccountId(accountId)
-                                                    .withValue(JenkinsConfig.builder()
-                                                                   .accountId(accountId)
-                                                                   .jenkinsUrl("BAD_URL")
-                                                                   .username(JENKINS_USERNAME)
-                                                                   .password(JENKINS_PASSWORD)
-                                                                   .build())
-                                                    .build(),
+                            .post(entity(aSettingAttribute()
+                                             .withName("Wings Jenkins")
+                                             .withCategory(Category.CONNECTOR)
+                                             .withAccountId(accountId)
+                                             .withValue(JenkinsConfig.builder()
+                                                            .accountId(accountId)
+                                                            .jenkinsUrl("BAD_URL")
+                                                            .username(JENKINS_USERNAME)
+                                                            .password(JENKINS_PASSWORD)
+                                                            .build())
+                                             .build(),
                                 APPLICATION_JSON));
 
     assertThat(response.getStatus()).isEqualTo(400);
@@ -89,17 +89,17 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void shouldSaveNexusConfig() {
     RestResponse<SettingAttribute> restResponse = getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-                                                      .post(Entity.entity(aSettingAttribute()
-                                                                              .withName("Wings Nexus")
-                                                                              .withCategory(Category.CONNECTOR)
-                                                                              .withAccountId(accountId)
-                                                                              .withValue(NexusConfig.builder()
-                                                                                             .nexusUrl(NEXUS_URL)
-                                                                                             .username(NEXUS_USERNAME)
-                                                                                             .password(NEXUS_PASSWORD)
-                                                                                             .accountId(accountId)
-                                                                                             .build())
-                                                                              .build(),
+                                                      .post(entity(aSettingAttribute()
+                                                                       .withName("Wings Nexus")
+                                                                       .withCategory(Category.CONNECTOR)
+                                                                       .withAccountId(accountId)
+                                                                       .withValue(NexusConfig.builder()
+                                                                                      .nexusUrl(NEXUS_URL)
+                                                                                      .username(NEXUS_USERNAME)
+                                                                                      .password(NEXUS_PASSWORD)
+                                                                                      .accountId(accountId)
+                                                                                      .build())
+                                                                       .build(),
                                                                 APPLICATION_JSON),
                                                           new GenericType<RestResponse<SettingAttribute>>() {});
     assertThat(restResponse.getResource())
@@ -112,17 +112,17 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void shouldSaveBambooConfig() {
     RestResponse<SettingAttribute> restResponse = getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-                                                      .post(Entity.entity(aSettingAttribute()
-                                                                              .withName("Wings Bamboo")
-                                                                              .withCategory(Category.CONNECTOR)
-                                                                              .withAccountId(accountId)
-                                                                              .withValue(BambooConfig.builder()
-                                                                                             .accountId(accountId)
-                                                                                             .bambooUrl(BAMBOO_URL)
-                                                                                             .username(BAMBOO_USERNAME)
-                                                                                             .password(BAMBOO_PASSWORD)
-                                                                                             .build())
-                                                                              .build(),
+                                                      .post(entity(aSettingAttribute()
+                                                                       .withName("Wings Bamboo")
+                                                                       .withCategory(Category.CONNECTOR)
+                                                                       .withAccountId(accountId)
+                                                                       .withValue(BambooConfig.builder()
+                                                                                      .accountId(accountId)
+                                                                                      .bambooUrl(BAMBOO_URL)
+                                                                                      .username(BAMBOO_USERNAME)
+                                                                                      .password(BAMBOO_PASSWORD)
+                                                                                      .build())
+                                                                       .build(),
                                                                 APPLICATION_JSON),
                                                           new GenericType<RestResponse<SettingAttribute>>() {});
     assertThat(restResponse.getResource())
@@ -138,17 +138,17 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   public void shouldSaveDockerConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-            .post(Entity.entity(aSettingAttribute()
-                                    .withName("Wings Docker Registry")
-                                    .withCategory(Category.CONNECTOR)
-                                    .withAccountId(accountId)
-                                    .withValue(DockerConfig.builder()
-                                                   .accountId(accountId)
-                                                   .dockerRegistryUrl(DOCKER_REGISTRY_URL)
-                                                   .username(DOCKER_USERNAME)
-                                                   .password(DOCKER_PASSOWRD)
-                                                   .build())
-                                    .build(),
+            .post(entity(aSettingAttribute()
+                             .withName("Wings Docker Registry")
+                             .withCategory(Category.CONNECTOR)
+                             .withAccountId(accountId)
+                             .withValue(DockerConfig.builder()
+                                            .accountId(accountId)
+                                            .dockerRegistryUrl(DOCKER_REGISTRY_URL)
+                                            .username(DOCKER_USERNAME)
+                                            .password(DOCKER_PASSOWRD)
+                                            .build())
+                             .build(),
                       APPLICATION_JSON),
                 new GenericType<RestResponse<SettingAttribute>>() {});
     assertThat(restResponse.getResource())

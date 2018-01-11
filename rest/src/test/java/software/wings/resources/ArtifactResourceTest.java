@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -36,7 +37,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -116,7 +116,7 @@ public class ArtifactResourceTest {
         RESOURCES.client()
             .target("/artifacts?appId=" + APP_ID)
             .request()
-            .post(Entity.entity(artifact, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Artifact>>() {});
+            .post(entity(artifact, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Artifact>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Artifact.class);
     verify(ARTIFACT_SERVICE).create(artifact);
   }
@@ -132,7 +132,7 @@ public class ArtifactResourceTest {
         RESOURCES.client()
             .target("/artifacts/" + ARTIFACT_ID + "?appId=" + APP_ID)
             .request()
-            .put(Entity.entity(artifact, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Artifact>>() {});
+            .put(entity(artifact, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Artifact>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Artifact.class);
     verify(ARTIFACT_SERVICE).update(artifact);
   }

@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -155,7 +154,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, Collections.singletonList(new LogElement()));
 
-    Assert.assertFalse(status);
+    assertFalse(status);
   }
 
   @Test
@@ -168,7 +167,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, Collections.singletonList(new LogElement()));
 
-    Assert.assertFalse(status);
+    assertFalse(status);
   }
 
   @Test
@@ -181,7 +180,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, Collections.singletonList(new LogElement()));
 
-    Assert.assertFalse(status);
+    assertFalse(status);
   }
 
   @Test
@@ -217,12 +216,12 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     List<LogDataRecord> logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
-    Assert.assertTrue(logDataRecords.isEmpty());
+    assertTrue(logDataRecords.isEmpty());
 
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    Assert.assertTrue(status);
+    assertTrue(status);
 
     logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
@@ -269,7 +268,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    Assert.assertTrue(status);
+    assertTrue(status);
 
     List<LogDataRecord> logData =
         analysisService.getLogData(logRequest, true, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2);
@@ -317,7 +316,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    Assert.assertTrue(status);
+    assertTrue(status);
 
     List<LogDataRecord> logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
@@ -361,7 +360,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    Assert.assertTrue(status);
+    assertTrue(status);
 
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
@@ -380,7 +379,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
-    Assert.assertTrue(logDataRecords.isEmpty());
+    assertTrue(logDataRecords.isEmpty());
 
     logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L2, StateType.SPLUNKV2);
@@ -400,7 +399,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     final String host = UUID.randomUUID().toString();
     final int logCollectionMinute = 3;
 
-    Assert.assertFalse(
+    assertFalse(
         analysisService.isLogDataCollected(appId, stateExecutionId, query, logCollectionMinute, StateType.SPLUNKV2));
 
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -428,20 +427,20 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
         serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    Assert.assertTrue(
+    assertTrue(
         analysisService.isLogDataCollected(appId, stateExecutionId, query, logCollectionMinute, StateType.SPLUNKV2));
   }
 
   @Test
   public void testIsBaseLineCreatedWithCurrentStrategy() throws Exception {
-    Assert.assertTrue(analysisService.isBaselineCreated(
+    assertTrue(analysisService.isBaselineCreated(
         AnalysisComparisonStrategy.COMPARE_WITH_CURRENT, null, null, null, null, null, null));
   }
 
   @Test
   public void testIsBaseLineCreatedNoWorkFlowExecutions() throws Exception {
-    Assert.assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
-        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, null));
+    assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
+        appId, workflowId, workflowExecutionId, serviceId, null));
   }
 
   @Test
@@ -459,8 +458,8 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
     stateMachine.setUuid(workflowExecution.getStateMachineId());
     wingsPersistence.save(stateMachine);
-    Assert.assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
-        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, null));
+    assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
+        appId, workflowId, workflowExecutionId, serviceId, null));
   }
 
   @Test
@@ -491,8 +490,8 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
         serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    Assert.assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
-        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, null));
+    assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
+        appId, workflowId, workflowExecutionId, serviceId, null));
   }
 
   @Test
@@ -534,11 +533,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
     logElements.add(logElement);
-    Assert.assertTrue(analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
+    assertTrue(analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements));
 
-    Assert.assertTrue(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
-        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, query));
+    assertTrue(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
+        appId, workflowId, workflowExecutionId, serviceId, query));
   }
 
   @Test

@@ -30,7 +30,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionData.StateExecutionDataBuilder;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -139,7 +139,7 @@ public class NewRelicDeploymentMarkerState extends State {
     if (executionResponse.getStatus() == DataCollectionTaskResult.DataCollectionTaskStatus.FAILURE) {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
-          .withStateExecutionData(StateExecutionData.StateExecutionDataBuilder.aStateExecutionData()
+          .withStateExecutionData(StateExecutionDataBuilder.aStateExecutionData()
                                       .withStatus(ExecutionStatus.FAILED)
                                       .withErrorMsg(executionResponse.getErrorMessage())
                                       .build())
@@ -149,9 +149,8 @@ public class NewRelicDeploymentMarkerState extends State {
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
-        .withStateExecutionData(StateExecutionData.StateExecutionDataBuilder.aStateExecutionData()
-                                    .withStatus(ExecutionStatus.SUCCESS)
-                                    .build())
+        .withStateExecutionData(
+            StateExecutionDataBuilder.aStateExecutionData().withStatus(ExecutionStatus.SUCCESS).build())
         .build();
   }
 

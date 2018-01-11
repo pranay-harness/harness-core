@@ -5,7 +5,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import com.google.common.base.Joiner;
 
 import org.apache.commons.lang.ArrayUtils;
-import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -185,7 +185,7 @@ public class Misc {
         }
       }
       if (isNotBlank(msg)) {
-        executionLogCallback.saveExecutionLog(msg, Log.LogLevel.ERROR);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
       t = t.getCause();
     }

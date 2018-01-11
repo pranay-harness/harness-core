@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static java.lang.String.format;
+import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.ResourceTestRule;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
@@ -75,7 +75,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
         RESOURCES.client()
             .target(format("/workflows?appId=%s", APP_ID))
             .request()
-            .post(Entity.entity(WORKFLOW, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Workflow>>() {});
+            .post(entity(WORKFLOW, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Workflow>>() {});
 
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", workflow2);
     verify(WORKFLOW_SERVICE).createWorkflow(WORKFLOW);
@@ -93,11 +93,11 @@ public class WorkflowResourceTest extends WingsBaseTest {
                              .build();
     CloneMetadata cloneMetadata = CloneMetadata.builder().workflow(WORKFLOW).build();
     when(WORKFLOW_SERVICE.cloneWorkflow(APP_ID, WORKFLOW_ID, cloneMetadata)).thenReturn(workflow2);
-    RestResponse<Workflow> restResponse = RESOURCES.client()
-                                              .target(format("/workflows/%s/clone?appId=%s", WORKFLOW_ID, APP_ID))
-                                              .request()
-                                              .post(Entity.entity(cloneMetadata, MediaType.APPLICATION_JSON),
-                                                  new GenericType<RestResponse<Workflow>>() {});
+    RestResponse<Workflow> restResponse =
+        RESOURCES.client()
+            .target(format("/workflows/%s/clone?appId=%s", WORKFLOW_ID, APP_ID))
+            .request()
+            .post(entity(cloneMetadata, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Workflow>>() {});
 
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", workflow2);
     verify(WORKFLOW_SERVICE).cloneWorkflow(APP_ID, WORKFLOW_ID, cloneMetadata);

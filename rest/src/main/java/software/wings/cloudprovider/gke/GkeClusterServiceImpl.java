@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -97,11 +98,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {
     MasterAuth masterAuth = cluster.getMasterAuth();
-    KubernetesConfig.KubernetesConfigBuilder kubernetesConfigBuilder =
-        KubernetesConfig.builder()
-            .masterUrl("https://" + cluster.getEndpoint() + "/")
-            .username(masterAuth.getUsername())
-            .namespace(isNotEmpty(namespace) ? namespace : "default");
+    KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder()
+                                                          .masterUrl("https://" + cluster.getEndpoint() + "/")
+                                                          .username(masterAuth.getUsername())
+                                                          .namespace(isNotEmpty(namespace) ? namespace : "default");
     if (masterAuth.getPassword() != null) {
       kubernetesConfigBuilder.password(masterAuth.getPassword().toCharArray());
     }

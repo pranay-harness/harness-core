@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -30,7 +31,6 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ResourceTestRule;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
@@ -103,7 +103,7 @@ public class ServiceResourceTest {
         RESOURCES.client()
             .target(format("/services/?appId=%s", APP_ID))
             .request()
-            .post(Entity.entity(aSERVICE, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+            .post(entity(aSERVICE, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
     verify(RESOURCE_SERVICE).save(aSERVICE);
   }
@@ -119,7 +119,7 @@ public class ServiceResourceTest {
         RESOURCES.client()
             .target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID))
             .request()
-            .put(Entity.entity(service, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+            .put(entity(service, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
     verify(RESOURCE_SERVICE).update(service);
   }
@@ -143,11 +143,11 @@ public class ServiceResourceTest {
     when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), anyBoolean()))
         .thenReturn(aSERVICE);
 
-    RestResponse<Service> restResponse = RESOURCES.client()
-                                             .target(format("/services/%s/commands?appId=%s", SERVICE_ID, APP_ID))
-                                             .request()
-                                             .post(Entity.entity(aServiceCommand().build(), APPLICATION_JSON),
-                                                 new GenericType<RestResponse<Service>>() {});
+    RestResponse<Service> restResponse =
+        RESOURCES.client()
+            .target(format("/services/%s/commands?appId=%s", SERVICE_ID, APP_ID))
+            .request()
+            .post(entity(aServiceCommand().build(), APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
     verify(RESOURCE_SERVICE).addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), anyBoolean());
   }
@@ -179,8 +179,7 @@ public class ServiceResourceTest {
         RESOURCES.client()
             .target(format("/services/%s/commands/%s?appId=%s", SERVICE_ID, "START", APP_ID))
             .request()
-            .put(Entity.entity(aServiceCommand().build(), APPLICATION_JSON),
-                new GenericType<RestResponse<Service>>() {});
+            .put(entity(aServiceCommand().build(), APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
     verify(RESOURCE_SERVICE).updateCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class));
   }

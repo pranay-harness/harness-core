@@ -7,6 +7,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.NotificationRule.Yaml;
 import software.wings.beans.ObjectType;
 import software.wings.beans.yaml.ChangeContext;
@@ -55,7 +56,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
                                            .stream()
                                            .map(condition -> Util.getEnumFromString(ExecutionStatus.class, condition))
                                            .collect(Collectors.toList());
-    return NotificationRule.NotificationRuleBuilder.aNotificationRule()
+    return NotificationRuleBuilder.aNotificationRule()
         .withActive(yaml.isActive())
         .withBatchNotifications(yaml.isBatchNotifications())
         .withConditions(conditions)

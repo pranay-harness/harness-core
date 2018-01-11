@@ -1,6 +1,8 @@
 package software.wings.metrics;
 
-import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 
@@ -17,26 +19,26 @@ public class NewRelicMetricAnalysisTest {
     NewRelicMetricAnalysis analysis2 =
         NewRelicMetricAnalysis.builder().metricName("metric0").riskLevel(RiskLevel.MEDIUM).build();
 
-    Assert.assertTrue(analysis1.compareTo(analysis2) < 0);
+    assertTrue(analysis1.compareTo(analysis2) < 0);
     TreeSet<NewRelicMetricAnalysis> treeSet = new TreeSet<>();
     treeSet.add(analysis2);
     treeSet.add(analysis1);
 
-    Assert.assertEquals(analysis1, treeSet.first());
+    assertEquals(analysis1, treeSet.first());
 
     analysis2.setRiskLevel(RiskLevel.HIGH);
-    Assert.assertTrue(analysis1.compareTo(analysis2) > 0);
+    assertTrue(analysis1.compareTo(analysis2) > 0);
 
     treeSet.clear();
     treeSet.add(analysis1);
     treeSet.add(analysis2);
-    Assert.assertEquals(analysis2, treeSet.first());
+    assertEquals(analysis2, treeSet.first());
 
     analysis1.setMetricName("metric0");
-    Assert.assertTrue(analysis1.compareTo(analysis2) == 0);
+    assertTrue(analysis1.compareTo(analysis2) == 0);
 
     NewRelicMetricAnalysis analysis3 =
         NewRelicMetricAnalysis.builder().metricName("abc").riskLevel(RiskLevel.HIGH).build();
-    Assert.assertTrue(analysis3.compareTo(analysis1) < 0);
+    assertTrue(analysis3.compareTo(analysis1) < 0);
   }
 }

@@ -83,7 +83,7 @@ public class ElbStateExecutionData extends StateExecutionData {
 
     ElbStateExecutionDataBuilder() {}
 
-    public ElbStateExecutionData.ElbStateExecutionDataBuilder hostName(String hostName) {
+    public ElbStateExecutionDataBuilder hostName(String hostName) {
       this.hostName = hostName;
       return this;
     }

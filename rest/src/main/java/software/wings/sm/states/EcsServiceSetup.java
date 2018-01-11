@@ -11,6 +11,7 @@ import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -92,7 +93,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     EcsSetupParams setupParams = (EcsSetupParams) executionData.getContainerSetupParams();
-    ContainerServiceElement.ContainerServiceElementBuilder containerServiceElementBuilder =
+    ContainerServiceElementBuilder containerServiceElementBuilder =
         aContainerServiceElement()
             .withUuid(executionData.getServiceId())
             .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())

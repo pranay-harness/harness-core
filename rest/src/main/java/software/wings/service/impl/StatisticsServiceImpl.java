@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
@@ -36,7 +37,6 @@ import com.google.inject.Singleton;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.aggregation.Projection;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
@@ -530,9 +530,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         .match(query)
         .group(Group.id(grouping("appId"), grouping("status")), grouping("count", new Accumulator("$sum", 1)))
         .group("_id.appId",
-            grouping("status",
-                grouping("$addToSet", Projection.projection("status", "_id.status"),
-                    Projection.projection("count", "count"))))
+            grouping("status", grouping("$addToSet", projection("status", "_id.status"), projection("count", "count"))))
         .aggregate(ActivityStatusAggregation.class)
         .forEachRemaining(activityStatusAggregation
             -> topConsumers.add(getTopConsumerFromActivityStatusAggregation(activityStatusAggregation)));

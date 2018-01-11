@@ -1,11 +1,13 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -16,7 +18,6 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import org.assertj.core.util.Sets;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
@@ -69,7 +70,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -166,8 +166,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId + "&clusterLevel="
             + ClusterLevel.L1.name() + "&compareCurrent=true&workflowExecutionId=" + workflowExecutionId);
         RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
-            Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
-        Assert.assertEquals(
+            entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+        assertEquals(
             "failed for " + host + " for minute " + logCollectionMinute, 15, restResponse.getResource().size());
       }
     }
@@ -233,8 +233,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
             for (Entry<Integer, List<LogElement>> entry : recordsByMinute.entrySet()) {
               totalRecordsInserted += entry.getValue().size();
               RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
-                  Entity.entity(entry.getValue(), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-              Assert.assertTrue(restResponse.getResource());
+                  entity(entry.getValue(), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+              assertTrue(restResponse.getResource());
             }
           }
         }
@@ -243,19 +243,17 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     }
 
     Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class);
-    Assert.assertEquals(totalRecordsInserted, logDataRecordQuery.asList().size());
+    assertEquals(totalRecordsInserted, logDataRecordQuery.asList().size());
     analysisService.purgeLogs();
     logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class);
     List<LogDataRecord> logDataRecords = logDataRecordQuery.asList();
-    Assert.assertEquals(
+    assertEquals(
         numOfMinutes * numOfLogs * hosts.size() * AnalysisServiceImpl.logAnalysisStates.length * numOfWorkFlows,
         logDataRecords.size());
 
     for (LogDataRecord logDataRecord : logDataRecords) {
-      Assert.assertEquals(
-          workFlowToExecution.get(logDataRecord.getWorkflowId()), logDataRecord.getWorkflowExecutionId());
-      Assert.assertEquals(
-          workFlowToStateExecution.get(logDataRecord.getWorkflowId()), logDataRecord.getStateExecutionId());
+      assertEquals(workFlowToExecution.get(logDataRecord.getWorkflowId()), logDataRecord.getWorkflowExecutionId());
+      assertEquals(workFlowToStateExecution.get(logDataRecord.getWorkflowId()), logDataRecord.getStateExecutionId());
     }
   }
 

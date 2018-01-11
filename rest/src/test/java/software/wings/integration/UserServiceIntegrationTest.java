@@ -1,7 +1,9 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -36,7 +38,6 @@ import java.io.InputStream;
 import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -58,56 +59,56 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testBlankEmail() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    Assert.assertEquals(1, restResponse.getResponseMessages().size());
+    assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
-    Assert.assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
-    Assert.assertFalse(restResponse.getResource());
+    assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
+    assertFalse(restResponse.getResource());
   }
 
   @Test
   public void testInvalidEmail() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz.com");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    Assert.assertEquals(1, restResponse.getResponseMessages().size());
+    assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
-    Assert.assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
-    Assert.assertFalse(restResponse.getResource());
+    assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
+    assertFalse(restResponse.getResource());
   }
 
   @Test
   public void testDomainNotAllowed() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@some-domain.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    Assert.assertEquals(1, restResponse.getResponseMessages().size());
+    assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
-    Assert.assertEquals(ErrorCode.USER_DOMAIN_NOT_ALLOWED, responseMessage.getCode());
-    Assert.assertFalse(restResponse.getResource());
+    assertEquals(ErrorCode.USER_DOMAIN_NOT_ALLOWED, responseMessage.getCode());
+    assertFalse(restResponse.getResource());
   }
 
   @Test
   public void testUserExists() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=admin@harness.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    Assert.assertEquals(1, restResponse.getResponseMessages().size());
+    assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
-    Assert.assertEquals(ErrorCode.USER_ALREADY_REGISTERED, responseMessage.getCode());
-    Assert.assertFalse(restResponse.getResource());
+    assertEquals(ErrorCode.USER_ALREADY_REGISTERED, responseMessage.getCode());
+    assertFalse(restResponse.getResource());
   }
 
   @Test
   public void testValidEmail() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=" + validEmail);
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    Assert.assertEquals(0, restResponse.getResponseMessages().size());
-    Assert.assertTrue(restResponse.getResource());
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertTrue(restResponse.getResource());
   }
 
   @Test
   public void testValidEmailWithSpace() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=%20" + validEmail + "%20");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    Assert.assertEquals(0, restResponse.getResponseMessages().size());
-    Assert.assertTrue(restResponse.getResource());
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertTrue(restResponse.getResource());
   }
 
   @Test
@@ -119,7 +120,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     final String companyName = "some company" + System.currentTimeMillis();
     WebTarget target = client.target(API_BASE + "/users");
     RestResponse<User> response = target.request().post(
-        Entity.entity(
+        entity(
             anUser()
                 .withName(name)
                 .withEmail(email)
@@ -137,14 +138,14 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
                 .build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
-    Assert.assertEquals(0, response.getResponseMessages().size());
+    assertEquals(0, response.getResponseMessages().size());
     final User savedUser = response.getResource();
-    Assert.assertEquals(name, savedUser.getName());
-    Assert.assertEquals(email, savedUser.getEmail());
-    Assert.assertNull(savedUser.getPassword());
-    Assert.assertEquals(1, savedUser.getAccounts().size());
-    Assert.assertEquals(accountName, savedUser.getAccounts().get(0).getAccountName());
-    Assert.assertEquals(companyName, savedUser.getAccounts().get(0).getCompanyName());
+    assertEquals(name, savedUser.getName());
+    assertEquals(email, savedUser.getEmail());
+    assertNull(savedUser.getPassword());
+    assertEquals(1, savedUser.getAccounts().size());
+    assertEquals(accountName, savedUser.getAccounts().get(0).getAccountName());
+    assertEquals(companyName, savedUser.getAccounts().get(0).getCompanyName());
   }
 
   @Test
@@ -159,36 +160,35 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     RestResponse<User> response = null;
     try {
       response = target.request().post(
-          Entity.entity(
-              anUser()
-                  .withName(name)
-                  .withEmail(email)
-                  .withPassword(pwd)
-                  .withRoles(wingsPersistence
-                                 .query(Role.class,
-                                     aPageRequest()
-                                         .addFilter(aSearchFilter()
-                                                        .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                        .build())
-                                         .build())
-                                 .getResponse())
-                  .withAccountName(accountName)
-                  .withCompanyName(companyName)
-                  .build(),
+          entity(anUser()
+                     .withName(name)
+                     .withEmail(email)
+                     .withPassword(pwd)
+                     .withRoles(wingsPersistence
+                                    .query(Role.class,
+                                        aPageRequest()
+                                            .addFilter(aSearchFilter()
+                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
+                                                           .build())
+                                            .build())
+                                    .getResponse())
+                     .withAccountName(accountName)
+                     .withCompanyName(companyName)
+                     .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
     } catch (BadRequestException e) {
       System.out.println(new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity())));
       Assert.fail();
     }
-    Assert.assertEquals(0, response.getResponseMessages().size());
+    assertEquals(0, response.getResponseMessages().size());
     final User savedUser = response.getResource();
-    Assert.assertEquals(name.trim(), savedUser.getName());
-    Assert.assertEquals(email.trim(), savedUser.getEmail());
-    Assert.assertNull(savedUser.getPassword());
-    Assert.assertEquals(1, savedUser.getAccounts().size());
-    Assert.assertEquals(accountName.trim(), savedUser.getAccounts().get(0).getAccountName());
-    Assert.assertEquals(companyName.trim(), savedUser.getAccounts().get(0).getCompanyName());
+    assertEquals(name.trim(), savedUser.getName());
+    assertEquals(email.trim(), savedUser.getEmail());
+    assertNull(savedUser.getPassword());
+    assertEquals(1, savedUser.getAccounts().size());
+    assertEquals(accountName.trim(), savedUser.getAccounts().get(0).getAccountName());
+    assertEquals(companyName.trim(), savedUser.getAccounts().get(0).getCompanyName());
   }
 
   @Test
@@ -202,32 +202,31 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          Entity.entity(
-              anUser()
-                  .withName(name)
-                  .withEmail(email)
-                  .withPassword(pwd)
-                  .withRoles(wingsPersistence
-                                 .query(Role.class,
-                                     aPageRequest()
-                                         .addFilter(aSearchFilter()
-                                                        .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                        .build())
-                                         .build())
-                                 .getResponse())
-                  .withAccountName(accountName)
-                  .withCompanyName(companyName)
-                  .build(),
+          entity(anUser()
+                     .withName(name)
+                     .withEmail(email)
+                     .withPassword(pwd)
+                     .withRoles(wingsPersistence
+                                    .query(Role.class,
+                                        aPageRequest()
+                                            .addFilter(aSearchFilter()
+                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
+                                                           .build())
+                                            .build())
+                                    .getResponse())
+                     .withAccountName(accountName)
+                     .withCompanyName(companyName)
+                     .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with bad email");
     } catch (BadRequestException e) {
-      Assert.assertEquals(HttpStatus.SC_BAD_REQUEST, e.getResponse().getStatus());
+      assertEquals(HttpStatus.SC_BAD_REQUEST, e.getResponse().getStatus());
       final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
       final RestResponse<User> restResponse =
           JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      Assert.assertEquals(1, restResponse.getResponseMessages().size());
-      Assert.assertEquals(ErrorCode.INVALID_ARGUMENT, restResponse.getResponseMessages().get(0).getCode());
+      assertEquals(1, restResponse.getResponseMessages().size());
+      assertEquals(ErrorCode.INVALID_ARGUMENT, restResponse.getResponseMessages().get(0).getCode());
     }
   }
 
@@ -242,32 +241,31 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          Entity.entity(
-              anUser()
-                  .withName(name)
-                  .withEmail(email)
-                  .withPassword(pwd)
-                  .withRoles(wingsPersistence
-                                 .query(Role.class,
-                                     aPageRequest()
-                                         .addFilter(aSearchFilter()
-                                                        .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                        .build())
-                                         .build())
-                                 .getResponse())
-                  .withAccountName(accountName)
-                  .withCompanyName(companyName)
-                  .build(),
+          entity(anUser()
+                     .withName(name)
+                     .withEmail(email)
+                     .withPassword(pwd)
+                     .withRoles(wingsPersistence
+                                    .query(Role.class,
+                                        aPageRequest()
+                                            .addFilter(aSearchFilter()
+                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
+                                                           .build())
+                                            .build())
+                                    .getResponse())
+                     .withAccountName(accountName)
+                     .withCompanyName(companyName)
+                     .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with bad email");
     } catch (BadRequestException e) {
-      Assert.assertEquals(HttpStatus.SC_BAD_REQUEST, e.getResponse().getStatus());
+      assertEquals(HttpStatus.SC_BAD_REQUEST, e.getResponse().getStatus());
       final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
       final RestResponse<User> restResponse =
           JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      Assert.assertEquals(1, restResponse.getResponseMessages().size());
-      Assert.assertEquals(ErrorCode.INVALID_EMAIL, restResponse.getResponseMessages().get(0).getCode());
+      assertEquals(1, restResponse.getResponseMessages().size());
+      assertEquals(ErrorCode.INVALID_EMAIL, restResponse.getResponseMessages().get(0).getCode());
     }
   }
 
@@ -282,33 +280,31 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          Entity.entity(
-              anUser()
-                  .withName(name)
-                  .withEmail(email)
-                  .withPassword(pwd)
-                  .withRoles(wingsPersistence
-                                 .query(Role.class,
-                                     aPageRequest()
-                                         .addFilter(aSearchFilter()
-                                                        .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                        .build())
-                                         .build())
-                                 .getResponse())
-                  .withAccountName(accountName)
-                  .withCompanyName(companyName)
-                  .build(),
+          entity(anUser()
+                     .withName(name)
+                     .withEmail(email)
+                     .withPassword(pwd)
+                     .withRoles(wingsPersistence
+                                    .query(Role.class,
+                                        aPageRequest()
+                                            .addFilter(aSearchFilter()
+                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
+                                                           .build())
+                                            .build())
+                                    .getResponse())
+                     .withAccountName(accountName)
+                     .withCompanyName(companyName)
+                     .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with bad email");
     } catch (BadRequestException e) {
-      Assert.assertEquals(HttpStatus.SC_BAD_REQUEST, e.getResponse().getStatus());
+      assertEquals(HttpStatus.SC_BAD_REQUEST, e.getResponse().getStatus());
       final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
       final RestResponse<User> restResponse =
           JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      Assert.assertEquals(1, restResponse.getResponseMessages().size());
-      Assert.assertEquals(
-          ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER, restResponse.getResponseMessages().get(0).getCode());
+      assertEquals(1, restResponse.getResponseMessages().size());
+      assertEquals(ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER, restResponse.getResponseMessages().get(0).getCode());
     }
   }
 
@@ -323,32 +319,31 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          Entity.entity(
-              anUser()
-                  .withName(name)
-                  .withEmail(email)
-                  .withPassword(pwd)
-                  .withRoles(wingsPersistence
-                                 .query(Role.class,
-                                     aPageRequest()
-                                         .addFilter(aSearchFilter()
-                                                        .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                        .build())
-                                         .build())
-                                 .getResponse())
-                  .withAccountName(accountName)
-                  .withCompanyName(companyName)
-                  .build(),
+          entity(anUser()
+                     .withName(name)
+                     .withEmail(email)
+                     .withPassword(pwd)
+                     .withRoles(wingsPersistence
+                                    .query(Role.class,
+                                        aPageRequest()
+                                            .addFilter(aSearchFilter()
+                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
+                                                           .build())
+                                            .build())
+                                    .getResponse())
+                     .withAccountName(accountName)
+                     .withCompanyName(companyName)
+                     .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with existing email");
     } catch (ClientErrorException e) {
-      Assert.assertEquals(HttpStatus.SC_CONFLICT, e.getResponse().getStatus());
+      assertEquals(HttpStatus.SC_CONFLICT, e.getResponse().getStatus());
       final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
       final RestResponse<User> restResponse =
           JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      Assert.assertEquals(1, restResponse.getResponseMessages().size());
-      Assert.assertEquals(ErrorCode.USER_ALREADY_REGISTERED, restResponse.getResponseMessages().get(0).getCode());
+      assertEquals(1, restResponse.getResponseMessages().size());
+      assertEquals(ErrorCode.USER_ALREADY_REGISTERED, restResponse.getResponseMessages().get(0).getCode());
     }
   }
 
@@ -366,7 +361,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     WebTarget target = client.target(API_BASE + "/users/account");
     RestResponse<Account> response = getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(account, APPLICATION_JSON), new GenericType<RestResponse<Account>>() {});
+        entity(account, APPLICATION_JSON), new GenericType<RestResponse<Account>>() {});
 
     assertNotNull(response.getResource());
     assertTrue(accountService.exists(account.getAccountName()));

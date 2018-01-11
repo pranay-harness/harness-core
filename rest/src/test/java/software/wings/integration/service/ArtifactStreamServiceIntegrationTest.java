@@ -1,6 +1,7 @@
 package software.wings.integration.service;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
@@ -27,7 +28,6 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.intfc.ServiceResourceService;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -86,7 +86,7 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
                                 .withArtifactPaths(asList("target/todolistwar"))
                                 .build();
     RestResponse<ArtifactStream> response = getRequestBuilder(target).post(
-        Entity.entity(jenkinsArtifactStream, APPLICATION_JSON), new GenericType<RestResponse<ArtifactStream>>() {
+        entity(jenkinsArtifactStream, APPLICATION_JSON), new GenericType<RestResponse<ArtifactStream>>() {
 
         });
     assertThat(response).isNotNull();

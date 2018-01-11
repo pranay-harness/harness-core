@@ -33,6 +33,7 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -171,31 +172,31 @@ public class AwsAmiServiceDeployState extends State {
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), getCommandName()).getCommand();
     List<CommandUnit> commandUnitList =
         serviceResourceService.getFlattenCommandUnitList(app.getUuid(), serviceId, env.getUuid(), getCommandName());
-    Activity.ActivityBuilder activityBuilder = Activity.builder()
-                                                   .applicationName(app.getName())
-                                                   .environmentId(env.getUuid())
-                                                   .environmentName(env.getName())
-                                                   .environmentType(env.getEnvironmentType())
-                                                   .serviceId(service.getUuid())
-                                                   .serviceName(service.getName())
-                                                   .commandName(getCommandName())
-                                                   .type(Type.Command)
-                                                   .workflowExecutionId(context.getWorkflowExecutionId())
-                                                   .workflowId(context.getWorkflowId())
-                                                   .workflowType(context.getWorkflowType())
-                                                   .workflowExecutionName(context.getWorkflowExecutionName())
-                                                   .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                                   .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                                   .commandUnits(commandUnitList)
-                                                   .commandType(command.getCommandUnitType().name())
-                                                   .serviceVariables(context.getServiceVariables())
-                                                   .status(ExecutionStatus.RUNNING)
-                                                   .artifactStreamId(artifactStream.getUuid())
-                                                   .artifactStreamName(artifactStream.getSourceName())
-                                                   .artifactName(artifact.getDisplayName())
-                                                   .artifactId(artifact.getUuid())
-                                                   .artifactId(artifact.getUuid())
-                                                   .artifactName(artifact.getDisplayName());
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .environmentId(env.getUuid())
+                                          .environmentName(env.getName())
+                                          .environmentType(env.getEnvironmentType())
+                                          .serviceId(service.getUuid())
+                                          .serviceName(service.getName())
+                                          .commandName(getCommandName())
+                                          .type(Type.Command)
+                                          .workflowExecutionId(context.getWorkflowExecutionId())
+                                          .workflowId(context.getWorkflowId())
+                                          .workflowType(context.getWorkflowType())
+                                          .workflowExecutionName(context.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                          .commandUnits(commandUnitList)
+                                          .commandType(command.getCommandUnitType().name())
+                                          .serviceVariables(context.getServiceVariables())
+                                          .status(ExecutionStatus.RUNNING)
+                                          .artifactStreamId(artifactStream.getUuid())
+                                          .artifactStreamName(artifactStream.getSourceName())
+                                          .artifactName(artifact.getDisplayName())
+                                          .artifactId(artifact.getUuid())
+                                          .artifactId(artifact.getUuid())
+                                          .artifactName(artifact.getDisplayName());
 
     Activity build = activityBuilder.build();
     build.setAppId(app.getUuid());

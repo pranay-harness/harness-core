@@ -1,12 +1,13 @@
 package software.wings.scheduler;
 
+import static org.quartz.JobKey.jobKey;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
-import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
@@ -53,7 +54,7 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
         if (jobScheduler.getScheduler() == null
             || jobScheduler.getScheduler()
                    .getJobKeys(GroupMatcher.anyGroup())
-                   .contains(JobKey.jobKey("NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP"))) {
+                   .contains(jobKey("NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP"))) {
           return;
         }
 

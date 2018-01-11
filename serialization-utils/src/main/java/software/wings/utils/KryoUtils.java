@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static java.util.Arrays.asList;
+import static software.wings.utils.SerializationClasses.serializationClasses;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
@@ -156,7 +157,7 @@ public class KryoUtils {
             ImmutableMultimapSerializer.registerSerializers(kryo);
 
             // Harness classes
-            Map<String, Integer> classIds = SerializationClasses.serializationClasses();
+            Map<String, Integer> classIds = serializationClasses();
             classIds.keySet().forEach(className -> {
               try {
                 kryo.register(Class.forName(className), classIds.get(className));

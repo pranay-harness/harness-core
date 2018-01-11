@@ -54,8 +54,7 @@ public class RepeatStateTest {
     ExecutionResponse response = repeatState.execute(context, null);
 
     assertResponse(repeatElements, response, 1);
-    RepeatState.RepeatStateExecutionData stateExecutionData =
-        (RepeatStateExecutionData) response.getStateExecutionData();
+    RepeatStateExecutionData stateExecutionData = (RepeatStateExecutionData) response.getStateExecutionData();
 
     assertThat(stateExecutionData.getRepeatElementIndex()).isNotNull();
     assertThat(stateExecutionData.getRepeatElementIndex()).isEqualTo(0);
@@ -86,8 +85,7 @@ public class RepeatStateTest {
     ExecutionResponse response = repeatState.execute(context, null);
 
     assertResponse(repeatElements, response, 2);
-    RepeatState.RepeatStateExecutionData stateExecutionData =
-        (RepeatStateExecutionData) response.getStateExecutionData();
+    RepeatStateExecutionData stateExecutionData = (RepeatStateExecutionData) response.getStateExecutionData();
 
     assertThat(stateExecutionData.getRepeatElementIndex()).isNull();
 
@@ -100,9 +98,8 @@ public class RepeatStateTest {
     assertThat(response).isNotNull();
     assertThat(response.isAsync()).as("Async Execution").isEqualTo(true);
     assertThat(response.getStateExecutionData()).isNotNull();
-    assertThat(response.getStateExecutionData()).isInstanceOf(RepeatState.RepeatStateExecutionData.class);
-    RepeatState.RepeatStateExecutionData stateExecutionData =
-        (RepeatStateExecutionData) response.getStateExecutionData();
+    assertThat(response.getStateExecutionData()).isInstanceOf(RepeatStateExecutionData.class);
+    RepeatStateExecutionData stateExecutionData = (RepeatStateExecutionData) response.getStateExecutionData();
 
     assertThat(stateExecutionData.getRepeatElements()).isNotNull();
     assertThat(stateExecutionData.getRepeatElements()).isEqualTo(repeatElements);
