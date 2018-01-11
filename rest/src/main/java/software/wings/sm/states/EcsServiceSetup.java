@@ -37,7 +37,6 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
 
   private String ecsServiceName;
-  private int serviceSteadyStateTimeout; // Minutes
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
@@ -98,7 +97,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             .withUuid(executionData.getServiceId())
             .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
             .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
+            .withServiceSteadyStateTimeout((int) getServiceSteadyStateTimeout())
             .withClusterName(executionData.getClusterName())
             .withDeploymentType(DeploymentType.ECS)
             .withInfraMappingId(setupParams.getInfraMappingId());
@@ -213,13 +212,5 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
   public void setEcsServiceName(String ecsServiceName) {
     this.ecsServiceName = ecsServiceName;
-  }
-
-  public long getServiceSteadyStateTimeout() {
-    return serviceSteadyStateTimeout;
-  }
-
-  public void setServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
-    this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
   }
 }

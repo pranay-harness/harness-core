@@ -51,6 +51,7 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
         .withClusterName(contextData.containerElement.getClusterName())
         .withDesiredCounts(desiredCounts)
         .withNamespace(contextData.containerElement.getNamespace())
+        .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .build();
   }
 }

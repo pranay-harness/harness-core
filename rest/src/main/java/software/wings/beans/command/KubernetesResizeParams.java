@@ -17,6 +17,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   public static final class KubernetesResizeParamsBuilder {
     private String clusterName;
     private List<ContainerServiceData> desiredCounts = new ArrayList<>();
+    private int serviceSteadyStateTimeout;
     private String namespace;
 
     private KubernetesResizeParamsBuilder() {}
@@ -35,6 +36,11 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+      this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder withNamespace(String namespace) {
       this.namespace = namespace;
       return this;
@@ -44,6 +50,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
           .withDesiredCounts(desiredCounts)
+          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
           .withNamespace(namespace);
     }
 
@@ -51,6 +58,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       KubernetesResizeParams kubernetesResizeParams = new KubernetesResizeParams();
       kubernetesResizeParams.setClusterName(clusterName);
       kubernetesResizeParams.setDesiredCounts(desiredCounts);
+      kubernetesResizeParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       kubernetesResizeParams.setNamespace(namespace);
       return kubernetesResizeParams;
     }

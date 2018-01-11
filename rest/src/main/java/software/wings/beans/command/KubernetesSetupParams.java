@@ -25,6 +25,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String controllerNamePrefix;
   private boolean rollbackDaemonSet;
   private String previousDaemonSetYaml;
+  private int serviceSteadyStateTimeout;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -47,6 +48,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String controllerNamePrefix;
     private boolean rollbackDaemonSet;
     private String previousDaemonSetYaml;
+    private int serviceSteadyStateTimeout;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -154,6 +156,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+      this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -175,7 +182,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
           .withRollbackDaemonSet(rollbackDaemonSet)
-          .withPreviousDaemonSetYaml(previousDaemonSetYaml);
+          .withPreviousDaemonSetYaml(previousDaemonSetYaml)
+          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout);
     }
 
     public KubernetesSetupParams build() {
@@ -200,6 +208,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
       kubernetesSetupParams.setRollbackDaemonSet(rollbackDaemonSet);
       kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);
+      kubernetesSetupParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       return kubernetesSetupParams;
     }
   }

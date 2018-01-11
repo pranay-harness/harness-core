@@ -72,7 +72,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
         .withClusterName(contextData.containerElement.getClusterName())
         .withDesiredCounts(desiredCounts)
         .withRegion(contextData.region)
-        .withEcsServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
+        .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .build();
   }
 

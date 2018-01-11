@@ -53,6 +53,8 @@ import java.util.List;
 public class KubernetesReplicationControllerSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
+  private static final int DEFAULT_STEADY_STATE_TIMEOUT = 10;
+
   private String replicationControllerName;
   private KubernetesServiceType serviceType;
   private Integer port;
@@ -135,6 +137,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withTargetPort(targetPort)
         .withControllerNamePrefix(controllerNamePrefix)
         .withPreviousDaemonSetYaml(previousDaemonSetYaml)
+        .withServiceSteadyStateTimeout(
+            getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT)
         .build();
   }
 
@@ -147,6 +151,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
             .withUuid(executionData.getServiceId())
             .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
             .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+            .withServiceSteadyStateTimeout(getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout()
+                                                                              : DEFAULT_STEADY_STATE_TIMEOUT)
             .withClusterName(executionData.getClusterName())
             .withNamespace(setupParams.getNamespace())
             .withDeploymentType(DeploymentType.KUBERNETES)

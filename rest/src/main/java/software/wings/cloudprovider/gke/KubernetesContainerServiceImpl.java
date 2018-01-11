@@ -75,7 +75,6 @@ import java.util.stream.Collectors;
 @Singleton
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
-  private static final int steadyStateTimeout = 15;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
@@ -178,7 +177,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
-      int desiredCount, ExecutionLogCallback executionLogCallback) {
+      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
                                               controllerName, clusterName, previousCount, desiredCount),
         LogLevel.INFO);
@@ -201,15 +200,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
           previousCount, desiredCount);
     }
-    return getContainerInfosWhenReady(
-        kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount, executionLogCallback);
+    return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
+        desiredCount, serviceSteadyStateTimeout, executionLogCallback);
   }
 
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      ExecutionLogCallback executionLogCallback) {
-    List<Pod> pods = waitForPodsToBeRunning(
-        kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount, executionLogCallback);
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
+        desiredCount, serviceSteadyStateTimeout, executionLogCallback);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     if (pods.size() != desiredCount) {
@@ -511,13 +510,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      Map<String, String> labels, ExecutionLogCallback executionLogCallback) {
+      Map<String, String> labels, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     String waitingMsg = "Waiting for pods to stop...";
     logger.info(waitingMsg);
     try {
-      with().pollInterval(5, TimeUnit.SECONDS).await().atMost(steadyStateTimeout, TimeUnit.MINUTES).until(() -> {
+      with().pollInterval(5, TimeUnit.SECONDS).await().atMost(serviceSteadyStateTimeout, TimeUnit.MINUTES).until(() -> {
         executionLogCallback.saveExecutionLog(waitingMsg, LogLevel.INFO);
         int size = kubernetesClient.pods()
                        .inNamespace(kubernetesConfig.getNamespace())
@@ -536,7 +535,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      ExecutionLogCallback executionLogCallback) {
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     Set<String> images = getControllerImages(controller);
     Map<String, String> labels = controller.getMetadata().getLabels();
@@ -548,7 +547,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     AtomicBoolean runningCountReached = new AtomicBoolean(false);
     AtomicBoolean steadyStateCountReached = new AtomicBoolean(false);
     try {
-      with().pollInterval(5, TimeUnit.SECONDS).await().atMost(steadyStateTimeout, TimeUnit.MINUTES).until(() -> {
+      with().pollInterval(5, TimeUnit.SECONDS).await().atMost(serviceSteadyStateTimeout, TimeUnit.MINUTES).until(() -> {
         List<Pod> pods =
             kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
 

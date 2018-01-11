@@ -35,11 +35,11 @@ public interface KubernetesContainerService {
 
   List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
-      int count, ExecutionLogCallback executionLogCallback);
+      int count, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
   List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      ExecutionLogCallback executionLogCallback);
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
   Optional<Integer> getControllerPodCount(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
@@ -72,5 +72,5 @@ public interface KubernetesContainerService {
   NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      Map<String, String> labels, ExecutionLogCallback executionLogCallback);
+      Map<String, String> labels, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 }
