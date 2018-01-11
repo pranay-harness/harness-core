@@ -38,7 +38,6 @@ import software.wings.utils.Validator;
 import software.wings.yaml.workflow.StepYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -311,10 +310,14 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
             .collect(Collectors.toList());
 
     // rollback phases
-    Collection<WorkflowPhase> rollbackPhaseCollection = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values();
+    Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
     List<WorkflowPhase.Yaml> rollbackPhaseYamlList =
-        rollbackPhaseCollection.stream()
-            .map(workflowPhase -> (WorkflowPhase.Yaml) phaseYamlHandler.toYaml(workflowPhase, appId))
+        orchestrationWorkflow.getWorkflowPhaseIds()
+            .stream()
+            .map(workflowPhaseId -> {
+              WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
+              return (WorkflowPhase.Yaml) phaseYamlHandler.toYaml(rollbackPhase, appId);
+            })
             .collect(Collectors.toList());
 
     // user variables
