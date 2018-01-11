@@ -72,9 +72,9 @@ public class StateMachine extends Base {
 
   private String initialStateName;
 
-  @Transient private transient Map<String, State> cachedStatesMap = null;
+  @Transient private transient Map<String, State> cachedStatesMap;
 
-  @Transient private transient Map<String, Map<TransitionType, List<State>>> cachedTransitionFlowMap = null;
+  @Transient private transient Map<String, Map<TransitionType, List<State>>> cachedTransitionFlowMap;
 
   /**
    * Instantiates a new state machine.

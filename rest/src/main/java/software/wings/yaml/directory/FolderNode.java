@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FolderNode extends DirectoryNode {
-  private boolean defaultToClosed = false;
+  private boolean defaultToClosed;
   private List<DirectoryNode> children = new ArrayList<>();
   private String appId;
 

@@ -83,7 +83,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
     private final SumoDataCollectionInfo dataCollectionInfo;
     private final LogAnalysisStoreService logAnalysisStoreService;
     private long collectionStartTime;
-    private int logCollectionMinute = 0;
+    private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
 
     private SumoDataCollector(String delegateTaskId, SumoLogicClient sumoClient,

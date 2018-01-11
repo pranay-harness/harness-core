@@ -77,7 +77,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   private class ElkLogzDataCollector implements Runnable {
     private final LogDataCollectionInfo dataCollectionInfo;
     private long collectionStartTime;
-    private int logCollectionMinute = 0;
+    private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
     private String delegateTaskId;
 

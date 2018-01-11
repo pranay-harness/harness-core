@@ -12,7 +12,7 @@ import software.wings.yaml.BaseYaml;
 public class StorageConfiguration {
   @Attributes(title = "Host Source Path") private String hostSourcePath;
   @Attributes(title = "Container Path") private String containerPath;
-  @Attributes(title = "Options") private boolean readonly = false;
+  @Attributes(title = "Options") private boolean readonly;
 
   @Data
   @EqualsAndHashCode(callSuper = true)
@@ -20,7 +20,7 @@ public class StorageConfiguration {
   public static final class Yaml extends BaseYaml {
     private String hostSourcePath;
     private String containerPath;
-    private boolean readonly = false;
+    private boolean readonly;
 
     @Builder
     public Yaml(String hostSourcePath, String containerPath, boolean readonly) {

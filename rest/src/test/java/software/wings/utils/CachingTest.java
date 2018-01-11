@@ -72,7 +72,7 @@ public class CachingTest extends WingsBaseTest {
    * The type Cacheable service.
    */
   public static class CacheableService {
-    private int callCount = 0;
+    private int callCount;
 
     /**
      * Gets cacheable object.

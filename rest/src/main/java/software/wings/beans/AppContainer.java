@@ -25,7 +25,7 @@ import java.util.Objects;
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;
   @FormDataParam("description") private String description;
-  private boolean standardUpload = false;
+  private boolean standardUpload;
   @FormDataParam("family") private ContainerFamily family;
   private String stackRootDirectory;
   private FileType fileType;
@@ -227,7 +227,7 @@ public class AppContainer extends BaseFile {
     private String checksum;
     private boolean standard;
     private String description;
-    private boolean standardUpload = false;
+    private boolean standardUpload;
     private ContainerFamily family;
     private String stackRootDirectory;
     private FileType fileType;

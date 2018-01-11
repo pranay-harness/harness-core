@@ -59,9 +59,9 @@ public abstract class ArtifactStream extends Base {
 
   @SchemaIgnore private boolean autoDownload = true;
 
-  @SchemaIgnore private boolean autoApproveForProduction = false;
+  @SchemaIgnore private boolean autoApproveForProduction;
 
-  @SchemaIgnore private boolean metadataOnly = false;
+  @SchemaIgnore private boolean metadataOnly;
 
   /**
    * Instantiates a new lastArtifact source.
@@ -313,7 +313,7 @@ public abstract class ArtifactStream extends Base {
   @NoArgsConstructor
   public abstract static class Yaml extends BaseEntityYaml {
     private String serverName;
-    private boolean metadataOnly = false;
+    private boolean metadataOnly;
 
     public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly) {
       super(type, harnessApiVersion);

@@ -172,8 +172,8 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean autoApproveForProduction = false;
-    private boolean metadataOnly = false;
+    private boolean autoApproveForProduction;
+    private boolean metadataOnly;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
     private Builder() {}

@@ -22,7 +22,7 @@ public class UserInvite extends Base {
   @NotEmpty private String accountId;
   @NotEmpty(groups = {Update.class}) private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
-  private boolean completed = false;
+  private boolean completed;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
 
   @Transient private String name;
@@ -129,7 +129,7 @@ public class UserInvite extends Base {
     private String accountId;
     private String email;
     private List<Role> roles = new ArrayList<>();
-    private boolean completed = false;
+    private boolean completed;
     private List<String> emails = new ArrayList<>();
     private String uuid;
     private String appId;

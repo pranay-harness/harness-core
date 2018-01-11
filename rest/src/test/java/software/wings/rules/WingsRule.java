@@ -116,7 +116,7 @@ public class WingsRule implements MethodRule {
   private MongoServer mongoServer;
   private AdvancedDatastore datastore;
   private DistributedLockSvc distributedLockSvc;
-  private int port = 0;
+  private int port;
   private ExecutorService executorService = new CurrentThreadExecutor();
   private boolean fakeMongo;
 

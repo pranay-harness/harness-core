@@ -7,8 +7,8 @@ import com.jcraft.jsch.UserInfo;
  * Created by anubhaw on 6/21/16.
  */
 public class SshUserInfo implements UserInfo, UIKeyboardInteractive {
-  private String password = null;
-  private String passphrase = null;
+  private String password;
+  private String passphrase;
 
   /**
    * Instantiates a new Ssh user info.

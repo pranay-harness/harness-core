@@ -1407,7 +1407,7 @@ public class StateMachineExecutor {
     private StateMachineExecutor stateMachineExecutor;
     private State state;
     private Map<String, NotifyResponseData> response;
-    private boolean asyncError = false;
+    private boolean asyncError;
 
     /**
      * Instantiates a new Sm execution dispatcher.

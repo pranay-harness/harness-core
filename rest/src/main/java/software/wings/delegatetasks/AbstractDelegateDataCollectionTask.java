@@ -36,7 +36,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
 
   private ScheduledFuture future;
   private volatile Future taskFuture;
-  private volatile boolean pendingTask = false;
+  private volatile boolean pendingTask;
 
   public AbstractDelegateDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {

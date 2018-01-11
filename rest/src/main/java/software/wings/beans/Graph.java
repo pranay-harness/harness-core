@@ -41,7 +41,7 @@ public class Graph {
   private List<Link> links = new ArrayList<>();
   @Embedded private Map<String, Graph> subworkflows = new HashMap<>();
 
-  @Transient private Optional<Node> originState = null;
+  @Transient private Optional<Node> originState;
 
   @Transient @JsonIgnore private int version;
 
