@@ -24,7 +24,7 @@ import javax.net.ssl.X509TrustManager;
  * Created by anubhaw on 5/2/17.
  */
 public class HttpUtil {
-  static UrlValidator urlValidator = new UrlValidator(new String[] {"http", "https"});
+  static UrlValidator urlValidator = new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
   private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
   private static TrustManager[] trustAllCerts = getTrustManagers();
   private static SSLContext sc = getSslContext();
