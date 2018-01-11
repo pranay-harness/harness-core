@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -145,8 +147,8 @@ public class PruneEntityJob implements Job {
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
-    } catch (WingsException e) {
-      e.processMessages();
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(MAINTENANCE_JOB);
       return false;
     } catch (Exception e) {
       logger.error("", e);

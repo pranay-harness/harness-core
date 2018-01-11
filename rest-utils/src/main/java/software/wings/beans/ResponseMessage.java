@@ -46,7 +46,15 @@ public class ResponseMessage implements Serializable {
      * another. Such type of reports make sense to be reported to the user, but they do not indicate any problem with
      * the software or the system to require any further attention.
      */
-    HARMLESS
+    HARMLESS,
+
+    /*
+     * Ignorable acuteness indicates an issue report that is based on know technical context that does not require
+     * fixing or attention. For example the system throw exception to terminate an execution of maintenance job
+     * when persistent lock cannot be acquired (assuming - some other instance of the service is dealing with the
+     * problem at the moment).
+     */
+    IGNORABLE,
   }
 
   @Builder.Default private ErrorCode code = DEFAULT_ERROR_CODE;

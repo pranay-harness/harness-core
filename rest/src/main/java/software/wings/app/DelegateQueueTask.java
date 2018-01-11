@@ -3,6 +3,7 @@ package software.wings.app;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import com.google.inject.Inject;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Status;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
@@ -227,6 +229,8 @@ public class DelegateQueueTask implements Runnable {
         });
       }
 
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(MAINTENANCE_JOB);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }

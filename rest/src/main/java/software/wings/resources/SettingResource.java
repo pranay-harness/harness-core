@@ -35,6 +35,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -126,8 +127,10 @@ public class SettingResource {
 
     SettingValue value = null;
     if (GCP.name().equals(type)) {
-      value =
-          GcpConfig.builder().serviceAccountKeyFileContent(IOUtils.toString(uploadedInputStream).toCharArray()).build();
+      value = GcpConfig.builder()
+                  .serviceAccountKeyFileContent(
+                      IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray())
+                  .build();
     }
     if (null != value) {
       if (value instanceof Encryptable) {
@@ -198,7 +201,7 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
-    char[] credentials = IOUtils.toString(uploadedInputStream).toCharArray();
+    char[] credentials = IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray();
     SettingValue value = null;
     if (GCP.name().equals(type) && credentials != null && credentials.length > 0) {
       value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
