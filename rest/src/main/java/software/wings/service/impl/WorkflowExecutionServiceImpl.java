@@ -407,18 +407,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                         .withStartTs(stateExecutionInstance.getStartTs())
                                                         .withEndTs(stateExecutionInstance.getEndTs())
                                                         .build();
-
             StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
 
             if (stateExecutionData != null && stateExecutionData instanceof EnvStateExecutionData) {
               EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-              WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
-                  workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
-              //          if (!workflowExecution2.getStatus().isFinalStatus()) {
-              //            populateNodeHierarchyWithGraph(workflowExecution2);
-              //          }
-              stageExecution.setWorkflowExecutions(asList(workflowExecution2));
-              stageExecution.setStatus(workflowExecution2.getStatus());
+              if (envStateExecutionData.getWorkflowExecutionId() != null) {
+                WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
+                    workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+                stageExecution.setWorkflowExecutions(asList(workflowExecution2));
+                stageExecution.setStatus(workflowExecution2.getStatus());
+              }
+              stageExecution.setMessage(envStateExecutionData.getErrorMsg());
             }
             stageExecutionDataList.add(stageExecution);
 
@@ -857,7 +856,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           || StringUtils.isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
         if (variable.isMandatory() && variable.getValue() == null) {
           throw new WingsException(ErrorCode.INVALID_REQUEST)
-              .addParam("message", "Workflow variable " + variable.getName() + " is mandatory for execution");
+              .addParam("message", "Workflow variable [" + variable.getName() + "] is mandatory for execution");
         }
         setVariables(variable.getName(), variable.getValue(), variables);
         continue;

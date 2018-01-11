@@ -18,6 +18,7 @@ public class PipelineStageExecution {
   private Long estimatedTime;
   private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
   private StateExecutionData stateExecutionData;
+  private String message;
 
   /**
    * Gets status.
@@ -164,8 +165,21 @@ public class PipelineStageExecution {
   }
 
   /**
-   * The type Builder.
+   *
+   * @return message
    */
+  public String getMessage() {
+    return message;
+  }
+
+  /**
+   * Sets the message
+   * @param message
+   */
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
   public static final class Builder {
     private String stateName;
     private String stateType;
@@ -175,111 +189,59 @@ public class PipelineStageExecution {
     private Long estimatedTime;
     private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
     private StateExecutionData stateExecutionData;
+    private String message;
 
     private Builder() {}
 
-    /**
-     * A pipeline stage execution builder.
-     *
-     * @return the builder
-     */
     public static Builder aPipelineStageExecution() {
       return new Builder();
     }
 
-    /**
-     * With state name builder.
-     *
-     * @param stateName the state name
-     * @return the builder
-     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
-    /**
-     * With state type builder.
-     *
-     * @param stateType the state type
-     * @return the builder
-     */
     public Builder withStateType(String stateType) {
       this.stateType = stateType;
       return this;
     }
 
-    /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
-    /**
-     * With start ts builder.
-     *
-     * @param startTs the start ts
-     * @return the builder
-     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
-    /**
-     * With end ts builder.
-     *
-     * @param endTs the end ts
-     * @return the builder
-     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
-    /**
-     * With estimated time builder.
-     *
-     * @param estimatedTime the estimated time
-     * @return the builder
-     */
     public Builder withEstimatedTime(Long estimatedTime) {
       this.estimatedTime = estimatedTime;
       return this;
     }
 
-    /**
-     * With workflow executions builder.
-     *
-     * @param workflowExecutions the workflow executions
-     * @return the builder
-     */
     public Builder withWorkflowExecutions(List<WorkflowExecution> workflowExecutions) {
       this.workflowExecutions = workflowExecutions;
       return this;
     }
 
-    /**
-     * With state execution data builder.
-     *
-     * @param stateExecutionData the state execution data
-     * @return the builder
-     */
     public Builder withStateExecutionData(StateExecutionData stateExecutionData) {
       this.stateExecutionData = stateExecutionData;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withMessage(String message) {
+      this.message = message;
+      return this;
+    }
+
     public Builder but() {
       return aPipelineStageExecution()
           .withStateName(stateName)
@@ -289,14 +251,10 @@ public class PipelineStageExecution {
           .withEndTs(endTs)
           .withEstimatedTime(estimatedTime)
           .withWorkflowExecutions(workflowExecutions)
-          .withStateExecutionData(stateExecutionData);
+          .withStateExecutionData(stateExecutionData)
+          .withMessage(message);
     }
 
-    /**
-     * Build pipeline stage execution.
-     *
-     * @return the pipeline stage execution
-     */
     public PipelineStageExecution build() {
       PipelineStageExecution pipelineStageExecution = new PipelineStageExecution();
       pipelineStageExecution.setStateName(stateName);
@@ -307,6 +265,7 @@ public class PipelineStageExecution {
       pipelineStageExecution.setEstimatedTime(estimatedTime);
       pipelineStageExecution.setWorkflowExecutions(workflowExecutions);
       pipelineStageExecution.setStateExecutionData(stateExecutionData);
+      pipelineStageExecution.setMessage(message);
       return pipelineStageExecution;
     }
   }

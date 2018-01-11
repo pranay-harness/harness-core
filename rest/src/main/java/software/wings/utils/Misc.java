@@ -177,18 +177,23 @@ public class Misc {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < MAX_CAUSES) {
-      String msg = t.getMessage();
-      if (t instanceof WingsException) {
-        String paramMsg = Joiner.on(". ").join(((WingsException) t).getParams().values());
-        if (isNotBlank(paramMsg)) {
-          msg += " - " + paramMsg;
-        }
-      }
+      String msg = getMessage(t);
       if (isNotBlank(msg)) {
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
       t = t.getCause();
     }
+  }
+
+  public static String getMessage(Throwable t) {
+    String msg = t.getMessage();
+    if (t instanceof WingsException) {
+      String paramMsg = Joiner.on(". ").join(((WingsException) t).getParams().values());
+      if (isNotBlank(paramMsg)) {
+        msg += " - " + paramMsg;
+      }
+    }
+    return msg;
   }
 
   /**
