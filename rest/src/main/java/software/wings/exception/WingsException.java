@@ -1,11 +1,11 @@
 package software.wings.exception;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ResponseMessage.Acuteness.SERIOUS;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.INFO;
 import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.Scenario.API_CALL;
 import static software.wings.utils.Switch.unhandled;
 
 import lombok.Getter;
@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
+import software.wings.beans.ResponseMessage.Acuteness;
 import software.wings.beans.ResponseMessage.Level;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.utils.Util;
@@ -164,13 +165,71 @@ public class WingsException extends WingsApiException {
     return this;
   }
 
-  public List<ResponseMessage> processMessages() {
-    List<ResponseMessage> responseMessages =
+  public enum Scenario {
+    // API call scenarios is when the execution was made in the context of API call.
+    API_CALL,
+
+    // API call scenarios is when the execution was made in the context of API call.
+    MAINTENANCE_JOB,
+  }
+
+  public static boolean shouldLog(Scenario scenario, Acuteness acuteness) {
+    switch (acuteness) {
+      case SERIOUS:
+        return true;
+      case ALERTING:
+      case HARMLESS:
+        switch (scenario) {
+          case API_CALL:
+            return false;
+          case MAINTENANCE_JOB:
+            return true;
+          default:
+            unhandled(scenario);
+        }
+        break;
+      case IGNORABLE:
+        switch (scenario) {
+          case API_CALL:
+            return true;
+          case MAINTENANCE_JOB:
+            return false;
+          default:
+            unhandled(scenario);
+        }
+        break;
+      default:
+        unhandled(acuteness);
+    }
+    return true;
+  }
+
+  public static boolean shouldPropagate(Scenario scenario, Acuteness acuteness) {
+    if (scenario != API_CALL) {
+      return false;
+    }
+
+    switch (acuteness) {
+      case SERIOUS:
+        return true;
+      case ALERTING:
+      case HARMLESS:
+        return true;
+      case IGNORABLE:
+        return false;
+      default:
+        unhandled(acuteness);
+    }
+    return true;
+  }
+
+  public List<ResponseMessage> logProcessedMessages(Scenario scenario) {
+    final List<ResponseMessage> responseMessages =
         responseMessageList.stream()
             .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, params))
             .collect(toList());
 
-    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getAcuteness() == SERIOUS)) {
+    if (responseMessages.stream().anyMatch(responseMessage -> shouldLog(scenario, responseMessage.getAcuteness()))) {
       String msg = "Exception occurred: " + getMessage();
       if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
         logger.error(msg, this);
@@ -184,7 +243,7 @@ public class WingsException extends WingsApiException {
     }
 
     responseMessages.stream()
-        .filter(responseMessage -> responseMessage.getAcuteness() == SERIOUS)
+        .filter(responseMessage -> shouldLog(scenario, responseMessage.getAcuteness()))
         .forEach(responseMessage -> {
           final Level errorType = responseMessage.getLevel();
           switch (errorType) {
@@ -204,14 +263,23 @@ public class WingsException extends WingsApiException {
               unhandled(errorType);
           }
         });
-    return responseMessages;
+
+    return responseMessages.stream()
+        .filter(responseMessage -> shouldPropagate(scenario, responseMessage.getAcuteness()))
+        .collect(toList());
   }
 
+  // There is only one use of this method. We should reconsider the need of it.
+  @Deprecated
   public String getMessagesAsString() {
-    List<ResponseMessage> responseMessageList = processMessages();
+    final List<ResponseMessage> responseMessages =
+        responseMessageList.stream()
+            .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, params))
+            .collect(toList());
+
     StringBuilder errorMsgBuilder = new StringBuilder();
-    if (Util.isNotEmpty(responseMessageList)) {
-      responseMessageList.stream().forEach(responseMessage -> {
+    if (Util.isNotEmpty(responseMessages)) {
+      responseMessages.stream().forEach(responseMessage -> {
         errorMsgBuilder.append(responseMessage.getMessage());
         errorMsgBuilder.append(".");
       });
