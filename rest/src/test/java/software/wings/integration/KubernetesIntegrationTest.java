@@ -229,7 +229,7 @@ public class KubernetesIntegrationTest {
             .build());
 
     kubernetesService.setControllerPodCount(
-        config, Collections.emptyList(), ZONE_CLUSTER, "frontend-ctrl", 0, 2, new ExecutionLogCallback());
+        config, Collections.emptyList(), ZONE_CLUSTER, "frontend-ctrl", 0, 2, 10, new ExecutionLogCallback());
 
     Optional<Integer> backendCount =
         kubernetesService.getControllerPodCount(config, Collections.emptyList(), "backend-ctrl");

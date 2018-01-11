@@ -10,4 +10,5 @@ import java.util.List;
 public class ContainerResizeParams {
   private String clusterName;
   private List<ContainerServiceData> desiredCounts = new ArrayList<>();
+  private int serviceSteadyStateTimeout;
 }

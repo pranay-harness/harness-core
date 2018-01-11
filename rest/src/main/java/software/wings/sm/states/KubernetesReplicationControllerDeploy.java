@@ -67,6 +67,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
         .withClusterName(contextData.containerElement.getClusterName())
         .withDesiredCounts(desiredCounts)
         .withNamespace(contextData.containerElement.getNamespace())
+        .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .build();
   }
 

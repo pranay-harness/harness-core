@@ -11,13 +11,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class EcsResizeParams extends ContainerResizeParams {
   private String region;
-  private int ecsServiceSteadyStateTimeout;
 
   public static final class EcsResizeParamsBuilder {
     private String region;
     private String clusterName;
-    private int ecsServiceSteadyStateTimeout;
     private List<ContainerServiceData> desiredCounts = new ArrayList<>();
+    private int serviceSteadyStateTimeout;
 
     private EcsResizeParamsBuilder() {}
 
@@ -35,13 +34,13 @@ public class EcsResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public EcsResizeParamsBuilder withEcsServiceSteadyStateTimeout(int ecsServiceSteadyStateTimeout) {
-      this.ecsServiceSteadyStateTimeout = ecsServiceSteadyStateTimeout;
+    public EcsResizeParamsBuilder withDesiredCounts(List<ContainerServiceData> desiredCounts) {
+      this.desiredCounts = desiredCounts;
       return this;
     }
 
-    public EcsResizeParamsBuilder withDesiredCounts(List<ContainerServiceData> desiredCounts) {
-      this.desiredCounts = desiredCounts;
+    public EcsResizeParamsBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+      this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
       return this;
     }
 
@@ -49,16 +48,16 @@ public class EcsResizeParams extends ContainerResizeParams {
       return anEcsResizeParams()
           .withRegion(region)
           .withClusterName(clusterName)
-          .withEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout)
-          .withDesiredCounts(desiredCounts);
+          .withDesiredCounts(desiredCounts)
+          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout);
     }
 
     public EcsResizeParams build() {
       EcsResizeParams ecsResizeParams = new EcsResizeParams();
       ecsResizeParams.setRegion(region);
       ecsResizeParams.setClusterName(clusterName);
-      ecsResizeParams.setEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout);
       ecsResizeParams.setDesiredCounts(desiredCounts);
+      ecsResizeParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       return ecsResizeParams;
     }
   }

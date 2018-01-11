@@ -34,7 +34,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
     EcsResizeParams resizeParams = (EcsResizeParams) params;
     return awsClusterService.resizeCluster(resizeParams.getRegion(), cloudProviderSetting, encryptedDataDetails,
         resizeParams.getClusterName(), containerServiceData.getName(), containerServiceData.getPreviousCount(),
-        containerServiceData.getDesiredCount(), resizeParams.getEcsServiceSteadyStateTimeout(), executionLogCallback);
+        containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
   }
 
   @Data

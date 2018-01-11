@@ -102,6 +102,7 @@ public abstract class ContainerServiceSetup extends State {
 
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
+  private int serviceSteadyStateTimeout; // Minutes
   @Inject @Transient private transient EcrService ecrService;
   @Inject @Transient private transient EcrClassicService ecrClassicService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
@@ -289,6 +290,14 @@ public abstract class ContainerServiceSetup extends State {
 
   public void setResizeStrategy(ResizeStrategy resizeStrategy) {
     this.resizeStrategy = resizeStrategy;
+  }
+
+  public long getServiceSteadyStateTimeout() {
+    return serviceSteadyStateTimeout;
+  }
+
+  public void setServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+    this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
   }
 
   @Override

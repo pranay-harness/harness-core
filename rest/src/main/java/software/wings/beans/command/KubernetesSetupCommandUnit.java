@@ -208,7 +208,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
 
     if (isDaemonSet) {
-      listContainerInfosWhenReady(encryptedDataDetails, executionLogCallback, kubernetesConfig, containerServiceName);
+      listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
+          executionLogCallback, kubernetesConfig, containerServiceName);
     } else {
       executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
       cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
@@ -217,14 +218,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig, String containerServiceName) {
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
+      String containerServiceName) {
     int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
     int previousCount =
         kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName) != null
         ? desiredCount
         : 0;
-    List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
-        encryptedDataDetails, containerServiceName, previousCount, desiredCount, executionLogCallback);
+    List<ContainerInfo> containerInfos =
+        kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails,
+            containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -267,7 +270,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .map(Container::getImage)
                       .collect(toList()),
             LogLevel.INFO);
-        listContainerInfosWhenReady(encryptedDataDetails, executionLogCallback, kubernetesConfig, daemonSetName);
+        listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
+            executionLogCallback, kubernetesConfig, daemonSetName);
       } catch (IOException e) {
         executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
       }
@@ -278,8 +282,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, daemonSetName);
       Map<String, String> labels = daemonSet.getMetadata().getLabels();
       kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, daemonSetName);
-      kubernetesContainerService.waitForPodsToStop(
-          kubernetesConfig, encryptedDataDetails, labels, executionLogCallback);
+      kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels,
+          setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
     }
     return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(daemonSetName).build();
   }
