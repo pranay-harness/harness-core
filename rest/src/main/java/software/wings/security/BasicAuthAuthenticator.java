@@ -1,7 +1,15 @@
 package software.wings.security;
 
+import static org.mindrot.jbcrypt.BCrypt.checkpw;
+import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
@@ -13,13 +21,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.UserService;
 
 import java.util.Optional;
-
-import static org.mindrot.jbcrypt.BCrypt.checkpw;
-import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 /**
  * Created by anubhaw on 3/10/16.

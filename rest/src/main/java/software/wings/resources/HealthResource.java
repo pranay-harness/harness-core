@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @PublicApi
 public class HealthResource {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(HealthResource.class);
 
   @GET
   @Timed

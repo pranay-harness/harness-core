@@ -15,7 +15,7 @@ public class ExecutionLogCallback {
   private transient DelegateLogService logService;
   private CommandExecutionContext commandExecutionContext;
   private String commandName;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ExecutionLogCallback.class);
 
   public ExecutionLogCallback() {}
 

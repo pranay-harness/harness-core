@@ -43,7 +43,7 @@ public class SwaggerFileExamplesReader implements ReaderListener {
     mapper.registerModule(new JavaTimeModule());
   }
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(SwaggerFileExamplesReader.class);
 
   @Override
   public void beforeScan(Reader reader, Swagger swagger) {

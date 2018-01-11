@@ -16,7 +16,7 @@ import software.wings.utils.JsonUtils;
  * @author Rishi
  */
 public class ApplicationTest extends WingsBaseTest {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
   @Inject private JsonUtils jsonUtils;
 
   /**

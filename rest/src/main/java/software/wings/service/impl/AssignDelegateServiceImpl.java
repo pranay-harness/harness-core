@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class AssignDelegateServiceImpl implements AssignDelegateService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AssignDelegateServiceImpl.class);
 
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;

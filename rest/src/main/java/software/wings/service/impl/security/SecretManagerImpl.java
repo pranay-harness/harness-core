@@ -84,7 +84,7 @@ import java.util.UUID;
  */
 public class SecretManagerImpl implements SecretManager {
   public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
-  protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+  protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FeatureFlagService featureFlagService;

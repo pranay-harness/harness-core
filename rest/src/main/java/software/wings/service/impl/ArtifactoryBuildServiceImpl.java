@@ -37,7 +37,7 @@ import javax.ws.rs.NotSupportedException;
  */
 @Singleton
 public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactoryBuildServiceImpl.class);
 
   @Inject private ArtifactoryService artifactoryService;
 

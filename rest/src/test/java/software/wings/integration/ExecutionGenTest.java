@@ -27,7 +27,7 @@ import java.util.Random;
 public class ExecutionGenTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ExecutionGenTest.class);
 
   @Test
   @Ignore

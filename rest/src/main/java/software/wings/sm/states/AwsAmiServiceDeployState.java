@@ -546,7 +546,7 @@ public class AwsAmiServiceDeployState extends State {
     private transient LogService logService;
     private Builder logBuilder;
     private String activityId;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(ExecutionLogCallback.class);
 
     public ExecutionLogCallback() {}
 

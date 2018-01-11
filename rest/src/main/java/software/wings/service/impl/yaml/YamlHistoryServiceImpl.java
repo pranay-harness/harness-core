@@ -27,7 +27,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class YamlHistoryServiceImpl implements YamlHistoryService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(YamlHistoryServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

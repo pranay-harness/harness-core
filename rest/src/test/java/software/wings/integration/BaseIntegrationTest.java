@@ -108,7 +108,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static String accountId = "INVALID_ID";
   protected static String userToken = "INVALID_TOKEN";
 
-  protected final Logger logger = LoggerFactory.getLogger(getClass());
+  protected static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject protected SettingsService settingsService;

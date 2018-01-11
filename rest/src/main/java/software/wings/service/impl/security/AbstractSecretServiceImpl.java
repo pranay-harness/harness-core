@@ -23,7 +23,7 @@ import java.util.Iterator;
  * Created by rsingh on 11/6/17.
  */
 public abstract class AbstractSecretServiceImpl {
-  protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+  protected static final Logger logger = LoggerFactory.getLogger(AbstractSecretServiceImpl.class);
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;

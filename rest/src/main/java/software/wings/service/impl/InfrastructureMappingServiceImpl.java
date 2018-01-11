@@ -123,7 +123,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(InfrastructureMappingServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;

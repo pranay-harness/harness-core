@@ -68,7 +68,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public class YamlGitServiceImpl implements YamlGitService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(YamlGitServiceImpl.class);
 
   /**
    * The constant SETUP_ENTITY_ID.

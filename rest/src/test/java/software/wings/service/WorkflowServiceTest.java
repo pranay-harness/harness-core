@@ -166,7 +166,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   private static String envId = UUIDGenerator.getUuid();
   private static String workflowId = UUIDGenerator.getUuid();
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceTest.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Mock private ServiceResourceService serviceResourceService;

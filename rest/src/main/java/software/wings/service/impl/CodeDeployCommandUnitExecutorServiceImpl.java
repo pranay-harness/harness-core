@@ -29,7 +29,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class CodeDeployCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(CodeDeployCommandUnitExecutorServiceImpl.class);
   /**
    * The Log service.
    */

@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 11/8/16.
  */
 public class ArtifactCollectionJob implements Job {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionJob.class);
 
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   private static final int POLL_INTERVAL = 60; // in secs

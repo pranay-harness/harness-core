@@ -90,7 +90,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class EnvironmentServiceImpl implements EnvironmentService, DataProvider {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(EnvironmentServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

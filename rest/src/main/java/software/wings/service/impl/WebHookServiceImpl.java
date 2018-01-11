@@ -35,7 +35,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private TriggerService triggerService;
   @Inject private AppService appService;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 
   @Override
   public WebHookResponse execute(String token, WebHookRequest webHookRequest) {

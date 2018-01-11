@@ -55,7 +55,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   private static final String ARTIFACT_REPO_BASE_DIR = "./repository/artifacts/";
   private static final String ARTIFACT_REPO_TMP_DIR = "./repository/artifacts/tmp/";
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DelegateFileManagerImpl.class);
 
   @Inject
   public DelegateFileManagerImpl(ManagerClient managerClient, DelegateConfiguration delegateConfiguration) {

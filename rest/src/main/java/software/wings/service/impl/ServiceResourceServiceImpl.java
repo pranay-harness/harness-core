@@ -120,7 +120,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
-  private final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

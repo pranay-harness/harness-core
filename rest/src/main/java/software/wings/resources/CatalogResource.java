@@ -59,7 +59,7 @@ public class CatalogResource {
    */
   public static final String JENKINS_SETTING_ID = "jenkinsSettingId";
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(CatalogResource.class);
 
   private CatalogService catalogService;
   private SettingsService settingsService;

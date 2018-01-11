@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class BambooServiceImpl implements BambooService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(BambooServiceImpl.class);
   @Inject private EncryptionService encryptionService;
 
   private BambooRestClient getBambooClient(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {

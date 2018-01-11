@@ -80,7 +80,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class PipelineServiceImpl implements PipelineService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(PipelineServiceImpl.class);
 
   @Inject private AppService appService;
   @Inject private EntityUpdateService entityUpdateService;

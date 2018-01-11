@@ -45,7 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ContainerServiceImpl implements ContainerService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
   @Inject private GkeClusterService gkeClusterService;
   @Inject private KubernetesContainerService kubernetesContainerService;

@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class DockerRegistryServiceImpl implements DockerRegistryService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DockerRegistryServiceImpl.class);
 
   @Inject private EncryptionService encryptionService;
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config

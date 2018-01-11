@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class GraphRenderer {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GraphRenderer.class);
   @Inject private Injector injector;
 
   /**

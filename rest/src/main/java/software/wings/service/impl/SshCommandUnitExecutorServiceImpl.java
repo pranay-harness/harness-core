@@ -45,7 +45,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(SshCommandUnitExecutorServiceImpl.class);
   /**
    * The Log service.
    */

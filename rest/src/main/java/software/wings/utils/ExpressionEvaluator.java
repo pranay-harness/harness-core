@@ -33,7 +33,7 @@ public class ExpressionEvaluator {
   public static final Pattern variableNamePattern = Pattern.compile("^[_a-zA-Z][_\\w]*$");
 
   private static ExpressionEvaluator instance = new ExpressionEvaluator();
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ExpressionEvaluator.class);
 
   /**
    * Gets instance.

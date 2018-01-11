@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  */
 @Singleton
 public class GkeClusterServiceImpl implements GkeClusterService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GkeClusterServiceImpl.class);
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
 
   @Override

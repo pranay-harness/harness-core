@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  * Created by brett on 10/26/17
  */
 public class MessageServiceImpl implements MessageService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(MessageServiceImpl.class);
 
   private static final String ROOT = "msg/";
   private static final String IO = "io/";

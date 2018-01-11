@@ -33,7 +33,7 @@ import java.util.stream.Stream;
  */
 @Singleton
 public class StencilPostProcessor {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(StencilPostProcessor.class);
 
   @Inject private Injector injector;
 

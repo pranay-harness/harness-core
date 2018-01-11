@@ -56,7 +56,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private LogService logService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EventEmitter eventEmitter;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ActivityServiceImpl.class);
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 

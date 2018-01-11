@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * @author rktummala 07/30/17
  */
 public class AmazonS3ServiceImpl implements AmazonS3Service {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AmazonS3ServiceImpl.class);
   @Inject AwsHelperService awsHelperService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   private static final int MAX_FILES_TO_SHOW_IN_UI = 1000;

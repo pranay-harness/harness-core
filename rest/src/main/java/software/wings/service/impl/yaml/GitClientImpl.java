@@ -71,7 +71,7 @@ public class GitClientImpl implements GitClient {
    */
   public static final String DEFAULT_BRANCH = "master";
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GitClientImpl.class);
 
   @Override
   public synchronized GitCloneResult clone(GitConfig gitConfig) {

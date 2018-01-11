@@ -19,7 +19,7 @@ import javax.ws.rs.ext.ExceptionMapper;
  * @param <T> the generic type
  */
 public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GenericExceptionMapper.class);
 
   /* (non-Javadoc)
    * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)

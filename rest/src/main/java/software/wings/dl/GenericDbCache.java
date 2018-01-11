@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Singleton
 public class GenericDbCache {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GenericDbCache.class);
   @Inject private WingsPersistence wingsPersistence;
   private LoadingCache<String, Object> cache =
       CacheBuilder.newBuilder()

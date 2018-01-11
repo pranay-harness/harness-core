@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by peeyushaggarwal on 1/11/17.
  */
 public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(HazelcastBroadcaster.class);
 
   public static HazelcastInstance HAZELCAST_INSTANCE;
 

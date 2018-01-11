@@ -42,7 +42,7 @@ import java.util.function.Supplier;
  * Created by rishi on 12/14/16.
  */
 public class JenkinsTask extends AbstractDelegateRunnableTask {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(JenkinsTask.class);
 
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private EncryptionService encryptionService;

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * @author bsollish on 09/26/17
  */
 public class GitChangeSetRunnable implements Runnable {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GitChangeSetRunnable.class);
 
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlChangeSetService yamlChangeSetService;

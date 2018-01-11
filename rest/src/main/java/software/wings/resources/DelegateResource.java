@@ -63,7 +63,7 @@ public class DelegateResource {
   private DelegateService delegateService;
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DelegateResource.class);
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,

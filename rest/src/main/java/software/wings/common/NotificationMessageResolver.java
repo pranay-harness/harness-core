@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 @Singleton
 public class NotificationMessageResolver {
   private Map<String, ChannelTemplate> templateMap = new HashMap<>();
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(NotificationMessageResolver.class);
 
   /**
    * The enum Notification message type.

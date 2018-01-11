@@ -57,7 +57,7 @@ public class WorkflowNotificationHelper {
   @Inject private NotificationService notificationService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowNotificationHelper.class);
   private final DateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {

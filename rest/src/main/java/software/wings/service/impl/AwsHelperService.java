@@ -224,7 +224,7 @@ public class AwsHelperService {
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   @Inject private EncryptionService encryptionService;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AwsHelperService.class);
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {

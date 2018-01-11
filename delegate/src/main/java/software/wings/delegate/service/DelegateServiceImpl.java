@@ -152,7 +152,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Clock clock;
   @Inject private TimeLimiter timeLimiter;
 
-  private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
 
   private final ConcurrentHashMap<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();

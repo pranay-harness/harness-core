@@ -49,7 +49,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
    * II
    * The constant ARTIFACT_STREAM_NAME.
    */
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(JenkinsBuildServiceImpl.class);
 
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private EncryptionService encryptionService;

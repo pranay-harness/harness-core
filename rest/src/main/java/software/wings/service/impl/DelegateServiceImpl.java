@@ -114,7 +114,7 @@ public class DelegateServiceImpl implements DelegateService {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private AccountService accountService;

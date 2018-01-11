@@ -37,7 +37,7 @@ import javax.ws.rs.QueryParam;
 public class YamlHistoryResource {
   private YamlHistoryService yamlHistoryService;
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(YamlHistoryResource.class);
 
   /**
    * Instantiates a new app yaml resource.

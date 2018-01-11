@@ -82,7 +82,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class ArtifactoryServiceImpl implements ArtifactoryService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactoryServiceImpl.class);
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Inject private ExecutorService executorService;

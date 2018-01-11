@@ -43,7 +43,7 @@ public class GitCommandCallback implements NotifyCallback {
     this.yamlGitConfigId = yamlGitConfigId;
   }
 
-  @Transient private final transient Logger logger = LoggerFactory.getLogger(getClass());
+  @Transient private static final transient Logger logger = LoggerFactory.getLogger(GitCommandCallback.class);
 
   @Transient @Inject private transient YamlChangeSetService yamlChangeSetService;
   @Transient @Inject private transient YamlService yamlService;

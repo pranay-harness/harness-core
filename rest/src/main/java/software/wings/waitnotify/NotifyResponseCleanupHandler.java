@@ -31,7 +31,7 @@ import java.util.Map;
  * @author Rishi
  */
 public final class NotifyResponseCleanupHandler implements Runnable {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(NotifyResponseCleanupHandler.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

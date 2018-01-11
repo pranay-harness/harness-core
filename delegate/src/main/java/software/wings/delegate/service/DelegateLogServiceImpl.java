@@ -37,7 +37,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class DelegateLogServiceImpl implements DelegateLogService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DelegateLogServiceImpl.class);
   private Cache<String, List<Log>> cache;
   private ManagerClient managerClient;
 

@@ -63,7 +63,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class AccountServiceImpl implements AccountService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;

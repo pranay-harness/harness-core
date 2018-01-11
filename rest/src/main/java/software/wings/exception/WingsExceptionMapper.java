@@ -17,7 +17,7 @@ import javax.ws.rs.ext.ExceptionMapper;
  * Created by peeyushaggarwal on 4/4/16.
  */
 public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static Logger logger = LoggerFactory.getLogger(WingsExceptionMapper.class);
 
   /**
    * {@inheritDoc}

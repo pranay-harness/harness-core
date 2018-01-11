@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
@@ -57,7 +58,7 @@ import java.util.List;
  * @author Rishi
  */
 public class ExecutionInterruptManager {
-  private final org.slf4j.Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ExecutionInterruptManager.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;

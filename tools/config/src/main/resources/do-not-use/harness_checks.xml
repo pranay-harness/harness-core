@@ -122,6 +122,16 @@
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
 
+        <!-- Keeping consistent imports order reduces the noise when committing code. This custom import order is in
+        sink intelliJ IDE embedded imports scheme: 'GoogleStyle'. To set intelliJ to organize the imports according
+        to this expectations go to Preferences | Editor > Code Style > Java | Imports and select scheme: GoogleStyle -->
+        <module name="CustomImportOrder">
+            <property name="specialImportsRegExp" value="^com.google"/>
+            <property name="sortImportsInGroupAlphabetically" value="true"/>
+            <property name="customImportOrderRules"
+                      value="STATIC###SPECIAL_IMPORTS###THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE"/>
+        </module>
+
         <!-- LOMBOK -->
 
         <!--
@@ -144,6 +154,10 @@
         <module name="DefaultComesLast"/>
 
         <!-- LOGGING -->
+
+        <!-- Using logger as member of the class is pointlessly expensive, even if the object is obtained from
+        a factory and shared from all instances. -->
+        <module name="io.harness.checks.LoggerCheck"/>
 
         <!-- TODO: Every system handler should be responsible to handle all the exception in its execution threads.
         When the thread is done or move to another task it should log or serialize the exception info to another

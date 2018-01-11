@@ -126,7 +126,7 @@ import java.util.stream.Collectors;
 @Listeners({NotifyEventListener.class, ExecutionEventListener.class})
 @RealMongo
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionServiceImplTest.class);
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Mock private JobScheduler jobScheduler;

@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Singleton
 public class MaintenanceController implements Managed {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(MaintenanceController.class);
 
   private static boolean forceMaintenanceOff = false;
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);

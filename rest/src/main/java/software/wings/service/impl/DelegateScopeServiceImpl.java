@@ -36,7 +36,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class DelegateScopeServiceImpl implements DelegateScopeService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(DelegateScopeServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateService delegateService;
 
