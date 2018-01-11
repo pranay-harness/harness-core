@@ -3,6 +3,7 @@ package software.wings.core.ssh.executors;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCode.INVALID_EXECUTION_ID;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -17,6 +18,7 @@ import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.utils.Misc.sleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
@@ -37,6 +39,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -142,6 +145,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     Channel channel = null;
     long start = System.currentTimeMillis();
     try {
+      saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
       channel = getCachedSession(this.config).openChannel("exec");
       logger.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
@@ -188,14 +192,36 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         }
         sleep(1, TimeUnit.SECONDS);
       }
-    } catch (JSchException | IOException ex) {
+    } catch (Exception ex) {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+      logger.error("Command execution failed with error", ex);
+      RuntimeException rethrow = null;
       if (ex instanceof JSchException) {
-        logger.error("Command execution failed with error", ex);
-        saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));
-      } else {
+        saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
+      } else if (ex instanceof IOException) {
         logger.error("Exception in reading InputStream", ex);
-        saveExecutionLog("Command execution failed with error " + UNKNOWN_ERROR);
+      } else if (ex instanceof RuntimeException) {
+        rethrow = (RuntimeException) ex;
+      }
+      int i = 0;
+      Throwable t = ex;
+      while (t != null && i++ < Misc.MAX_CAUSES) {
+        String msg = t.getMessage();
+        if (t instanceof WingsException) {
+          String paramMsg = Joiner.on(". ").join(((WingsException) t).getParams().values());
+          if (isNotBlank(paramMsg)) {
+            msg += " - " + paramMsg;
+          } else {
+            msg = "Command execution failed with error " + msg;
+          }
+        }
+        if (isNotBlank(msg)) {
+          saveExecutionLogError(msg);
+        }
+        t = t instanceof JSchException ? null : t.getCause();
+      }
+      if (rethrow != null) {
+        throw rethrow;
       }
       return commandExecutionStatus;
     } finally {
@@ -352,9 +378,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         aLog()
             .withAppId(config.getAppId())
             .withActivityId(config.getExecutionId())
-            .withHostName(config.getHost())
             .withLogLevel(INFO)
             .withCommandUnitName(config.getCommandUnitName())
+            .withHostName(config.getHost())
             .withLogLine(line)
             .withExecutionResult(RUNNING)
             .build());
@@ -365,11 +391,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         aLog()
             .withAppId(config.getAppId())
             .withActivityId(config.getExecutionId())
-            .withHostName(config.getHost())
             .withLogLevel(ERROR)
             .withCommandUnitName(config.getCommandUnitName())
+            .withHostName(config.getHost())
             .withLogLine(line)
-            .withExecutionResult(FAILURE)
+            .withExecutionResult(RUNNING)
             .build());
   }
 

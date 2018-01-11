@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import com.google.common.base.Joiner;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -175,9 +177,16 @@ public class Misc {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < MAX_CAUSES) {
-      String msg = t instanceof WingsException ? Joiner.on(". ").join(((WingsException) t).getParams().values())
-                                               : t.getMessage();
-      executionLogCallback.saveExecutionLog(msg, Log.LogLevel.ERROR);
+      String msg = t.getMessage();
+      if (t instanceof WingsException) {
+        String paramMsg = Joiner.on(". ").join(((WingsException) t).getParams().values());
+        if (isNotBlank(paramMsg)) {
+          msg += " - " + paramMsg;
+        }
+      }
+      if (isNotBlank(msg)) {
+        executionLogCallback.saveExecutionLog(msg, Log.LogLevel.ERROR);
+      }
       t = t.getCause();
     }
   }
