@@ -1,9 +1,10 @@
 package software.wings.utils;
 
-import org.junit.Test;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 
 public class CryptoUtilTest {
   public static final int LEN = 10;
