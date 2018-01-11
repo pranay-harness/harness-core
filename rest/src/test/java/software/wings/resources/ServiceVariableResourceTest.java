@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -34,7 +35,6 @@ import software.wings.utils.ResourceTestRule;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.UUID;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
@@ -105,11 +105,11 @@ public class ServiceVariableResourceTest {
   @Test
   public void shouldSaveServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.save(any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
-    RestResponse<ServiceVariable> restResponse = RESOURCES.client()
-                                                     .target(format("/service-variables/?appId=%s", APP_ID))
-                                                     .request()
-                                                     .post(Entity.entity(SERVICE_VARIABLE, APPLICATION_JSON),
-                                                         new GenericType<RestResponse<ServiceVariable>>() {});
+    RestResponse<ServiceVariable> restResponse =
+        RESOURCES.client()
+            .target(format("/service-variables/?appId=%s", APP_ID))
+            .request()
+            .post(entity(SERVICE_VARIABLE, APPLICATION_JSON), new GenericType<RestResponse<ServiceVariable>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(ServiceVariable.class);
     verify(VARIABLE_SERVICE).save(SERVICE_VARIABLE);
   }
@@ -143,8 +143,7 @@ public class ServiceVariableResourceTest {
         RESOURCES.client()
             .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, APP_ID))
             .request()
-            .put(
-                Entity.entity(SERVICE_VARIABLE, APPLICATION_JSON), new GenericType<RestResponse<ServiceVariable>>() {});
+            .put(entity(SERVICE_VARIABLE, APPLICATION_JSON), new GenericType<RestResponse<ServiceVariable>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(ServiceVariable.class);
     verify(VARIABLE_SERVICE).update(SERVICE_VARIABLE);
   }

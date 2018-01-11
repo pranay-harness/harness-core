@@ -18,6 +18,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -146,7 +147,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    ContainerServiceElement.ContainerServiceElementBuilder containerServiceElementBuilder =
+    ContainerServiceElementBuilder containerServiceElementBuilder =
         aContainerServiceElement()
             .withUuid(executionData.getServiceId())
             .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())

@@ -16,6 +16,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.ObjectType;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
@@ -185,8 +186,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       BaseYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
 
       // Pre-deployment steps
-      PhaseStep.PhaseStepBuilder preDeploymentSteps =
-          PhaseStep.PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, PhaseStepType.PRE_DEPLOYMENT.name());
+      PhaseStepBuilder preDeploymentSteps =
+          PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, PhaseStepType.PRE_DEPLOYMENT.name());
 
       if (yaml.getPreDeploymentSteps() != null) {
         List<Node> stepList =
@@ -205,8 +206,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       }
 
       // Post-deployment steps
-      PhaseStep.PhaseStepBuilder postDeploymentSteps =
-          PhaseStep.PhaseStepBuilder.aPhaseStep(PhaseStepType.POST_DEPLOYMENT, PhaseStepType.POST_DEPLOYMENT.name());
+      PhaseStepBuilder postDeploymentSteps =
+          PhaseStepBuilder.aPhaseStep(PhaseStepType.POST_DEPLOYMENT, PhaseStepType.POST_DEPLOYMENT.name());
 
       if (yaml.getPostDeploymentSteps() != null) {
         List<Node> postDeployStepList =

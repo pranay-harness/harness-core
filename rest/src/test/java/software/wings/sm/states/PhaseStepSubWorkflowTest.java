@@ -28,6 +28,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
@@ -200,11 +201,10 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
 
     List<String> instanceIds = Lists.newArrayList(getUuid(), getUuid());
     String serviceId = getUuid();
-    ServiceInstanceIdsParam serviceInstanceIdsParam =
-        ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam()
-            .withInstanceIds(instanceIds)
-            .withServiceId(serviceId)
-            .build();
+    ServiceInstanceIdsParam serviceInstanceIdsParam = ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam()
+                                                          .withInstanceIds(instanceIds)
+                                                          .withServiceId(serviceId)
+                                                          .build();
 
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement()

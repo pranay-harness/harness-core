@@ -14,6 +14,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -221,12 +222,11 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   private ServiceVariable createNewServiceVariable(String appId, String serviceId, NameValuePair.Yaml cv) {
     Validator.notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType());
 
-    ServiceVariable.ServiceVariableBuilder serviceVariableBuilder =
-        ServiceVariable.builder()
-            .name(cv.getName())
-            .entityType(EntityType.SERVICE)
-            .entityId(serviceId)
-            .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID);
+    ServiceVariableBuilder serviceVariableBuilder = ServiceVariable.builder()
+                                                        .name(cv.getName())
+                                                        .entityType(EntityType.SERVICE)
+                                                        .entityId(serviceId)
+                                                        .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID);
 
     if ("TEXT".equals(cv.getValueType())) {
       serviceVariableBuilder.type(Type.TEXT);

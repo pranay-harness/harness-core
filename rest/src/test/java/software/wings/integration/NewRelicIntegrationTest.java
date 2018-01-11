@@ -1,9 +1,11 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,7 +18,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
@@ -60,7 +61,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -195,7 +195,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
       WebTarget target = client.target(API_BASE + "/newrelic/save-metrics?accountId=" + accountId + "&applicationId="
           + applicationId + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+          entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       assertTrue(restResponse.getResource());
 
       Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class);
@@ -247,7 +247,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicMetricAnalysisRecord>>() {});
 
     NewRelicMetricAnalysisRecord savedRecord = restResponse.getResource();
-    Assert.assertNotNull(savedRecord);
+    assertNotNull(savedRecord);
 
     final List<NewRelicMetricAnalysis> analyses = savedRecord.getMetricAnalyses();
     assertEquals(record.getMetricAnalyses().size(), analyses.size());

@@ -61,6 +61,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.ecr.EcrClassicService;
@@ -304,7 +305,7 @@ public abstract class ContainerServiceSetup extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private ImageDetails fetchArtifactDetails(Artifact artifact, ExecutionContext context) {
-    ImageDetails.ImageDetailsBuilder imageDetails = ImageDetails.builder().tag(artifact.getBuildNo());
+    ImageDetailsBuilder imageDetails = ImageDetails.builder().tag(artifact.getBuildNo());
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     String settingId = artifactStream.getSettingId();
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {

@@ -37,6 +37,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 /**
  * Created by anubhaw on 5/4/16.
@@ -166,7 +167,7 @@ public class AppContainerResource {
   public Response download(
       @QueryParam("accountId") String accountId, @PathParam("appContainerId") String appContainerId) {
     File appContainerFile = appContainerService.download(accountId, appContainerId);
-    Response.ResponseBuilder response = Response.ok(appContainerFile, "application/x-unknown");
+    ResponseBuilder response = Response.ok(appContainerFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + appContainerFile.getName());
     return response.build();
   }

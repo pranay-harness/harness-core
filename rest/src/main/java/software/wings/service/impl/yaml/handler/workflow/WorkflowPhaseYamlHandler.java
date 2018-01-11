@@ -13,6 +13,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowPhase.Yaml;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -111,7 +112,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       computeProviderId = computeProvider.getUuid();
     }
 
-    WorkflowPhase.WorkflowPhaseBuilder phase = WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase();
+    WorkflowPhaseBuilder phase = WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, deploymentTypeString);
     phase.withComputeProviderId(computeProviderId)
         .withDeploymentType(deploymentType)

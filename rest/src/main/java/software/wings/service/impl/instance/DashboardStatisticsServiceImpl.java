@@ -20,7 +20,6 @@ import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.aggregation.Projection;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -292,23 +291,18 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .match(query)
         .group(Group.id(grouping("serviceId"), grouping("envId"), grouping("lastArtifactId")),
             grouping("count", accumulator("$sum", 1)),
-            grouping("appInfo",
-                grouping("$first", Projection.projection("id", "appId"), Projection.projection("name", "appName"))),
-            grouping("serviceInfo",
-                grouping(
-                    "$first", Projection.projection("id", "serviceId"), Projection.projection("name", "serviceName"))),
+            grouping("appInfo", grouping("$first", projection("id", "appId"), projection("name", "appName"))),
+            grouping(
+                "serviceInfo", grouping("$first", projection("id", "serviceId"), projection("name", "serviceName"))),
             grouping("envInfo",
-                grouping("$first", Projection.projection("id", "envId"), Projection.projection("name", "envName"),
-                    Projection.projection("type", "envType"))),
+                grouping(
+                    "$first", projection("id", "envId"), projection("name", "envName"), projection("type", "envType"))),
             grouping("artifactInfo",
-                grouping("$first", Projection.projection("id", "lastArtifactId"),
-                    Projection.projection("name", "lastArtifactName"),
-                    Projection.projection("buildNo", "lastArtifactBuildNum"),
-                    Projection.projection("streamId", "lastArtifactStreamId"),
-                    Projection.projection("deployedAt", "lastDeployedAt"),
-                    Projection.projection("sourceName", "lastArtifactSourceName"))),
-            grouping("instanceInfoList",
-                grouping("$addToSet", Projection.projection("id", "_id"), Projection.projection("name", "hostName"))))
+                grouping("$first", projection("id", "lastArtifactId"), projection("name", "lastArtifactName"),
+                    projection("buildNo", "lastArtifactBuildNum"), projection("streamId", "lastArtifactStreamId"),
+                    projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"))),
+            grouping(
+                "instanceInfoList", grouping("$addToSet", projection("id", "_id"), projection("name", "hostName"))))
         .sort(ascending("_id.serviceId"), ascending("_id.envId"), descending("count"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
@@ -550,21 +544,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .match(query)
         .group(Group.id(grouping("envId"), grouping("infraMappingId"), grouping("lastArtifactId")),
             grouping("count", accumulator("$sum", 1)),
-            grouping("appInfo",
-                grouping("$first", Projection.projection("id", "appId"), Projection.projection("name", "appName"))),
+            grouping("appInfo", grouping("$first", projection("id", "appId"), projection("name", "appName"))),
             grouping("infraMappingInfo",
-                grouping("$first", Projection.projection("id", "infraMappingId"),
-                    Projection.projection("name", "infraMappingType"))),
+                grouping("$first", projection("id", "infraMappingId"), projection("name", "infraMappingType"))),
             grouping("envInfo",
-                grouping("$first", Projection.projection("id", "envId"), Projection.projection("name", "envName"),
-                    Projection.projection("type", "envType"))),
+                grouping(
+                    "$first", projection("id", "envId"), projection("name", "envName"), projection("type", "envType"))),
             grouping("artifactInfo",
-                grouping("$first", Projection.projection("id", "lastArtifactId"),
-                    Projection.projection("name", "lastArtifactName"),
-                    Projection.projection("buildNo", "lastArtifactBuildNum"),
-                    Projection.projection("streamId", "lastArtifactStreamId"),
-                    Projection.projection("deployedAt", "lastDeployedAt"),
-                    Projection.projection("sourceName", "lastArtifactSourceName"))))
+                grouping("$first", projection("id", "lastArtifactId"), projection("name", "lastArtifactName"),
+                    projection("buildNo", "lastArtifactBuildNum"), projection("streamId", "lastArtifactStreamId"),
+                    projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"))))
         .sort(descending("count"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {

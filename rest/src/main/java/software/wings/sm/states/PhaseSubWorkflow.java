@@ -12,6 +12,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -115,7 +116,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     ExecutionResponse response = getSpawningExecutionResponse(context, service, infrastructureMapping);
 
-    PhaseExecutionData.PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
+    PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
     if (infrastructureMapping != null) {
       phaseExecutionDataBuilder.withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
           .withComputeProviderName(infrastructureMapping.getComputeProviderName())

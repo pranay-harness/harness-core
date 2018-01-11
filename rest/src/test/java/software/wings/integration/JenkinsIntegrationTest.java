@@ -1,11 +1,11 @@
 package software.wings.integration;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
 
-import org.junit.Assert;
 import org.junit.Test;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
@@ -46,7 +46,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
             .executeGetOneQuery(
                 wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"))
             .getValue();
-    Assert.assertEquals("http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/", jenkinsConfig.getJenkinsUrl());
+    assertEquals("http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/", jenkinsConfig.getJenkinsUrl());
   }
 
   @Test

@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static java.lang.String.format;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
@@ -75,7 +76,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -329,7 +329,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
     try {
       RestResponse<SettingAttribute> response = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(
+          entity(
               aSettingAttribute()
                   .withAccountId(accountId)
                   .withAppId(GLOBAL_APP_ID)
@@ -381,7 +381,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     for (int i = 0; i < NUM_APPS; i++) {
       String name = getName(appNames);
       RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(
+          entity(
               anApplication().withName(name).withDescription(name).withAccountId(accountId).build(), APPLICATION_JSON),
           new GenericType<RestResponse<Application>>() {});
       assertThat(response.getResource()).isInstanceOf(Application.class);
@@ -405,7 +405,7 @@ public class DataGenUtil extends BaseIntegrationTest {
       //      serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size()))); //TODO:: create
       //      service with tomcat/jboss family container type
       RestResponse<Service> response = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() { // FIXME
+          entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() { // FIXME
           });
       assertThat(response.getResource()).isInstanceOf(Service.class);
       String serviceId = response.getResource().getUuid();
@@ -439,8 +439,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                                       .field("name", file.getName())
                                       .field("relativeFilePath", "configs/" + file.getName());
     multiPart.bodyPart(filePart);
-    Response response =
-        getRequestBuilderWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
+    Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
     return response.getStatus() == 200;
   }
 
@@ -477,8 +476,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                                         .field("sourceType", "FILE_UPLOAD")
                                         .field("standard", "false");
       multiPart.bodyPart(filePart);
-      Response response =
-          getRequestBuilderWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
+      Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
       return response.getStatus() == 200;
     } catch (IOException e) {
       log().info("Error occurred in uploading app container", e);
@@ -493,8 +491,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     for (int i = 0; i < NUM_ENV_PER_APP; i++) {
       RestResponse<Environment> response = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(
-              anEnvironment().withAppId(appId).withName(envNames.get(i)).withDescription(randomText(10)).build(),
+          entity(anEnvironment().withAppId(appId).withName(envNames.get(i)).withDescription(randomText(10)).build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<Environment>>() {});
       assertThat(response.getResource()).isInstanceOf(Environment.class);

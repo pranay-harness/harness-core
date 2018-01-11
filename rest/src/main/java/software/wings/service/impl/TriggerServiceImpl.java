@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
@@ -236,7 +237,7 @@ public class TriggerServiceImpl implements TriggerService {
       Pipeline pipeline = validatePipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
       services = pipeline.getServices();
       for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-        for (PipelineStage.PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
           if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
             try {
               Workflow workflow = workflowService.readWorkflow(
@@ -785,7 +786,7 @@ public class TriggerServiceImpl implements TriggerService {
     if (PIPELINE.equals(workflowType)) {
       Pipeline pipeline = validatePipeline(appId, workflowId, true);
       for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-        for (PipelineStage.PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
           if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
             try {
               Workflow workflow = workflowService.readWorkflow(

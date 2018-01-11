@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FailureStrategy.FailureStrategyBuilder;
 import software.wings.beans.FailureStrategy.Yaml;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.yaml.ChangeContext;
@@ -24,7 +25,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
     RepairActionCode repairActionCodeAfterRetry =
         Util.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCodeAfterRetry());
-    return FailureStrategy.FailureStrategyBuilder.aFailureStrategy()
+    return FailureStrategyBuilder.aFailureStrategy()
         .withExecutionScope(executionScope)
         .withRepairActionCode(repairActionCode)
         .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)

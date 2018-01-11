@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -42,7 +43,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -97,7 +97,7 @@ public class DelegateResourceTest {
         RESOURCES.client()
             .target("/delegates/register?accountId=" + ACCOUNT_ID)
             .request()
-            .post(Entity.entity(aDelegate().withUuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
+            .post(entity(aDelegate().withUuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
                 new GenericType<RestResponse<Delegate>>() {});
 
     ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
@@ -120,7 +120,7 @@ public class DelegateResourceTest {
         RESOURCES.client()
             .target("/delegates?accountId=" + ACCOUNT_ID)
             .request()
-            .post(Entity.entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+            .post(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
 
     ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
     verify(DELEGATE_SERVICE).add(captor.capture());
@@ -140,7 +140,7 @@ public class DelegateResourceTest {
         RESOURCES.client()
             .target("/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID)
             .request()
-            .put(Entity.entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+            .put(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
 
     ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
     verify(DELEGATE_SERVICE).update(captor.capture());
@@ -218,7 +218,7 @@ public class DelegateResourceTest {
     Response response1 = RESOURCES.client()
                              .target("/delegates/" + ID_KEY + "/tasks/1?accountId=" + ACCOUNT_ID)
                              .request()
-                             .post(Entity.entity(response, "application/x-kryo"), Response.class);
+                             .post(entity(response, "application/x-kryo"), Response.class);
     System.out.println(response1);
 
     verify(DELEGATE_SERVICE).processDelegateResponse(response);

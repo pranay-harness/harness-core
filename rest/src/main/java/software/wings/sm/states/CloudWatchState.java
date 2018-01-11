@@ -28,6 +28,7 @@ import software.wings.api.CloudWatchExecutionData;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -329,24 +330,23 @@ public class CloudWatchState extends State {
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
 
-    Activity.ActivityBuilder activityBuilder =
-        Activity.builder()
-            .applicationName(app.getName())
-            .environmentId(env.getUuid())
-            .environmentName(env.getName())
-            .environmentType(env.getEnvironmentType())
-            .commandName(getName())
-            .type(Type.Verification)
-            .workflowType(executionContext.getWorkflowType())
-            .workflowExecutionName(executionContext.getWorkflowExecutionName())
-            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .commandType(getStateType())
-            .workflowExecutionId(executionContext.getWorkflowExecutionId())
-            .workflowId(executionContext.getWorkflowId())
-            .commandUnits(Collections.emptyList())
-            .serviceVariables(Maps.newHashMap())
-            .status(ExecutionStatus.RUNNING);
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .environmentId(env.getUuid())
+                                          .environmentName(env.getName())
+                                          .environmentType(env.getEnvironmentType())
+                                          .commandName(getName())
+                                          .type(Type.Verification)
+                                          .workflowType(executionContext.getWorkflowType())
+                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                                          .commandType(getStateType())
+                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                                          .workflowId(executionContext.getWorkflowId())
+                                          .commandUnits(Collections.emptyList())
+                                          .serviceVariables(Maps.newHashMap())
+                                          .status(ExecutionStatus.RUNNING);
 
     if (instanceElement != null) {
       activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())

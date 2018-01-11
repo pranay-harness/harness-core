@@ -23,6 +23,7 @@ import software.wings.api.BambooExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
@@ -294,21 +295,20 @@ public class BambooState extends State {
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
 
-    Activity.ActivityBuilder activityBuilder =
-        Activity.builder()
-            .applicationName(app.getName())
-            .commandName(getName())
-            .type(Activity.Type.Verification)
-            .workflowType(executionContext.getWorkflowType())
-            .workflowExecutionName(executionContext.getWorkflowExecutionName())
-            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .commandType(getStateType())
-            .workflowExecutionId(executionContext.getWorkflowExecutionId())
-            .workflowId(executionContext.getWorkflowId())
-            .commandUnits(Collections.emptyList())
-            .serviceVariables(Maps.newHashMap())
-            .status(ExecutionStatus.RUNNING);
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .commandName(getName())
+                                          .type(Activity.Type.Verification)
+                                          .workflowType(executionContext.getWorkflowType())
+                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                                          .commandType(getStateType())
+                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                                          .workflowId(executionContext.getWorkflowId())
+                                          .commandUnits(Collections.emptyList())
+                                          .serviceVariables(Maps.newHashMap())
+                                          .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {

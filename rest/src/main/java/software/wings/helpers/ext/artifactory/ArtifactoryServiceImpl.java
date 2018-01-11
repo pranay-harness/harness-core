@@ -298,11 +298,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
         Collections.reverse(artifactPaths);
         return artifactPaths.stream()
-            .map(s
+            .map(path
                 -> aBuildDetails()
-                       .withNumber(s.substring(s.lastIndexOf('/') + 1))
-                       .withArtifactPath(s)
-                       .withBuildUrl(getBaseUrl(artifactoryConfig) + s)
+                       .withNumber(path.substring(path.lastIndexOf('/') + 1))
+                       .withArtifactPath(path)
+                       .withBuildUrl(getBaseUrl(artifactoryConfig) + path)
                        .build())
             .collect(toList());
       } else {
@@ -315,11 +315,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           logger.warn("User not authorized to perform deep level search. Trying with different search api");
           artifactPaths = getFilePathsForAnonymousUser(artifactory, repoKey, artifactPath, maxVersions);
           return artifactPaths.stream()
-              .map(s
+              .map(path
                   -> aBuildDetails()
-                         .withNumber(s.substring(s.lastIndexOf('/') + 1))
-                         .withArtifactPath(s)
-                         .withBuildUrl(getBaseUrl(artifactoryConfig) + s)
+                         .withNumber(path.substring(path.lastIndexOf('/') + 1))
+                         .withArtifactPath(path)
+                         .withBuildUrl(getBaseUrl(artifactoryConfig) + path)
                          .build())
               .collect(toList());
         }

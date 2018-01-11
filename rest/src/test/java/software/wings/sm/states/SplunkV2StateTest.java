@@ -28,7 +28,7 @@ import software.wings.beans.DelegateTask.Status;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -99,10 +99,8 @@ public class SplunkV2StateTest extends WingsBaseTest {
     delegateTaskId = UUID.randomUUID().toString();
 
     wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
-    wingsPersistence.save(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution()
-                              .withAppId(appId)
-                              .withWorkflowId(workflowId)
-                              .build());
+    wingsPersistence.save(
+        WorkflowExecutionBuilder.aWorkflowExecution().withAppId(appId).withWorkflowId(workflowId).build());
     configuration.getPortal().setJwtExternalServiceSecret(accountId);
     MockitoAnnotations.initMocks(this);
 

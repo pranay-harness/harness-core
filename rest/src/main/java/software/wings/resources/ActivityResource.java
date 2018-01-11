@@ -31,6 +31,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
@@ -143,7 +144,7 @@ public class ActivityResource {
   @ExceptionMetered
   public Response exportLogs(@QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     File logFile = logService.exportLogs(appId, activityId);
-    Response.ResponseBuilder response = Response.ok(logFile, "application/x-unknown");
+    ResponseBuilder response = Response.ok(logFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + logFile.getName());
     return response.build();
   }

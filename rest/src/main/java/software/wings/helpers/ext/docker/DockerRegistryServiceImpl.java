@@ -204,7 +204,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       if (headerParts.length == 2 && "Bearer".equals(headerParts[0])) {
         Map<String, String> tokens =
             Arrays.stream(headerParts[1].split(","))
-                .map(s -> s.split("="))
+                .map(token -> token.split("="))
                 .collect(Collectors.toMap(s -> s[0], s -> s[1].substring(1, s[1].length() - 1)));
         if (tokens.size() == 3 && tokens.get("realm") != null && tokens.get("service") != null
             && tokens.get("scope") != null) {

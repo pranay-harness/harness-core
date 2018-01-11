@@ -77,7 +77,7 @@ import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
-import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
@@ -344,7 +344,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(
             aPageResponse()
-                .withResponse(asList(Workflow.WorkflowBuilder.aWorkflow()
+                .withResponse(asList(WorkflowBuilder.aWorkflow()
                                          .withName(WORKFLOW_NAME)
                                          .withServices(asList(Service.Builder.aService().withUuid(SERVICE_ID).build()))
                                          .build()))
@@ -813,7 +813,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse()
                         .withResponse(asList(
-                            Workflow.WorkflowBuilder.aWorkflow()
+                            WorkflowBuilder.aWorkflow()
                                 .withName(WORKFLOW_NAME)
                                 .withServices(asList(Service.Builder.aService()
                                                          .withUuid(SERVICE_ID)
@@ -849,7 +849,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse()
                         .withResponse(asList(
-                            Workflow.WorkflowBuilder.aWorkflow()
+                            WorkflowBuilder.aWorkflow()
                                 .withName(WORKFLOW_NAME)
                                 .withServices(asList(Service.Builder.aService()
                                                          .withUuid(SERVICE_ID_CHANGED)

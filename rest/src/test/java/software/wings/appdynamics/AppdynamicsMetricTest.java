@@ -1,7 +1,8 @@
 package software.wings.appdynamics;
 
+import static org.junit.Assert.assertEquals;
+
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.junit.Assert;
 import org.junit.Test;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
@@ -22,18 +23,18 @@ public class AppdynamicsMetricTest {
 
     final List<AppdynamicsMetric> metrics =
         JsonUtils.asObject(metricResponse, new TypeReference<List<AppdynamicsMetric>>() {});
-    Assert.assertEquals(4, metrics.size());
+    assertEquals(4, metrics.size());
 
-    Assert.assertEquals(AppdynamicsMetricType.leaf, metrics.get(0).getType());
-    Assert.assertEquals("Average Response Time (ms)", metrics.get(0).getName());
+    assertEquals(AppdynamicsMetricType.leaf, metrics.get(0).getType());
+    assertEquals("Average Response Time (ms)", metrics.get(0).getName());
 
-    Assert.assertEquals(AppdynamicsMetricType.folder, metrics.get(1).getType());
-    Assert.assertEquals("Calls per Minute", metrics.get(1).getName());
+    assertEquals(AppdynamicsMetricType.folder, metrics.get(1).getType());
+    assertEquals("Calls per Minute", metrics.get(1).getName());
 
-    Assert.assertEquals(AppdynamicsMetricType.leaf, metrics.get(2).getType());
-    Assert.assertEquals("Errors per Minute", metrics.get(2).getName());
+    assertEquals(AppdynamicsMetricType.leaf, metrics.get(2).getType());
+    assertEquals("Errors per Minute", metrics.get(2).getName());
 
-    Assert.assertEquals(AppdynamicsMetricType.folder, metrics.get(3).getType());
-    Assert.assertEquals("Number of Slow Calls", metrics.get(3).getName());
+    assertEquals(AppdynamicsMetricType.folder, metrics.get(3).getType());
+    assertEquals("Number of Slow Calls", metrics.get(3).getName());
   }
 }

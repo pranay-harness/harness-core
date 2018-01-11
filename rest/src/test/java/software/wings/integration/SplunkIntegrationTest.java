@@ -1,13 +1,14 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertEquals;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -29,7 +30,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -118,8 +118,8 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
       final LogRequest logRequest =
           new LogRequest(query, applicationId, "se2", workflowId, serviceId, hosts, collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
-      Assert.assertEquals(
+          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+      assertEquals(
           "failed for minute " + collectionMinute, addedMessages.get(2, collectionMinute), restResponse.getResource());
     }
   }
@@ -203,8 +203,8 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
       final LogRequest logRequest = new LogRequest(
           query, applicationId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
-      Assert.assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),
+          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+      assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),
           restResponse.getResource());
     }
   }

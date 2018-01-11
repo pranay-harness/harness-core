@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.variable;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Variable;
+import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.Variable.Yaml;
 import software.wings.beans.VariableType;
 import software.wings.beans.yaml.ChangeContext;
@@ -19,7 +20,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
   private Variable toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     VariableType variableType = Util.getEnumFromString(VariableType.class, yaml.getType());
-    return Variable.VariableBuilder.aVariable()
+    return VariableBuilder.aVariable()
         .withDescription(yaml.getDescription())
         .withFixed(yaml.isFixed())
         .withMandatory(yaml.isMandatory())

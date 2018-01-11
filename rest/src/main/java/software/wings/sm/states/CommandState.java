@@ -30,6 +30,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.CountsByStatuses;
@@ -245,31 +246,30 @@ public class CommandState extends State {
       Map<String, String> serviceVariables = context.getServiceVariables();
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
-      Activity.ActivityBuilder activityBuilder =
-          Activity.builder()
-              .applicationName(application.getName())
-              .environmentId(environment.getUuid())
-              .environmentName(environment.getName())
-              .environmentType(environment.getEnvironmentType())
-              .serviceTemplateId(serviceTemplateId)
-              .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
-              .serviceId(service.getUuid())
-              .serviceName(service.getName())
-              .commandName(command.getName())
-              .type(Type.Command)
-              .serviceInstanceId(serviceInstance.getUuid())
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .workflowType(context.getWorkflowType())
-              .workflowId(context.getWorkflowId())
-              .workflowExecutionName(context.getWorkflowExecutionName())
-              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-              .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-              .commandType(command.getCommandUnitType().name())
-              .hostName(host.getHostName())
-              .publicDns(host.getPublicDns())
-              .commandUnits(getFlattenCommandUnits(appId, envId, service, command))
-              .serviceVariables(serviceVariables)
-              .status(ExecutionStatus.RUNNING);
+      ActivityBuilder activityBuilder = Activity.builder()
+                                            .applicationName(application.getName())
+                                            .environmentId(environment.getUuid())
+                                            .environmentName(environment.getName())
+                                            .environmentType(environment.getEnvironmentType())
+                                            .serviceTemplateId(serviceTemplateId)
+                                            .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+                                            .serviceId(service.getUuid())
+                                            .serviceName(service.getName())
+                                            .commandName(command.getName())
+                                            .type(Type.Command)
+                                            .serviceInstanceId(serviceInstance.getUuid())
+                                            .workflowExecutionId(context.getWorkflowExecutionId())
+                                            .workflowType(context.getWorkflowType())
+                                            .workflowId(context.getWorkflowId())
+                                            .workflowExecutionName(context.getWorkflowExecutionName())
+                                            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                            .commandType(command.getCommandUnitType().name())
+                                            .hostName(host.getHostName())
+                                            .publicDns(host.getPublicDns())
+                                            .commandUnits(getFlattenCommandUnits(appId, envId, service, command))
+                                            .serviceVariables(serviceVariables)
+                                            .status(ExecutionStatus.RUNNING);
 
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");

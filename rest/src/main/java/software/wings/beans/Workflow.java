@@ -208,7 +208,7 @@ public class Workflow extends Base {
         .build();
   }
 
-  public Workflow.WorkflowBuilder toBuilder() {
+  public WorkflowBuilder toBuilder() {
     return aWorkflow()
         .withAppId(getAppId())
         .withCreatedAt(getCreatedAt())

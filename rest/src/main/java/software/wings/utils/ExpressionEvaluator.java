@@ -59,11 +59,11 @@ public class ExpressionEvaluator {
 
     logger.debug("evaluate request - expression: {}, name: {}, value: {}", expression, name, value);
     JexlEngine jexl = new JexlBuilder().create();
-    JexlExpression e = jexl.createExpression(expression);
+    JexlExpression expr = jexl.createExpression(expression);
     JexlContext jc = new MapContext();
     jc.set(name, value);
 
-    Object retValue = e.evaluate(jc);
+    Object retValue = expr.evaluate(jc);
     logger.debug("evaluate request - return value: {}", retValue);
     return retValue;
   }

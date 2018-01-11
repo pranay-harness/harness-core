@@ -19,6 +19,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
+import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -267,7 +268,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     Validator.notNullCheck(
         "Value type is not set for variable: " + overrideYaml.getName(), overrideYaml.getValueType());
 
-    ServiceVariable.ServiceVariableBuilder variableBuilder = ServiceVariable.builder().name(overrideYaml.getName());
+    ServiceVariableBuilder variableBuilder = ServiceVariable.builder().name(overrideYaml.getName());
     if (overrideYaml.getServiceName() == null) {
       variableBuilder.entityType(EntityType.ENVIRONMENT)
           .entityId(envId)

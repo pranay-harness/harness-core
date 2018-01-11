@@ -7,6 +7,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationGroup.AddressYaml;
+import software.wings.beans.NotificationGroup.NotificationGroupBuilder;
 import software.wings.beans.NotificationGroup.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -37,7 +38,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     if (yaml.getAddresses() != null) {
       addressByChannelTypeMap = toAddressByChannelTypeMap(yaml.getAddresses());
     }
-    return NotificationGroup.NotificationGroupBuilder.aNotificationGroup()
+    return NotificationGroupBuilder.aNotificationGroup()
         .withAppId(appId)
         .withAccountId(accountId)
         .withAddressesByChannelType(addressByChannelTypeMap)

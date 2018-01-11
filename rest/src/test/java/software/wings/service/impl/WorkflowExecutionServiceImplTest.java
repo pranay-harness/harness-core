@@ -588,8 +588,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .contains("instSuccessWait", "instSuccessWait");
     assertThat(instSuccessWait).extracting("type").contains("WAIT", "WAIT");
 
-    List<Node> instRepeatElements =
-        repeatInstance.stream().map(Node::getGroup).flatMap(g -> g.getElements().stream()).collect(Collectors.toList());
+    List<Node> instRepeatElements = repeatInstance.stream()
+                                        .map(Node::getGroup)
+                                        .flatMap(group -> group.getElements().stream())
+                                        .collect(Collectors.toList());
     assertThat(instRepeatElements).extracting("type").contains("ELEMENT", "ELEMENT", "ELEMENT", "ELEMENT");
 
     List<Node> instRepeatWait = instRepeatElements.stream().map(Node::getNext).collect(Collectors.toList());
@@ -1567,13 +1569,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                        .getGroup()
                        .getElements()
                        .stream()
-                       .filter(n -> n.getNext() != null)
+                       .filter(node -> node.getNext() != null)
                        .map(Node::getNext)
-                       .filter(n -> n.getGroup() != null)
+                       .filter(node -> node.getGroup() != null)
                        .map(Node::getGroup)
-                       .filter(g -> g.getElements() != null)
-                       .flatMap(g -> g.getElements().stream())
-                       .filter(n -> n.getNext() != null)
+                       .filter(group -> group.getElements() != null)
+                       .flatMap(group -> group.getElements().stream())
+                       .filter(node -> node.getNext() != null)
                        .map(Node::getNext)
                        .collect(Collectors.toList());
     assertThat(installNodes)
@@ -1603,13 +1605,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                          .getGroup()
                          .getElements()
                          .stream()
-                         .filter(n -> n.getNext() != null)
+                         .filter(node -> node.getNext() != null)
                          .map(Node::getNext)
-                         .filter(n -> n.getGroup() != null)
+                         .filter(node -> node.getGroup() != null)
                          .map(Node::getGroup)
-                         .filter(g -> g.getElements() != null)
-                         .flatMap(g -> g.getElements().stream())
-                         .filter(n -> n.getNext() != null)
+                         .filter(group -> group.getElements() != null)
+                         .flatMap(group -> group.getElements().stream())
+                         .filter(node -> node.getNext() != null)
                          .map(Node::getNext)
                          .collect(Collectors.toList());
       paused = !installNodes.stream()
@@ -1762,13 +1764,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                        .getGroup()
                        .getElements()
                        .stream()
-                       .filter(n -> n.getNext() != null)
+                       .filter(node -> node.getNext() != null)
                        .map(Node::getNext)
-                       .filter(n -> n.getGroup() != null)
+                       .filter(node -> node.getGroup() != null)
                        .map(Node::getGroup)
-                       .filter(g -> g.getElements() != null)
-                       .flatMap(g -> g.getElements().stream())
-                       .filter(n -> n.getNext() != null)
+                       .filter(group -> group.getElements() != null)
+                       .flatMap(group -> group.getElements().stream())
+                       .filter(node -> node.getNext() != null)
                        .map(Node::getNext)
                        .collect(Collectors.toList());
     assertThat(installNodes)

@@ -22,7 +22,7 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -53,7 +53,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     EcsSetupParams setupParams = (EcsSetupParams) containerSetupParams;
     executionLogCallback.saveExecutionLog(
-        "Create ECS service in cluster " + setupParams.getClusterName(), Log.LogLevel.INFO);
+        "Create ECS service in cluster " + setupParams.getClusterName(), LogLevel.INFO);
 
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
     String containerName = EcsConvention.getContainerName(dockerImageName);
@@ -105,22 +105,21 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
     executionLogCallback.saveExecutionLog(
         String.format("Creating ECS service %s in cluster %s", containerServiceName, setupParams.getClusterName()),
-        Log.LogLevel.INFO);
+        LogLevel.INFO);
     awsClusterService.createService(
         setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
 
-    executionLogCallback.saveExecutionLog("Cleaning up old versions", Log.LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
     cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName, setupParams.getClusterName(),
         encryptedDataDetails, executionLogCallback);
 
-    executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), Log.LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("ECS Service Name: " + containerServiceName, Log.LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, Log.LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("ECS Service Name: " + containerServiceName, LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
     if (setupParams.isUseLoadBalancer()) {
-      executionLogCallback.saveExecutionLog(
-          "Load Balancer Name: " + setupParams.getLoadBalancerName(), Log.LogLevel.INFO);
-      executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), Log.LogLevel.INFO);
-      executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), Log.LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Load Balancer Name: " + setupParams.getLoadBalancerName(), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), LogLevel.INFO);
     }
 
     return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
@@ -159,7 +158,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
     executionLogCallback.saveExecutionLog(
         String.format("Creating task definition %s with container image %s", taskFamily, dockerImageName),
-        Log.LogLevel.INFO);
+        LogLevel.INFO);
     return awsClusterService.createTask(region, settingAttribute, encryptedDataDetails, registerTaskDefinitionRequest);
   }
 
@@ -176,7 +175,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
           .forEach(s -> {
             String oldServiceName = s.getServiceName();
             if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
-              executionLogCallback.saveExecutionLog("Deleting old version: " + oldServiceName, Log.LogLevel.INFO);
+              executionLogCallback.saveExecutionLog("Deleting old version: " + oldServiceName, LogLevel.INFO);
               awsClusterService.deleteService(
                   region, settingAttribute, encryptedDataDetails, clusterName, oldServiceName);
             }

@@ -44,6 +44,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 /**
  * Application Resource class.
@@ -199,7 +200,7 @@ public class ConfigResource {
   public Response downloadConfig(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @QueryParam("version") Integer version) {
     File configFile = configService.download(appId, configId, version);
-    Response.ResponseBuilder response = Response.ok(configFile, "application/x-unknown");
+    ResponseBuilder response = Response.ok(configFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + configFile.getName());
     return response.build();
   }

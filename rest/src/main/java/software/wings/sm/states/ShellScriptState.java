@@ -22,6 +22,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
@@ -177,24 +178,23 @@ public class ShellScriptState extends State {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
-    Activity.ActivityBuilder activityBuilder =
-        Activity.builder()
-            .applicationName(app.getName())
-            .commandName(getName())
-            .type(Activity.Type.Verification)
-            .workflowType(executionContext.getWorkflowType())
-            .workflowExecutionName(executionContext.getWorkflowExecutionName())
-            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .commandType(getStateType())
-            .workflowExecutionId(executionContext.getWorkflowExecutionId())
-            .workflowId(executionContext.getWorkflowId())
-            .commandUnits(asList(Command.Builder.aCommand()
-                                     .withName(ShellScriptParameters.CommandUnit)
-                                     .withCommandType(CommandType.OTHER)
-                                     .build()))
-            .serviceVariables(Maps.newHashMap())
-            .status(ExecutionStatus.RUNNING);
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .commandName(getName())
+                                          .type(Activity.Type.Verification)
+                                          .workflowType(executionContext.getWorkflowType())
+                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                                          .commandType(getStateType())
+                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                                          .workflowId(executionContext.getWorkflowId())
+                                          .commandUnits(asList(Command.Builder.aCommand()
+                                                                   .withName(ShellScriptParameters.CommandUnit)
+                                                                   .withCommandType(CommandType.OTHER)
+                                                                   .build()))
+                                          .serviceVariables(Maps.newHashMap())
+                                          .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {

@@ -33,6 +33,7 @@ import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -175,25 +176,25 @@ public class AwsLambdaState extends State {
 
     List<CommandUnit> commandUnitList =
         serviceResourceService.getFlattenCommandUnitList(app.getUuid(), serviceId, envId, command.getName());
-    Activity.ActivityBuilder activityBuilder = Activity.builder()
-                                                   .applicationName(app.getName())
-                                                   .environmentId(envId)
-                                                   .environmentName(env.getName())
-                                                   .environmentType(env.getEnvironmentType())
-                                                   .serviceId(service.getUuid())
-                                                   .serviceName(service.getName())
-                                                   .commandName(command.getName())
-                                                   .type(Type.Command)
-                                                   .workflowExecutionId(context.getWorkflowExecutionId())
-                                                   .workflowId(context.getWorkflowId())
-                                                   .workflowType(context.getWorkflowType())
-                                                   .workflowExecutionName(context.getWorkflowExecutionName())
-                                                   .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                                   .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                                   .commandUnits(commandUnitList)
-                                                   .commandType(command.getCommandUnitType().name())
-                                                   .serviceVariables(context.getServiceVariables())
-                                                   .status(ExecutionStatus.RUNNING);
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .environmentId(envId)
+                                          .environmentName(env.getName())
+                                          .environmentType(env.getEnvironmentType())
+                                          .serviceId(service.getUuid())
+                                          .serviceName(service.getName())
+                                          .commandName(command.getName())
+                                          .type(Type.Command)
+                                          .workflowExecutionId(context.getWorkflowExecutionId())
+                                          .workflowId(context.getWorkflowId())
+                                          .workflowType(context.getWorkflowType())
+                                          .workflowExecutionName(context.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                          .commandUnits(commandUnitList)
+                                          .commandType(command.getCommandUnitType().name())
+                                          .serviceVariables(context.getServiceVariables())
+                                          .status(ExecutionStatus.RUNNING);
 
     Artifact artifact =
         getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), (DeploymentExecutionContext) context);
