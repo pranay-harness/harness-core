@@ -234,8 +234,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
 
-    Service finalSavedService = savedService;
-    yamlChangeSetHelper.serviceYamlChangeAsync(finalSavedService, ChangeType.ADD);
+    if (!fromYaml) {
+      yamlChangeSetHelper.serviceYamlChangeAsync(savedService, ChangeType.ADD);
+    }
+
     return savedService;
   }
 
@@ -368,6 +370,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service update(Service service) {
+    return update(service, false);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Service update(Service service, boolean fromYaml) {
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     Validator.notNullCheck("Service", savedService);
 
@@ -385,7 +395,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           service.getAppId(), service.getUuid(), savedService.getName(), service.getName().trim());
     }
 
-    yamlChangeSetHelper.serviceUpdateYamlChangeAsync(service, savedService, updatedService);
+    if (!fromYaml) {
+      yamlChangeSetHelper.serviceUpdateYamlChangeAsync(service, savedService, updatedService);
+    }
+
     return updatedService;
   }
 

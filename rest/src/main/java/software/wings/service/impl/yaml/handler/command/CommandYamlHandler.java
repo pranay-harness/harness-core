@@ -96,7 +96,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     Command command = Builder.aCommand()
                           .withCommandType(commandType)
-                          .withCommandUnits(commandUnitList)
+                          //                          .withCommandUnits(commandUnitList)
                           .withName(name)
                           .withGraph(graphBuilder.build())
                           .build();

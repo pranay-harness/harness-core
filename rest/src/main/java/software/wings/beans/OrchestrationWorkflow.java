@@ -90,6 +90,8 @@ public abstract class OrchestrationWorkflow {
 
   public abstract boolean needCloudProvider();
 
+  public abstract List<NotificationRule> getNotificationRules();
+
   public abstract void setNotificationRules(List<NotificationRule> notificationRules);
 
   @JsonIgnore

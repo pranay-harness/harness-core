@@ -97,6 +97,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     this.postDeploymentSteps = postDeploymentSteps;
   }
 
+  @Override
   public List<NotificationRule> getNotificationRules() {
     return notificationRules;
   }
