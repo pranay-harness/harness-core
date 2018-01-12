@@ -5,15 +5,19 @@ import com.google.inject.Inject;
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
+import org.apache.http.HttpHost;
 import software.wings.beans.SumoConfig;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
+import software.wings.time.WingsTimeUtils;
+import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Created by sriram_parthasarathy on 9/11/17.
@@ -24,7 +28,11 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
   public boolean validateConfig(SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException {
     try {
-      getSumoClient(sumoConfig, encryptedDataDetails).search("*exception*");
+      getSumoClient(sumoConfig, encryptedDataDetails)
+          .createSearchJob("*exception*",
+              String.valueOf(WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1),
+              String.valueOf(WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis())),
+              TimeZone.getDefault().getID());
       return true;
     } catch (Throwable t) {
       if (t instanceof MalformedURLException) {
@@ -46,6 +54,12 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     final Credentials credentials =
         new Credentials(new String(sumoConfig.getAccessId()), new String(sumoConfig.getAccessKey()));
     SumoLogicClient sumoLogicClient = new SumoLogicClient(credentials);
+    HttpHost httpProxyHost = HttpUtil.getHttpProxyHost();
+    if (httpProxyHost != null) {
+      sumoLogicClient.setProxyHost(httpProxyHost.getHostName());
+      sumoLogicClient.setProxyPort(httpProxyHost.getPort());
+      sumoLogicClient.setProxyProtocol(httpProxyHost.getSchemeName());
+    }
     sumoLogicClient.setURL(sumoConfig.getSumoUrl());
     return sumoLogicClient;
   }

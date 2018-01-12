@@ -1,6 +1,8 @@
 package software.wings.service.impl.sumo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -79,6 +81,6 @@ public class SumoDelegateServiceImplTest {
     } catch (RuntimeException ex) {
     }
     verify(sumoDelegateService, times(1)).getSumoClient(sumoConfig, Collections.emptyList());
-    verify(sumoLogicClient, times(1)).search("*exception*");
+    verify(sumoLogicClient, times(1)).createSearchJob(eq("*exception*"), any(), any(), any());
   }
 }
