@@ -7,7 +7,16 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
@@ -34,23 +43,12 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.ExpressionEvaluator;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 /**
  * Describes execution context for a state machine execution.
  *
  * @author Rishi
  */
 public class ExecutionContextImpl implements DeploymentExecutionContext {
-  private static final String CURRENT_STATE = "currentState";
   private static final Pattern wildCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   private static final Pattern argsCharPattern = Pattern.compile("[(|)|\"|\']");
   private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
@@ -301,67 +299,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {
-    expression = normalizeExpression(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
-    return evaluator.evaluate(expression, context);
+    return normalizeAndEvaluate(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
   }
 
-  private Map<String, Object> prepareContext(Object stateExecutionData) {
-    Map<String, Object> context = prepareContext();
-    if (stateExecutionData != null) {
-      context.put(normalizeStateName(getStateExecutionInstance().getStateName()), stateExecutionData);
-    }
-    return context;
-  }
-
-  private Map<String, Object> prepareContext() {
-    Map<String, Object> context = new HashMap<>();
-    if (contextMap == null) {
-      contextMap = prepareContext(context);
-    }
-    return contextMap;
-  }
-
-  private String normalizeStateName(String name) {
-    Matcher matcher = wildCharPattern.matcher(name);
-    return matcher.replaceAll("__");
-  }
-
-  private Map<String, Object> prepareContext(Map<String, Object> context) {
-    // add state execution data
-    stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
-
-    context.put(CURRENT_STATE, normalizeStateName(getStateExecutionInstance().getStateName()));
-
-    // add context params
-    Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
-    while (it.hasNext()) {
-      ContextElement contextElement = it.next();
-
-      Map<String, Object> map = contextElement.paramMap(this);
-      if (map != null) {
-        context.putAll(map);
-      }
-    }
-
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    if (phaseElement != null && phaseElement.getVariableOverrides() != null
-        && !phaseElement.getVariableOverrides().isEmpty()) {
-      Map<String, String> map = (Map<String, String>) context.get(ContextElement.SERVICE_VARIABLE);
-      if (map == null) {
-        map = new HashMap<>();
-      }
-      map.putAll(phaseElement.getVariableOverrides().stream().collect(
-          Collectors.toMap(nv -> nv.getName(), nv -> nv.getValue())));
-      context.put(ContextElement.SERVICE_VARIABLE, map);
-    }
-
-    context.putAll(
-        variableProcessor.getVariables(stateExecutionInstance.getContextElements(), getWorkflowExecutionId()));
-
-    return context;
-  }
-
-  private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+  private Object normalizeAndEvaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     if (expression == null) {
       return null;
     }
@@ -369,6 +310,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();
+
+    String varPrefix = "VAR_";
+    Map<String, String> normalizedExpressionMap = new HashMap<>();
 
     while (matcher.find()) {
       String variable = matcher.group(0);
@@ -415,7 +359,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         variable = defaultObjectPrefix + "." + variable;
       }
 
-      matcher.appendReplacement(sb, variable);
+      String varId = varPrefix + new Random().nextInt(10000);
+      while (normalizedExpressionMap.containsKey(varId)) {
+        varId = varPrefix + new Random().nextInt(10000);
+      }
+      normalizedExpressionMap.put(varId, variable);
+      matcher.appendReplacement(sb, varId);
     }
     matcher.appendTail(sb);
 
@@ -423,7 +372,80 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       context.put(expressionProcessor.getPrefixObjectName(), expressionProcessor);
     }
 
-    return sb.toString();
+    return evaluate(sb.toString(), normalizedExpressionMap, context, defaultObjectPrefix);
+  }
+
+  private Object evaluate(String expr, Map<String, String> normalizedExpressionMap, Map<String, Object> context,
+      String defaultObjectPrefix) {
+    Map<String, Object> evaluatedValueMap = new HashMap<>();
+    for (String key : normalizedExpressionMap.keySet()) {
+      Object val = evaluator.evaluate(normalizedExpressionMap.get(key), context);
+      if (val instanceof String) {
+        String valStr = (String) val;
+        Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(valStr);
+        if (matcher.find()) {
+          val = normalizeAndEvaluate(valStr, context, defaultObjectPrefix);
+        }
+      }
+      evaluatedValueMap.put(key, val);
+    }
+
+    logger.info("expr: {}, evaluatedValueMap: {}", expr, evaluatedValueMap);
+    return evaluator.evaluate(expr, evaluatedValueMap);
+  }
+
+  private Map<String, Object> prepareContext(Object stateExecutionData) {
+    Map<String, Object> context = prepareContext();
+    if (stateExecutionData != null) {
+      context.put(normalizeStateName(getStateExecutionInstance().getStateName()), stateExecutionData);
+    }
+    return context;
+  }
+
+  private Map<String, Object> prepareContext() {
+    Map<String, Object> context = new HashMap<>();
+    if (contextMap == null) {
+      contextMap = prepareContext(context);
+    }
+    return contextMap;
+  }
+
+  private String normalizeStateName(String name) {
+    Matcher matcher = wildCharPattern.matcher(name);
+    return matcher.replaceAll("__");
+  }
+
+  private Map<String, Object> prepareContext(Map<String, Object> context) {
+    // add state execution data
+    stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
+
+    // add context params
+    Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
+    while (it.hasNext()) {
+      ContextElement contextElement = it.next();
+
+      Map<String, Object> map = contextElement.paramMap(this);
+      if (map != null) {
+        context.putAll(map);
+      }
+    }
+
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    if (phaseElement != null && phaseElement.getVariableOverrides() != null
+        && !phaseElement.getVariableOverrides().isEmpty()) {
+      Map<String, String> map = (Map<String, String>) context.get(ContextElement.SERVICE_VARIABLE);
+      if (map == null) {
+        map = new HashMap<>();
+      }
+      map.putAll(phaseElement.getVariableOverrides().stream().collect(
+          Collectors.toMap(nv -> nv.getName(), nv -> nv.getValue())));
+      context.put(ContextElement.SERVICE_VARIABLE, map);
+    }
+
+    context.putAll(
+        variableProcessor.getVariables(stateExecutionInstance.getContextElements(), getWorkflowExecutionId()));
+
+    return context;
   }
 
   @Override
