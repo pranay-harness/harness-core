@@ -14,8 +14,8 @@ import org.mockito.InjectMocks;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
-import software.wings.yaml.workflow.CanaryWorkflowYaml;
+import software.wings.service.impl.yaml.handler.workflow.MultiServiceWorkflowYamlHandler;
+import software.wings.yaml.workflow.MultiServiceWorkflowYaml;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -23,7 +23,7 @@ import java.util.Arrays;
 /**
  * @author rktummala on 1/10/18
  */
-public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
+public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   private String validYamlContent = "envName: ENV_NAME\n"
       + "templatized: false\n"
       + "phases:\n"
@@ -162,13 +162,13 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
       + "    executionScope: WORKFLOW\n"
       + "    repairActionCode: ROLLBACK_WORKFLOW\n"
       + "    retryCount: 0\n"
-      + "type: CANARY";
-  private String validYamlFilePath = "Setup/Applications/APP_NAME/Workflows/canary.yaml";
-  private String invalidYamlContent = "envName: env1\nphaseInvalid: phase1\ntype: CANARY";
-  private String invalidYamlFilePath = "Setup/Applications/APP_NAME/WorkflowsInvalid/canary.yaml";
-  private String workflowName = "canary";
+      + "type: MULTI_SERVICE";
+  private String validYamlFilePath = "Setup/Applications/APP_NAME/Workflows/multiService.yaml";
+  private String invalidYamlContent = "envName: env1\nphaseInvalid: phase1\ntype: MULTI_SERVICE";
+  private String invalidYamlFilePath = "Setup/Applications/APP_NAME/WorkflowsInvalid/multiService.yaml";
+  private String workflowName = "multiService";
 
-  @InjectMocks @Inject private CanaryWorkflowYamlHandler yamlHandler;
+  @InjectMocks @Inject private MultiServiceWorkflowYamlHandler yamlHandler;
 
   @Before
   public void runBeforeTest() {
@@ -177,19 +177,20 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
-    ChangeContext<CanaryWorkflowYaml> changeContext =
+    ChangeContext<MultiServiceWorkflowYaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    CanaryWorkflowYaml yamlObject = (CanaryWorkflowYaml) getYaml(validYamlContent, CanaryWorkflowYaml.class, false);
+    MultiServiceWorkflowYaml yamlObject =
+        (MultiServiceWorkflowYaml) getYaml(validYamlContent, MultiServiceWorkflowYaml.class, false);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
     assertNotNull(workflow);
     assertEquals(workflow.getName(), workflowName);
 
-    CanaryWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
+    MultiServiceWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertNotNull(yaml);
-    assertEquals(yaml.getType(), "CANARY");
+    assertEquals(yaml.getType(), "MULTI_SERVICE");
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);
@@ -211,6 +212,6 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Test
   public void testFailures() throws HarnessException, IOException {
     testFailures(validYamlContent, validYamlFilePath, invalidYamlContent, invalidYamlFilePath, yamlHandler,
-        CanaryWorkflowYaml.class);
+        MultiServiceWorkflowYaml.class);
   }
 }

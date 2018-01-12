@@ -16,9 +16,9 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.UIOrder;
 import software.wings.utils.Util;
 
-import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author rktummala on 8/4/17.
@@ -148,234 +148,148 @@ public class GcrArtifactStream extends ArtifactStream {
         .withAutoApproveForProduction(isAutoApproveForProduction());
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
-    private String dockerImageName;
+    private static DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+    protected String appId;
     private String registryHostName;
-    private String sourceName;
-    private String settingId;
-    private String serviceId;
+    private String dockerImageName;
     private String uuid;
-    private String appId;
+    private String artifactStreamType;
+    private String sourceName;
     private EmbeddedUser createdBy;
+    private String settingId;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
+    private String name;
     private long lastUpdatedAt;
-    private boolean autoDownload;
+    // auto populate name
+    private boolean autoPopulate = true;
+    private String serviceId;
+    private boolean autoDownload = true;
     private boolean autoApproveForProduction;
-    private List<ArtifactStreamAction> streamActions = new ArrayList<>();
+    private boolean metadataOnly;
 
     private Builder() {}
 
-    /**
-     * A docker artifact stream builder.
-     *
-     * @return the builder
-     */
     public static Builder aGcrArtifactStream() {
       return new Builder();
     }
 
-    /**
-     * With registryHostName builder.
-     *
-     * @param registryHostName registry host name. For example, us.gcr.io
-     * @return the builder
-     */
     public Builder withRegistryHostName(String registryHostName) {
       this.registryHostName = registryHostName;
       return this;
     }
 
-    /**
-     * With image name builder.
-     *
-     * @param imageName the image name
-     * @return the builder
-     */
-    public Builder withDockerImageName(String imageName) {
-      this.dockerImageName = imageName;
+    public Builder withDockerImageName(String dockerImageName) {
+      this.dockerImageName = dockerImageName;
       return this;
     }
 
-    /**
-     * With source name builder.
-     *
-     * @param sourceName the source name
-     * @return the builder
-     */
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
+    public Builder withDateFormat(DateFormat dateFormat) {
+      this.dateFormat = dateFormat;
       return this;
     }
 
-    /**
-     * With setting id builder.
-     *
-     * @param settingId the setting id
-     * @return the builder
-     */
-    public Builder withSettingId(String settingId) {
-      this.settingId = settingId;
-      return this;
-    }
-
-    /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
+    public Builder withArtifactStreamType(String artifactStreamType) {
+      this.artifactStreamType = artifactStreamType;
+      return this;
+    }
+
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
+    public Builder withSourceName(String sourceName) {
+      this.sourceName = sourceName;
+      return this;
+    }
+
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
+    public Builder withSettingId(String settingId) {
+      this.settingId = settingId;
+      return this;
+    }
+
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With auto download builder.
-     *
-     * @param autoDownload the auto download
-     * @return the builder
-     */
+    public Builder withAutoPopulate(boolean autoPopulate) {
+      this.autoPopulate = autoPopulate;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public Builder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
+      return this;
+    }
+
     public Builder withAutoDownload(boolean autoDownload) {
       this.autoDownload = autoDownload;
       return this;
     }
 
-    /**
-     * With auto approve for production builder.
-     *
-     * @param autoApproveForProduction the auto approve for production
-     * @return the builder
-     */
     public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
       this.autoApproveForProduction = autoApproveForProduction;
       return this;
     }
 
-    /**
-     * With stream actions builder.
-     *
-     * @param streamActions the stream actions
-     * @return the builder
-     */
-    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
-      this.streamActions = streamActions;
+    public Builder withMetadataOnly(boolean metadataOnly) {
+      this.metadataOnly = metadataOnly;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aGcrArtifactStream()
-          .withDockerImageName(dockerImageName)
-          .withRegistryHostName(registryHostName)
-          .withSourceName(sourceName)
-          .withSettingId(settingId)
-          .withServiceId(serviceId)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withAutoDownload(autoDownload)
-          .withAutoApproveForProduction(autoApproveForProduction)
-          .withStreamActions(streamActions);
-    }
-
-    /**
-    /**
-     * Build docker artifact stream.
-     *
-     * @return the gcr artifact stream
-     */
     public GcrArtifactStream build() {
       GcrArtifactStream gcrArtifactStream = new GcrArtifactStream();
-      gcrArtifactStream.setDockerImageName(dockerImageName);
       gcrArtifactStream.setRegistryHostName(registryHostName);
-      gcrArtifactStream.setSourceName(sourceName);
-      gcrArtifactStream.setSettingId(settingId);
-      gcrArtifactStream.setServiceId(serviceId);
+      gcrArtifactStream.setDockerImageName(dockerImageName);
       gcrArtifactStream.setUuid(uuid);
       gcrArtifactStream.setAppId(appId);
+      gcrArtifactStream.setSourceName(sourceName);
       gcrArtifactStream.setCreatedBy(createdBy);
+      gcrArtifactStream.setSettingId(settingId);
       gcrArtifactStream.setCreatedAt(createdAt);
       gcrArtifactStream.setLastUpdatedBy(lastUpdatedBy);
+      gcrArtifactStream.setName(name);
       gcrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      gcrArtifactStream.setAutoPopulate(autoPopulate);
+      gcrArtifactStream.setServiceId(serviceId);
+      gcrArtifactStream.setEntityYamlPath(entityYamlPath);
       gcrArtifactStream.setAutoDownload(autoDownload);
       gcrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      gcrArtifactStream.setMetadataOnly(metadataOnly);
       return gcrArtifactStream;
     }
   }
