@@ -55,7 +55,7 @@ then
     echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
     export http_proxy=$PROXY_HOST:$PROXY_PORT
     export https_proxy=$PROXY_HOST:$PROXY_PORT
-    PROXY_SYS_PROPS="-DproxyScheme='$PROXY_SCHEME' -Dhttp.proxyHost='$PROXY_HOST' -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost='$PROXY_HOST' -Dhttps.proxyPort=$PROXY_PORT"
+    PROXY_SYS_PROPS="-DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
 fi
 
