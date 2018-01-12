@@ -16,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+
 import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
