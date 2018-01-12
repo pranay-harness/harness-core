@@ -1,5 +1,6 @@
 package software.wings.lock;
 
+import static java.lang.String.format;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ResponseMessage.Acuteness.IGNORABLE;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
@@ -30,10 +31,7 @@ public class PersistentLocker implements Locker {
     if (lock.tryLock()) {
       return AcquiredLock.builder().key(key).distributedLockSvc(distributedLockSvc).build();
     }
-    throw new WingsException(aResponseMessage()
-                                 .code(GENERAL_ERROR)
-                                 .message("Failed to acquire distributed lock")
-                                 .acuteness(IGNORABLE)
-                                 .build());
+    throw new WingsException(aResponseMessage().code(GENERAL_ERROR).acuteness(IGNORABLE).build())
+        .addParam("args", format("Failed to acquire distributed lock for %s", key));
   }
 }

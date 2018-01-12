@@ -1,6 +1,7 @@
 package software.wings.core.queue;
 
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -8,6 +9,7 @@ import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
+import software.wings.exception.WingsException;
 import software.wings.utils.Misc;
 import software.wings.utils.ThreadContext;
 
@@ -70,6 +72,8 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         try {
           onMessage(message);
           queue.ack(message);
+        } catch (WingsException exception) {
+          exception.logProcessedMessages(MAINTENANCE_JOB);
         } catch (Exception exception) {
           onException(exception, message);
         } finally {
