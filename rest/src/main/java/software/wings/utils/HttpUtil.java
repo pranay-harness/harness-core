@@ -1,7 +1,10 @@
 package software.wings.utils;
 
+import static software.wings.utils.Util.isNotEmpty;
+
 import okhttp3.OkHttpClient;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.apache.http.HttpHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +93,9 @@ public class HttpUtil {
     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
       return new java.security.cert.X509Certificate[] {};
     }
+
     public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+
     public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
   }
 
@@ -115,5 +120,34 @@ public class HttpUtil {
 
   public static boolean validUrl(String url) {
     return urlValidator.isValid(url);
+  }
+
+  public static HttpHost getHttpProxyHost() {
+    String proxyHost = null;
+    int proxyPort = -1;
+    String proxyScheme = System.getProperty("proxyScheme");
+
+    if ("http".equalsIgnoreCase(proxyScheme)) {
+      String httpProxyHost = System.getProperty("http.proxyHost");
+      String httpProxyPort = System.getProperty("http.proxyPort");
+      if (isNotEmpty(httpProxyHost)) {
+        proxyHost = httpProxyHost;
+        if (isNotEmpty(httpProxyPort)) {
+          proxyPort = Integer.valueOf(httpProxyPort);
+        }
+        proxyScheme = "http";
+      }
+    } else { // https by default
+      String httpsProxyHost = System.getProperty("https.proxyHost");
+      String httpsProxyPort = System.getProperty("https.proxyPort");
+      if (isNotEmpty(httpsProxyHost)) {
+        proxyHost = httpsProxyHost;
+        if (isNotEmpty(httpsProxyHost)) {
+          proxyPort = Integer.valueOf(httpsProxyPort);
+        }
+        proxyScheme = "https";
+      }
+    }
+    return isNotEmpty(proxyHost) ? new HttpHost(proxyHost, proxyPort, proxyScheme) : null;
   }
 }

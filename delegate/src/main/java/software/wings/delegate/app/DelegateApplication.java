@@ -80,7 +80,7 @@ public class DelegateApplication {
         watcherProcess);
   }
 
-  private void run(DelegateConfiguration configuration, String watcherProcess) throws Exception {
+  private void run(DelegateConfiguration configuration, String watcherProcess) {
     Injector injector = Guice.createInjector(
         new AbstractModule() {
           @Override

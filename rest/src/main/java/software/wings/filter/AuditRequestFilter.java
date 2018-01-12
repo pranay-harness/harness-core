@@ -57,7 +57,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
     if (isAuditExemptedHttpMethod(requestContext) || isAuditExemptedResource()) {
-      // do not audit idempotent HttpMethod untill we have finer control auditing.
+      // do not audit idempotent HttpMethod until we have finer control auditing.
       return;
     }
 
