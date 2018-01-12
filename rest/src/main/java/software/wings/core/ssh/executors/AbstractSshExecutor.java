@@ -14,11 +14,11 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.utils.Misc.getMessage;
 import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.utils.Misc.sleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
@@ -206,15 +206,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       int i = 0;
       Throwable t = ex;
       while (t != null && i++ < Misc.MAX_CAUSES) {
-        String msg = t.getMessage();
-        if (t instanceof WingsException) {
-          String paramMsg = Joiner.on(". ").join(((WingsException) t).getParams().values());
-          if (isNotBlank(paramMsg)) {
-            msg += " - " + paramMsg;
-          } else {
-            msg = "Command execution failed with error " + msg;
-          }
-        }
+        String msg = getMessage(t);
         if (isNotBlank(msg)) {
           saveExecutionLogError(msg);
         }

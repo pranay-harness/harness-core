@@ -170,7 +170,7 @@ public class Misc {
   }
 
   public static String trim(String key) {
-    return key != null ? key.trim() : key;
+    return key != null ? key.trim() : null;
   }
 
   public static void logAllMessages(Exception ex, ExecutionLogCallback executionLogCallback) {
@@ -186,14 +186,16 @@ public class Misc {
   }
 
   public static String getMessage(Throwable t) {
-    String msg = t.getMessage();
     if (t instanceof WingsException) {
       String paramMsg = Joiner.on(". ").join(((WingsException) t).getParams().values());
       if (isNotBlank(paramMsg)) {
-        msg += " - " + paramMsg;
+        return t.getMessage() + " - " + paramMsg;
+      } else {
+        return "Failed with error " + t.getMessage();
       }
+    } else {
+      return t.getClass().getSimpleName() + ": " + t.getMessage();
     }
-    return msg;
   }
 
   /**
