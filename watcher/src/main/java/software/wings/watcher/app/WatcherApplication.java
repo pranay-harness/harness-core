@@ -95,7 +95,7 @@ public class WatcherApplication {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("commandCheckExecutor"))).shutdownNow();
     injector.getInstance(ExecutorService.class).shutdown();
-    injector.getInstance(ExecutorService.class).awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+    injector.getInstance(ExecutorService.class).awaitTermination(5, TimeUnit.MINUTES);
     logger.info("Flushing logs");
     LogManager.shutdown();
     System.exit(0);

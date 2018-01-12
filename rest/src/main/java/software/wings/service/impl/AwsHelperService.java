@@ -228,7 +228,7 @@ public class AwsHelperService {
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
-      new AmazonEC2Client(new BasicAWSCredentials(accessKey, new String(secretKey))).describeRegions();
+      getAmazonEc2Client(Regions.US_EAST_1.getName(), accessKey, secretKey).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");

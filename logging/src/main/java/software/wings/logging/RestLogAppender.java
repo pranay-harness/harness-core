@@ -2,7 +2,6 @@ package software.wings.logging;
 
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Queues;
@@ -11,8 +10,10 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.client.fluent.Request;
+import com.fasterxml.jackson.databind.JsonNode;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,11 +32,11 @@ import java.util.concurrent.TimeUnit;
 public class RestLogAppender<E> extends AppenderBase<E> {
   private static final int MAX_BATCH_SIZE = 1000;
   private static final String LOGDNA_INGEST_URL = "https://logs.logdna.com/logs/ingest?hostname=%s&now=:now";
+  public static final String LOGDNA_HOST = "https://logs.logdna.com";
   private String programName;
   private String key;
   private String localhostName = "localhost";
   private Layout<E> layout;
-  private ObjectMapper mapper = new ObjectMapper();
   private ConcurrentLinkedQueue<LogLine> logQueue; // don't call size(), it runs in linear time
   private ExecutorService appenderPool = Executors.newSingleThreadScheduledExecutor();
 
@@ -71,13 +72,14 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       if (logLines.isEmpty()) {
         return;
       }
-      Request.Post(String.format(LOGDNA_INGEST_URL, localhostName))
-          .addHeader("authorization", getAuthHeader())
-          .bodyString(mapper.writeValueAsString(logLines), APPLICATION_JSON)
-          .connectTimeout(10000)
-          .socketTimeout(30000)
-          .execute()
-          .handleResponse(httpResponse -> httpResponse.getStatusLine().getStatusCode() == 200);
+
+      Retrofit retrofit = new Retrofit.Builder()
+                              .baseUrl(LOGDNA_HOST)
+                              .addConverterFactory(JacksonConverterFactory.create())
+                              .client(HttpUtil.getUnsafeOkHttpClient())
+                              .build();
+      Response<JsonNode> execute =
+          retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
     } catch (Exception ex) {
       ex.printStackTrace();
     }

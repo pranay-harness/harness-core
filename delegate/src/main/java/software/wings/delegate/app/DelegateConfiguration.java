@@ -22,20 +22,10 @@ public class DelegateConfiguration {
 
   private boolean pollForTasks;
 
-  /**
-   * Getter for property 'managerUrl'.
-   *
-   * @return Value for property 'managerUrl'.
-   */
   public String getManagerUrl() {
     return managerUrl;
   }
 
-  /**
-   * Setter for property 'managerUrl'.
-   *
-   * @param managerUrl Value to set for property 'managerUrl'.
-   */
   public void setManagerUrl(String managerUrl) {
     this.managerUrl = managerUrl;
   }

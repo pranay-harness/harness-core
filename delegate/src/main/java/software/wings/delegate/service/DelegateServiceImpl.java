@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.Delegate.Builder.aDelegate;
@@ -203,6 +204,15 @@ public class DelegateServiceImpl implements DelegateService {
         startLocalHeartbeat();
       } else {
         logger.info("Delegate process started");
+      }
+
+      String proxyHost = System.getProperty("https.proxyHost");
+
+      if (isNotBlank(proxyHost)) {
+        logger.info("Using {} proxy {}:{}", System.getProperty("proxyScheme"), proxyHost,
+            System.getProperty("https.proxyPort"));
+      } else {
+        logger.info("No proxy settings. Configure in proxy.config if needed");
       }
 
       long start = clock.millis();

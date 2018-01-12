@@ -46,6 +46,16 @@ then
   exit 0
 fi
 
+source proxy.config
+
+if [[ $PROXY_HOST != "" ]]
+then
+  echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
+  export http_proxy=$PROXY_HOST:$PROXY_PORT
+  export https_proxy=$PROXY_HOST:$PROXY_PORT
+  PROXY_SYS_PROPS="-DproxyScheme='$PROXY_SCHEME' -Dhttp.proxyHost='$PROXY_HOST' -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost='$PROXY_HOST' -Dhttps.proxyPort=$PROXY_PORT"
+fi
+
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."
@@ -97,7 +107,7 @@ fi
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 echo "Starting delegate - version $REMOTE_DELEGATE_VERSION"
-$JRE_BINARY -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml watched $1
+$JRE_BINARY $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml watched $1
 sleep 3
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then

@@ -31,9 +31,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.http.HttpHost;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
 import org.jfrog.artifactory.client.Artifactory;
+import org.jfrog.artifactory.client.ArtifactoryClient.ProxyConfig;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
 import org.jfrog.artifactory.client.impl.ArtifactoryRequestImpl;
@@ -53,6 +55,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.HttpUtil;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
@@ -894,6 +897,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         builder.setPassword(new String(artifactoryConfig.getPassword()));
       }
       // TODO Ignore SSL issues -
+
+      HttpHost httpProxyHost = HttpUtil.getHttpProxyHost();
+      if (httpProxyHost != null) {
+        builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), null, null, null));
+      }
+
       return builder.build();
     } catch (Exception ex) {
       logger.error("Error occurred while trying to initialize artifactory", ex);

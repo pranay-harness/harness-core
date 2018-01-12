@@ -40,6 +40,23 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+if [ ! -e proxy.config ]
+then
+  echo "PROXY_HOST=" > proxy.config
+  echo "PROXY_PORT=" >> proxy.config
+  echo "PROXY_SCHEME=" >> proxy.config
+fi
+
+source proxy.config
+
+if [[ $PROXY_HOST != "" ]]
+then
+  echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
+  export http_proxy=$PROXY_HOST:$PROXY_PORT
+  export https_proxy=$PROXY_HOST:$PROXY_PORT
+  PROXY_SYS_PROPS="-DproxyScheme='$PROXY_SCHEME' -Dhttp.proxyHost='$PROXY_HOST' -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost='$PROXY_HOST' -Dhttps.proxyPort=$PROXY_PORT"
+fi
+
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."
@@ -114,13 +131,13 @@ then
   CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   mkdir -p watcherBackup.$CURRENT_VERSION
   cp watcher.jar watcherBackup.$CURRENT_VERSION
-  $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml upgrade $2
+  $JRE_BINARY $PROXY_SYS_PROPS -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml upgrade $2
 else
   if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
   then
     echo "Watcher already running"
   else
-    nohup $JRE_BINARY -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
+    nohup $JRE_BINARY $PROXY_SYS_PROPS -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
     sleep 1
     if [ -s nohup-watcher.out ]
     then
