@@ -35,6 +35,10 @@ public class RepetitiveNameCheck extends AbstractCheck {
       return;
     }
 
+    if (!Character.isUpperCase(outer.getText().charAt(0))) {
+      return;
+    }
+
     final DetailAST inner = outer.getNextSibling();
     if (inner.getType() != TokenTypes.IDENT) {
       return;

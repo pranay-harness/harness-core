@@ -1,5 +1,9 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.beans.yaml.Change.ChangeType.ADD;
+import static software.wings.beans.yaml.Change.ChangeType.DELETE;
+import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
+import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import static software.wings.utils.Switch.unhandled;
 
 import groovy.lang.Singleton;
@@ -12,7 +16,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -32,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GitConfig;
-import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCheckoutResult;
 import software.wings.beans.yaml.GitCloneResult;
 import software.wings.beans.yaml.GitCommitAndPushResult;
@@ -98,16 +101,16 @@ public class GitClientImpl implements GitClient {
     return GIT_REPO_BASE_DIR.replace("ACCOUNT_ID", gitConfig.getAccountId()).replace("REPO_NAME", repoName);
   }
 
-  private Change.ChangeType getChangeType(ChangeType gitDiffChangeType) {
+  private ChangeType getChangeType(DiffEntry.ChangeType gitDiffChangeType) {
     switch (gitDiffChangeType) {
       case ADD:
-        return Change.ChangeType.ADD;
+        return ADD;
       case MODIFY:
-        return Change.ChangeType.MODIFY;
+        return MODIFY;
       case DELETE:
-        return Change.ChangeType.DELETE;
+        return DELETE;
       case RENAME:
-        return Change.ChangeType.RENAME;
+        return RENAME;
       default:
         unhandled(gitDiffChangeType);
     }
@@ -155,7 +158,7 @@ public class GitClientImpl implements GitClient {
         for (DiffEntry entry : diffs) {
           ObjectId objectId = entry.getNewId().toObjectId();
           String content = null;
-          if (!entry.getChangeType().equals(ChangeType.DELETE)) {
+          if (!entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
             ObjectLoader loader = repository.open(objectId);
             content = new String(loader.getBytes(), Charset.forName("utf-8"));
           }
@@ -208,7 +211,7 @@ public class GitClientImpl implements GitClient {
         String repoDirectory = getRepoDirectory(gitConfig);
         String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
         File file = new File(filePath);
-        final Change.ChangeType changeType = gitFileChange.getChangeType();
+        final ChangeType changeType = gitFileChange.getChangeType();
         switch (changeType) {
           case ADD:
           case MODIFY:
@@ -285,11 +288,11 @@ public class GitClientImpl implements GitClient {
         return GitCommitResult.builder().build(); // do nothing
       } else {
         status.getAdded().forEach(
-            filePath -> commitMessage.append(String.format("%s: %s\n", ChangeType.ADD, filePath)));
+            filePath -> commitMessage.append(String.format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
         status.getChanged().forEach(
-            filePath -> commitMessage.append(String.format("%s: %s\n", ChangeType.MODIFY, filePath)));
+            filePath -> commitMessage.append(String.format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
         status.getRemoved().forEach(
-            filePath -> commitMessage.append(String.format("%s: %s\n", ChangeType.DELETE, filePath)));
+            filePath -> commitMessage.append(String.format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
       }
       RevCommit revCommit = git.commit()
                                 .setCommitter(gitConfig.getUsername(), "")
