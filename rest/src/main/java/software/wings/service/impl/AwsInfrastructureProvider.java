@@ -123,7 +123,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
       }
       if (isNotEmpty(instanceFilter.getSecurityGroupIds())) {
-        filters.add(new Filter("group-id", instanceFilter.getSecurityGroupIds()));
+        filters.add(new Filter("instance.group-id", instanceFilter.getSecurityGroupIds()));
       }
       if (isNotEmpty(instanceFilter.getSubnetIds())) {
         filters.add(new Filter("network-interface.subnet-id", instanceFilter.getSubnetIds()));
