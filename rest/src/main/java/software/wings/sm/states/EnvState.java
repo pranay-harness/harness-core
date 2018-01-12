@@ -23,6 +23,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
@@ -247,6 +248,12 @@ public class EnvState extends State {
    */
   public Map<String, String> getWorkflowVariables() {
     return workflowVariables;
+  }
+
+  @SchemaIgnore
+  @Override
+  public Integer getTimeoutMillis() {
+    return Constants.ENV_STATE_TIMEOUT_MILLIS;
   }
 
   /**
