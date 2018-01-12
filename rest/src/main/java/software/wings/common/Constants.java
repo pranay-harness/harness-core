@@ -353,6 +353,11 @@ public interface Constants {
   Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   /**
+   * The constant for Default Env State timeout
+   */
+  Integer ENV_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+
+  /**
    * The constant RUNTIME.
    */
   String RUNTIME = "RUNTIME";
