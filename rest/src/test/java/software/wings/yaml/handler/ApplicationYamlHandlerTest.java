@@ -61,12 +61,12 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
-    GitFileChange gitFileChange = spy(GitFileChange.class);
+    GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Application.Yaml> changeContext = spy(ChangeContext.class);
+    ChangeContext<Application.Yaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.APPLICATION);
     changeContext.setYamlSyncHandler(yamlHandler);

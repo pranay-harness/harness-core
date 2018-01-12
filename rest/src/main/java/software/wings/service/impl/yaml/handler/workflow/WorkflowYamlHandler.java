@@ -23,6 +23,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.WorkflowPhase.Yaml;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -31,6 +32,9 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
+import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
+import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
@@ -303,76 +307,78 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
 
     // phases
-    BaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE);
-    List<WorkflowPhase.Yaml> phaseYamlList =
-        workflowPhases.stream()
-            .map(workflowPhase -> (WorkflowPhase.Yaml) phaseYamlHandler.toYaml(workflowPhase, appId))
-            .collect(Collectors.toList());
+    WorkflowPhaseYamlHandler phaseYamlHandler =
+        (WorkflowPhaseYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE);
+    List<WorkflowPhase.Yaml> phaseYamlList = workflowPhases.stream()
+                                                 .map(workflowPhase -> phaseYamlHandler.toYaml(workflowPhase, appId))
+                                                 .collect(Collectors.toList());
 
     // rollback phases
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
-    List<WorkflowPhase.Yaml> rollbackPhaseYamlList =
-        orchestrationWorkflow.getWorkflowPhaseIds()
-            .stream()
-            .map(workflowPhaseId -> {
-              WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
-              return (WorkflowPhase.Yaml) phaseYamlHandler.toYaml(rollbackPhase, appId);
-            })
-            .collect(Collectors.toList());
+    List<WorkflowPhase.Yaml> rollbackPhaseYamlList = Lists.newArrayList();
+    orchestrationWorkflow.getWorkflowPhaseIds().stream().forEach(workflowPhaseId -> {
+      WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
+      if (rollbackPhase != null) {
+        Yaml rollbackPhaseYaml = phaseYamlHandler.toYaml(rollbackPhase, appId);
+        rollbackPhaseYamlList.add(rollbackPhaseYaml);
+      }
+    });
 
     // user variables
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
-    BaseYamlHandler variableYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE, ObjectType.VARIABLE);
-    List<Variable.Yaml> variableYamlList =
-        userVariables.stream()
-            .map(userVariable -> (Variable.Yaml) variableYamlHandler.toYaml(userVariable, appId))
-            .collect(Collectors.toList());
+    VariableYamlHandler variableYamlHandler =
+        (VariableYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE, ObjectType.VARIABLE);
+    List<Variable.Yaml> variableYamlList = userVariables.stream()
+                                               .map(userVariable -> variableYamlHandler.toYaml(userVariable, appId))
+                                               .collect(Collectors.toList());
 
     // template expressions
-    BaseYamlHandler templateExpressionYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
+    TemplateExpressionYamlHandler templateExpressionYamlHandler =
+        (TemplateExpressionYamlHandler) yamlHandlerFactory.getYamlHandler(
+            YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
     List<TemplateExpression.Yaml> templateExprYamlList = null;
     if (templateExpressions != null) {
       templateExprYamlList =
           templateExpressions.stream()
-              .map(templateExpression
-                  -> (TemplateExpression.Yaml) templateExpressionYamlHandler.toYaml(templateExpression, appId))
+              .map(templateExpression -> templateExpressionYamlHandler.toYaml(templateExpression, appId))
               .collect(Collectors.toList());
     }
 
-    BaseYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
+    StepYamlHandler stepYamlHandler =
+        (StepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
     // Pre-deployment steps
     PhaseStep preDeploymentSteps = orchestrationWorkflow.getPreDeploymentSteps();
     List<StepYaml> preDeployStepsYamlList = preDeploymentSteps.getSteps()
                                                 .stream()
-                                                .map(step -> (StepYaml) stepYamlHandler.toYaml(step, appId))
+                                                .map(step -> stepYamlHandler.toYaml(step, appId))
                                                 .collect(Collectors.toList());
 
     // Post-deployment steps
     PhaseStep postDeploymentSteps = orchestrationWorkflow.getPostDeploymentSteps();
     List<StepYaml> postDeployStepsYamlList = postDeploymentSteps.getSteps()
                                                  .stream()
-                                                 .map(step -> (StepYaml) stepYamlHandler.toYaml(step, appId))
+                                                 .map(step -> stepYamlHandler.toYaml(step, appId))
                                                  .collect(Collectors.toList());
 
     // Failure strategies
-    BaseYamlHandler failureStrategyYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
+    FailureStrategyYamlHandler failureStrategyYamlHandler =
+        (FailureStrategyYamlHandler) yamlHandlerFactory.getYamlHandler(
+            YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
     List<FailureStrategy> failureStrategies = orchestrationWorkflow.getFailureStrategies();
     List<FailureStrategy.Yaml> failureStrategyYamlList =
         failureStrategies.stream()
-            .map(failureStrategy -> (FailureStrategy.Yaml) failureStrategyYamlHandler.toYaml(failureStrategy, appId))
+            .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
             .collect(Collectors.toList());
 
     // Notification rules
-    BaseYamlHandler notificationRuleYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE, ObjectType.NOTIFICATION_RULE);
+    NotificationRulesYamlHandler notificationRuleYamlHandler =
+        (NotificationRulesYamlHandler) yamlHandlerFactory.getYamlHandler(
+            YamlType.NOTIFICATION_RULE, ObjectType.NOTIFICATION_RULE);
     List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
     List<NotificationRule.Yaml> notificationRuleYamlList =
         notificationRules.stream()
-            .map(
-                notificationRule -> (NotificationRule.Yaml) notificationRuleYamlHandler.toYaml(notificationRule, appId))
+            .map(notificationRule -> notificationRuleYamlHandler.toYaml(notificationRule, appId))
             .collect(Collectors.toList());
 
     yaml.setDescription(workflow.getDescription());
