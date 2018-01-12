@@ -118,7 +118,7 @@ public class NexusServiceImpl implements NexusService {
         } catch (Exception e) {
           logger.error(
               "Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
-          if (e.getCause() != null || e.getCause() instanceof XMLStreamException) {
+          if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
             throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
           }
           throw new WingsException(INVALID_ARTIFACT_SERVER)
@@ -149,7 +149,7 @@ public class NexusServiceImpl implements NexusService {
           logger.error(
               "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
               e);
-          if (e.getCause() != null || e.getCause() instanceof XMLStreamException) {
+          if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
             throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
           }
           throw new WingsException(INVALID_ARTIFACT_SERVER)

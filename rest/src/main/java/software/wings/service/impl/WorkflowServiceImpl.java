@@ -1167,7 +1167,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             if (step.getType().equals(DC_NODE_SELECT.name()) || step.getType().equals(AWS_NODE_SELECT.name())) {
               Map<String, Object> properties = step.getProperties();
               if ((Boolean) properties.get("specificHosts")) {
-                properties.put("specificHosts", new Boolean(false));
+                properties.put("specificHosts", Boolean.FALSE);
                 properties.remove("hostNames");
               }
             }
