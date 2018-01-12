@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
 
 import com.google.inject.Inject;
 
@@ -20,6 +21,8 @@ import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
 import software.wings.MockTest;
+import software.wings.common.cache.ResponseCodeCache;
+import software.wings.exception.WingsException;
 
 /**
  * The Class PersistentLockerTest.
@@ -54,7 +57,7 @@ public class PersistentLockerTest extends MockTest {
     try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba")) {
       body = true;
     } catch (RuntimeException ex) {
-      assertThat(ex.getMessage()).isEqualTo("Failed to acquire distributed lock");
+      assertThat(ex.getMessage()).isEqualTo("GENERAL_ERROR");
     }
 
     assertThat(body).isFalse();
@@ -78,5 +81,24 @@ public class PersistentLockerTest extends MockTest {
     }
 
     verify(logger).error(matches("attempt to release lock that is not currently locked"), any(Throwable.class));
+  }
+
+  @Test
+  public void testAcquireLockLogging() {
+    DistributedLock distributedLock = mock(DistributedLock.class);
+    when(distributedLock.tryLock()).thenReturn(false);
+    when(distributedLockSvc.create("abc-cba")).thenReturn(distributedLock);
+
+    Logger logger = mock(Logger.class);
+
+    Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", logger);
+    Whitebox.setInternalState(new WingsException(""), "logger", logger);
+
+    try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba")) {
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(MAINTENANCE_JOB);
+    }
+
+    verify(logger, times(0)).error(any());
   }
 }
