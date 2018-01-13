@@ -60,7 +60,7 @@ public class ArtifactStreamMigratorUtil extends WingsBaseTest {
       System.out.println("Checking if artifact stream info with name exists: " + artifactStream.generateName());
       PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
       String name = artifactStream.generateName();
-      if (response.size() > 0) {
+      if (!response.isEmpty()) {
         name = name + "." + ++counter;
       }
 

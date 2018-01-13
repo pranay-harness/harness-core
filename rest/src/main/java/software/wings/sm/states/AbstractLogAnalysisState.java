@@ -321,7 +321,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
       batch.add(host);
     }
-    if (batch.size() > 0) {
+    if (!batch.isEmpty()) {
       batchedHosts.add(batch);
     }
 

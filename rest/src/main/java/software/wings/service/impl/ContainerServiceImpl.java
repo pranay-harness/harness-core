@@ -157,14 +157,14 @@ public class ContainerServiceImpl implements ContainerService {
             kubernetesContainerService
                 .getServices(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
                 .getItems();
-        String serviceName = services.size() > 0 ? services.get(0).getMetadata().getName() : "None";
+        String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
         for (Pod pod :
             kubernetesContainerService.getPods(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
                 .getItems()) {
           if (pod.getStatus().getPhase().equals("Running")) {
             List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
                 kubernetesConfig, containerServiceParams.getEncryptionDetails(), pod.getMetadata().getLabels());
-            String controllerName = controllers.size() > 0 ? controllers.get(0).getMetadata().getName() : "None";
+            String controllerName = controllers.isEmpty() ? "None" : controllers.get(0).getMetadata().getName();
             result.add(aKubernetesContainerInfo()
                            .withClusterName(containerServiceParams.getClusterName())
                            .withPodName(pod.getMetadata().getName())

@@ -83,6 +83,7 @@ import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
@@ -2069,7 +2070,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
     Graph.Node.Builder node =
         aNode().withId(getUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
-    if (stateDefaults != null && stateDefaults.size() != 0) {
+    if (MapUtils.isNotEmpty(stateDefaults)) {
       if (!Misc.isNullOrEmpty(stateDefaults.get("bucket"))) {
         node.addProperty("bucket", stateDefaults.get("bucket"));
       }

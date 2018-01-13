@@ -61,7 +61,7 @@ public class InfraMappingMigratorUtil extends WingsBaseTest {
       System.out.println("Checking if infra mapping info with name exists: " + infraMapping.getDefaultName());
       PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
       String name = infraMapping.getDefaultName();
-      if (response.size() > 0) {
+      if (!response.isEmpty()) {
         name = name + "." + ++counter;
       }
 

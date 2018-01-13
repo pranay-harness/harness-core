@@ -8,7 +8,6 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 public class UseIsEmptyCheck extends AbstractCheck {
   private static final String UTIL_NULL_OR_EMPTY_MSG_KEY = "code.readability.util.null_or_empty";
   private static final String UTIL_NOT_NULL_AND_NOT_EMPTY_MSG_KEY = "code.readability.util.not_null_and_not_empty";
-  private static final String SIZE_TO_IS_EMPTY_MSG_KEY = "code.readability.size_to_is_empty";
 
   @Override
   public int[] getDefaultTokens() {
@@ -91,18 +90,6 @@ public class UseIsEmptyCheck extends AbstractCheck {
         constant -> constant.getType() == TokenTypes.NUM_INT && constant.getText().equals("0"));
   }
 
-  void checkForSizeEqualZero(DetailAST ast) {
-    final DetailAST method = methodEqualZero(ast);
-    if (method == null) {
-      return;
-    }
-    final DetailAST identifier = methodCall(method, "size");
-    if (identifier == null) {
-      return;
-    }
-    log(ast, SIZE_TO_IS_EMPTY_MSG_KEY);
-  }
-
   void checkForNullOrIsEmpty(DetailAST ast) {
     if (ast.getType() != TokenTypes.LOR) {
       return;
@@ -150,7 +137,6 @@ public class UseIsEmptyCheck extends AbstractCheck {
 
   @Override
   public void visitToken(DetailAST ast) {
-    checkForSizeEqualZero(ast);
     checkForNullOrIsEmpty(ast);
     checkForNotNullAndIsNotEmpty(ast);
   }

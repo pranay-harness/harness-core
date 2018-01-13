@@ -10,6 +10,7 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -479,7 +480,7 @@ public class StateMachine extends Base {
    * @return map to state to stateNames.
    */
   public Map<String, State> getStatesMap() {
-    if (cachedStatesMap != null && cachedStatesMap.size() > 0) {
+    if (MapUtils.isNotEmpty(cachedStatesMap)) {
       return cachedStatesMap;
     }
     Map<String, State> statesMap = new HashMap<>();
@@ -494,7 +495,7 @@ public class StateMachine extends Base {
         }
       }
     }
-    if (dupNames.size() > 0) {
+    if (!dupNames.isEmpty()) {
       throw new WingsException(ErrorCode.DUPLICATE_STATE_NAMES).addParam("dupStateNames", dupNames.toString());
     }
 
@@ -581,7 +582,7 @@ public class StateMachine extends Base {
    * @return a transition flow map describing transition types to list of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
-    if (cachedTransitionFlowMap != null && cachedTransitionFlowMap.size() > 0) {
+    if (MapUtils.isNotEmpty(cachedTransitionFlowMap)) {
       return cachedTransitionFlowMap;
     }
 
@@ -659,17 +660,17 @@ public class StateMachine extends Base {
         }
       }
     }
-    if (invalidStateNames.size() > 0) {
+    if (!invalidStateNames.isEmpty()) {
       throw new WingsException(ErrorCode.TRANSITION_TO_INCORRECT_STATE)
           .addParam("invalidStateNames", invalidStateNames.toString());
     }
-    if (nonForkStates.size() > 0) {
+    if (!nonForkStates.isEmpty()) {
       throw new WingsException(ErrorCode.NON_FORK_STATES).addParam("nonForkStates", nonForkStates.toString());
     }
-    if (nonRepeatStates.size() > 0) {
+    if (!nonRepeatStates.isEmpty()) {
       throw new WingsException(ErrorCode.NON_REPEAT_STATES).addParam("nonRepeatStates", nonRepeatStates.toString());
     }
-    if (statesWithDupTransitions.size() > 0) {
+    if (!statesWithDupTransitions.isEmpty()) {
       throw new WingsException(ErrorCode.STATES_WITH_DUP_TRANSITIONS)
           .addParam("statesWithDupTransitions", statesWithDupTransitions.toString());
     }

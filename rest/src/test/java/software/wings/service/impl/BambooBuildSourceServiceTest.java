@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -73,13 +74,13 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Test
   public void getJobs() {
     Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
-    assertTrue(jobs.size() > 0);
+    assertFalse(jobs.isEmpty());
   }
 
   @Test
   public void getPlans() {
     Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
-    assertTrue(plans.size() > 0);
+    assertFalse(plans.isEmpty());
   }
 
   @Test
@@ -89,14 +90,14 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
     wingsPersistence.save(service);
     Map<String, String> plans =
         buildSourceService.getPlans(appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), "");
-    assertTrue(plans.size() > 0);
+    assertFalse(plans.isEmpty());
   }
 
   @Test
   public void getArtifactPaths() {
     Set<String> artifactPaths =
         buildSourceService.getArtifactPaths(appId, "TOD-TOD", settingAttribute.getUuid(), null, streamType.name());
-    assertTrue(artifactPaths.size() > 0);
+    assertFalse(artifactPaths.isEmpty());
     assertTrue(artifactPaths.contains("artifacts/todolist.war"));
   }
 
@@ -114,7 +115,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
 
     List<BuildDetails> builds =
         buildSourceService.getBuilds(appId, artifactStream.getUuid(), settingAttribute.getUuid());
-    assertTrue(builds.size() > 0);
+    assertFalse(builds.isEmpty());
   }
 
   @Test

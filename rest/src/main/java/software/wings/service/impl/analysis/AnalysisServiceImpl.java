@@ -8,6 +8,7 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -239,7 +240,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                         .equal(query)
                                                         .field("logCollectionMinute")
                                                         .equal(logCollectionMinute);
-    return splunkLogDataRecordQuery.asList().size() > 0;
+    return !splunkLogDataRecordQuery.asList().isEmpty();
   }
 
   @Override
@@ -274,7 +275,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                            .limit(1);
 
       List<LogDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();
-      if (lastSuccessfulRecords != null && lastSuccessfulRecords.size() > 0) {
+      if (CollectionUtils.isNotEmpty(lastSuccessfulRecords)) {
         return successfulExecution;
       }
     }
@@ -422,7 +423,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     int highRiskClusters = 0;
     int mediumRiskCluster = 0;
     int lowRiskClusters = 0;
-    if (analysisSummary.getUnknownClusters() != null && analysisSummary.getUnknownClusters().size() > 0) {
+    if (CollectionUtils.isNotEmpty(analysisSummary.getUnknownClusters())) {
       for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
         if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
           ++highRiskClusters;
@@ -694,7 +695,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                      .equal(workflowExecution.getUuid())
                                                      .limit(1);
 
-    return lastSuccessfulRecords.asList().size() > 0;
+    return !lastSuccessfulRecords.asList().isEmpty();
   }
 
   private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {

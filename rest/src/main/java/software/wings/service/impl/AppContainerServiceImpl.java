@@ -154,7 +154,7 @@ public class AppContainerServiceImpl implements AppContainerService {
         serviceResourceService
             .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(), false, true)
             .getResponse();
-    if (services.size() > 0) {
+    if (!services.isEmpty()) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               String.format(

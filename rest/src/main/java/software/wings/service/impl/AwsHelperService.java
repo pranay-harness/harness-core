@@ -181,6 +181,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
@@ -1105,7 +1106,7 @@ public class AwsHelperService {
     DescribeRepositoriesResult describeRepositoriesResult =
         listRepositories(awsConfig, encryptionDetails, describeRepositoriesRequest, region);
     List<Repository> repositories = describeRepositoriesResult.getRepositories();
-    if (repositories != null && repositories.size() > 0) {
+    if (CollectionUtils.isNotEmpty(repositories)) {
       return repositories.get(0);
     }
     return null;
@@ -1217,9 +1218,9 @@ public class AwsHelperService {
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
           describeAutoScalingGroups(awsConfig, encryptionDetails, region,
               new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName));
-      return describeAutoScalingGroupsResult.getAutoScalingGroups().size() != 0
-          ? describeAutoScalingGroupsResult.getAutoScalingGroups().get(0)
-          : null;
+      return describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()
+          ? null
+          : describeAutoScalingGroupsResult.getAutoScalingGroups().get(0);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1410,9 +1411,9 @@ public class AwsHelperService {
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
           describeAutoScalingGroups(awsConfig, encryptionDetails, region,
               new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName));
-      return describeAutoScalingGroupsResult.getAutoScalingGroups().size() != 0
-          ? describeAutoScalingGroupsResult.getAutoScalingGroups().get(0)
-          : null;
+      return describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()
+          ? null
+          : describeAutoScalingGroupsResult.getAutoScalingGroups().get(0);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1468,7 +1469,7 @@ public class AwsHelperService {
       Misc.quietSleep(5, TimeUnit.SECONDS);
       describeAutoScalingGroupsResult = amazonAutoScalingClient.describeAutoScalingGroups(
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroup.getAutoScalingGroupName()));
-    } while (--retry_counter > 0 && describeAutoScalingGroupsResult.getAutoScalingGroups().size() != 0);
+    } while (--retry_counter > 0 && !describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty());
   }
 
   public Datapoint getCloudWatchMetricStatistics(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,

@@ -31,14 +31,6 @@ public class UseIsEmptyCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
-  public void testSizeDetectIssues() throws Exception {
-    final String[] expected = {"7:21: Use isEmpty instead.", "9:11: Use isEmpty instead.",
-        "11:37: Use isEmpty instead.", "13:27: Use isEmpty instead."};
-
-    verify(config(), getPath("UseIsEmptyCheckSizeIssues.jv"), expected);
-  }
-
-  @Test
   public void testFalsePositive() throws Exception {
     final String[] expected = {};
     verify(config(), getPath("UseIsEmptyCheckNonIssues.jv"), expected);

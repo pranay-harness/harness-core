@@ -78,7 +78,7 @@ public class InstanceDuplicateCleanupMigratorUtil extends WingsBaseTest {
       System.out.println("Duplicate count for service: " + serviceId + " size:" + size);
     }
 
-    if (idsToDelete.size() > 0) {
+    if (!idsToDelete.isEmpty()) {
       Query<Instance> deleteQuery = wingsPersistence.createQuery(Instance.class);
       deleteQuery.field("_id").in(idsToDelete);
       wingsPersistence.delete(deleteQuery);

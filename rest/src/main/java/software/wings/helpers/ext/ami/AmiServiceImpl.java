@@ -10,6 +10,7 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
+import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -42,7 +43,7 @@ public class AmiServiceImpl implements AmiService {
     if (!isNullOrEmpty(platform)) {
       filters.add(new Filter("platform").withValues(platform));
     }
-    if (tags != null && tags.size() != 0) {
+    if (MapUtils.isNotEmpty(tags)) {
       tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
     }
     DescribeImagesRequest describeImagesRequest = new DescribeImagesRequest().withFilters(filters);

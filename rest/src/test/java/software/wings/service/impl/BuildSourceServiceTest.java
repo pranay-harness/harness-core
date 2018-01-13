@@ -311,7 +311,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
 
       default:
         Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
-        assertTrue(jobs.size() > 0);
+        assertFalse(jobs.isEmpty());
     }
   }
 
@@ -323,7 +323,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         return;
       default:
         Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
-        assertTrue(plans.size() > 0);
+        assertFalse(plans.isEmpty());
     }
   }
 
@@ -340,7 +340,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         wingsPersistence.save(service);
         Map<String, String> plans = buildSourceService.getPlans(
             appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), repositoryType);
-        assertTrue(plans.size() > 0);
+        assertFalse(plans.isEmpty());
     }
   }
 
@@ -354,7 +354,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
       default:
         Set<String> artifactPaths =
             buildSourceService.getArtifactPaths(appId, jobName, settingAttribute.getUuid(), groupId, streamType.name());
-        assertTrue(artifactPaths.size() > 0);
+        assertFalse(artifactPaths.isEmpty());
         assertTrue(artifactPaths.contains(artifactPath));
     }
   }
@@ -369,7 +369,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
       default:
         List<BuildDetails> builds =
             buildSourceService.getBuilds(appId, artifactStream.getUuid(), settingAttribute.getUuid());
-        assertTrue(builds.size() > 0);
+        assertFalse(builds.isEmpty());
     }
   }
 

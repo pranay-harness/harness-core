@@ -855,7 +855,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .get(0);
     List<Instance> instances = autoScalingGroup.getInstances();
     logger.info("Waiting for all instances to be ready. {}/{} ready...", instances.size(), clusterSize);
-    return instances.size() != 0
+    return !instances.isEmpty()
         && instances.stream().allMatch(instance -> "InService".equals(instance.getLifecycleState()));
   }
 
@@ -946,7 +946,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         List<ServiceEvent> events = updateServiceResult.getService().getEvents();
 
         String latestExcludedEventId = null;
-        if (events.size() > 0) {
+        if (!events.isEmpty()) {
           latestExcludedEventId = events.get(0).getId();
         }
 

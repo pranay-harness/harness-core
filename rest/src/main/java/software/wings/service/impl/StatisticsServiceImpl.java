@@ -256,7 +256,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     List<AppDeployment> appDeployments = new ArrayList<>();
 
     wflExecutionsByApp.forEach((appId, wflExecutions) -> {
-      if (wflExecutions.size() != 0) {
+      if (!wflExecutions.isEmpty()) {
         String appName = wflExecutions.get(0).getAppName();
 
         appDeployments.add(new AppDeployment(appId, appName, wflExecutions));

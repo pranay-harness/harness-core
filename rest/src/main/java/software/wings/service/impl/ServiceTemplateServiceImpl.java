@@ -381,7 +381,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles) {
     List<ConfigFile> mergedConfigFiles = existingFiles;
 
-    if (existingFiles.size() != 0 || newFiles.size() != 0) {
+    if (!existingFiles.isEmpty() || !newFiles.isEmpty()) {
       logger.info("Config files before overrides [{}]", existingFiles.toString());
       logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
       if (CollectionUtils.isNotEmpty(newFiles)) {
@@ -398,7 +398,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId,
       boolean maskEncryptedFields) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
-    if (existingServiceVariables.size() != 0 || newServiceVariables.size() != 0) {
+    if (!existingServiceVariables.isEmpty() || !newServiceVariables.isEmpty()) {
       logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
       logger.info(
           "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);

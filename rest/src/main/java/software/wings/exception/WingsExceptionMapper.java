@@ -4,6 +4,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.exception.WingsException.Scenario.API_CALL;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -34,7 +35,7 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
 
   private Status resolveHttpStatus(List<ResponseMessage> responseMessageList) {
     ErrorCode errorCode = null;
-    if (responseMessageList != null && responseMessageList.size() > 0) {
+    if (CollectionUtils.isNotEmpty(responseMessageList)) {
       errorCode = responseMessageList.get(responseMessageList.size() - 1).getCode();
     }
     if (errorCode != null) {

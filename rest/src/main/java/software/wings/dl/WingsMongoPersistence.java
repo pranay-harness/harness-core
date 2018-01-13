@@ -430,7 +430,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T> List<T> queryAll(Class<T> cls, PageRequest<T> req) {
     PageResponse<T> res = query(cls, req);
     List<T> ret = new ArrayList<>();
-    while (res != null && res.size() > 0) {
+    while (CollectionUtils.isNotEmpty(res)) {
       ret.addAll(res.getResponse());
       req.setOffset(String.valueOf(ret.size()));
       res = query(cls, req);

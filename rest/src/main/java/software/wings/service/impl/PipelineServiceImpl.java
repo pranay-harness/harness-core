@@ -135,14 +135,14 @@ public class PipelineServiceImpl implements PipelineService {
             }
           }
         }
-        if (invalidStageWorkflows.size() != 0) {
+        if (!invalidStageWorkflows.isEmpty()) {
           pipelineStage.setValid(false);
           pipelineStage.setValidationMessage(
               String.format(Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStageWorkflows.toString()));
         }
         invalidWorkflows.addAll(invalidStageWorkflows);
       }
-      if (invalidWorkflows.size() != 0) {
+      if (!invalidWorkflows.isEmpty()) {
         pipeline.setValid(false);
         pipeline.setValidationMessage(
             String.format(Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
