@@ -1144,8 +1144,15 @@
                     <artifactId>maven-pmd-plugin</artifactId>
                     <version>3.6</version>
                     <configuration>
-                        <skip>CollapsibleIfStatements</skip>
+                        <rulesets>do-not-use/harness_pmd_ruleset.xml</rulesets>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>software.wings</groupId>
+                            <artifactId>config</artifactId>
+                            <version>0.0.1-SNAPSHOT</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>
