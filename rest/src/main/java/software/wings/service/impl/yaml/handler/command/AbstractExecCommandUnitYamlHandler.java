@@ -13,7 +13,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Util;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,7 +31,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
 
   private List<TailFilePatternEntry.Yaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {
     if (Util.isEmpty(patternEntryList)) {
-      return Collections.emptyList();
+      return null;
     }
 
     return patternEntryList.stream()
@@ -46,7 +45,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
 
   private List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
     if (Util.isEmpty(patternEntryYamlList)) {
-      return Collections.emptyList();
+      return null;
     }
 
     return patternEntryYamlList.stream()

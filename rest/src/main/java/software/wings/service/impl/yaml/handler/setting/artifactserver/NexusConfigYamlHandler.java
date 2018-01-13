@@ -16,8 +16,13 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
-    return new Yaml(nexusConfig.getType(), nexusConfig.getNexusUrl(), nexusConfig.getUsername(),
-        getEncryptedValue(nexusConfig, "password", false));
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(nexusConfig.getType())
+        .url(nexusConfig.getNexusUrl())
+        .username(nexusConfig.getUsername())
+        .password(getEncryptedValue(nexusConfig, "password", false))
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

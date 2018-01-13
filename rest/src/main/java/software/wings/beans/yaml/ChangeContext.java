@@ -6,6 +6,7 @@ import lombok.Data;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.yaml.BaseYaml;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -35,8 +36,8 @@ public class ChangeContext<Y extends BaseYaml> {
     private YamlType yamlType;
     private Y yaml;
     private BaseYamlHandler yamlSyncHandler;
-    private Map<String, String> entityIdMap = Maps.newHashMap();
-    private Map<String, Object> properties = Maps.newHashMap();
+    private Map<String, String> entityIdMap = Collections.emptyMap();
+    private Map<String, Object> properties = Collections.emptyMap();
 
     private Builder() {}
 

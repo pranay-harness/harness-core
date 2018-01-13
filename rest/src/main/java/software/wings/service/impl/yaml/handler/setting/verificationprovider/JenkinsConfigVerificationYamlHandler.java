@@ -17,8 +17,13 @@ public class JenkinsConfigVerificationYamlHandler
   @Override
   public VerificationYaml toYaml(SettingAttribute settingAttribute, String appId) {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
-    return new VerificationYaml(jenkinsConfig.getType(), jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
-        getEncryptedValue(jenkinsConfig, "password", false));
+    return VerificationYaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(jenkinsConfig.getType())
+        .url(jenkinsConfig.getJenkinsUrl())
+        .username(jenkinsConfig.getUsername())
+        .password(getEncryptedValue(jenkinsConfig, "password", false))
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<VerificationYaml> changeContext,

@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;
-import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.BaseYamlWithType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,18 +18,15 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class StepYaml extends BaseEntityYaml {
+public class StepYaml extends BaseYamlWithType {
   private String name;
-  private boolean rollback;
   private Map<String, Object> properties = new HashMap<>();
   private List<TemplateExpression.Yaml> templateExpressions;
 
   @Builder
-  public StepYaml(String type, String harnessApiVersion, String name, boolean rollback, Map<String, Object> properties,
-      List<Yaml> templateExpressions) {
-    super(type, harnessApiVersion);
+  public StepYaml(String type, String name, Map<String, Object> properties, List<Yaml> templateExpressions) {
+    super(type);
     this.name = name;
-    this.rollback = rollback;
     this.properties = properties;
     this.templateExpressions = templateExpressions;
   }

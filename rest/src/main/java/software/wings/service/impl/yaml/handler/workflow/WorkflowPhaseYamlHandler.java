@@ -17,11 +17,13 @@ import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowPhase.Yaml;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -69,39 +71,39 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     // phase step
     List<PhaseStep> phaseSteps = Lists.newArrayList();
     if (yaml.getPhaseSteps() != null) {
-      BaseYamlHandler phaseStepYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP);
-      phaseSteps =
-          yaml.getPhaseSteps()
-              .stream()
-              .map(phaseStep -> {
-                try {
-                  ChangeContext.Builder clonedContext = cloneFileChangeContext(context, phaseStep);
-                  return (PhaseStep) phaseStepYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
-                } catch (HarnessException e) {
-                  throw new WingsException(e);
-                }
-              })
-              .collect(Collectors.toList());
+      PhaseStepYamlHandler phaseStepYamlHandler =
+          (PhaseStepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP);
+      phaseSteps = yaml.getPhaseSteps()
+                       .stream()
+                       .map(phaseStep -> {
+                         try {
+                           ChangeContext.Builder clonedContext = cloneFileChangeContext(context, phaseStep);
+                           return phaseStepYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+                         } catch (HarnessException e) {
+                           throw new WingsException(e);
+                         }
+                       })
+                       .collect(Collectors.toList());
     }
 
     // template expressions
     List<TemplateExpression> templateExpressions = Lists.newArrayList();
     if (yaml.getTemplateExpressions() != null) {
-      BaseYamlHandler templateExprYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
-      templateExpressions = yaml.getTemplateExpressions()
-                                .stream()
-                                .map(templateExpr -> {
-                                  try {
-                                    ChangeContext.Builder clonedContext = cloneFileChangeContext(context, templateExpr);
-                                    return (TemplateExpression) templateExprYamlHandler.upsertFromYaml(
-                                        clonedContext.build(), changeSetContext);
-                                  } catch (HarnessException e) {
-                                    throw new WingsException(e);
-                                  }
-                                })
-                                .collect(Collectors.toList());
+      TemplateExpressionYamlHandler templateExprYamlHandler =
+          (TemplateExpressionYamlHandler) yamlHandlerFactory.getYamlHandler(
+              YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
+      templateExpressions =
+          yaml.getTemplateExpressions()
+              .stream()
+              .map(templateExpr -> {
+                try {
+                  ChangeContext.Builder clonedContext = cloneFileChangeContext(context, templateExpr);
+                  return templateExprYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+                } catch (HarnessException e) {
+                  throw new WingsException(e);
+                }
+              })
+              .collect(Collectors.toList());
     }
 
     SettingAttribute computeProvider = settingsService.getByName(accountId, appId, yaml.getComputeProviderName());
@@ -112,6 +114,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       computeProviderId = computeProvider.getUuid();
     }
 
+    Boolean isRollback = (Boolean) context.getProperties().get(YamlConstants.IS_ROLLBACK);
     WorkflowPhaseBuilder phase = WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, deploymentTypeString);
     phase.withComputeProviderId(computeProviderId)
@@ -122,6 +125,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .withPhaseNameForRollback(yaml.getPhaseNameForRollback())
         .withPhaseSteps(phaseSteps)
         .withServiceId(serviceId)
+        .withRollback(isRollback)
         .withTemplateExpressions(templateExpressions)
         .build();
     return phase.build();
@@ -140,23 +144,23 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     // template expressions
     List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
     if (bean.getTemplateExpressions() != null) {
-      BaseYamlHandler templateExpressionYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
+      TemplateExpressionYamlHandler templateExpressionYamlHandler =
+          (TemplateExpressionYamlHandler) yamlHandlerFactory.getYamlHandler(
+              YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
       templateExprYamlList =
           bean.getTemplateExpressions()
               .stream()
-              .map(templateExpression
-                  -> (TemplateExpression.Yaml) templateExpressionYamlHandler.toYaml(templateExpression, appId))
+              .map(templateExpression -> templateExpressionYamlHandler.toYaml(templateExpression, appId))
               .collect(Collectors.toList());
     }
 
     List<PhaseStep.Yaml> phaseStepYamlList = Lists.newArrayList();
     if (bean.getPhaseSteps() != null) {
-      BaseYamlHandler phaseStepYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP);
+      PhaseStepYamlHandler phaseStepYamlHandler =
+          (PhaseStepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP);
       phaseStepYamlList = bean.getPhaseSteps()
                               .stream()
-                              .map(phaseStep -> (PhaseStep.Yaml) phaseStepYamlHandler.toYaml(phaseStep, appId))
+                              .map(phaseStep -> phaseStepYamlHandler.toYaml(phaseStep, appId))
                               .collect(Collectors.toList());
     }
 

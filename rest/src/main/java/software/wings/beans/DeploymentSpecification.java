@@ -3,7 +3,7 @@ package software.wings.beans;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.yaml.BaseYamlWithType;
+import software.wings.yaml.BaseEntityYaml;
 
 /**
  * Marker base class for all deployment specifications
@@ -13,9 +13,9 @@ public abstract class DeploymentSpecification extends Base {
   @Data
   @EqualsAndHashCode(callSuper = false)
   @NoArgsConstructor
-  public abstract static class Yaml extends BaseYamlWithType {
-    public Yaml(String type) {
-      super(type);
+  public abstract static class Yaml extends BaseEntityYaml {
+    public Yaml(String type, String harnessApiVersion) {
+      super(type, harnessApiVersion);
     }
   }
 }

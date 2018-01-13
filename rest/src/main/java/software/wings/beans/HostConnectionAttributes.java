@@ -211,8 +211,10 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private String userName;
     private String key;
 
-    public Yaml(String type, String connectionType, String accessType, String userName, String key) {
-      super(type);
+    @lombok.Builder
+    public Yaml(
+        String type, String harnessApiVersion, String connectionType, String accessType, String userName, String key) {
+      super(type, harnessApiVersion);
       this.connectionType = connectionType;
       this.accessType = accessType;
       this.userName = userName;

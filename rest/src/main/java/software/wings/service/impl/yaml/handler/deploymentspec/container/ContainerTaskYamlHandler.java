@@ -69,6 +69,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
   protected void toYaml(Y yaml, C bean) {
     String advancedType = Util.getStringFromEnum(bean.getAdvancedType());
 
+    yaml.setHarnessApiVersion(getHarnessApiVersion());
     yaml.setAdvancedConfig(bean.getAdvancedConfig());
     yaml.setAdvancedType(advancedType);
     yaml.setType(bean.getDeploymentType());

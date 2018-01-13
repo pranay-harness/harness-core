@@ -48,8 +48,8 @@ public class GcpConfig extends SettingValue implements Encryptable {
     private String serviceAccountKeyFileContent;
 
     @Builder
-    public Yaml(String type, String serviceAccountKeyFileContent) {
-      super(type);
+    public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent) {
+      super(type, harnessApiVersion);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
     }
   }

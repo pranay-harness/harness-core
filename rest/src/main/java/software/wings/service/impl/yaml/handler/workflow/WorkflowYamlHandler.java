@@ -27,6 +27,7 @@ import software.wings.beans.WorkflowPhase.Yaml;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -90,7 +91,9 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     String envId = environment != null ? environment.getUuid() : null;
 
     try {
-      BaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE);
+      WorkflowPhaseYamlHandler phaseYamlHandler =
+          (WorkflowPhaseYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE);
+
       // phases
       List<WorkflowPhase> phaseList = Lists.newArrayList();
       if (yaml.getPhases() != null) {
@@ -102,10 +105,10 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                 cloneFileChangeContext(changeContext, workflowPhaseYaml);
                             ChangeContext clonedContext = clonedContextBuilder.build();
                             clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
+                            clonedContext.getProperties().put(YamlConstants.IS_ROLLBACK, false);
 
                             WorkflowPhase workflowPhase =
-                                (WorkflowPhase) phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
-                            workflowPhase.setRollback(false);
+                                phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
                             return workflowPhase;
                           } catch (HarnessException e) {
                             throw new WingsException(e);
@@ -129,10 +132,9 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                         cloneFileChangeContext(changeContext, workflowPhaseYaml);
                     ChangeContext clonedContext = clonedContextBuilder.build();
                     clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
+                    clonedContext.getProperties().put(YamlConstants.IS_ROLLBACK, true);
 
-                    WorkflowPhase workflowPhase =
-                        (WorkflowPhase) phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
-                    workflowPhase.setRollback(true);
+                    WorkflowPhase workflowPhase = phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
                     return workflowPhase;
                   } catch (HarnessException e) {
                     throw new WingsException(e);
@@ -393,6 +395,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     yaml.setPostDeploymentSteps(postDeployStepsYamlList);
     yaml.setNotificationRules(notificationRuleYamlList);
     yaml.setFailureStrategies(failureStrategyYamlList);
+    yaml.setHarnessApiVersion(getHarnessApiVersion());
   }
 
   @Override

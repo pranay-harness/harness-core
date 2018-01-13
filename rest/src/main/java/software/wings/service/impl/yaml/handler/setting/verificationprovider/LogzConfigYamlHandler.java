@@ -16,7 +16,13 @@ public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     LogzConfig config = (LogzConfig) settingAttribute.getValue();
-    return new Yaml(config.getType(), config.getLogzUrl(), getEncryptedValue(config, "token", false));
+
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(config.getType())
+        .logzUrl(config.getLogzUrl())
+        .token(getEncryptedValue(config, "token", false))
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

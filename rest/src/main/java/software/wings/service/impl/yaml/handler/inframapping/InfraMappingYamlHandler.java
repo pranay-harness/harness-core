@@ -45,9 +45,9 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     return environment.getUuid();
   }
 
-  protected String getServiceTemplateId(String appId, String serviceId) {
+  protected String getServiceTemplateId(String appId, String serviceId, String envId) {
     List<Key<ServiceTemplate>> templateRefKeysByService =
-        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, null);
+        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId);
     Validator.notNullCheck("Service template can't be found for Service " + serviceId, templateRefKeysByService.get(0));
     return templateRefKeysByService.get(0).getId().toString();
   }
@@ -86,7 +86,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     yaml.setServiceName(getServiceName(infraMapping.getAppId(), infraMapping.getServiceId()));
     yaml.setInfraMappingType(infraMapping.getInfraMappingType());
     yaml.setDeploymentType(infraMapping.getDeploymentType());
-    yaml.setHarnessApiVersion("1.0");
+    yaml.setHarnessApiVersion(getHarnessApiVersion());
   }
 
   protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String serviceId)
@@ -94,7 +94,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     Y yaml = context.getYaml();
     bean.setAutoPopulate(false);
     bean.setInfraMappingType(yaml.getInfraMappingType());
-    bean.setServiceTemplateId(getServiceTemplateId(appId, serviceId));
+    bean.setServiceTemplateId(getServiceTemplateId(appId, serviceId, envId));
     bean.setEnvId(envId);
     bean.setServiceId(serviceId);
     bean.setDeploymentType(yaml.getDeploymentType());

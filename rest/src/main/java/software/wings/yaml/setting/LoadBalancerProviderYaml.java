@@ -12,7 +12,7 @@ import software.wings.settings.SettingValue;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class LoadBalancerProviderYaml extends SettingValue.Yaml {
-  public LoadBalancerProviderYaml(String type) {
-    super(type);
+  public LoadBalancerProviderYaml(String type, String harnessApiVersion) {
+    super(type, harnessApiVersion);
   }
 }

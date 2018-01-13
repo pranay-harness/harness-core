@@ -23,7 +23,7 @@ import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
-import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.BaseYamlWithType;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.ArrayList;
@@ -506,27 +506,24 @@ public class PhaseStep {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends BaseEntityYaml {
+  public static final class Yaml extends BaseYamlWithType {
     private String name;
     private String statusForRollback;
     private boolean stepsInParallel;
     private List<StepYaml> steps = new ArrayList<>();
     private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
-    private boolean rollback;
     private String phaseStepNameForRollback;
     private Integer waitInterval;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String name, String statusForRollback, boolean stepsInParallel,
-        List<StepYaml> steps, List<FailureStrategy.Yaml> failureStrategies, boolean rollback,
-        String phaseStepNameForRollback, Integer waitInterval) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String name, String statusForRollback, boolean stepsInParallel, List<StepYaml> steps,
+        List<FailureStrategy.Yaml> failureStrategies, String phaseStepNameForRollback, Integer waitInterval) {
+      super(type);
       this.name = name;
       this.statusForRollback = statusForRollback;
       this.stepsInParallel = stepsInParallel;
       this.steps = steps;
       this.failureStrategies = failureStrategies;
-      this.rollback = rollback;
       this.phaseStepNameForRollback = phaseStepNameForRollback;
       this.waitInterval = waitInterval;
     }

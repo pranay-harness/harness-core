@@ -25,7 +25,11 @@ public class UserDataSpecificationYamlHandler extends DeploymentSpecificationYam
 
   @Override
   public Yaml toYaml(UserDataSpecification bean, String appId) {
-    return new Yaml(DeploymentType.AMI.name(), bean.getData());
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(DeploymentType.AMI.name())
+        .data(bean.getData())
+        .build();
   }
 
   @Override

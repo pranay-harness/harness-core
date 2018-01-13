@@ -318,9 +318,9 @@ public class KubernetesContainerTask extends ContainerTask {
   @NoArgsConstructor
   public static class Yaml extends ContainerTask.Yaml {
     @Builder
-    public Yaml(String deploymentType, String advancedType, String advancedConfig,
+    public Yaml(String type, String harnessApiVersion, String advancedType, String advancedConfig,
         ContainerDefinition.Yaml containerDefinition) {
-      super(deploymentType, advancedType, advancedConfig, containerDefinition);
+      super(type, harnessApiVersion, advancedType, advancedConfig, containerDefinition);
     }
   }
 }

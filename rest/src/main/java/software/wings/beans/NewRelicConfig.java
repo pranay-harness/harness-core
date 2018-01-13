@@ -65,8 +65,8 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
     private String apiKey;
 
     @Builder
-    public Yaml(String type, String apiKey) {
-      super(type);
+    public Yaml(String type, String harnessApiVersion, String apiKey) {
+      super(type, harnessApiVersion);
       this.apiKey = apiKey;
     }
   }

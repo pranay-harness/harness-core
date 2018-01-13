@@ -48,6 +48,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
     List<NameValuePair.Yaml> nameValuePairList = convertToNameValuePair(service.getServiceVariables());
     return Service.Yaml.builder()
         .type(SERVICE.name())
+        .harnessApiVersion(getHarnessApiVersion())
         .description(service.getDescription())
         .artifactType(service.getArtifactType().name())
         .configVariables(nameValuePairList)

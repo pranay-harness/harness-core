@@ -188,6 +188,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         .targetEnvs(envNameList)
         .targetToAllEnv(serviceCommand.isTargetToAllEnv())
         .type(commandType)
+        .harnessApiVersion(getHarnessApiVersion())
         .build();
   }
 

@@ -60,8 +60,8 @@ public class GitConfig extends SettingValue implements Encryptable {
     private String branch;
 
     @Builder
-    public Yaml(String type, String url, String username, String password, String branch) {
-      super(type, url, username, password);
+    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch) {
+      super(type, harnessApiVersion, url, username, password);
       this.branch = branch;
     }
   }

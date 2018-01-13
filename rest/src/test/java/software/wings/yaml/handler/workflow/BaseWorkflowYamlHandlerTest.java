@@ -37,6 +37,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
+import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.FailureStrategyYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
@@ -86,6 +87,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject protected NotificationRulesYamlHandler notificationRulesYamlHandler;
   @InjectMocks @Inject protected NotificationGroupYamlHandler notificationGroupYamlHandler;
   @InjectMocks @Inject protected TemplateExpressionYamlHandler templateExpressionYamlHandler;
+  @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
 
   protected void setup(String yamlFilePath, String workflowName) {
     when(appService.getAppByName(anyString(), anyString()))
@@ -122,6 +124,8 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
         .thenReturn(notificationRulesYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP, ObjectType.NOTIFICATION_GROUP))
         .thenReturn(notificationGroupYamlHandler);
+
+    when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE, ObjectType.VARIABLE)).thenReturn(variableYamlHandler);
   }
 
   private InfrastructureMapping getInfraMapping() {

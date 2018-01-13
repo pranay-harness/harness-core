@@ -62,4 +62,5 @@ public interface YamlConstants {
   String NODE_PROPERTY_FILE_CATEGORY = "fileCategory";
   String NODE_PROPERTY_DESTINATION_DIR_PATH = "destinationDirectoryPath";
   String NODE_PROPERTY_DESTINATION_PARENT_PATH = "destinationParentPath";
+  String IS_ROLLBACK = "IS_ROLLBACK";
 }

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 
@@ -8,10 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -29,6 +32,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
   @Inject protected SecretManager secretManager;
   @Inject private SettingsService settingsService;
   @Inject protected EncryptionService encryptionService;
+  @Inject protected YamlHelper yamlHelper;
 
   @Override
   public SettingAttribute upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
@@ -71,5 +75,19 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
     if (settingAttribute != null) {
       settingsService.delete(GLOBAL_APP_ID, settingAttribute.getUuid());
     }
+  }
+
+  protected SettingAttribute buildSettingAttribute(
+      String accountId, String yamlFilePath, String uuid, B config, Category category) {
+    String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    return SettingAttribute.Builder.aSettingAttribute()
+        .withAccountId(accountId)
+        .withAppId(GLOBAL_APP_ID)
+        .withCategory(category)
+        .withEnvId(GLOBAL_ENV_ID)
+        .withName(name)
+        .withUuid(uuid)
+        .withValue(config)
+        .build();
   }
 }

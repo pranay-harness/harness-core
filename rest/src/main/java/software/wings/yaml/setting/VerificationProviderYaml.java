@@ -9,7 +9,7 @@ import software.wings.settings.SettingValue;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class VerificationProviderYaml extends SettingValue.Yaml {
-  public VerificationProviderYaml(String type) {
-    super(type);
+  public VerificationProviderYaml(String type, String harnessApiVersion) {
+    super(type, harnessApiVersion);
   }
 }

@@ -13,6 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
@@ -81,12 +82,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
     }
 
     generateKnownProperties(outputProperties, changeContext);
-
+    Boolean isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
     return Node.Builder.aNode()
         .withName(yaml.getName())
         .withType(yaml.getType())
-        .withRollback(yaml.isRollback())
         .withTemplateExpressions(templateExpressions)
+        .withRollback(isRollback)
         .withProperties(outputProperties.size() > 0 ? outputProperties : null)
         .build();
   }
@@ -128,7 +129,6 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
     return StepYaml.builder()
         .name(bean.getName())
         .properties(outputProperties.size() > 0 ? outputProperties : null)
-        .rollback(bean.getRollback())
         .type(bean.getType())
         .templateExpressions(templateExprYamlList)
         .build();

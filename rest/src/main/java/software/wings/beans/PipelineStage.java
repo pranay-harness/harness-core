@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.BaseYamlWithType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -222,16 +222,16 @@ public class PipelineStage {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends BaseEntityYaml {
+  public static final class Yaml extends BaseYamlWithType {
     private String name;
     private boolean parallel;
     private String workflowName;
     private List<NameValuePair.Yaml> workflowVariables = Lists.newArrayList();
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String name, boolean parallel, String workflowName,
-        List<NameValuePair.Yaml> workflowVariables) {
-      super(type, harnessApiVersion);
+    public Yaml(
+        String type, String name, boolean parallel, String workflowName, List<NameValuePair.Yaml> workflowVariables) {
+      super(type);
       this.name = name;
       this.parallel = parallel;
       this.workflowName = workflowName;

@@ -134,9 +134,9 @@ public abstract class ContainerTask extends DeploymentSpecification {
     private String advancedConfig;
     private ContainerDefinition.Yaml containerDefinition;
 
-    protected Yaml(String deploymentType, String advancedType, String advancedConfig,
+    protected Yaml(String type, String harnessApiVersion, String advancedType, String advancedConfig,
         ContainerDefinition.Yaml containerDefinition) {
-      super(deploymentType);
+      super(type, harnessApiVersion);
       this.advancedType = advancedType;
       this.advancedConfig = advancedConfig;
       this.containerDefinition = containerDefinition;

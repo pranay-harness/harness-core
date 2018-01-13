@@ -16,8 +16,13 @@ public class BambooConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Bam
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
-    return new Yaml(bambooConfig.getType(), bambooConfig.getBambooUrl(), bambooConfig.getUsername(),
-        getEncryptedValue(bambooConfig, "password", false));
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(bambooConfig.getType())
+        .url(bambooConfig.getBambooUrl())
+        .username(bambooConfig.getUsername())
+        .password(getEncryptedValue(bambooConfig, "password", false))
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
