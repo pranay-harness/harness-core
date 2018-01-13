@@ -788,8 +788,7 @@ public class StateMachineExecutor {
       StateMachine sm, StateExecutionInstance stateExecutionInstance, ExecutionResponse executionResponse) {
     if (executionResponse instanceof SpawningExecutionResponse) {
       SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) executionResponse;
-      if (spawningExecutionResponse.getStateExecutionInstanceList() != null
-          && spawningExecutionResponse.getStateExecutionInstanceList().size() > 0) {
+      if (CollectionUtils.isNotEmpty(spawningExecutionResponse.getStateExecutionInstanceList())) {
         for (StateExecutionInstance childStateExecutionInstance :
             spawningExecutionResponse.getStateExecutionInstanceList()) {
           childStateExecutionInstance.setUuid(null);

@@ -142,7 +142,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
       }
     } catch (WingsException e) {
-      if (e.getResponseMessageList().size() > 0) {
+      if (!e.getResponseMessageList().isEmpty()) {
         if (e.getResponseMessageList().get(0).getCode() == ErrorCode.INVALID_KEY
             || e.getResponseMessageList().get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {
           logService.save(context.getAccountId(),

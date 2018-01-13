@@ -486,7 +486,7 @@ public class DelegateServiceImpl implements DelegateService {
       executorService.submit(() -> {
         long started = clock.millis();
         long now = started;
-        while (currentlyExecutingTasks.size() > 0 && now - started < UPGRADE_TIMEOUT) {
+        while (!currentlyExecutingTasks.isEmpty() && now - started < UPGRADE_TIMEOUT) {
           Misc.sleep(1, TimeUnit.SECONDS);
           now = clock.millis();
           logger.info("[Old] Completing {} tasks... ({} seconds elapsed): {}", currentlyExecutingTasks.size(),

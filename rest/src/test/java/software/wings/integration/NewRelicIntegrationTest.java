@@ -116,7 +116,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     assertEquals(0, restResponse.getResponseMessages().size());
-    assertTrue(restResponse.getResource().size() > 0);
+    assertFalse(restResponse.getResource().isEmpty());
 
     for (NewRelicApplication app : restResponse.getResource()) {
       assertTrue(app.getId() > 0);

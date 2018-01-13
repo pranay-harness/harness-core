@@ -406,7 +406,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    * @return the artifacts
    */
   public List<Artifact> getArtifacts() {
-    if (artifacts == null && artifactIds != null && artifactIds.size() > 0) {
+    if (artifacts == null && CollectionUtils.isNotEmpty(artifactIds)) {
       List<Artifact> list = new ArrayList<>();
       for (String artifactId : artifactIds) {
         list.add(artifactService.get(appId, artifactId));

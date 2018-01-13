@@ -88,7 +88,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
         .withType(yaml.getType())
         .withTemplateExpressions(templateExpressions)
         .withRollback(isRollback)
-        .withProperties(outputProperties.size() > 0 ? outputProperties : null)
+        .withProperties(outputProperties.isEmpty() ? null : outputProperties)
         .build();
   }
 
@@ -128,7 +128,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
 
     return StepYaml.builder()
         .name(bean.getName())
-        .properties(outputProperties.size() > 0 ? outputProperties : null)
+        .properties(outputProperties.isEmpty() ? null : outputProperties)
         .type(bean.getType())
         .templateExpressions(templateExprYamlList)
         .build();

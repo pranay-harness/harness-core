@@ -109,7 +109,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
                                      .order("-version")
                                      .asList();
 
-    if (versions.size() > 0) {
+    if (!versions.isEmpty()) {
       YamlVersion yv = versions.get(0);
       return yv;
     }

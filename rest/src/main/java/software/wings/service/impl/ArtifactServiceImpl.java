@@ -409,7 +409,7 @@ public class ArtifactServiceImpl implements ArtifactService {
           }
         }
       }
-      if (artifactFileUuids.size() > 0) {
+      if (!artifactFileUuids.isEmpty()) {
         wingsPersistence.getCollection("artifacts")
             .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactUuids.toArray())));
         wingsPersistence.getCollection("artifacts.files")

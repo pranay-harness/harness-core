@@ -273,21 +273,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       // For each service template id check if it has service or config overrides
       List<ServiceVariable> serviceVariableOverrides = serviceVariableService.getServiceVariablesByTemplate(
           environment.getAppId(), environment.getUuid(), serviceTemplate, true);
-      if (serviceVariableOverrides != null) {
-        if (serviceVariableOverrides.size() > 0) {
-          // This service template has at least on service overrides
-          includeServiceId = true;
-        }
+      if (CollectionUtils.isNotEmpty(serviceVariableOverrides)) {
+        // This service template has at least on service overrides
+        includeServiceId = true;
       }
       if (!includeServiceId) {
         // For each service template id check if it has service or config overrides
         List<ConfigFile> overrideConfigFiles =
             configService.getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
-        if (overrideConfigFiles != null) {
-          if (overrideConfigFiles.size() > 0) {
-            // This service template has at least on service overrides
-            includeServiceId = true;
-          }
+        if (CollectionUtils.isNotEmpty(overrideConfigFiles)) {
+          // This service template has at least on service overrides
+          includeServiceId = true;
         }
       }
       if (includeServiceId) {
@@ -314,7 +310,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .addFilter("pipelineStages.pipelineStageElements.properties.envId", EQ, environment.getUuid())
             .build());
 
-    if (pipelines.size() > 0) {
+    if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
@@ -421,7 +417,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           List<ServiceTemplate> serviceTemplateList =
               serviceTemplateService.list(serviceTemplatePageRequest, false, false);
           ServiceTemplate clonedServiceTemplate = null;
-          if (serviceTemplateList != null && serviceTemplateList.size() > 0) {
+          if (CollectionUtils.isNotEmpty(serviceTemplateList)) {
             clonedServiceTemplate = serviceTemplateList.get(0);
           }
           if (clonedServiceTemplate == null) {
@@ -523,7 +519,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           List<ServiceTemplate> serviceTemplateList =
               serviceTemplateService.list(serviceTemplatePageRequest, false, false);
           ServiceTemplate clonedServiceTemplate = null;
-          if (serviceTemplateList != null && serviceTemplateList.size() > 0) {
+          if (CollectionUtils.isNotEmpty(serviceTemplateList)) {
             clonedServiceTemplate = serviceTemplateList.get(0);
           }
           if (clonedServiceTemplate == null) {

@@ -503,7 +503,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .filter(wfl -> wfl.getServices().stream().anyMatch(s -> service.getUuid().equals(s.getUuid())))
             .collect(Collectors.toList());
 
-    if (serviceWorkflows != null && serviceWorkflows.size() > 0) {
+    if (CollectionUtils.isNotEmpty(serviceWorkflows)) {
       String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
       String message =
           String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
@@ -708,7 +708,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
     command.setAppId(appId);
-    if (command.getCommandUnits() != null && command.getCommandUnits().size() > 0) {
+    if (CollectionUtils.isNotEmpty(command.getCommandUnits())) {
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
 

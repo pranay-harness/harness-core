@@ -68,7 +68,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     assertEquals(0, restResponse.getResponseMessages().size());
-    assertTrue(restResponse.getResource().size() > 0);
+    assertFalse(restResponse.getResource().isEmpty());
 
     for (NewRelicApplication app : restResponse.getResource()) {
       assertTrue(app.getId() > 0);
@@ -103,7 +103,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-    assertTrue(tierRestResponse.getResource().size() > 0);
+    assertFalse(tierRestResponse.getResource().isEmpty());
 
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
       assertTrue(tier.getId() > 0);
@@ -141,7 +141,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsBusinessTransaction>> btRestResponse = getRequestBuilderWithAuthHeader(btTarget).get(
         new GenericType<RestResponse<List<AppdynamicsBusinessTransaction>>>() {});
-    assertTrue(btRestResponse.getResource().size() > 0);
+    assertFalse(btRestResponse.getResource().isEmpty());
 
     for (AppdynamicsBusinessTransaction bt : btRestResponse.getResource()) {
       assertTrue(bt.getId() > 0);
@@ -181,7 +181,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-    assertTrue(tierRestResponse.getResource().size() > 0);
+    assertFalse(tierRestResponse.getResource().isEmpty());
 
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
       WebTarget btMetricsTarget =
@@ -192,11 +192,11 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
               .get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {});
 
       List<AppdynamicsMetric> btMetrics = tierBTMResponse.getResource();
-      assertTrue(btMetrics.size() > 0);
+      assertFalse(btMetrics.isEmpty());
 
       for (AppdynamicsMetric btMetric : btMetrics) {
         assertFalse(StringUtils.isBlank(btMetric.getName()));
-        assertTrue("failed for " + btMetric.getName(), btMetric.getChildMetrices().size() > 0);
+        assertFalse("failed for " + btMetric.getName(), btMetric.getChildMetrices().isEmpty());
 
         for (AppdynamicsMetric leafMetric : btMetric.getChildMetrices()) {
           assertFalse(StringUtils.isBlank(leafMetric.getName()));
@@ -234,7 +234,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-    assertTrue(tierRestResponse.getResource().size() > 0);
+    assertFalse(tierRestResponse.getResource().isEmpty());
 
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
       WebTarget btMetricsTarget =
@@ -245,11 +245,11 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
               .get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {});
 
       List<AppdynamicsMetric> btMetrics = tierBTMResponse.getResource();
-      assertTrue(btMetrics.size() > 0);
+      assertFalse(btMetrics.isEmpty());
 
       for (AppdynamicsMetric btMetric : btMetrics) {
         assertFalse(StringUtils.isBlank(btMetric.getName()));
-        assertTrue("failed for " + btMetric.getName(), btMetric.getChildMetrices().size() > 0);
+        assertFalse("failed for " + btMetric.getName(), btMetric.getChildMetrices().isEmpty());
 
         final String url = API_BASE + "/appdynamics/get-metric-data?settingId=" + appdynamicsSettings.get(0).getUuid()
             + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId() + "&btName="

@@ -1,7 +1,7 @@
 package software.wings.integration;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
@@ -54,6 +54,6 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
     JenkinsConfig jenkinsConfig =
         JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).password(JENKINS_PASSWORD).username(JENKINS_USERNAME).build();
     List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, null, Optional.empty());
-    assertTrue(jobs.size() > 0);
+    assertFalse(jobs.isEmpty());
   }
 }

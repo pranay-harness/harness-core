@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -133,7 +134,7 @@ public class ArtifactCollectionJob implements Job {
         logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, e);
       }
     }
-    if (artifacts != null && artifacts.size() != 0) {
+    if (CollectionUtils.isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());
       artifacts.forEach(artifact -> logger.info(artifact.toString()));
       Artifact latestArtifact = artifacts.get(artifacts.size() - 1);

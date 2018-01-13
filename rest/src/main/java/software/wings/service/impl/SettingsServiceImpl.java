@@ -224,7 +224,7 @@ public class SettingsServiceImpl implements SettingsService {
       List<ArtifactStream> artifactStreams =
           artifactStreamService.list(aPageRequest().addFilter("settingId", EQ, connectorSetting.getUuid()).build())
               .getResponse();
-      if (artifactStreams.size() > 0) {
+      if (!artifactStreams.isEmpty()) {
         List<String> artifactStreamName = artifactStreams.stream()
                                               .map(ArtifactStream::getSourceName)
                                               .filter(java.util.Objects::nonNull)
@@ -248,7 +248,7 @@ public class SettingsServiceImpl implements SettingsService {
                       .withLimit(PageRequest.UNLIMITED)
                       .build())
             .getResponse();
-    if (infrastructureMappings.size() > 0) {
+    if (!infrastructureMappings.isEmpty()) {
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
       throw new WingsException(INVALID_REQUEST)

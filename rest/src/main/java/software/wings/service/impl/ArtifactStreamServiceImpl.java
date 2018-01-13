@@ -163,7 +163,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
     // If an entry exists with the given default name
-    if (response != null && response.size() > 0) {
+    if (CollectionUtils.isNotEmpty(response)) {
       String existingName = response.get(0).getName();
       name = Util.getNameWithNextRevision(existingName, name);
     }

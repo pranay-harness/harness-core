@@ -426,7 +426,7 @@ public class ConfigServiceImpl implements ConfigService {
                                          .field("parentConfigFileId")
                                          .equal(configId)
                                          .asList();
-      if (configFiles.size() != 0) {
+      if (!configFiles.isEmpty()) {
         configFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
       }
       if (!configFile.isEncrypted()) {

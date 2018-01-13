@@ -27,6 +27,7 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -290,7 +291,7 @@ public class AwsLambdaState extends State {
     Integer timeout = lambdaSpecification.getTimeout();
     String roleArn = infrastructureMapping.getRole();
     List<String> evaluatedAliases = new ArrayList<>();
-    if (aliases != null && aliases.size() > 0) {
+    if (CollectionUtils.isNotEmpty(aliases)) {
       evaluatedAliases = aliases.stream().map(context::renderExpression).collect(Collectors.toList());
     }
 
@@ -504,7 +505,7 @@ public class AwsLambdaState extends State {
     if (vpcId != null) {
       List<String> subnetIds = infrastructureMapping.getSubnetIds();
       List<String> securityGroupIds = infrastructureMapping.getSecurityGroupIds();
-      if (securityGroupIds.size() > 0 && subnetIds.size() > 0) {
+      if (!securityGroupIds.isEmpty() && !subnetIds.isEmpty()) {
         vpcConfig.setSubnetIds(subnetIds);
         vpcConfig.setSecurityGroupIds(securityGroupIds);
       } else {

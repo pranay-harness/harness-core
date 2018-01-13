@@ -262,7 +262,7 @@ public class TriggerServiceImpl implements TriggerService {
       Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       services = workflow.getServices();
       Map<String, String> workflowVariables = trigger.getWorkflowVariables();
-      if (workflowVariables != null && workflowVariables.size() != 0) {
+      if (MapUtils.isNotEmpty(workflowVariables)) {
         if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
           if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
             services = workflowService.resolveServices(workflow, workflowVariables);
@@ -284,10 +284,10 @@ public class TriggerServiceImpl implements TriggerService {
         artifactList.add(artifacts);
       }
     }
-    if (artifactList.size() != 0 && artifactNeeded) {
+    if (!artifactList.isEmpty() && artifactNeeded) {
       payload.put("artifacts", artifactList);
     }
-    if (parameters.size() != 0) {
+    if (!parameters.isEmpty()) {
       payload.put("parameters", parameters);
     }
     webHookToken.setPayload(new Gson().toJson(payload));
@@ -630,7 +630,7 @@ public class TriggerServiceImpl implements TriggerService {
 
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
-    if (pageResponse != null && pageResponse.getResponse() != null && pageResponse.getResponse().size() != 0) {
+    if (pageResponse != null && CollectionUtils.isNotEmpty(pageResponse.getResponse())) {
       if (pageResponse.getResponse().get(0).getExecutionArgs() != null) {
         lastDeployedArtifacts = pageResponse.getResponse().get(0).getExecutionArgs().getArtifacts();
         if (lastDeployedArtifacts != null) {

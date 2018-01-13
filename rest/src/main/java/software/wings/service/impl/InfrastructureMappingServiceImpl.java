@@ -36,6 +36,7 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -265,7 +266,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
     // If an entry exists with the given default name
-    if (response != null && response.size() > 0) {
+    if (CollectionUtils.isNotEmpty(response)) {
       String existingName = response.get(0).getName();
       name = Util.getNameWithNextRevision(existingName, name);
     }
@@ -516,7 +517,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .map(Workflow::getName)
             .collect(toList());
 
-    if (referencingWorkflowNames.size() > 0) {
+    if (!referencingWorkflowNames.isEmpty()) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               String.format("Service Infrastructure is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),

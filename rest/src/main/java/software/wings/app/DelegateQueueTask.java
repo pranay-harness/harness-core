@@ -91,7 +91,7 @@ public class DelegateQueueTask implements Runnable {
         }
       }
 
-      if (longRunningTimedOutTasks.size() > 0) {
+      if (!longRunningTimedOutTasks.isEmpty()) {
         logger.info("Found {} long running tasks, to be killed", longRunningTimedOutTasks.size());
         longRunningTimedOutTasks.forEach(delegateTask -> {
           Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -141,7 +141,7 @@ public class DelegateQueueTask implements Runnable {
         }
       }
 
-      if (queuedTimedOutTasks.size() > 0) {
+      if (!queuedTimedOutTasks.isEmpty()) {
         logger.info("Found {} long queued tasks, to be killed", queuedTimedOutTasks.size());
         queuedTimedOutTasks.forEach(delegateTask -> {
           Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)

@@ -265,8 +265,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       logger.info("fetching new relic metric names from harness manager");
       NewRelicMetricNames newRelicMetricNames = metricStoreService.getNewRelicMetricNames(getAccountId(),
           String.valueOf(dataCollectionInfo.getNewRelicAppId()), dataCollectionInfo.getSettingAttributeId());
-      if (newRelicMetricNames != null && newRelicMetricNames.getMetrics() != null
-          && newRelicMetricNames.getMetrics().size() > 0) {
+      if (newRelicMetricNames != null && CollectionUtils.isNotEmpty(newRelicMetricNames.getMetrics())) {
         logger.info("found new relic metric names {} from harness manager", newRelicMetricNames.getMetrics().size());
         metrics = newRelicMetricNames.getMetrics();
       } else {
