@@ -194,7 +194,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                     sumoLogElement.setHost(logMessage.getSourceHost());
                     sumoLogElement.setCount(1);
                     sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
-                    sumoLogElement.setTimeStamp(Long.valueOf(logMessage.getProperties().get("_timeslice")));
+                    sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
                     sumoLogElement.setLogCollectionMinute(logCollectionMinute);
                     logElements.add(sumoLogElement);
                   }
