@@ -18,8 +18,8 @@ public abstract class ArtifactServerYaml extends SettingValue.Yaml {
   private String username;
   private String password = ENCRYPTED_VALUE_STR;
 
-  public ArtifactServerYaml(String type, String url, String username, String password) {
-    super(type);
+  public ArtifactServerYaml(String type, String harnessApiVersion, String url, String username, String password) {
+    super(type, harnessApiVersion);
     this.url = url;
     this.username = username;
     this.password = password;

@@ -101,6 +101,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
         .fileName(fileName)
         .checksum(bean.getChecksum())
         .checksumType(Util.getStringFromEnum(bean.getChecksumType()))
+        .harnessApiVersion(getHarnessApiVersion())
         .build();
   }
 

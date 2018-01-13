@@ -16,8 +16,15 @@ public class GitConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, GitCon
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
-    return new Yaml(gitConfig.getType(), gitConfig.getRepoUrl(), gitConfig.getUsername(),
-        getEncryptedValue(gitConfig, "password", false), gitConfig.getBranch());
+
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(gitConfig.getType())
+        .url(gitConfig.getRepoUrl())
+        .username(gitConfig.getUsername())
+        .password(getEncryptedValue(gitConfig, "password", false))
+        .branch(gitConfig.getBranch())
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

@@ -63,6 +63,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   protected void toYaml(Y yaml, B bean) {
     yaml.setServerName(getSettingName(bean.getSettingId()));
     yaml.setMetadataOnly(bean.isMetadataOnly());
+    yaml.setHarnessApiVersion(getHarnessApiVersion());
   }
 
   @Override

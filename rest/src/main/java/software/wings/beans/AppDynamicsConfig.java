@@ -68,8 +68,9 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
     private String controllerUrl;
 
     @Builder
-    public Yaml(String type, String username, String password, String accountName, String controllerUrl) {
-      super(type);
+    public Yaml(String type, String harnessApiVersion, String username, String password, String accountName,
+        String controllerUrl) {
+      super(type, harnessApiVersion);
       this.username = username;
       this.password = password;
       this.accountName = accountName;

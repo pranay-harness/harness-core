@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.yaml.BaseYaml;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -412,40 +412,15 @@ public class Pipeline extends Base {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends BaseYaml {
+  public static final class Yaml extends BaseEntityYaml {
     private String description;
     private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
 
-    public static final class Builder {
-      private String description;
-      private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withDescription(String description) {
-        this.description = description;
-        return this;
-      }
-
-      public Builder withPipelineStages(List<PipelineStage.Yaml> pipelineStages) {
-        this.pipelineStages = pipelineStages;
-        return this;
-      }
-
-      public Builder but() {
-        return anYaml().withDescription(description).withPipelineStages(pipelineStages);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setDescription(description);
-        yaml.setPipelineStages(pipelineStages);
-        return yaml;
-      }
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, String description, List<PipelineStage.Yaml> pipelineStages) {
+      super(type, harnessApiVersion);
+      this.description = description;
+      this.pipelineStages = pipelineStages;
     }
   }
 }

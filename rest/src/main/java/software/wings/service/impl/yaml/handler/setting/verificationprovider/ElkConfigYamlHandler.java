@@ -19,8 +19,15 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     ElkConfig config = (ElkConfig) settingAttribute.getValue();
     String connectorType = Util.getStringFromEnum(config.getElkConnector());
-    return new Yaml(config.getType(), config.getElkUrl(), config.getUsername(),
-        getEncryptedValue(config, "password", false), connectorType);
+
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(config.getType())
+        .elkUrl(config.getElkUrl())
+        .username(config.getUsername())
+        .password(getEncryptedValue(config, "password", false))
+        .connectorType(connectorType)
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

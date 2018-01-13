@@ -57,7 +57,12 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
               .collect(Collectors.toList());
     }
 
-    return new Yaml(DeploymentType.AWS_LAMBDA.name(), defaultSpecYaml, functionSpecYamlList);
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(DeploymentType.AWS_LAMBDA.name())
+        .functions(functionSpecYamlList)
+        .defaults(defaultSpecYaml)
+        .build();
   }
 
   @Override

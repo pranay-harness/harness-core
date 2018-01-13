@@ -30,8 +30,8 @@ public class UserDataSpecification extends DeploymentSpecification {
     private String data;
 
     @Builder
-    public Yaml(String type, String data) {
-      super(type);
+    public Yaml(String type, String harnessApiVersion, String data) {
+      super(type, harnessApiVersion);
       this.data = data;
     }
   }

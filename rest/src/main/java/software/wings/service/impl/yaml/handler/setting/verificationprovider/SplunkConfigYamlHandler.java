@@ -16,8 +16,13 @@ public class SplunkConfigYamlHandler extends VerificationProviderYamlHandler<Yam
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     SplunkConfig config = (SplunkConfig) settingAttribute.getValue();
-    return new Yaml(
-        config.getType(), config.getSplunkUrl(), config.getUsername(), getEncryptedValue(config, "password", false));
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(config.getType())
+        .splunkUrl(config.getSplunkUrl())
+        .username(config.getUsername())
+        .password(getEncryptedValue(config, "password", false))
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

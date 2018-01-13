@@ -32,7 +32,11 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
   @Override
   public Application.Yaml toYaml(Application application, String appId) {
-    return Application.Yaml.builder().type(APPLICATION.name()).description(application.getDescription()).build();
+    return Application.Yaml.builder()
+        .type(APPLICATION.name())
+        .description(application.getDescription())
+        .harnessApiVersion(getHarnessApiVersion())
+        .build();
   }
 
   @Override

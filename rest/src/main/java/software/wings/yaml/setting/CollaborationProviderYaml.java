@@ -12,7 +12,7 @@ import software.wings.settings.SettingValue;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class CollaborationProviderYaml extends SettingValue.Yaml {
-  public CollaborationProviderYaml(String type) {
-    super(type);
+  public CollaborationProviderYaml(String type, String harnessApiVersion) {
+    super(type, harnessApiVersion);
   }
 }

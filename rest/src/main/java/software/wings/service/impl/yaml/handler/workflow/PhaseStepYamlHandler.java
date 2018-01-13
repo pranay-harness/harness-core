@@ -12,6 +12,7 @@ import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStep.Yaml;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
@@ -42,7 +43,8 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
 
     List<Node> stepList = Lists.newArrayList();
     if (yaml.getSteps() != null) {
-      BaseYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
+      StepYamlHandler stepYamlHandler =
+          (StepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
 
       // Steps
       stepList = yaml.getSteps()
@@ -51,9 +53,8 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                        try {
                          ChangeContext.Builder clonedContextBuilder = cloneFileChangeContext(changeContext, stepYaml);
                          ChangeContext clonedContext = clonedContextBuilder.build();
-
                          clonedContext.getEntityIdMap().put("PHASE_STEP", phaseStepUuid);
-                         return (Node) stepYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
+                         return stepYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
                        } catch (HarnessException e) {
                          throw new WingsException(e);
                        }
@@ -64,27 +65,28 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
     // Failure strategies
     List<FailureStrategy> failureStrategies = Lists.newArrayList();
     if (yaml.getFailureStrategies() != null) {
-      BaseYamlHandler failureStrategyYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
-      failureStrategies = yaml.getFailureStrategies()
-                              .stream()
-                              .map(failureStrategy -> {
-                                try {
-                                  ChangeContext.Builder clonedContext =
-                                      cloneFileChangeContext(changeContext, failureStrategy);
-                                  return (FailureStrategy) failureStrategyYamlHandler.upsertFromYaml(
-                                      clonedContext.build(), changeSetContext);
-                                } catch (HarnessException e) {
-                                  throw new WingsException(e);
-                                }
-                              })
-                              .collect(Collectors.toList());
+      FailureStrategyYamlHandler failureStrategyYamlHandler =
+          (FailureStrategyYamlHandler) yamlHandlerFactory.getYamlHandler(
+              YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
+      failureStrategies =
+          yaml.getFailureStrategies()
+              .stream()
+              .map(failureStrategy -> {
+                try {
+                  ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, failureStrategy);
+                  return failureStrategyYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+                } catch (HarnessException e) {
+                  throw new WingsException(e);
+                }
+              })
+              .collect(Collectors.toList());
     }
 
+    Boolean isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
     return phaseStepBuilder.addAllSteps(stepList)
         .withFailureStrategies(failureStrategies)
         .withPhaseStepNameForRollback(yaml.getPhaseStepNameForRollback())
-        .withRollback(yaml.isRollback())
+        .withRollback(isRollback)
         .withStatusForRollback(statusForRollback)
         .withStepsInParallel(yaml.isStepsInParallel())
         .withWaitInterval(yaml.getWaitInterval())
@@ -113,7 +115,6 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
         .failureStrategies(failureStrategyYamlList)
         .name(bean.getName())
         .phaseStepNameForRollback(bean.getPhaseStepNameForRollback())
-        .rollback(bean.isRollback())
         .statusForRollback(bean.getStatusForRollback() != null ? bean.getStatusForRollback().name() : null)
         .stepsInParallel(bean.isStepsInParallel())
         .steps(stepsYamlList)

@@ -47,4 +47,8 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
     clonedContext.withYaml(yaml);
     return clonedContext;
   }
+
+  protected String getHarnessApiVersion() {
+    return "1.0";
+  }
 }

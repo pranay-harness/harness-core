@@ -82,9 +82,10 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
             .map(pipelineStage -> (PipelineStage.Yaml) pipelineStageYamlHandler.toYaml(pipelineStage, bean.getAppId()))
             .collect(Collectors.toList());
 
-    return Yaml.Builder.anYaml()
-        .withDescription(bean.getDescription())
-        .withPipelineStages(pipelineStageYamlList)
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .description(bean.getDescription())
+        .pipelineStages(pipelineStageYamlList)
         .build();
   }
 

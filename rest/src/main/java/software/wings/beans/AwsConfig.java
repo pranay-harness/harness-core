@@ -53,8 +53,8 @@ public class AwsConfig extends SettingValue implements Encryptable {
     private String secretKey;
 
     @Builder
-    public Yaml(String type, String accessKey, String secretKey) {
-      super(type);
+    public Yaml(String type, String harnessApiVersion, String accessKey, String secretKey) {
+      super(type, harnessApiVersion);
       this.accessKey = accessKey;
       this.secretKey = secretKey;
     }

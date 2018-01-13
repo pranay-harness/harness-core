@@ -16,8 +16,14 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
-    return new Yaml(jenkinsConfig.getType(), jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
-        getEncryptedValue(jenkinsConfig, "password", false));
+
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(jenkinsConfig.getType())
+        .url(jenkinsConfig.getJenkinsUrl())
+        .username(jenkinsConfig.getUsername())
+        .password(getEncryptedValue(jenkinsConfig, "password", false))
+        .build();
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

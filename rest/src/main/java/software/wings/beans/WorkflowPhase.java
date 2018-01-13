@@ -18,7 +18,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.TransitionType;
-import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.BaseYamlWithType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -414,7 +414,7 @@ public class WorkflowPhase implements UuidAware {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends BaseEntityYaml {
+  public static final class Yaml extends BaseYamlWithType {
     private String name;
     private String infraMappingName;
     private String serviceName;
@@ -426,10 +426,10 @@ public class WorkflowPhase implements UuidAware {
     //  private DeploymentType deploymentType;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String name, String infraMappingName, String serviceName,
-        String computeProviderName, boolean provisionNodes, String phaseNameForRollback,
-        List<TemplateExpression.Yaml> templateExpressions, List<PhaseStep.Yaml> phaseSteps) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String name, String infraMappingName, String serviceName, String computeProviderName,
+        boolean provisionNodes, String phaseNameForRollback, List<TemplateExpression.Yaml> templateExpressions,
+        List<PhaseStep.Yaml> phaseSteps) {
+      super(type);
       this.name = name;
       this.infraMappingName = infraMappingName;
       this.serviceName = serviceName;

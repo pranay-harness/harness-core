@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import ro.fortsoft.pf4j.ExtensionPoint;
 import software.wings.utils.WingsReflectionUtils;
-import software.wings.yaml.BaseYamlWithType;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -270,9 +270,9 @@ public abstract class SettingValue implements ExtensionPoint {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public abstract static class Yaml extends BaseYamlWithType {
-    public Yaml(String type) {
-      super(type);
+  public abstract static class Yaml extends BaseEntityYaml {
+    public Yaml(String type, String harnessApiVersion) {
+      super(type, harnessApiVersion);
     }
   }
 }

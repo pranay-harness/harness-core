@@ -63,8 +63,9 @@ public class ElkConfig extends SettingValue implements Encryptable {
     private String connectorType;
 
     @Builder
-    public Yaml(String type, String elkUrl, String username, String password, String connectorType) {
-      super(type);
+    public Yaml(
+        String type, String harnessApiVersion, String elkUrl, String username, String password, String connectorType) {
+      super(type, harnessApiVersion);
       this.elkUrl = elkUrl;
       this.username = username;
       this.password = password;

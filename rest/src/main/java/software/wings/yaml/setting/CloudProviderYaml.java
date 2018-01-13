@@ -12,7 +12,7 @@ import software.wings.settings.SettingValue;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class CloudProviderYaml extends SettingValue.Yaml {
-  public CloudProviderYaml(String type) {
-    super(type);
+  public CloudProviderYaml(String type, String harnessApiVersion) {
+    super(type, harnessApiVersion);
   }
 }

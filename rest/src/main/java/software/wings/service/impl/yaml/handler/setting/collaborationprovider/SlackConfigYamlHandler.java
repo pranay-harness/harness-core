@@ -14,7 +14,12 @@ public class SlackConfigYamlHandler extends CollaborationProviderYamlHandler<Yam
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     SlackConfig slackConfig = (SlackConfig) settingAttribute.getValue();
-    return new Yaml(slackConfig.getType(), slackConfig.getOutgoingWebhookUrl());
+
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .type(slackConfig.getType())
+        .outgoingWebhookUrl(slackConfig.getOutgoingWebhookUrl())
+        .build();
   }
 
   protected SettingAttribute toBean(

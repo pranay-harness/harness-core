@@ -86,6 +86,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
         .checksum(bean.getChecksum())
         .checksumType(Util.getStringFromEnum(bean.getChecksumType()))
         .encrypted(bean.isEncrypted())
+        .harnessApiVersion(getHarnessApiVersion())
         .build();
   }
 

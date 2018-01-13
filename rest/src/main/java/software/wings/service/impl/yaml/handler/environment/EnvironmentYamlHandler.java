@@ -61,6 +61,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         .description(environment.getDescription())
         .environmentType(environment.getEnvironmentType().name())
         .variableOverrides(variableOverrideYamlList)
+        .harnessApiVersion(getHarnessApiVersion())
         .build();
   }
 

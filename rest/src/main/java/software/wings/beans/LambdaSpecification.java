@@ -32,8 +32,9 @@ public class LambdaSpecification extends DeploymentSpecification {
     private List<FunctionSpecification.Yaml> functions;
 
     @Builder
-    public Yaml(String type, DefaultSpecification.Yaml defaults, List<FunctionSpecification.Yaml> functions) {
-      super(type);
+    public Yaml(String type, String harnessApiVersion, DefaultSpecification.Yaml defaults,
+        List<FunctionSpecification.Yaml> functions) {
+      super(type, harnessApiVersion);
       this.defaults = defaults;
       this.functions = functions;
     }

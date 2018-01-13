@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.sm.StateType;
 import software.wings.utils.ArtifactType;
-import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.BaseYamlWithType;
 
 import java.beans.Transient;
 import java.util.Map;
@@ -248,7 +248,7 @@ public class Variable {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static final class Yaml extends BaseEntityYaml {
+  public static final class Yaml extends BaseYamlWithType {
     private String name;
     private String description;
     private boolean mandatory;
@@ -256,9 +256,8 @@ public class Variable {
     private boolean fixed;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String name, String description, boolean mandatory, String value,
-        boolean fixed) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String name, String description, boolean mandatory, String value, boolean fixed) {
+      super(type);
       this.name = name;
       this.description = description;
       this.mandatory = mandatory;
