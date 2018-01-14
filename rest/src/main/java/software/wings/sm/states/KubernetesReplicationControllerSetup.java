@@ -26,6 +26,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
@@ -53,7 +54,7 @@ import java.util.List;
 public class KubernetesReplicationControllerSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
-  private static final int DEFAULT_STEADY_STATE_TIMEOUT = 10;
+  static final int DEFAULT_STEADY_STATE_TIMEOUT = 15;
 
   private String replicationControllerName;
   private KubernetesServiceType serviceType;
@@ -118,6 +119,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
           delegateProxyFactory.get(ContainerService.class, syncTaskContext).getDaemonSetYaml(containerServiceParams);
     }
 
+    int serviceSteadyStateTimeout =
+        getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -137,8 +140,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withTargetPort(targetPort)
         .withControllerNamePrefix(controllerNamePrefix)
         .withPreviousDaemonSetYaml(previousDaemonSetYaml)
-        .withServiceSteadyStateTimeout(
-            getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT)
+        .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .build();
   }
 
@@ -146,15 +148,19 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
+    int maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
+    int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
+    ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
+    int serviceSteadyStateTimeout =
+        getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     ContainerServiceElementBuilder containerServiceElementBuilder =
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
-            .maxInstances(getMaxInstances() == 0
-                    ? 10
-                    : getMaxInstances()) // Max instances is old name, but requires migration to change
-            .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .serviceSteadyStateTimeout(getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout()
-                                                                          : DEFAULT_STEADY_STATE_TIMEOUT)
+            .useFixedInstances(isUseFixedInstances())
+            .fixedInstances(fixedInstances)
+            .maxInstances(maxInstances)
+            .resizeStrategy(resizeStrategy)
+            .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
             .clusterName(executionData.getClusterName())
             .namespace(setupParams.getNamespace())
             .deploymentType(DeploymentType.KUBERNETES)

@@ -228,7 +228,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
       if (desiredCount > 0 && !podHasImages(pod, images)) {
         hasErrors = true;
-        String msg = String.format("Pod %s does not have image(s) %s", podName, images);
+        String msg = String.format("Pod %s does not have image %s", podName, images);
         logger.error(msg);
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
@@ -565,14 +565,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           int haveImages = (int) pods.stream().filter(pod -> podHasImages(pod, images)).count();
           if (haveImages != desiredCount) {
             executionLogCallback.saveExecutionLog(
-                String.format(
-                    "Waiting for pods to be updated with image(s) %s [%d/%d]", images, haveImages, desiredCount),
+                String.format("Waiting for pods to be updated with image %s [%d/%d]", images, haveImages, desiredCount),
                 LogLevel.INFO);
             return false;
           }
           if (!haveImagesCountReached.getAndSet(true)) {
             executionLogCallback.saveExecutionLog(
-                String.format("Pods are updated with image(s) %s [%d/%d]", images, haveImages, desiredCount),
+                String.format("Pods are updated with image %s [%d/%d]", images, haveImages, desiredCount),
                 LogLevel.INFO);
           }
         }

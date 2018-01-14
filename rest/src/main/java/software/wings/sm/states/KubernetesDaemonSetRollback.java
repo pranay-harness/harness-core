@@ -1,9 +1,9 @@
 package software.wings.sm.states;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
+import static software.wings.sm.states.KubernetesReplicationControllerSetup.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.collections.CollectionUtils;
@@ -18,9 +18,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
-import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -80,6 +78,8 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
     ContainerRollbackRequestElement rollbackElement =
         context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
 
+    int serviceSteadyStateTimeout =
+        getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -100,25 +100,14 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
         .withControllerNamePrefix(controllerName)
         .withRollbackDaemonSet(true)
         .withPreviousDaemonSetYaml(rollbackElement.getPreviousDaemonSetYaml())
+        .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .build();
   }
 
   @Override
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
-    ContainerSetupCommandUnitExecutionData setupExecutionData =
-        (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
-    KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    return ContainerServiceElement.builder()
-        .uuid(executionData.getServiceId())
-        .name(setupExecutionData.getContainerServiceName())
-        .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-        .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-        .clusterName(executionData.getClusterName())
-        .namespace(setupParams.getNamespace())
-        .deploymentType(DeploymentType.KUBERNETES)
-        .infraMappingId(setupParams.getInfraMappingId())
-        .build();
+    return null;
   }
 
   @Override

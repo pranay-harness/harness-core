@@ -2,14 +2,10 @@ package software.wings.sm.states;
 
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 
-import com.google.inject.Inject;
-
 import com.github.reinert.jjschema.Attributes;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
-import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
@@ -32,8 +28,6 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Service Cluster")
   private String commandName;
-
-  @Inject @Transient private transient AwsClusterService awsClusterService;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());

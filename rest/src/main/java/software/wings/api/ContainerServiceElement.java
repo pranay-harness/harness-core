@@ -21,6 +21,8 @@ import java.util.Map;
 public class ContainerServiceElement implements ContextElement {
   private String uuid;
   private String name;
+  private boolean useFixedInstances;
+  private int fixedInstances;
   private int maxInstances;
   private int serviceSteadyStateTimeout;
   private ResizeStrategy resizeStrategy;

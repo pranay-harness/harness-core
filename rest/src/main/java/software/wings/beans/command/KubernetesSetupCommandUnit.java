@@ -261,7 +261,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
         executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName, LogLevel.INFO);
         kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, daemonSet);
-        executionLogCallback.saveExecutionLog("Rolled back to DaemonSet with image(s): "
+        executionLogCallback.saveExecutionLog("Rolled back to DaemonSet with image: "
                 + daemonSet.getSpec()
                       .getTemplate()
                       .getSpec()

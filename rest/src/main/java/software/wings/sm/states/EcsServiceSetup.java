@@ -17,6 +17,7 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
@@ -92,12 +93,18 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     EcsSetupParams setupParams = (EcsSetupParams) executionData.getContainerSetupParams();
+    int maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
+    int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
+    ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
+    int serviceSteadyStateTimeout = (int) getServiceSteadyStateTimeout();
     ContainerServiceElementBuilder containerServiceElementBuilder =
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
-            .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-            .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .serviceSteadyStateTimeout((int) getServiceSteadyStateTimeout())
+            .useFixedInstances(isUseFixedInstances())
+            .fixedInstances(fixedInstances)
+            .maxInstances(maxInstances)
+            .resizeStrategy(resizeStrategy)
+            .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
             .clusterName(executionData.getClusterName())
             .deploymentType(DeploymentType.ECS)
             .infraMappingId(setupParams.getInfraMappingId());
