@@ -106,13 +106,12 @@ public class HttpUtil {
 
   public static OkHttpClient getUnsafeOkHttpClient() {
     try {
-      OkHttpClient.Builder okHttpClient = new OkHttpClient.Builder();
-      okHttpClient.sslSocketFactory(HttpUtil.getSslContext().getSocketFactory());
-      HostnameVerifier allHostsValid = (s, sslSession) -> true;
-      okHttpClient.hostnameVerifier(allHostsValid);
-      okHttpClient.connectTimeout(15000, TimeUnit.SECONDS);
-      okHttpClient.readTimeout(15000, TimeUnit.SECONDS);
-      return okHttpClient.build();
+      return new OkHttpClient.Builder()
+          .sslSocketFactory(HttpUtil.getSslContext().getSocketFactory())
+          .hostnameVerifier((s, sslSession) -> true)
+          .connectTimeout(15000, TimeUnit.SECONDS)
+          .readTimeout(15000, TimeUnit.SECONDS)
+          .build();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

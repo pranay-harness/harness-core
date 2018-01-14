@@ -88,15 +88,13 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   @Override
   public List<YamlVersion> getList(String entityId, Type type) {
     List<YamlVersion> versions = new ArrayList<>();
-    versions = wingsPersistence.createQuery(YamlVersion.class)
-                   .field("entityId")
-                   .equal(entityId)
-                   .field("type")
-                   .equal(type)
-                   .order("-version")
-                   .asList();
-
-    return versions;
+    return wingsPersistence.createQuery(YamlVersion.class)
+        .field("entityId")
+        .equal(entityId)
+        .field("type")
+        .equal(type)
+        .order("-version")
+        .asList();
   }
 
   @Override
@@ -109,11 +107,6 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
                                      .order("-version")
                                      .asList();
 
-    if (!versions.isEmpty()) {
-      YamlVersion yv = versions.get(0);
-      return yv;
-    }
-
-    return null;
+    return versions.isEmpty() ? null : versions.get(0);
   }
 }

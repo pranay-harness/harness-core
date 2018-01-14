@@ -11,10 +11,7 @@ class UnsortedPropertyUtils extends PropertyUtils {
   @Override
   protected Set<Property> createPropertySet(Class<? extends Object> type, BeanAccess bAccess) {
     try {
-      Set<Property> result = new LinkedHashSet<Property>(getPropertiesMap(type, BeanAccess.FIELD).values());
-      // We don't need this
-      // result.remove(result.iterator().next());  // drop 'listInt' property
-      return result;
+      return new LinkedHashSet<Property>(getPropertiesMap(type, BeanAccess.FIELD).values());
     } catch (Exception e) {
       e.printStackTrace();
     }

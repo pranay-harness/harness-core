@@ -214,15 +214,14 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public List<ConfigFile> getConfigFileByTemplate(String appId, String envId, ServiceTemplate serviceTemplate) {
-    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                       .field("appId")
-                                       .equal(appId)
-                                       .field("envId")
-                                       .equal(envId)
-                                       .field("templateId")
-                                       .equal(serviceTemplate.getUuid())
-                                       .asList();
-    return configFiles;
+    return wingsPersistence.createQuery(ConfigFile.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("templateId")
+        .equal(serviceTemplate.getUuid())
+        .asList();
   }
 
   @Override

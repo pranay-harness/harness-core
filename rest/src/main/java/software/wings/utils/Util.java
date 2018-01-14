@@ -52,16 +52,14 @@ public class Util {
   }
 
   public static List<NameValuePair> toYamlList(Map<String, Object> properties) {
-    List<NameValuePair> nameValuePairs =
-        properties.entrySet()
-            .stream()
-            .map(entry
-                -> NameValuePair.builder()
-                       .name(entry.getKey())
-                       .value(entry.getValue() != null ? entry.getValue().toString() : null)
-                       .build())
-            .collect(Collectors.toList());
-    return nameValuePairs;
+    return properties.entrySet()
+        .stream()
+        .map(entry
+            -> NameValuePair.builder()
+                   .name(entry.getKey())
+                   .value(entry.getValue() != null ? entry.getValue().toString() : null)
+                   .build())
+        .collect(Collectors.toList());
   }
 
   public static Map<String, Object> toProperties(List<NameValuePair> nameValuePairList) {

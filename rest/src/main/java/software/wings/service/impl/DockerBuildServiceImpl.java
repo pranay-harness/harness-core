@@ -35,9 +35,8 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.DOCKER.name());
-    List<BuildDetails> builds =
-        dockerRegistryService.getBuilds(dockerConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 50);
-    return builds;
+    return dockerRegistryService.getBuilds(
+        dockerConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 50);
   }
 
   @Override

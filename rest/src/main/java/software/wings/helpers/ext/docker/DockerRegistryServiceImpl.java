@@ -54,8 +54,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
                             .baseUrl(dockerConfig.getDockerRegistryUrl())
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
-    DockerRegistryRestClient dockerRegistryRestClient = retrofit.create(DockerRegistryRestClient.class);
-    return dockerRegistryRestClient;
+    return retrofit.create(DockerRegistryRestClient.class);
   }
 
   @Override

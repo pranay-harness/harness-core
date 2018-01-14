@@ -134,8 +134,7 @@ public class BambooState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
-    ExecutionResponse response = executeInternal(context, activityId);
-    return response;
+    return executeInternal(context, activityId);
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {

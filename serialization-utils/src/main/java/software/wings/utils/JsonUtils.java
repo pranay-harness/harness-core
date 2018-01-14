@@ -325,15 +325,8 @@ public class JsonUtils {
    * @return the json node
    */
   public static JsonNode jsonSchema(ObjectMapper objectMapper, Class<?> clazz) {
-    try {
-      JsonSchemaFactory schemaFactory = new JsonSchemaV4Factory();
-      JsonNode schemaNode = schemaFactory.createSchema(clazz);
-
-      return schemaNode;
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      throw e;
-    }
+    JsonSchemaFactory schemaFactory = new JsonSchemaV4Factory();
+    return schemaFactory.createSchema(clazz);
   }
 
   /**

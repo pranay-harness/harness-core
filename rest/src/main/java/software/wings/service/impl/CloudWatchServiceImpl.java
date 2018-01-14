@@ -64,7 +64,6 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
       throw new StateExecutionException("AWS account setting not found");
     }
-    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    return awsConfig;
+    return (AwsConfig) settingAttribute.getValue();
   }
 }

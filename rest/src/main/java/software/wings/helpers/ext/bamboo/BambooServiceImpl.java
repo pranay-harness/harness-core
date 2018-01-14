@@ -67,8 +67,7 @@ public class BambooServiceImpl implements BambooService {
                               .addConverterFactory(JacksonConverterFactory.create())
                               .client(HttpUtil.getUnsafeOkHttpClient())
                               .build();
-      BambooRestClient bambooRestClient = retrofit.create(BambooRestClient.class);
-      return bambooRestClient;
+      return retrofit.create(BambooRestClient.class);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message",
@@ -375,8 +374,7 @@ public class BambooServiceImpl implements BambooService {
     int artifactIdx = strings.indexOf("artifact");
     if (artifactIdx >= 0 && artifactIdx + 2 < strings.size()) {
       artifactIdx += 2; // skip next path element jobShortId as well: "baseUrl/.../../artifact/jobShortId/{relativePath}
-      String relativePath = Joiner.on("/").join(strings.listIterator(artifactIdx));
-      return relativePath;
+      return Joiner.on("/").join(strings.listIterator(artifactIdx));
     }
     return null;
   }

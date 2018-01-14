@@ -99,8 +99,7 @@ public class PipelineServiceImpl implements PipelineService {
    */
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
-    PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
-    return res;
+    return wingsPersistence.query(Pipeline.class, pageRequest);
   }
 
   /**

@@ -57,8 +57,7 @@ public class GenericDbCache {
    */
   public <T> T get(Class<T> cls, String objKey) {
     try {
-      Object obj = cache.get(makeCacheKey(cls, objKey));
-      return (T) obj;
+      return (T) cache.get(makeCacheKey(cls, objKey));
     } catch (Exception ex) {
       logger.warn(String.format("Exception occurred in fetching key %s, %s", cls.getSimpleName(), objKey), ex);
     }

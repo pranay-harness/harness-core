@@ -88,8 +88,7 @@ public class EcrServiceImpl implements EcrService {
     Repository repository =
         awsHelperService.getRepository(awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName());
     if (repository != null) {
-      String imageUrl = repository.getRepositoryUri();
-      return imageUrl;
+      return repository.getRepositoryUri();
     }
     return null;
   }
