@@ -137,11 +137,11 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param appId            the app id
    * @param serviceId        the service id
    * @param serviceCommand   the command graph
-   * @param isDefaultCommand the is default command
+   * @param defaultCommand
    * @return the service
    */
-  Service addCommand(
-      @NotEmpty String appId, @NotEmpty String serviceId, ServiceCommand serviceCommand, boolean isDefaultCommand);
+  Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, ServiceCommand serviceCommand,
+      boolean defaultCommand, boolean pushToYaml);
 
   /**
    * Update command service.

@@ -40,6 +40,11 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
+
+    @Override
     public List<Command> getDefaultCommands() {
       return asList(getStartCommand(), getStopCommand(), getInstallCommand());
     }
@@ -205,6 +210,11 @@ public enum ArtifactType {
     public static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
+
+    @Override
     public List<Command> getDefaultCommands() {
       return asList(
           aCommand()
@@ -246,6 +256,11 @@ public enum ArtifactType {
    */
   TAR {
     private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
 
     @Override
     public List<Command> getDefaultCommands() {
@@ -373,6 +388,11 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
+
+    @Override
     public List<Command> getDefaultCommands() {
       return asList(getStartCommand(), getInstallCommand(), getStopCommand());
     }
@@ -498,6 +518,11 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return false;
+    }
+
+    @Override
     public List<Command> getDefaultCommands() {
       return asList(aCommand()
                         .withCommandType(CommandType.SETUP)
@@ -562,6 +587,11 @@ public enum ArtifactType {
    */
   RPM {
     private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
 
     @Override
     public List<Command> getDefaultCommands() {
@@ -686,6 +716,11 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return false;
+    }
+
+    @Override
     public List<Command> getDefaultCommands() {
       return asList(getAwsLambdaCommand());
     }
@@ -713,6 +748,11 @@ public enum ArtifactType {
    */
   AWS_CODEDEPLOY {
     private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean shouldPushCommandsToYaml() {
+      return false;
+    }
 
     @Override
     public List<Command> getDefaultCommands() {
@@ -748,6 +788,11 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return false;
+    }
+
+    @Override
     public List<Command> getDefaultCommands() {
       return asList(getAmiDeployCommandUnit());
     }
@@ -781,6 +826,11 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
+
+    @Override
     public List<Command> getDefaultCommands() {
       return emptyList();
     }
@@ -792,4 +842,6 @@ public enum ArtifactType {
    * @return the default commands
    */
   public abstract List<Command> getDefaultCommands();
+
+  public abstract boolean shouldPushCommandsToYaml();
 }

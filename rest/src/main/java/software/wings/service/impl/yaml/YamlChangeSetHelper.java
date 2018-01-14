@@ -241,7 +241,7 @@ public class YamlChangeSetHelper {
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, crudType));
-      if (crudType.equals(ChangeType.ADD)) {
+      if (crudType.equals(ChangeType.ADD) && service.getArtifactType().shouldPushCommandsToYaml()) {
         serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid())
             .forEach(serviceCommand
                 -> changeSet.add(
