@@ -615,9 +615,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     Query query = createQuery(collectionClass);
     if (authFilters(query)) {
       return query;
-    } else {
-      throw new WingsException(getExceptionMsgWithUserContext());
     }
+    throw new WingsException(getExceptionMsgWithUserContext());
   }
 
   @Override
@@ -628,24 +627,19 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
     if (authFilters(query)) {
       return query;
-    } else {
-      throw new WingsException(getExceptionMsgWithUserContext());
     }
+    throw new WingsException(getExceptionMsgWithUserContext());
   }
 
   private String getExceptionMsgWithUserContext() throws WingsException {
     User user = UserThreadLocal.get();
-    String msg =
-        "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account.";
+    StringBuilder buffer = new StringBuilder(
+        "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account.");
     if (user != null) {
-      msg = new StringBuffer(msg)
-                .append(" User Name: ")
-                .append(user.getName())
-                .append(" Email id: ")
-                .append(user.getEmail())
-                .toString();
+      buffer.append(" User uuid: ");
+      buffer.append(user.getUuid());
     }
-    return msg;
+    return buffer.toString();
   }
 
   /**
