@@ -101,6 +101,8 @@ import java.util.stream.Collectors;
 public abstract class ContainerServiceSetup extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
 
+  private boolean useFixedInstances;
+  private int fixedInstances;
   private int maxInstances; // Named minimum in the UI
   private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout; // Minutes
@@ -275,6 +277,22 @@ public abstract class ContainerServiceSetup extends State {
         .addNotifyElement(containerServiceElement)
         .addNotifyElement(instanceElementListParam)
         .build();
+  }
+
+  public boolean isUseFixedInstances() {
+    return useFixedInstances;
+  }
+
+  public void setUseFixedInstances(boolean useFixedInstances) {
+    this.useFixedInstances = useFixedInstances;
+  }
+
+  public int getFixedInstances() {
+    return fixedInstances;
+  }
+
+  public void setFixedInstances(int fixedInstances) {
+    this.fixedInstances = fixedInstances;
   }
 
   public int getMaxInstances() {

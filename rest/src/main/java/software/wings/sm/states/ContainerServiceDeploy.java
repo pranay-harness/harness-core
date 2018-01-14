@@ -192,26 +192,43 @@ public abstract class ContainerServiceDeploy extends State {
 
   private int getNewInstancesDesiredCount(ContextData contextData) {
     if (getInstanceUnitType() == PERCENTAGE) {
-      int percent = Math.min(getInstanceCount(), 100);
-      SyncTaskContext syncTaskContext =
-          aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-      ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                          .settingAttribute(contextData.settingAttribute)
-                                                          .containerServiceName(contextData.containerElement.getName())
-                                                          .encryptionDetails(contextData.encryptedDataDetails)
-                                                          .clusterName(contextData.containerElement.getClusterName())
-                                                          .namespace(contextData.containerElement.getNamespace())
-                                                          .region(contextData.region)
-                                                          .build();
-      LinkedHashMap<String, Integer> activeServiceCounts =
-          delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-              .getActiveServiceCounts(containerServiceParams);
-      int totalActiveInstances = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
-      int totalInstancesAvailable = Math.max(contextData.containerElement.getMaxInstances(), totalActiveInstances);
-      int instanceCount = Long.valueOf(Math.round(percent * totalInstancesAvailable / 100.0)).intValue();
-      return Math.max(instanceCount, 1);
+      int totalInstancesAvailable;
+      if (contextData.containerElement.isUseFixedInstances()) {
+        totalInstancesAvailable = contextData.containerElement.getFixedInstances();
+      } else {
+        SyncTaskContext syncTaskContext =
+            aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
+        ContainerServiceParams containerServiceParams =
+            ContainerServiceParams.builder()
+                .settingAttribute(contextData.settingAttribute)
+                .containerServiceName(contextData.containerElement.getName())
+                .encryptionDetails(contextData.encryptedDataDetails)
+                .clusterName(contextData.containerElement.getClusterName())
+                .namespace(contextData.containerElement.getNamespace())
+                .region(contextData.region)
+                .build();
+        LinkedHashMap<String, Integer> activeServiceCounts =
+            delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                .getActiveServiceCounts(containerServiceParams);
+        int activeCount = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
+        totalInstancesAvailable = activeCount > 0 ? activeCount : contextData.containerElement.getMaxInstances();
+      }
+      return (int) Math.round(Math.min(getInstanceCount(), 100) * totalInstancesAvailable / 100.0);
     } else {
-      return getInstanceCount();
+      if (contextData.containerElement.isUseFixedInstances()) {
+        return Math.min(getInstanceCount(), contextData.containerElement.getFixedInstances());
+      } else {
+        return getInstanceCount();
+      }
+    }
+  }
+
+  private boolean downsizeAllPrevious(ContextData contextData) {
+    if (getInstanceUnitType() == PERCENTAGE) {
+      return getInstanceCount() >= 100;
+    } else {
+      return contextData.containerElement.isUseFixedInstances()
+          && getInstanceCount() >= contextData.containerElement.getFixedInstances();
     }
   }
 
@@ -230,7 +247,11 @@ public abstract class ContainerServiceDeploy extends State {
     LinkedHashMap<String, Integer> previousCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                                                         .getActiveServiceCounts(containerServiceParams);
     previousCounts.remove(newServiceData.getName());
-    int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
+
+    int downsizeCount = downsizeAllPrevious(contextData)
+        ? previousCounts.values().stream().mapToInt(Integer::intValue).sum()
+        : Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
+
     for (String serviceName : previousCounts.keySet()) {
       int previousCount = previousCounts.get(serviceName);
       int desiredCount = Math.max(previousCount - downsizeCount, 0);
