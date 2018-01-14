@@ -25,7 +25,7 @@ public class GenericDbCache {
           .build(new CacheLoader<String, Object>() {
             @Override
             public Object load(String key) throws Exception {
-              int idx = key.lastIndexOf("~");
+              int idx = key.lastIndexOf('~');
               String className = key.substring(0, idx);
               String uuid = key.substring(idx + 1);
               return wingsPersistence.getDatastore().get(Class.forName(className), uuid);

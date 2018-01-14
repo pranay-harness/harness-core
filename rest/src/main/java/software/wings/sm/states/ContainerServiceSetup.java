@@ -354,8 +354,8 @@ public abstract class ContainerServiceSetup extends State {
       encryptionService.decrypt(artifactoryConfig,
           secretManager.getEncryptionDetails(artifactoryConfig, context.getAppId(), context.getWorkflowExecutionId()));
       String url = artifactoryConfig.getArtifactoryUrl();
-      int firstDotIndex = url.indexOf(".");
-      int slashAfterDomain = url.indexOf("/", firstDotIndex);
+      int firstDotIndex = url.indexOf('.');
+      int slashAfterDomain = url.indexOf('/', firstDotIndex);
       String registryUrl = url.substring(0, firstDotIndex) + "-" + artifactoryArtifactStream.getJobname()
           + url.substring(firstDotIndex, slashAfterDomain > 0 ? slashAfterDomain : url.length());
       String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
@@ -371,8 +371,8 @@ public abstract class ContainerServiceSetup extends State {
           secretManager.getEncryptionDetails(nexusConfig, context.getAppId(), context.getWorkflowExecutionId()));
 
       String url = nexusConfig.getNexusUrl();
-      int firstDotIndex = url.indexOf(".");
-      int colonIndex = url.indexOf(":", firstDotIndex);
+      int firstDotIndex = url.indexOf('.');
+      int colonIndex = url.indexOf(':', firstDotIndex);
       int endIndex = colonIndex > 0 ? colonIndex : url.length();
       String registryUrl = url.substring(0, endIndex) + ":"
           + (nexusArtifactStream.getDockerPort() != null ? nexusArtifactStream.getDockerPort() : "5000");

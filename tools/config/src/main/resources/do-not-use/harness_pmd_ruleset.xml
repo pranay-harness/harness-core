@@ -20,4 +20,7 @@
 
     <rule ref="rulesets/java/design.xml/UnnecessaryLocalBeforeReturn"/>
 
+    <rule ref="rulesets/java/strings.xml">
+        <exclude name="AvoidDuplicateLiterals"/>
+    </rule>
 </ruleset>

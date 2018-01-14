@@ -182,7 +182,7 @@ public class JenkinsImpl implements Jenkins {
       }
     }
 
-    sb.append("/");
+    sb.append('/');
     return sb.toString();
   }
 
@@ -277,7 +277,7 @@ public class JenkinsImpl implements Jenkins {
     StringBuilder nameBuilder = new StringBuilder();
     // We start with index 2 since we have to skip /job/
     for (int idx = 1; idx <= parts.length - 1; idx = idx + 2) {
-      nameBuilder.append("/").append(parts[idx]);
+      nameBuilder.append('/').append(parts[idx]);
     }
     String name = nameBuilder.toString();
     name = name.startsWith("/") ? name.substring(1) : name;

@@ -522,7 +522,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     for (int i = 0; i < pathElems.size(); i++) {
       groupIdBuilder.append(pathElems.get(i));
       if (i != pathElems.size() - 1) {
-        groupIdBuilder.append(".");
+        groupIdBuilder.append('.');
       }
     }
     return groupIdBuilder.toString();
@@ -533,7 +533,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     for (int i = 0; i < pathElems.size(); i++) {
       groupIdBuilder.append(pathElems.get(i));
       if (i != pathElems.size() - 1) {
-        groupIdBuilder.append("/");
+        groupIdBuilder.append('/');
       }
     }
     return groupIdBuilder.toString();
@@ -735,7 +735,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         for (RepoPath searchItem : results) {
           String repoKey = searchItem.getRepoKey();
           String itemPath = searchItem.getItemPath();
-          String artifactName = itemPath.substring(itemPath.lastIndexOf("/") + 1);
+          String artifactName = itemPath.substring(itemPath.lastIndexOf('/') + 1);
           try {
             if (pattern.matcher(itemPath).find()) {
               logger.info("Artifact name {}", artifactName);

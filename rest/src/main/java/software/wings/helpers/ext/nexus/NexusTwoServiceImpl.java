@@ -307,10 +307,12 @@ public class NexusTwoServiceImpl {
   }
 
   private String getIndexContentPathUrl(NexusConfig nexusConfig, String repoId, String path) {
-    final StringBuilder url = new StringBuilder(getBaseUrl(nexusConfig));
-    url.append("service/local/repositories/");
-    url.append(repoId).append("/index_content").append(path);
-    return url.toString();
+    return new StringBuilder(getBaseUrl(nexusConfig))
+        .append("service/local/repositories/")
+        .append(repoId)
+        .append("/index_content")
+        .append(path)
+        .toString();
   }
 
   private String getGroupId(String path) {

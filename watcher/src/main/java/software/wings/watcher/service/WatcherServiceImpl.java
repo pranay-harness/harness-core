@@ -343,7 +343,7 @@ public class WatcherServiceImpl implements WatcherService {
     Integer delegateVersionNumber = null;
     if (isNotBlank(delegateVersion)) {
       try {
-        delegateVersionNumber = Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf(".") + 1));
+        delegateVersionNumber = Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1));
       } catch (NumberFormatException e) {
         delegateVersionNumber = null;
       }
@@ -463,7 +463,7 @@ public class WatcherServiceImpl implements WatcherService {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
       String bucketName =
           watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-      String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 1);
+      String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
       S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
       BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
       String watcherMetadata = reader.readLine();
@@ -490,7 +490,7 @@ public class WatcherServiceImpl implements WatcherService {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
       String bucketName =
           watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
-      String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/") + 8);
+      String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 8);
       S3Object commandsObj = amazonS3Client.getObject(bucketName, "commands/" + env);
       if (commandsObj != null) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(commandsObj.getObjectContent()));
