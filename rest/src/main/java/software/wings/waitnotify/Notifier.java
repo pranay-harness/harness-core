@@ -20,6 +20,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -43,7 +44,8 @@ public class Notifier implements Runnable {
       return;
     }
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(Notifier.class, Notifier.class.getName())) {
+    try (AcquiredLock lock =
+             persistentLocker.acquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
           NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build());
 

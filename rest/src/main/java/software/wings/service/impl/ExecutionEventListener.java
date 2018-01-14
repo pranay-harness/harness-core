@@ -30,6 +30,8 @@ import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutor;
 
+import java.time.Duration;
+
 public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent> {
   private static final Logger logger = LoggerFactory.getLogger(ExecutionEventListener.class);
 
@@ -40,7 +42,8 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
 
   @Override
   protected void onMessage(ExecutionEvent message) throws Exception {
-    try (AcquiredLock lock = persistentLocker.acquireLock(Workflow.class, message.getWorkflowId())) {
+    try (AcquiredLock lock =
+             persistentLocker.acquireLock(Workflow.class, message.getWorkflowId(), Duration.ofMinutes(1))) {
       PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                        .addFilter("appId", EQ, message.getAppId())
                                                        .addFilter("workflowId", EQ, message.getWorkflowId())

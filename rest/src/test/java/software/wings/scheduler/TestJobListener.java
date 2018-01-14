@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import org.eclipse.jgit.util.time.MonotonicSystemClock;
+import org.eclipse.jgit.util.time.ProposedTimestamp;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
@@ -9,6 +10,8 @@ import java.util.concurrent.TimeoutException;
 
 public class TestJobListener implements JobListener {
   private String jobKey;
+
+  private static final MonotonicSystemClock monotonicSystemClock = new MonotonicSystemClock();
 
   public TestJobListener(String jk) {
     jobKey = jk;
@@ -37,13 +40,18 @@ public class TestJobListener implements JobListener {
     }
   }
 
+  long monotonicTimestamp() {
+    try (ProposedTimestamp timestamp = monotonicSystemClock.propose()) {
+      return timestamp.millis();
+    }
+  }
+
   public void waitToSatisfy(int timeoutMillis) throws InterruptedException, TimeoutException {
-    final MonotonicSystemClock monotonicSystemClock = new MonotonicSystemClock();
-    final long end = monotonicSystemClock.propose().millis() + timeoutMillis;
+    final long end = monotonicTimestamp() + timeoutMillis;
 
     synchronized (this) {
       while (!satisfied) {
-        int timeLeft = (int) (end - monotonicSystemClock.propose().millis());
+        int timeLeft = (int) (end - monotonicTimestamp());
         if (timeLeft <= 0) {
           throw new TimeoutException();
         }

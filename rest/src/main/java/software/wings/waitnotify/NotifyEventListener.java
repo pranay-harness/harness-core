@@ -25,6 +25,7 @@ import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +122,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
     boolean isError = notifyResponses.stream().filter(NotifyResponse::isError).findFirst().isPresent();
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(WaitInstance.class, waitInstanceId)) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(WaitInstance.class, waitInstanceId, Duration.ofMinutes(1))) {
       ExecutionStatus status = ExecutionStatus.SUCCESS;
       NotifyCallback callback = waitInstance.getCallback();
       injector.injectMembers(callback);
