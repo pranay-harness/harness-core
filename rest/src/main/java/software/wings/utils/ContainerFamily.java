@@ -38,6 +38,11 @@ public enum ContainerFamily {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
+
+    @Override
     protected Command getStartCommand(ArtifactType artifactType) {
       Graph graph =
           aGraph()
@@ -250,6 +255,11 @@ public enum ContainerFamily {
    */
   JBOSS {
     private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean shouldPushCommandsToYaml() {
+      return true;
+    }
 
     @Override
     protected Command getStartCommand(ArtifactType artifactType) {
@@ -506,4 +516,6 @@ public enum ContainerFamily {
    * @return the install command graph
    */
   protected abstract Command getInstallCommand(ArtifactType artifactType, AppContainer appContainer);
+
+  public abstract boolean shouldPushCommandsToYaml();
 }

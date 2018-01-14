@@ -382,20 +382,22 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         // ------------------- SERVICE COMMANDS SECTION -----------------------
 
-        DirectoryPath serviceCommandPath = servicePath.clone().add(COMMANDS_FOLDER);
-        FolderNode serviceCommandsFolder = new FolderNode(accountId, COMMANDS_FOLDER, ServiceCommand.class,
-            serviceCommandPath, service.getAppId(), yamlGitSyncService);
-        serviceFolder.addChild(serviceCommandsFolder);
+        if (service.getArtifactType().shouldPushCommandsToYaml()) {
+          DirectoryPath serviceCommandPath = servicePath.clone().add(COMMANDS_FOLDER);
+          FolderNode serviceCommandsFolder = new FolderNode(accountId, COMMANDS_FOLDER, ServiceCommand.class,
+              serviceCommandPath, service.getAppId(), yamlGitSyncService);
+          serviceFolder.addChild(serviceCommandsFolder);
 
-        List<ServiceCommand> serviceCommands =
-            serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid());
+          List<ServiceCommand> serviceCommands =
+              serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid());
 
-        // iterate over service commands
-        for (ServiceCommand serviceCommand : serviceCommands) {
-          String commandYamlFileName = serviceCommand.getName() + YAML_EXTENSION;
-          serviceCommandsFolder.addChild(new ServiceLevelYamlNode(accountId, serviceCommand.getUuid(),
-              serviceCommand.getAppId(), serviceCommand.getServiceId(), commandYamlFileName, ServiceCommand.class,
-              serviceCommandPath.clone().add(commandYamlFileName), yamlGitSyncService, Type.SERVICE_COMMAND));
+          // iterate over service commands
+          for (ServiceCommand serviceCommand : serviceCommands) {
+            String commandYamlFileName = serviceCommand.getName() + YAML_EXTENSION;
+            serviceCommandsFolder.addChild(new ServiceLevelYamlNode(accountId, serviceCommand.getUuid(),
+                serviceCommand.getAppId(), serviceCommand.getServiceId(), commandYamlFileName, ServiceCommand.class,
+                serviceCommandPath.clone().add(commandYamlFileName), yamlGitSyncService, Type.SERVICE_COMMAND));
+          }
         }
 
         // ------------------- END SERVICE COMMANDS SECTION -----------------------

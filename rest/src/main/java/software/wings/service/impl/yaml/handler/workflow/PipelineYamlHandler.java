@@ -42,22 +42,23 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
       List<PipelineStage> pipelineStages = Lists.newArrayList();
       if (yaml.getPipelineStages() != null) {
-        BaseYamlHandler pipelineStageYamlHandler =
-            yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE, ObjectType.PIPELINE_STAGE);
+        PipelineStageYamlHandler pipelineStageYamlHandler =
+            (PipelineStageYamlHandler) yamlHandlerFactory.getYamlHandler(
+                YamlType.PIPELINE_STAGE, ObjectType.PIPELINE_STAGE);
 
         // Pipeline stages
-        pipelineStages = yaml.getPipelineStages()
-                             .stream()
-                             .map(stageYaml -> {
-                               try {
-                                 ChangeContext.Builder clonedContext = cloneFileChangeContext(context, stageYaml);
-                                 return (PipelineStage) pipelineStageYamlHandler.upsertFromYaml(
-                                     clonedContext.build(), changeSetContext);
-                               } catch (HarnessException e) {
-                                 throw new WingsException(e);
-                               }
-                             })
-                             .collect(Collectors.toList());
+        pipelineStages =
+            yaml.getPipelineStages()
+                .stream()
+                .map(stageYaml -> {
+                  try {
+                    ChangeContext.Builder clonedContext = cloneFileChangeContext(context, stageYaml);
+                    return pipelineStageYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+                  } catch (HarnessException e) {
+                    throw new WingsException(e);
+                  }
+                })
+                .collect(Collectors.toList());
       }
 
       String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());

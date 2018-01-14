@@ -62,26 +62,28 @@ public class CommandServiceImpl implements CommandService {
   }
 
   @Override
-  public Command save(Command command, boolean isDefaultCommand) {
+  public Command save(Command command, boolean isDefaultCommand, boolean pushToYaml) {
     Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
 
     if (savedCommand != null) {
-      String accountId = appService.getAccountIdByAppId(command.getAppId());
-      String serviceCommandId = command.getOriginEntityId();
-      ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
-      Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
+      if ((isDefaultCommand && pushToYaml) || (!isDefaultCommand)) {
+        String accountId = appService.getAccountIdByAppId(command.getAppId());
+        String serviceCommandId = command.getOriginEntityId();
+        ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+        Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
 
-      executorService.submit(() -> {
-        if (!isDefaultCommand) { // Don't do yaml generation for default commands. We group them with service
-          YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-          if (ygs != null) {
-            List<GitFileChange> changeSet = new ArrayList<>();
-            changeSet.add(
-                entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD));
-            yamlChangeSetService.saveChangeSet(ygs, changeSet);
+        executorService.submit(() -> {
+          if (!isDefaultCommand) { // Don't do yaml generation for default commands. We group them with service
+            YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+            if (ygs != null) {
+              List<GitFileChange> changeSet = new ArrayList<>();
+              changeSet.add(
+                  entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD));
+              yamlChangeSetService.saveChangeSet(ygs, changeSet);
+            }
           }
-        }
-      });
+        });
+      }
     }
     return savedCommand;
   }

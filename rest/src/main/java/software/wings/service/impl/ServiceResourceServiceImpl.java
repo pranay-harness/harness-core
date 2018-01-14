@@ -38,6 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -253,7 +254,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     originalService.getServiceCommands().forEach(serviceCommand -> {
       ServiceCommand clonedServiceCommand = serviceCommand.clone();
-      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, false);
+      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, true, false);
     });
 
     List<ServiceTemplate> serviceTemplates =
@@ -309,7 +310,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                            .orElse(null);
     ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
     clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
-    return addCommand(appId, serviceId, clonedServiceCommand, false);
+    return addCommand(appId, serviceId, clonedServiceCommand, true, false);
   }
 
   @Override
@@ -348,18 +349,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private Service addDefaultCommands(Service service) {
+    boolean pushToYaml = true;
     List<Command> commands = emptyList();
-    if (service.getAppContainer() != null && service.getAppContainer().getFamily() != null) {
-      commands = service.getAppContainer().getFamily().getDefaultCommands(
-          service.getArtifactType(), service.getAppContainer());
-    } else if (service.getArtifactType() != null) {
-      commands = service.getArtifactType().getDefaultCommands();
+    ArtifactType artifactType = service.getArtifactType();
+    AppContainer appContainer = service.getAppContainer();
+    if (appContainer != null && appContainer.getFamily() != null) {
+      commands = appContainer.getFamily().getDefaultCommands(artifactType, appContainer);
+      pushToYaml = appContainer.getFamily().shouldPushCommandsToYaml();
+    } else if (artifactType != null) {
+      commands = artifactType.getDefaultCommands();
+      pushToYaml = artifactType.shouldPushCommandsToYaml();
     }
 
     Service serviceToReturn = service;
     for (Command command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true);
+          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true, pushToYaml);
     }
 
     return serviceToReturn;
@@ -681,7 +686,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public Service addCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean isDefaultCommand) {
+  public Service addCommand(
+      String appId, String serviceId, ServiceCommand serviceCommand, boolean defaultCommand, boolean pushToYaml) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
@@ -712,7 +718,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
 
-    commandService.save(command, isDefaultCommand);
+    commandService.save(command, defaultCommand, pushToYaml);
     service.getServiceCommands().add(serviceCommand);
 
     wingsPersistence.save(service);
@@ -771,7 +777,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         command.setDeploymentType(oldCommand.getDeploymentType());
         command.setCommandType(oldCommand.getCommandType());
         command.setArtifactType(oldCommand.getArtifactType());
-        commandService.save(command, false);
+        commandService.save(command, false, true);
 
         if (serviceCommand.getSetAsDefault()) {
           serviceCommand.setDefaultVersion(entityVersion.getVersion());
