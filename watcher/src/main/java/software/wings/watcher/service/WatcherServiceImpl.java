@@ -439,6 +439,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void shutdownDelegate(String delegateProcess) {
     executorService.submit(() -> {
+      messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
       try {
         new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
       } catch (Exception e) {
