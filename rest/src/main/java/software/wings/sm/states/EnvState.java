@@ -7,7 +7,6 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -24,7 +23,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -39,6 +37,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -121,17 +120,7 @@ public class EnvState extends State {
           .withStateExecutionData(envStateExecutionData)
           .build();
     } catch (Exception e) {
-      String message;
-      if (e instanceof WingsException) {
-        WingsException wingsException = (WingsException) e;
-        if (wingsException.getParams() != null) {
-          message = Joiner.on(". ").join(((WingsException) e).getParams().values());
-        } else {
-          message = e.getMessage();
-        }
-      } else {
-        message = e.getMessage();
-      }
+      String message = Misc.getMessage(e);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withErrorMessage(message)

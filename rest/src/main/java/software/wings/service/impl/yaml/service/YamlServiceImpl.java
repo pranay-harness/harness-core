@@ -60,6 +60,7 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
@@ -376,8 +377,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         logger.info("Processing done for change [{}]", changeContext.getChange());
       } catch (Exception ex) {
         logger.error("Exception while processing yaml file {}", yamlFilePath, ex);
-        String message = ex instanceof WingsException ? ((WingsException) ex).getMessagesAsString() : ex.getMessage();
-        throw new YamlProcessingException(message, ex, changeContext.getChange());
+        throw new YamlProcessingException(Misc.getMessage(ex), ex, changeContext.getChange());
       }
     }
   }
