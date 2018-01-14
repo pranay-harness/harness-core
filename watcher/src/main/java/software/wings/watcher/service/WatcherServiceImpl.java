@@ -441,7 +441,10 @@ public class WatcherServiceImpl implements WatcherService {
     executorService.submit(() -> {
       messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
       try {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
         new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       } catch (Exception e) {
         logger.error("Error killing delegate {}", delegateProcess, e);
       }
