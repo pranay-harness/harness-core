@@ -1,22 +1,16 @@
-package software.wings.rules;
+package io.harness.rule;
 
-import lombok.Builder;
+import io.harness.rule.RepeatRule.RepeatStatement.RepeatStatementBuilder;
 import lombok.Getter;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestTimedOutException;
-import software.wings.exception.CauseCollection;
-import software.wings.rules.RepeatRule.RepeatStatement.RepeatStatementBuilder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-/**
- * Created by anubhaw on 6/5/17.
- */
 
 public class RepeatRule implements TestRule {
   @Getter private int repetition;
@@ -28,8 +22,9 @@ public class RepeatRule implements TestRule {
     int successes() default - 1; // default value -1 gets converted to times() value.
   }
 
-  @Builder
-  protected static class RepeatStatement extends Statement {
+  // TODO: find out why Builder and Statement require full path to compile
+  @lombok.Builder
+  protected static class RepeatStatement extends org.junit.runners.model.Statement {
     private RepeatRule parentRule;
 
     // Defines up to how many times to repeat the tests
@@ -46,8 +41,9 @@ public class RepeatRule implements TestRule {
 
     @Override
     public void evaluate() throws Throwable {
-      // Use cause collection to track the reasons to fail, but do not print until we are sure that it will fail.
-      CauseCollection causeCollection = new CauseCollection();
+      // There might be many different reasons for test to fail, but that is unlikely.
+      // Providing the last one is good enough. When it is resolved and there is another - it will became visible.
+      Throwable lastException = null;
       int successfulCount = 0;
       for (parentRule.repetition = 1; parentRule.repetition <= times && successfulCount < successes;
            parentRule.repetition++) {
@@ -57,12 +53,12 @@ public class RepeatRule implements TestRule {
           successfulCount++;
         } catch (TestTimedOutException ex) {
           // We track timeouts in every scenario
-          causeCollection.addCause(ex);
+          lastException = ex;
         } catch (Throwable throwable) {
           if (timeoutOnly) {
             throw throwable;
           }
-          causeCollection.addCause(throwable);
+          lastException = throwable;
         }
       }
       if (successfulCount != successes) {
@@ -70,7 +66,7 @@ public class RepeatRule implements TestRule {
             String.format(
                 "Test failed more number of times than expected, Run count: Total: %s, Expected: %s, Actual: %s", times,
                 successes, successfulCount),
-            causeCollection.getCause());
+            lastException);
       }
     }
   }

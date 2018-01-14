@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,7 +21,6 @@ import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
 import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.WingsBaseTest;
-import software.wings.rules.RepeatRule.Repeat;
 
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;

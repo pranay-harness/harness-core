@@ -105,11 +105,21 @@ public class UseIsEmptyCheck extends AbstractCheck {
       return;
     }
 
-    if (FullIdent.createFullIdent(leftIdentifier)
-            .getText()
-            .equals(FullIdent.createFullIdent(rightIdentifier).getText())) {
-      log(ast, UTIL_NULL_OR_EMPTY_MSG_KEY);
+    if (!FullIdent.createFullIdent(leftIdentifier)
+             .getText()
+             .equals(FullIdent.createFullIdent(rightIdentifier).getText())) {
+      return;
     }
+
+    DetailAST parent = ast.getParent();
+    while (parent != null) {
+      if (parent.getType() == TokenTypes.LITERAL_RETURN) {
+        return;
+      }
+      parent = parent.getParent();
+    }
+
+    log(ast, UTIL_NULL_OR_EMPTY_MSG_KEY);
   }
 
   void checkForNotNullAndIsNotEmpty(DetailAST ast) {
@@ -128,11 +138,21 @@ public class UseIsEmptyCheck extends AbstractCheck {
       return;
     }
 
-    if (FullIdent.createFullIdent(leftIdentifier)
-            .getText()
-            .equals(FullIdent.createFullIdent(rightIdentifier).getText())) {
-      log(ast, UTIL_NOT_NULL_AND_NOT_EMPTY_MSG_KEY);
+    if (!FullIdent.createFullIdent(leftIdentifier)
+             .getText()
+             .equals(FullIdent.createFullIdent(rightIdentifier).getText())) {
+      return;
     }
+
+    DetailAST parent = ast.getParent();
+    while (parent != null) {
+      if (parent.getType() == TokenTypes.LITERAL_RETURN) {
+        return;
+      }
+      parent = parent.getParent();
+    }
+
+    log(ast, UTIL_NOT_NULL_AND_NOT_EMPTY_MSG_KEY);
   }
 
   @Override

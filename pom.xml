@@ -11,6 +11,10 @@
     <packaging>pom</packaging>
 
     <modules>
+        <!-- Harness Commons provides all aspects of reusable Java components. -->
+        <module>commons-test</module>
+        <module>commons</module>
+
         <module>rest</module>
         <module>tools</module>
         <module>api</module>
@@ -1135,7 +1139,6 @@
                     <version>3.0.4</version>
                     <configuration>
                         <findbugsXmlOutput>true</findbugsXmlOutput>
-                        <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
                         <xmlOutput>true</xmlOutput>
                     </configuration>
                 </plugin>
@@ -1199,7 +1202,6 @@
                 <version>3.0.4</version>
                 <configuration>
                     <findbugsXmlOutput>true</findbugsXmlOutput>
-                    <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
                     <xmlOutput>true</xmlOutput>
                 </configuration>
             </plugin>

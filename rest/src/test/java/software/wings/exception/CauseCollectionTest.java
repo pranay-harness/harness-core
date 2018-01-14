@@ -2,12 +2,12 @@ package software.wings.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
+import io.harness.category.FastUnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.BasicTest;
-import software.wings.category.FastUnitTests;
 
-public class CauseCollectionTest extends BasicTest {
+public class CauseCollectionTest extends CategoryTest {
   @Test
   @Category(FastUnitTests.class)
   public void collectCauseCollection() {

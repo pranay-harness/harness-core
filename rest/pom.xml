@@ -20,6 +20,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.harness</groupId>
+            <artifactId>commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>api</artifactId>
             <version>${project.parent.version}</version>
@@ -438,6 +444,14 @@
         </dependency>
 
         <!-- Test Dependencies -->
+
+        <dependency>
+            <groupId>io.harness</groupId>
+            <artifactId>commons-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-testing</artifactId>

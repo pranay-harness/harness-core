@@ -8,13 +8,13 @@ import static software.wings.beans.ResponseMessage.Acuteness.SERIOUS;
 import static software.wings.exception.WingsException.Scenario.API_CALL;
 import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
 
+import io.harness.CategoryTest;
+import io.harness.category.FastUnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.BasicTest;
 import software.wings.beans.ErrorCode;
-import software.wings.category.FastUnitTests;
 
-public class WingsExceptionTest extends BasicTest {
+public class WingsExceptionTest extends CategoryTest {
   @Test
   @Category(FastUnitTests.class)
   public void constructionShouldCreateAtLeastOneResponseMessageTest() {
