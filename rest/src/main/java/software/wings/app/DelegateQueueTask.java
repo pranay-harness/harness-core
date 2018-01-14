@@ -25,6 +25,7 @@ import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +57,8 @@ public class DelegateQueueTask implements Runnable {
       return;
     }
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(DelegateQueueTask.class, DelegateQueueTask.class.getName())) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(
+             DelegateQueueTask.class, DelegateQueueTask.class.getName(), Duration.ofMinutes(1))) {
       // Release tasks acquired by delegate but not started execution. Introduce "ACQUIRED" status may be ?
       Query<DelegateTask> releaseLongQueuedTasks =
           wingsPersistence.createQuery(DelegateTask.class)

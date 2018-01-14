@@ -147,6 +147,7 @@ import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -1052,7 +1053,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution == null) {
       return;
     }
-    try (AcquiredLock lock = persistentLocker.acquireLock(Workflow.class, workflowExecution.getWorkflowId())) {
+    try (AcquiredLock lock =
+             persistentLocker.acquireLock(Workflow.class, workflowExecution.getWorkflowId(), Duration.ofMinutes(1))) {
       List<WorkflowExecution> runningWorkflowExecutions =
           getRunningWorkflowExecutions(ORCHESTRATION, workflowExecution.getAppId(), workflowExecution.getWorkflowId());
       if (CollectionUtils.isNotEmpty(runningWorkflowExecutions)) {

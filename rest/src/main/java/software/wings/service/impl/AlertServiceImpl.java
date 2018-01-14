@@ -40,6 +40,7 @@ import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -83,7 +84,7 @@ public class AlertServiceImpl implements AlertService {
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
     String lockName = alertType.name() + "-" + (appId == null || appId.equals(GLOBAL_APP_ID) ? accountId : appId);
-    try (AcquiredLock lock = persistentLocker.acquireLock(AlertType.class, lockName)) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(AlertType.class, lockName, Duration.ofMinutes(1))) {
       if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
         return;
       }

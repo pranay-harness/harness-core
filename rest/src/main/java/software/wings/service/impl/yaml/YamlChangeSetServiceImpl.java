@@ -19,6 +19,7 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.time.Duration;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -57,7 +58,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @Override
   public synchronized YamlChangeSet getQueuedChangeSet(String accountId) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId)) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
       Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
                                            .field("accountId")
                                            .equal(accountId)
