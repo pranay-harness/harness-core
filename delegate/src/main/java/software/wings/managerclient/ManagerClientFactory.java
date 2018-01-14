@@ -69,22 +69,19 @@ private OkHttpClient getUnsafeOkHttpClient() {
     // Create an ssl socket factory with our all-trusting manager
     final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-    OkHttpClient okHttpClient =
-        new Builder()
-            .connectionPool(new ConnectionPool())
-            .retryOnConnectionFailure(true)
-            .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
-            .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
-            .addInterceptor(chain
-                -> chain.proceed(chain.request()
-                                     .newBuilder()
-                                     .addHeader("User-Agent", "delegate/" + System.getProperty("version"))
-                                     .build()))
-            .addInterceptor(chain -> ExponentialBackOff.executeForEver(() -> chain.proceed(chain.request())))
-            .hostnameVerifier((hostname, session) -> true)
-            .build();
-
-    return okHttpClient;
+    return new Builder()
+        .connectionPool(new ConnectionPool())
+        .retryOnConnectionFailure(true)
+        .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
+        .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
+        .addInterceptor(chain
+            -> chain.proceed(chain.request()
+                                 .newBuilder()
+                                 .addHeader("User-Agent", "delegate/" + System.getProperty("version"))
+                                 .build()))
+        .addInterceptor(chain -> ExponentialBackOff.executeForEver(() -> chain.proceed(chain.request())))
+        .hostnameVerifier((hostname, session) -> true)
+        .build();
   } catch (Exception e) {
     throw new RuntimeException(e);
   }

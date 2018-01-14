@@ -172,8 +172,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     }
 
     public HttpTask build() {
-      HttpTask httpTask = new HttpTask(delegateId, delegateTask, postExecute, preExecute);
-      return httpTask;
+      return new HttpTask(delegateId, delegateTask, postExecute, preExecute);
     }
   }
 }

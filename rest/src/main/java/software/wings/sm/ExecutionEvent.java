@@ -55,8 +55,7 @@ public class ExecutionEvent {
     }
 
     public ExecutionEvent build() {
-      ExecutionEvent executionEvent = new ExecutionEvent(context, state);
-      return executionEvent;
+      return new ExecutionEvent(context, state);
     }
   }
 }

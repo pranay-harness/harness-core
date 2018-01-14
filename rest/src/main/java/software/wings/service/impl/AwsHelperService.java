@@ -1478,12 +1478,11 @@ public class AwsHelperService {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonCloudWatchClient cloudWatchClient =
           getAwsCloudWatchClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      Datapoint datapoint = cloudWatchClient.getMetricStatistics(metricStatisticsRequest)
-                                .getDatapoints()
-                                .stream()
-                                .max(Comparator.comparing(Datapoint::getTimestamp))
-                                .orElse(null);
-      return datapoint;
+      return cloudWatchClient.getMetricStatistics(metricStatisticsRequest)
+          .getDatapoints()
+          .stream()
+          .max(Comparator.comparing(Datapoint::getTimestamp))
+          .orElse(null);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }

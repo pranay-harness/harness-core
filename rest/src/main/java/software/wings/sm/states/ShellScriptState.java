@@ -86,8 +86,7 @@ public class ShellScriptState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
-    ExecutionResponse response = executeInternal(context, activityId);
-    return response;
+    return executeInternal(context, activityId);
   }
 
   @Override

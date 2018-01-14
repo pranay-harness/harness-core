@@ -75,7 +75,6 @@ public class XmlUtils {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
     DocumentBuilder builder = factory.newDocumentBuilder();
-    Document document = builder.parse(new ByteArrayInputStream(content.getBytes(UTF_8)));
-    return document;
+    return builder.parse(new ByteArrayInputStream(content.getBytes(UTF_8)));
   }
 }

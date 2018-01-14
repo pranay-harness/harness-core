@@ -10,7 +10,6 @@ import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -56,14 +55,12 @@ public class HttpUtil {
 
   public static OkHttpClient getUnsafeOkHttpClient() {
     try {
-      OkHttpClient.Builder builder = new OkHttpClient.Builder();
-      builder.sslSocketFactory(HttpUtil.getSslContext().getSocketFactory());
-      HostnameVerifier allHostsValid = (s, sslSession) -> true;
-      builder.hostnameVerifier(allHostsValid);
-      builder.connectTimeout(15, TimeUnit.SECONDS);
-      builder.readTimeout(120, TimeUnit.SECONDS);
-      OkHttpClient okHttpClient = builder.build();
-      return okHttpClient;
+      return new OkHttpClient.Builder()
+          .sslSocketFactory(HttpUtil.getSslContext().getSocketFactory())
+          .hostnameVerifier((s, sslSession) -> true)
+          .connectTimeout(15, TimeUnit.SECONDS)
+          .readTimeout(120, TimeUnit.SECONDS)
+          .build();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

@@ -8,6 +8,16 @@
         This ruleset checks my code for bad stuff
     </description>
 
-    <rule ref="rulesets/java/design.xml/UseCollectionIsEmpty"/>
+    <rule ref="rulesets/java/basic.xml">
+        <exclude name="CollapsibleIfStatements"/>
+        <exclude name="AvoidUsingOctalValues"/>
+        <exclude name="AvoidUsingHardCodedIP"/>
+        <exclude name="AvoidBranchingStatementAsLastInLoop"/>
+        <exclude name="OverrideBothEqualsAndHashcode"/>
+    </rule>
+
+    <rule ref="rulesets/java/braces.xml"/>
+
+    <rule ref="rulesets/java/design.xml/UnnecessaryLocalBeforeReturn"/>
 
 </ruleset>

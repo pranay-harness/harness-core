@@ -136,9 +136,7 @@ public class FileServiceImpl implements FileService {
       objIDs.add(new ObjectId(id));
     }
     BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$in", objIDs));
-    List<DBObject> dbObjects =
-        wingsPersistence.getCollection(fileBucket.representationName() + ".files").find(query).toArray();
-    return dbObjects;
+    return wingsPersistence.getCollection(fileBucket.representationName() + ".files").find(query).toArray();
   }
 
   /**

@@ -132,14 +132,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
-    T data = datastoreMap.get(readPref).get(cls, id);
-    return data;
+    return datastoreMap.get(readPref).get(cls, id);
   }
 
   @Override
   public <T extends Base> T executeGetOneQuery(Query<T> query) {
-    T data = query.get();
-    return data;
+    return query.get();
   }
 
   /**
@@ -160,8 +158,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (CollectionUtils.isEmpty(res)) {
       return null;
     }
-    T data = res.get(0);
-    return data;
+    return res.get(0);
   }
 
   @Override
@@ -230,8 +227,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (object.getShardKeys() != null) {
       object.getShardKeys().keySet().forEach(key -> query.field(key).equal(object.getShardKeys().get(key)));
     }
-    T data = query.get();
-    return data;
+    return query.get();
   }
 
   /**
@@ -465,8 +461,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (readPref == ReadPref.NORMAL && req.getReadPref() == ReadPref.CRITICAL) {
       readPref = ReadPref.CRITICAL;
     }
-    PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, false);
-    return output;
+    return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, false);
   }
 
   /**
@@ -485,8 +480,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();
     }
-    PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, disableValidation);
-    return output;
+    return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, disableValidation);
   }
 
   /**

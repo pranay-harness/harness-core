@@ -84,8 +84,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
-    PageResponse<ArtifactStream> pageResponse = wingsPersistence.query(ArtifactStream.class, req);
-    return pageResponse;
+    return wingsPersistence.query(ArtifactStream.class, req);
   }
 
   @Override

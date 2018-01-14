@@ -91,8 +91,7 @@ public class HostServiceImpl implements HostService {
     }
     wingsPersistence.updateFields(Host.class, savedHost.getUuid(), builder.build());
 
-    Host appHost = get(savedHost.getAppId(), savedHost.getEnvId(), host.getUuid());
-    return appHost;
+    return get(savedHost.getAppId(), savedHost.getEnvId(), host.getUuid());
   }
 
   @Override
