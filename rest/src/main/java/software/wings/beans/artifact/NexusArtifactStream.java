@@ -82,18 +82,12 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    StringBuilder builder = new StringBuilder(getJobname());
-    builder.append("/");
-    builder.append(getGroupId());
+    StringBuilder builder = new StringBuilder(getJobname()).append('/').append(getGroupId());
 
     if (StringUtils.isBlank(getImageName())) {
-      getArtifactPaths().stream().forEach(artifactPath -> {
-        builder.append("/");
-        builder.append(artifactPath);
-      });
+      getArtifactPaths().stream().forEach(artifactPath -> { builder.append('/').append(artifactPath); });
     } else {
-      builder.append("/");
-      builder.append(getImageName());
+      builder.append('/').append(getImageName());
     }
     return builder.toString();
   }

@@ -586,9 +586,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                   && serviceCommand.getName().equals(step.getProperties().get("commandName"))) {
                 sb.append(" (")
                     .append(workflow.getName())
-                    .append(":")
+                    .append(':')
                     .append(workflowPhase.getName())
-                    .append(":")
+                    .append(':')
                     .append(phaseStep.getName())
                     .append(") ");
               }

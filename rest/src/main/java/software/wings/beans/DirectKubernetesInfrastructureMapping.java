@@ -71,7 +71,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    StringBuilder nameBuilder = new StringBuilder();
+    StringBuilder nameBuilder = new StringBuilder(128);
     try {
       URL url = new URL(getMasterUrl());
       if (url.getHost() != null) {
@@ -85,7 +85,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     }
 
     if (getUsername() != null) {
-      nameBuilder.append("_");
+      nameBuilder.append('_');
       nameBuilder.append(getUsername());
     }
 

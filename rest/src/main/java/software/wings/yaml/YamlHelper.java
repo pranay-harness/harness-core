@@ -186,7 +186,7 @@ public class YamlHelper {
           }
         }
 
-        sb.append(line + "\n");
+        sb.append(line).append('\n');
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -204,8 +204,6 @@ public class YamlHelper {
 
     try {
       while ((line = bufReader.readLine()) != null) {
-        StringBuilder newLine = new StringBuilder();
-
         // count number of spaces or dashes at start of line
         int count = 0;
 
@@ -220,10 +218,10 @@ public class YamlHelper {
 
         // prepend that many spaces to the start of the line
         for (int i = 0; i < count; i++) {
-          newLine.append(" ");
+          sb.append(' ');
         }
 
-        sb.append(newLine.append(line) + "\n");
+        sb.append(line).append('\n');
       }
     } catch (Exception e) {
       e.printStackTrace();

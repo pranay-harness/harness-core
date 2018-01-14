@@ -306,7 +306,7 @@ public class AwsHelperService {
 
     String url = ecrConfig.getEcrUrl();
     // Example: https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
-    String awsAccount = url.substring(8, url.indexOf("."));
+    String awsAccount = url.substring(8, url.indexOf('.'));
     return ecrClient
         .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
         .getAuthorizationData()

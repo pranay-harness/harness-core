@@ -153,7 +153,8 @@ public abstract class NodeSelectState extends State {
       ExecutionContext context) {
     String errorMessage = null;
     if (isEmpty(serviceInstances)) {
-      StringBuilder msg = new StringBuilder("No nodes were selected. ");
+      StringBuilder msg = new StringBuilder(256);
+      msg.append("No nodes were selected. ");
       if (specificHosts) {
         msg.append("'Use Specific Hosts' was chosen ");
         if (isEmpty(hostNames)) {
@@ -173,9 +174,8 @@ public abstract class NodeSelectState extends State {
       msg.append("and ")
           .append(hostExclusionList.size())
           .append(hostExclusionList.size() == 1 ? " instance has" : " instances have")
-          .append(" already been deployed. ");
-
-      msg.append("\n\nThe service infrastructure [")
+          .append(" already been deployed. \n\n"
+              + "The service infrastructure [")
           .append(infraMapping.getName())
           .append("] has ")
           .append(totalAvailableInstances)

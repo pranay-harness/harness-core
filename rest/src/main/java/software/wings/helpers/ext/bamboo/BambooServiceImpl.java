@@ -405,7 +405,7 @@ public class BambooServiceImpl implements BambooService {
         URLConnection uc = url.openConnection();
         uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
         logger.info("Artifact url {}", link);
-        return ImmutablePair.of(link.substring(link.lastIndexOf("/") + 1), uc.getInputStream());
+        return ImmutablePair.of(link.substring(link.lastIndexOf('/') + 1), uc.getInputStream());
       } catch (IOException e) {
         String msg = "Failed to download the artifact from url [" + link + "]";
         logger.error(msg, e);
@@ -414,8 +414,8 @@ public class BambooServiceImpl implements BambooService {
       }
     } else {
       // It is not matching  direct url, so just prepare the url
-      String msg = "Artifact path  [" + artifactPathRegex
-          + "] not matching with any values: " + String.valueOf(artifactPathMap.values());
+      String msg =
+          "Artifact path  [" + artifactPathRegex + "] not matching with any values: " + artifactPathMap.values();
       logger.info(msg);
       logger.info("Constructing url path to download");
       Artifact artifactJob = artifactPathMap.values()
@@ -442,7 +442,7 @@ public class BambooServiceImpl implements BambooService {
           URLConnection uc = url.openConnection();
           uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
           if (artifactSourcePath.contains("/")) {
-            artifactSourcePath = artifactSourcePath.substring(artifactSourcePath.lastIndexOf("/") + 1);
+            artifactSourcePath = artifactSourcePath.substring(artifactSourcePath.lastIndexOf('/') + 1);
           }
           return ImmutablePair.of(artifactSourcePath, uc.getInputStream());
         } catch (IOException e) {

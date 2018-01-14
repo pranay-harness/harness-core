@@ -93,7 +93,7 @@ public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest 
               .append(app.getName())
               .append(" workflow: ")
               .append(workflow.getName())
-              .append("\n");
+              .append('\n');
 
           try {
             //            workflowService.updateWorkflow(workflow);

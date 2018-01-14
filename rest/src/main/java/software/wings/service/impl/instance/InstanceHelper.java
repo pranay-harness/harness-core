@@ -400,7 +400,7 @@ public class InstanceHelper {
   private void setInstanceInfoAndKey(Instance.Builder builder, com.amazonaws.services.ec2.model.Instance ec2Instance,
       String infraMappingId, String autoScalingGroupName) {
     String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName = privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf("."));
+    String privateDnsName = privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
     builder.withHostInstanceKey(hostInstanceKey);

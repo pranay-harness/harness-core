@@ -100,7 +100,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
     for (int i = 0; i < pathElems.size(); i++) {
       groupIdBuilder.append(pathElems.get(i));
       if (i != pathElems.size() - 1) {
-        groupIdBuilder.append(".");
+        groupIdBuilder.append('.');
       }
     }
     return groupIdBuilder.toString();

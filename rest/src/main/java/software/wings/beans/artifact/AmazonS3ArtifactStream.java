@@ -117,7 +117,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
   public String generateSourceName() {
     StringBuilder builder = new StringBuilder(getJobname());
     getArtifactPaths().stream().forEach(artifactPath -> {
-      builder.append("/");
+      builder.append('/');
       builder.append(artifactPath);
     });
     return builder.toString();

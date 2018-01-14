@@ -281,7 +281,7 @@ public class WingsException extends WingsApiException {
     if (Util.isNotEmpty(responseMessages)) {
       responseMessages.stream().forEach(responseMessage -> {
         errorMsgBuilder.append(responseMessage.getMessage());
-        errorMsgBuilder.append(".");
+        errorMsgBuilder.append('.');
       });
     }
 

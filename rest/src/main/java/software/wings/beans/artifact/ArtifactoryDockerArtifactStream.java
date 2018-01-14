@@ -125,10 +125,7 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    StringBuilder builder = new StringBuilder(getJobname());
-    builder.append("/");
-    builder.append(getGroupId());
-    return builder.toString();
+    return new StringBuilder(getJobname()).append('/').append(getGroupId()).toString();
   }
 
   @Override
