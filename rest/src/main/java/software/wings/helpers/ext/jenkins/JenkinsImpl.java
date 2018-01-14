@@ -2,6 +2,7 @@ package software.wings.helpers.ext.jenkins;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -25,7 +26,6 @@ import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHost;
@@ -69,7 +69,6 @@ import javax.net.ssl.HostnameVerifier;
  */
 public class JenkinsImpl implements Jenkins {
   private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
-  private final int MAX_FOLDER_DEPTH = 10;
   private JenkinsServer jenkinsServer;
   private JenkinsHttpClient jenkinsHttpClient;
   private String jenkinsBaseUrl;
@@ -188,7 +187,7 @@ public class JenkinsImpl implements Jenkins {
   }
 
   @Override
-  public List<JobDetails> getJobs(String parentJob) throws IOException {
+  public List<JobDetails> getJobs(String parentJob) {
     try {
       return with()
           .pollInterval(100L, TimeUnit.MILLISECONDS)
@@ -243,7 +242,7 @@ public class JenkinsImpl implements Jenkins {
 
   protected String getNormalizedName(String jobName) {
     try {
-      if (!StringUtils.isEmpty(jobName)) {
+      if (isNotEmpty(jobName)) {
         return URLDecoder.decode(jobName, Charset.defaultCharset().name());
       }
     } catch (UnsupportedEncodingException e) {
@@ -275,11 +274,12 @@ public class JenkinsImpl implements Jenkins {
 
     // URI uri = new URI(relativeUrl);
     String[] parts = relativeUrl.split("/");
-    String name = "";
+    StringBuilder nameBuilder = new StringBuilder();
     // We start with index 2 since we have to skip /job/
     for (int idx = 1; idx <= parts.length - 1; idx = idx + 2) {
-      name += "/" + parts[idx];
+      nameBuilder.append("/").append(parts[idx]);
     }
+    String name = nameBuilder.toString();
     name = name.startsWith("/") ? name.substring(1) : name;
     return getNormalizedName(name);
   }
@@ -310,12 +310,12 @@ public class JenkinsImpl implements Jenkins {
                 return build;
               }
             })
-            .filter(build -> BuildWithDetails.class.isInstance(build))
+            .filter(BuildWithDetails.class ::isInstance)
             .map(build -> (BuildWithDetails) build)
             .filter(build
                 -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE)
                     && isNotEmpty(build.getArtifacts()))
-            .map(buildWithDetails -> getBuildDetails(buildWithDetails))
+            .map(this ::getBuildDetails)
             .collect(toList()));
   }
 

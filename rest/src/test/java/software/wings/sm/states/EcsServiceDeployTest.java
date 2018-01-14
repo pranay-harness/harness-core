@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -58,6 +57,7 @@ import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceData;
+import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -132,22 +132,21 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withDeploymentType(DeploymentType.ECS.name())
                                           .build();
-  private StateExecutionInstance stateExecutionInstance =
-      aStateExecutionInstance()
-          .withStateName(STATE_NAME)
-          .addContextElement(workflowStandardParams)
-          .addContextElement(phaseElement)
-          .addContextElement(aContainerServiceElement()
-                                 .withUuid(serviceElement.getUuid())
-                                 .withClusterName(CLUSTER_NAME)
-                                 .withName(ECS_SERVICE_NAME)
-                                 .withMaxInstances(10)
-                                 .withDeploymentType(DeploymentType.ECS)
-                                 .withInfraMappingId(INFRA_MAPPING_ID)
-                                 .withResizeStrategy(RESIZE_NEW_FIRST)
-                                 .build())
-          .addStateExecutionData(new PhaseStepExecutionData())
-          .build();
+  private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                              .withStateName(STATE_NAME)
+                                                              .addContextElement(workflowStandardParams)
+                                                              .addContextElement(phaseElement)
+                                                              .addContextElement(ContainerServiceElement.builder()
+                                                                                     .uuid(serviceElement.getUuid())
+                                                                                     .clusterName(CLUSTER_NAME)
+                                                                                     .name(ECS_SERVICE_NAME)
+                                                                                     .maxInstances(10)
+                                                                                     .deploymentType(DeploymentType.ECS)
+                                                                                     .infraMappingId(INFRA_MAPPING_ID)
+                                                                                     .resizeStrategy(RESIZE_NEW_FIRST)
+                                                                                     .build())
+                                                              .addStateExecutionData(new PhaseStepExecutionData())
+                                                              .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();

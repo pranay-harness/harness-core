@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -148,21 +147,23 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
     ContainerServiceElementBuilder containerServiceElementBuilder =
-        aContainerServiceElement()
-            .withUuid(executionData.getServiceId())
-            .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-            .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .withServiceSteadyStateTimeout(getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout()
-                                                                              : DEFAULT_STEADY_STATE_TIMEOUT)
-            .withClusterName(executionData.getClusterName())
-            .withNamespace(setupParams.getNamespace())
-            .withDeploymentType(DeploymentType.KUBERNETES)
-            .withInfraMappingId(setupParams.getInfraMappingId());
+        ContainerServiceElement.builder()
+            .uuid(executionData.getServiceId())
+            .maxInstances(getMaxInstances() == 0
+                    ? 10
+                    : getMaxInstances()) // Max instances is old name, but requires migration to change
+            .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+            .serviceSteadyStateTimeout(getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout()
+                                                                          : DEFAULT_STEADY_STATE_TIMEOUT)
+            .clusterName(executionData.getClusterName())
+            .namespace(setupParams.getNamespace())
+            .deploymentType(DeploymentType.KUBERNETES)
+            .infraMappingId(setupParams.getInfraMappingId());
     if (executionResult != null) {
       ContainerSetupCommandUnitExecutionData setupExecutionData =
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
       if (setupExecutionData != null) {
-        containerServiceElementBuilder.withName(setupExecutionData.getContainerServiceName());
+        containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName());
       }
     }
     return containerServiceElementBuilder.build();

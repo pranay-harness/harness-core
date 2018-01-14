@@ -9,7 +9,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -52,6 +51,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
+import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -134,15 +134,15 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
           .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
-          .addContextElement(aContainerServiceElement()
-                                 .withUuid(serviceElement.getUuid())
-                                 .withMaxInstances(10)
-                                 .withClusterName(CLUSTER_NAME)
-                                 .withNamespace("default")
-                                 .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-                                 .withResizeStrategy(RESIZE_NEW_FIRST)
-                                 .withInfraMappingId(INFRA_MAPPING_ID)
-                                 .withDeploymentType(DeploymentType.KUBERNETES)
+          .addContextElement(ContainerServiceElement.builder()
+                                 .uuid(serviceElement.getUuid())
+                                 .maxInstances(10)
+                                 .clusterName(CLUSTER_NAME)
+                                 .namespace("default")
+                                 .name(KUBERNETES_REPLICATION_CONTROLLER_NAME)
+                                 .resizeStrategy(RESIZE_NEW_FIRST)
+                                 .infraMappingId(INFRA_MAPPING_ID)
+                                 .deploymentType(DeploymentType.KUBERNETES)
                                  .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();

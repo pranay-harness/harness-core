@@ -391,7 +391,8 @@ public class StateMachineExecutor {
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
-      logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
+      logger.warn(
+          "Error in {} execution: {}", stateExecutionInstance.getStateName(), Misc.getMessage(exception), exception);
       ex = exception;
     }
 
@@ -641,8 +642,8 @@ public class StateMachineExecutor {
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-    logger.warn("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
-        stateExecutionInstance.getUuid(), e);
+    logger.warn("Error seen in the state execution - currentState : {}, stateExecutionInstanceId: {} : {}",
+        currentState, stateExecutionInstance.getUuid(), Misc.getMessage(e), e);
 
     String errorMessage;
     if (e instanceof WingsException) {

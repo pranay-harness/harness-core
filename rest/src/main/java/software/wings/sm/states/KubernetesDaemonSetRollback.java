@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
@@ -110,15 +109,15 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
     ContainerSetupCommandUnitExecutionData setupExecutionData =
         (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    return aContainerServiceElement()
-        .withUuid(executionData.getServiceId())
-        .withName(setupExecutionData.getContainerServiceName())
-        .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-        .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-        .withClusterName(executionData.getClusterName())
-        .withNamespace(setupParams.getNamespace())
-        .withDeploymentType(DeploymentType.KUBERNETES)
-        .withInfraMappingId(setupParams.getInfraMappingId())
+    return ContainerServiceElement.builder()
+        .uuid(executionData.getServiceId())
+        .name(setupExecutionData.getContainerServiceName())
+        .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+        .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+        .clusterName(executionData.getClusterName())
+        .namespace(setupParams.getNamespace())
+        .deploymentType(DeploymentType.KUBERNETES)
+        .infraMappingId(setupParams.getInfraMappingId())
         .build();
   }
 

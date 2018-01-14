@@ -27,7 +27,8 @@ import javax.net.ssl.X509TrustManager;
  * Created by anubhaw on 5/2/17.
  */
 public class HttpUtil {
-  static UrlValidator urlValidator = new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
+  private static UrlValidator urlValidator =
+      new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
   private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
   private static TrustManager[] trustAllCerts = getTrustManagers();
   private static SSLContext sc = getSslContext();
@@ -73,7 +74,7 @@ public class HttpUtil {
         return true;
       }
     } catch (Exception e) {
-      logger.info("Could not connect to url {}: {}", url, e.getMessage());
+      logger.info("Could not connect to url {}: {}", url, Misc.getMessage(e));
       return false;
     }
     return false;
@@ -105,14 +106,13 @@ public class HttpUtil {
 
   public static OkHttpClient getUnsafeOkHttpClient() {
     try {
-      OkHttpClient.Builder builder = new OkHttpClient.Builder();
-      builder.sslSocketFactory(HttpUtil.getSslContext().getSocketFactory());
+      OkHttpClient.Builder okHttpClient = new OkHttpClient.Builder();
+      okHttpClient.sslSocketFactory(HttpUtil.getSslContext().getSocketFactory());
       HostnameVerifier allHostsValid = (s, sslSession) -> true;
-      builder.hostnameVerifier(allHostsValid);
-      builder.connectTimeout(15000, TimeUnit.SECONDS);
-      builder.readTimeout(15000, TimeUnit.SECONDS);
-      OkHttpClient okHttpClient = builder.build();
-      return okHttpClient;
+      okHttpClient.hostnameVerifier(allHostsValid);
+      okHttpClient.connectTimeout(15000, TimeUnit.SECONDS);
+      okHttpClient.readTimeout(15000, TimeUnit.SECONDS);
+      return okHttpClient.build();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
