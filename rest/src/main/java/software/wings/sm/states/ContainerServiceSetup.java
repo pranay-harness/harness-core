@@ -131,6 +131,10 @@ public abstract class ContainerServiceSetup extends State {
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+      if (artifact == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
+      }
+
       ImageDetails imageDetails = fetchArtifactDetails(artifact, context);
 
       Application app = workflowStandardParams.getApp();

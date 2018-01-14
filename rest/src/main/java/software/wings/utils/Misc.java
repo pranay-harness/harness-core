@@ -2,8 +2,6 @@ package software.wings.utils;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
-import com.google.common.base.Joiner;
-
 import org.apache.commons.lang.ArrayUtils;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -187,7 +185,16 @@ public class Misc {
 
   public static String getMessage(Throwable t) {
     if (t instanceof WingsException) {
-      String paramMsg = Joiner.on(". ").join(((WingsException) t).getParams().values());
+      WingsException we = (WingsException) t;
+      StringBuilder paramMsgBuilder = new StringBuilder();
+      if (we.getParams() != null) {
+        for (Object value : we.getParams().values()) {
+          if (value != null) {
+            paramMsgBuilder.append(value.toString()).append(". ");
+          }
+        }
+      }
+      String paramMsg = paramMsgBuilder.toString();
       if (isNotBlank(paramMsg)) {
         return t.getMessage() + " - " + paramMsg;
       } else {
