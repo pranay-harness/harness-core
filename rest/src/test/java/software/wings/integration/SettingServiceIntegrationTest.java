@@ -9,6 +9,7 @@ import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,7 +21,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.NexusConfig;
-import software.wings.rules.RepeatRule.Repeat;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;

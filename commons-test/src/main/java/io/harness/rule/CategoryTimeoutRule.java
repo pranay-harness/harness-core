@@ -1,14 +1,14 @@
-package software.wings.rules;
+package io.harness.rule;
 
+import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
+import io.harness.category.speed.FastTests;
+import io.harness.category.speed.SlowTests;
 import org.junit.experimental.categories.Category;
 import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import software.wings.category.element.IntegrationTests;
-import software.wings.category.element.UnitTests;
-import software.wings.category.speed.FastTests;
-import software.wings.category.speed.SlowTests;
 
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;

@@ -11,4 +11,14 @@ public class UseIsEmptyCheckIssues {
     if (list.form() == 0) {
     }
   }
+
+  void isEmpty() {
+    List<Integer> list = null;
+    return list == null || list.isEmpty();
+  }
+
+  void isNotEmpty() {
+    List<Integer> list = null;
+    return list != null && !list.isEmpty();
+  }
 }

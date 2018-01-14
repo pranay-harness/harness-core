@@ -12,21 +12,21 @@ import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
+import io.harness.CategoryTest;
+import io.harness.category.FastUnitTests;
+import io.harness.category.element.UnitTests;
+import io.harness.category.feature.CoreTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
-import software.wings.BasicTest;
 import software.wings.beans.ResponseMessage;
-import software.wings.category.FastUnitTests;
-import software.wings.category.element.UnitTests;
-import software.wings.category.feature.CoreTests;
 import software.wings.common.cache.ResponseCodeCache;
 
 import javax.ws.rs.core.Response;
 
-public class WingsExceptionMapperTest extends BasicTest {
+public class WingsExceptionMapperTest extends CategoryTest {
   @Test
   @Category({FastUnitTests.class, CoreTests.class})
   public void sanity() {

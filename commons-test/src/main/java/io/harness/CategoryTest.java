@@ -1,5 +1,7 @@
-package software.wings;
+package io.harness;
 
+import io.harness.rule.CategoryTimeoutRule;
+import io.harness.rule.RepeatRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
@@ -7,10 +9,8 @@ import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.rules.CategoryTimeoutRule;
-import software.wings.rules.RepeatRule;
 
-public class BasicTest {
+public class CategoryTest {
   @Rule public TestName testName = new TestName();
 
   private RepeatRule repeatRule = new RepeatRule();
@@ -22,11 +22,13 @@ public class BasicTest {
    */
   @Before
   public void logTestCaseName() {
-    if (repeatRule.getRepetition() == 0) {
-      System.out.println(String.format("Running test %s", testName.getMethodName()));
-    } else {
-      System.out.println(String.format("Running test %s - %s", testName.getMethodName(), repeatRule.getRepetition()));
+    StringBuilder sb = new StringBuilder("Running test ").append(testName.getMethodName());
+
+    int repetition = repeatRule.getRepetition();
+    if (repetition > 0) {
+      sb.append(" - ").append(repetition);
     }
+    System.out.println(sb.toString());
   }
 
   /**

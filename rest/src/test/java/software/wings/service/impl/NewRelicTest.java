@@ -4,12 +4,12 @@ import static org.junit.Assert.assertFalse;
 
 import com.google.inject.Inject;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.NewRelicConfig;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;

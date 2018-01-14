@@ -17,6 +17,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 
 import com.google.inject.Inject;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
@@ -58,7 +59,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;

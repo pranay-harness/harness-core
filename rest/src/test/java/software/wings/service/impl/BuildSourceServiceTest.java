@@ -22,6 +22,7 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,7 +60,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;

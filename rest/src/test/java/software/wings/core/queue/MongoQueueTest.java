@@ -7,6 +7,7 @@ import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -16,7 +17,6 @@ import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
-import software.wings.rules.RepeatRule.Repeat;
 
 import java.net.UnknownHostException;
 import java.util.Date;
