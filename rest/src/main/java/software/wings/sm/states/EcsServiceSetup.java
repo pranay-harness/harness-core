@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -94,19 +93,19 @@ public class EcsServiceSetup extends ContainerServiceSetup {
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     EcsSetupParams setupParams = (EcsSetupParams) executionData.getContainerSetupParams();
     ContainerServiceElementBuilder containerServiceElementBuilder =
-        aContainerServiceElement()
-            .withUuid(executionData.getServiceId())
-            .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-            .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .withServiceSteadyStateTimeout((int) getServiceSteadyStateTimeout())
-            .withClusterName(executionData.getClusterName())
-            .withDeploymentType(DeploymentType.ECS)
-            .withInfraMappingId(setupParams.getInfraMappingId());
+        ContainerServiceElement.builder()
+            .uuid(executionData.getServiceId())
+            .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+            .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+            .serviceSteadyStateTimeout((int) getServiceSteadyStateTimeout())
+            .clusterName(executionData.getClusterName())
+            .deploymentType(DeploymentType.ECS)
+            .infraMappingId(setupParams.getInfraMappingId());
     if (executionResult != null) {
       ContainerSetupCommandUnitExecutionData setupExecutionData =
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
       if (setupExecutionData != null) {
-        containerServiceElementBuilder.withName(setupExecutionData.getContainerServiceName());
+        containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName());
       }
     }
     return containerServiceElementBuilder.build();

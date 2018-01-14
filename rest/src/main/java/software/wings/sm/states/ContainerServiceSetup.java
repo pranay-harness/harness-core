@@ -101,7 +101,7 @@ import java.util.stream.Collectors;
 public abstract class ContainerServiceSetup extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
 
-  private int maxInstances;
+  private int maxInstances; // Named minimum in the UI
   private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout; // Minutes
   @Inject @Transient private transient EcrService ecrService;

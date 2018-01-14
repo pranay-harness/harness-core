@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -127,7 +126,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                           .withStateName(STATE_NAME)
                                                           .addContextElement(workflowStandardParams)
                                                           .addContextElement(phaseElement)
-                                                          .addContextElement(aContainerServiceElement().build())
+                                                          .addContextElement(ContainerServiceElement.builder().build())
                                                           .addStateExecutionData(new PhaseStepExecutionData())
                                                           .build();
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
@@ -154,9 +153,9 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .withStateName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
-                                                        .addContextElement(aContainerServiceElement()
-                                                                               .withUuid(serviceElement.getUuid())
-                                                                               .withResizeStrategy(RESIZE_NEW_FIRST)
+                                                        .addContextElement(ContainerServiceElement.builder()
+                                                                               .uuid(serviceElement.getUuid())
+                                                                               .resizeStrategy(RESIZE_NEW_FIRST)
                                                                                .build())
                                                         .addStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
@@ -248,7 +247,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                     .build();
 
     ContainerServiceElement containerServiceElement =
-        aContainerServiceElement().withUuid(serviceElement.getUuid()).withResizeStrategy(RESIZE_NEW_FIRST).build();
+        ContainerServiceElement.builder().uuid(serviceElement.getUuid()).resizeStrategy(RESIZE_NEW_FIRST).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withStateName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
@@ -315,7 +314,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                     .build();
 
     ContainerServiceElement containerServiceElement =
-        aContainerServiceElement().withUuid(serviceElement.getUuid()).withResizeStrategy(RESIZE_NEW_FIRST).build();
+        ContainerServiceElement.builder().uuid(serviceElement.getUuid()).resizeStrategy(RESIZE_NEW_FIRST).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withStateName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
