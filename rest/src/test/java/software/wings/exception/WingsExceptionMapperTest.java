@@ -13,11 +13,7 @@ import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import io.harness.CategoryTest;
-import io.harness.category.FastUnitTests;
-import io.harness.category.element.UnitTests;
-import io.harness.category.feature.CoreTests;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
@@ -28,7 +24,6 @@ import javax.ws.rs.core.Response;
 
 public class WingsExceptionMapperTest extends CategoryTest {
   @Test
-  @Category({FastUnitTests.class, CoreTests.class})
   public void sanity() {
     final WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
@@ -45,7 +40,6 @@ public class WingsExceptionMapperTest extends CategoryTest {
   }
 
   @Test
-  @Category({FastUnitTests.class, CoreTests.class})
   public void missingParameter() {
     final WingsException exception = new WingsException(INVALID_ARTIFACT_SOURCE);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
@@ -64,7 +58,6 @@ public class WingsExceptionMapperTest extends CategoryTest {
   }
 
   @Test
-  @Category({FastUnitTests.class, CoreTests.class})
   public void overrideMessage() {
     final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).message("Override message").build();
 
@@ -84,7 +77,6 @@ public class WingsExceptionMapperTest extends CategoryTest {
   }
 
   @Test
-  @Category(UnitTests.class)
   public void shouldNotLogHarmless() {
     final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).acuteness(HARMLESS).build();
 
