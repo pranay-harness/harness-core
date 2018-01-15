@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
@@ -35,7 +35,7 @@ public class InstanceChangeEventListener extends AbstractQueueListener<InstanceC
 
       // Stop gap solution until the rewrite is done
       List<String> autoScalingGroupList = instanceChangeEvent.getAutoScalingGroupList();
-      if (!isEmpty(autoScalingGroupList)) {
+      if (isNotEmpty(autoScalingGroupList)) {
         instanceService.deleteInstancesOfAutoScalingGroups(autoScalingGroupList, instanceChangeEvent.getAppId());
       }
       List<Instance> instanceList = instanceChangeEvent.getInstanceList();

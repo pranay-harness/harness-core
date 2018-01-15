@@ -1,6 +1,6 @@
 package software.wings.stencils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -127,7 +127,7 @@ public class StencilPostProcessor {
                           Stencil stencilForExpand = finalStencil;
                           DataProvider dataProvider = injector.getInstance(expand.dataProvider());
                           Map<String, String> data = dataProvider.getData(appId, args);
-                          if (!isEmpty(data)) {
+                          if (isNotEmpty(data)) {
                             return expandBasedOnData(stencilForExpand, data, field.getName());
                           }
 

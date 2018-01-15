@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -133,7 +133,7 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public void batchedSave(List<Log> logs) {
-    if (!isEmpty(logs)) {
+    if (isNotEmpty(logs)) {
       logs = logs.stream().filter(Objects::nonNull).collect(toList());
       //    List<String> savedLogIds = wingsPersistence.save(logs);
 

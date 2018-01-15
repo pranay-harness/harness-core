@@ -2,7 +2,6 @@ package software.wings.beans.command;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 
@@ -86,7 +85,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
-    if (!isEmpty(context.getArtifactFiles())) {
+    if (isNotEmpty(context.getArtifactFiles())) {
       String name = context.getArtifactFiles().get(0).getName();
       if (isNotEmpty(name)) {
         envVariables.put("ARTIFACT_FILE_NAME", name);
@@ -115,7 +114,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
     }
     try {
       List<String> commandUnitFiles = getCommandUnitFiles();
-      if (!isEmpty(commandUnitFiles)) {
+      if (isNotEmpty(commandUnitFiles)) {
         commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
             ? context.copyFiles(executionStagingDir, commandUnitFiles)
             : commandExecutionStatus;

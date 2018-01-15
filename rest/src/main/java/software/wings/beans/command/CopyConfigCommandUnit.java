@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -78,13 +78,12 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
     }
 
     CommandExecutionStatus result = CommandExecutionStatus.SUCCESS;
-    if (!isEmpty(configFiles)) {
+    if (isNotEmpty(configFiles)) {
       for (ConfigFile configFile : configFiles) {
         File destFile = new File(configFile.getRelativeFilePath());
         String path = destinationParentPath + "/" + (isNotBlank(destFile.getParent()) ? destFile.getParent() : "");
-        String fileId = null;
         try {
-          fileId = delegateFileManager.getFileIdByVersion(FileBucket.CONFIGS, configFile.getUuid(),
+          delegateFileManager.getFileIdByVersion(FileBucket.CONFIGS, configFile.getUuid(),
               configFile.getVersionForEnv(context.getEnvId()), context.getAccountId());
         } catch (IOException e) {
           String message = "Unable to get config file for entityId: " + configFile.getUuid()

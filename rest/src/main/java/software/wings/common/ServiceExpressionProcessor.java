@@ -4,7 +4,7 @@
 
 package software.wings.common;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -133,7 +133,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<ServiceElement> list() {
-    if (!isEmpty(serviceNames)) {
+    if (isNotEmpty(serviceNames)) {
       return matchingServices(getSelectedServices(), serviceNames);
     }
 

@@ -393,7 +393,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
               .withField("serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray())
               .build());
     }
-    if (!isEmpty(names)) {
+    if (isNotEmpty(names)) {
       pageRequestBuilder.addFilter(
           aSearchFilter()
               .withField(

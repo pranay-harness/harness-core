@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_PATH;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_STRING;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE;
@@ -81,7 +82,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     nodeProperties.put(NODE_PROPERTY_COMMAND_TYPE, yaml.getCommandUnitType());
 
     List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
-    if (!isEmpty(filePatternEntryList)) {
+    if (isNotEmpty(filePatternEntryList)) {
       List<String> patternList = filePatternEntryList.stream()
                                      .map(filePatternEntry -> filePatternEntry.getSearchPattern())
                                      .collect(Collectors.toList());

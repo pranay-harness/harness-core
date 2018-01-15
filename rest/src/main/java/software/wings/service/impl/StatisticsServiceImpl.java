@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -407,7 +408,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     List<String> authorizedAppIds;
     if (isEmpty(appIds)) {
       authorizedAppIds = getAppIdsForAccount(accountId);
-      if (!isEmpty(authorizedAppIds)) {
+      if (isNotEmpty(authorizedAppIds)) {
         failureRequest.addFilter(aSearchFilter().withField("appId", IN, authorizedAppIds.toArray()).build());
       }
     } else {

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
@@ -142,7 +143,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       configFile.setChecksumType(checksumType);
     }
 
-    if (!isEmpty(yaml.getServiceName())) {
+    if (isNotEmpty(yaml.getServiceName())) {
       String serviceName = yaml.getServiceName();
       if (serviceName == null) {
         configFile.setEntityType(EntityType.ENVIRONMENT);

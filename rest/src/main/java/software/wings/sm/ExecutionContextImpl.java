@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
@@ -84,7 +85,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     injector.injectMembers(this);
     this.stateExecutionInstance = stateExecutionInstance;
     this.stateMachine = stateMachine;
-    if (!isEmpty(stateExecutionInstance.getContextElements())) {
+    if (isNotEmpty(stateExecutionInstance.getContextElements())) {
       stateExecutionInstance.getContextElements().forEach(contextElement -> {
         injector.injectMembers(contextElement);
         if (contextElement instanceof ExecutionContextAware) {
@@ -93,7 +94,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
       });
     }
-    if (!isEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
+    if (isNotEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
       stateExecutionInstance.getExecutionEventAdvisors().forEach(injector::injectMembers);
     }
   }
@@ -196,8 +197,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
    */
   @Override
   public List<Artifact> getArtifacts() {
-    WorkflowStandardParams workflowStandardParams =
-        (WorkflowStandardParams) getContextElement(ContextElementType.STANDARD);
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
     List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
     if (isEmpty(contextElementList)) {
       return workflowStandardParams.getArtifacts();
@@ -214,8 +214,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
    */
   @Override
   public Artifact getArtifactForService(String serviceId) {
-    WorkflowStandardParams workflowStandardParams =
-        (WorkflowStandardParams) getContextElement(ContextElementType.STANDARD);
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
     List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
     if (contextElementList == null) {
       return workflowStandardParams.getArtifactForService(serviceId);

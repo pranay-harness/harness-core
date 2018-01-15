@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -49,7 +49,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     BaseYamlHandler functionSpecYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION, ObjectType.FUNCTION_SPECIFICATION);
     List<FunctionSpecification> functionSpecificationList = lambdaSpecification.getFunctions();
-    if (!isEmpty(functionSpecificationList)) {
+    if (isNotEmpty(functionSpecificationList)) {
       functionSpecYamlList =
           functionSpecificationList.stream()
               .map(functionSpecification
@@ -96,7 +96,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
 
     // function specification
     List<FunctionSpecification> functionSpecList = Lists.newArrayList();
-    if (!isEmpty(yaml.getFunctions())) {
+    if (isNotEmpty(yaml.getFunctions())) {
       BaseYamlHandler functionSpecYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION, ObjectType.FUNCTION_SPECIFICATION);
       functionSpecList = yaml.getFunctions()
