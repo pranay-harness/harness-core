@@ -19,7 +19,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
@@ -162,7 +161,7 @@ public class EcsContainerTask extends ContainerTask {
   private TaskDefinition createTaskDefinition() {
     Map<String, Volume> volumeMap = new HashMap<>();
     for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
-      if (CollectionUtils.isNotEmpty(containerDefinition.getStorageConfigurations())) {
+      if (isNotEmpty(containerDefinition.getStorageConfigurations())) {
         for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
           if (isNotBlank(storageConfiguration.getHostSourcePath())) {
             String volumeName = EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
@@ -237,7 +236,7 @@ public class EcsContainerTask extends ContainerTask {
       }
     }
 
-    if (CollectionUtils.isNotEmpty(harnessContainerDefinition.getStorageConfigurations())) {
+    if (isNotEmpty(harnessContainerDefinition.getStorageConfigurations())) {
       List<StorageConfiguration> harnessStorageConfigurations = harnessContainerDefinition.getStorageConfigurations();
       containerDefinition.setMountPoints(
           harnessStorageConfigurations.stream()

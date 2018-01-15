@@ -1,6 +1,7 @@
 package software.wings.api;
 
-import org.apache.commons.collections.CollectionUtils;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -63,7 +64,7 @@ public class PartitionElement implements ContextElement {
    * @return the partition element type
    */
   public ContextElementType getPartitionElementType() {
-    if (CollectionUtils.isNotEmpty(partitionElements)) {
+    if (isNotEmpty(partitionElements)) {
       return partitionElements.get(0).getElementType();
     }
     return partitionElementType;

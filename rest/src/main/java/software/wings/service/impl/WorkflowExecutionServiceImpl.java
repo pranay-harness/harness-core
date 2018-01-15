@@ -5,6 +5,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -53,7 +54,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -1059,7 +1059,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
              persistentLocker.acquireLock(Workflow.class, workflowExecution.getWorkflowId(), Duration.ofMinutes(1))) {
       List<WorkflowExecution> runningWorkflowExecutions =
           getRunningWorkflowExecutions(ORCHESTRATION, workflowExecution.getAppId(), workflowExecution.getWorkflowId());
-      if (CollectionUtils.isNotEmpty(runningWorkflowExecutions)) {
+      if (isNotEmpty(runningWorkflowExecutions)) {
         return;
       }
       boolean started = stateMachineExecutor.startQueuedExecution(appId, workflowExecution.getUuid());
@@ -1588,7 +1588,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private List<InfrastructureMapping> getInfrastructureMappings(Workflow workflow, List<String> infraMappingIds) {
-    if (CollectionUtils.isNotEmpty(infraMappingIds)) {
+    if (isNotEmpty(infraMappingIds)) {
       PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
                                                            .withLimit(PageRequest.UNLIMITED)
                                                            .addFilter("appId", EQ, workflow.getAppId())
@@ -1913,7 +1913,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
 
     List<String> parentInstanceIds = asList(stateExecutionInstanceId);
-    while (CollectionUtils.isNotEmpty(parentInstanceIds)) {
+    while (isNotEmpty(parentInstanceIds)) {
       PageRequest<StateExecutionInstance> pageRequest =
           aPageRequest()
               .withReadPref(CRITICAL)

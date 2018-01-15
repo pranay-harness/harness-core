@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
@@ -26,7 +27,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -135,7 +135,7 @@ public class ArtifactCollectionJob implements Job {
         logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, e);
       }
     }
-    if (CollectionUtils.isNotEmpty(artifacts)) {
+    if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());
       artifacts.forEach(artifact -> logger.info(artifact.toString()));
       Artifact latestArtifact = artifacts.get(artifacts.size() - 1);

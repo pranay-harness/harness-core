@@ -1,6 +1,7 @@
 package software.wings.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -45,7 +46,6 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
@@ -549,7 +549,7 @@ public class DelegateServiceImpl implements DelegateService {
       List<DelegateTaskEvent> taskEvents = new ArrayList<>();
       timeLimiter.callWithTimeout(() -> {
         List<DelegateTaskEvent> delegateTaskEvents = execute(managerClient.pollTaskEvents(delegateId, accountId));
-        if (CollectionUtils.isNotEmpty(delegateTaskEvents)) {
+        if (isNotEmpty(delegateTaskEvents)) {
           taskEvents.addAll(delegateTaskEvents);
         }
         return true;

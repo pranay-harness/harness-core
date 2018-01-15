@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBuilder.aServiceArtifactElement;
@@ -12,7 +13,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.DeploymentExecutionContext;
@@ -164,7 +164,7 @@ public class EnvState extends State {
     if (stateExecutionData.getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
       List<Artifact> artifacts =
           executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
-      if (CollectionUtils.isNotEmpty(artifacts)) {
+      if (isNotEmpty(artifacts)) {
         List<ContextElement> artifactElements = new ArrayList<>();
         artifacts.forEach(artifact
             -> artifactElements.add(aServiceArtifactElement()

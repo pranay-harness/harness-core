@@ -7,7 +7,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.eclipse.jetty.util.StringUtil.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
@@ -36,7 +36,6 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -266,7 +265,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
     // If an entry exists with the given default name
-    if (CollectionUtils.isNotEmpty(response)) {
+    if (isNotEmpty(response)) {
       String existingName = response.get(0).getName();
       name = Util.getNameWithNextRevision(existingName, name);
     }

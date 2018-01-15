@@ -1,8 +1,8 @@
 package software.wings.api;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.ServiceInstance;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
@@ -37,7 +37,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    if (CollectionUtils.isNotEmpty(serviceInstanceList)) {
+    if (isNotEmpty(serviceInstanceList)) {
       putNotNull(executionDetails, "hosts",
           anExecutionDataValue()
               .withDisplayName("Hosts")
@@ -50,7 +50,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    if (CollectionUtils.isNotEmpty(serviceInstanceList)) {
+    if (isNotEmpty(serviceInstanceList)) {
       putNotNull(executionDetails, "hosts",
           anExecutionDataValue()
               .withDisplayName("Hosts")

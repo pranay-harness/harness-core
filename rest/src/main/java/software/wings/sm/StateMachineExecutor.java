@@ -36,7 +36,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -789,7 +788,7 @@ public class StateMachineExecutor {
       StateMachine sm, StateExecutionInstance stateExecutionInstance, ExecutionResponse executionResponse) {
     if (executionResponse instanceof SpawningExecutionResponse) {
       SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) executionResponse;
-      if (CollectionUtils.isNotEmpty(spawningExecutionResponse.getStateExecutionInstanceList())) {
+      if (isNotEmpty(spawningExecutionResponse.getStateExecutionInstanceList())) {
         for (StateExecutionInstance childStateExecutionInstance :
             spawningExecutionResponse.getStateExecutionInstanceList()) {
           childStateExecutionInstance.setUuid(null);

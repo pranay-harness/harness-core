@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -25,7 +26,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import de.danielbechler.util.Collections;
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -417,7 +417,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private List<Service> getServices(Workflow workflow, List<String> serviceIds) {
-    if (CollectionUtils.isNotEmpty(serviceIds)) {
+    if (isNotEmpty(serviceIds)) {
       PageRequest<Service> pageRequest = aPageRequest()
                                              .withLimit(UNLIMITED)
                                              .addFilter("appId", EQ, workflow.getAppId())

@@ -9,7 +9,6 @@ import static software.wings.common.Constants.PHASE_PARAM;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
@@ -406,7 +405,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    * @return the artifacts
    */
   public List<Artifact> getArtifacts() {
-    if (artifacts == null && CollectionUtils.isNotEmpty(artifactIds)) {
+    if (artifacts == null && isNotEmpty(artifactIds)) {
       List<Artifact> list = new ArrayList<>();
       for (String artifactId : artifactIds) {
         list.add(artifactService.get(appId, artifactId));

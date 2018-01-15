@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -10,7 +11,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
@@ -87,7 +87,7 @@ public class ExecutionResource {
     filter.setFieldName("appId");
 
     List<String> authorizedAppIds = null;
-    if (CollectionUtils.isNotEmpty(appIds)) {
+    if (isNotEmpty(appIds)) {
       authorizedAppIds = appIds; //(List<String>) CollectionUtils.intersection(authorizedAppIds, appIds);
     } else {
       PageRequest<Application> applicationPageRequest = aPageRequest()
@@ -109,7 +109,7 @@ public class ExecutionResource {
       pageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
     }
 
-    if (CollectionUtils.isNotEmpty(workflowTypes)) {
+    if (isNotEmpty(workflowTypes)) {
       pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.IN, workflowTypes.toArray()).build());
     }
 

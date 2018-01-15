@@ -1,12 +1,12 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
 
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -259,13 +259,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private void getMetricsSet() {
-      if (CollectionUtils.isNotEmpty(metrics)) {
+      if (isNotEmpty(metrics)) {
         return;
       }
       logger.info("fetching new relic metric names from harness manager");
       NewRelicMetricNames newRelicMetricNames = metricStoreService.getNewRelicMetricNames(getAccountId(),
           String.valueOf(dataCollectionInfo.getNewRelicAppId()), dataCollectionInfo.getSettingAttributeId());
-      if (newRelicMetricNames != null && CollectionUtils.isNotEmpty(newRelicMetricNames.getMetrics())) {
+      if (newRelicMetricNames != null && isNotEmpty(newRelicMetricNames.getMetrics())) {
         logger.info("found new relic metric names {} from harness manager", newRelicMetricNames.getMetrics().size());
         metrics = newRelicMetricNames.getMetrics();
       } else {

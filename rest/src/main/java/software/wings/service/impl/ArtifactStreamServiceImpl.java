@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -20,7 +21,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SearchFilter.Operator;
@@ -162,7 +162,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
     // If an entry exists with the given default name
-    if (CollectionUtils.isNotEmpty(response)) {
+    if (isNotEmpty(response)) {
       String existingName = response.get(0).getName();
       name = Util.getNameWithNextRevision(existingName, name);
     }

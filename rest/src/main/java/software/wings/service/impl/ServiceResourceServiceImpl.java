@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -32,7 +33,6 @@ import com.google.inject.name.Named;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -508,7 +508,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .filter(wfl -> wfl.getServices().stream().anyMatch(s -> service.getUuid().equals(s.getUuid())))
             .collect(Collectors.toList());
 
-    if (CollectionUtils.isNotEmpty(serviceWorkflows)) {
+    if (isNotEmpty(serviceWorkflows)) {
       String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
       String message =
           String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
@@ -714,7 +714,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
     command.setAppId(appId);
-    if (CollectionUtils.isNotEmpty(command.getCommandUnits())) {
+    if (isNotEmpty(command.getCommandUnits())) {
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
 
@@ -951,7 +951,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void validateLambdaSpecification(LambdaSpecification lambdaSpecification) {
     List<String> duplicateFunctionName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
-    if (CollectionUtils.isNotEmpty(duplicateFunctionName)) {
+    if (isNotEmpty(duplicateFunctionName)) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               "Function name should be unique. Duplicate function names: [" + Joiner.on(",").join(duplicateFunctionName)
@@ -959,7 +959,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     List<String> duplicateHandlerName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getHandler);
-    if (CollectionUtils.isNotEmpty(duplicateHandlerName)) {
+    if (isNotEmpty(duplicateHandlerName)) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               "Function Handler name should be unique. Duplicate function handlers: ["
