@@ -37,16 +37,16 @@ public class UserDataSpecificationYamlHandler extends DeploymentSpecificationYam
       throws HarnessException {
     UserDataSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    UserDataSpecification userDataSpecification = toBean(changeContext, previous, changeSetContext);
+    UserDataSpecification userDataSpecification = toBean(changeContext);
     if (previous != null) {
+      userDataSpecification.setUuid(previous.getUuid());
       return serviceResourceService.updateUserDataSpecification(userDataSpecification);
     } else {
       return serviceResourceService.createUserDataSpecification(userDataSpecification);
     }
   }
 
-  private UserDataSpecification toBean(ChangeContext<Yaml> changeContext, UserDataSpecification previous,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  private UserDataSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
     String filePath = changeContext.getChange().getFilePath();
@@ -56,12 +56,10 @@ public class UserDataSpecificationYamlHandler extends DeploymentSpecificationYam
     String serviceId = yamlHelper.getServiceId(appId, filePath);
     Validator.notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId);
 
-    if (previous == null) {
-      return UserDataSpecification.builder().data(yaml.getData()).serviceId(serviceId).build();
-    } else {
-      previous.setData(yaml.getData());
-      return previous;
-    }
+    UserDataSpecification userDataSpecification =
+        UserDataSpecification.builder().data(yaml.getData()).serviceId(serviceId).build();
+    userDataSpecification.setAppId(appId);
+    return userDataSpecification;
   }
 
   @Override

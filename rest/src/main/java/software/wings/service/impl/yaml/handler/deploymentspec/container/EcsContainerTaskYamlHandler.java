@@ -24,4 +24,9 @@ public class EcsContainerTaskYamlHandler extends ContainerTaskYamlHandler<Yaml, 
   public EcsContainerTask get(String accountId, String yamlFilePath) {
     return getContainerTask(accountId, yamlFilePath, DeploymentType.ECS.name());
   }
+
+  @Override
+  protected EcsContainerTask createNewContainerTask() {
+    return new EcsContainerTask();
+  }
 }

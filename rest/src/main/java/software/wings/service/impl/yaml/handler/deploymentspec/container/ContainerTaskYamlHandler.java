@@ -31,8 +31,9 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
 
-  protected C toBean(C containerTask, ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  protected abstract C createNewContainerTask();
+
+  protected C toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     Y yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
 
@@ -41,6 +42,8 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
 
     String serviceId = yamlHelper.getServiceId(appId, change.getFilePath());
     Validator.notNullCheck("Could not locate service info in file path:" + change.getFilePath(), serviceId);
+
+    C containerTask = createNewContainerTask();
 
     AdvancedType advancedType = Util.getEnumFromString(AdvancedType.class, yaml.getAdvancedType());
     containerTask.setServiceId(serviceId);
@@ -110,8 +113,9 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
       throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
     C previous = get(accountId, changeContext.getChange().getFilePath());
-    C containerTask = toBean(previous, changeContext, changeSetContext);
+    C containerTask = toBean(changeContext, changeSetContext);
     if (previous != null) {
+      containerTask.setUuid(previous.getUuid());
       return (C) serviceResourceService.updateContainerTask(containerTask, false);
     } else {
       return (C) serviceResourceService.createContainerTask(containerTask, false);

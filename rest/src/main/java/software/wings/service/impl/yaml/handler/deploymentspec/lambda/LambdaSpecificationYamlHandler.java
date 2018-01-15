@@ -70,28 +70,28 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
       throws HarnessException {
     LambdaSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    LambdaSpecification lambdaSpecification = toBean(changeContext, previous, changeSetContext);
+    LambdaSpecification lambdaSpecification = toBean(changeContext, changeSetContext);
     if (previous != null) {
+      lambdaSpecification.setUuid(previous.getUuid());
       return serviceResourceService.updateLambdaSpecification(lambdaSpecification);
     } else {
       return serviceResourceService.createLambdaSpecification(lambdaSpecification);
     }
   }
 
-  private LambdaSpecification toBean(ChangeContext<Yaml> changeContext, LambdaSpecification previous,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  private LambdaSpecification toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    boolean isCreate = previous == null;
 
     // default specification
     DefaultSpecification defaultSpec = null;
     DefaultSpecification.Yaml defaultSpecYaml = yaml.getDefaults();
     if (defaultSpecYaml != null) {
-      BaseYamlHandler defaultSpecYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION, ObjectType.DEFAULT_SPECIFICATION);
+      DefaultSpecificationYamlHandler defaultSpecYamlHandler =
+          (DefaultSpecificationYamlHandler) yamlHandlerFactory.getYamlHandler(
+              YamlType.DEFAULT_SPECIFICATION, ObjectType.DEFAULT_SPECIFICATION);
       ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, defaultSpecYaml);
-      defaultSpec =
-          (DefaultSpecification) defaultSpecYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+      defaultSpec = defaultSpecYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
     }
 
     // function specification
@@ -122,17 +122,10 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     Validator.notNullCheck(
         "Could not lookup service for the yaml file: " + changeContext.getChange().getFilePath(), serviceId);
 
-    if (isCreate) {
-      return LambdaSpecification.builder()
-          .defaults(defaultSpec)
-          .functions(functionSpecList)
-          .serviceId(serviceId)
-          .build();
-    } else {
-      previous.setDefaults(defaultSpec);
-      previous.setFunctions(functionSpecList);
-      return previous;
-    }
+    LambdaSpecification lambdaSpecification =
+        LambdaSpecification.builder().defaults(defaultSpec).functions(functionSpecList).serviceId(serviceId).build();
+    lambdaSpecification.setAppId(appId);
+    return lambdaSpecification;
   }
 
   @Override
