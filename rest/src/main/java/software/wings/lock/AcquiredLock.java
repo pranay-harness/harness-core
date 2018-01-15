@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import lombok.Builder;
+import lombok.Getter;
 import org.eclipse.jgit.util.time.MonotonicSystemClock;
 import org.eclipse.jgit.util.time.ProposedTimestamp;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ public class AcquiredLock implements Closeable {
 
   public static final MonotonicSystemClock monotonicSystemClock = new MonotonicSystemClock();
 
-  private DistributedLock lock;
+  @Getter private DistributedLock lock;
   private long startTimestamp;
 
   public static long monotonicTimestamp() {
@@ -26,8 +27,16 @@ public class AcquiredLock implements Closeable {
     }
   }
 
+  public void release() {
+    lock = null;
+  }
+
   @Override
   public void close() {
+    if (lock == null) {
+      return;
+    }
+
     // Check if procedure took longer than its timeout. This is as bad as not having lock at first place.
     // Any lock that attempts to grab the lock after its timeout will be able to grab it. Resulting in
     // working in parallel with the current process.
