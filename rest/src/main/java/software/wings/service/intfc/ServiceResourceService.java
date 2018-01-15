@@ -46,10 +46,10 @@ public interface ServiceResourceService extends OwnedByApplication {
    * Save service.
    *
    * @param service  the service
-   * @param fromYaml the from git
+   * @param serviceCreatedFromYaml flag indicating if the service was created from yaml
    * @return the service
    */
-  @ValidationGroups(Create.class) Service save(@Valid Service service, boolean fromYaml);
+  @ValidationGroups(Create.class) Service save(@Valid Service service, boolean serviceCreatedFromYaml);
 
   /**
    * Clone service.

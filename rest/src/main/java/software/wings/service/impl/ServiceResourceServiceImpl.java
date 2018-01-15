@@ -220,12 +220,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public Service save(Service service, boolean fromYaml) {
+  public Service save(Service service, boolean serviceCreatedFromYaml) {
     Service savedService =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
-    if (!fromYaml) {
-      savedService = addDefaultCommands(savedService);
-    }
+    savedService = addDefaultCommands(savedService, serviceCreatedFromYaml);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
     notificationService.sendNotificationAsync(
         anInformationNotification()
@@ -235,7 +233,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
 
-    if (!fromYaml) {
+    if (!serviceCreatedFromYaml) {
       yamlChangeSetHelper.serviceYamlChangeAsync(savedService, ChangeType.ADD);
     }
 
@@ -348,7 +346,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .collect(toList());
   }
 
-  private Service addDefaultCommands(Service service) {
+  private Service addDefaultCommands(Service service, boolean serviceCreatedFromYaml) {
     boolean pushToYaml = true;
     List<Command> commands = emptyList();
     ArtifactType artifactType = service.getArtifactType();
@@ -361,10 +359,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       pushToYaml = artifactType.shouldPushCommandsToYaml();
     }
 
+    // This makes sure we only push commands to git when the service is not created from yaml and if the artifact type
+    // has configurable / exposed commands. For services like docker, the commands are internal. For War, user could
+    // configure it.
+    boolean shouldPushCommandsToYaml = pushToYaml && !serviceCreatedFromYaml;
+
     Service serviceToReturn = service;
     for (Command command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true, pushToYaml);
+          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true, shouldPushCommandsToYaml);
     }
 
     return serviceToReturn;
