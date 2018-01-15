@@ -4,12 +4,15 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.directory.DirectoryNode;
@@ -54,6 +57,12 @@ public interface YamlDirectoryService {
   String getRootPathByService(Service service, String applicationPath);
 
   String getRootPathByServiceCommand(Service service, ServiceCommand serviceCommand);
+
+  String getRootPathByContainerTask(Service service, ContainerTask containerTask);
+
+  String getRootPathByLambdaSpec(Service service, LambdaSpecification lambdaSpecification);
+
+  String getRootPathByUserDataSpec(Service service, UserDataSpecification userDataSpecification);
 
   String getRootPathByConfigFile(Service service);
 

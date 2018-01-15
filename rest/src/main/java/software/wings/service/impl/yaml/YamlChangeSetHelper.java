@@ -12,8 +12,11 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.AppService;
@@ -30,6 +33,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -74,6 +78,42 @@ public class YamlChangeSetHelper {
     if (ygs != null) {
       yamlChangeSetService.saveChangeSet(ygs, asList(gitFileChange));
     }
+  }
+
+  public void containerTaskYamlChangeAsync(
+      String accountId, Service service, ContainerTask containerTask, ChangeType changeType) {
+    executorService.submit(() -> containerTaskYamlChange(accountId, service, containerTask, changeType));
+  }
+
+  public void containerTaskYamlChange(
+      String accountId, Service service, ContainerTask containerTask, ChangeType changeType) {
+    GitFileChange gitSyncFile =
+        entityUpdateService.getContainerTaskGitSyncFile(accountId, service, containerTask, changeType);
+    queueYamlChangeSet(accountId, gitSyncFile);
+  }
+
+  public void lamdbaSpecYamlChangeAsync(
+      String accountId, Service service, LambdaSpecification lambdaSpec, ChangeType changeType) {
+    executorService.submit(() -> lamdbaSpecYamlChange(accountId, service, lambdaSpec, changeType));
+  }
+
+  public void lamdbaSpecYamlChange(
+      String accountId, Service service, LambdaSpecification lambdaSpec, ChangeType changeType) {
+    GitFileChange gitSyncFile =
+        entityUpdateService.getLamdbaSpecGitSyncFile(accountId, service, lambdaSpec, changeType);
+    queueYamlChangeSet(accountId, gitSyncFile);
+  }
+
+  public void userDataSpecYamlChangeAsync(
+      String accountId, Service service, UserDataSpecification userDataSpec, ChangeType changeType) {
+    executorService.submit(() -> userDataSpecYamlChange(accountId, service, userDataSpec, changeType));
+  }
+
+  public void userDataSpecYamlChange(
+      String accountId, Service service, UserDataSpecification userDataSpec, ChangeType changeType) {
+    GitFileChange gitSyncFile =
+        entityUpdateService.getUserDataGitSyncFile(accountId, service, userDataSpec, changeType);
+    queueYamlChangeSet(accountId, gitSyncFile);
   }
 
   public void configFileYamlChangeAsync(ConfigFile configFile, ChangeType changeType) {
@@ -122,6 +162,10 @@ public class YamlChangeSetHelper {
     if (ygs != null) {
       yamlChangeSetService.saveChangeSet(ygs, gitFileChangeList);
     }
+  }
+
+  private void queueYamlChangeSet(String accountId, GitFileChange gitFileChange) {
+    queueYamlChangeSet(accountId, Arrays.asList(gitFileChange));
   }
 
   private void moveApplicationYamlChange(Application oldApp, Application newApp) {
