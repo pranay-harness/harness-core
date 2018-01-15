@@ -12,13 +12,16 @@ public class ExclusiveStaticImportCheck extends AbstractCheck {
   private static final String MSG_KEY = "code.dependencies.hell.exclusive.static.import";
 
   // TODO: take this as arguments
-  private Map<String, String> staticImports = new HashMap<String, String>() {
-    {
-      put("asList", "java.util.Arrays");
-      put("isEmpty", "io.harness.data.structure.EmptyPredicate");
-      put("isNotEmpty", "io.harness.data.structure.EmptyPredicate");
+  private Map<String, String> staticImports = new HashMap();
+
+  public void setStaticImports(String... imports) {
+    for (String staticImport : imports) {
+      String method = staticImport.substring(staticImport.lastIndexOf('.') + 1);
+      String pkg = staticImport.substring(0, staticImport.length() - method.length() - 1);
+
+      staticImports.put(method, pkg);
     }
-  };
+  }
 
   @Override
   public int[] getDefaultTokens() {
