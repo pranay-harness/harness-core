@@ -28,122 +28,195 @@ public class EmptyPredicateTest extends CategoryTest {
 
   @Test
   @Category({FastUnitTests.class})
-  public void testNullIsEmpty() {
-    int[] array = null;
-    assertTrue(isEmpty(array));
-
+  public void testNull() {
     Custom custom = null;
     assertTrue(isEmpty(custom));
+    assertFalse(isNotEmpty(custom));
 
     List list = null;
     assertTrue(isEmpty(list));
+    assertFalse(isNotEmpty(list));
 
     String string = null;
     assertTrue(isEmpty(string));
+    assertFalse(isNotEmpty(string));
 
     Map map = null;
     assertTrue(isEmpty(map));
+    assertFalse(isNotEmpty(map));
 
     ImplementsCollection<String> collection = null;
     assertTrue(isEmpty(collection));
+    assertFalse(isNotEmpty(collection));
+
+    ImplementsMap<String, String> implMap = null;
+    assertTrue(isEmpty(implMap));
+    assertFalse(isNotEmpty(implMap));
+
+    Object[] objects = null;
+    assertTrue(isEmpty(objects));
+    assertFalse(isNotEmpty(objects));
+
+    long[] longs = null;
+    assertTrue(isEmpty(longs));
+    assertFalse(isNotEmpty(longs));
+
+    int[] ints = null;
+    assertTrue(isEmpty(ints));
+    assertFalse(isNotEmpty(ints));
+
+    short[] shorts = null;
+    assertTrue(isEmpty(shorts));
+    assertFalse(isNotEmpty(shorts));
+
+    char[] chars = null;
+    assertTrue(isEmpty(chars));
+    assertFalse(isNotEmpty(chars));
+
+    byte[] bytes = null;
+    assertTrue(isEmpty(bytes));
+    assertFalse(isNotEmpty(bytes));
+
+    double[] doubles = null;
+    assertTrue(isEmpty(doubles));
+    assertFalse(isNotEmpty(doubles));
+
+    float[] floats = null;
+    assertTrue(isEmpty(floats));
+    assertFalse(isNotEmpty(floats));
+
+    boolean[] booleans = null;
+    assertTrue(isEmpty(booleans));
+    assertFalse(isNotEmpty(booleans));
   }
 
   @Test
   @Category({FastUnitTests.class})
-  public void testEmptyIsEmpty() {
+  public void testEmpty() {
     Custom custom = Custom.builder().empty(true).build();
     assertTrue(isEmpty(custom));
+    assertFalse(isNotEmpty(custom));
 
     List<String> list = new ArrayList();
     assertTrue(isEmpty(list));
+    assertFalse(isNotEmpty(list));
 
     String string = "";
     assertTrue(isEmpty(string));
+    assertFalse(isNotEmpty(string));
 
     Map<String, String> map = new HashMap();
     assertTrue(isEmpty(map));
+    assertFalse(isNotEmpty(map));
 
     ImplementsCollection<String> collection = new ImplementsCollection(true);
     assertTrue(isEmpty(collection));
+    assertFalse(isNotEmpty(collection));
+
+    ImplementsMap<String, String> implMap = new ImplementsMap<String, String>(true);
+    assertTrue(isEmpty(implMap));
+    assertFalse(isNotEmpty(implMap));
+
+    Object[] objects = new Object[0];
+    assertTrue(isEmpty(objects));
+    assertFalse(isNotEmpty(objects));
+
+    long[] longs = new long[0];
+    assertTrue(isEmpty(longs));
+    assertFalse(isNotEmpty(longs));
+
+    int[] ints = new int[0];
+    assertTrue(isEmpty(ints));
+    assertFalse(isNotEmpty(ints));
+
+    short[] shorts = new short[0];
+    assertTrue(isEmpty(shorts));
+    assertFalse(isNotEmpty(shorts));
+
+    char[] chars = new char[0];
+    assertTrue(isEmpty(chars));
+    assertFalse(isNotEmpty(chars));
+
+    byte[] bytes = new byte[0];
+    assertTrue(isEmpty(bytes));
+    assertFalse(isNotEmpty(bytes));
+
+    double[] doubles = new double[0];
+    assertTrue(isEmpty(doubles));
+    assertFalse(isNotEmpty(doubles));
+
+    float[] floats = new float[0];
+    assertTrue(isEmpty(floats));
+    assertFalse(isNotEmpty(floats));
+
+    boolean[] booleans = new boolean[0];
+    assertTrue(isEmpty(booleans));
+    assertFalse(isNotEmpty(booleans));
   }
 
   @Test
   @Category({FastUnitTests.class})
-  public void testNotEmptyIsEmptyFalse() {
+  public void testNotEmpty() {
     Custom custom = Custom.builder().empty(false).build();
     assertFalse(isEmpty(custom));
-
-    List<String> list = asList("foo");
-    assertFalse(isEmpty(list));
-
-    String string = "some";
-    assertFalse(isEmpty(string));
-
-    Map<String, String> map = new HashMap() {
-      { put("foo", "foo"); }
-    };
-    assertFalse(isEmpty(map));
-
-    ImplementsCollection<String> collection = new ImplementsCollection(false);
-    assertFalse(isEmpty(collection));
-  }
-
-  @Test
-  @Category({FastUnitTests.class})
-  public void testNullIsNotEmptyFalse() {
-    Custom custom = null;
-    assertFalse(isNotEmpty(custom));
-
-    List list = null;
-    assertFalse(isNotEmpty(list));
-
-    String string = null;
-    assertFalse(isNotEmpty(string));
-
-    Map map = null;
-    assertFalse(isNotEmpty(map));
-
-    ImplementsCollection<String> collection = null;
-    assertFalse(isNotEmpty(collection));
-  }
-
-  @Test
-  @Category({FastUnitTests.class})
-  public void testEmptyIsNotEmptyFalse() {
-    Custom custom = Custom.builder().empty(true).build();
-    assertFalse(isNotEmpty(custom));
-
-    List<String> list = new ArrayList();
-    assertFalse(isNotEmpty(list));
-
-    String string = "";
-    assertFalse(isNotEmpty(string));
-
-    Map<String, String> map = new HashMap();
-    assertFalse(isNotEmpty(map));
-
-    ImplementsCollection<String> collection = new ImplementsCollection(true);
-    assertFalse(isNotEmpty(collection));
-  }
-
-  @Test
-  @Category({FastUnitTests.class})
-  public void testNotEmptyIsNotEmpty() {
-    Custom custom = Custom.builder().empty(false).build();
     assertTrue(isNotEmpty(custom));
 
     List<String> list = asList("foo");
+    assertFalse(isEmpty(list));
     assertTrue(isNotEmpty(list));
 
     String string = "some";
+    assertFalse(isEmpty(string));
     assertTrue(isNotEmpty(string));
 
     Map<String, String> map = new HashMap() {
       { put("foo", "foo"); }
     };
+    assertFalse(isEmpty(map));
     assertTrue(isNotEmpty(map));
 
     ImplementsCollection<String> collection = new ImplementsCollection(false);
+    assertFalse(isEmpty(collection));
     assertTrue(isNotEmpty(collection));
+
+    ImplementsMap<String, String> implMap = new ImplementsMap<String, String>(false);
+    assertFalse(isEmpty(implMap));
+    assertTrue(isNotEmpty(implMap));
+
+    Object[] objects = new Object[1];
+    assertFalse(isEmpty(objects));
+    assertTrue(isNotEmpty(objects));
+
+    long[] longs = new long[1];
+    assertFalse(isEmpty(longs));
+    assertTrue(isNotEmpty(longs));
+
+    int[] ints = new int[1];
+    assertFalse(isEmpty(ints));
+    assertTrue(isNotEmpty(ints));
+
+    short[] shorts = new short[1];
+    assertFalse(isEmpty(shorts));
+    assertTrue(isNotEmpty(shorts));
+
+    char[] chars = new char[1];
+    assertFalse(isEmpty(chars));
+    assertTrue(isNotEmpty(chars));
+
+    byte[] bytes = new byte[1];
+    assertFalse(isEmpty(bytes));
+    assertTrue(isNotEmpty(bytes));
+
+    double[] doubles = new double[1];
+    assertFalse(isEmpty(doubles));
+    assertTrue(isNotEmpty(doubles));
+
+    float[] floats = new float[1];
+    assertFalse(isEmpty(floats));
+    assertTrue(isNotEmpty(floats));
+
+    boolean[] booleans = new boolean[1];
+    assertFalse(isEmpty(booleans));
+    assertTrue(isNotEmpty(booleans));
   }
 }

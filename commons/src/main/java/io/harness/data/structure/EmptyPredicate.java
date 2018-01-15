@@ -21,7 +21,7 @@ public class EmptyPredicate {
     return collection == null || collection.isEmpty();
   }
 
-  public static boolean isEmpty(Map map) {
+  public static <K, V> boolean isEmpty(Map<K, V> map) {
     return map == null || map.isEmpty();
   }
 
@@ -73,7 +73,7 @@ public class EmptyPredicate {
     return collection != null && !collection.isEmpty();
   }
 
-  public static boolean isNotEmpty(Map map) {
+  public static <K, V> boolean isNotEmpty(Map<K, V> map) {
     return map != null && !map.isEmpty();
   }
 

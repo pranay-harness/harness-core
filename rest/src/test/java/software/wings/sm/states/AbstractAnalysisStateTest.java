@@ -31,7 +31,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.RealMongo;
 import software.wings.service.impl.instance.ContainerInstanceHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -70,7 +69,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getLastExecutionNodes() throws NoSuchAlgorithmException, KeyManagementException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
@@ -131,7 +129,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException {
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
