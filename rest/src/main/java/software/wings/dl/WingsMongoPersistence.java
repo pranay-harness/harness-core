@@ -2,6 +2,8 @@ package software.wings.dl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.System.currentTimeMillis;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
@@ -21,7 +23,6 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
@@ -681,7 +682,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     final String accountId = object.getAccountId();
     String encryptedId =
         savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
-    EncryptedData encryptedData = StringUtils.isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
+    EncryptedData encryptedData = isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
     EncryptedData encryptedPair = secretManager.encrypt(
         encryptionType, accountId, object.getSettingType(), secret, encryptedData, UUID.randomUUID().toString());
 
@@ -718,7 +719,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   private boolean isReferencedSecretText(Encryptable object, Field encryptedField) throws IllegalAccessException {
     if (ServiceVariable.class.isInstance(object)) {
       ServiceVariable serviceVariable = (ServiceVariable) object;
-      if (!StringUtils.isBlank(serviceVariable.getUuid())) {
+      if (isNotBlank(serviceVariable.getUuid())) {
         Field decryptedField = getDecryptedField(encryptedField, object);
         deleteEncryptionReference(object, Sets.newHashSet(decryptedField.getName()), serviceVariable.getUuid());
       }
@@ -740,7 +741,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         throw new WingsException("Error updating parent for encrypted record", e);
       }
 
-      if (StringUtils.isBlank(encryptedId)) {
+      if (isBlank(encryptedId)) {
         continue;
       }
 
@@ -769,7 +770,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
           throw new WingsException("Could not deleter referenced record", e);
         }
 
-        if (StringUtils.isBlank(encryptedId)) {
+        if (isBlank(encryptedId)) {
           continue;
         }
 
@@ -791,8 +792,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   private <T extends Base> void encryptIfNecessary(T o) {
     // if its an update
     Object savedObject = null;
-    if (!StringUtils.isBlank(o.getUuid())
-        && (SettingAttribute.class.isInstance(o) || Encryptable.class.isInstance(o))) {
+    if (isNotBlank(o.getUuid()) && (SettingAttribute.class.isInstance(o) || Encryptable.class.isInstance(o))) {
       savedObject = datastoreMap.get(ReadPref.NORMAL).get((Class<T>) o.getClass(), o.getUuid());
     }
     Object toEncrypt = o;
@@ -817,7 +817,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   private <T extends Base> void deleteEncryptionReferenceIfNecessary(T o) {
-    if (StringUtils.isBlank(o.getUuid())) {
+    if (isBlank(o.getUuid())) {
       return;
     }
 

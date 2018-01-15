@@ -1,11 +1,12 @@
 package software.wings.resources;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import org.apache.commons.lang.StringUtils;
 import software.wings.beans.RestResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -60,7 +61,7 @@ public class BuildSourceResource {
   public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("appId") String appId,
       @QueryParam("settingId") String settingId, @QueryParam("serviceId") String serviceId,
       @QueryParam("streamType") String streamType, @QueryParam("repositoryType") String repositoryType) {
-    if (StringUtils.isBlank(serviceId)) {
+    if (isBlank(serviceId)) {
       return new RestResponse<>(buildSourceService.getPlans(appId, settingId, streamType));
     }
     return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType, repositoryType));

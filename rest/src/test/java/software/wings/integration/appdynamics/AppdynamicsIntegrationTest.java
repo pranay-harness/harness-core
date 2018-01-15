@@ -1,13 +1,13 @@
 package software.wings.integration.appdynamics;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.rule.RepeatRule.Repeat;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -72,7 +72,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     for (NewRelicApplication app : restResponse.getResource()) {
       assertTrue(app.getId() > 0);
-      assertFalse(StringUtils.isBlank(app.getName()));
+      assertFalse(isBlank(app.getName()));
     }
   }
 
@@ -107,9 +107,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
       assertTrue(tier.getId() > 0);
-      assertFalse(StringUtils.isBlank(tier.getName()));
-      assertFalse(StringUtils.isBlank(tier.getType()));
-      assertFalse(StringUtils.isBlank(tier.getAgentType()));
+      assertFalse(isBlank(tier.getName()));
+      assertFalse(isBlank(tier.getType()));
+      assertFalse(isBlank(tier.getAgentType()));
       assertEquals(tier.getName(), "MyTier");
     }
   }
@@ -146,11 +146,11 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     for (AppdynamicsBusinessTransaction bt : btRestResponse.getResource()) {
       assertTrue(bt.getId() > 0);
       assertTrue(bt.getTierId() > 0);
-      assertFalse(StringUtils.isBlank(bt.getName()));
-      assertFalse(StringUtils.isBlank(bt.getEntryPointType()));
-      assertFalse(StringUtils.isBlank(bt.getInternalName()));
-      assertFalse(StringUtils.isBlank(bt.getTierName()));
-      assertFalse(StringUtils.isBlank(bt.getInternalName()));
+      assertFalse(isBlank(bt.getName()));
+      assertFalse(isBlank(bt.getEntryPointType()));
+      assertFalse(isBlank(bt.getInternalName()));
+      assertFalse(isBlank(bt.getTierName()));
+      assertFalse(isBlank(bt.getInternalName()));
     }
   }
 
@@ -195,11 +195,11 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       assertFalse(btMetrics.isEmpty());
 
       for (AppdynamicsMetric btMetric : btMetrics) {
-        assertFalse(StringUtils.isBlank(btMetric.getName()));
+        assertFalse(isBlank(btMetric.getName()));
         assertFalse("failed for " + btMetric.getName(), btMetric.getChildMetrices().isEmpty());
 
         for (AppdynamicsMetric leafMetric : btMetric.getChildMetrices()) {
-          assertFalse(StringUtils.isBlank(leafMetric.getName()));
+          assertFalse(isBlank(leafMetric.getName()));
           assertEquals(
               "failed for " + btMetric.getName() + "|" + leafMetric.getName(), 0, leafMetric.getChildMetrices().size());
         }
@@ -248,7 +248,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       assertFalse(btMetrics.isEmpty());
 
       for (AppdynamicsMetric btMetric : btMetrics) {
-        assertFalse(StringUtils.isBlank(btMetric.getName()));
+        assertFalse(isBlank(btMetric.getName()));
         assertFalse("failed for " + btMetric.getName(), btMetric.getChildMetrices().isEmpty());
 
         final String url = API_BASE + "/appdynamics/get-metric-data?settingId=" + appdynamicsSettings.get(0).getUuid()

@@ -1,10 +1,10 @@
 package software.wings.app;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.BroadcastFilter.BroadcastAction.ACTION;
 import org.atmosphere.cpr.BroadcastFilterAdapter;
@@ -27,7 +27,7 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
       if (delegateService.filter(delegateId, task)) {
         return new BroadcastAction(JsonUtils.asJson(aDelegateTaskEvent()
                                                         .withDelegateTaskId(task.getUuid())
-                                                        .withSync(StringUtils.isNotBlank(task.getQueueName()))
+                                                        .withSync(isNotBlank(task.getQueueName()))
                                                         .withAccountId(task.getAccountId())
                                                         .build()));
       } else {

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
@@ -11,7 +12,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
@@ -142,7 +142,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
 
     EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
-    if (!StringUtils.isBlank(kmsConfig.getUuid())) {
+    if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedAccessKey = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getAccessKey());
       Preconditions.checkNotNull(savedAccessKey, "reference is null for " + kmsConfig.getUuid());
@@ -157,7 +157,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     kmsConfig.setAccessKey(accessKeyId);
 
     EncryptedData secretKeyData = encrypt(kmsConfig.getSecretKey().toCharArray(), accountId, null);
-    if (!StringUtils.isBlank(kmsConfig.getUuid())) {
+    if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedSecretKey = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getSecretKey());
       Preconditions.checkNotNull(savedSecretKey, "reference is null for " + kmsConfig.getUuid());
@@ -172,7 +172,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     kmsConfig.setSecretKey(secretKeyId);
 
     EncryptedData arnKeyData = encrypt(kmsConfig.getKmsArn().toCharArray(), accountId, null);
-    if (!StringUtils.isBlank(kmsConfig.getUuid())) {
+    if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedArn = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getKmsArn());
       Preconditions.checkNotNull(savedArn, "reference is null for " + kmsConfig.getUuid());

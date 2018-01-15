@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.utils.Misc.isNullOrEmpty;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 import com.google.inject.Inject;
 
@@ -54,13 +54,12 @@ public class WebHookServiceImpl implements WebHookService {
           return WebHookResponse.builder().error("Invalid request payload. ArtifactStream does not exists").build();
         }
         Artifact artifact;
-        if (isNullOrEmpty(webHookRequest.getBuildNumber()) && isNullOrEmpty(webHookRequest.getDockerImageTag())) {
+        if (isBlank(webHookRequest.getBuildNumber()) && isBlank(webHookRequest.getDockerImageTag())) {
           artifact = artifactService.fetchLatestArtifactForArtifactStream(
               appId, artifactStreamId, artifactStream.getSourceName());
         } else {
-          String requestBuildNumber = isNullOrEmpty(webHookRequest.getBuildNumber())
-              ? webHookRequest.getDockerImageTag()
-              : webHookRequest.getBuildNumber();
+          String requestBuildNumber = isBlank(webHookRequest.getBuildNumber()) ? webHookRequest.getDockerImageTag()
+                                                                               : webHookRequest.getBuildNumber();
           artifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId, requestBuildNumber);
           if (artifact == null) {
             // do collection and then run

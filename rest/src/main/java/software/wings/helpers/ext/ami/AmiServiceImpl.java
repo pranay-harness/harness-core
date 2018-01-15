@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.ami;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.utils.Misc.isNullOrEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,7 +40,7 @@ public class AmiServiceImpl implements AmiService {
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("is-public").withValues("false"));
     filters.add(new Filter("state").withValues("available"));
-    if (!isNullOrEmpty(platform)) {
+    if (isNotBlank(platform)) {
       filters.add(new Filter("platform").withValues(platform));
     }
     if (MapUtils.isNotEmpty(tags)) {
@@ -54,7 +54,7 @@ public class AmiServiceImpl implements AmiService {
     Collections.sort(describeImagesResult.getImages(), Comparator.comparing(Image::getCreationDate));
     describeImagesResult.getImages()
         .stream()
-        .filter(image -> image != null && !isNullOrEmpty(image.getName()))
+        .filter(image -> image != null && isNotBlank(image.getName()))
         .forEach(image
             -> buildDetails.add(aBuildDetails().withNumber(image.getName()).withRevision(image.getImageId()).build()));
     if (buildDetails.isEmpty()) {

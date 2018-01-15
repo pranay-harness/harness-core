@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -19,7 +20,6 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -449,7 +449,7 @@ public class VaultTest extends WingsBaseTest {
         vaultService.encrypt(name, keyToEncrypt, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, null);
     assertNull(encryptedData.getEncryptedValue());
     assertNotNull(encryptedData.getEncryptionKey());
-    assertFalse(StringUtils.isBlank(encryptedData.getEncryptionKey()));
+    assertFalse(isBlank(encryptedData.getEncryptionKey()));
 
     char[] decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
     assertNull(decryptedValue);
@@ -481,7 +481,7 @@ public class VaultTest extends WingsBaseTest {
         name, keyToEncrypt, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, savedEncryptedData);
     assertNotNull(encryptedData.getEncryptedValue());
     assertNotNull(encryptedData.getEncryptionKey());
-    assertFalse(StringUtils.isBlank(encryptedData.getEncryptionKey()));
+    assertFalse(isBlank(encryptedData.getEncryptionKey()));
 
     decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
     assertEquals(password, String.valueOf(decryptedValue));
@@ -514,7 +514,7 @@ public class VaultTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
-    assertFalse(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
+    assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
@@ -1414,7 +1414,7 @@ public class VaultTest extends WingsBaseTest {
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertEquals(accountId, savedConfig.getAccountId());
       assertNull(savedConfig.getPassword());
-      assertFalse(StringUtils.isBlank(savedConfig.getEncryptedPassword()));
+      assertFalse(isBlank(savedConfig.getEncryptedPassword()));
 
       encryptionService.decrypt(
           savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));

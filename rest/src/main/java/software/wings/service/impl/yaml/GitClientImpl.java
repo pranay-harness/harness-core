@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
@@ -47,7 +48,6 @@ import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.GitClient;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -342,7 +342,7 @@ public class GitClientImpl implements GitClient {
     GitCommitResult commitResult = commit(gitConfig, gitCommitRequest);
     GitCommitAndPushResult gitCommitAndPushResult =
         GitCommitAndPushResult.builder().gitCommitResult(commitResult).build();
-    if (!Misc.isNullOrEmpty(commitResult.getCommitId())) {
+    if (isNotBlank(commitResult.getCommitId())) {
       gitCommitAndPushResult.setGitPushResult(push(gitConfig));
     } else {
       logger.warn("Null commitId. Nothing to push for request [{}]", gitCommitRequest);

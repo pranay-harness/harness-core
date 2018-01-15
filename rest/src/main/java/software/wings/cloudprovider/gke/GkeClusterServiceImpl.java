@@ -1,7 +1,7 @@
 package software.wings.cloudprovider.gke;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
@@ -243,7 +243,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     String clusterName = zoneCluster[1];
     try {
       ClusterUpdate clusterUpdate = new ClusterUpdate();
-      if (!isNullOrEmpty(nodePoolId)) {
+      if (isNotBlank(nodePoolId)) {
         clusterUpdate.setDesiredNodePoolId(nodePoolId);
       }
       UpdateClusterRequest update = new UpdateClusterRequest().setUpdate(clusterUpdate.setDesiredNodePoolAutoscaling(
@@ -283,7 +283,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     String clusterName = zoneCluster[1];
     try {
       Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
-      if (!isNullOrEmpty(nodePoolId)) {
+      if (isNotBlank(nodePoolId)) {
         for (NodePool nodePool : cluster.getNodePools()) {
           if (nodePool.getName().equals(nodePoolId)) {
             return nodePool.getAutoscaling();

@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -9,8 +10,6 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Set;
@@ -25,9 +24,8 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
 
   @Override
   public Set<String> getExpressions(String appId, String entityId, String serviceId) {
-    Set<String> expressions = new TreeSet<>();
-    expressions.addAll(getStaticExpressions());
-    if (!Misc.isNullOrEmpty(serviceId)) {
+    Set<String> expressions = new TreeSet<>(getStaticExpressions());
+    if (isNotBlank(serviceId)) {
       expressions.addAll(serviceExpressionBuilder.getDynamicExpressions(appId, serviceId));
       expressions.addAll(getServiceTemplateVariableExpressions(appId, entityId, serviceId));
     } else {

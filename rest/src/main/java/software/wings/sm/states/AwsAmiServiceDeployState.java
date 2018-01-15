@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -9,8 +11,6 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-import static software.wings.utils.Misc.isNotNullOrEmpty;
-import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.common.base.Objects;
@@ -442,31 +442,31 @@ public class AwsAmiServiceDeployState extends State {
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
       Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst,
       Integer autoScalingSteadyStateTimeout) {
-    if (isNullOrEmpty(newAutoScalingGroupName) && isNullOrEmpty(oldAutoScalingGroupName)) {
+    if (isBlank(newAutoScalingGroupName) && isBlank(oldAutoScalingGroupName)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
           .addParam("message", "At least one AutoScaling Group must be present");
     }
     if (resizeNewFirst) {
-      if (isNotNullOrEmpty(newAutoScalingGroupName)) {
+      if (isNotBlank(newAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(String.format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback, autoScalingSteadyStateTimeout);
       }
-      if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+      if (isNotBlank(oldAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(
             String.format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
       }
     } else {
-      if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+      if (isNotBlank(oldAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(
             String.format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
       }
 
-      if (isNotNullOrEmpty(newAutoScalingGroupName)) {
+      if (isNotBlank(newAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(String.format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);

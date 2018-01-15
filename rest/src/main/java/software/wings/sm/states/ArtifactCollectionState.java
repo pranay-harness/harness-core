@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.DEFAULT_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.Constants.URL;
@@ -14,7 +15,6 @@ import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
@@ -39,7 +39,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Date;
@@ -156,7 +155,7 @@ public class ArtifactCollectionState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (StringUtils.isBlank(artifactStreamId)) {
+    if (isBlank(artifactStreamId)) {
       invalidFields.put("artifactSource", "Artifact Source should not be empty");
     }
     return invalidFields;
@@ -169,7 +168,7 @@ public class ArtifactCollectionState extends State {
   }
 
   private Artifact getLastCollectedArtifact(ExecutionContext context, String artifactStreamId, String sourceName) {
-    if (Misc.isNullOrEmpty(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
+    if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
       return artifactService.fetchLatestArtifactForArtifactStream(context.getAppId(), artifactStreamId, sourceName);
     } else {
       String evaluatedBuildNo = buildNo;

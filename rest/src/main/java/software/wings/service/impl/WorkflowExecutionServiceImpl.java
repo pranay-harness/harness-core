@@ -6,6 +6,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -52,7 +54,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -855,7 +856,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // no input from user
       if (executionArgs == null || executionArgs.getWorkflowVariables() == null
           || executionArgs.getWorkflowVariables().isEmpty()
-          || StringUtils.isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
+          || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
         if (variable.isMandatory() && variable.getValue() == null) {
           throw new WingsException(ErrorCode.INVALID_REQUEST)
               .addParam("message", "Workflow variable [" + variable.getName() + "] is mandatory for execution");
@@ -1354,7 +1355,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addParam("message", "serviceInstances are empty for a simple execution");
       }
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
-      if (StringUtils.isNotBlank(executionArgs.getCommandName())) {
+      if (isNotBlank(executionArgs.getCommandName())) {
         ServiceCommand command = serviceResourceService.getCommandByName(
             appId, executionArgs.getServiceId(), envId, executionArgs.getCommandName());
         if (command.getCommand().isArtifactNeeded()) {

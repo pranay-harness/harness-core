@@ -1,9 +1,10 @@
 package software.wings.service.impl.newrelic;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -109,7 +110,7 @@ public class MetricAnalysisJob implements Job {
       this.waitNotifyEngine = waitNotifyEngine;
       this.delegateService = delegateService;
       this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
-      Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
+      Preconditions.checkState(isNotBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
       this.delegateTaskId = delegateTaskId;

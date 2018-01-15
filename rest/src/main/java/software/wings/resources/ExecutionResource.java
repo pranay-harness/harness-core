@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -10,7 +11,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
@@ -118,7 +118,7 @@ public class ExecutionResource {
       pageRequest.addFilter(aSearchFilter().withField("pipelineExecutionId", Operator.NOT_EXISTS).build());
     }
 
-    if (StringUtils.isNotBlank(orchestrationId)) {
+    if (isNotBlank(orchestrationId)) {
       filter = new SearchFilter();
       filter.setFieldName("workflowId");
       filter.setFieldValues(orchestrationId);

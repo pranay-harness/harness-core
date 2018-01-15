@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.NexusArtifactStream.Builder.aNexusArtifactStream;
@@ -9,7 +10,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang.StringUtils;
 import software.wings.beans.EmbeddedUser;
 import software.wings.utils.Util;
 
@@ -49,7 +49,7 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   public String getArtifactDisplayName(String buildNo) {
-    if (StringUtils.isBlank(getImageName())) {
+    if (isBlank(getImageName())) {
       return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
     }
     return String.format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, getDateFormat().format(new Date()));
@@ -84,8 +84,8 @@ public class NexusArtifactStream extends ArtifactStream {
   public String generateSourceName() {
     StringBuilder builder = new StringBuilder(getJobname()).append('/').append(getGroupId());
 
-    if (StringUtils.isBlank(getImageName())) {
-      getArtifactPaths().stream().forEach(artifactPath -> { builder.append('/').append(artifactPath); });
+    if (isBlank(getImageName())) {
+      getArtifactPaths().forEach(artifactPath -> { builder.append('/').append(artifactPath); });
     } else {
       builder.append('/').append(getImageName());
     }

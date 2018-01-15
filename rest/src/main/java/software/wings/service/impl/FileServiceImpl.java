@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
@@ -217,7 +216,7 @@ public class FileServiceImpl implements FileService {
   }
 
   private void verifyFileIntegrity(BaseFile baseFile, GridFSFile gridFsFile) {
-    if (!isNullOrEmpty(baseFile.getChecksum()) && !gridFsFile.getMD5().equals(baseFile.getChecksum())) {
+    if (isNotBlank(baseFile.getChecksum()) && !gridFsFile.getMD5().equals(baseFile.getChecksum())) {
       throw new WingsException(FILE_INTEGRITY_CHECK_FAILED);
     }
   }

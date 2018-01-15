@@ -8,9 +8,9 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.utils.Misc.sleep;
 
 import com.google.common.base.Joiner;
@@ -1134,7 +1134,7 @@ public class AwsHelperService {
 
       String loadBalancerArn = null;
 
-      if (!isNullOrEmpty(loadBalancerName)) {
+      if (isNotBlank(loadBalancerName)) {
         DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
         request.withNames(loadBalancerName);
         loadBalancerArn = amazonElasticLoadBalancingClient.describeLoadBalancers(request)

@@ -1,10 +1,11 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
@@ -79,7 +80,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CryptoUtil;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -434,7 +434,7 @@ public class TriggerServiceImpl implements TriggerService {
           Artifact artifact;
           String serviceName = finalServices.get(artifactSelection.getServiceId());
           String buildNumber = serviceBuildNumbers.get(serviceName);
-          if (Misc.isNullOrEmpty(buildNumber)) {
+          if (isBlank(buildNumber)) {
             ArtifactStream artifactStream =
                 artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
             if (artifactStream != null) {
@@ -746,7 +746,7 @@ public class TriggerServiceImpl implements TriggerService {
         return;
       }
       ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
-      if (!isNullOrEmpty(scheduledTriggerCondition.getCronExpression())) {
+      if (isNotBlank(scheduledTriggerCondition.getCronExpression())) {
         CronScheduleBuilder.cronSchedule(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression());
         scheduledTriggerCondition.setCronDescription(
             getCronDescription(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression()));
@@ -849,7 +849,7 @@ public class TriggerServiceImpl implements TriggerService {
       case WEBHOOK:
         WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
         if (webHookTriggerCondition.getWebHookToken() == null
-            || Misc.isNullOrEmpty(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
+            || isBlank(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
           WebHookToken webHookToken = generateWebHookToken(trigger);
           webHookTriggerCondition.setWebHookToken(webHookToken);
         }
@@ -880,7 +880,7 @@ public class TriggerServiceImpl implements TriggerService {
       Service service;
       switch (artifactSelection.getType()) {
         case LAST_DEPLOYED:
-          if (Misc.isNullOrEmpty(artifactSelection.getWorkflowId())) {
+          if (isBlank(artifactSelection.getWorkflowId())) {
             throw new WingsException(INVALID_REQUEST)
                 .addParam("message", "Pipeline cannot be empty for Last deployed type");
           }
@@ -897,7 +897,7 @@ public class TriggerServiceImpl implements TriggerService {
           }
           break;
         case LAST_COLLECTED:
-          if (Misc.isNullOrEmpty(artifactSelection.getArtifactStreamId())) {
+          if (isBlank(artifactSelection.getArtifactStreamId())) {
             throw new WingsException(INVALID_REQUEST)
                 .addParam("message", "Artifact Source cannot be empty for Last collected type");
           }
@@ -907,7 +907,7 @@ public class TriggerServiceImpl implements TriggerService {
           artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
           break;
         case WEBHOOK_VARIABLE:
-          if (Misc.isNullOrEmpty(artifactSelection.getArtifactStreamId())) {
+          if (isBlank(artifactSelection.getArtifactStreamId())) {
             throw new WingsException(INVALID_REQUEST)
                 .addParam("message", "Artifact Source cannot be empty for Webhook Variable type");
           }

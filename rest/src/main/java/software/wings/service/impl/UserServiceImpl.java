@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.net.URLEncoder.encode;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
@@ -134,19 +135,19 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public User register(User user) {
-    if (!StringUtils.isBlank(user.getEmail())) {
+    if (isNotBlank(user.getEmail())) {
       user.setEmail(user.getEmail().trim().toLowerCase());
     }
 
-    if (!StringUtils.isBlank(user.getAccountName())) {
+    if (isNotBlank(user.getAccountName())) {
       user.setAccountName(user.getAccountName().trim());
     }
 
-    if (!StringUtils.isBlank(user.getName())) {
+    if (isNotBlank(user.getName())) {
       user.setName(user.getName().trim());
     }
 
-    if (!StringUtils.isBlank(user.getCompanyName())) {
+    if (isNotBlank(user.getCompanyName())) {
       user.setCompanyName(user.getCompanyName().trim());
     }
 
@@ -163,11 +164,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Account addAccount(Account account, User user) {
-    if (!StringUtils.isBlank(account.getAccountName())) {
+    if (isNotBlank(account.getAccountName())) {
       account.setAccountName(account.getAccountName().trim());
     }
 
-    if (!StringUtils.isBlank(account.getCompanyName())) {
+    if (isNotBlank(account.getCompanyName())) {
       account.setCompanyName(account.getCompanyName().trim());
     }
 
@@ -260,7 +261,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void verifyRegisteredOrAllowed(String email) {
-    if (StringUtils.isBlank(email)) {
+    if (isBlank(email)) {
       throw new WingsException(ErrorCode.INVALID_EMAIL);
     }
 

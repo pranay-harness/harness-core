@@ -16,7 +16,6 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.utils.Misc.getMessage;
-import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.utils.Misc.sleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
@@ -260,7 +259,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public CommandExecutionStatus copyGridFsFiles(ConfigFileMetaData configFileMetaData) {
-    if (isNullOrEmpty(configFileMetaData.getFileId()) || isNullOrEmpty(configFileMetaData.getFilename())) {
+    if (isBlank(configFileMetaData.getFileId()) || isBlank(configFileMetaData.getFilename())) {
       saveExecutionLog("There are no artifacts to copy. " + configFileMetaData.toString());
       return CommandExecutionStatus.SUCCESS;
     }
@@ -284,7 +283,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
-    if (isNullOrEmpty(configFileMetaData.getFileId()) || isNullOrEmpty(configFileMetaData.getFilename())) {
+    if (isBlank(configFileMetaData.getFileId()) || isBlank(configFileMetaData.getFilename())) {
       saveExecutionLog("There are no artifacts to copy. " + configFileMetaData.toString());
       return CommandExecutionStatus.SUCCESS;
     }

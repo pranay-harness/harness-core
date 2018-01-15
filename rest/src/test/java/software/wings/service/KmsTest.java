@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -20,7 +21,6 @@ import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -233,7 +233,7 @@ public class KmsTest extends WingsBaseTest {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
     assertNull(encryptedData.getEncryptedValue());
-    assertFalse(StringUtils.isBlank(encryptedData.getEncryptionKey()));
+    assertFalse(isBlank(encryptedData.getEncryptionKey()));
 
     final char[] decryptedValue = kmsService.decrypt(encryptedData, null, null);
     assertNull(decryptedValue);
@@ -255,7 +255,7 @@ public class KmsTest extends WingsBaseTest {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, UUID.randomUUID().toString(), kmsConfig);
     assertNull(encryptedData.getEncryptedValue());
-    assertFalse(StringUtils.isBlank(encryptedData.getEncryptionKey()));
+    assertFalse(isBlank(encryptedData.getEncryptionKey()));
 
     final char[] decryptedValue = kmsService.decrypt(encryptedData, null, kmsConfig);
     assertNull(decryptedValue);
@@ -402,7 +402,7 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
-    assertFalse(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
+    assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
     enableKmsFeatureFlag();
     encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowExecutionId, appId));
@@ -436,7 +436,7 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
-    assertFalse(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
+    assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
@@ -2068,7 +2068,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(renameAccountId, encryptedData.getEncryptionKey());
     assertEquals(SettingVariableTypes.CONFIG_FILE, encryptedData.getType());
     assertTrue(encryptedData.isEnabled());
-    assertTrue(StringUtils.isBlank(encryptedData.getKmsId()));
+    assertTrue(isBlank(encryptedData.getKmsId()));
     assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
 
     // now make the same file not encrypted
@@ -2443,7 +2443,7 @@ public class KmsTest extends WingsBaseTest {
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertEquals(accountId, savedConfig.getAccountId());
       assertNull(savedConfig.getPassword());
-      assertFalse(StringUtils.isBlank(savedConfig.getEncryptedPassword()));
+      assertFalse(isBlank(savedConfig.getEncryptedPassword()));
 
       encryptionService.decrypt(
           savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
@@ -2547,7 +2547,7 @@ public class KmsTest extends WingsBaseTest {
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertEquals(accountId, savedConfig.getAccountId());
       assertNull(savedConfig.getPassword());
-      assertFalse(StringUtils.isBlank(savedConfig.getEncryptedPassword()));
+      assertFalse(isBlank(savedConfig.getEncryptedPassword()));
 
       encryptionService.decrypt(
           savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));

@@ -1,7 +1,8 @@
 package software.wings.helpers.ext.jenkins;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import com.offbytwo.jenkins.client.JenkinsHttpClient;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.BasicHttpContext;
@@ -19,7 +20,7 @@ public class HarnessJenkinsHttpClient extends JenkinsHttpClient {
 
   public HarnessJenkinsHttpClient(URI uri, String username, String password, HttpClientBuilder builder) {
     super(uri, addAuthentication(builder, uri, username, password));
-    if (StringUtils.isNotBlank(username)) {
+    if (isNotBlank(username)) {
       BasicHttpContext basicHttpContext = new BasicHttpContext();
       basicHttpContext.setAttribute("preemptive-auth", new BasicScheme());
       setLocalContext(basicHttpContext);

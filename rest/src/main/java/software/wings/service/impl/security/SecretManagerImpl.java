@@ -1,5 +1,7 @@
 package software.wings.service.impl.security;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
@@ -13,7 +15,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -220,7 +221,7 @@ public class SecretManagerImpl implements SecretManager {
 
           encryptedDataDetails.add(encryptedDataDetail);
 
-          if (!StringUtils.isBlank(workflowExecutionId)) {
+          if (isNotBlank(workflowExecutionId)) {
             WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
             if (workflowExecution == null) {
               logger.warn("No workflow execution with id {} found.", workflowExecutionId);
@@ -253,7 +254,7 @@ public class SecretManagerImpl implements SecretManager {
         PageRequest.Builder.aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, request);
     response.getResponse().forEach(secretUsageLog -> {
-      if (!StringUtils.isBlank(secretUsageLog.getWorkflowExecutionId())) {
+      if (isNotBlank(secretUsageLog.getWorkflowExecutionId())) {
         WorkflowExecution workflowExecution =
             wingsPersistence.get(WorkflowExecution.class, secretUsageLog.getWorkflowExecutionId());
         secretUsageLog.setWorkflowExecutionName(workflowExecution.getName());
@@ -342,7 +343,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException {
-    Preconditions.checkState(!StringUtils.isBlank(encryptedYamlRef));
+    Preconditions.checkState(isNotBlank(encryptedYamlRef));
     String[] tags = encryptedYamlRef.split(":");
     String fieldRefId = tags[1];
     return wingsPersistence.get(EncryptedData.class, fieldRefId);
@@ -351,11 +352,11 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
       EncryptionType toEncryptionType, String toSecretId) {
-    Preconditions.checkState(!StringUtils.isBlank(accountId), "accountId can't be blank");
+    Preconditions.checkState(isNotBlank(accountId), "accountId can't be blank");
     Preconditions.checkNotNull(fromEncryptionType, "fromEncryptionType can't be blank");
-    Preconditions.checkState(!StringUtils.isBlank(fromSecretId), "fromVaultId can't be blank");
+    Preconditions.checkState(isNotBlank(fromSecretId), "fromVaultId can't be blank");
     Preconditions.checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
-    Preconditions.checkState(!StringUtils.isBlank(toSecretId), "toVaultId can't be blank");
+    Preconditions.checkState(isNotBlank(toSecretId), "toVaultId can't be blank");
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .field("accountId")
@@ -893,7 +894,7 @@ public class SecretManagerImpl implements SecretManager {
       SettingVariableTypes type, String parentId, String kmsId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
-        Preconditions.checkState(StringUtils.isBlank(kmsId),
+        Preconditions.checkState(isBlank(kmsId),
             "kms id should be null for local type, "
                 + "kmsId: " + kmsId + " for " + type + " id: " + parentId);
         return HARNESS_DEFAULT_SECRET_MANAGER;

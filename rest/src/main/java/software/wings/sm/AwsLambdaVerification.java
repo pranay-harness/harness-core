@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import static software.wings.utils.Misc.isNullOrEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -81,7 +81,7 @@ public class AwsLambdaVerification extends State {
                                         .withQualifier(functionMeta.getVersion())
                                         .withLogType(LogType.Tail);
 
-      if (!isNullOrEmpty(lambdaTestEvent.getPayload())) {
+      if (isNotBlank(lambdaTestEvent.getPayload())) {
         invokeRequest.setPayload(lambdaTestEvent.getPayload());
       }
 
@@ -99,7 +99,7 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setPayload(StandardCharsets.UTF_8.decode(invokeResult.getPayload()).toString());
       awsLambdaExecutionData.setAssertionStatement(lambdaTestEvent.getAssertion());
 
-      if (!isNullOrEmpty(lambdaTestEvent.getAssertion())) {
+      if (isNotBlank(lambdaTestEvent.getAssertion())) {
         assertionStatus = (boolean) context.evaluateExpression(lambdaTestEvent.getAssertion(), awsLambdaExecutionData);
       }
     } catch (Exception ex) {

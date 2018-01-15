@@ -1,10 +1,11 @@
 package software.wings.service.impl.analysis;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -43,7 +44,7 @@ public class LogMLClusterGenerator implements Runnable {
     String protocol = context.isSSL() ? "https" : "http";
     this.serverUrl = protocol + "://localhost:" + context.getAppPort();
     this.pythonScriptRoot = System.getenv(AbstractLogAnalysisState.LOG_ML_ROOT);
-    Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
+    Preconditions.checkState(isNotBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
   }
 
   @Override

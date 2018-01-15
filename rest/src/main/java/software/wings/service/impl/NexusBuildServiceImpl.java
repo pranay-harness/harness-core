@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
@@ -8,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -69,7 +69,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<String> getArtifactPaths(
       String repoId, String groupId, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    if (StringUtils.isBlank(groupId)) {
+    if (isBlank(groupId)) {
       return nexusService.getArtifactPaths(config, encryptionDetails, repoId);
     }
     return nexusService.getArtifactNames(config, encryptionDetails, repoId, groupId);

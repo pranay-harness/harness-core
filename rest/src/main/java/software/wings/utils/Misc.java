@@ -81,20 +81,6 @@ public class Misc {
   }
 
   /**
-   * Is null or empty boolean.
-   *
-   * @param str the str
-   * @return the boolean
-   */
-  public static boolean isNullOrEmpty(String str) {
-    return str == null || str.length() == 0;
-  }
-
-  public static boolean isNotNullOrEmpty(String str) {
-    return !isNullOrEmpty(str);
-  }
-
-  /**
    * As int.
    *
    * @param value the value

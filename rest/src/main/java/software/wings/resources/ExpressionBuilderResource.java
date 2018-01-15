@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -7,7 +8,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import org.apache.commons.lang.StringUtils;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
@@ -41,7 +41,7 @@ public class ExpressionBuilderResource {
       @QueryParam("entityId") String entityId, @QueryParam("entityType") EntityType entityType,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
     StateType stateType = null;
-    if (!StringUtils.isBlank(strStateType)) {
+    if (isNotBlank(strStateType)) {
       try {
         if (!strStateType.contentEquals("\"\"")) {
           stateType = StateType.valueOf(strStateType);
