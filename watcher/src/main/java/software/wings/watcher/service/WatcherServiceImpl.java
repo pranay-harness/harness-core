@@ -1,7 +1,7 @@
 package software.wings.watcher.service;
 
-import static com.google.common.collect.Iterables.isEmpty;
-import static com.hazelcast.util.CollectionUtil.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
@@ -211,7 +211,7 @@ public class WatcherServiceImpl implements WatcherService {
           });
 
       String extraWatcher = messageService.getData(WATCHER_DATA, EXTRA_WATCHER, String.class);
-      if (StringUtils.isNotEmpty(extraWatcher)) {
+      if (isNotEmpty(extraWatcher)) {
         if (!StringUtils.equals(extraWatcher, getProcessId())) {
           logger.warn("Shutting down extra watcher {}", extraWatcher);
           executorService.submit(() -> {

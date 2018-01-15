@@ -5,6 +5,7 @@
 package software.wings.beans;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -16,7 +17,6 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
@@ -772,7 +772,7 @@ public class Graph {
     }
 
     public boolean validate() {
-      if (MapUtils.isEmpty(inValidFieldMessages)) {
+      if (isEmpty(inValidFieldMessages)) {
         valid = true;
         validationMessage = null;
       } else {

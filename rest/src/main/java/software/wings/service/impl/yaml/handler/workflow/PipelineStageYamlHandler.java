@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.PipelineStage.Yaml;
 
 import com.google.common.collect.Lists;
@@ -18,7 +19,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -70,7 +70,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
   @Override
   public Yaml toYaml(PipelineStage bean, String appId) {
-    if (Util.isEmpty(bean.getPipelineStageElements())) {
+    if (isEmpty(bean.getPipelineStageElements())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "No stage elements present in the given phase stage: " + bean.getName());
     }

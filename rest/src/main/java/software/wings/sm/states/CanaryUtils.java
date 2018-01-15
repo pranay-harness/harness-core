@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.SelectNodeStepExecutionSummary;
@@ -17,7 +17,6 @@ import software.wings.sm.StepExecutionSummary;
 
 import java.util.ArrayList;
 import java.util.List;
-
 /**
  * Created by rishi on 7/16/17.
  */
@@ -35,7 +34,7 @@ public class CanaryUtils {
                 -> stateExecutionData.getStateType().equals(StateType.PHASE.name())
                     && !stateExecutionData.getStateName().equals(phaseElement.getName()))
             .collect(toList());
-    if (CollectionUtils.isEmpty(previousPhaseExecutionData)) {
+    if (isEmpty(previousPhaseExecutionData)) {
       return hostExclusionList;
     }
 

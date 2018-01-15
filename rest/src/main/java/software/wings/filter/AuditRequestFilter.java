@@ -1,12 +1,12 @@
 package software.wings.filter;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +112,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   }
 
   private String getHeaderString(MultivaluedMap<String, String> headers) {
-    if (MapUtils.isEmpty(headers)) {
+    if (isEmpty(headers)) {
       return "";
     }
 

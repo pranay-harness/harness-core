@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -16,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.exception.WingsException;
 import software.wings.utils.ExpressionEvaluator;
 
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
-
 /**
  * Created by rishi on 3/28/17.
  */
@@ -106,7 +105,7 @@ public abstract class OrchestrationWorkflow {
   @JsonIgnore
   public boolean isTemplatized() {
     List<Variable> userVariables = getUserVariables();
-    if (CollectionUtils.isEmpty(userVariables)) {
+    if (isEmpty(userVariables)) {
       return false;
     }
     return userVariables.stream().anyMatch(variable -> !variable.isFixed());
@@ -146,7 +145,7 @@ public abstract class OrchestrationWorkflow {
    */
 
   public void addToUserVariables(List<TemplateExpression> templateExpressions, String stateType, String name) {
-    if (CollectionUtils.isEmpty(templateExpressions)) {
+    if (isEmpty(templateExpressions)) {
       return;
     }
     for (TemplateExpression templateExpression : templateExpressions) {

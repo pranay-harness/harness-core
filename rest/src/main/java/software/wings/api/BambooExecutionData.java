@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
@@ -13,7 +14,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 /**
  * Created by sgurubelli on 8/29/17.
  */
@@ -109,14 +109,14 @@ public class BambooExecutionData extends StateExecutionData implements NotifyRes
     putNotNull(
         executionDetails, "planName", anExecutionDataValue().withValue(planName).withDisplayName("Plan Name").build());
     if (CollectionUtils.isNotEmpty(parameters)) {
-      Map<String, String> jobParameterMap = CollectionUtils.isEmpty(parameters)
+      Map<String, String> jobParameterMap = isEmpty(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "parameters",
           anExecutionDataValue().withValue(String.valueOf(jobParameterMap)).withDisplayName("Parameters").build());
     }
     if (CollectionUtils.isNotEmpty(filePathAssertionEntries)) {
-      Map<String, String> filePathAsssertionMap = CollectionUtils.isEmpty(parameters)
+      Map<String, String> filePathAsssertionMap = isEmpty(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "fileAssertionData",
@@ -142,7 +142,7 @@ public class BambooExecutionData extends StateExecutionData implements NotifyRes
     putNotNull(
         executionDetails, "planName", anExecutionDataValue().withValue(planName).withDisplayName("Plan Name").build());
     if (CollectionUtils.isNotEmpty(parameters)) {
-      Map<String, String> jobParameterMap = CollectionUtils.isEmpty(parameters)
+      Map<String, String> jobParameterMap = isEmpty(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "parameters",
@@ -150,7 +150,7 @@ public class BambooExecutionData extends StateExecutionData implements NotifyRes
     }
 
     if (CollectionUtils.isNotEmpty(filePathAssertionEntries)) {
-      Map<String, String> filePathAsssertionMap = CollectionUtils.isEmpty(parameters)
+      Map<String, String> filePathAsssertionMap = isEmpty(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "fileAssertionData",

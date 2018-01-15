@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.artifactory;
 
-import static com.google.common.collect.Iterables.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -27,7 +27,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import groovyx.net.http.HttpResponseException;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -196,7 +195,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                               .responseType(JSON));
       if (response != null) {
         images = (List<String>) response.get("repositories");
-        if (CollectionUtils.isEmpty(images)) {
+        if (isEmpty(images)) {
           logger.info("No docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
           images = new ArrayList<>();
         }
@@ -225,7 +224,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       Map response = artifactory.restCall(repositoryRequest);
       if (response != null) {
         List<String> tags = (List<String>) response.get("tags");
-        if (CollectionUtils.isEmpty(tags)) {
+        if (isEmpty(tags)) {
           logger.info("No  docker tags for repoKey {} imageName {} success ", repoKey, imageName);
           return buildDetails;
         }
@@ -605,7 +604,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           return buildDetails;
         }
       }
-      if (StringUtils.isEmpty(latestVersion)) {
+      if (isEmpty(latestVersion)) {
         logger.error("Failed to {}", msg);
         return null;
       }
@@ -788,7 +787,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       } catch (Exception e) {
         prepareAndThrowException("Invalid artifact path");
       }
-      if (CollectionUtils.isEmpty(filePaths)) {
+      if (isEmpty(filePaths)) {
         prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]");
       }
       logger.info("Validating whether directory exists or not for Generic repository type by fetching file paths");

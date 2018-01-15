@@ -1,5 +1,7 @@
 package software.wings.common;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -13,7 +15,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -57,7 +58,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 /**
  * The Class InstanceExpressionProcessor.
  *
@@ -226,7 +226,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   private PartitionElement getInstancesPartition() {
     List<ContextElement> partitions = context.getContextElementList(ContextElementType.PARTITION);
-    if (CollectionUtils.isEmpty(partitions)) {
+    if (isEmpty(partitions)) {
       return null;
     }
 
@@ -278,7 +278,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       elements.add(convertToInstanceElement(instance, host, service, serviceTemplate));
     }
 
-    if (ArrayUtils.isNotEmpty(instanceIds)) {
+    if (isNotEmpty(instanceIds)) {
       Map<String, InstanceElement> map =
           elements.stream().collect(Collectors.toMap(InstanceElement::getUuid, Function.identity()));
       elements = new ArrayList<>();
@@ -295,7 +295,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   private void applyServiceInstanceIdsFilter(Builder pageRequest) {
     ServiceInstanceIdsParam serviceInstanceIdsParam = getServiceInstanceIdsParam();
     if (serviceInstanceIdsParam != null) {
-      if (ArrayUtils.isNotEmpty(instanceIds)) {
+      if (isNotEmpty(instanceIds)) {
         Collection<String> commonInstanceIds =
             intersection(asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
         instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
@@ -310,7 +310,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       }
     }
 
-    if (ArrayUtils.isNotEmpty(instanceIds)) {
+    if (isNotEmpty(instanceIds)) {
       pageRequest.addFilter(
           aSearchFilter()
               .withField(ID_KEY, Operator.IN, Arrays.copyOf(instanceIds, instanceIds.length, Object[].class))
@@ -330,7 +330,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   private void applyServiceTemplatesFilter(String appId, String envId, Builder pageRequest) {
     List<Service> services = null;
     List<ServiceTemplate> serviceTemplates = null;
-    if (ArrayUtils.isEmpty(serviceTemplateNames)) {
+    if (isEmpty(serviceTemplateNames)) {
       services = getServices(appId);
       serviceTemplates = getServiceTemplates(envId, services, serviceTemplateNames);
     } else {
@@ -393,7 +393,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
               .withField("serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray())
               .build());
     }
-    if (!ArrayUtils.isEmpty(names)) {
+    if (!isEmpty(names)) {
       pageRequestBuilder.addFilter(
           aSearchFilter()
               .withField(

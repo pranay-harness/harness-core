@@ -405,7 +405,7 @@ public class StateMachineExecutor {
 
   private ExecutionEventAdvice invokeAdvisors(ExecutionContextImpl context, State state) {
     List<ExecutionEventAdvisor> advisors = context.getStateExecutionInstance().getExecutionEventAdvisors();
-    if (CollectionUtils.isEmpty(advisors)) {
+    if (isEmpty(advisors)) {
       return null;
     }
 
@@ -432,7 +432,7 @@ public class StateMachineExecutor {
 
     ExecutionStatus status = executionResponse.getExecutionStatus();
     if (executionResponse.isAsync()) {
-      if (CollectionUtils.isEmpty(executionResponse.getCorrelationIds())) {
+      if (isEmpty(executionResponse.getCorrelationIds())) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
             + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
         status = ERROR;
@@ -1153,7 +1153,7 @@ public class StateMachineExecutor {
               .build();
 
       List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-      if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
+      if (isEmpty(allStateExecutionInstances)) {
         logger.warn(
             "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
             workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
@@ -1256,7 +1256,7 @@ public class StateMachineExecutor {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
+    if (isEmpty(allStateExecutionInstances)) {
       logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
@@ -1302,7 +1302,7 @@ public class StateMachineExecutor {
             .map(StateExecutionInstance::getUuid)
             .collect(Collectors.toList());
 
-    if (CollectionUtils.isEmpty(parentInstanceIds)) {
+    if (isEmpty(parentInstanceIds)) {
       return allInstanceIds;
     }
 

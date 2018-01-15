@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -205,7 +206,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(String.format("%s%s (AWS_SSH) %s", Util.isNotEmpty(customName) ? (customName + " - ") : "",
+    return Util.normalize(String.format("%s%s (AWS_SSH) %s", isNotEmpty(customName) ? (customName + " - ") : "",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));
   }

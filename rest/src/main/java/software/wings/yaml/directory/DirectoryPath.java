@@ -1,6 +1,6 @@
 package software.wings.yaml.directory;
 
-import ro.fortsoft.pf4j.util.StringUtils;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 public class DirectoryPath {
   private String path;
@@ -11,7 +11,7 @@ public class DirectoryPath {
   }
 
   public DirectoryPath add(String pathPart) {
-    if (StringUtils.isEmpty(path)) {
+    if (isEmpty(path)) {
       this.path = pathPart;
     } else {
       this.path += this.delimiter + pathPart;

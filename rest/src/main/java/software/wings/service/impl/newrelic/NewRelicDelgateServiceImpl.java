@@ -1,10 +1,11 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -28,7 +29,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
 /**
  * Created by rsingh on 8/28/17.
  */
@@ -56,7 +56,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       final Response<NewRelicApplicationsResponse> response = request.execute();
       if (response.isSuccessful()) {
         List<NewRelicApplication> applications = response.body().getApplications();
-        if (CollectionUtils.isEmpty(applications)) {
+        if (isEmpty(applications)) {
           break;
         } else {
           rv.addAll(applications);
@@ -84,7 +84,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       final Response<NewRelicApplicationInstancesResponse> response = request.execute();
       if (response.isSuccessful()) {
         List<NewRelicApplicationInstance> applicationInstances = response.body().getApplication_instances();
-        if (CollectionUtils.isEmpty(applicationInstances)) {
+        if (isEmpty(applicationInstances)) {
           break;
         } else {
           rv.addAll(applicationInstances);

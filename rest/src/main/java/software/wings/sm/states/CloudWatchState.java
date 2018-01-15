@@ -5,11 +5,11 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Maximum;
 import static com.amazonaws.services.cloudwatch.model.Statistic.Minimum;
 import static com.amazonaws.services.cloudwatch.model.Statistic.SampleCount;
 import static com.amazonaws.services.cloudwatch.model.Statistic.Sum;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -123,7 +123,7 @@ public class CloudWatchState extends State {
     if (contextElement != null) {
       HostElement hostElement = ((InstanceElement) contextElement).getHost();
       String hostName = hostElement.getHostName();
-      if (!Strings.isNullOrEmpty(hostName)) {
+      if (!isEmpty(hostName)) {
         String awsInstanceId = awsHelperService.getInstanceId(
             Regions.US_EAST_1, awsConfig.getAccessKey(), awsConfig.getSecretKey(), hostName);
         hostElement.setInstanceId(awsInstanceId);
@@ -147,14 +147,14 @@ public class CloudWatchState extends State {
     getMetricRequest.setNamespace(namespace);
     getMetricRequest.setMetricName(metricName);
     List<String> statistics = asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name());
-    if (!Strings.isNullOrEmpty(percentile)) {
+    if (!isEmpty(percentile)) {
       getMetricRequest.setExtendedStatistics(asList(percentile));
     }
     getMetricRequest.setStatistics(statistics);
     getMetricRequest.setDimensions(stateExecutionData.getDimensions());
     getMetricRequest.setPeriod(DEFAULT_AGGREGATION_PERIOD);
 
-    long startTimeOffset = Strings.isNullOrEmpty(timeDuration) ? DEFAULT_TIME_DURATION : Long.parseLong(timeDuration);
+    long startTimeOffset = isEmpty(timeDuration) ? DEFAULT_TIME_DURATION : Long.parseLong(timeDuration);
     long endEpoch = System.currentTimeMillis();
     long startEpoch = endEpoch - startTimeOffset * 1000;
     getMetricRequest.setStartTime(new Date(startEpoch));

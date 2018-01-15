@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -166,14 +168,14 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
     String deploymentType = Util.getStringFromEnum(bean.getDeploymentType());
     String serviceName = null;
-    if (Util.isNotEmpty(bean.getServiceId())) {
+    if (isNotEmpty(bean.getServiceId())) {
       Service service = serviceResourceService.get(appId, bean.getServiceId());
       serviceName = service != null ? service.getName() : null;
     }
 
     String infraMappingName = null;
     String infraMappingId = bean.getInfraMappingId();
-    if (Util.isNotEmpty(infraMappingId)) {
+    if (isNotEmpty(infraMappingId)) {
       InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
       Validator.notNullCheck("Infra mapping not found for given id:" + infraMappingId, infrastructureMapping);
       infraMappingName = infrastructureMapping.getName();

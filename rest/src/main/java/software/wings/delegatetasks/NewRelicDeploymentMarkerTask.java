@@ -1,8 +1,9 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.exception.WingsException;
@@ -15,7 +16,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
 public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   @Inject private NewRelicDelegateService newRelicDelegateService;
 
@@ -27,7 +27,7 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   @Override
   public NotifyResponseData run(Object[] parameters) {
     NewRelicDataCollectionInfo dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
-    if (StringUtils.isEmpty(dataCollectionInfo.getDeploymentMarker())) {
+    if (isEmpty(dataCollectionInfo.getDeploymentMarker())) {
       throw new WingsException("Empty deployment marker body");
     }
     try {

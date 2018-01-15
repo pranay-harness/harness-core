@@ -1,5 +1,6 @@
 package software.wings.exception;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.INFO;
@@ -17,7 +18,6 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.Acuteness;
 import software.wings.beans.ResponseMessage.Level;
 import software.wings.common.cache.ResponseCodeCache;
-import software.wings.utils.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -278,7 +278,7 @@ public class WingsException extends WingsApiException {
             .collect(toList());
 
     StringBuilder errorMsgBuilder = new StringBuilder();
-    if (Util.isNotEmpty(responseMessages)) {
+    if (isNotEmpty(responseMessages)) {
       responseMessages.stream().forEach(responseMessage -> {
         errorMsgBuilder.append(responseMessage.getMessage());
         errorMsgBuilder.append('.');

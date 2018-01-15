@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -24,7 +26,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ro.fortsoft.pf4j.util.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
@@ -63,7 +64,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -268,7 +268,7 @@ public class AppServiceImpl implements AppService {
     Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
     UpdateOperations<Application> operations =
         wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName());
-    if (Util.isNotEmpty(app.getDescription())) {
+    if (isNotEmpty(app.getDescription())) {
       operations.set("description", app.getDescription());
     }
 
@@ -386,7 +386,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public String getAccountIdByAppId(String appId) {
-    if (StringUtils.isEmpty(appId)) {
+    if (isEmpty(appId)) {
       return null;
     }
 

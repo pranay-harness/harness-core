@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static software.wings.utils.Util.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;

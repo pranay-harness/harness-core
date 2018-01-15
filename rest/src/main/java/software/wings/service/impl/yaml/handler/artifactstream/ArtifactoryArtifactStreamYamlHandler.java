@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static software.wings.utils.Util.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream.Yaml;

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -15,7 +16,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import okhttp3.Credentials;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -46,7 +46,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 /**
  * Created by sgurubelli on 11/18/17.
  */
@@ -113,7 +112,7 @@ public class NexusTwoServiceImpl {
       final Response<IndexBrowserTreeViewResponse> response = request.execute();
       if (isSuccessful(response)) {
         final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
-        if (CollectionUtils.isEmpty(treeNodes)) {
+        if (isEmpty(treeNodes)) {
           return groupIds;
         }
         treeNodes.forEach(treeNode -> {

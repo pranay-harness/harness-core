@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -19,7 +20,6 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -48,7 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 /**
  * Created by anubhaw on 4/7/17.
  */
@@ -63,7 +62,7 @@ public class WorkflowNotificationHelper {
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
         getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW, status);
-    if (CollectionUtils.isEmpty(notificationRules)) {
+    if (isEmpty(notificationRules)) {
       return;
     }
 
@@ -164,7 +163,7 @@ public class WorkflowNotificationHelper {
 
     List<NotificationRule> notificationRules =
         getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW_PHASE, status);
-    if (CollectionUtils.isEmpty(notificationRules)) {
+    if (isEmpty(notificationRules)) {
       return;
     }
 

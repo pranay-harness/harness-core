@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -84,7 +85,6 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -180,7 +180,6 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Misc;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -200,7 +199,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * The Class WorkflowServiceImpl.
  *
@@ -279,7 +277,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
 
     Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
-    if (ArrayUtils.isEmpty(stateTypeScopes)) {
+    if (isEmpty(stateTypeScopes)) {
       maps.putAll(mapByScope);
     } else {
       for (StateTypeScope scope : stateTypeScopes) {
@@ -495,7 +493,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
         BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
         WorkflowPhase workflowPhase;
-        if (Util.isEmpty(basicOrchestrationWorkflow.getWorkflowPhases())) {
+        if (isEmpty(basicOrchestrationWorkflow.getWorkflowPhases())) {
           workflowPhase = aWorkflowPhase()
                               .withInfraMappingId(workflow.getInfraMappingId())
                               .withServiceId(workflow.getServiceId())
@@ -514,19 +512,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
         BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
 
-        if (CollectionUtils.isEmpty(buildWorkflow.getWorkflowPhases())) {
+        if (isEmpty(buildWorkflow.getWorkflowPhases())) {
           WorkflowPhase workflowPhase = aWorkflowPhase().build();
           attachWorkflowPhase(workflow, workflowPhase);
         }
       }
-      if (CollectionUtils.isEmpty(orchestrationWorkflow.getNotificationRules())) {
+      if (isEmpty(orchestrationWorkflow.getNotificationRules())) {
         createDefaultNotificationRule(workflow);
       }
 
       if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)
           && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-        if (CollectionUtils.isEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
+        if (isEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
           createDefaultFailureStrategy(workflow);
         }
       }
@@ -567,7 +565,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
           (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-      if (CollectionUtils.isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+      if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
         return;
       }
 
@@ -681,7 +679,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
-    if (CollectionUtils.isEmpty(templateExpressions)) {
+    if (isEmpty(templateExpressions)) {
       templateExpressions = new ArrayList<>();
     }
     orchestrationWorkflow = propagateWorkflowDataToPhases(orchestrationWorkflow, templateExpressions,
@@ -908,7 +906,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowPhase workflowPhase, List<TemplateExpression> templateExpressions,
       List<TemplateExpression> phaseTemplateExpressions) {
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
-    if (CollectionUtils.isEmpty(userVariables)) {
+    if (isEmpty(userVariables)) {
       return;
     }
     List<Variable> entityVariables =
@@ -1036,7 +1034,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     if (workflowPhase != null) {
       List<TemplateExpression> phaseTemplateExpressions = workflowPhase.getTemplateExpressions();
-      if (CollectionUtils.isEmpty(phaseTemplateExpressions)) {
+      if (isEmpty(phaseTemplateExpressions)) {
         phaseTemplateExpressions = new ArrayList<>();
       }
       // It means, user templatizing it from phase level
@@ -1231,7 +1229,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
-    if (CollectionUtils.isEmpty(triggers)) {
+    if (isEmpty(triggers)) {
       return;
     }
     List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
@@ -1283,7 +1281,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .build();
 
     PageResponse<Workflow> workflows = listWorkflows(req);
-    if (CollectionUtils.isEmpty(workflows)) {
+    if (isEmpty(workflows)) {
       return createDefaultSimpleWorkflow(appId, envId);
     }
     return workflows.get(0);
@@ -2529,7 +2527,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String name = RoleType.ACCOUNT_ADMIN.getDisplayName();
     List<NotificationGroup> notificationGroups =
         notificationSetupService.listNotificationGroups(app.getAccountId(), name);
-    if (CollectionUtils.isEmpty(notificationGroups)) {
+    if (isEmpty(notificationGroups)) {
       logger.warn("Default notification group not created for account {}. Ignoring adding notification group",
           account.getAccountName());
       return;

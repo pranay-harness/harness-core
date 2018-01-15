@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -25,7 +27,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.workflow.StepYaml;
 
@@ -33,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
 /**
  * @author rktummala on 10/28/17
  */
@@ -138,7 +138,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
   private void convertIdToNameIfKnownType(Entry<String, Object> mapEntry, Map<String, Object> outputProperties,
       String appId, Map<String, Object> inputProperties) {
     String name = mapEntry.getKey();
-    if (Util.isEmpty(name)) {
+    if (isEmpty(name)) {
       return;
     }
 
@@ -187,7 +187,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
   private void convertNameToIdIfKnownType(Entry<String, Object> mapEntry, Map<String, Object> properties, String appId,
       String accountId, Map<String, Object> inputProperties) {
     String name = mapEntry.getKey();
-    if (Util.isEmpty(name)) {
+    if (isEmpty(name)) {
       return;
     }
 
@@ -232,7 +232,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
 
   // Some of these properties need not be exposed, they could be generated in the toBean() method
   private boolean shouldBeIgnored(String name) {
-    if (Util.isEmpty(name)) {
+    if (isEmpty(name)) {
       return true;
     }
 

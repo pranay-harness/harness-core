@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.System.currentTimeMillis;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -59,7 +60,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-
 /**
  * The Class WingsMongoPersistence.
  */
@@ -155,7 +155,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     req.setLimit("1");
     PageResponse<T> res = query(cls, req, readPref);
-    if (CollectionUtils.isEmpty(res)) {
+    if (isEmpty(res)) {
       return null;
     }
     return res.get(0);
@@ -563,9 +563,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
     if (userRequestInfo.isAppIdFilterRequired()) {
       // TODO: field name should be dynamic
-      boolean emptyAppIdsInUserReq = CollectionUtils.isEmpty(userRequestInfo.getAppIds());
+      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
       if (emptyAppIdsInUserReq) {
-        if (CollectionUtils.isEmpty(userRequestInfo.getAllowedAppIds())) {
+        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
           return false;
         } else {
           pageRequest.addFilter(
@@ -588,10 +588,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
     if (userRequestInfo.isAppIdFilterRequired()) {
       // TODO: field name should be dynamic
-      boolean emptyAppIdsInUserReq = CollectionUtils.isEmpty(userRequestInfo.getAppIds());
+      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
 
       if (emptyAppIdsInUserReq) {
-        if (CollectionUtils.isEmpty(userRequestInfo.getAllowedAppIds())) {
+        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
           return false;
         } else {
           query.field("appId").in(userRequestInfo.getAllowedAppIds());

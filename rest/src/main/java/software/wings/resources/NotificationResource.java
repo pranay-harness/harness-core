@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -7,7 +8,6 @@ import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.SortOrder.OrderType.ASC;
 import static software.wings.beans.SortOrder.OrderType.DESC;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -54,7 +54,7 @@ public class NotificationResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Notification>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Notification> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    if (!Strings.isNullOrEmpty(appId)) {
+    if (!isEmpty(appId)) {
       pageRequest.addFilter("appId", appId, EQ);
     }
     pageRequest.setOrders(

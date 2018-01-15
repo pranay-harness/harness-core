@@ -1,11 +1,10 @@
 package software.wings.utils;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import software.wings.beans.NameValuePair;
 import software.wings.exception.WingsException;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,26 +15,6 @@ import java.util.stream.Collectors;
  */
 public class Util {
   private static final String FIRST_REVISION = ".1";
-
-  // TODO: remove this helper method or commit to it everywhere
-  public static boolean isEmpty(String value) {
-    return StringUtils.isEmpty(value);
-  }
-
-  // TODO: remove this helper method or commit to it everywhere
-  public static boolean isNotEmpty(String value) {
-    return StringUtils.isNotEmpty(value);
-  }
-
-  // TODO: remove this helper method or commit to it everywhere
-  public static boolean isEmpty(Collection collection) {
-    return CollectionUtils.isEmpty(collection);
-  }
-
-  // TODO: remove this helper method or commit to it everywhere
-  public static boolean isNotEmpty(Collection collection) {
-    return CollectionUtils.isNotEmpty(collection);
-  }
 
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();

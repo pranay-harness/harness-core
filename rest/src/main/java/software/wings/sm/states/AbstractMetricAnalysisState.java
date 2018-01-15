@@ -1,11 +1,11 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 /**
  * Created by rsingh on 9/25/17.
  */
@@ -63,13 +62,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     AnalysisContext analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
-    if (CollectionUtils.isEmpty(canaryNewHostNames)) {
+    if (isEmpty(canaryNewHostNames)) {
       getLogger().error("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
     }
 
     Set<String> lastExecutionNodes = analysisContext.getControlNodes();
-    if (CollectionUtils.isEmpty(lastExecutionNodes)) {
+    if (isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,

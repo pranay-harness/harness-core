@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
@@ -46,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 /**
  * Created by rishi on 1/24/17.
  */
@@ -226,7 +226,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           int waitInterval = 0;
           List<Integer> retryIntervals = failureStrategy.getRetryIntervals();
           if (CollectionUtils.isNotEmpty(retryIntervals)) {
-            if (CollectionUtils.isEmpty(stateExecutionDataHistory)) {
+            if (isEmpty(stateExecutionDataHistory)) {
               waitInterval = retryIntervals.get(0);
             } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {
               waitInterval = retryIntervals.get(retryIntervals.size() - 1);
@@ -298,7 +298,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   private FailureStrategy rollbackStrategy(List<FailureStrategy> failureStrategies, State state) {
-    if (CollectionUtils.isEmpty(failureStrategies)) {
+    if (isEmpty(failureStrategies)) {
       return null;
     }
 
@@ -309,9 +309,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             .collect(Collectors.toList());
 
     if (filteredFailureStrategies.isEmpty()) {
-      filteredFailureStrategies = failureStrategies.stream()
-                                      .filter(f -> CollectionUtils.isEmpty(f.getSpecificSteps()))
-                                      .collect(Collectors.toList());
+      filteredFailureStrategies =
+          failureStrategies.stream().filter(f -> isEmpty(f.getSpecificSteps())).collect(Collectors.toList());
     }
 
     Optional<FailureStrategy> rollbackStrategy =

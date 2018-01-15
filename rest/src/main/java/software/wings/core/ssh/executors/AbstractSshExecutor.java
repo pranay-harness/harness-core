@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -19,14 +20,12 @@ import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.utils.Misc.sleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -55,7 +54,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * Created by anubhaw on 2/10/16.
  */
@@ -128,7 +126,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    */
   @Override
   public void init(@Valid SshSessionConfig config) {
-    if (Strings.isNullOrEmpty(config.getExecutionId())) {
+    if (isEmpty(config.getExecutionId())) {
       throw new WingsException(INVALID_EXECUTION_ID);
     }
     this.config = config;
@@ -227,7 +225,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   @Override
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
-    if (CollectionUtils.isEmpty(fileNamesIds)) {
+    if (isEmpty(fileNamesIds)) {
       saveExecutionLog("There are no artifacts to copy.");
       return CommandExecutionStatus.SUCCESS;
     }

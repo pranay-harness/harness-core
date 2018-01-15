@@ -1,8 +1,8 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -71,7 +71,7 @@ public class ActivityResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Activity>> list(@QueryParam("accountId") String accountId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
-    if (!Strings.isNullOrEmpty(envId)) {
+    if (!isEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
     }
     if (request.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {

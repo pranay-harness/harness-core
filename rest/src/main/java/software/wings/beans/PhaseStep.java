@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -195,7 +196,7 @@ public class PhaseStep {
 
   public Graph generateSubworkflow(DeploymentType deploymentType) {
     Builder graphBuilder = aGraph().withGraphName(name);
-    if (CollectionUtils.isEmpty(steps)) {
+    if (isEmpty(steps)) {
       return graphBuilder.build();
     }
     for (Node step : getSteps()) {

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
@@ -10,7 +11,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.List;
-
 /**
  * Created by brett on 4/14/17
  */
@@ -93,13 +92,13 @@ public class GcpClusterSetup extends State {
         (Encryptable) computeProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    if (StringUtils.isEmpty(zone)) {
+    if (isEmpty(zone)) {
       zone = "us-west1-a";
     }
     if (nodeCount <= 0) {
       nodeCount = 2;
     }
-    if (StringUtils.isEmpty(machineType)) {
+    if (isEmpty(machineType)) {
       machineType = "n1-standard-2";
     }
     String clusterName = "harness-"

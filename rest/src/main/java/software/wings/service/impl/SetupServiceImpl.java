@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * Created by anubhaw on 6/30/16.
  */
@@ -79,7 +79,7 @@ public class SetupServiceImpl implements SetupService {
     PageRequest<ArtifactStream> req =
         PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
     PageResponse<ArtifactStream> res = artifactStreamService.list(req);
-    if (CollectionUtils.isEmpty(res)) {
+    if (isEmpty(res)) {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_STREAM_FOUND")
           .withDisplayText("Setup complete: now you can add artifact stream and deployment.")
@@ -94,7 +94,7 @@ public class SetupServiceImpl implements SetupService {
                                            .withLimit("1")
                                            .build();
     PageResponse<Artifact> artRes = artifactService.list(pageReques, false);
-    if (CollectionUtils.isEmpty(artRes)) {
+    if (isEmpty(artRes)) {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_FOUND")
           .withDisplayText("Setup complete: Please add an artifact")

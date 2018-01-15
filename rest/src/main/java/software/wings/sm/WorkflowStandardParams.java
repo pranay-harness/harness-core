@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import static com.google.common.collect.Iterables.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
 import static software.wings.common.Constants.PHASE_PARAM;
@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
@@ -112,14 +111,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         } else if (artifact.getMetadata() != null) {
           artifactFileName = artifact.getArtifactFileName();
         }
-        if (!StringUtils.isEmpty(artifactFileName)) {
+        if (!isEmpty(artifactFileName)) {
           map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
         }
       }
 
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
-      if (CollectionUtils.isEmpty(templateRefKeysByService) || templateRefKeysByService.get(0).getId() == null) {
+      if (isEmpty(templateRefKeysByService) || templateRefKeysByService.get(0).getId() == null) {
         map.put(SERVICE_VARIABLE, new HashMap<>());
         map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
         return map;

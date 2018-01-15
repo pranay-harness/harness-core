@@ -29,6 +29,9 @@ public class EmptyPredicateTest extends CategoryTest {
   @Test
   @Category({FastUnitTests.class})
   public void testNullIsEmpty() {
+    int[] array = null;
+    assertTrue(isEmpty(array));
+
     Custom custom = null;
     assertTrue(isEmpty(custom));
 
@@ -40,6 +43,9 @@ public class EmptyPredicateTest extends CategoryTest {
 
     Map map = null;
     assertTrue(isEmpty(map));
+
+    ImplementsCollection<String> collection = null;
+    assertTrue(isEmpty(collection));
   }
 
   @Test
@@ -56,6 +62,9 @@ public class EmptyPredicateTest extends CategoryTest {
 
     Map<String, String> map = new HashMap();
     assertTrue(isEmpty(map));
+
+    ImplementsCollection<String> collection = new ImplementsCollection(true);
+    assertTrue(isEmpty(collection));
   }
 
   @Test
@@ -74,6 +83,9 @@ public class EmptyPredicateTest extends CategoryTest {
       { put("foo", "foo"); }
     };
     assertFalse(isEmpty(map));
+
+    ImplementsCollection<String> collection = new ImplementsCollection(false);
+    assertFalse(isEmpty(collection));
   }
 
   @Test
@@ -90,6 +102,9 @@ public class EmptyPredicateTest extends CategoryTest {
 
     Map map = null;
     assertFalse(isNotEmpty(map));
+
+    ImplementsCollection<String> collection = null;
+    assertFalse(isNotEmpty(collection));
   }
 
   @Test
@@ -106,6 +121,9 @@ public class EmptyPredicateTest extends CategoryTest {
 
     Map<String, String> map = new HashMap();
     assertFalse(isNotEmpty(map));
+
+    ImplementsCollection<String> collection = new ImplementsCollection(true);
+    assertFalse(isNotEmpty(collection));
   }
 
   @Test
@@ -124,5 +142,8 @@ public class EmptyPredicateTest extends CategoryTest {
       { put("foo", "foo"); }
     };
     assertTrue(isNotEmpty(map));
+
+    ImplementsCollection<String> collection = new ImplementsCollection(false);
+    assertTrue(isNotEmpty(collection));
   }
 }

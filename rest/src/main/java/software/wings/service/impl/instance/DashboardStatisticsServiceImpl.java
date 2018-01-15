@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
@@ -77,7 +78,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-
 /**
  * @author rktummala on 8/13/17
  */
@@ -606,7 +606,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<DeploymentHistory> getDeploymentHistory(String appId, String serviceId) {
     List<DeploymentHistory> deploymentExecutionHistoryList = new ArrayList<>();
     List<Environment> environments = environmentService.getEnvByApp(appId);
-    if (CollectionUtils.isEmpty(environments)) {
+    if (isEmpty(environments)) {
       return deploymentExecutionHistoryList;
     }
     List<String> envIds = environments.stream()
@@ -626,7 +626,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<WorkflowExecution> workflowExecutionList =
         workflowExecutionService.listExecutions(pageRequest, false).getResponse();
 
-    if (CollectionUtils.isEmpty(workflowExecutionList)) {
+    if (isEmpty(workflowExecutionList)) {
       return deploymentExecutionHistoryList;
     }
 
@@ -705,7 +705,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         }
 
         List<String> serviceIds = artifact.getServiceIds();
-        if (CollectionUtils.isEmpty(serviceIds)) {
+        if (isEmpty(serviceIds)) {
           continue;
         }
 

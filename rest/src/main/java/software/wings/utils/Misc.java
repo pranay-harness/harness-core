@@ -1,8 +1,8 @@
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
-import org.apache.commons.lang.ArrayUtils;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
@@ -156,7 +156,7 @@ public class Misc {
    * @return true, if is wild char present
    */
   public static boolean isWildCharPresent(String... names) {
-    if (ArrayUtils.isEmpty(names)) {
+    if (isEmpty(names)) {
       return false;
     }
     for (String name : names) {

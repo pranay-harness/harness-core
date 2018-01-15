@@ -1,10 +1,11 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.math.Stats;
 
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.WordUtils;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
@@ -21,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 /**
  * Created by rsingh on 9/6/17.
  */
@@ -264,7 +264,7 @@ public class NewRelicMetricValueDefinition {
 
   private double getValueForComparison(List<NewRelicMetricDataRecord> records) {
     double value;
-    if (CollectionUtils.isEmpty(records)) {
+    if (isEmpty(records)) {
       value = -1;
     } else {
       List<Double> testValues;

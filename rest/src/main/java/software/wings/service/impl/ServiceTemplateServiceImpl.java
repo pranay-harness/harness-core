@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -53,7 +54,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * Created by anubhaw on 4/4/16.
  */
@@ -105,7 +105,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   private void setArtifactTypeAndInfraMappings(List<ServiceTemplate> serviceTemplates) {
-    if (CollectionUtils.isEmpty(serviceTemplates)) {
+    if (isEmpty(serviceTemplates)) {
       return;
     }
     String appId = serviceTemplates.get(0).getAppId();

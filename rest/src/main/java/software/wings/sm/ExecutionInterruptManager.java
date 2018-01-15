@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
@@ -34,7 +35,6 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
@@ -248,7 +248,7 @@ public class ExecutionInterruptManager {
 
     PageResponse<StateExecutionInstance> pageResponse =
         wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (CollectionUtils.isEmpty(pageResponse)) {
+    if (isEmpty(pageResponse)) {
       logger.error("No StateExecutionInstance found for sendNotification");
       return;
     }
@@ -269,7 +269,7 @@ public class ExecutionInterruptManager {
 
   private ExecutionInterrupt getExecutionInterrupt(
       PageResponse<ExecutionInterrupt> res, ExecutionInterruptType eventType) {
-    if (CollectionUtils.isEmpty(res)) {
+    if (isEmpty(res)) {
       return null;
     }
     for (ExecutionInterrupt evt : res) {
