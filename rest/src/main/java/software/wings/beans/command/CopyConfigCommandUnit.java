@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;

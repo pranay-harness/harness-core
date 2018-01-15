@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 
 import com.google.common.base.Joiner;

@@ -4,8 +4,8 @@
 
 package software.wings.common;
 
-import static org.apache.commons.lang.ArrayUtils.isNotEmpty;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

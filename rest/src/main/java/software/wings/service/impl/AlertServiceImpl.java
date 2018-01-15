@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.awaitility.Awaitility.with;
 import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;

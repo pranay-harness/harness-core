@@ -1,6 +1,6 @@
 package software.wings.app;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;

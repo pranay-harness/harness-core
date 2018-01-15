@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.MapUtils.isNotEmpty;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 

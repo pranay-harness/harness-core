@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;

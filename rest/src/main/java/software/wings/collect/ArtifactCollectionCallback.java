@@ -1,6 +1,6 @@
 package software.wings.collect;
 
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;

@@ -1,8 +1,8 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;

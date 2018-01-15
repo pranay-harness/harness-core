@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;

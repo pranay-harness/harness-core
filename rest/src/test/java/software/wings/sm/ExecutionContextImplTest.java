@@ -1,7 +1,7 @@
 package software.wings.sm;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;

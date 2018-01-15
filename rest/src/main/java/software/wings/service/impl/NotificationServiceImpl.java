@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION_STATUS;

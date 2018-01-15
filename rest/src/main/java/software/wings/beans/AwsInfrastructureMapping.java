@@ -1,8 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 
 import com.google.common.collect.ImmutableMap;
