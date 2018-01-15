@@ -1,7 +1,7 @@
 package software.wings.integration.migration;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 

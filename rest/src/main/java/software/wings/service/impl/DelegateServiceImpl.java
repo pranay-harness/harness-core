@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.Iterables.isEmpty;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringAfter;

@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;

@@ -1,7 +1,7 @@
 package software.wings.integration.migration;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;

@@ -1,8 +1,8 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 

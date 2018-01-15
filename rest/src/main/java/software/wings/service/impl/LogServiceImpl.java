@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -7,7 +8,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;

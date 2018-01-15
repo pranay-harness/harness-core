@@ -1,7 +1,7 @@
 package software.wings.cloudprovider.gke;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;

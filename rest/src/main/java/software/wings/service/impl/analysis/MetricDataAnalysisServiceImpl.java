@@ -1,7 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 

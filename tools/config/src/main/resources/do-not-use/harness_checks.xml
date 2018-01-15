@@ -82,6 +82,8 @@
                                                    org.junit.Assert.assertThat"/>
         </module>
 
+        <module name="io.harness.checks.ExclusiveStaticImportCheck"/>
+
         <!-- ERROR PREVENTION -->
 
         <!-- Novice Java programmers often make this mistake -->

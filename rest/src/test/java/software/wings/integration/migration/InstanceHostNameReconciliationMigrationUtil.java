@@ -1,6 +1,6 @@
 package software.wings.integration.migration;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;

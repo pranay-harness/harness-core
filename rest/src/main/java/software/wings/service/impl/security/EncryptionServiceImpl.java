@@ -1,6 +1,6 @@
 package software.wings.service.impl.security;
 
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

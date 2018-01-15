@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 import static software.wings.utils.Switch.unhandled;
 

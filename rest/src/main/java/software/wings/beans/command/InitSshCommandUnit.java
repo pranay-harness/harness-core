@@ -2,9 +2,9 @@ package software.wings.beans.command;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;

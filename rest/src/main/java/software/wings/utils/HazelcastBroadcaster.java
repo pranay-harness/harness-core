@@ -1,7 +1,7 @@
 package software.wings.utils;
 
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;

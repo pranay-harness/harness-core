@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.Constants.DEPLOY_SERVICE;
 
 import com.google.common.collect.Lists;

@@ -1,6 +1,6 @@
 package software.wings.cloudprovider.aws;
 
-import static com.google.common.collect.Iterables.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.awaitility.Awaitility.with;
