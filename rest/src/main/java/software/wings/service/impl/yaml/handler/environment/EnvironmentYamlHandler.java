@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.environment;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 
@@ -31,7 +32,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 /**
  * @author rktummala on 11/07/17
  */
@@ -67,7 +66,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   private List<ServiceVariable> getAllVariableOverridesForEnv(Environment environment) {
     List<ServiceVariable> serviceVariableList = Lists.newArrayList();
-    if (Util.isEmpty(environment.getServiceTemplates())) {
+    if (isEmpty(environment.getServiceTemplates())) {
       return serviceVariableList;
     }
     environment.getServiceTemplates().stream().forEach(serviceTemplate -> {
@@ -280,12 +279,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       Validator.notNullCheck("No service found for given name: " + parentServiceName, service);
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
-      if (Util.isEmpty(templateRefKeysByService)) {
+      if (isEmpty(templateRefKeysByService)) {
         throw new HarnessException("Unable to locate a service template for the given service: " + parentServiceName);
       }
 
       String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
-      if (Util.isEmpty(serviceTemplateId)) {
+      if (isEmpty(serviceTemplateId)) {
         throw new HarnessException(
             "Unable to locate a service template with the given service: " + parentServiceName + " and env: " + envId);
       }

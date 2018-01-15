@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 
@@ -15,7 +16,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,12 +88,12 @@ public class InitSshCommandUnit extends SshCommandUnit {
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
     if (!isEmpty(context.getArtifactFiles())) {
       String name = context.getArtifactFiles().get(0).getName();
-      if (StringUtils.isNotEmpty(name)) {
+      if (isNotEmpty(name)) {
         envVariables.put("ARTIFACT_FILE_NAME", name);
       }
     } else if (context.getMetadata() != null) {
       String value = context.getMetadata().get(Constants.ARTIFACT_FILE_NAME);
-      if (StringUtils.isNotEmpty(value)) {
+      if (isNotEmpty(value)) {
         envVariables.put("ARTIFACT_FILE_NAME", value);
       }
     }

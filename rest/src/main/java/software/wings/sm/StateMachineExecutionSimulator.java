@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ForkElement.Builder.aForkElement;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -12,7 +13,6 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 /**
  * The type State machine execution simulator.
  *
@@ -106,7 +105,7 @@ public class StateMachineExecutionSimulator {
                                                    .build();
 
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);
-    if (CollectionUtils.isEmpty(res)) {
+    if (isEmpty(res)) {
       logger.error("No service instance found for the ids: {}", serviceInstanceIds);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
@@ -182,7 +181,7 @@ public class StateMachineExecutionSimulator {
     if (state instanceof RepeatState) {
       String repeatElementExpression = ((RepeatState) state).getRepeatElementExpression();
       List<ContextElement> repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
-      if (CollectionUtils.isEmpty(repeatElements)) {
+      if (isEmpty(repeatElements)) {
         logger.warn("No repeatElements found for the expression: {}", repeatElementExpression);
         return;
       }
@@ -258,7 +257,7 @@ public class StateMachineExecutionSimulator {
   private Map<String, StateExecutionInstance> prepareStateExecutionInstanceMap(
       List<StateExecutionInstance> stateExecutionInstances) {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap = new HashMap<>();
-    if (CollectionUtils.isEmpty(stateExecutionInstances)) {
+    if (isEmpty(stateExecutionInstances)) {
       return stateExecutionInstanceMap;
     }
 

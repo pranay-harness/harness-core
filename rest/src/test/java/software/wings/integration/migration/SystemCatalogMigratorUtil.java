@@ -1,5 +1,6 @@
 package software.wings.integration.migration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
@@ -10,7 +11,6 @@ import static software.wings.utils.ContainerFamily.TOMCAT;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -142,7 +142,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
     System.out.println("Creating System App Containers");
     List<Account> accounts =
         accountService.list(aPageRequest().withLimit(PageRequest.UNLIMITED).addFieldsIncluded("uuid").build());
-    if (CollectionUtils.isEmpty(accounts)) {
+    if (isEmpty(accounts)) {
       return;
     }
     List<SystemCatalog> systemCatalogs = systemCatalogService.list(
@@ -172,7 +172,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
                                            .addFilter("accountId", EQ, account.getUuid())
                                            .addFilter("fileUuid", EQ, systemCatalog.getFileUuid())
                                            .build());
-          if (CollectionUtils.isEmpty(pageResponse.getResponse())) {
+          if (isEmpty(pageResponse.getResponse())) {
             appContainerService.save(appContainer);
           } else {
             AppContainer storedAppContainer = pageResponse.getResponse().get(0);

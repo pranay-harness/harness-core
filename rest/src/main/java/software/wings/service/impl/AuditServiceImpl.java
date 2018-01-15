@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.awaitility.Awaitility.with;
 import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -9,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
-import org.apache.commons.collections.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 /**
  * Audit Service Implementation class.
  *
@@ -153,7 +152,7 @@ public class AuditServiceImpl implements AuditService {
                                              .field("createdAt")
                                              .lessThan(System.currentTimeMillis() - retentionMillis)
                                              .asList(new FindOptions().limit(limit).batchSize(batchSize));
-        if (CollectionUtils.isEmpty(auditHeaders)) {
+        if (isEmpty(auditHeaders)) {
           logger.info("No more audit records older than {} days", days);
           return true;
         }

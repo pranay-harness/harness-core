@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -24,7 +25,6 @@ import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -373,7 +373,7 @@ public class JenkinsImpl implements Jenkins {
     try {
       QueueReference queueReference;
       logger.info("Triggering job {} ", jobWithDetails.getUrl());
-      if (MapUtils.isEmpty(parameters)) {
+      if (isEmpty(parameters)) {
         ExtractHeader location =
             jobWithDetails.getClient().post(jobWithDetails.getUrl() + "build", null, ExtractHeader.class, true);
         queueReference = new QueueReference(location.getLocation());

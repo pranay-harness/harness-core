@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -40,7 +41,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-
 /**
  * The Class ExecutionResource.
  */
@@ -96,7 +96,7 @@ public class ExecutionResource {
                                                             .withLimit(PageRequest.UNLIMITED)
                                                             .build();
       PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
-      if (CollectionUtils.isEmpty(res)) {
+      if (isEmpty(res)) {
         return new RestResponse<>(new PageResponse<>());
       }
       authorizedAppIds = res.stream().map(Application::getUuid).collect(Collectors.toList());

@@ -39,7 +39,6 @@ import com.mongodb.BasicDBObject;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -955,7 +954,7 @@ public class DelegateServiceImpl implements DelegateService {
                                           .lessThan(clock.millis() - retentionMillis);
           query.or(query.criteria("status").equal(ABORTED), query.criteria("status").equal(ERROR));
           delegateTasks.addAll(query.asList(new FindOptions().limit(limit).batchSize(batchSize)));
-          if (CollectionUtils.isEmpty(delegateTasks)) {
+          if (isEmpty(delegateTasks)) {
             logger.info("No more delegate tasks older than {} hours", hours);
             return true;
           }

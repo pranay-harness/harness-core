@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -18,7 +19,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -56,7 +56,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * Created by peeyushaggarwal on 10/11/16.
  */
@@ -205,7 +204,7 @@ public class AccountServiceImpl implements AccountService {
     // check if the notification group name exists
     List<NotificationGroup> existingGroups =
         notificationSetupService.listNotificationGroups(account.getUuid(), role, name);
-    if (CollectionUtils.isEmpty(existingGroups)) {
+    if (isEmpty(existingGroups)) {
       logger.info("Creating default {} notification group {} for account {}", ACCOUNT_ADMIN.getDisplayName(), name,
           account.getAccountName());
       NotificationGroup notificationGroup = aNotificationGroup()

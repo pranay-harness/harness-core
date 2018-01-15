@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_PATH;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_STRING;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE;
@@ -11,12 +12,10 @@ import software.wings.beans.command.ExecCommandUnit.AbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.utils.Util;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 /**
  * @author rktummala on 11/13/17
  */
@@ -30,7 +29,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   }
 
   private List<TailFilePatternEntry.Yaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {
-    if (Util.isEmpty(patternEntryList)) {
+    if (isEmpty(patternEntryList)) {
       return null;
     }
 
@@ -44,7 +43,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   }
 
   private List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
-    if (Util.isEmpty(patternEntryYamlList)) {
+    if (isEmpty(patternEntryYamlList)) {
       return null;
     }
 
@@ -82,7 +81,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     nodeProperties.put(NODE_PROPERTY_COMMAND_TYPE, yaml.getCommandUnitType());
 
     List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
-    if (!Util.isEmpty(filePatternEntryList)) {
+    if (!isEmpty(filePatternEntryList)) {
       List<String> patternList = filePatternEntryList.stream()
                                      .map(filePatternEntry -> filePatternEntry.getSearchPattern())
                                      .collect(Collectors.toList());

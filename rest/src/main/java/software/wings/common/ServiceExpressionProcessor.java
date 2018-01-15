@@ -4,10 +4,11 @@
 
 package software.wings.common;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.ArrayUtils;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
@@ -132,7 +133,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<ServiceElement> list() {
-    if (!ArrayUtils.isEmpty(serviceNames)) {
+    if (!isEmpty(serviceNames)) {
       return matchingServices(getSelectedServices(), serviceNames);
     }
 

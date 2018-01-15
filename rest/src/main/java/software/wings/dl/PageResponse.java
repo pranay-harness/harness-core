@@ -24,7 +24,6 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import javax.ws.rs.core.UriInfo;
-
 /**
  * PageResponse bean class.
  *

@@ -1,5 +1,6 @@
 package software.wings.integration.migration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -7,7 +8,6 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -45,7 +45,7 @@ public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest 
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     List<Application> apps = pageResponse.getResponse();
-    if (pageResponse.isEmpty() || CollectionUtils.isEmpty(apps)) {
+    if (pageResponse.isEmpty() || isEmpty(apps)) {
       System.out.println("No applications found");
       return;
     }

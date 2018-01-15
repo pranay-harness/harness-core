@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static software.wings.utils.Util.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import okhttp3.OkHttpClient;
 import org.apache.commons.validator.routines.UrlValidator;

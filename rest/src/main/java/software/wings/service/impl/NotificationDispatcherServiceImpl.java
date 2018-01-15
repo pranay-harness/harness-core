@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
@@ -16,7 +17,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -50,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
 /**
  * Created by rishi on 10/30/16.
  */
@@ -152,13 +151,13 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private void dispatchSlackMessage(List<Notification> notifications, List<String> channels) {
-    if (CollectionUtils.isEmpty(channels)) {
+    if (isEmpty(channels)) {
       return;
     }
 
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
         notifications.get(0).getAccountId(), SettingVariableTypes.SLACK.name());
-    if (CollectionUtils.isEmpty(settingAttributes)) {
+    if (isEmpty(settingAttributes)) {
       logger.error("No slack configuration found ");
       return;
     }
@@ -182,7 +181,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private void dispatchEmail(List<Notification> notifications, List<String> toAddress) {
-    if (CollectionUtils.isEmpty(toAddress)) {
+    if (isEmpty(toAddress)) {
       return;
     }
 

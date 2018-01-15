@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -62,7 +63,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * The type Yaml git sync service.
  */
@@ -444,7 +444,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent) {
     RestResponse<List<GitSyncError>> listRestResponse = listGitSyncErrors(accountId);
     List<GitSyncError> syncErrorList = listRestResponse.getResource();
-    if (Util.isEmpty(syncErrorList)) {
+    if (isEmpty(syncErrorList)) {
       logger.error("No sync errors found to process for account {}", accountId);
       return RestResponse.Builder.aRestResponse().build();
     }

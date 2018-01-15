@@ -1,5 +1,6 @@
 package software.wings.integration.migration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -7,7 +8,6 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
@@ -36,7 +36,7 @@ public class PipelineExecutionMigrationUtil extends WingsBaseTest {
     System.out.println("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
-    if (pageResponse.isEmpty() || CollectionUtils.isEmpty(pageResponse.getResponse())) {
+    if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
       System.out.println("No applications found");
       return;
     }

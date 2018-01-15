@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -19,12 +19,10 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.utils.Util;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
 /**
  * @author rktummala on 11/15/17
  */
@@ -47,7 +45,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     BaseYamlHandler portMappingYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING, ObjectType.PORT_MAPPING);
     List<PortMapping> portMappings = containerDefinition.getPortMappings();
-    if (!Util.isEmpty(portMappings)) {
+    if (!isEmpty(portMappings)) {
       portMappingYamlList =
           portMappings.stream()
               .map(portMapping -> (PortMapping.Yaml) portMappingYamlHandler.toYaml(portMapping, appId))
@@ -59,7 +57,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     BaseYamlHandler storageConfigYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION, ObjectType.STORAGE_CONFIGURATION);
     List<StorageConfiguration> storageConfigurations = containerDefinition.getStorageConfigurations();
-    if (!Util.isEmpty(storageConfigurations)) {
+    if (!isEmpty(storageConfigurations)) {
       storageConfigYamlList =
           storageConfigurations.stream()
               .filter(storageConfiguration
@@ -112,7 +110,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
 
     // storage configurations
     List<StorageConfiguration> storageConfigs = Lists.newArrayList();
-    if (!Util.isEmpty(yaml.getStorageConfigurations())) {
+    if (!isEmpty(yaml.getStorageConfigurations())) {
       BaseYamlHandler storageConfigYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION, ObjectType.STORAGE_CONFIGURATION);
       storageConfigs = yaml.getStorageConfigurations()

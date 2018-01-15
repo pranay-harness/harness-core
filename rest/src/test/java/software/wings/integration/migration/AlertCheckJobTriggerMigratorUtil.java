@@ -1,12 +1,12 @@
 package software.wings.integration.migration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -36,7 +36,7 @@ public class AlertCheckJobTriggerMigratorUtil extends WingsBaseTest {
     System.out.println("Retrieving accounts");
     PageResponse<Account> pageResponse = wingsPersistence.query(Account.class, pageRequest);
 
-    if (pageResponse.isEmpty() || CollectionUtils.isEmpty(pageResponse.getResponse())) {
+    if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
       System.out.println("No accounts found");
       return;
     }

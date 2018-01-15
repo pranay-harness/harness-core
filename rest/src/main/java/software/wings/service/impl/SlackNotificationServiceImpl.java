@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
-import com.google.common.base.Strings;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Singleton;
 
 import allbegray.slack.SlackClientFactory;
@@ -24,7 +25,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
 
     Payload payload = new Payload();
     payload.setText(message);
-    if (!Strings.isNullOrEmpty(slackChannel)) {
+    if (!isEmpty(slackChannel)) {
       payload.setChannel(slackChannel);
     }
     payload.setUsername(senderName);

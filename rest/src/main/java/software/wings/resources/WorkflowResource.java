@@ -4,6 +4,7 @@
 
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.utils.Validator.validateUuid;
 
 import com.google.inject.Inject;
@@ -12,7 +13,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.Api;
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
@@ -44,7 +44,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-
 /**
  * The Class OrchestrationResource.
  *
@@ -83,7 +82,7 @@ public class WorkflowResource {
       @BeanParam PageRequest<Workflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
       @QueryParam("workflowType") List<String> workflowTypes) {
-    if ((CollectionUtils.isEmpty(workflowTypes))
+    if ((isEmpty(workflowTypes))
         && (pageRequest.getFilters() == null
                || pageRequest.getFilters().stream().noneMatch(
                       searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {

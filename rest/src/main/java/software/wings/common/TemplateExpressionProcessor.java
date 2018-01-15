@@ -1,5 +1,6 @@
 package software.wings.common;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Category;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -56,7 +57,7 @@ public class TemplateExpressionProcessor {
       PageRequest<InfrastructureMapping> pageRequest =
           aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("serviceId", EQ, serviceId).build();
       List<InfrastructureMapping> infraMappings = infrastructureMappingService.list(pageRequest);
-      if (CollectionUtils.isEmpty(infraMappings)) {
+      if (isEmpty(infraMappings)) {
         return null;
       }
       Optional<InfrastructureMapping> infraMapping =
@@ -123,7 +124,7 @@ public class TemplateExpressionProcessor {
                                                     .build();
 
     List<SettingAttribute> settingAttributes = settingsService.list(pageRequest);
-    if (CollectionUtils.isEmpty(settingAttributes)) {
+    if (isEmpty(settingAttributes)) {
       return null;
     }
     Optional<SettingAttribute> settingAttribute = settingAttributes.stream().findAny();

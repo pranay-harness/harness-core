@@ -30,7 +30,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
-import org.apache.commons.collections.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -377,7 +376,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                                                           .addFilter("artifactFiles", EXISTS)
                                                           .build())
                                                   .getResponse();
-        if (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) {
+        if (!isEmpty(toBeDeletedArtifacts)) {
           logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
               toBeDeletedArtifacts.size(), appId);
           deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
@@ -389,7 +388,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         /* toBeDeletedArtifacts = wingsPersistence.query(Artifact.class,
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("artifactStreamId", EQ,
          artifactStreamId) .addFilter("status", IN, FAILED, REJECTED, ERROR, ABORTED).build()).getResponse(); if
-         (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) { logger.info("Deleting failed artifacts for artifactStreamId
+         (!isEmpty(toBeDeletedArtifacts)) { logger.info("Deleting failed artifacts for artifactStreamId
          {}  of size: {} for appId {}", artifactStreamId, toBeDeletedArtifacts.size(), appId); deleteArtifacts(appId,
          artifactStreamId, toBeDeletedArtifacts); } else { logger.info("ArtifactStreamId {} for the app {} does not have
          failed artifacts to delete", artifactStreamId, appId);

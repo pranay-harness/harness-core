@@ -1,14 +1,14 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
-import software.wings.utils.Util;
 import software.wings.yaml.workflow.BasicWorkflowYaml;
 
 import java.util.List;
-
 /**
  * @author rktummala on 11/1/17
  */
@@ -19,7 +19,7 @@ public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowY
         BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow();
 
     List<WorkflowPhase> phaseList = workflowInfo.getPhaseList();
-    if (!Util.isEmpty(phaseList)) {
+    if (!isEmpty(phaseList)) {
       WorkflowPhase workflowPhase = phaseList.get(0);
       workflow.withInfraMappingId(workflowPhase.getInfraMappingId()).withServiceId(workflowPhase.getServiceId());
     }

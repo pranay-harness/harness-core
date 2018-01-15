@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.collect.Lists;
 
 import software.wings.beans.NameValuePair;
@@ -7,11 +9,9 @@ import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream.Tag;
 import software.wings.beans.artifact.AmiArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.utils.Util;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 /**
  * @author rktummala on 10/09/17
  */
@@ -45,7 +45,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   }
 
   private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {
-    if (Util.isEmpty(tagList)) {
+    if (isEmpty(tagList)) {
       return Lists.newArrayList();
     }
     return tagList.stream()

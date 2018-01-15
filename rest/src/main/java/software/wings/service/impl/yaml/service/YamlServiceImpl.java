@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
@@ -21,7 +22,6 @@ import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.SERVICE;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
-import static software.wings.utils.Util.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

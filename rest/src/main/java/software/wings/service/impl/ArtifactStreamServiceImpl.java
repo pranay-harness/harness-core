@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -63,7 +64,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
-
 /**
  * The Class ArtifactStreamServiceImpl.
  */
@@ -206,7 +206,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId) {
     List<software.wings.beans.trigger.Trigger> triggers =
         triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
-    if (CollectionUtils.isEmpty(triggers)) {
+    if (isEmpty(triggers)) {
       return;
     }
     List<String> triggerNames =

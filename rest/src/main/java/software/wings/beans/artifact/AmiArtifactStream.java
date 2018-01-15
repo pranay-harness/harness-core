@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 
@@ -10,7 +11,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.NameValuePair;
 import software.wings.utils.Util;
 
@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 /**
  * Created by sgurubelli on 12/14/17.
  */
@@ -41,7 +40,7 @@ public class AmiArtifactStream extends ArtifactStream {
 
   @Override
   public String getArtifactDisplayName(String amiName) {
-    if (CollectionUtils.isEmpty(tags)) {
+    if (isEmpty(tags)) {
       return String.format("%s_%s", getRegion(), amiName);
     }
     return String.format("%s_%s", getSourceName(), amiName);
@@ -54,7 +53,7 @@ public class AmiArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    if (CollectionUtils.isEmpty(tags)) {
+    if (isEmpty(tags)) {
       return region;
     }
     List<String> tagFields = new ArrayList<>();

@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.SearchFilter.Operator.AND;
@@ -11,7 +12,6 @@ import static software.wings.beans.SortOrder.OrderType.DESC;
 import static software.wings.utils.Switch.unhandled;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -173,7 +173,7 @@ public class MongoHelper {
   }
 
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
-    if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
+    if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && isEmpty(filter.getFieldValues())) {
       throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();

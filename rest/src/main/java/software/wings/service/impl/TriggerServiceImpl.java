@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -92,7 +93,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * Handles Triggers
  * Created by Srinivas on 10/26/17.
@@ -389,7 +389,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void addArtifactsFromVersionsOfWebHook(
       Trigger trigger, Map<String, String> serviceBuildNumbers, List<Artifact> artifacts) {
-    if (MapUtils.isEmpty(serviceBuildNumbers)) {
+    if (isEmpty(serviceBuildNumbers)) {
       return;
     }
     Map<String, String> services = new HashMap<>();
@@ -469,10 +469,10 @@ public class TriggerServiceImpl implements TriggerService {
       ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger1.getCondition();
       List<Artifact> artifacts = new ArrayList<>();
       List<ArtifactSelection> artifactSelections = trigger1.getArtifactSelections();
-      if (CollectionUtils.isEmpty(artifactSelections)) {
+      if (isEmpty(artifactSelections)) {
         logger.info("No artifact selections found so executing pipeline with the collected artifact");
         addIfArtifactFilterMatches(artifact, artifactTriggerCondition.getArtifactFilter(), artifacts);
-        if (CollectionUtils.isEmpty(artifacts)) {
+        if (isEmpty(artifacts)) {
           logger.warn(
               "Skipping execution - artifact does not match with the given filter {}", artifactTriggerCondition);
           continue;
@@ -483,7 +483,7 @@ public class TriggerServiceImpl implements TriggerService {
                 -> artifactSelection.getType().equals(ARTIFACT_SOURCE)
                     && artifact.getServiceIds().contains(artifactSelection.getServiceId()))) {
           addIfArtifactFilterMatches(artifact, artifactTriggerCondition.getArtifactFilter(), artifacts);
-          if (CollectionUtils.isEmpty(artifacts)) {
+          if (isEmpty(artifacts)) {
             logger.warn(
                 "Skipping execution - artifact does not match with the given filter {}", artifactTriggerCondition);
             continue;
@@ -513,7 +513,7 @@ public class TriggerServiceImpl implements TriggerService {
         .forEach(trigger -> {
 
           List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
-          if (CollectionUtils.isEmpty(artifactSelections)) {
+          if (isEmpty(artifactSelections)) {
             logger.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",
                 trigger.getWorkflowId(), sourcePipelineId);
             triggerExecution(
@@ -536,9 +536,9 @@ public class TriggerServiceImpl implements TriggerService {
 
     ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
-    if (CollectionUtils.isEmpty(artifactSelections)) {
+    if (isEmpty(artifactSelections)) {
       logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
-      if (!CollectionUtils.isEmpty(lastDeployedArtifacts)) {
+      if (!isEmpty(lastDeployedArtifacts)) {
         triggerExecution(lastDeployedArtifacts, trigger, null);
       }
     } else {
@@ -646,10 +646,10 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void addIfArtifactFilterMatches(Artifact artifact, String artifactFilter, List<Artifact> artifacts) {
-    if (!StringUtils.isEmpty(artifactFilter)) {
+    if (!isEmpty(artifactFilter)) {
       logger.info("Artifact filter {} set for artifact stream id {}", artifactFilter, artifact.getArtifactStreamId());
       Pattern pattern = Pattern.compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-      if (CollectionUtils.isEmpty(artifact.getArtifactFiles())) {
+      if (isEmpty(artifact.getArtifactFiles())) {
         if (pattern.matcher(artifact.getBuildNo()).find()) {
           logger.info("Artifact filter {} matching with artifact name/ tag / buildNo {}", artifactFilter,
               artifact.getBuildNo());
@@ -661,7 +661,7 @@ public class TriggerServiceImpl implements TriggerService {
                                                .stream()
                                                .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
                                                .collect(toList());
-        if (!CollectionUtils.isEmpty(artifactFiles)) {
+        if (!isEmpty(artifactFiles)) {
           logger.info("Artifact file names matches with the given artifact filter");
           artifact.setArtifactFiles(artifactFiles);
           artifacts.add(artifact);
@@ -865,10 +865,10 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void validateAndSetArtifactSelections(Trigger trigger, List<Service> services) {
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
-    if (CollectionUtils.isEmpty(artifactSelections)) {
+    if (isEmpty(artifactSelections)) {
       return;
     }
-    if (CollectionUtils.isEmpty(services)) {
+    if (isEmpty(services)) {
       throw new WingsException(INVALID_REQUEST).addParam("message", "Pipeline services can not be empty");
     }
 

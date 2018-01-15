@@ -1,8 +1,8 @@
 package software.wings.common.cache;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public class ResponseCodeCache {
   }
 
   public ResponseMessage rebuildMessage(ResponseMessage inputMessage, Map<String, Object> params) {
-    if (StringUtils.isNotEmpty(inputMessage.getMessage())) {
+    if (isNotEmpty(inputMessage.getMessage())) {
       logger.error(
           MessageFormat.format("The provided response message \"{0}\" will be overridden!", inputMessage.getMessage()));
     }

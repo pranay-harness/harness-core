@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -34,7 +35,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
@@ -85,7 +85,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.IntStream;
-
 /**
  * Created by anubhaw on 8/15/16.
  */
@@ -104,7 +103,7 @@ public class StatisticsServiceImpl implements StatisticsService {
   public WingsStatistics getTopConsumerServices(String accountId, List<String> appIds) {
     ImmutableMap<String, Application> appIdMap;
     List<Application> applications;
-    if (CollectionUtils.isEmpty(appIds)) {
+    if (isEmpty(appIds)) {
       applications =
           appService.list(aPageRequest().addFilter("accountId", EQ, accountId).build(), false, 0, 0).getResponse();
     } else {
@@ -119,7 +118,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     ImmutableMap<String, Application> appIdMap;
     List<TopConsumer> topConsumers;
     List<Application> applications;
-    if (CollectionUtils.isEmpty(appIds)) {
+    if (isEmpty(appIds)) {
       applications =
           appService.list(aPageRequest().addFilter("accountId", EQ, accountId).build(), false, 0, 0).getResponse();
     } else {
@@ -228,9 +227,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     UserStatistics userStatistics = anUserStatistics().withLastFetchedOn(statsFetchedOn).build();
 
     List<String> authorizedAppIds;
-    if (CollectionUtils.isEmpty(appIds)) {
+    if (isEmpty(appIds)) {
       authorizedAppIds = getAppIdsForAccount(accountId);
-      if (CollectionUtils.isEmpty(authorizedAppIds)) {
+      if (isEmpty(authorizedAppIds)) {
         return userStatistics;
       }
 
@@ -294,9 +293,9 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
 
-    if (CollectionUtils.isEmpty(appIds)) {
+    if (isEmpty(appIds)) {
       appIds = getAppIdsForAccount(accountId);
-      if (CollectionUtils.isEmpty(appIds)) {
+      if (isEmpty(appIds)) {
         return null;
       }
       pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
@@ -337,9 +336,9 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter().withField("pipelineExecutionId", NOT_EXISTS).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
-    if (CollectionUtils.isEmpty(appIds)) {
+    if (isEmpty(appIds)) {
       appIds = getAppIdsForAccount(accountId);
-      if (CollectionUtils.isEmpty(appIds)) {
+      if (isEmpty(appIds)) {
         return null;
       }
       pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
@@ -406,9 +405,9 @@ public class StatisticsServiceImpl implements StatisticsService {
                                      .addFieldsIncluded("appId")
                                      .build();
     List<String> authorizedAppIds;
-    if (CollectionUtils.isEmpty(appIds)) {
+    if (isEmpty(appIds)) {
       authorizedAppIds = getAppIdsForAccount(accountId);
-      if (!CollectionUtils.isEmpty(authorizedAppIds)) {
+      if (!isEmpty(authorizedAppIds)) {
         failureRequest.addFilter(aSearchFilter().withField("appId", IN, authorizedAppIds.toArray()).build());
       }
     } else {
@@ -561,7 +560,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private void getTopServicesDeployed(List<TopConsumer> topConsumers, List<WorkflowExecution> wflExecutions) {
     Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-    if (CollectionUtils.isEmpty(wflExecutions)) {
+    if (isEmpty(wflExecutions)) {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
@@ -625,7 +624,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     Map<String, String> serviceIdNames = new HashMap<>();
     Map<String, String> serviceAppIdMap = new HashMap<>();
     Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-    if (CollectionUtils.isEmpty(wflExecutions)) {
+    if (isEmpty(wflExecutions)) {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {

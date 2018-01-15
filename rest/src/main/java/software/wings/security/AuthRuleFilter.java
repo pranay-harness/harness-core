@@ -1,6 +1,7 @@
 package software.wings.security;
 
 import static com.google.common.collect.ImmutableList.copyOf;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang.StringUtils.startsWith;
@@ -17,7 +18,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AccountRole;
@@ -54,7 +54,6 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-
 /**
  * Created by anubhaw on 3/11/16.
  */
@@ -99,7 +98,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return; // do nothing
     }
     List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
-    if (CollectionUtils.isEmpty(requiredPermissionAttributes)) {
+    if (isEmpty(requiredPermissionAttributes)) {
       logger.error("Requested Resource: {}", requestContext.getUriInfo().getPath());
       throw new WingsException(ACCESS_DENIED);
     }
@@ -152,7 +151,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
-    boolean emptyAppIdsInReq = CollectionUtils.isEmpty(appIdsFromRequest);
+    boolean emptyAppIdsInReq = isEmpty(appIdsFromRequest);
     String envId = getRequestParamFromContext("envId", pathParameters, queryParameters);
 
     if (!emptyAppIdsInReq && accountId == null) {
@@ -198,7 +197,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private List<String> getValidAppsFromAccount(
       String accountId, List<String> appIdsFromRequest, boolean emptyAppIdsInReq) {
     List<String> appIdsOfAccount = appService.getAppIdsByAccountId(accountId);
-    if (!CollectionUtils.isEmpty(appIdsOfAccount)) {
+    if (!isEmpty(appIdsOfAccount)) {
       if (!emptyAppIdsInReq) {
         List<String> invalidAppIdList = Lists.newArrayList();
         for (String appId : appIdsFromRequest) {

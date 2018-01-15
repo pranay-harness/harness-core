@@ -1,11 +1,11 @@
 package software.wings.integration.migration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -34,7 +34,7 @@ public class InfraMappingMigratorUtil extends WingsBaseTest {
     System.out.println("Retrieving infra mapping info");
     PageResponse<InfrastructureMapping> pageResponse = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
-    if (pageResponse.isEmpty() || CollectionUtils.isEmpty(pageResponse.getResponse())) {
+    if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
       System.out.println("No infra mapping info found");
       return;
     }

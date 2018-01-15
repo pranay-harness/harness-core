@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
@@ -233,7 +234,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest,
       boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
-    if (CollectionUtils.isEmpty(res)) {
+    if (isEmpty(res)) {
       return res;
     }
     for (int i = 0; i < res.size(); i++) {
@@ -608,7 +609,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                     .addFieldsExcluded("contextElements", "callback")
                                                     .build();
       List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
-      if (CollectionUtils.isEmpty(allInstances)) {
+      if (isEmpty(allInstances)) {
         return;
       }
       Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
@@ -869,13 +870,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void setVariables(String key, Object value, Map<String, Object> variableMap) {
-    if (!isEmpty(key)) {
+    if (!isNull(key)) {
       variableMap.put(key, value);
     }
   }
 
-  private boolean isEmpty(String string) {
-    return StringUtils.isEmpty(string) || string.equals("null");
+  private boolean isNull(String string) {
+    return isEmpty(string) || string.equals("null");
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
@@ -1384,7 +1385,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                      .build();
 
     PageResponse<WorkflowExecution> pageResponse = wingsPersistence.query(WorkflowExecution.class, pageRequest);
-    if (CollectionUtils.isEmpty(pageResponse)) {
+    if (isEmpty(pageResponse)) {
       return false;
     }
     return true;
@@ -1641,7 +1642,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PageResponse<StateExecutionInstance> pageResponse =
         wingsPersistence.query(StateExecutionInstance.class, pageRequest);
 
-    if (CollectionUtils.isEmpty(pageResponse)) {
+    if (isEmpty(pageResponse)) {
       return;
     }
 
@@ -1790,7 +1791,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
+    if (isEmpty(allStateExecutionInstances)) {
       return null;
     }
 
@@ -1888,7 +1889,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
+    if (isEmpty(allStateExecutionInstances)) {
       return null;
     }
 
@@ -1924,7 +1925,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .build();
 
       List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-      if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
+      if (isEmpty(allStateExecutionInstances)) {
         return null;
       }
 
@@ -1962,7 +1963,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-    if (CollectionUtils.isEmpty(allStateExecutionInstances)) {
+    if (isEmpty(allStateExecutionInstances)) {
       return null;
     }
 
@@ -1985,7 +1986,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<BuildExecutionSummary> buildExecutionSummaries = workflowExecution.getBuildExecutionSummaries();
-    if (CollectionUtils.isEmpty(buildExecutionSummaries)) {
+    if (isEmpty(buildExecutionSummaries)) {
       buildExecutionSummaries = new ArrayList<>();
     }
     buildExecutionSummaries.add(buildExecutionSummary);

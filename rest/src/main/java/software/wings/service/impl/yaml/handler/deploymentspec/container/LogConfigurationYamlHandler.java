@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.container.LogConfiguration;
@@ -9,12 +11,10 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.utils.Util;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
 /**
  * @author rktummala on 11/15/17
  */
@@ -34,7 +34,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   }
 
   private List<NameValuePair.Yaml> getLogOptionsYaml(List<LogOption> logOptionList) {
-    if (Util.isEmpty(logOptionList)) {
+    if (isEmpty(logOptionList)) {
       return Collections.emptyList();
     }
     return logOptionList.stream()
@@ -43,7 +43,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   }
 
   private List<LogOption> getLogOptions(List<NameValuePair.Yaml> yamlList) {
-    if (Util.isEmpty(yamlList)) {
+    if (isEmpty(yamlList)) {
       return Collections.emptyList();
     }
 

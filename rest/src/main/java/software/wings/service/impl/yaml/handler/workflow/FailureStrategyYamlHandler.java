@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
@@ -34,7 +36,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
                                                         .withRetryCount(yaml.getRetryCount())
                                                         .withRetryIntervals(yaml.getRetryIntervals());
 
-    if (Util.isNotEmpty(yaml.getFailureTypes())) {
+    if (isNotEmpty(yaml.getFailureTypes())) {
       yaml.getFailureTypes().stream().forEach(failureTypeString -> {
         FailureType failureType = Util.getEnumFromString(FailureType.class, failureTypeString);
         failureStrategyBuilder.addFailureTypes(failureType);

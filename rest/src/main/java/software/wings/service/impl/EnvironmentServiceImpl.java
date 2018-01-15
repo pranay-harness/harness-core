@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -25,7 +26,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +83,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
-
 /**
  * Created by anubhaw on 4/1/16.
  */
@@ -264,7 +263,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       return services;
     }
     List<ServiceTemplate> serviceTemplates = environment.getServiceTemplates();
-    if (CollectionUtils.isEmpty(serviceTemplates)) {
+    if (isEmpty(serviceTemplates)) {
       return services;
     }
     List<String> serviceIds = new ArrayList<>();
@@ -393,7 +392,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       }
       Environment sourceEnvironment = get(appId, envId, true);
       Environment clonedEnvironment = sourceEnvironment.clone();
-      if (StringUtils.isEmpty(description)) {
+      if (isEmpty(description)) {
         description = "Cloned from environment " + sourceEnvironment.getName();
       }
       clonedEnvironment.setName(envName);
@@ -481,7 +480,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         envId = cloneMetadata.getEnvironment().getUuid();
       }
       Environment sourceEnvironment = get(appId, envId, true);
-      if (StringUtils.isEmpty(description)) {
+      if (isEmpty(description)) {
         description =
             "Cloned from environment " + sourceEnvironment.getName() + " of application " + sourceApplication.getName();
       }

@@ -1,11 +1,12 @@
 package software.wings.scheduler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -29,7 +30,6 @@ import software.wings.utils.Validator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 /**
  * Periodic job that syncs for instances with the current containers like kubernetes and ECS.
  *
@@ -74,7 +74,7 @@ public class ContainerSyncJob implements Job {
 
     Set<String> containerSvcNameNoRevisionSet =
         instanceService.getLeastRecentSyncedContainerDeployments(appId, System.currentTimeMillis() - SYNC_INTERVAL);
-    if (CollectionUtils.isEmpty(containerSvcNameNoRevisionSet)) {
+    if (isEmpty(containerSvcNameNoRevisionSet)) {
       logger.info("No Container deployments to process for appId:" + appId);
       // This is making the job self pruning. This allow to simplify the logic in deletion of the application.
       Application application = wingsPersistence.get(Application.class, appId);

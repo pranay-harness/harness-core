@@ -29,7 +29,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
@@ -188,7 +187,7 @@ public class KubernetesContainerTask extends ContainerTask {
   public HasMetadata createController(String containerName, String imageNameTag, String secretName) {
     String configTemplate;
     AdvancedType type;
-    if (StringUtils.isNotEmpty(getAdvancedConfig())) {
+    if (isNotEmpty(getAdvancedConfig())) {
       configTemplate = getAdvancedConfig();
       type = getAdvancedType();
     } else {

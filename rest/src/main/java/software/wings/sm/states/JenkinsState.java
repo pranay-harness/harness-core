@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -60,7 +61,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
 /**
  * Created by peeyushaggarwal on 10/21/16.
  */
@@ -236,7 +236,7 @@ public class JenkinsState extends State {
       evaluatedJobName = jobName;
     }
 
-    Map<String, String> jobParameterMap = CollectionUtils.isEmpty(jobParameters)
+    Map<String, String> jobParameterMap = isEmpty(jobParameters)
         ? Collections.emptyMap()
         : jobParameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
     final String finalJobName = evaluatedJobName;

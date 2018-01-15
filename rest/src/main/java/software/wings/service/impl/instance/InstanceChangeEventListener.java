@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -8,11 +10,9 @@ import software.wings.api.InstanceChangeEvent;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.intfc.instance.InstanceService;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.List;
-
 /**
  * Receives all the completed phases and their instance info and feeds it to the instance collection.
  * The instance information is used in the service and infrastructure dashboards.
@@ -35,7 +35,7 @@ public class InstanceChangeEventListener extends AbstractQueueListener<InstanceC
 
       // Stop gap solution until the rewrite is done
       List<String> autoScalingGroupList = instanceChangeEvent.getAutoScalingGroupList();
-      if (!Util.isEmpty(autoScalingGroupList)) {
+      if (!isEmpty(autoScalingGroupList)) {
         instanceService.deleteInstancesOfAutoScalingGroups(autoScalingGroupList, instanceChangeEvent.getAppId());
       }
       List<Instance> instanceList = instanceChangeEvent.getInstanceList();

@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
@@ -9,7 +10,6 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.common.collect.Lists;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
@@ -526,7 +526,7 @@ public class StateMachine extends Base {
    */
   public State getNextState(String fromStateName, TransitionType transitionType) {
     List<State> nextStates = getNextStates(fromStateName, transitionType);
-    if (CollectionUtils.isEmpty(nextStates)) {
+    if (isEmpty(nextStates)) {
       return null;
     }
     return nextStates.get(0);
@@ -786,7 +786,7 @@ public class StateMachine extends Base {
         continue;
       }
       List<Transition> transitionsToOldState = getTransitionsTo(state);
-      if (CollectionUtils.isEmpty(transitionsToOldState)) {
+      if (isEmpty(transitionsToOldState)) {
         if (!initialStateName.equals(stateName)) {
           throw new WingsException("Inconsistent state");
         }
@@ -837,7 +837,7 @@ public class StateMachine extends Base {
   private void buildAvailableContextsByTransition(State state, Set<ContextElementType> previousContexts,
       Map<Transition, Set<ContextElementType>> availableContextsByTransition) {
     List<Transition> transitionFrom = getTransitionFrom(state);
-    if (CollectionUtils.isEmpty(transitionFrom)) {
+    if (isEmpty(transitionFrom)) {
       return;
     }
     transitionFrom.forEach(transition -> {
@@ -853,7 +853,7 @@ public class StateMachine extends Base {
 
   private void buildStateNamesInOrderByAppearance(State state, List<String> stateNamesInOrder) {
     List<State> nextStates = getNextStates(state.getName());
-    if (CollectionUtils.isEmpty(nextStates)) {
+    if (isEmpty(nextStates)) {
       stateNamesInOrder.add(state.getName());
       return;
     }

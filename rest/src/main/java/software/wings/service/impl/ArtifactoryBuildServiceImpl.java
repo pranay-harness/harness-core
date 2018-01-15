@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
@@ -9,7 +10,6 @@ import static software.wings.utils.Validator.equalCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -70,7 +70,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    if (StringUtils.isEmpty(groupId)) {
+    if (isEmpty(groupId)) {
       logger.info("Retrieving {} repo paths.", jobName);
       List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, jobName);
       logger.info("Retrieved {} repo paths.", repoPaths.size());

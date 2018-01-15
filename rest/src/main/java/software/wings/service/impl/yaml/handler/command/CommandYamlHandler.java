@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
@@ -36,7 +37,6 @@ import software.wings.yaml.command.CommandYaml;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 /**
  *  @author rktummala on 11/13/17
  */
@@ -63,7 +63,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(name);
 
-    if (!Util.isEmpty(commandUnitYamlList)) {
+    if (!isEmpty(commandUnitYamlList)) {
       Node previousGraphNode = null;
 
       for (Yaml commandUnitYaml : commandUnitYamlList) {
@@ -86,7 +86,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         nodeList.add(graphNode);
       }
 
-      if (!Util.isEmpty(linkList)) {
+      if (!isEmpty(linkList)) {
         graphBuilder.withLinks(linkList);
       }
       graphBuilder.withNodes(nodeList);
@@ -103,7 +103,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     List<String> envNameList = commandYaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = Maps.newHashMap();
-    if (!Util.isEmpty(envNameList)) {
+    if (!isEmpty(envNameList)) {
       envNameList.stream().forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);
         if (environment != null) {
@@ -172,7 +172,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
                                    .filter(entry -> entry.getValue() == null)
                                    .map(entry -> entry.getKey())
                                    .collect(Collectors.toList());
-      if (!Util.isEmpty(envIdList)) {
+      if (!isEmpty(envIdList)) {
         envIdList.stream().forEach(envId -> {
           Environment environment = environmentService.get(appId, envId, false);
           if (environment != null) {

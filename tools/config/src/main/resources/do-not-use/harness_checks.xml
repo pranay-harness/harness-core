@@ -94,7 +94,7 @@
          where the developer forget to add braces -->
         <module name="NeedBraces"/>
 
-        <!-- Using (var == null || var.isEmpty()) can be replaced from utility call XyzUtil.isEmpty(var). This is
+        <!-- Using (var == null || var.isEmpty()) can be replaced from utility call Xyz.isEmpty(var). This is
         mostly for better readability, but it has same element of reducing the potential risk of using different
         variables for the two statements.
         -->

@@ -4,6 +4,7 @@
 
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import org.apache.commons.jexl3.JexlBuilder;
@@ -13,7 +14,6 @@ import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ro.fortsoft.pf4j.util.StringUtils;
 import software.wings.exception.WingsException;
 
 import java.util.Map;
@@ -215,7 +215,7 @@ public class ExpressionEvaluator {
 
   public static void isValidVariableName(String name) {
     // Verify Service variable name should not contain any special character
-    if (StringUtils.isEmpty(name)) {
+    if (isEmpty(name)) {
       return;
     }
     Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);

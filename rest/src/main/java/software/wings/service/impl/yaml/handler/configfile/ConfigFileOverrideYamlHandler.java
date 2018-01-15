@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
@@ -28,7 +29,6 @@ import software.wings.utils.Validator;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
-
 /**
  * @author rktummala on 12/08/17
  */
@@ -142,7 +142,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       configFile.setChecksumType(checksumType);
     }
 
-    if (!Util.isEmpty(yaml.getServiceName())) {
+    if (!isEmpty(yaml.getServiceName())) {
       String serviceName = yaml.getServiceName();
       if (serviceName == null) {
         configFile.setEntityType(EntityType.ENVIRONMENT);
@@ -157,12 +157,12 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
 
         List<Key<ServiceTemplate>> templateRefKeysByService =
             serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
-        if (Util.isEmpty(templateRefKeysByService)) {
+        if (isEmpty(templateRefKeysByService)) {
           throw new HarnessException("Unable to locate a service template for the given service: " + serviceName);
         }
 
         String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
-        if (Util.isEmpty(serviceTemplateId)) {
+        if (isEmpty(serviceTemplateId)) {
           throw new HarnessException(
               "Unable to locate a service template with the given service: " + serviceName + " and env: " + envId);
         }

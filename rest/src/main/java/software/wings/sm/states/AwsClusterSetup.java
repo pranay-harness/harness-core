@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.api.AwsClusterExecutionData.AwsClusterExecutionDataBuilder.anAwsClusterExecutionData;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
@@ -10,7 +12,6 @@ import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,6 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 
 import java.util.List;
-
 /**
  * Created by brett on 4/14/17
  */
@@ -108,22 +108,22 @@ public class AwsClusterSetup extends State {
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
 
-    if (StringUtils.isNotEmpty(availabilityZones)) {
+    if (isNotEmpty(availabilityZones)) {
       clusterConfiguration.setAvailabilityZones(asList(availabilityZones.split(",")));
     }
-    if (StringUtils.isNotEmpty(vpcZoneIdentifiers)) {
+    if (isNotEmpty(vpcZoneIdentifiers)) {
       clusterConfiguration.setVpcZoneIdentifiers(vpcZoneIdentifiers);
     }
-    if (StringUtils.isNotEmpty(autoScalingGroupName)) {
+    if (isNotEmpty(autoScalingGroupName)) {
       clusterConfiguration.setAutoScalingGroupName(autoScalingGroupName);
     }
-    if (StringUtils.isNotEmpty(launcherConfig)) {
+    if (isNotEmpty(launcherConfig)) {
       clusterConfiguration.setLauncherConfiguration(launcherConfig);
     }
-    if (StringUtils.isNotEmpty(machineType)) {
+    if (isNotEmpty(machineType)) {
       // TODO:: specify machine type for the cluster
     }
-    if (StringUtils.isEmpty(region)) {
+    if (isEmpty(region)) {
       region = "us-west-1";
     }
     if (nodeCount <= 0) {

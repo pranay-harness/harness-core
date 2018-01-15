@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 
 import com.google.common.collect.Lists;
@@ -8,7 +9,6 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.NodeTuple;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.representer.Representer;
-import software.wings.utils.Util;
 
 import java.beans.Transient;
 import java.lang.reflect.Field;
@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
-
 public class YamlRepresenter extends Representer {
   private boolean removeEmptyValues;
 
@@ -45,7 +44,7 @@ public class YamlRepresenter extends Representer {
 
     if (removeEmptyValues) {
       if (propertyValue == null || propertyValue.equals("")
-          || (propertyValue instanceof Collection<?> && Util.isEmpty((Collection) propertyValue))) {
+          || (propertyValue instanceof Collection<?> && isEmpty((Collection) propertyValue))) {
         return null;
       }
     }

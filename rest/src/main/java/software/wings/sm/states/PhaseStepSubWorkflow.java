@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
@@ -27,7 +28,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
@@ -301,7 +301,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
     List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
-    if (CollectionUtils.isEmpty(contextElements)) {
+    if (isEmpty(contextElements)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Setup not done");
     }
     Optional<ContextElement> containerServiceElement =
@@ -344,7 +344,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void handleElementNotifyResponseData(
       PhaseElement phaseElement, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
-    if (MapUtils.isEmpty(response)) {
+    if (isEmpty(response)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Missing response");
     }
     NotifyResponseData notifiedResponseData = response.values().iterator().next();
@@ -397,7 +397,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private ContextElement notifiedElement(
       ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls, String message) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-    if (CollectionUtils.isEmpty(elements)) {
+    if (isEmpty(elements)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", message);
     }
     if (!(cls.isInstance(elements.get(0)))) {

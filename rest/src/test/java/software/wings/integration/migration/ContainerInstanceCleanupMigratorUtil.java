@@ -1,12 +1,12 @@
 package software.wings.integration.migration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Objects;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,7 +41,7 @@ public class ContainerInstanceCleanupMigratorUtil extends WingsBaseTest {
     PageResponse<ContainerDeploymentInfo> pageResponse =
         wingsPersistence.query(ContainerDeploymentInfo.class, pageRequest);
 
-    if (pageResponse.isEmpty() || CollectionUtils.isEmpty(pageResponse.getResponse())) {
+    if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
       System.out.println("No Container deployment info found");
       return;
     }
@@ -62,7 +62,7 @@ public class ContainerInstanceCleanupMigratorUtil extends WingsBaseTest {
             .build();
     System.out.println("Retrieving Container instances");
     PageResponse<Instance> pageResponse = wingsPersistence.query(Instance.class, pageRequest);
-    if (pageResponse.isEmpty() || CollectionUtils.isEmpty(pageResponse.getResponse())) {
+    if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
       System.out.println("No Container instance found");
       return;
     }

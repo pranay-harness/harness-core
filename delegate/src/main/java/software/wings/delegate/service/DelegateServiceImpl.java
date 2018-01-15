@@ -1,5 +1,6 @@
 package software.wings.delegate.service;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -750,7 +751,7 @@ public class DelegateServiceImpl implements DelegateService {
         return;
       }
 
-      if (StringUtils.isEmpty(delegateTask.getDelegateId())) {
+      if (isEmpty(delegateTask.getDelegateId())) {
         // Not whitelisted. Perform validation.
         DelegateValidateTask delegateValidateTask = delegateTask.getTaskType().getDelegateValidateTask(
             delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));

@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -22,7 +23,6 @@ import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-
 /**
  * Created by sgurubelli on 8/7/17.
  */
@@ -177,7 +176,7 @@ public abstract class ExpressionBuilder {
   }
 
   protected Set<String> getServiceVariables(String appId, List<String> entityIds, EntityType entityType) {
-    if (CollectionUtils.isEmpty(entityIds)) {
+    if (isEmpty(entityIds)) {
       return new TreeSet<>();
     }
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()

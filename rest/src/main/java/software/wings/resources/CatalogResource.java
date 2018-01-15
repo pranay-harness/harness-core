@@ -4,6 +4,7 @@
 
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
@@ -12,7 +13,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
@@ -36,7 +36,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
-
 /**
  * The Class CatalogResource.
  *
@@ -115,7 +114,7 @@ public class CatalogResource {
   private Map<String, Object> getCatalogs(List<String> catalogTypes, String appId) throws IOException {
     Map<String, Object> catalogs = new HashMap<>();
 
-    if (CollectionUtils.isEmpty(catalogTypes)) {
+    if (isEmpty(catalogTypes)) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
       catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
       catalogs.putAll(catalogService.getCatalogs());
