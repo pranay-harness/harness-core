@@ -14,6 +14,8 @@ public class ExclusiveStaticImportCheckTest extends AbstractModuleTestSupport {
   public DefaultConfiguration config() {
     DefaultConfiguration config = createModuleConfig(ExclusiveStaticImportCheck.class);
 
+    config.addAttribute("staticImports", "java.util.Arrays.asList");
+
     DefaultConfiguration twConf = createModuleConfig(TreeWalker.class);
     twConf.addChild(config);
     twConf.addAttribute("fileExtensions", "jv");
