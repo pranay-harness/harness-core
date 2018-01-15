@@ -2,6 +2,7 @@ package software.wings.security;
 
 import static com.google.common.collect.ImmutableList.copyOf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang.StringUtils.startsWith;
@@ -197,7 +198,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private List<String> getValidAppsFromAccount(
       String accountId, List<String> appIdsFromRequest, boolean emptyAppIdsInReq) {
     List<String> appIdsOfAccount = appService.getAppIdsByAccountId(accountId);
-    if (!isEmpty(appIdsOfAccount)) {
+    if (isNotEmpty(appIdsOfAccount)) {
       if (!emptyAppIdsInReq) {
         List<String> invalidAppIdList = Lists.newArrayList();
         for (String appId : appIdsFromRequest) {

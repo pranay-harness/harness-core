@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -54,7 +54,7 @@ public class NotificationResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Notification>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Notification> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    if (!isEmpty(appId)) {
+    if (isNotEmpty(appId)) {
       pageRequest.addFilter("appId", appId, EQ);
     }
     pageRequest.setOrders(

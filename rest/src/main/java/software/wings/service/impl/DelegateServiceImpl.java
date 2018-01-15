@@ -193,7 +193,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     // Touch currently executing tasks.
     if (delegate.getCurrentlyExecutingDelegateTasks() != null
-        && !isEmpty(delegate.getCurrentlyExecutingDelegateTasks())) {
+        && isNotEmpty(delegate.getCurrentlyExecutingDelegateTasks())) {
       logger.info("Updating tasks");
 
       Query<DelegateTask> delegateTaskQuery =

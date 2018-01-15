@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
@@ -70,8 +70,8 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
                                    .filter(entry -> entry.getValue() == null)
                                    .map(entry -> entry.getKey())
                                    .collect(Collectors.toList());
-      if (!isEmpty(envIdList)) {
-        envIdList.stream().forEach(envId -> {
+      if (isNotEmpty(envIdList)) {
+        envIdList.forEach(envId -> {
           Environment environment = environmentService.get(appId, envId, false);
           if (environment != null) {
             envNameList.add(environment.getName());
@@ -119,8 +119,8 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     Yaml yaml = changeContext.getYaml();
     List<String> envNameList = yaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = Maps.newHashMap();
-    if (!isEmpty(envNameList)) {
-      envNameList.stream().forEach(envName -> {
+    if (isNotEmpty(envNameList)) {
+      envNameList.forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);
         if (environment != null) {
           envIdMap.put(environment.getUuid(), null);

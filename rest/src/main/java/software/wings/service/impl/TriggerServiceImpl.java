@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -538,7 +539,7 @@ public class TriggerServiceImpl implements TriggerService {
     List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
     if (isEmpty(artifactSelections)) {
       logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
-      if (!isEmpty(lastDeployedArtifacts)) {
+      if (isNotEmpty(lastDeployedArtifacts)) {
         triggerExecution(lastDeployedArtifacts, trigger, null);
       }
     } else {
@@ -646,7 +647,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void addIfArtifactFilterMatches(Artifact artifact, String artifactFilter, List<Artifact> artifacts) {
-    if (!isEmpty(artifactFilter)) {
+    if (isNotEmpty(artifactFilter)) {
       logger.info("Artifact filter {} set for artifact stream id {}", artifactFilter, artifact.getArtifactStreamId());
       Pattern pattern = Pattern.compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
       if (isEmpty(artifact.getArtifactFiles())) {
@@ -661,7 +662,7 @@ public class TriggerServiceImpl implements TriggerService {
                                                .stream()
                                                .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
                                                .collect(toList());
-        if (!isEmpty(artifactFiles)) {
+        if (isNotEmpty(artifactFiles)) {
           logger.info("Artifact file names matches with the given artifact filter");
           artifact.setArtifactFiles(artifactFiles);
           artifacts.add(artifact);

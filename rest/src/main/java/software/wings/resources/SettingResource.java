@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -75,7 +75,7 @@ public class SettingResource {
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
-    if (!isEmpty(settingVariableTypes)) {
+    if (isNotEmpty(settingVariableTypes)) {
       pageRequest.addFilter(aSearchFilter().withField("value.type", IN, settingVariableTypes.toArray()).build());
     }
     pageRequest.addFilter("appId", appId, EQ);

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -78,7 +78,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     BaseYamlHandler containerDefYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
     List<ContainerDefinition> containerDefinitions = bean.getContainerDefinitions();
-    if (!isEmpty(containerDefinitions)) {
+    if (isNotEmpty(containerDefinitions)) {
       ContainerDefinition containerDefinition = containerDefinitions.get(0);
       ContainerDefinition.Yaml containerDefYaml =
           (ContainerDefinition.Yaml) containerDefYamlHandler.toYaml(containerDefinition, bean.getAppId());

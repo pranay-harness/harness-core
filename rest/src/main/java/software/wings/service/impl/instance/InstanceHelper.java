@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.Constants.DEPLOY_SERVICE;
 
 import com.google.common.collect.Lists;
@@ -180,7 +181,7 @@ public class InstanceHelper {
         AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) stepExecutionSummary;
 
         // Capture the instances of the new revision
-        if (!isEmpty(amiStepExecutionSummary.getNewInstanceData())) {
+        if (isNotEmpty(amiStepExecutionSummary.getNewInstanceData())) {
           amiStepExecutionSummary.getNewInstanceData().stream().forEach(containerServiceData -> {
             List<Instance> instanceList = getInstancesFromAutoScalingGroup(awsAmiInfrastructureMapping.getRegion(),
                 containerServiceData.getName(), phaseExecutionData, workflowExecution, artifact,
@@ -192,7 +193,7 @@ public class InstanceHelper {
 
         // Capture the instances of the old revision, note that the downsize operation need not bring the count
         // to zero.
-        if (!isEmpty(amiStepExecutionSummary.getOldInstanceData())) {
+        if (isNotEmpty(amiStepExecutionSummary.getOldInstanceData())) {
           amiStepExecutionSummary.getOldInstanceData().stream().forEach(containerServiceData -> {
             List<Instance> instanceList = getInstancesFromAutoScalingGroup(awsAmiInfrastructureMapping.getRegion(),
                 containerServiceData.getName(), phaseExecutionData, workflowExecution, artifact,

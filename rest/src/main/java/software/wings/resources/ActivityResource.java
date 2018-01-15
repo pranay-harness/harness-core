@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
@@ -71,7 +71,7 @@ public class ActivityResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Activity>> list(@QueryParam("accountId") String accountId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
-    if (!isEmpty(envId)) {
+    if (isNotEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
     }
     if (request.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {

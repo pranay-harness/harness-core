@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
 import static software.wings.common.Constants.PHASE_PARAM;
@@ -106,12 +107,12 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       if (artifact != null) {
         map.put(ARTIFACT, artifact);
         String artifactFileName = null;
-        if (!isEmpty(artifact.getArtifactFiles())) {
+        if (isNotEmpty(artifact.getArtifactFiles())) {
           artifactFileName = artifact.getArtifactFiles().get(0).getName();
         } else if (artifact.getMetadata() != null) {
           artifactFileName = artifact.getArtifactFileName();
         }
-        if (!isEmpty(artifactFileName)) {
+        if (isNotEmpty(artifactFileName)) {
           map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
         }
       }

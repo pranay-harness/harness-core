@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static jersey.repackaged.com.google.common.collect.ImmutableMap.of;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.command.CommandUnitType.EXEC;
@@ -67,7 +67,7 @@ public class ExecCommandUnit extends SshCommandUnit {
 
     List<String> returnValue = Lists.newArrayList(commandFile);
 
-    if (!isEmpty(tailPatterns)) {
+    if (isNotEmpty(tailPatterns)) {
       cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
       String tailWrapperFileName = "harnesstailwrapper" + DigestUtils.md5Hex(prefix + getName() + activityId);
       String tailWrapperFile = new File(System.getProperty("java.io.tmpdir"), tailWrapperFileName).getAbsolutePath();

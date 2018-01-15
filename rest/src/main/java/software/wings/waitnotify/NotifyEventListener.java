@@ -1,6 +1,7 @@
 package software.wings.waitnotify;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -75,12 +76,12 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     List<String> correlationIds = message.getCorrelationIds();
     final List<String> finalCorrelationIdsForLambda = correlationIds;
 
-    if (!isEmpty(correlationIds)) {
+    if (isNotEmpty(correlationIds)) {
       List<String> missingCorrelationIds = waitQueuesResponse.stream()
                                                .map(WaitQueue::getCorrelationId)
                                                .filter(s -> !finalCorrelationIdsForLambda.contains(s))
                                                .collect(toList());
-      if (!isEmpty(missingCorrelationIds)) {
+      if (isNotEmpty(missingCorrelationIds)) {
         logger.warn("Some of the correlationIds still needs to be waited, waitInstanceId: [{}], correlationIds: {}",
             waitInstanceId, missingCorrelationIds);
         return;

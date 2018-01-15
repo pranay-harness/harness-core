@@ -6,6 +6,7 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Minimum;
 import static com.amazonaws.services.cloudwatch.model.Statistic.SampleCount;
 import static com.amazonaws.services.cloudwatch.model.Statistic.Sum;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -123,7 +124,7 @@ public class CloudWatchState extends State {
     if (contextElement != null) {
       HostElement hostElement = ((InstanceElement) contextElement).getHost();
       String hostName = hostElement.getHostName();
-      if (!isEmpty(hostName)) {
+      if (isNotEmpty(hostName)) {
         String awsInstanceId = awsHelperService.getInstanceId(
             Regions.US_EAST_1, awsConfig.getAccessKey(), awsConfig.getSecretKey(), hostName);
         hostElement.setInstanceId(awsInstanceId);
@@ -147,7 +148,7 @@ public class CloudWatchState extends State {
     getMetricRequest.setNamespace(namespace);
     getMetricRequest.setMetricName(metricName);
     List<String> statistics = asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name());
-    if (!isEmpty(percentile)) {
+    if (isNotEmpty(percentile)) {
       getMetricRequest.setExtendedStatistics(asList(percentile));
     }
     getMetricRequest.setStatistics(statistics);

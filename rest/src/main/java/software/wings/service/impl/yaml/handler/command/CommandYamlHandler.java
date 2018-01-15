@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
@@ -63,7 +63,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(name);
 
-    if (!isEmpty(commandUnitYamlList)) {
+    if (isNotEmpty(commandUnitYamlList)) {
       Node previousGraphNode = null;
 
       for (Yaml commandUnitYaml : commandUnitYamlList) {
@@ -86,7 +86,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         nodeList.add(graphNode);
       }
 
-      if (!isEmpty(linkList)) {
+      if (isNotEmpty(linkList)) {
         graphBuilder.withLinks(linkList);
       }
       graphBuilder.withNodes(nodeList);
@@ -103,7 +103,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     List<String> envNameList = commandYaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = Maps.newHashMap();
-    if (!isEmpty(envNameList)) {
+    if (isNotEmpty(envNameList)) {
       envNameList.stream().forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);
         if (environment != null) {
@@ -172,8 +172,8 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
                                    .filter(entry -> entry.getValue() == null)
                                    .map(entry -> entry.getKey())
                                    .collect(Collectors.toList());
-      if (!isEmpty(envIdList)) {
-        envIdList.stream().forEach(envId -> {
+      if (isNotEmpty(envIdList)) {
+        envIdList.forEach(envId -> {
           Environment environment = environmentService.get(appId, envId, false);
           if (environment != null) {
             envNameList.add(environment.getName());

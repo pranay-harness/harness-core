@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -376,7 +377,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                                                           .addFilter("artifactFiles", EXISTS)
                                                           .build())
                                                   .getResponse();
-        if (!isEmpty(toBeDeletedArtifacts)) {
+        if (isNotEmpty(toBeDeletedArtifacts)) {
           logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
               toBeDeletedArtifacts.size(), appId);
           deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
@@ -388,7 +389,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         /* toBeDeletedArtifacts = wingsPersistence.query(Artifact.class,
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("artifactStreamId", EQ,
          artifactStreamId) .addFilter("status", IN, FAILED, REJECTED, ERROR, ABORTED).build()).getResponse(); if
-         (!isEmpty(toBeDeletedArtifacts)) { logger.info("Deleting failed artifacts for artifactStreamId
+         (isNotEmpty(toBeDeletedArtifacts)) { logger.info("Deleting failed artifacts for artifactStreamId
          {}  of size: {} for appId {}", artifactStreamId, toBeDeletedArtifacts.size(), appId); deleteArtifacts(appId,
          artifactStreamId, toBeDeletedArtifacts); } else { logger.info("ArtifactStreamId {} for the app {} does not have
          failed artifacts to delete", artifactStreamId, appId);

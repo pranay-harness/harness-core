@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -474,7 +474,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           invalidInfraPhaseIds.add(phase.getName());
         }
       }
-      if (!isEmpty(invalidInfraPhaseIds)) {
+      if (isNotEmpty(invalidInfraPhaseIds)) {
         setValid(false);
         setValidationMessage(String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
       }
