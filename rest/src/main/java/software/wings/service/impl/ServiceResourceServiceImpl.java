@@ -634,14 +634,30 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced) {
+    return upsertContainerTask(containerTask, advanced, true);
+  }
+
+  private ContainerTask upsertContainerTask(ContainerTask containerTask, boolean advanced, boolean isCreate) {
     boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
     if (!exist) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exists");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
     }
     ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
+
     if (advanced) {
       return persistedContainerTask.convertToAdvanced();
     }
+
+    String appId = persistedContainerTask.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, persistedContainerTask.getServiceId());
+
+    if (isCreate) {
+      yamlChangeSetHelper.containerTaskYamlChangeAsync(accountId, service, persistedContainerTask, ChangeType.ADD);
+    } else {
+      yamlChangeSetHelper.containerTaskYamlChangeAsync(accountId, service, persistedContainerTask, ChangeType.MODIFY);
+    }
+
     return persistedContainerTask;
   }
 
@@ -652,7 +668,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced) {
-    return createContainerTask(containerTask, advanced);
+    return upsertContainerTask(containerTask, advanced, false);
   }
 
   @Override
@@ -674,7 +690,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       // Disabling advanced validation since it doesn't work when service variable expressions are used.
       // containerTask.validateAdvanced();
     }
-    return createContainerTask(containerTask, false);
+    return upsertContainerTask(containerTask, false, false);
   }
 
   @Override
@@ -866,12 +882,27 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public UserDataSpecification createUserDataSpecification(UserDataSpecification userDataSpecification) {
-    return wingsPersistence.saveAndGet(UserDataSpecification.class, userDataSpecification);
+    return upsertUserDataSpecification(userDataSpecification, true);
+  }
+
+  public UserDataSpecification upsertUserDataSpecification(
+      UserDataSpecification userDataSpecification, boolean isCreate) {
+    UserDataSpecification persistedUserDataSpec =
+        wingsPersistence.saveAndGet(UserDataSpecification.class, userDataSpecification);
+    String appId = persistedUserDataSpec.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, persistedUserDataSpec.getServiceId());
+    if (isCreate) {
+      yamlChangeSetHelper.userDataSpecYamlChangeAsync(accountId, service, persistedUserDataSpec, ChangeType.ADD);
+    } else {
+      yamlChangeSetHelper.userDataSpecYamlChangeAsync(accountId, service, persistedUserDataSpec, ChangeType.MODIFY);
+    }
+    return persistedUserDataSpec;
   }
 
   @Override
   public UserDataSpecification updateUserDataSpecification(UserDataSpecification userDataSpecification) {
-    return createUserDataSpecification(userDataSpecification);
+    return upsertUserDataSpecification(userDataSpecification, false);
   }
 
   @Override
@@ -944,8 +975,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public LambdaSpecification createLambdaSpecification(LambdaSpecification lambdaSpecification) {
-    validateLambdaSpecification(lambdaSpecification);
-    return wingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification);
+    return upsertLambdaSpecification(lambdaSpecification, true);
   }
 
   private void validateLambdaSpecification(LambdaSpecification lambdaSpecification) {
@@ -980,7 +1010,24 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public LambdaSpecification updateLambdaSpecification(LambdaSpecification lambdaSpecification) {
-    return createLambdaSpecification(lambdaSpecification);
+    return upsertLambdaSpecification(lambdaSpecification, false);
+  }
+
+  private LambdaSpecification upsertLambdaSpecification(LambdaSpecification lambdaSpecification, boolean isCreate) {
+    validateLambdaSpecification(lambdaSpecification);
+
+    LambdaSpecification persistedLambdaSpec =
+        wingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification);
+    String appId = persistedLambdaSpec.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, persistedLambdaSpec.getServiceId());
+    if (isCreate) {
+      yamlChangeSetHelper.lamdbaSpecYamlChangeAsync(accountId, service, persistedLambdaSpec, ChangeType.ADD);
+    } else {
+      yamlChangeSetHelper.lamdbaSpecYamlChangeAsync(accountId, service, persistedLambdaSpec, ChangeType.MODIFY);
+    }
+
+    return persistedLambdaSpec;
   }
 
   @Override

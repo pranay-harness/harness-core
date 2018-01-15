@@ -789,6 +789,21 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
+  public String getRootPathByContainerTask(Service service, ContainerTask containerTask) {
+    return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
+  }
+
+  @Override
+  public String getRootPathByLambdaSpec(Service service, LambdaSpecification lambdaSpecification) {
+    return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
+  }
+
+  @Override
+  public String getRootPathByUserDataSpec(Service service, UserDataSpecification userDataSpecification) {
+    return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
+  }
+
+  @Override
   public String getRootPathByConfigFile(Service service) {
     return getRootPathByService(service) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
   }

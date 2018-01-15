@@ -6,20 +6,25 @@ import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -93,6 +98,55 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
     return createGitFileChange(accountId, yamlDirectoryService.getRootPathByServiceCommand(service, serviceCommand),
         serviceCommand.getName(), yaml, changeType, false);
+  }
+
+  @Override
+  public GitFileChange getContainerTaskGitSyncFile(
+      String accountId, Service service, ContainerTask containerTask, ChangeType changeType) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.getContainerTask(accountId, containerTask.getAppId(), containerTask.getUuid())
+                 .getResource()
+                 .getYaml();
+    }
+
+    String name;
+    if (DeploymentType.ECS.name().equals(containerTask.getDeploymentType())) {
+      name = YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
+    } else if (DeploymentType.KUBERNETES.name().equals(containerTask.getDeploymentType())) {
+      name = YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
+    } else {
+      throw new WingsException("UnSupported ContainerTask: " + containerTask.getDeploymentType());
+    }
+
+    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByContainerTask(service, containerTask), name,
+        yaml, changeType, false);
+  }
+
+  @Override
+  public GitFileChange getLamdbaSpecGitSyncFile(
+      String accountId, Service service, LambdaSpecification lambdaSpec, ChangeType changeType) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.getLambdaSpec(accountId, lambdaSpec.getAppId(), lambdaSpec.getUuid())
+                 .getResource()
+                 .getYaml();
+    }
+    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByLambdaSpec(service, lambdaSpec),
+        YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME, yaml, changeType, false);
+  }
+
+  @Override
+  public GitFileChange getUserDataGitSyncFile(
+      String accountId, Service service, UserDataSpecification userDataSpec, ChangeType changeType) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.getUserDataSpec(accountId, userDataSpec.getAppId(), userDataSpec.getUuid())
+                 .getResource()
+                 .getYaml();
+    }
+    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByUserDataSpec(service, userDataSpec),
+        YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME, yaml, changeType, false);
   }
 
   @Override
