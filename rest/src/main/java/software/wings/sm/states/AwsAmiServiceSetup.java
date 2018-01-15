@@ -20,7 +20,6 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import io.fabric8.utils.Lists;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -229,7 +228,7 @@ public class AwsAmiServiceSetup extends State {
 
   private Integer getNewHarnessVersion(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
     Integer harnessRevision = 1;
-    if (CollectionUtils.isNotEmpty(harnessManagedAutoScalingGroups)) {
+    if (isNotEmpty(harnessManagedAutoScalingGroups)) {
       harnessRevision = harnessManagedAutoScalingGroups.stream()
                             .flatMap(autoScalingGroup -> autoScalingGroup.getTags().stream())
                             .filter(tagDescription -> tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG))
@@ -243,7 +242,7 @@ public class AwsAmiServiceSetup extends State {
 
   private String getLastDeployedAsgNameWithNonZeroCapacity(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
     String oldAutoScalingGroupName = null;
-    if (CollectionUtils.isNotEmpty(harnessManagedAutoScalingGroups)) {
+    if (isNotEmpty(harnessManagedAutoScalingGroups)) {
       oldAutoScalingGroupName = harnessManagedAutoScalingGroups.stream()
                                     .filter(hAsg -> hAsg.getDesiredCapacity() != 0)
                                     .findFirst()

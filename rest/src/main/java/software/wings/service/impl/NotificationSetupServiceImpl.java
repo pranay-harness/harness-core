@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -7,7 +8,6 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.NotificationChannelType;
@@ -56,7 +56,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
       if (notificationChannelType.getSettingVariableTypes() != null) {
         List<SettingAttribute> settingAttributes = settingsService.getSettingAttributesByType(
             accountId, notificationChannelType.getSettingVariableTypes().name());
-        if (CollectionUtils.isNotEmpty(settingAttributes)) {
+        if (isNotEmpty(settingAttributes)) {
           supportedChannelTypeDetails.put(notificationChannelType, new Object());
           // Put more details for the given notificationChannelType, else leave it as blank object.
         }

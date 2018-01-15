@@ -15,7 +15,6 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PartitionElement;
@@ -301,7 +300,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
         instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
       } else {
         List<String> instanceIds = serviceInstanceIdsParam.getInstanceIds();
-        if (CollectionUtils.isNotEmpty(instanceIds)) {
+        if (isNotEmpty(instanceIds)) {
           this.instanceIds = instanceIds.toArray(new String[instanceIds.size()]);
         } else {
           pageRequest.addFilter(aSearchFilter().withField(ID_KEY, Operator.IN, emptyList()).build());
@@ -342,7 +341,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       }
     }
 
-    if (CollectionUtils.isNotEmpty(serviceTemplates)) {
+    if (isNotEmpty(serviceTemplates)) {
       pageRequest.withLimit(UNLIMITED).addFilter(
           aSearchFilter()
               .withField(
@@ -387,7 +386,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
             .withLimit(UNLIMITED)
             .addFilter(aSearchFilter().withField("envId", Operator.EQ, envId).build())
             .addOrder(SortOrder.Builder.aSortOrder().withField("createdAt", OrderType.ASC).build());
-    if (CollectionUtils.isNotEmpty(services)) {
+    if (isNotEmpty(services)) {
       pageRequestBuilder.addFilter(
           aSearchFilter()
               .withField("serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray())

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -16,7 +17,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -200,7 +200,7 @@ public class JenkinsState extends State {
     String jobNameExpression = null;
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (CollectionUtils.isNotEmpty(templateExpressions)) {
+    if (isNotEmpty(templateExpressions)) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {
@@ -253,7 +253,7 @@ public class JenkinsState extends State {
     });
 
     Map<String, String> evaluatedFilePathsForAssertion = Maps.newHashMap();
-    if (CollectionUtils.isNotEmpty(filePathsForAssertion)) {
+    if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionMap -> {
         String evaluatedKey;
         try {
@@ -336,11 +336,11 @@ public class JenkinsState extends State {
   public List<String> getPatternsForRequiredContextElementType() {
     List<String> patterns = new ArrayList<>();
     patterns.add(jobName);
-    if (CollectionUtils.isNotEmpty(jobParameters)) {
+    if (isNotEmpty(jobParameters)) {
       jobParameters.forEach(parameterEntry -> patterns.add(parameterEntry.getValue()));
     }
 
-    if (CollectionUtils.isNotEmpty(filePathsForAssertion)) {
+    if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> patterns.add(filePathAssertionEntry.getFilePath()));
     }
     return patterns;

@@ -1,6 +1,7 @@
 package software.wings.dl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.SearchFilter.Operator.AND;
@@ -11,7 +12,6 @@ import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
 import static software.wings.utils.Switch.unhandled;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -163,9 +163,9 @@ public class MongoHelper {
     List<String> fieldsIncluded = req.getFieldsIncluded();
     List<String> fieldsExcluded = req.getFieldsExcluded();
 
-    if (CollectionUtils.isNotEmpty(fieldsIncluded)) {
+    if (isNotEmpty(fieldsIncluded)) {
       query.retrievedFields(true, fieldsIncluded.toArray(new String[] {}));
-    } else if (CollectionUtils.isNotEmpty(fieldsExcluded)) {
+    } else if (isNotEmpty(fieldsExcluded)) {
       query.retrievedFields(false, fieldsExcluded.toArray(new String[] {}));
     }
 

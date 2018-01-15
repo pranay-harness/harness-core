@@ -5,6 +5,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -83,7 +84,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -1526,8 +1526,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     // No need to generate phase steps if it's already created
-    if (CollectionUtils.isNotEmpty(workflowPhase.getPhaseSteps())
-        && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+    if (isNotEmpty(workflowPhase.getPhaseSteps()) && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
       return;
     }

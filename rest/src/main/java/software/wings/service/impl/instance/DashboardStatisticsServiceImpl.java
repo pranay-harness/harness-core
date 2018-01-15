@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
@@ -19,7 +20,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
@@ -654,12 +654,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       EntitySummary infraMappingEntitySummary = null;
       List<ElementExecutionSummary> serviceExecutionSummaries = workflowExecution.getServiceExecutionSummaries();
 
-      if (CollectionUtils.isNotEmpty(serviceExecutionSummaries)) {
+      if (isNotEmpty(serviceExecutionSummaries)) {
         // we always have one execution summary per workflow
         ElementExecutionSummary elementExecutionSummary = serviceExecutionSummaries.get(0);
         instancesCount = elementExecutionSummary.getInstancesCount();
         List<InfraMappingSummary> infraMappingSummaries = elementExecutionSummary.getInfraMappingSummaries();
-        if (CollectionUtils.isNotEmpty(infraMappingSummaries)) {
+        if (isNotEmpty(infraMappingSummaries)) {
           InfraMappingSummary infraMappingSummary = infraMappingSummaries.get(0);
           infraMappingEntitySummary = getEntitySummary(infraMappingSummary.getDisplayName(),
               infraMappingSummary.getInfraMappingId(), EntityType.INFRASTRUCTURE_MAPPING.name());
@@ -747,7 +747,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private Query<Instance> getQuery(List<String> appIds) throws Exception {
     Query query = wingsPersistence.createAuthorizedQuery(Instance.class);
-    if (CollectionUtils.isNotEmpty(appIds)) {
+    if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
     }
 

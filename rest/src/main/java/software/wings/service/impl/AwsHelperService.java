@@ -180,7 +180,6 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
@@ -1105,7 +1104,7 @@ public class AwsHelperService {
     DescribeRepositoriesResult describeRepositoriesResult =
         listRepositories(awsConfig, encryptionDetails, describeRepositoriesRequest, region);
     List<Repository> repositories = describeRepositoriesResult.getRepositories();
-    if (CollectionUtils.isNotEmpty(repositories)) {
+    if (isNotEmpty(repositories)) {
       return repositories.get(0);
     }
     return null;

@@ -86,6 +86,9 @@
             <property name="staticImports" value="java.util.Arrays.asList"/>
             <property name="staticImports" value="io.harness.data.structure.EmptyPredicate.isEmpty"/>
             <property name="staticImports" value="io.harness.data.structure.EmptyPredicate.isNotEmpty"/>
+
+            <property name="staticImports" value="org.apache.commons.lang.StringUtils.isBlank"/>
+            <property name="staticImports" value="org.apache.commons.lang.StringUtils.isNotBlank"/>
         </module>
 
         <!-- ERROR PREVENTION -->

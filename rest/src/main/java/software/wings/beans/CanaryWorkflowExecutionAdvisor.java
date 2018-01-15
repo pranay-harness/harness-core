@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
@@ -17,7 +18,6 @@ import static software.wings.sm.StateType.SUB_WORKFLOW;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -225,7 +225,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         if (stateExecutionDataHistory == null || stateExecutionDataHistory.size() < failureStrategy.getRetryCount()) {
           int waitInterval = 0;
           List<Integer> retryIntervals = failureStrategy.getRetryIntervals();
-          if (CollectionUtils.isNotEmpty(retryIntervals)) {
+          if (isNotEmpty(retryIntervals)) {
             if (isEmpty(stateExecutionDataHistory)) {
               waitInterval = retryIntervals.get(0);
             } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {
@@ -304,8 +304,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
     List<FailureStrategy> filteredFailureStrategies =
         failureStrategies.stream()
-            .filter(
-                f -> CollectionUtils.isNotEmpty(f.getSpecificSteps()) && f.getSpecificSteps().contains(state.getName()))
+            .filter(f -> isNotEmpty(f.getSpecificSteps()) && f.getSpecificSteps().contains(state.getName()))
             .collect(Collectors.toList());
 
     if (filteredFailureStrategies.isEmpty()) {

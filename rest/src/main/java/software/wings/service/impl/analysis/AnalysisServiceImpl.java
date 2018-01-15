@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.utils.Switch.noop;
@@ -8,7 +9,6 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -275,7 +275,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                            .limit(1);
 
       List<LogDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();
-      if (CollectionUtils.isNotEmpty(lastSuccessfulRecords)) {
+      if (isNotEmpty(lastSuccessfulRecords)) {
         return successfulExecution;
       }
     }
@@ -423,7 +423,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     int highRiskClusters = 0;
     int mediumRiskCluster = 0;
     int lowRiskClusters = 0;
-    if (CollectionUtils.isNotEmpty(analysisSummary.getUnknownClusters())) {
+    if (isNotEmpty(analysisSummary.getUnknownClusters())) {
       for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
         if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
           ++highRiskClusters;

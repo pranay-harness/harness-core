@@ -21,7 +21,6 @@ import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -432,7 +431,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
                                          .filter(workflowPhase -> !workflowPhase.validate())
                                          .map(WorkflowPhase::getName)
                                          .collect(toList());
-      if (CollectionUtils.isNotEmpty(invalidChildren)) {
+      if (isNotEmpty(invalidChildren)) {
         setValid(false);
         invalid += invalidChildren.toString();
       }

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -17,7 +18,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.Query;
@@ -384,7 +384,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (!existingFiles.isEmpty() || !newFiles.isEmpty()) {
       logger.info("Config files before overrides [{}]", existingFiles.toString());
       logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
-      if (CollectionUtils.isNotEmpty(newFiles)) {
+      if (isNotEmpty(newFiles)) {
         mergedConfigFiles = concat(newFiles.stream(), existingFiles.stream())
                                 .filter(new TreeSet<>(comparing(ConfigFile::getRelativeFilePath))::add)
                                 .collect(toList());
@@ -402,7 +402,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
       logger.info(
           "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
-      if (CollectionUtils.isNotEmpty(newServiceVariables)) {
+      if (isNotEmpty(newServiceVariables)) {
         mergedServiceSettings = concat(newServiceVariables.stream(), existingServiceVariables.stream())
                                     .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
                                     .collect(toList());

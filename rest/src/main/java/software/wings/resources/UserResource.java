@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -9,7 +10,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.auth.Auth;
 import io.swagger.annotations.Api;
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
@@ -88,7 +88,7 @@ public class UserResource {
     Account account = accountService.get(accountId);
     pageRequest.addFilter("accounts", account, Operator.HAS);
     PageResponse<User> pageResponse = userService.list(pageRequest);
-    if (CollectionUtils.isNotEmpty(pageResponse)) {
+    if (isNotEmpty(pageResponse)) {
       pageResponse.forEach(user -> {
         int i = 0;
         while (i < user.getAccounts().size()) {

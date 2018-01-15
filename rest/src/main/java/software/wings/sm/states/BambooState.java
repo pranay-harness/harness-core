@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.BambooExecutionData.Builder.aBambooExecutionData;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -15,7 +16,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,7 +147,7 @@ public class BambooState extends State {
     String planNameExpression = null;
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (CollectionUtils.isNotEmpty(templateExpressions)) {
+    if (isNotEmpty(templateExpressions)) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {
@@ -182,7 +182,7 @@ public class BambooState extends State {
       evaluatedPlanName = planName;
     }
     List<ParameterEntry> evaluatedParameters = new ArrayList<>();
-    if (CollectionUtils.isNotEmpty(parameters)) {
+    if (isNotEmpty(parameters)) {
       parameters.forEach(parameterEntry -> {
         String evaluatedValue;
         try {
@@ -197,7 +197,7 @@ public class BambooState extends State {
       });
     }
     List<FilePathAssertionEntry> evaluatedFilePathsForAssertion = new ArrayList<>();
-    if (CollectionUtils.isNotEmpty(filePathsForAssertion)) {
+    if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> {
         String evaluatedFilePath = filePathAssertionEntry.getFilePath();
         try {
@@ -274,11 +274,11 @@ public class BambooState extends State {
   public List<String> getPatternsForRequiredContextElementType() {
     List<String> patterns = new ArrayList<>();
     patterns.add(planName);
-    if (CollectionUtils.isNotEmpty(parameters)) {
+    if (isNotEmpty(parameters)) {
       parameters.forEach(parameterEntry -> patterns.add(parameterEntry.getValue()));
     }
 
-    if (CollectionUtils.isNotEmpty(filePathsForAssertion)) {
+    if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> patterns.add(filePathAssertionEntry.getFilePath()));
     }
     return patterns;

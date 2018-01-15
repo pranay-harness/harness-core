@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -10,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
@@ -247,7 +247,7 @@ public class WorkflowPhase implements UuidAware {
                                          .filter(phaseStep -> !phaseStep.validate())
                                          .map(PhaseStep::getName)
                                          .collect(Collectors.toList());
-      if (CollectionUtils.isNotEmpty(invalidChildren)) {
+      if (isNotEmpty(invalidChildren)) {
         valid = false;
         validationMessage = String.format(Constants.PHASE_VALIDATION_MESSAGE, invalidChildren.toString());
       }

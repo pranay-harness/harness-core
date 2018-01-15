@@ -39,7 +39,6 @@ import com.google.inject.name.Named;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.CronScheduleBuilder;
@@ -545,7 +544,7 @@ public class TriggerServiceImpl implements TriggerService {
     } else {
       List<Artifact> artifacts = new ArrayList<>();
       addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
-      if (CollectionUtils.isNotEmpty(artifacts)) {
+      if (isNotEmpty(artifacts)) {
         if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
           triggerExecution(artifacts, trigger);
         } else {
@@ -631,7 +630,7 @@ public class TriggerServiceImpl implements TriggerService {
 
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
-    if (pageResponse != null && CollectionUtils.isNotEmpty(pageResponse.getResponse())) {
+    if (pageResponse != null && isNotEmpty(pageResponse.getResponse())) {
       if (pageResponse.getResponse().get(0).getExecutionArgs() != null) {
         lastDeployedArtifacts = pageResponse.getResponse().get(0).getExecutionArgs().getArtifacts();
         if (lastDeployedArtifacts != null) {

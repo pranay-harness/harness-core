@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -25,7 +26,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -272,7 +272,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       // For each service template id check if it has service or config overrides
       List<ServiceVariable> serviceVariableOverrides = serviceVariableService.getServiceVariablesByTemplate(
           environment.getAppId(), environment.getUuid(), serviceTemplate, true);
-      if (CollectionUtils.isNotEmpty(serviceVariableOverrides)) {
+      if (isNotEmpty(serviceVariableOverrides)) {
         // This service template has at least on service overrides
         includeServiceId = true;
       }
@@ -280,7 +280,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         // For each service template id check if it has service or config overrides
         List<ConfigFile> overrideConfigFiles =
             configService.getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
-        if (CollectionUtils.isNotEmpty(overrideConfigFiles)) {
+        if (isNotEmpty(overrideConfigFiles)) {
           // This service template has at least on service overrides
           includeServiceId = true;
         }
@@ -416,7 +416,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           List<ServiceTemplate> serviceTemplateList =
               serviceTemplateService.list(serviceTemplatePageRequest, false, false);
           ServiceTemplate clonedServiceTemplate = null;
-          if (CollectionUtils.isNotEmpty(serviceTemplateList)) {
+          if (isNotEmpty(serviceTemplateList)) {
             clonedServiceTemplate = serviceTemplateList.get(0);
           }
           if (clonedServiceTemplate == null) {
@@ -518,7 +518,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           List<ServiceTemplate> serviceTemplateList =
               serviceTemplateService.list(serviceTemplatePageRequest, false, false);
           ServiceTemplate clonedServiceTemplate = null;
-          if (CollectionUtils.isNotEmpty(serviceTemplateList)) {
+          if (isNotEmpty(serviceTemplateList)) {
             clonedServiceTemplate = serviceTemplateList.get(0);
           }
           if (clonedServiceTemplate == null) {

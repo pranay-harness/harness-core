@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -27,7 +28,6 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -291,7 +291,7 @@ public class AwsLambdaState extends State {
     Integer timeout = lambdaSpecification.getTimeout();
     String roleArn = infrastructureMapping.getRole();
     List<String> evaluatedAliases = new ArrayList<>();
-    if (CollectionUtils.isNotEmpty(aliases)) {
+    if (isNotEmpty(aliases)) {
       evaluatedAliases = aliases.stream().map(context::renderExpression).collect(Collectors.toList());
     }
 

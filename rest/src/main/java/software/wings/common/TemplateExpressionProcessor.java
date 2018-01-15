@@ -1,6 +1,7 @@
 package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Category;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -8,7 +9,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -95,7 +95,7 @@ public class TemplateExpressionProcessor {
       PageRequest<Service> pageRequest =
           aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("name", EQ, serviceNameOrId).build();
       List<Service> services = serviceResourceService.list(pageRequest, false, false);
-      if (CollectionUtils.isNotEmpty(services)) {
+      if (isNotEmpty(services)) {
         return services.get(0);
       }
       throw new WingsException("Service expression " + templateExpression.getExpression() + " resolved as"

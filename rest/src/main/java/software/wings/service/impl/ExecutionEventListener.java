@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -12,7 +13,6 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
 
       PageResponse<WorkflowExecution> runningWorkflowExecutions =
           wingsPersistence.query(WorkflowExecution.class, pageRequest);
-      if (CollectionUtils.isNotEmpty(runningWorkflowExecutions)) {
+      if (isNotEmpty(runningWorkflowExecutions)) {
         return;
       }
 

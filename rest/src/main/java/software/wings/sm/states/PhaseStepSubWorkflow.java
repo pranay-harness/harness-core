@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
@@ -27,7 +28,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
@@ -252,7 +252,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                    .addFilter("artifactId", EXISTS)
                                    .build());
 
-      if (CollectionUtils.isNotEmpty(pageResponse)) {
+      if (isNotEmpty(pageResponse)) {
         serviceInstanceArtifactParam.getInstanceArtifactMap().put(
             serviceInstanceId, pageResponse.getResponse().get(0).getArtifactId());
       }

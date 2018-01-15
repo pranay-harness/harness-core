@@ -20,6 +20,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.harness</groupId>
+            <artifactId>commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>ro.fortsoft.pf4j</groupId>
             <artifactId>pf4j</artifactId>
         </dependency>

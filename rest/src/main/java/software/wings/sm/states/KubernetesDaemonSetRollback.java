@@ -6,7 +6,6 @@ import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
 import static software.wings.sm.states.KubernetesReplicationControllerSetup.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
@@ -70,7 +69,7 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
       kubernetesContainerTask.getContainerDefinitions()
           .stream()
-          .filter(cd -> CollectionUtils.isNotEmpty(cd.getCommands()))
+          .filter(cd -> isNotEmpty(cd.getCommands()))
           .forEach(cd
               -> cd.setCommands(cd.getCommands().stream().map(context::renderExpression).collect(Collectors.toList())));
     }

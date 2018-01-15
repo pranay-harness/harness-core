@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -9,7 +10,6 @@ import static software.wings.beans.SetupAction.Builder.aSetupAction;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter.Operator;
@@ -119,12 +119,12 @@ public class SetupServiceImpl implements SetupService {
                                              .withLimit("1")
                                              .build();
     PageResponse<WorkflowExecution> res = workflowExecutionService.listExecutions(req, false);
-    if (CollectionUtils.isNotEmpty(res)) {
+    if (isNotEmpty(res)) {
       return null;
     }
     for (Environment env : application.getEnvironments()) {
       List<Host> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
-      if (CollectionUtils.isNotEmpty(hosts)) {
+      if (isNotEmpty(hosts)) {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
             .withDisplayText("Setup complete: you can create a deployment.")

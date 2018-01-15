@@ -1,6 +1,7 @@
 package software.wings.dl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -22,7 +23,6 @@ import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
@@ -427,7 +427,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T> List<T> queryAll(Class<T> cls, PageRequest<T> req) {
     PageResponse<T> res = query(cls, req);
     List<T> ret = new ArrayList<>();
-    while (CollectionUtils.isNotEmpty(res)) {
+    while (isNotEmpty(res)) {
       ret.addAll(res.getResponse());
       req.setOffset(String.valueOf(ret.size()));
       res = query(cls, req);
