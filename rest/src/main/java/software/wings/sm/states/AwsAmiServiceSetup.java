@@ -104,9 +104,6 @@ public class AwsAmiServiceSetup extends State {
     Environment env = workflowStandardParams.getEnv();
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
 
-    UserDataSpecification userDataSpecification =
-        serviceResourceService.getUserDataSpecification(app.getUuid(), serviceId);
-
     AwsAmiInfrastructureMapping infrastructureMapping =
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
@@ -116,50 +113,54 @@ public class AwsAmiServiceSetup extends State {
     String region = infrastructureMapping.getRegion();
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
-    AutoScalingGroup baseAutoScalingGroup = ensureAndGetBaseAutoScalingGroup(
-        infrastructureMapping, encryptionDetails, region, awsConfig, infrastructureMapping.getAutoScalingGroupName());
-
-    LaunchConfiguration baseLaunchConfiguration = ensureAndGetBaseLaunchConfiguration(
-        infrastructureMapping, encryptionDetails, region, awsConfig, baseAutoScalingGroup);
-
-    List<AutoScalingGroup> harnessManagedAutoScalingGroups =
-        awsHelperService.listAutoScalingGroups(awsConfig, encryptionDetails, region)
-            .stream()
-            .filter(autoScalingGroup
-                -> autoScalingGroup.getTags().stream().anyMatch(
-                    tagDescription -> isHarnessManagedTag(infrastructureMapping.getUuid(), tagDescription)))
-            .sorted(Comparator.comparing(AutoScalingGroup::getCreatedTime).reversed())
-            .collect(toList());
-
-    String lastDeployedAsgName = getLastDeployedAsgNameWithNonZeroCapacity(harnessManagedAutoScalingGroups);
-    Integer harnessRevision = getNewHarnessVersion(harnessManagedAutoScalingGroups);
-
-    String asgNamePrefix = isNotEmpty(autoScalingGroupName)
-        ? normalizeExpression(context.renderExpression(autoScalingGroupName))
-        : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
-    String newAutoScalingGroupName = AsgConvention.getAsgName(asgNamePrefix, harnessRevision);
-
-    AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
-                                                       .newAutoScalingGroupName(newAutoScalingGroupName)
-                                                       .oldAutoScalingGroupName(lastDeployedAsgName)
-                                                       .maxInstances(maxInstances)
-                                                       .newVersion(harnessRevision)
-                                                       .resizeStrategy(resizeStrategy)
-                                                       .build();
-
-    AmiServiceSetupElement amiServiceElement =
-        AmiServiceSetupElement.builder()
-            .newAutoScalingGroupName(newAutoScalingGroupName)
-            .oldAutoScalingGroupName(lastDeployedAsgName)
-            .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-            .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
-            .build();
-
+    AwsAmiSetupExecutionData awsAmiExecutionData = null;
+    AmiServiceSetupElement amiServiceElement = null;
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage = null;
 
     try {
+      UserDataSpecification userDataSpecification =
+          serviceResourceService.getUserDataSpecification(app.getUuid(), serviceId);
+
+      AutoScalingGroup baseAutoScalingGroup = ensureAndGetBaseAutoScalingGroup(
+          infrastructureMapping, encryptionDetails, region, awsConfig, infrastructureMapping.getAutoScalingGroupName());
+
+      LaunchConfiguration baseLaunchConfiguration = ensureAndGetBaseLaunchConfiguration(
+          infrastructureMapping, encryptionDetails, region, awsConfig, baseAutoScalingGroup);
+
+      List<AutoScalingGroup> harnessManagedAutoScalingGroups =
+          awsHelperService.listAutoScalingGroups(awsConfig, encryptionDetails, region)
+              .stream()
+              .filter(autoScalingGroup
+                  -> autoScalingGroup.getTags().stream().anyMatch(
+                      tagDescription -> isHarnessManagedTag(infrastructureMapping.getUuid(), tagDescription)))
+              .sorted(Comparator.comparing(AutoScalingGroup::getCreatedTime).reversed())
+              .collect(toList());
+
+      String lastDeployedAsgName = getLastDeployedAsgNameWithNonZeroCapacity(harnessManagedAutoScalingGroups);
+      Integer harnessRevision = getNewHarnessVersion(harnessManagedAutoScalingGroups);
+
+      String asgNamePrefix = isNotEmpty(autoScalingGroupName)
+          ? normalizeExpression(context.renderExpression(autoScalingGroupName))
+          : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
+      String newAutoScalingGroupName = AsgConvention.getAsgName(asgNamePrefix, harnessRevision);
+
+      awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
+                                .newAutoScalingGroupName(newAutoScalingGroupName)
+                                .oldAutoScalingGroupName(lastDeployedAsgName)
+                                .maxInstances(maxInstances)
+                                .newVersion(harnessRevision)
+                                .resizeStrategy(resizeStrategy)
+                                .build();
+
+      amiServiceElement = AmiServiceSetupElement.builder()
+                              .newAutoScalingGroupName(newAutoScalingGroupName)
+                              .oldAutoScalingGroupName(lastDeployedAsgName)
+                              .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+                              .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+                              .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
+                              .build();
+
       if (awsHelperService.getLaunchConfiguration(awsConfig, encryptionDetails, region, newAutoScalingGroupName)
           != null) {
         awsHelperService.deleteLaunchConfig(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
@@ -170,14 +171,13 @@ public class AwsAmiServiceSetup extends State {
       awsHelperService.createAutoScalingGroup(awsConfig, encryptionDetails, region,
           createNewAutoScalingGroupRequest(
               infrastructureMapping, newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision));
+      deleteOldHarnessManagedAutoScalingGroups(encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups,
+          amiServiceElement.getOldAutoScalingGroupName());
     } catch (Exception ex) {
       logger.error("Ami setup step failed with error ", ex);
       executionStatus = ExecutionStatus.FAILED;
       errorMessage = ex.getMessage();
     }
-
-    deleteOldHarnessManagedAutoScalingGroups(encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups,
-        amiServiceElement.getOldAutoScalingGroupName());
 
     return anExecutionResponse()
         .withStateExecutionData(awsAmiExecutionData)
