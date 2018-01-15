@@ -24,4 +24,9 @@ public class KubernetesContainerTaskYamlHandler extends ContainerTaskYamlHandler
   public KubernetesContainerTask get(String accountId, String yamlFilePath) {
     return getContainerTask(accountId, yamlFilePath, DeploymentType.KUBERNETES.name());
   }
+
+  @Override
+  protected KubernetesContainerTask createNewContainerTask() {
+    return new KubernetesContainerTask();
+  }
 }
