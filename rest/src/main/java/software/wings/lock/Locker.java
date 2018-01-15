@@ -11,6 +11,15 @@ public interface Locker {
   /**
    * Acquire lock.
    *
+   * @param name    the lock name
+   * @param timeout for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock acquireLock(String name, Duration timeout);
+
+  /**
+   * Acquire lock.
+   *
    * @param entityClass the entity class
    * @param entityId    the entity id
    * @param timeout     for how long to keep the lock if the app crashes
@@ -27,4 +36,11 @@ public interface Locker {
    * @return true, if successful
    */
   AcquiredLock acquireLock(String entityType, String entityId, Duration timeout);
+
+  /**
+   * Destroy lock.
+   *
+   * @param acquiredLock  already acquired lock
+   */
+  void destroy(AcquiredLock acquiredLock);
 }
