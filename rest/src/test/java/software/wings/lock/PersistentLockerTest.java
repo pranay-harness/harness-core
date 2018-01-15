@@ -8,7 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 
 import com.google.inject.Inject;
 
@@ -113,7 +113,7 @@ public class PersistentLockerTest extends MockTest {
 
     try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MAINTENANCE_JOB);
+      exception.logProcessedMessages(BACKGROUND_JOB);
     }
 
     verify(logger, times(0)).error(any());
@@ -139,7 +139,7 @@ public class PersistentLockerTest extends MockTest {
     try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba", timeout)) {
       Thread.sleep(10);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MAINTENANCE_JOB);
+      exception.logProcessedMessages(BACKGROUND_JOB);
     }
 
     verify(logger).error("The distributed lock abc-cba was not released on time. THIS IS VERY BAD!!!");

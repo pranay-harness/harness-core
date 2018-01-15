@@ -6,7 +6,7 @@ import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.Acuteness.IGNORABLE;
 import static software.wings.beans.ResponseMessage.Acuteness.SERIOUS;
 import static software.wings.exception.WingsException.Scenario.API_CALL;
-import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 
 import io.harness.CategoryTest;
 import io.harness.category.FastUnitTests;
@@ -35,10 +35,10 @@ public class WingsExceptionTest extends CategoryTest {
     assertThat(WingsException.shouldLog(API_CALL, HARMLESS)).isFalse();
     assertThat(WingsException.shouldLog(API_CALL, IGNORABLE)).isTrue();
 
-    assertThat(WingsException.shouldLog(MAINTENANCE_JOB, SERIOUS)).isTrue();
-    assertThat(WingsException.shouldLog(MAINTENANCE_JOB, ALERTING)).isTrue();
-    assertThat(WingsException.shouldLog(MAINTENANCE_JOB, HARMLESS)).isTrue();
-    assertThat(WingsException.shouldLog(MAINTENANCE_JOB, IGNORABLE)).isFalse();
+    assertThat(WingsException.shouldLog(BACKGROUND_JOB, SERIOUS)).isTrue();
+    assertThat(WingsException.shouldLog(BACKGROUND_JOB, ALERTING)).isTrue();
+    assertThat(WingsException.shouldLog(BACKGROUND_JOB, HARMLESS)).isTrue();
+    assertThat(WingsException.shouldLog(BACKGROUND_JOB, IGNORABLE)).isFalse();
   }
 
   @Test
@@ -49,9 +49,9 @@ public class WingsExceptionTest extends CategoryTest {
     assertThat(WingsException.shouldPropagate(API_CALL, HARMLESS)).isTrue();
     assertThat(WingsException.shouldPropagate(API_CALL, IGNORABLE)).isFalse();
 
-    assertThat(WingsException.shouldPropagate(MAINTENANCE_JOB, SERIOUS)).isFalse();
-    assertThat(WingsException.shouldPropagate(MAINTENANCE_JOB, ALERTING)).isFalse();
-    assertThat(WingsException.shouldPropagate(MAINTENANCE_JOB, HARMLESS)).isFalse();
-    assertThat(WingsException.shouldPropagate(MAINTENANCE_JOB, IGNORABLE)).isFalse();
+    assertThat(WingsException.shouldPropagate(BACKGROUND_JOB, SERIOUS)).isFalse();
+    assertThat(WingsException.shouldPropagate(BACKGROUND_JOB, ALERTING)).isFalse();
+    assertThat(WingsException.shouldPropagate(BACKGROUND_JOB, HARMLESS)).isFalse();
+    assertThat(WingsException.shouldPropagate(BACKGROUND_JOB, IGNORABLE)).isFalse();
   }
 }

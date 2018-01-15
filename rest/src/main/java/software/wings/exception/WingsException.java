@@ -169,8 +169,8 @@ public class WingsException extends WingsApiException {
     // API call scenarios is when the execution was made in the context of API call.
     API_CALL,
 
-    // API call scenarios is when the execution was made in the context of API call.
-    MAINTENANCE_JOB,
+    // Scenarios when the execution was in a context of background job.
+    BACKGROUND_JOB,
   }
 
   public static boolean shouldLog(Scenario scenario, Acuteness acuteness) {
@@ -182,7 +182,7 @@ public class WingsException extends WingsApiException {
         switch (scenario) {
           case API_CALL:
             return false;
-          case MAINTENANCE_JOB:
+          case BACKGROUND_JOB:
             return true;
           default:
             unhandled(scenario);
@@ -192,7 +192,7 @@ public class WingsException extends WingsApiException {
         switch (scenario) {
           case API_CALL:
             return true;
-          case MAINTENANCE_JOB:
+          case BACKGROUND_JOB:
             return false;
           default:
             unhandled(scenario);

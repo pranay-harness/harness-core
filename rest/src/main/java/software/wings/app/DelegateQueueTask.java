@@ -3,7 +3,7 @@ package software.wings.app;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.exception.WingsException.Scenario.MAINTENANCE_JOB;
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import com.google.inject.Inject;
@@ -232,7 +232,7 @@ public class DelegateQueueTask implements Runnable {
       }
 
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MAINTENANCE_JOB);
+      exception.logProcessedMessages(BACKGROUND_JOB);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }
