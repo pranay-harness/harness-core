@@ -7,6 +7,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;
@@ -17,6 +18,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
@@ -80,7 +82,8 @@ public class Notifier implements Runnable {
           .forEach(waitInstanceId
               -> notifyQueue.send(
                   aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build()));
-
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(BACKGROUND_JOB);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }
