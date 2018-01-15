@@ -1,13 +1,13 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -64,7 +64,7 @@ public class PhysicalInfraMappingYamlHandler
       String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
-    if (!Misc.isNullOrEmpty(yaml.getLoadBalancer())) {
+    if (isNotBlank(yaml.getLoadBalancer())) {
       bean.setLoadBalancerId(getSettingId(bean.getAccountId(), appId, yaml.getLoadBalancer()));
     } else {
       bean.setLoadBalancerId("");

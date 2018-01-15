@@ -4,9 +4,11 @@
 
 package software.wings.beans;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import com.google.common.base.MoreObjects;
 
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -72,9 +74,9 @@ public class WorkflowExecution extends Base {
    * @return the name
    */
   public String getName() {
-    if (StringUtils.isBlank(name)) {
+    if (isBlank(name)) {
       if (pipelineExecution != null && pipelineExecution.getPipeline() != null
-          && StringUtils.isNotBlank(pipelineExecution.getPipeline().getName())) {
+          && isNotBlank(pipelineExecution.getPipeline().getName())) {
         return pipelineExecution.getPipeline().getName();
       }
       return String.valueOf(workflowType);

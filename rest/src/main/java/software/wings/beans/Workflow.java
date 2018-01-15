@@ -4,11 +4,11 @@
 
 package software.wings.beans;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -194,7 +194,7 @@ public class Workflow extends Base {
   }
 
   public boolean envValid() {
-    return !(Misc.isNullOrEmpty(envId) && !checkEnvironmentTemplatized());
+    return isNotBlank(envId) || checkEnvironmentTemplatized();
   }
 
   public Workflow clone() {

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
@@ -21,7 +22,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -383,7 +383,7 @@ public class HttpState extends State {
       executionData.setAssertionStatement(assertion);
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       boolean assertionStatus = true;
-      if (StringUtils.isNotBlank(assertion)) {
+      if (isNotBlank(assertion)) {
         // check if the request failed
         if (!executionData.getStatus().equals(ExecutionStatus.ERROR)) {
           try {

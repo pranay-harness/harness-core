@@ -1,11 +1,13 @@
 package software.wings.service.impl.elk;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import com.google.inject.Inject;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,11 +49,11 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   @Override
   public boolean validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
-      if (!StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
+      if (isNotBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
         throw new WingsException("User name is given but password is empty");
       }
 
-      if (StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null) {
+      if (isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null) {
         throw new WingsException("User name is empty but password is given");
       }
       if (elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER) {
@@ -180,7 +182,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         .addInterceptor(chain -> {
           Request original = chain.request();
 
-          boolean shouldAuthenticate = !StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null;
+          boolean shouldAuthenticate = isNotBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null;
           boolean isKibana = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER;
           Request.Builder builder = shouldAuthenticate
               ? original.newBuilder()

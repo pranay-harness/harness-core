@@ -3,10 +3,10 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
-import static software.wings.utils.Misc.isNotNullOrEmpty;
 import static software.wings.utils.Misc.normalizeExpression;
 
 import com.google.common.base.Joiner;
@@ -276,29 +276,29 @@ public class AwsAmiServiceSetup extends State {
       }
     }
 
-    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getInstanceType())) {
+    if (isNotBlank(cloneBaseLaunchConfiguration.getInstanceType())) {
       createLaunchConfigurationRequest.setInstanceType(cloneBaseLaunchConfiguration.getInstanceType());
     }
-    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getKernelId())) {
+    if (isNotBlank(cloneBaseLaunchConfiguration.getKernelId())) {
       createLaunchConfigurationRequest.setKernelId(cloneBaseLaunchConfiguration.getKernelId());
     }
 
-    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getRamdiskId())) {
+    if (isNotBlank(cloneBaseLaunchConfiguration.getRamdiskId())) {
       createLaunchConfigurationRequest.setRamdiskId(cloneBaseLaunchConfiguration.getRamdiskId());
     }
     if (cloneBaseLaunchConfiguration.getInstanceMonitoring() != null) {
       createLaunchConfigurationRequest.setInstanceMonitoring(cloneBaseLaunchConfiguration.getInstanceMonitoring());
     }
-    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getSpotPrice())) {
+    if (isNotBlank(cloneBaseLaunchConfiguration.getSpotPrice())) {
       createLaunchConfigurationRequest.setSpotPrice(cloneBaseLaunchConfiguration.getSpotPrice());
     }
-    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getIamInstanceProfile())) {
+    if (isNotBlank(cloneBaseLaunchConfiguration.getIamInstanceProfile())) {
       createLaunchConfigurationRequest.setIamInstanceProfile(cloneBaseLaunchConfiguration.getIamInstanceProfile());
     }
-    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getPlacementTenancy())) {
+    if (isNotBlank(cloneBaseLaunchConfiguration.getPlacementTenancy())) {
       createLaunchConfigurationRequest.setPlacementTenancy(cloneBaseLaunchConfiguration.getPlacementTenancy());
     }
-    if (isNotNullOrEmpty(cloneBaseLaunchConfiguration.getKeyName())) {
+    if (isNotBlank(cloneBaseLaunchConfiguration.getKeyName())) {
       createLaunchConfigurationRequest.setKeyName(cloneBaseLaunchConfiguration.getKeyName());
     }
 
@@ -353,17 +353,17 @@ public class AwsAmiServiceSetup extends State {
       createAutoScalingGroupRequest.setDefaultCooldown(baseAutoScalingGroup.getDefaultCooldown());
     }
 
-    if (isNotNullOrEmpty(baseAutoScalingGroup.getHealthCheckType())) {
+    if (isNotBlank(baseAutoScalingGroup.getHealthCheckType())) {
       createAutoScalingGroupRequest.setHealthCheckType(baseAutoScalingGroup.getHealthCheckType());
     }
     if (baseAutoScalingGroup.getHealthCheckGracePeriod() != null) {
       createAutoScalingGroupRequest.setHealthCheckGracePeriod(baseAutoScalingGroup.getHealthCheckGracePeriod());
     }
-    if (isNotNullOrEmpty(baseAutoScalingGroup.getPlacementGroup())) {
+    if (isNotBlank(baseAutoScalingGroup.getPlacementGroup())) {
       createAutoScalingGroupRequest.setPlacementGroup(baseAutoScalingGroup.getPlacementGroup());
     }
 
-    if (isNotNullOrEmpty(baseAutoScalingGroup.getVPCZoneIdentifier())) {
+    if (isNotBlank(baseAutoScalingGroup.getVPCZoneIdentifier())) {
       createAutoScalingGroupRequest.setVPCZoneIdentifier(baseAutoScalingGroup.getVPCZoneIdentifier());
     }
     return createAutoScalingGroupRequest;
@@ -379,7 +379,7 @@ public class AwsAmiServiceSetup extends State {
               .collect(toList());
       if (emptyHarnessAsgToBeDeleted.size() >= MAX_OLD_ASG_VERSION_TO_KEEP) {
         int startIdx = MAX_OLD_ASG_VERSION_TO_KEEP;
-        if (isNotNullOrEmpty(oldAutoScalingGroupName)) {
+        if (isNotBlank(oldAutoScalingGroupName)) {
           startIdx--; // one is already counted as oldAutoScalingGroup
         }
         emptyHarnessAsgToBeDeleted = emptyHarnessAsgToBeDeleted.subList(startIdx, emptyHarnessAsgToBeDeleted.size());

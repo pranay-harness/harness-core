@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
@@ -9,7 +10,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -40,7 +40,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
   @SchemaIgnore
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    if (StringUtils.isBlank(getSourceName())) {
+    if (isBlank(getSourceName())) {
       return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
     }
     return String.format("%s_%s_%s", getJobname(), buildNo, getDateFormat().format(new Date()));

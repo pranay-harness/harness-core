@@ -1,7 +1,7 @@
 package software.wings.licensing;
 
 import static java.util.Arrays.stream;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -20,7 +20,7 @@ public class LicenseInterceptor implements MethodInterceptor {
   public Object invoke(MethodInvocation invocation) throws Throwable {
     String licenseKey = extractLicenseKey(invocation.getMethod().getParameterAnnotations(), invocation.getArguments());
     String operation = invocation.getMethod().getName();
-    if (!isBlank(licenseKey)) {
+    if (isNotBlank(licenseKey)) {
       licenseManager.validateLicense(licenseKey, operation);
     }
     return invocation.proceed();

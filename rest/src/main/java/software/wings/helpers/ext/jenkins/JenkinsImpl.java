@@ -3,6 +3,7 @@ package software.wings.helpers.ext.jenkins;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -203,7 +204,7 @@ public class JenkinsImpl implements Jenkins {
     try {
       Stack<Job> jobs = new Stack<>();
       Queue<Future> futures = new ConcurrentLinkedQueue<>();
-      if (Misc.isNullOrEmpty(parentJob)) {
+      if (isBlank(parentJob)) {
         return jenkinsServer.getJobs()
             .values()
             .stream()

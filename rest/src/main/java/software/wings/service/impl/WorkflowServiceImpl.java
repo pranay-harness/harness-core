@@ -85,7 +85,6 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -179,7 +178,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -2069,13 +2067,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Graph.Node.Builder node =
         aNode().withId(getUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
     if (MapUtils.isNotEmpty(stateDefaults)) {
-      if (!Misc.isNullOrEmpty(stateDefaults.get("bucket"))) {
+      if (isNotBlank(stateDefaults.get("bucket"))) {
         node.addProperty("bucket", stateDefaults.get("bucket"));
       }
-      if (!Misc.isNullOrEmpty(stateDefaults.get("key"))) {
+      if (isNotBlank(stateDefaults.get("key"))) {
         node.addProperty("key", stateDefaults.get("key"));
       }
-      if (!Misc.isNullOrEmpty(stateDefaults.get("bundleType"))) {
+      if (isNotBlank(stateDefaults.get("bundleType"))) {
         node.addProperty("bundleType", stateDefaults.get("bundleType"));
       }
     }
@@ -2233,9 +2231,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private boolean attachElbSteps(InfrastructureMapping infrastructureMapping) {
     return (infrastructureMapping instanceof PhysicalInfrastructureMapping
-               && StringUtils.isNotBlank(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId()))
+               && isNotBlank(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId()))
         || (infrastructureMapping instanceof AwsInfrastructureMapping
-               && StringUtils.isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
+               && isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
   }
 
   private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase) {

@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -15,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PartitionElement;
@@ -430,7 +430,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   private List<Service> getServices(String appId) {
-    if (!StringUtils.isBlank(serviceName)) {
+    if (isNotBlank(serviceName)) {
       PageRequest<Service> svcPageRequest =
           aPageRequest()
               .withLimit(UNLIMITED)

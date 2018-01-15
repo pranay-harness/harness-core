@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -28,7 +29,6 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -223,7 +223,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void validateExternalServiceToken(String accountId, String externalServiceToken) {
     String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
-    if (StringUtils.isBlank(jwtExternalServiceSecret)) {
+    if (isBlank(jwtExternalServiceSecret)) {
       throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
     }
     try {

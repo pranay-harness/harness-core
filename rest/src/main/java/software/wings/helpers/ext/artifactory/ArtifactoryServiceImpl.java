@@ -2,6 +2,8 @@ package software.wings.helpers.ext.artifactory;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.JSON;
@@ -27,7 +29,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import groovyx.net.http.HttpResponseException;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.http.HttpHost;
@@ -253,7 +254,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     try {
       String aclQuery = "api/search/aql";
       String requestBody;
-      if (!StringUtils.isBlank(artifactPath)) {
+      if (isNotBlank(artifactPath)) {
         if (artifactPath.startsWith("/")) {
           artifactPath = artifactPath.substring(1);
         }
@@ -340,7 +341,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
     List<FolderPath> folderPaths;
     try {
-      if (!StringUtils.isBlank(artifactPath)) {
+      if (isNotBlank(artifactPath)) {
         if (artifactPath.startsWith("/")) {
           artifactPath = artifactPath.substring(1);
         }
@@ -590,14 +591,14 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                  .artifactId(artifactId)
                                  .repositories(repoId)
                                  .doRawSearch();
-      if (StringUtils.isBlank(latestVersion)) {
+      if (isBlank(latestVersion)) {
         // Fetch all the versions
         logger.info("No latest release or integration version found for artifactory server ["
             + artifactoryConfig.getArtifactoryUrl() + "] repoId [" + repoId + "] groupId [" + groupId + "] artifactId ["
             + artifactId + "]");
         logger.info("Retrieving all versions to find the latest version ");
         BuildDetails buildDetails = getLatestSnapshotVersion(artifactory, repoId, groupId, artifactId);
-        if (buildDetails == null || StringUtils.isBlank(buildDetails.getNumber())) {
+        if (buildDetails == null || isBlank(buildDetails.getNumber())) {
           latestVersion = null;
         } else {
           logger.info("Latest integration version {} found", buildDetails.getNumber());
@@ -775,7 +776,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       String repoType, String artifactPath, String repositoryType) {
     logger.info(
         "Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repoType, repositoryType);
-    if (StringUtils.isBlank(artifactPath)) {
+    if (isBlank(artifactPath)) {
       prepareAndThrowException("Artifact Pattern  can not be empty");
     }
     List<BuildDetails> filePaths = null;
@@ -883,11 +884,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     try {
       ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
       builder.setUrl(getBaseUrl(artifactoryConfig));
-      if (StringUtils.isBlank(artifactoryConfig.getUsername())) {
+      if (isBlank(artifactoryConfig.getUsername())) {
         logger.info("Username is not set for artifactory config {} . Will use anonymous access.",
             artifactoryConfig.getArtifactoryUrl());
-      } else if (artifactoryConfig.getPassword() == null
-          || StringUtils.isBlank(new String(artifactoryConfig.getPassword()))) {
+      } else if (artifactoryConfig.getPassword() == null || isBlank(new String(artifactoryConfig.getPassword()))) {
         logger.info("Username is set. However no password set for artifactory config {}",
             artifactoryConfig.getArtifactoryUrl());
         builder.setUsername(artifactoryConfig.getUsername());

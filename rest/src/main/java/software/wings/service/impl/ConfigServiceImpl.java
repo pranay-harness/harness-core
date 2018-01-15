@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -17,7 +18,6 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
@@ -141,7 +141,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   private void updateParentForEncryptedData(ConfigFile configFile) {
-    if (!StringUtils.isBlank(configFile.getEncryptedFileId())) {
+    if (isNotBlank(configFile.getEncryptedFileId())) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
       encryptedData.addParent(configFile.getUuid());
       wingsPersistence.save(encryptedData);
@@ -266,7 +266,7 @@ public class ConfigServiceImpl implements ConfigService {
   private File getDecryptedFile(ConfigFile configFile, File file, String appId, String activityId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
     Preconditions.checkNotNull(encryptedData);
-    if (!StringUtils.isBlank(activityId)) {
+    if (isNotBlank(activityId)) {
       Activity activity = activityService.get(activityId, appId);
       Preconditions.checkNotNull(activity, "Could not find activity " + activityId + " for app " + appId);
       SecretUsageLog secretUsageLog = SecretUsageLog.builder()
@@ -316,7 +316,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
     updateMap.put("encrypted", inputConfigFile.isEncrypted());
 
-    if (!StringUtils.isBlank(fileId)) {
+    if (isNotBlank(fileId)) {
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
           inputConfigFile.getUuid(), savedConfigFile.getEntityId(), inputConfigFile.getFileName(), ChangeType.UPDATED,
           inputConfigFile.getNotes());

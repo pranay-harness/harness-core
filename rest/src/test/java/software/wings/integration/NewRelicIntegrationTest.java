@@ -3,6 +3,7 @@ package software.wings.integration;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -17,7 +18,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
@@ -120,7 +120,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     for (NewRelicApplication app : restResponse.getResource()) {
       assertTrue(app.getId() > 0);
-      assertFalse(StringUtils.isBlank(app.getName()));
+      assertFalse(isBlank(app.getName()));
     }
   }
 

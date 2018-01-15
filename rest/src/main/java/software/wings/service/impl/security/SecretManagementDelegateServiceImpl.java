@@ -1,5 +1,7 @@
 package software.wings.service.impl.security;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
@@ -8,7 +10,6 @@ import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -139,7 +140,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           .kmsId(vaultConfig.getUuid())
           .build();
     }
-    if (savedEncryptedData != null && !StringUtils.isBlank(value)) {
+    if (savedEncryptedData != null && isNotBlank(value)) {
       getVaultRestClient(vaultConfig)
           .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey())
           .execute();

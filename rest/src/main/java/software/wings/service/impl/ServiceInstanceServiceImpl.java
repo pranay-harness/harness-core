@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
@@ -142,7 +142,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                        .equal(activity.getServiceInstanceId());
     UpdateOperations<ServiceInstance> operations = wingsPersistence.createUpdateOperations(ServiceInstance.class);
 
-    if (!isNullOrEmpty(activity.getArtifactId())) {
+    if (isNotBlank(activity.getArtifactId())) {
       operations.set("artifactId", activity.getArtifactId())
           .set("artifactName", activity.getArtifactName())
           .set("artifactStreamId", activity.getArtifactStreamId())
@@ -157,7 +157,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
         .set("commandType", activity.getCommandType())
         .set("lastActivityCreatedAt", activity.getCreatedAt());
 
-    if (activity.getType() == Type.Command && !isNullOrEmpty(activity.getArtifactId())) {
+    if (activity.getType() == Type.Command && isNotBlank(activity.getArtifactId())) {
       operations.set("lastDeployedOn", activity.getLastUpdatedAt());
     }
     wingsPersistence.update(query, operations);

@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -21,7 +22,6 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -236,8 +236,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
       int i = 0;
       for (WorkflowPhase workflowPhase : workflowPhases) {
-        if (StringUtils.isBlank(workflowPhase.getName())
-            || phaseNamePattern.matcher(workflowPhase.getName()).matches()) {
+        if (isBlank(workflowPhase.getName()) || phaseNamePattern.matcher(workflowPhase.getName()).matches()) {
           workflowPhase.setName(PHASE_NAME_PREFIX + ++i);
         }
         workflowPhaseIds.add(workflowPhase.getUuid());

@@ -1,5 +1,7 @@
 package software.wings.integration.migration;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
@@ -14,7 +16,6 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -164,12 +165,12 @@ public class SecretMigrationUtil extends WingsBaseTest {
       String uuId = (String) next.get("_id");
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
       String parentId = (String) next.get("parentId");
-      if (!StringUtils.isBlank(parentId)) {
+      if (isNotBlank(parentId)) {
         encryptedData.addParent(parentId);
       }
       String kmsId = (String) next.get("kmsId");
       SettingVariableTypes type = SettingVariableTypes.valueOf((String) next.get("type"));
-      if (StringUtils.isBlank(kmsId) || type == SettingVariableTypes.KMS) {
+      if (isBlank(kmsId) || type == SettingVariableTypes.KMS) {
         encryptedData.setEncryptionType(EncryptionType.LOCAL);
       } else {
         encryptedData.setEncryptionType(EncryptionType.KMS);
@@ -191,7 +192,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
 
     int updated = 0;
     for (EncryptedData encryptedData : encryptedDataRecords) {
-      if (StringUtils.isBlank(encryptedData.getName())) {
+      if (isBlank(encryptedData.getName())) {
         encryptedData.setName(UUID.randomUUID().toString());
         //        wingsPersistence.save(encryptedData);
         updated++;
@@ -333,7 +334,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       System.out.println("Processing " + settingAttribute.getUuid());
 
       SmtpConfig config = (SmtpConfig) value;
-      if (StringUtils.isBlank(config.getEncryptedPassword())) {
+      if (isBlank(config.getEncryptedPassword())) {
         System.out.println("-------- Found value to be migrated ----------");
       } else {
         System.out.println("All good, continuing");

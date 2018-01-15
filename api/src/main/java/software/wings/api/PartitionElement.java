@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package software.wings.api;
 
 import org.apache.commons.collections.CollectionUtils;

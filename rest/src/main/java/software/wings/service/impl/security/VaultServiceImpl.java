@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
@@ -11,7 +12,6 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
@@ -139,7 +139,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     EncryptedData encryptedData =
         kmsService.encrypt(vaultConfig.getAuthToken().toCharArray(), accountId, kmsService.getSecretConfig(accountId));
-    if (!StringUtils.isBlank(vaultConfig.getUuid())) {
+    if (isNotBlank(vaultConfig.getUuid())) {
       EncryptedData savedEncryptedData = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid()).getAuthToken());
       Preconditions.checkNotNull(savedEncryptedData, "reference is null for " + vaultConfig.getUuid());

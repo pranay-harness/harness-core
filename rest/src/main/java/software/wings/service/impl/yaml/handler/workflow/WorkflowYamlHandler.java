@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import static software.wings.utils.Misc.isNullOrEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -299,7 +299,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
   protected void toYaml(Y yaml, Workflow workflow, String appId) {
     // Environment can be null in case of incomplete cloned workflows
     String envName = null;
-    if (!isNullOrEmpty(workflow.getEnvId())) {
+    if (isNotBlank(workflow.getEnvId())) {
       Environment environment = environmentService.get(appId, workflow.getEnvId(), false);
       envName = environment != null ? environment.getName() : null;
     }

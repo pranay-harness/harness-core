@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
@@ -9,7 +10,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -58,7 +58,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   @SchemaIgnore
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    if (StringUtils.isBlank(getImageName())) {
+    if (isBlank(getImageName())) {
       return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
     }
     return String.format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, getDateFormat().format(new Date()));
@@ -179,7 +179,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   public String generateSourceName() {
     StringBuilder builder = new StringBuilder(getJobname());
     builder.append('/');
-    if (StringUtils.isBlank(getImageName())) {
+    if (isBlank(getImageName())) {
       builder.append(getArtifactPattern());
     } else {
       builder.append(getImageName());

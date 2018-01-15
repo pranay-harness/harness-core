@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -20,7 +21,6 @@ import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -332,13 +332,13 @@ public class AwsCodeDeployState extends State {
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
     if (!isRollback()) {
-      if (StringUtils.isBlank(bucket)) {
+      if (isBlank(bucket)) {
         invalidFields.put("bucket", "Bucket should not be empty");
       }
-      if (StringUtils.isBlank(key)) {
+      if (isBlank(key)) {
         invalidFields.put("key", "Key should not be empty");
       }
-      if (StringUtils.isBlank(bundleType)) {
+      if (isBlank(bundleType)) {
         invalidFields.put("bundleType", "Bundle Type should not be empty");
       }
     }

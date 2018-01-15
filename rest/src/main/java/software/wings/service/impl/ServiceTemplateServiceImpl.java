@@ -1,11 +1,11 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -184,7 +184,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                                .equal(appId)
                                                .field("serviceId")
                                                .equal(serviceId);
-    if (!isNullOrEmpty(envId)) {
+    if (isNotBlank(envId)) {
       templateQuery.field("envId").equal(envId);
     }
     return templateQuery.asKeyList();

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.base.Preconditions;
@@ -10,7 +11,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.api.CanaryWorkflowStandardParams;
@@ -85,7 +85,7 @@ public abstract class AbstractAnalysisState extends State {
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
-    if (StringUtils.isBlank(timeDuration)) {
+    if (isBlank(timeDuration)) {
       return String.valueOf(15);
     }
     return timeDuration;

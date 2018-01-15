@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 
@@ -9,7 +10,6 @@ import com.google.inject.Singleton;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -27,10 +27,9 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
 
   @Override
   public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
-    SortedSet<String> expressions = new TreeSet<>();
     Workflow workflow = workflowService.readWorkflow(appId, entityId);
-    expressions.addAll(getWorkflowVariableExpressions(workflow));
-    if (!Misc.isNullOrEmpty(serviceId) && !serviceId.equalsIgnoreCase("All")) {
+    SortedSet<String> expressions = new TreeSet<>(getWorkflowVariableExpressions(workflow));
+    if (isNotBlank(serviceId) && !serviceId.equalsIgnoreCase("All")) {
       expressions.addAll(getExpressions(appId, entityId, serviceId));
     } else {
       expressions.addAll(getExpressions(appId, entityId));

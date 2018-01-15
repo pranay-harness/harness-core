@@ -5,6 +5,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ForkElement.Builder.aForkElement;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -13,7 +14,6 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
@@ -286,7 +286,7 @@ public class StateMachineExecutionSimulator {
 
   private String getKeyName(String parentPath, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getContextElement() == null
-        || StringUtils.isBlank(stateExecutionInstance.getContextElement().getName())) {
+        || isBlank(stateExecutionInstance.getContextElement().getName())) {
       return parentPath + "__" + stateExecutionInstance.getStateName();
     } else {
       return parentPath + "__" + stateExecutionInstance.getContextElement().getName() + "__"

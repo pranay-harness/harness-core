@@ -1,10 +1,10 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
   public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (StringUtils.isBlank(comparisonStrategy)) {
+    if (isBlank(comparisonStrategy)) {
       return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
@@ -63,7 +63,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
-    if (StringUtils.isBlank(timeDuration)) {
+    if (isBlank(timeDuration)) {
       return String.valueOf(15);
     }
     return timeDuration;
@@ -73,7 +73,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Failure Criteria")
   @DefaultValue("LOW")
   public AnalysisTolerance getAnalysisTolerance() {
-    if (StringUtils.isBlank(tolerance)) {
+    if (isBlank(tolerance)) {
       return AnalysisTolerance.LOW;
     }
     return AnalysisTolerance.valueOf(tolerance);
