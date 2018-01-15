@@ -14,7 +14,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -50,13 +49,14 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     containerTask.setAdvancedType(advancedType);
 
     // container definition
-    if (yaml.getContainerDefinition() != null) {
-      BaseYamlHandler containerDefYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
+    if (yaml.getAdvancedConfig() == null && yaml.getContainerDefinition() != null) {
+      ContainerDefinitionYamlHandler containerDefYamlHandler =
+          (ContainerDefinitionYamlHandler) yamlHandlerFactory.getYamlHandler(
+              YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
       try {
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, yaml.getContainerDefinition());
         ContainerDefinition containerDefinition =
-            (ContainerDefinition) containerDefYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+            containerDefYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
         containerTask.setContainerDefinitions(asList(containerDefinition));
       } catch (HarnessException e) {
         throw new WingsException(e);
@@ -74,15 +74,18 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     yaml.setAdvancedType(advancedType);
     yaml.setType(bean.getDeploymentType());
 
-    // container definition
-    BaseYamlHandler containerDefYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
-    List<ContainerDefinition> containerDefinitions = bean.getContainerDefinitions();
-    if (isNotEmpty(containerDefinitions)) {
-      ContainerDefinition containerDefinition = containerDefinitions.get(0);
-      ContainerDefinition.Yaml containerDefYaml =
-          (ContainerDefinition.Yaml) containerDefYamlHandler.toYaml(containerDefinition, bean.getAppId());
-      yaml.setContainerDefinition(containerDefYaml);
+    if (bean.getAdvancedConfig() == null) {
+      // container definition
+      ContainerDefinitionYamlHandler containerDefYamlHandler =
+          (ContainerDefinitionYamlHandler) yamlHandlerFactory.getYamlHandler(
+              YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
+      List<ContainerDefinition> containerDefinitions = bean.getContainerDefinitions();
+      if (isNotEmpty(containerDefinitions)) {
+        ContainerDefinition containerDefinition = containerDefinitions.get(0);
+        ContainerDefinition.Yaml containerDefYaml =
+            containerDefYamlHandler.toYaml(containerDefinition, bean.getAppId());
+        yaml.setContainerDefinition(containerDefYaml);
+      }
     }
   }
 
