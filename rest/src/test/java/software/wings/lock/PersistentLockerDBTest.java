@@ -1,5 +1,6 @@
 package software.wings.lock;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -11,6 +12,7 @@ import com.mongodb.DBObject;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 
 import java.time.Duration;
 
@@ -32,9 +34,15 @@ public class PersistentLockerDBTest extends WingsBaseTest {
     DBObject dbLock = wingsPersistence.getCollection("locks").findOne(filter);
     assertNotNull(dbLock);
 
+    boolean damage = false;
     try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
       persistentLocker.destroy(lock);
+      damage = true;
+    } catch (WingsException exception) {
+      // Do nothing. This is just to suppress the exception
     }
+
+    assertFalse(damage);
 
     dbLock = wingsPersistence.getCollection("locks").findOne(filter);
     assertNull(dbLock);
