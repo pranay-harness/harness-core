@@ -57,6 +57,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -92,6 +93,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -609,13 +611,15 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
     LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
-    activeCounts.put("rc-name.1", 2);
-    activeCounts.put("rc-name.2", 3);
-    when(containerService.getActiveServiceCounts(any())).thenReturn(activeCounts);
+    activeCounts.put("app-name.service-name.env-name.1", 2);
+    activeCounts.put("app-name.service-name.env-name.2", 3);
+    ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
+    when(containerService.getActiveServiceCounts(captor.capture())).thenReturn(activeCounts);
 
     String result = infrastructureMappingService.getContainerRunningInstances(
         APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
     assertThat(result).isEqualTo("5");
+    assertThat(captor.getValue().getContainerServiceName()).isEqualTo("app-name.service-name.env-name.0");
   }
 
   @Test
@@ -641,13 +645,15 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
     LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
-    activeCounts.put("rc-name.1", 2);
-    activeCounts.put("rc-name.2", 3);
-    when(containerService.getActiveServiceCounts(any())).thenReturn(activeCounts);
+    activeCounts.put("app-name.service-name.env-name.1", 2);
+    activeCounts.put("app-name.service-name.env-name.2", 3);
+    ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
+    when(containerService.getActiveServiceCounts(captor.capture())).thenReturn(activeCounts);
 
     String result = infrastructureMappingService.getContainerRunningInstances(
         APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
     assertThat(result).isEqualTo("5");
+    assertThat(captor.getValue().getContainerServiceName()).isEqualTo("app-name.service-name.env-name.0");
   }
 
   @Test
@@ -672,12 +678,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
     LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
-    activeCounts.put("task__name__1", 2);
-    activeCounts.put("task__name__2", 3);
-    when(containerService.getActiveServiceCounts(any())).thenReturn(activeCounts);
+    activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__1", 2);
+    activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__2", 3);
+    ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
+    when(containerService.getActiveServiceCounts(captor.capture())).thenReturn(activeCounts);
 
     String result = infrastructureMappingService.getContainerRunningInstances(
-        APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
+        APP_ID, INFRA_MAPPING_ID, "${app.name}__${service.name}__${env.name}");
     assertThat(result).isEqualTo("5");
+    assertThat(captor.getValue().getContainerServiceName()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME__0");
   }
 }
