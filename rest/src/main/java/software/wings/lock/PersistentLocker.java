@@ -53,10 +53,13 @@ public class PersistentLocker implements Locker {
 
   @Override
   public void destroy(AcquiredLock acquiredLock) {
+    String name = acquiredLock.getLock().getName();
     // NOTE: DistributedLockSvc destroy does not work. Also it expects the lock to not be acquired which
     //       is design flow. The only safe moment to destroy lock is, when you currently have it acquired.
-    final BasicDBObject filter = new BasicDBObject().append("_id", acquiredLock.getLock().getName());
+    final BasicDBObject filter = new BasicDBObject().append("_id", name);
     wingsPersistence.getCollection("locks").remove(filter);
     acquiredLock.release();
+    throw new WingsException(aResponseMessage().code(GENERAL_ERROR).acuteness(IGNORABLE).build())
+        .addParam("args", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));
   }
 }

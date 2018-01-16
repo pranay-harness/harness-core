@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -15,6 +17,7 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
@@ -28,7 +31,7 @@ public class PersistentLockCleanupJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(PersistentLockCleanupJob.class);
 
   public static final String NAME = "MAINTENANCE";
-  public static final String GROUP = "PERSISTENT_LOCK_RON_GROUP";
+  public static final String GROUP = "PERSISTENT_LOCK_CRON_GROUP";
   private static final int POLL_INTERVAL = 60 * 60;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -60,7 +63,7 @@ public class PersistentLockCleanupJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(1))) {
       Calendar date = Calendar.getInstance();
-      date.add(Calendar.HOUR, 24);
+      date.add(Calendar.HOUR, 7 * 24);
 
       final DBCursor locks = queryOldLocks(date);
 
@@ -74,8 +77,15 @@ public class PersistentLockCleanupJob implements Job {
 
         try (AcquiredLock lk = persistentLocker.acquireLock(object.toString(), Duration.ofSeconds(10))) {
           persistentLocker.destroy(lk);
+        } catch (WingsException exception) {
+          // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
+          // next one.
         }
       }
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(BACKGROUND_JOB);
+    } catch (Exception exception) {
+      logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }
   }
 }
