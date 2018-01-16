@@ -15,12 +15,12 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
-import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;

@@ -81,6 +81,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -106,7 +107,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.EcsConvention;
-import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
@@ -1118,7 +1118,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       namespace = directInfraMapping.getNamespace();
       containerServiceName =
           (isNotBlank(serviceNameExpression)
-                  ? KubernetesConvention.normalize(evaluator.merge(serviceNameExpression, context))
+                  ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
                   : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
           + KubernetesConvention.DOT + "0";
     } else {
@@ -1128,13 +1128,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
         containerServiceName =
             (isNotBlank(serviceNameExpression)
-                    ? KubernetesConvention.normalize(evaluator.merge(serviceNameExpression, context))
+                    ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
                     : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
             + KubernetesConvention.DOT + "0";
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
         containerServiceName = (isNotBlank(serviceNameExpression)
-                                       ? Misc.normalizeExpression(evaluator.merge(serviceNameExpression, context))
+                                       ? Misc.normalizeExpression(evaluator.substitute(serviceNameExpression, context))
                                        : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName()))
             + EcsConvention.DELIMITER + "0";
       }

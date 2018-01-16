@@ -28,11 +28,11 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -295,7 +295,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private String renderExpression(String expression, Map<String, Object> context) {
-    return evaluator.merge(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
+    return evaluator.substitute(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {

@@ -2,9 +2,10 @@
  *
  */
 
-package software.wings.utils;
+package software.wings.expression;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
@@ -41,37 +42,72 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   Person sam = Person.builder().age(20).address(Address.builder().city("San Francisco").build()).build();
   Person bob = Person.builder().age(40).address(Address.builder().city("New York").build()).build();
 
-  /**
-   * Should evaluate host url.
-   */
+  Map<String, Object> persons = new HashMap<String, Object>() {
+    {
+      put("sam", sam);
+      put("bob", bob);
+    }
+  };
+
+  @Test
+  public void testNormalizeExpression() {
+    assertThat(expressionEvaluator.normalizeExpression("address.city.length()", persons, "bob"))
+        .isEqualTo("address.city.length()");
+    assertThat(expressionEvaluator.normalizeExpression("${sam.address.city.length()}", persons, "bob"))
+        .isEqualTo("sam.address.city.length()");
+    assertThat(expressionEvaluator.normalizeExpression("${address.city.length()}", persons, "bob"))
+        .isEqualTo("bob.address.city.length()");
+  }
+
   @Test
   public void shouldEvaluateHostUrl() {
-    String expression = "http://${host.hostName}:8080/health/status";
     Host host = new Host();
     host.setHostName("app123.application.com");
     Map<String, Object> context = new HashMap<>();
     context.put("host", host);
-    String retValue = expressionEvaluator.merge(expression, context);
+
+    String retValue = expressionEvaluator.substitute("http://${host.hostName}:8080/health/status", context);
     assertThat(retValue).isEqualTo("http://app123.application.com:8080/health/status");
   }
 
-  /**
-   * Should evaluate host url.
-   */
   @Test
   public void shouldEvaluatePartially() {
-    String expression = "http://${host.hostName}:${PORT}/health/status";
     Host host = new Host();
     host.setHostName("${HOST}.$DOMAIN.${COM}");
     Map<String, Object> context = new HashMap<>();
     context.put("host", host);
-    String retValue = expressionEvaluator.merge(expression, context);
+    String retValue = expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context);
     assertThat(retValue).isEqualTo("http://${HOST}.$DOMAIN.${COM}:${PORT}/health/status");
   }
 
-  /**
-   * Should evaluate with name value.
-   */
+  @Test
+  public void shouldEvaluateRecursively() {
+    Host host = new Host();
+    host.setHostName("${HOST}.$DOMAIN.${COM}");
+    Map<String, Object> context = new HashMap<String, Object>() {
+      {
+        put("host", host);
+        put("COM", "io");
+      }
+    };
+    String retValue = expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context);
+    assertThat(retValue).isEqualTo("http://${HOST}.$DOMAIN.io:${PORT}/health/status");
+  }
+
+  @Test
+  public void shouldNotHangForCircle() {
+    Host host = new Host();
+    host.setHostName("${HOST}.$DOMAIN.${COM}");
+    Map<String, Object> context = new HashMap<String, Object>() {
+      {
+        put("host", host);
+        put("COM", "${host.hostName}");
+      }
+    };
+    assertThatThrownBy(() -> expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
   @Test
   public void shouldEvaluateWithNameValue() {
     String expr = "sam.age < 25 && sam.address.city=='San Francisco'";
@@ -93,33 +129,29 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     assertThat(retValue).isEqualTo("San Francisco");
   }
 
-  /**
-   * Should evaluate with map.
-   */
   @Test
   public void shouldEvaluateWithMap() {
     String expr = "sam.age < bob.age && sam.address.city.length()>bob.address.city.length()";
-    Map<String, Object> map = new HashMap<>();
-    map.put("sam", sam);
-    map.put("bob", bob);
-    Object retValue = expressionEvaluator.evaluate(expr, map);
+    Object retValue = expressionEvaluator.evaluate(expr, persons);
     assertThat(retValue).isNotNull();
     assertThat(retValue).isInstanceOf(Boolean.class);
     assertThat(retValue).isEqualTo(true);
   }
 
-  /**
-   * Should evaluate with default prefix.
-   */
   @Test
   public void shouldEvaluateWithDefaultPrefix() {
     String expr = "sam.age < bob.age && sam.address.city.length() > ${address.city.length()}";
-    Map<String, Object> map = new HashMap<>();
-    map.put("sam", sam);
-    map.put("bob", bob);
-    Object retValue = expressionEvaluator.evaluate(expr, map, "bob");
+    Object retValue = expressionEvaluator.evaluate(expr, persons, "bob");
     assertThat(retValue).isNotNull();
     assertThat(retValue).isInstanceOf(Boolean.class);
     assertThat(retValue).isEqualTo(true);
+  }
+
+  @Test
+  public void shouldSubstituteWithDefaultPrefix() {
+    String expr = "${sam.address.city}, ${address.city}";
+    Object retValue = expressionEvaluator.substitute(expr, persons, "bob");
+    assertThat(retValue).isNotNull();
+    assertThat(retValue).isEqualTo("San Francisco, New York");
   }
 }
