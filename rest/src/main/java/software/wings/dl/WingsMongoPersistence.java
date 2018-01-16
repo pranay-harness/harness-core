@@ -696,6 +696,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     } else {
       encryptedData.setEncryptionKey(encryptedPair.getEncryptionKey());
       encryptedData.setEncryptedValue(encryptedPair.getEncryptedValue());
+      encryptedData.setEncryptionType(encryptionType);
+      encryptedData.setKmsId(encryptedPair.getKmsId());
       changeLogDescription = "Changed " + decryptedField.getName();
     }
 
