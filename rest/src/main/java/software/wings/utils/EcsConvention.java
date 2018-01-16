@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
  * Created by rishi on 2/7/17.
  */
 public class EcsConvention {
-  private static final String DELIMITER = "__";
+  public static final String DELIMITER = "__";
   private static final String VOLUME_PREFIX = "vol_";
   private static final String VOLUME_SUFFIX = "_vol";
   private static Pattern wildCharPattern = Pattern.compile("[:.+*/\\\\ &$|\"']");

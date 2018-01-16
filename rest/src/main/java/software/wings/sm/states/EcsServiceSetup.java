@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -56,7 +57,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
       ContainerTask containerTask, String clusterName) {
-    String taskFamily = isNotEmpty(ecsServiceName)
+    String taskFamily = isNotBlank(ecsServiceName)
         ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
         : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
 

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
 import static software.wings.sm.states.KubernetesReplicationControllerSetup.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -61,7 +62,7 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
       ContainerTask containerTask, String clusterName) {
-    String controllerName = isNotEmpty(replicationControllerName)
+    String controllerName = isNotBlank(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
 
