@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.LogzConfig.Yaml;
@@ -12,6 +14,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, LogzConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

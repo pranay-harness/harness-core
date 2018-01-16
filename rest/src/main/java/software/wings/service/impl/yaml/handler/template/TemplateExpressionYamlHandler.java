@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.template;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/28/17
  */
+@Singleton
 public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpression.Yaml, TemplateExpression> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 

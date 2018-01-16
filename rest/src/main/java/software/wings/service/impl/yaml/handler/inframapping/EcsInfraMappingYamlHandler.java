@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -14,6 +16,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
+@Singleton
 public class EcsInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, EcsInfrastructureMapping> {
   @Override

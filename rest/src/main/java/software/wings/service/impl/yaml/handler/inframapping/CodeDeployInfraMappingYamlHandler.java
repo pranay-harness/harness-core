@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -14,6 +16,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
+@Singleton
 public class CodeDeployInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, CodeDeployInfrastructureMapping> {
   @Override

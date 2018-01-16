@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.Key;
 import software.wings.beans.Base;
@@ -33,6 +34,7 @@ import java.util.Optional;
 /**
  * @author rktummala on 12/08/17
  */
+@Singleton
 public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml, ConfigFile> {
   @Inject private YamlHelper yamlHelper;
   @Inject private ConfigService configService;

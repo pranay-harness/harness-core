@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
@@ -9,6 +11,7 @@ import software.wings.yaml.workflow.MultiServiceWorkflowYaml;
 /**
  * @author rktummala on 11/1/17
  */
+@Singleton
 public class MultiServiceWorkflowYamlHandler extends WorkflowYamlHandler<MultiServiceWorkflowYaml> {
   @Override
   protected void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflow) {

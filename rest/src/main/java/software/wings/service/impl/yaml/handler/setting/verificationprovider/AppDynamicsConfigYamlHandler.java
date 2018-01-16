@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AppDynamicsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -12,6 +14,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class AppDynamicsConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, AppDynamicsConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

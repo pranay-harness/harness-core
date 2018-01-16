@@ -25,6 +25,7 @@ import static software.wings.beans.yaml.YamlType.WORKFLOW;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -77,6 +78,7 @@ import java.util.regex.Pattern;
 /**
  * @author rktummala on 10/16/17
  */
+@Singleton
 public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements YamlService<Y, B> {
   private static final Logger logger = LoggerFactory.getLogger(YamlServiceImpl.class);
 

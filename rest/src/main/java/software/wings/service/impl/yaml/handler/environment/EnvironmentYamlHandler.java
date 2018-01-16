@@ -6,6 +6,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/07/17
  */
+@Singleton
 public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, Environment> {
   private static final Logger logger = LoggerFactory.getLogger(EnvironmentYamlHandler.class);
   @Inject YamlHelper yamlHelper;

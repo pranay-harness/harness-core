@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SlackConfig.Yaml;
@@ -10,6 +12,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class SlackConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml, SlackConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

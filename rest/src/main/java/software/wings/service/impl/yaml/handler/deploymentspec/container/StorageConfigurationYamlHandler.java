@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.container.StorageConfiguration.Yaml;
@@ -13,6 +15,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/15/17
  */
+@Singleton
 public class StorageConfigurationYamlHandler extends BaseYamlHandler<Yaml, StorageConfiguration> {
   @Override
   public Yaml toYaml(StorageConfiguration storageConfiguration, String appId) {

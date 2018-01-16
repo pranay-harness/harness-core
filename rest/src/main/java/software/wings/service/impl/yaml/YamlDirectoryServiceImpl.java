@@ -24,6 +24,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -90,6 +91,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+@Singleton
 public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private static final Logger logger = LoggerFactory.getLogger(YamlDirectoryServiceImpl.class);
 

@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.notification;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/28/17
  */
+@Singleton
 public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRule.Yaml, NotificationRule> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 

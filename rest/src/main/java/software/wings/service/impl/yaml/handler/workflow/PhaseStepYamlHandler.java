@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/28/17
  */
+@Singleton
 public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseStep> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 

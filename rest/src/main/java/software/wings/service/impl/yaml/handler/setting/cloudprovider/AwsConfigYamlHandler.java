@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -12,6 +14,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

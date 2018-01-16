@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Singleton;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/09/17
  */
+@Singleton
 public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, AmiArtifactStream> {
   @Override
   public Yaml toYaml(AmiArtifactStream bean, String appId) {

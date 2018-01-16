@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ import java.util.List;
  *
  * @author bsollish
  */
+@Singleton
 public class EntityUpdateServiceImpl implements EntityUpdateService {
   private static final Logger logger = LoggerFactory.getLogger(EntityUpdateServiceImpl.class);
 

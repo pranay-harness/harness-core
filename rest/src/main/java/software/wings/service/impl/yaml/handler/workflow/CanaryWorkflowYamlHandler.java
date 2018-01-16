@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
@@ -9,6 +11,7 @@ import software.wings.yaml.workflow.CanaryWorkflowYaml;
 /**
  * @author rktummala on 11/1/17
  */
+@Singleton
 public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflowYaml> {
   @Override
   protected void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflow) {

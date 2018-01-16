@@ -6,6 +6,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ObjectType;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/15/17
  */
+@Singleton
 public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDefinition.Yaml, ContainerDefinition> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.userdata;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.container.UserDataSpecification;
@@ -18,6 +19,7 @@ import java.util.List;
 /**
  * @author rktummala on 1/7/17
  */
+@Singleton
 public class UserDataSpecificationYamlHandler extends DeploymentSpecificationYamlHandler<Yaml, UserDataSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;

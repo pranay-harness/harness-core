@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.LambdaSpecification;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/15/17
  */
+@Singleton
 public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlHandler<Yaml, LambdaSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;

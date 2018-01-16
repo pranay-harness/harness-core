@@ -4,6 +4,7 @@ import static software.wings.beans.Pipeline.Yaml;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ObjectType;
 import software.wings.beans.Pipeline;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/2/17
  */
+@Singleton
 public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Inject private YamlHelper yamlHelper;
   @Inject private PipelineService pipelineService;

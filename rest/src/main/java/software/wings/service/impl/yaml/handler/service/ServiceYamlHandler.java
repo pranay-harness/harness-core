@@ -6,6 +6,7 @@ import static software.wings.beans.Service.Builder.aService;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/22/17
  */
+@Singleton
 public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   private static final Logger logger = LoggerFactory.getLogger(ServiceYamlHandler.class);
   @Inject YamlHelper yamlHelper;

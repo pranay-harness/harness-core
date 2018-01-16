@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -12,6 +14,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml, SmtpConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

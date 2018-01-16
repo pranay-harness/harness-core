@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.variable;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
@@ -16,6 +18,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/28/17
  */
+@Singleton
 public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable> {
   private Variable toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();

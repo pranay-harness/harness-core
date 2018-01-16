@@ -4,6 +4,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
@@ -18,6 +19,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
+@Singleton
 public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Application> {
   @Inject YamlHelper yamlHelper;
   @Inject AppService appService;

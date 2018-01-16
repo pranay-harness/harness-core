@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -12,6 +14,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class GitConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, GitConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

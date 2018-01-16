@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification.Yaml;
@@ -13,6 +15,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/15/17
  */
+@Singleton
 public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, FunctionSpecification> {
   @Override
   public Yaml toYaml(FunctionSpecification functionSpecification, String appId) {

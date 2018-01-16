@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.ScpCommandUnit.Yaml;
@@ -14,6 +16,7 @@ import java.util.Map;
 /**
  * @author rktummala on 11/13/17
  */
+@Singleton
 public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, ScpCommandUnit> {
   @Override
   public Class getYamlClass() {

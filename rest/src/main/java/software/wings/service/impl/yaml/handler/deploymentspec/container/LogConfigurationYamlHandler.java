@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.container.LogConfiguration;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/15/17
  */
+@Singleton
 public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfiguration> {
   @Override
   public Yaml toYaml(LogConfiguration logConfiguration, String appId) {

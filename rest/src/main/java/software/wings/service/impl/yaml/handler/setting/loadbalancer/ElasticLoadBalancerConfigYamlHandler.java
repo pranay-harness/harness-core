@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.loadbalancer;
 
+import com.google.inject.Singleton;
+
 import com.amazonaws.regions.Regions;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig.Yaml;
@@ -14,6 +16,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandler<Yaml, ElasticLoadBalancerConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
