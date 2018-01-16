@@ -31,6 +31,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -39,7 +40,6 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 

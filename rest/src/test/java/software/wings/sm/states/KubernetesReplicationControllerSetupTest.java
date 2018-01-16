@@ -71,6 +71,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.common.VariableProcessor;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -87,7 +88,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.ExpressionEvaluator;
 
 import java.util.Collections;
 
@@ -218,7 +218,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.merge(any(), any(), any())).thenReturn("");
+    when(evaluator.substitute(any(), any(), any())).thenReturn("");
   }
 
   @Test

@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import software.wings.exception.WingsException;
-import software.wings.utils.ExpressionEvaluator;
+import software.wings.expression.ExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.List;
