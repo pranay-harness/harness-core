@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.service;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
 /**
  * @author rktummala on 10/17/17
  */
+@Singleton
 public class YamlHelper {
   @Inject ServiceResourceService serviceResourceService;
   @Inject AppService appService;

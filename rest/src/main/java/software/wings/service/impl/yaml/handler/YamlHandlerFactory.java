@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
@@ -41,6 +42,7 @@ import java.util.Map;
 /**
  * @author rktummala on 10/19/17
  */
+@Singleton
 public class YamlHandlerFactory {
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
