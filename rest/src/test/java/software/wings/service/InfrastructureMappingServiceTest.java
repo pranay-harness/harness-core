@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -15,6 +16,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
+import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -25,17 +29,22 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
@@ -57,17 +66,26 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.infrastructure.Host;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -76,10 +94,13 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
@@ -88,6 +109,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -105,16 +127,22 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private AppService appService;
   @Mock private HostService hostService;
-
-  @Mock private Query<InfrastructureMapping> query;
-  @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
+  @Mock private EnvironmentService envService;
+  @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowService workflowService;
-  @Mock private FieldEnd end;
-  @Mock private SecretManager secretManager;
-
   @Mock private JobScheduler jobScheduler;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
+
+  @Mock private SecretManager secretManager;
+  @Mock private Query<InfrastructureMapping> query;
+  @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
+  @Mock private FieldEnd end;
+  @Mock private Application app;
+  @Mock private Environment env;
+  @Mock private Service service;
+  @Mock private ContainerService containerService;
 
   @Before
   public void setUp() throws Exception {
@@ -126,6 +154,13 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(infrastructureMappingService, "secretManager", secretManager);
+
+    when(appService.get(APP_ID)).thenReturn(app);
+    when(envService.get(APP_ID, ENV_ID, false)).thenReturn(env);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(app.getName()).thenReturn(APP_NAME);
+    when(env.getName()).thenReturn(ENV_NAME);
+    when(service.getName()).thenReturn(SERVICE_NAME);
   }
 
   @Test
@@ -552,5 +587,97 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(serviceInstanceService)
         .updateInstanceMappings(serviceTemplate, awsInfrastructureMapping, singletonList(provisionedHost));
+  }
+
+  @Test
+  public void shouldGetContainerRunningInstancesDirectKubernetes() {
+    DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
+        aDirectKubernetesInfrastructureMapping()
+            .withNamespace("default")
+            .withAppId(APP_ID)
+            .withEnvId(ENV_ID)
+            .withServiceId(SERVICE_ID)
+            .withServiceTemplateId(TEMPLATE_ID)
+            .withComputeProviderType(DIRECT.name())
+            .withUuid(INFRA_MAPPING_ID)
+            .build();
+
+    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
+        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(directKubernetesInfrastructureMapping);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
+        .thenReturn(containerService);
+    LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
+    activeCounts.put("rc-name.1", 2);
+    activeCounts.put("rc-name.2", 3);
+    when(containerService.getActiveServiceCounts(any())).thenReturn(activeCounts);
+
+    String result = infrastructureMappingService.getContainerRunningInstances(
+        APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
+    assertThat(result).isEqualTo("5");
+  }
+
+  @Test
+  public void shouldGetContainerRunningInstancesGcp() {
+    GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
+        aGcpKubernetesInfrastructureMapping()
+            .withNamespace("default")
+            .withAppId(APP_ID)
+            .withEnvId(ENV_ID)
+            .withServiceId(SERVICE_ID)
+            .withServiceTemplateId(TEMPLATE_ID)
+            .withComputeProviderType(GCP.name())
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .withUuid(INFRA_MAPPING_ID)
+            .build();
+
+    when(settingsService.get(COMPUTE_PROVIDER_ID))
+        .thenReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(GcpConfig.builder().build()).build());
+    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
+        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(gcpKubernetesInfrastructureMapping);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
+        .thenReturn(containerService);
+    LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
+    activeCounts.put("rc-name.1", 2);
+    activeCounts.put("rc-name.2", 3);
+    when(containerService.getActiveServiceCounts(any())).thenReturn(activeCounts);
+
+    String result = infrastructureMappingService.getContainerRunningInstances(
+        APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
+    assertThat(result).isEqualTo("5");
+  }
+
+  @Test
+  public void shouldGetContainerRunningInstancesEcs() {
+    EcsInfrastructureMapping ecsInfrastructureMapping = anEcsInfrastructureMapping()
+                                                            .withRegion("us-east-1")
+                                                            .withAppId(APP_ID)
+                                                            .withEnvId(ENV_ID)
+                                                            .withServiceId(SERVICE_ID)
+                                                            .withServiceTemplateId(TEMPLATE_ID)
+                                                            .withComputeProviderType(AWS.name())
+                                                            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                            .withUuid(INFRA_MAPPING_ID)
+                                                            .build();
+
+    when(settingsService.get(COMPUTE_PROVIDER_ID))
+        .thenReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(AwsConfig.builder().build()).build());
+    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
+        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(ecsInfrastructureMapping);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
+        .thenReturn(containerService);
+    LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
+    activeCounts.put("task__name__1", 2);
+    activeCounts.put("task__name__2", 3);
+    when(containerService.getActiveServiceCounts(any())).thenReturn(activeCounts);
+
+    String result = infrastructureMappingService.getContainerRunningInstances(
+        APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
+    assertThat(result).isEqualTo("5");
   }
 }

@@ -93,6 +93,16 @@ public class InfrastructureMappingResource {
     return new RestResponse<>(infrastructureMappingService.listHostDisplayNames(appId, infraMappingId, null));
   }
 
+  @GET
+  @Path("{infraMappingId}/containers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getRunningContainerCount(@QueryParam("appId") String appId,
+      @QueryParam("serviceNameExpr") String serviceNameExpr, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(
+        infrastructureMappingService.getContainerRunningInstances(appId, infraMappingId, serviceNameExpr));
+  }
+
   @PUT
   @Path("{infraMappingId}")
   @Timed

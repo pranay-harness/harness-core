@@ -18,6 +18,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -44,14 +45,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
@@ -82,6 +86,8 @@ import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -100,13 +106,19 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.EcsConvention;
+import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.HostValidationService;
+import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 import software.wings.utils.Util;
+import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -128,12 +140,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
   @Inject private AppService appService;
+  @Inject private EnvironmentService envService;
   @Inject private AwsCodeDeployService awsCodeDeployService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ExecutorService executorService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private HostService hostService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -143,6 +156,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private SecretManager secretManager;
+  @Inject private ExpressionEvaluator evaluator;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -1008,6 +1022,75 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return hostDisplayNames;
     }
     return emptyList();
+  }
+
+  @Override
+  public String getContainerRunningInstances(String appId, String infraMappingId, String serviceNameExpression) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    notNullCheck("Infrastructure Mapping", infrastructureMapping);
+
+    Application app = appService.get(infrastructureMapping.getAppId());
+    Environment env = envService.get(infrastructureMapping.getAppId(), infrastructureMapping.getEnvId(), false);
+    Service service =
+        serviceResourceService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId());
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("app", app);
+    context.put("env", env);
+    context.put("service", service);
+
+    SettingAttribute settingAttribute;
+    String clusterName = null;
+    String namespace = null;
+    String containerServiceName = null;
+    String region = null;
+    ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
+    if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
+      DirectKubernetesInfrastructureMapping directInfraMapping =
+          (DirectKubernetesInfrastructureMapping) containerInfraMapping;
+      settingAttribute = aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build();
+      namespace = directInfraMapping.getNamespace();
+      containerServiceName =
+          (isNotBlank(serviceNameExpression)
+                  ? KubernetesConvention.normalize(evaluator.merge(serviceNameExpression, context))
+                  : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
+          + KubernetesConvention.DOT + "0";
+    } else {
+      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      clusterName = containerInfraMapping.getClusterName();
+      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+        namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+        containerServiceName =
+            (isNotBlank(serviceNameExpression)
+                    ? KubernetesConvention.normalize(evaluator.merge(serviceNameExpression, context))
+                    : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
+            + KubernetesConvention.DOT + "0";
+      } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+        region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
+        containerServiceName = (isNotBlank(serviceNameExpression)
+                                       ? Misc.normalizeExpression(evaluator.merge(serviceNameExpression, context))
+                                       : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName()))
+            + EcsConvention.DELIMITER + "0";
+      }
+    }
+    Validator.notNullCheck("SettingAttribute", settingAttribute);
+
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+
+    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(settingAttribute)
+                                                        .containerServiceName(containerServiceName)
+                                                        .encryptionDetails(encryptionDetails)
+                                                        .clusterName(clusterName)
+                                                        .namespace(namespace)
+                                                        .region(region)
+                                                        .build();
+    LinkedHashMap<String, Integer> activeServiceCounts =
+        delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+            .getActiveServiceCounts(containerServiceParams);
+    return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
