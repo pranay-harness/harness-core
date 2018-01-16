@@ -21,4 +21,7 @@ public interface ContainerService {
 
   @DelegateTaskType(TaskType.CONTAINER_INFO)
   List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams);
+
+  @DelegateTaskType(TaskType.CONTAINER_CONNECTION_VALIDATION)
+  Boolean validate(ContainerServiceParams containerServiceParams);
 }

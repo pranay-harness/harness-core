@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
@@ -61,10 +60,5 @@ public class KubernetesHelperService {
     }
 
     return new DefaultKubernetesClient(configBuilder.build()).inNamespace(namespace);
-  }
-
-  public void validateCredential(KubernetesConfig kubernetesConfig) {
-    // TODO - Do we ever need to pass encryptedDataDetails instead of empty list?
-    getKubernetesClient(kubernetesConfig, emptyList()).replicationControllers().list();
   }
 }
