@@ -62,7 +62,6 @@ import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -294,6 +293,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .addParam("args", "Creating a cluster at runtime is not yet supported for ECS.");
       }
     }
+    //    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
+    //    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    //    String clusterName = infraMapping.getClusterName();
+    //    String region = infraMapping.getRegion();
+    //
+    //    List<EncryptedDataDetail> encryptionDetails =
+    //        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+    //
+    //    Application app = appService.get(infraMapping.getAppId());
+    //    SyncTaskContext syncTaskContext =
+    //    aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build(); ContainerServiceParams
+    //    containerServiceParams = ContainerServiceParams.builder()
+    //                                                        .settingAttribute(settingAttribute)
+    //                                                        .encryptionDetails(encryptionDetails)
+    //                                                        .clusterName(clusterName)
+    //                                                        .region(region)
+    //                                                        .build();
+    //    delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
   }
 
   private void validateGcpInfraMapping(
@@ -304,12 +321,43 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .addParam("args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
       }
     }
-    // TODO - Validate via delegate sync task to KubernetesHelperService::validateCredential
+    //    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
+    //    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    //    String clusterName = infraMapping.getClusterName();
+    //    String namespace = infraMapping.getNamespace();
+    //
+    //    List<EncryptedDataDetail> encryptionDetails =
+    //        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+    //
+    //    Application app = appService.get(infraMapping.getAppId());
+    //    SyncTaskContext syncTaskContext =
+    //    aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build(); ContainerServiceParams
+    //    containerServiceParams = ContainerServiceParams.builder()
+    //                                                        .settingAttribute(settingAttribute)
+    //                                                        .encryptionDetails(encryptionDetails)
+    //                                                        .clusterName(clusterName)
+    //                                                        .namespace(namespace)
+    //                                                        .build();
+    //    delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
   }
 
   private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
-    KubernetesConfig kubernetesConfig = infraMapping.createKubernetesConfig();
-    // TODO - Validate via delegate sync task to KubernetesHelperService::validateCredential
+    //    SettingAttribute settingAttribute =
+    //    aSettingAttribute().withValue(infraMapping.createKubernetesConfig()).build(); String namespace =
+    //    infraMapping.getNamespace();
+    //
+    //    List<EncryptedDataDetail> encryptionDetails =
+    //        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+    //
+    //    Application app = appService.get(infraMapping.getAppId());
+    //    SyncTaskContext syncTaskContext =
+    //    aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build(); ContainerServiceParams
+    //    containerServiceParams = ContainerServiceParams.builder()
+    //                                                        .settingAttribute(settingAttribute)
+    //                                                        .encryptionDetails(encryptionDetails)
+    //                                                        .namespace(namespace)
+    //                                                        .build();
+    //    delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
   }
 
   @Override
@@ -347,6 +395,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
+      //      directKubernetesInfrastructureMapping.setEncryptedPassword(null);
+      //      directKubernetesInfrastructureMapping.setEncryptedCaCert(null);
+      //      directKubernetesInfrastructureMapping.setEncryptedClientCert(null);
+      //      directKubernetesInfrastructureMapping.setEncryptedClientKey(null);
+      //      directKubernetesInfrastructureMapping.setEncryptedClientKeyPassphrase(null);
       updateOperations.set("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
       if (directKubernetesInfrastructureMapping.getUsername() != null) {
         updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
@@ -373,11 +426,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         updateOperations.unset("clientKey");
       }
+      if (directKubernetesInfrastructureMapping.getClientKeyPassphrase() != null) {
+        updateOperations.set("clientKeyPassphrase", directKubernetesInfrastructureMapping.getClientKeyPassphrase());
+      } else {
+        updateOperations.unset("clientKeyPassphrase");
+      }
+      if (directKubernetesInfrastructureMapping.getClientKeyAlgo() != null) {
+        updateOperations.set("clientKeyAlgo", directKubernetesInfrastructureMapping.getClientKeyAlgo());
+      } else {
+        updateOperations.unset("clientKeyAlgo");
+      }
+      if (isNotBlank(directKubernetesInfrastructureMapping.getNamespace())) {
+        updateOperations.set("namespace", directKubernetesInfrastructureMapping.getNamespace());
+      } else {
+        directKubernetesInfrastructureMapping.setNamespace("default");
+        updateOperations.set("namespace", "default");
+      }
       updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
-      updateOperations.set("namespace",
-          isNotBlank(directKubernetesInfrastructureMapping.getNamespace())
-              ? directKubernetesInfrastructureMapping.getNamespace()
-              : "default");
+      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;

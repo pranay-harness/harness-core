@@ -18,7 +18,6 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
@@ -52,7 +51,6 @@ public class SettingValidationService {
   @Inject private GcpHelperService gcpHelperService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private NewRelicService newRelicService;
-  @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private AnalysisService analysisService;
   @Inject private ElkAnalysisService elkAnalysisService;
   @Inject private WingsPersistence wingsPersistence;
@@ -90,8 +88,6 @@ public class SettingValidationService {
       buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
     } else if (settingValue instanceof AppDynamicsConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS);
-    } else if (settingValue instanceof KubernetesConfig) {
-      kubernetesHelperService.validateCredential((KubernetesConfig) settingValue);
     } else if (settingValue instanceof SplunkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
     } else if (settingValue instanceof ElkConfig) {
