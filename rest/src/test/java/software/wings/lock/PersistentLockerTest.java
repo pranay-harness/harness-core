@@ -142,6 +142,7 @@ public class PersistentLockerTest extends MockTest {
       exception.logProcessedMessages(BACKGROUND_JOB);
     }
 
-    verify(logger).error("The distributed lock abc-cba was not released on time. THIS IS VERY BAD!!!");
+    verify(logger).error(matches(
+        "The distributed lock abc-cba was not released on time. THIS IS VERY BAD!!!, elapsed: \\d+, timeout 1"));
   }
 }
