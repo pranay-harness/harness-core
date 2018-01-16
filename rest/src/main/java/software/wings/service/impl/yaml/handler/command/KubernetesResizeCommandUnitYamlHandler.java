@@ -1,11 +1,14 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.command.KubernetesResizeCommandUnit;
 import software.wings.beans.command.KubernetesResizeCommandUnit.Yaml;
 
 /**
  * @author rktummala on 11/13/17
  */
+@Singleton
 public class KubernetesResizeCommandUnitYamlHandler
     extends ContainerResizeCommandUnitYamlHandler<Yaml, KubernetesResizeCommandUnit> {
   @Override

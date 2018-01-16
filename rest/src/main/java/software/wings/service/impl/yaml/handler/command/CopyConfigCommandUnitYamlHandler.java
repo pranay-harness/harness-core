@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.command;
 
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_DESTINATION_PARENT_PATH;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -13,6 +15,7 @@ import java.util.Map;
 /**
  * @author rktummala on 11/13/17
  */
+@Singleton
 public class CopyConfigCommandUnitYamlHandler
     extends CommandUnitYamlHandler<CopyConfigCommandUnit.Yaml, CopyConfigCommandUnit> {
   @Override

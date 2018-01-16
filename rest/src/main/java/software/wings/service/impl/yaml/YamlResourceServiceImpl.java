@@ -4,6 +4,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -56,6 +57,7 @@ import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
+@Singleton
 public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private AppService appService;
   @Inject private YamlHistoryService yamlHistoryService;

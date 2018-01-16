@@ -3,6 +3,8 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping.Yaml;
@@ -15,6 +17,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
+@Singleton
 public class PhysicalInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, PhysicalInfrastructureMapping> {
   @Override

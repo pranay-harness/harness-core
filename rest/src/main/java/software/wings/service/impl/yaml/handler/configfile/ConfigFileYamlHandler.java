@@ -6,6 +6,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 12/08/17
  */
+@Singleton
 public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
   private static final Logger logger = LoggerFactory.getLogger(ConfigFileYamlHandler.class);
 

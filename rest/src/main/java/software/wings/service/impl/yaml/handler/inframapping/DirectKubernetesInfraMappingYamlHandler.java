@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/22/17
  */
+@Singleton
 public class DirectKubernetesInfraMappingYamlHandler
     extends InfraMappingYamlHandler<Yaml, DirectKubernetesInfrastructureMapping> {
   private static final Logger logger = LoggerFactory.getLogger(DirectKubernetesInfraMappingYamlHandler.class);

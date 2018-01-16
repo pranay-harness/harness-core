@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PhysicalDataCenterConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -10,6 +12,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Singleton
 public class PhysicalDataCenterConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PhysicalDataCenterConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

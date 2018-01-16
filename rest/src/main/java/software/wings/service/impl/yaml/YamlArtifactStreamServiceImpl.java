@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.Base;
@@ -24,6 +25,7 @@ import software.wings.yaml.YamlPayload;
  * @author rktummala on 10/09/17
  *
  */
+@Singleton
 public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private YamlGitService yamlGitSyncService;

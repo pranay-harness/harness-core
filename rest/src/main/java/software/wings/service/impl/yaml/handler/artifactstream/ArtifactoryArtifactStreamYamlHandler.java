@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -11,6 +13,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/09/17
  */
+@Singleton
 public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, ArtifactoryArtifactStream> {
   @Override
   public Yaml toYaml(ArtifactoryArtifactStream bean, String appId) {

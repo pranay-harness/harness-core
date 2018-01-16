@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -7,6 +9,7 @@ import software.wings.beans.yaml.ChangeContext;
 /**
  * @author rktummala on 10/09/17
  */
+@Singleton
 public class AmazonS3ArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, AmazonS3ArtifactStream> {
   @Override
   public Yaml toYaml(AmazonS3ArtifactStream bean, String appId) {

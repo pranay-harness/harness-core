@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph.Node;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/28/17
  */
+@Singleton
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;

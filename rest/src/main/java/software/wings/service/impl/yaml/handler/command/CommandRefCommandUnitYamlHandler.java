@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.command;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
@@ -24,6 +25,7 @@ import java.util.Optional;
 /**
  * @author rktummala on 11/13/17
  */
+@Singleton
 public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<CommandRefYaml, Command> {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject YamlHandlerFactory yamlHandlerFactory;

@@ -1,11 +1,14 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.command.PortCheckClearedCommandUnit;
 import software.wings.beans.command.PortCheckClearedCommandUnit.Yaml;
 
 /**
  * @author rktummala on 11/13/17
  */
+@Singleton
 public class PortCheckClearedCommandUnitYamlHandler
     extends AbstractExecCommandUnitYamlHandler<Yaml, PortCheckClearedCommandUnit> {
   @Override

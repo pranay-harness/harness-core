@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.Builder;
 import software.wings.beans.artifact.DockerArtifactStream.Yaml;
@@ -13,6 +15,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/09/17
  */
+@Singleton
 public class DockerArtifactStreamYamlHandler
     extends ArtifactStreamYamlHandler<DockerArtifactStream.Yaml, DockerArtifactStream> {
   public DockerArtifactStream.Yaml toYaml(DockerArtifactStream bean, String appId) {

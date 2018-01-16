@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import lombok.Builder;
 import lombok.Data;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/27/17
  */
+@Singleton
 public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYamlHandler<Y, Workflow> {
   @Inject WorkflowService workflowService;
   @Inject YamlHelper yamlHelper;

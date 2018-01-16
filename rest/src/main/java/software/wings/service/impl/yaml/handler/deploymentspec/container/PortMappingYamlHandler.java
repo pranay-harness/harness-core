@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.PortMapping.Yaml;
@@ -13,6 +15,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/15/17
  */
+@Singleton
 public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   @Override
   public Yaml toYaml(PortMapping portMapping, String appId) {

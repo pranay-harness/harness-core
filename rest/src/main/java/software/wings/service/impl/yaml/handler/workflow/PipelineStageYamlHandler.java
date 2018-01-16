@@ -6,6 +6,7 @@ import static software.wings.beans.PipelineStage.Yaml;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.PipelineStage;
@@ -27,6 +28,7 @@ import java.util.Map;
 /**
  * @author rktummala on 11/2/17
  */
+@Singleton
 public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;

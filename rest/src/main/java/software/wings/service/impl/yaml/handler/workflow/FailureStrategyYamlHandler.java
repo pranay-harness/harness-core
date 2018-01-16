@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/28/17
  */
+@Singleton
 public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.Yaml, FailureStrategy> {
   private FailureStrategy toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();

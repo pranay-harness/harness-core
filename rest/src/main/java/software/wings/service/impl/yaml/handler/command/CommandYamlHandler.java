@@ -6,6 +6,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 /**
  *  @author rktummala on 11/13/17
  */
+@Singleton
 public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceCommand> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/27/17
  */
+@Singleton
 public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml, WorkflowPhase> {
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;

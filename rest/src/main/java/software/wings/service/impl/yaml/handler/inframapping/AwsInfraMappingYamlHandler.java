@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Singleton;
 
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.Yaml;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/15/17
  */
+@Singleton
 public class AwsInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsInfrastructureMapping> {
   @Override

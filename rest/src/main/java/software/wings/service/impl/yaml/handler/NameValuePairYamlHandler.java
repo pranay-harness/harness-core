@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
@@ -12,6 +14,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/28/17
  */
+@Singleton
 public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml, NameValuePair> {
   private NameValuePair toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     NameValuePair.Yaml yaml = changeContext.getYaml();
