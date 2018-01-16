@@ -64,6 +64,9 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
       } catch (HarnessException e) {
         throw new WingsException(e);
       }
+    } else {
+      ContainerDefinition containerDefinition = ContainerDefinition.builder().name("DEFAULT_NAME").build();
+      containerTask.setContainerDefinitions(asList(containerDefinition));
     }
 
     return containerTask;

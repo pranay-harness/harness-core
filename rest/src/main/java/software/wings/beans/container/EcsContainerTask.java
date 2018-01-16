@@ -186,7 +186,7 @@ public class EcsContainerTask extends ContainerTask {
         .withVolumes(volumeMap.values());
   }
 
-  private com.amazonaws.services.ecs.model.ContainerDefinition createContainerDefinition(
+  public com.amazonaws.services.ecs.model.ContainerDefinition createContainerDefinition(
       String imageName, String containerName, ContainerDefinition harnessContainerDefinition) {
     com.amazonaws.services.ecs.model.ContainerDefinition containerDefinition =
         new com.amazonaws.services.ecs.model.ContainerDefinition()
