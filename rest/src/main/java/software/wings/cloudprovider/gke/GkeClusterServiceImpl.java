@@ -1,6 +1,5 @@
 package software.wings.cloudprovider.gke;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -100,8 +99,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     MasterAuth masterAuth = cluster.getMasterAuth();
     KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder()
                                                           .masterUrl("https://" + cluster.getEndpoint() + "/")
-                                                          .username(masterAuth.getUsername())
-                                                          .namespace(isNotEmpty(namespace) ? namespace : "default");
+                                                          .namespace(isNotBlank(namespace) ? namespace : "default");
+    if (masterAuth.getUsername() != null) {
+      kubernetesConfigBuilder.username(masterAuth.getUsername());
+    }
     if (masterAuth.getPassword() != null) {
       kubernetesConfigBuilder.password(masterAuth.getPassword().toCharArray());
     }

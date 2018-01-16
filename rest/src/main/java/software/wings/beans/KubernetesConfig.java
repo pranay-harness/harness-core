@@ -18,7 +18,7 @@ import software.wings.settings.SettingValue;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
-@ToString(exclude = "password")
+@ToString(exclude = {"password", "clientKeyPassphrase"})
 public class KubernetesConfig extends SettingValue implements Encryptable {
   @NotEmpty private String masterUrl;
   private String username;
@@ -26,6 +26,8 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @Encrypted private char[] caCert;
   @Encrypted private char[] clientCert;
   @Encrypted private char[] clientKey;
+  @Encrypted private char[] clientKeyPassphrase;
+  private String clientKeyAlgo;
   private String namespace;
   @NotEmpty @SchemaIgnore private String accountId;
 
@@ -33,6 +35,7 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @SchemaIgnore private String encryptedCaCert;
   @SchemaIgnore private String encryptedClientCert;
   @SchemaIgnore private String encryptedClientKey;
+  @SchemaIgnore private String encryptedClientKeyPassphrase;
 
   /**
    * Instantiates a new setting value.
@@ -42,8 +45,9 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   }
 
   public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
-      char[] clientKey, String namespace, String accountId, String encryptedPassword, String encryptedCaCert,
-      String encryptedClientCert, String encryptedClientKey) {
+      char[] clientKey, char[] clientKeyPassphrase, String clientKeyAlgo, String namespace, String accountId,
+      String encryptedPassword, String encryptedCaCert, String encryptedClientCert, String encryptedClientKey,
+      String encryptedClientKeyPassphrase) {
     this();
     this.masterUrl = masterUrl;
     this.username = username;
@@ -51,11 +55,14 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
     this.caCert = caCert;
     this.clientCert = clientCert;
     this.clientKey = clientKey;
+    this.clientKeyPassphrase = clientKeyPassphrase;
+    this.clientKeyAlgo = clientKeyAlgo;
     this.namespace = namespace;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.encryptedCaCert = encryptedCaCert;
     this.encryptedClientCert = encryptedClientCert;
     this.encryptedClientKey = encryptedClientKey;
+    this.encryptedClientKeyPassphrase = encryptedClientKeyPassphrase;
   }
 }

@@ -53,6 +53,12 @@ public class KubernetesHelperService {
     if (kubernetesConfig.getClientKey() != null) {
       configBuilder.withClientKeyData(new String(kubernetesConfig.getClientKey()).trim());
     }
+    if (kubernetesConfig.getClientKeyPassphrase() != null) {
+      configBuilder.withClientKeyPassphrase(new String(kubernetesConfig.getClientKeyPassphrase()).trim());
+    }
+    if (kubernetesConfig.getClientKeyAlgo() != null) {
+      configBuilder.withClientKeyAlgo(kubernetesConfig.getClientKeyAlgo().trim());
+    }
 
     return new DefaultKubernetesClient(configBuilder.build()).inNamespace(namespace);
   }

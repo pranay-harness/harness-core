@@ -33,12 +33,15 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @Encrypted @Attributes(title = "CA Certificate") private char[] caCert;
   @Encrypted @Attributes(title = "Client Certificate") private char[] clientCert;
   @Encrypted @Attributes(title = "Client Key") private char[] clientKey;
+  @Encrypted @Attributes(title = "Client Key Passphrase") private char[] clientKeyPassphrase;
+  @Attributes(title = "Client Key Algorithm") private String clientKeyAlgo;
   @Attributes(title = "Namespace") private String namespace;
 
   @SchemaIgnore private String encryptedPassword;
   @SchemaIgnore private String encryptedCaCert;
   @SchemaIgnore private String encryptedClientCert;
   @SchemaIgnore private String encryptedClientKey;
+  @SchemaIgnore private String encryptedClientKeyPassphrase;
 
   @SchemaIgnore @Transient private boolean decrypted;
 
@@ -104,6 +107,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
         .encryptedCaCert(encryptedCaCert)
         .encryptedClientCert(encryptedClientCert)
         .encryptedClientKey(encryptedClientKey)
+        .encryptedClientKeyPassphrase(encryptedClientKeyPassphrase)
+        .clientKeyAlgo(clientKeyAlgo)
         .namespace(isNotEmpty(namespace) ? namespace : "default")
         .build();
   }
@@ -117,6 +122,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
         .withCaCert(getCaCert())
         .withClientCert(getClientCert())
         .withClientKey(getClientKey())
+        .withClientKeyPassphrase(getClientKeyPassphrase())
+        .withClientKeyAlgo(getClientKeyAlgo())
         .withNamespace(getNamespace())
         .withUuid(getUuid())
         .withComputeProviderSettingId(getComputeProviderSettingId())
@@ -147,6 +154,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private char[] caCert;
     private char[] clientCert;
     private char[] clientKey;
+    private char[] clientKeyPassphrase;
+    private String clientKeyAlgo;
     private String namespace;
     private String uuid;
     private EmbeddedUser createdBy;
@@ -203,6 +212,16 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
     public Builder withClientKey(char[] clientKey) {
       this.clientKey = clientKey;
+      return this;
+    }
+
+    public Builder withClientKeyPassphrase(char[] clientKeyPassphrase) {
+      this.clientKeyPassphrase = clientKeyPassphrase;
+      return this;
+    }
+
+    public Builder withClientKeyAlgo(String clientKeyAlgo) {
+      this.clientKeyAlgo = clientKeyAlgo;
       return this;
     }
 
@@ -310,6 +329,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
           .withCaCert(caCert)
           .withClientCert(clientCert)
           .withClientKey(clientKey)
+          .withClientKeyPassphrase(clientKeyPassphrase)
+          .withClientKeyAlgo(clientKeyAlgo)
           .withNamespace(namespace)
           .withUuid(uuid)
           .withAppId(appId)
@@ -341,6 +362,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setCaCert(caCert);
       directKubernetesInfrastructureMapping.setClientCert(clientCert);
       directKubernetesInfrastructureMapping.setClientKey(clientKey);
+      directKubernetesInfrastructureMapping.setClientKeyPassphrase(clientKeyPassphrase);
+      directKubernetesInfrastructureMapping.setClientKeyAlgo(clientKeyAlgo);
       directKubernetesInfrastructureMapping.setNamespace(namespace);
       directKubernetesInfrastructureMapping.setUuid(uuid);
       directKubernetesInfrastructureMapping.setAppId(appId);
@@ -374,12 +397,14 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String caCert;
     private String clientCert;
     private String clientKey;
+    private String clientKeyPassphrase;
+    private String clientKeyAlgo;
     private String namespace;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
         String deploymentType, String cluster, String masterUrl, String username, String password, String caCert,
-        String clientCert, String clientKey, String namespace) {
+        String clientCert, String clientKey, String clientKeyPassphrase, String clientKeyAlgo, String namespace) {
       super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, cluster);
       this.masterUrl = masterUrl;
       this.username = username;
@@ -387,6 +412,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       this.caCert = caCert;
       this.clientCert = clientCert;
       this.clientKey = clientKey;
+      this.clientKeyPassphrase = clientKeyPassphrase;
+      this.clientKeyAlgo = clientKeyAlgo;
       this.namespace = namespace;
     }
   }

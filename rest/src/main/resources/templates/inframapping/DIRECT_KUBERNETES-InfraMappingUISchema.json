@@ -3,11 +3,12 @@
   "infraMappingType": { "ui:widget": "hidden" },
   "deploymentType": { "ui:widget": "hidden" },
   "password":{"ui:widget":"password"},
+  "clientKeyPassphrase":{"ui:widget":"password"},
   "caCert": {"ui:widget":"textarea"},
   "clientCert": {"ui:widget":"textarea"},
   "clientKey": {"ui:widget":"textarea"},
-  "custom:encryptedFields": [ "password", "caCert", "clientCert", "clientKey" ],
+  "custom:encryptedFields": [ "password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase" ],
   "namespace":{"ui:placeholder": "default"},
-  "ui:order": ["name", "autoPopulate","serviceId","deploymentType", "computeProviderSettingId", "masterUrl", "username", "password", "caCert", "clientCert", "clientKey","namespace","infraMappingType","computeProviderType"]
+  "ui:order": ["name", "autoPopulate","serviceId","deploymentType", "computeProviderSettingId", "masterUrl", "username", "password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase","clientKeyAlgo","namespace","infraMappingType","computeProviderType"]
 
 }
