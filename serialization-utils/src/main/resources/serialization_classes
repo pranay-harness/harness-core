@@ -258,4 +258,5 @@ software.wings.beans.RestResponse, 5224
 software.wings.service.impl.newrelic.MetricAnalysisExecutionData, 5225
 software.wings.beans.NameValuePair, 5226
 software.wings.sm.WorkflowStandardParams, 5227
-
+software.wings.api.AwsLambdaContextElement, 5228
+software.wings.api.AwsLambdaContextElement$FunctionMeta, 5229
