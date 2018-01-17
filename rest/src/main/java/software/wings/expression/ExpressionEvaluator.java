@@ -51,23 +51,15 @@ public class ExpressionEvaluator {
   public Object evaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     expression = normalizeExpression(expression, context, defaultObjectPrefix);
 
-    JexlContext jc = new MapContext();
-    if (context != null) {
-      for (String key : context.keySet()) {
-        jc.set(key, context.get(key));
-      }
-    }
-
+    JexlContext jc = prepareContext(context);
     return evaluate(expression, jc, defaultObjectPrefix);
   }
 
-  private Object evaluate(String expression, JexlContext context, String defaultObjectPrefix) {
+  public Object evaluate(String expression, JexlContext context, String defaultObjectPrefix) {
     logger.debug("evaluate request - expression: {}, context: {}", expression, context);
     if (expression == null) {
       return expression;
     }
-
-    context.set("re", regexFunctor);
 
     JexlExpression jexlExpression = engine.createExpression(expression);
     Object retValue = jexlExpression.evaluate(context);
@@ -80,8 +72,10 @@ public class ExpressionEvaluator {
       return expression;
     }
 
+    JexlContext jc = prepareContext(context);
+
     final NormalizeVariableResolver variableResolver =
-        NormalizeVariableResolver.builder().objectPrefix(defaultObjectPrefix).context(context).build();
+        NormalizeVariableResolver.builder().objectPrefix(defaultObjectPrefix).context(jc).build();
 
     StrSubstitutor substitutor = new StrSubstitutor();
     substitutor.setVariableResolver(variableResolver);
@@ -95,10 +89,12 @@ public class ExpressionEvaluator {
   }
 
   public String substitute(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    JexlContext jc = prepareContext(context);
+
     final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
                                                           .expressionEvaluator(this)
                                                           .objectPrefix(defaultObjectPrefix)
-                                                          .context(context)
+                                                          .context(jc)
                                                           .build();
 
     StrSubstitutor substitutor = new StrSubstitutor();
@@ -119,5 +115,17 @@ public class ExpressionEvaluator {
       throw new WingsException(INVALID_ARGUMENT)
           .addParam("args", "Special characters are not allowed in variable name");
     }
+  }
+
+  private JexlContext prepareContext(Map<String, Object> context) {
+    JexlContext jc = new MapContext();
+    if (context != null) {
+      for (String key : context.keySet()) {
+        jc.set(key, context.get(key));
+      }
+    }
+
+    jc.set("re", regexFunctor);
+    return jc;
   }
 }
