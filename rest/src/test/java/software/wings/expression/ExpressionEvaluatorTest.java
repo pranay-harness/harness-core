@@ -154,4 +154,46 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     assertThat(retValue).isNotNull();
     assertThat(retValue).isEqualTo("San Francisco, New York");
   }
+
+  @Test
+  public void shouldSubstituteReExtract() {
+    assertThat(expressionEvaluator.substitute("${re.extract('has matching', 'text has matching pattern')}", persons))
+        .isEqualTo("has matching");
+
+    assertThat(expressionEvaluator.substitute("${re.extract('has matching', 'no matching pattern')}", persons))
+        .isEqualTo("");
+
+    assertThat(expressionEvaluator.substitute("${re.extract('Y..k', '${bob.address.city}')}", persons))
+        .isEqualTo("York");
+  }
+
+  @Test
+  public void shouldSubstituteReReplace() {
+    assertThat(expressionEvaluator.substitute("${re.replace('foo', 'bar', 'foo bar baz')}", persons))
+        .isEqualTo("bar bar baz");
+
+    assertThat(expressionEvaluator.substitute("${re.replace('foo', '${bob.address.city}', 'foo bar baz')}", persons))
+        .isEqualTo("New York bar baz");
+
+    assertThat(
+        expressionEvaluator.substitute("${re.replace('.*(York)', 'New $1, New $1', '${bob.address.city}')}", persons))
+        .isEqualTo("New York, New York");
+  }
+
+  @Test
+  public void shouldSubstituteReMatch() {
+    assertThat(expressionEvaluator.evaluate("re.match('has matching', 'text has matching pattern')", persons))
+        .isEqualTo(true);
+
+    assertThat(expressionEvaluator.evaluate("re.match('.*has matching.*', 'text has matching pattern')", persons))
+        .isEqualTo(true);
+
+    assertThat(expressionEvaluator.evaluate("re.match('^has matching$', 'text has matching pattern')", persons))
+        .isEqualTo(false);
+
+    assertThat(expressionEvaluator.evaluate("re.match('has matching', 'no matching pattern')", persons))
+        .isEqualTo(false);
+
+    assertThat(expressionEvaluator.evaluate("re.match('York', ${bob.address.city})", persons)).isEqualTo(true);
+  }
 }

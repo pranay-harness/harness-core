@@ -22,7 +22,6 @@ public class EvaluateVariableResolver extends StrLookup {
       }
       return String.valueOf(expressionEvaluator.evaluate(variable, context));
     } catch (JexlException exception) {
-      // Suppress exception
     }
     return null;
   }

@@ -5,6 +5,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
@@ -30,6 +31,7 @@ public class ExpressionEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(ExpressionEvaluator.class);
 
   private JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
+  private RegexFunctor regexFunctor = new RegexFunctor();
 
   /**
    * The constant wingsVariablePattern.
@@ -38,36 +40,39 @@ public class ExpressionEvaluator {
   public static final Pattern variableNamePattern = Pattern.compile("^[_a-zA-Z][_\\w]*$");
 
   public Object evaluate(String expression, String name, Object value) {
-    JexlContext jc = new MapContext();
-    jc.set(name, value);
-    return evaluate(expression, jc);
+    Map<String, Object> context = new SingletonMap(name, value);
+    return evaluate(expression, context, null);
   }
 
   public Object evaluate(String expression, Map<String, Object> context) {
+    return evaluate(expression, context, null);
+  }
+
+  public Object evaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    expression = normalizeExpression(expression, context, defaultObjectPrefix);
+
     JexlContext jc = new MapContext();
     if (context != null) {
       for (String key : context.keySet()) {
         jc.set(key, context.get(key));
       }
     }
-    return evaluate(expression, jc);
+
+    return evaluate(expression, jc, defaultObjectPrefix);
   }
 
-  public Object evaluate(String expression, JexlContext context) {
+  private Object evaluate(String expression, JexlContext context, String defaultObjectPrefix) {
     logger.debug("evaluate request - expression: {}, context: {}", expression, context);
     if (expression == null) {
       return expression;
     }
 
+    context.set("re", regexFunctor);
+
     JexlExpression jexlExpression = engine.createExpression(expression);
     Object retValue = jexlExpression.evaluate(context);
     logger.debug("evaluate request - return value: {}", retValue);
     return retValue;
-  }
-
-  public Object evaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
-    expression = normalizeExpression(expression, context, defaultObjectPrefix);
-    return evaluate(expression, context);
   }
 
   public String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
@@ -97,6 +102,7 @@ public class ExpressionEvaluator {
                                                           .build();
 
     StrSubstitutor substitutor = new StrSubstitutor();
+    substitutor.setEnableSubstitutionInVariables(true);
     substitutor.setVariableResolver(variableResolver);
 
     StringBuffer sb = new StringBuffer(expression);
