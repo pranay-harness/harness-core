@@ -2193,6 +2193,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                 .withName("Select Nodes")
                                                 .addProperty("specificHosts", false)
                                                 .addProperty("instanceCount", 1)
+                                                .addProperty("excludeSelectedHostsFromFuturePhases", true)
                                                 .build())
                                    .build());
 

@@ -28,6 +28,8 @@ import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNot
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PROVISION_NODE;
+import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.Service.Builder.aService;
@@ -2070,6 +2072,22 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .containsKeys(orchestrationWorkflow3.getPreDeploymentSteps().getUuid(),
             orchestrationWorkflow3.getWorkflowPhaseIds().get(0), orchestrationWorkflow3.getWorkflowPhaseIds().get(1),
             orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+
+    for (WorkflowPhase phase : orchestrationWorkflow3.getWorkflowPhases()) {
+      for (PhaseStep phaseStep : phase.getPhaseSteps()) {
+        if (SELECT_NODE == phaseStep.getPhaseStepType() || PROVISION_NODE == phaseStep.getPhaseStepType()) {
+          for (Graph.Node node : phaseStep.getSteps()) {
+            if (StateType.AWS_NODE_SELECT.name().equals(node.getType())
+                || StateType.DC_NODE_SELECT.name().equals(node.getType())) {
+              Map<String, Object> properties = node.getProperties();
+              assertThat(properties.get("specificHosts")).isEqualTo(false);
+              assertThat(properties.get("instanceCount")).isEqualTo(1);
+              assertThat(properties.get("excludeSelectedHostsFromFuturePhases")).isEqualTo(true);
+            }
+          }
+        }
+      }
+    }
   }
 
   @Test
