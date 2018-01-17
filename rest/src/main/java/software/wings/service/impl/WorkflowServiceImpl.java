@@ -2001,11 +2001,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof AwsAmiInfrastructureMapping) {
+        Map<String, Object> defaultData = new HashMap<>();
+        defaultData.put("maxInstances", 10);
+        defaultData.put("autoScalingSteadyStateTimeout", 10);
         workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
                                        .addStep(aNode()
                                                     .withId(getUuid())
                                                     .withType(AWS_AMI_SERVICE_SETUP.name())
                                                     .withName("AWS AutoScaling Group Setup")
+                                                    .withProperties(defaultData)
                                                     .build())
                                        .build());
       }

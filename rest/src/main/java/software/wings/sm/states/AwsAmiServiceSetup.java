@@ -60,6 +60,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 12/19/17.
@@ -69,8 +70,8 @@ public class AwsAmiServiceSetup extends State {
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
 
   private String autoScalingGroupName;
-  private Integer autoScalingSteadyStateTimeout;
-  private Integer maxInstances;
+  private int autoScalingSteadyStateTimeout;
+  private int maxInstances;
   private ResizeStrategy resizeStrategy;
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
@@ -113,8 +114,8 @@ public class AwsAmiServiceSetup extends State {
     String region = infrastructureMapping.getRegion();
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
-    AwsAmiSetupExecutionData awsAmiExecutionData = null;
-    AmiServiceSetupElement amiServiceElement = null;
+    AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder().build();
+    AmiServiceSetupElement amiServiceElement = AmiServiceSetupElement.builder().build();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage = null;
 
@@ -145,6 +146,16 @@ public class AwsAmiServiceSetup extends State {
           : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
       String newAutoScalingGroupName = AsgConvention.getAsgName(asgNamePrefix, harnessRevision);
 
+      /**
+       * Defaulting to 10 max instances in case we get maxInstances as 0
+       */
+      maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
+      /**
+       * Defaulting to 10 minutes timeout in case we get autoScalingSteadyStateTimeout as 0
+       */
+      autoScalingSteadyStateTimeout = getAutoScalingSteadyStateTimeout() == 0 ? (int) TimeUnit.MINUTES.toMinutes(10)
+                                                                              : autoScalingSteadyStateTimeout;
+
       awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
                                 .newAutoScalingGroupName(newAutoScalingGroupName)
                                 .oldAutoScalingGroupName(lastDeployedAsgName)
@@ -156,7 +167,7 @@ public class AwsAmiServiceSetup extends State {
       amiServiceElement = AmiServiceSetupElement.builder()
                               .newAutoScalingGroupName(newAutoScalingGroupName)
                               .oldAutoScalingGroupName(lastDeployedAsgName)
-                              .maxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+                              .maxInstances(maxInstances)
                               .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
                               .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
                               .build();
@@ -177,6 +188,8 @@ public class AwsAmiServiceSetup extends State {
       logger.error("Ami setup step failed with error ", ex);
       executionStatus = ExecutionStatus.FAILED;
       errorMessage = ex.getMessage();
+      awsAmiExecutionData.setStatus(executionStatus);
+      awsAmiExecutionData.setErrorMsg(errorMessage);
     }
 
     return anExecutionResponse()
