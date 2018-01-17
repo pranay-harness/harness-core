@@ -87,13 +87,13 @@ public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest 
           candidateCount++;
         }
         if (workflowModified) {
-          result.append("\n***** account: ")
+          result.append("\n***** account: [")
               .append(app.getAccountId())
-              .append(" app: ")
+              .append("], app: [")
               .append(app.getName())
-              .append(" workflow: ")
+              .append("], workflow: {")
               .append(workflow.getName())
-              .append('\n');
+              .append("]\n\n");
 
           try {
             //            workflowService.updateWorkflow(workflow);
