@@ -2,9 +2,7 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <prerequisites>
-        <maven>3.0.0</maven>
-    </prerequisites>
+
     <groupId>software.wings</groupId>
     <artifactId>portal</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -12,8 +10,8 @@
 
     <modules>
         <!-- Harness Commons provides all aspects of reusable Java components. -->
-        <module>commons-test</module>
         <module>commons</module>
+        <module>commons-test</module>
 
         <module>rest</module>
         <module>tools</module>
@@ -98,7 +96,6 @@
             <name>bintray</name>
             <url>http://jcenter.bintray.com</url>
         </repository>
-
     </repositories>
 
     <dependencyManagement>
