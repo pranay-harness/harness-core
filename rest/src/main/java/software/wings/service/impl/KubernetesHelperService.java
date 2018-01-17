@@ -44,13 +44,13 @@ public class KubernetesHelperService {
       configBuilder.withPassword(new String(kubernetesConfig.getPassword()).trim());
     }
     if (kubernetesConfig.getCaCert() != null) {
-      configBuilder.withCaCertData(new String(kubernetesConfig.getCaCert()).trim());
+      configBuilder.withCaCertData(encode(kubernetesConfig.getCaCert()));
     }
     if (kubernetesConfig.getClientCert() != null) {
-      configBuilder.withClientCertData(new String(kubernetesConfig.getClientCert()).trim());
+      configBuilder.withClientCertData(encode(kubernetesConfig.getClientCert()));
     }
     if (kubernetesConfig.getClientKey() != null) {
-      configBuilder.withClientKeyData(new String(kubernetesConfig.getClientKey()).trim());
+      configBuilder.withClientKeyData(encode(kubernetesConfig.getClientKey()));
     }
     if (kubernetesConfig.getClientKeyPassphrase() != null) {
       configBuilder.withClientKeyPassphrase(new String(kubernetesConfig.getClientKeyPassphrase()).trim());
@@ -60,5 +60,10 @@ public class KubernetesHelperService {
     }
 
     return new DefaultKubernetesClient(configBuilder.build()).inNamespace(namespace);
+  }
+
+  private String encode(char[] value) {
+    return new String(value).trim();
+    //    return new String(Base64.getEncoder().encode(new String(value).trim().getBytes()));
   }
 }

@@ -69,7 +69,9 @@ public class EcsServiceSetup extends ContainerServiceSetup {
           .forEach(containerDefinition
               -> containerDefinition.setCommands(
                   containerDefinition.getCommands().stream().map(context::renderExpression).collect(toList())));
-      ecsContainerTask.setAdvancedConfig(context.renderExpression(ecsContainerTask.getAdvancedConfig()));
+      if (ecsContainerTask.getAdvancedConfig() != null) {
+        ecsContainerTask.setAdvancedConfig(context.renderExpression(ecsContainerTask.getAdvancedConfig()));
+      }
     }
 
     return anEcsSetupParams()
