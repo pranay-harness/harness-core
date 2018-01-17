@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 /**
  * Created by rishi on 1/24/17.
  */
@@ -169,6 +170,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     switch (repairActionCode) {
       case IGNORE: {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.IGNORE).build();
+      }
+      case END_EXECUTION: {
+        return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
 
       case MANUAL_INTERVENTION: {
