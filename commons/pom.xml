@@ -5,9 +5,15 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.harness</groupId>
     <artifactId>commons</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+
+    <repositories>
+        <repository>
+            <id>localrepository</id>
+            <url>file://${basedir}/../repo</url>
+        </repository>
+    </repositories>
 
     <parent>
         <groupId>software.wings</groupId>
@@ -27,7 +33,7 @@
             <version>3.0.0</version>
         </dependency>
         <dependency>
-            <groupId>io.harness</groupId>
+            <groupId>software.wings</groupId>
             <artifactId>commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>

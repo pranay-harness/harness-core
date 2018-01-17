@@ -2,7 +2,6 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>software.wings</groupId>
     <artifactId>rest</artifactId>
 
     <parent>
@@ -20,7 +19,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.harness</groupId>
+            <groupId>software.wings</groupId>
             <artifactId>commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -446,7 +445,7 @@
         <!-- Test Dependencies -->
 
         <dependency>
-            <groupId>io.harness</groupId>
+            <groupId>software.wings</groupId>
             <artifactId>commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
