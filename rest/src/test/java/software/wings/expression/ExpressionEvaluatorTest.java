@@ -60,6 +60,12 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  public void testNormalizeExpressionDoNotExpandRe() {
+    assertThat(expressionEvaluator.normalizeExpression("${re.match('', '')}", persons, "bob"))
+        .isEqualTo("re.match('', '')");
+  }
+
+  @Test
   public void shouldEvaluateHostUrl() {
     Host host = new Host();
     host.setHostName("app123.application.com");
@@ -165,6 +171,12 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
 
     assertThat(expressionEvaluator.substitute("${re.extract('Y..k', '${bob.address.city}')}", persons))
         .isEqualTo("York");
+  }
+
+  @Test
+  public void testSubstituteDoNotExpandRe() {
+    assertThat(expressionEvaluator.substitute("${re.extract('match', 'has matching pattern')}", persons, "bob"))
+        .isEqualTo("match");
   }
 
   @Test
