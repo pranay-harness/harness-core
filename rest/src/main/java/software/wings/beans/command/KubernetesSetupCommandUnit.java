@@ -100,7 +100,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Override
   protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> edd, ContainerSetupParams containerSetupParams, Map<String, String> serviceVariables,
-      ExecutionLogCallback executionLogCallback) {
+      Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
 
     KubernetesConfig kubernetesConfig;
@@ -155,9 +155,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                                .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
                                                .build();
 
-    HasMetadata controllerDefinition =
-        createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
-            kubernetesConfig.getNamespace(), setupParams.getImageDetails(), secretName, serviceVariables);
+    HasMetadata controllerDefinition = createKubernetesControllerDefinition(kubernetesContainerTask,
+        containerServiceName, controllerLabels, kubernetesConfig.getNamespace(), setupParams.getImageDetails(),
+        secretName, serviceVariables, safeDisplayServiceVariables, executionLogCallback);
     kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, controllerDefinition);
 
     String serviceClusterIP = null;
@@ -292,7 +292,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String secretName, String namespace, ImageDetails imageDetails, ExecutionLogCallback executionLogCallback) {
     String credentialData = String.format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
         imageDetails.getUsername(), imageDetails.getPassword());
-    executionLogCallback.saveExecutionLog("Setting secret " + secretName, LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName, LogLevel.INFO);
     return new SecretBuilder()
         .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
         .withNewMetadata()
@@ -368,7 +368,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
    */
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
       String replicationControllerName, Map<String, String> controllerLabels, String namespace,
-      ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables) {
+      ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables,
+      Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback) {
     String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
     String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
 
@@ -378,13 +379,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     KubernetesHelper.setNamespace(kubernetesObj, namespace);
     KubernetesHelper.getOrCreateLabels(kubernetesObj).putAll(controllerLabels);
 
-    configureTypeSpecificSpecs(controllerLabels, kubernetesObj, serviceVariables);
+    configureTypeSpecificSpecs(
+        controllerLabels, kubernetesObj, serviceVariables, safeDisplayServiceVariables, executionLogCallback);
 
     return kubernetesObj;
   }
 
-  private void configureTypeSpecificSpecs(
-      Map<String, String> controllerLabels, HasMetadata kubernetesObj, Map<String, String> serviceVariables) {
+  private void configureTypeSpecificSpecs(Map<String, String> controllerLabels, HasMetadata kubernetesObj,
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      ExecutionLogCallback executionLogCallback) {
     ObjectMeta objectMeta = null;
     PodSpec podSpec = null;
     if (kubernetesObj instanceof ReplicationController) {
@@ -429,6 +432,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (podSpec != null) {
       // Set service variables as environment variables
       if (MapUtils.isNotEmpty(serviceVariables)) {
+        if (MapUtils.isNotEmpty(safeDisplayServiceVariables)) {
+          executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
+          for (String key : safeDisplayServiceVariables.keySet()) {
+            executionLogCallback.saveExecutionLog(key + "=" + safeDisplayServiceVariables.get(key), LogLevel.INFO);
+          }
+        }
         Map<String, EnvVar> serviceEnvVars =
             serviceVariables.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build()));

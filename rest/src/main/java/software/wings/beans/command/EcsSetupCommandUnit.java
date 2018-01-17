@@ -50,7 +50,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Override
   protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
-      Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      ExecutionLogCallback executionLogCallback) {
     EcsSetupParams setupParams = (EcsSetupParams) containerSetupParams;
     executionLogCallback.saveExecutionLog(
         "Create ECS service in cluster " + setupParams.getClusterName(), LogLevel.INFO);
@@ -72,7 +73,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
     TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName,
         setupParams.getTaskFamily(), setupParams.getRegion(), cloudProviderSetting, serviceVariables,
-        encryptedDataDetails, executionLogCallback);
+        safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback);
 
     String containerServiceName =
         EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
@@ -127,13 +128,19 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,
       String dockerImageName, String taskFamily, String region, SettingAttribute settingAttribute,
-      Map<String, String> serviceVariables, List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback) {
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     TaskDefinition taskDefinition = ecsContainerTask.createTaskDefinition(containerName, dockerImageName);
     taskDefinition.setFamily(taskFamily);
 
     // Set service variables as environment variables
     if (MapUtils.isNotEmpty(serviceVariables)) {
+      if (MapUtils.isNotEmpty(safeDisplayServiceVariables)) {
+        executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
+        for (String key : safeDisplayServiceVariables.keySet()) {
+          executionLogCallback.saveExecutionLog(key + "=" + safeDisplayServiceVariables.get(key), LogLevel.INFO);
+        }
+      }
       Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey, entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue())));
       for (ContainerDefinition containerDefinition : taskDefinition.getContainerDefinitions()) {

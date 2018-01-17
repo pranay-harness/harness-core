@@ -43,7 +43,7 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
 
     try {
       context.setCommandExecutionData(executeInternal(cloudProviderSetting, cloudProviderCredentials, setupParams,
-          context.getServiceVariables(), executionLogCallback));
+          context.getServiceVariables(), context.getSafeDisplayServiceVariables(), executionLogCallback));
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
@@ -57,7 +57,8 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
 
   protected abstract ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams setupParams,
-      Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback);
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      ExecutionLogCallback executionLogCallback);
 
   @Data
   @EqualsAndHashCode(callSuper = true)
