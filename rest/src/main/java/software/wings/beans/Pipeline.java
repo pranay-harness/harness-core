@@ -11,6 +11,7 @@ import com.google.common.base.MoreObjects;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.BaseEntityYaml;
@@ -37,6 +38,7 @@ public class Pipeline extends Base {
   @Transient private boolean valid = true;
   @Transient private String validationMessage;
   @Transient private boolean templatized;
+  @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   /**
    * Gets state eta map.
@@ -134,6 +136,14 @@ public class Pipeline extends Base {
     this.templatized = templatized;
   }
 
+  public List<FailureStrategy> getFailureStrategies() {
+    return failureStrategies;
+  }
+
+  public void setFailureStrategies(List<FailureStrategy> failureStrategies) {
+    this.failureStrategies = failureStrategies;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(name, description, pipelineStages, stateEtaMap);
@@ -190,6 +200,7 @@ public class Pipeline extends Base {
         .withName(name)
         .withDescription(description)
         .withPipelineStages(getPipelineStages())
+        .withFailureStrategies(getFailureStrategies())
         .withStateEtaMap(getStateEtaMap())
         .build();
   }
@@ -200,6 +211,7 @@ public class Pipeline extends Base {
         .withDescription(getDescription())
         .withPipelineStages(getPipelineStages())
         .withStateEtaMap(getStateEtaMap())
+        .withFailureStrategies(getFailureStrategies())
         .withUuid(getUuid())
         .withAppId(getAppId())
         .withCreatedBy(getCreatedBy())
@@ -224,6 +236,7 @@ public class Pipeline extends Base {
     private long lastUpdatedAt;
     private List<Service> services;
     private List<Variable> variables = new ArrayList<>();
+    private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
     private Builder() {}
 
@@ -367,6 +380,16 @@ public class Pipeline extends Base {
     }
 
     /**
+     * With failureStrategies
+     * @param failureStrategies
+     * @return
+     */
+    public Builder withFailureStrategies(List<FailureStrategy> failureStrategies) {
+      this.failureStrategies = failureStrategies;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -384,7 +407,8 @@ public class Pipeline extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withServices(services)
-          .withVariables(variables);
+          .withVariables(variables)
+          .withFailureStrategies(failureStrategies);
     }
 
     /**
@@ -405,6 +429,7 @@ public class Pipeline extends Base {
       pipeline.setLastUpdatedBy(lastUpdatedBy);
       pipeline.setLastUpdatedAt(lastUpdatedAt);
       pipeline.setServices(services);
+      pipeline.setFailureStrategies(failureStrategies);
       return pipeline;
     }
   }
@@ -415,6 +440,7 @@ public class Pipeline extends Base {
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
+    private List<FailureStrategy.Yaml> failureStrategies;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String description, List<PipelineStage.Yaml> pipelineStages) {

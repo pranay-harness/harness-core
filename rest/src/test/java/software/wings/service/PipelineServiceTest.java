@@ -4,12 +4,14 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -34,16 +36,20 @@ import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RepairActionCode;
 import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -56,11 +62,15 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
+import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.EnvState;
 import software.wings.utils.WingsTestConstants;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 11/3/16.
@@ -79,6 +89,8 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private PipelineService pipelineService;
 
+  @Captor private ArgumentCaptor<Pipeline> pipelineArgumentCaptor;
+
   /**
    * Sets up.
    *
@@ -90,6 +102,40 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
     when(appService.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
+  }
+
+  @Test
+  public void shouldCreatePipeline() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", WORKFLOW_ID);
+    PipelineStage pipelineStage =
+        new PipelineStage(asList(new PipelineStageElement("SE", ENV_STATE.name(), properties)));
+    pipelineStage.setName("STAGE1");
+
+    FailureStrategy failureStrategy =
+        aFailureStrategy().withRepairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+    Pipeline pipeline = aPipeline()
+                            .withName("pipeline1")
+                            .withAppId(APP_ID)
+                            .withUuid(PIPELINE_ID)
+                            .withPipelineStages(asList(pipelineStage))
+                            .withFailureStrategies(asList(failureStrategy))
+                            .build();
+
+    when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+    pipelineService.createPipeline(pipeline);
+
+    verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
+    assertThat(pipelineArgumentCaptor.getValue())
+        .isNotNull()
+        .extracting("failureStrategies")
+        .doesNotContainNull()
+        .contains(asList(failureStrategy));
   }
 
   @Test

@@ -8,5 +8,6 @@ public enum RepairActionCode {
   ROLLBACK_WORKFLOW,
   ROLLBACK_PHASE,
   IGNORE,
-  RETRY;
+  RETRY,
+  END_EXECUTION;
 }

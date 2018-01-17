@@ -151,6 +151,8 @@ REPAIR_ACTION_CODE:
       value: IGNORE
     - name: Retry
       value: RETRY
+    - name: End Execution
+      value: END_EXECUTION
 
 ACTION_AFTER_RETRY:
     - name: Manual Intervention
@@ -163,6 +165,22 @@ ACTION_AFTER_RETRY:
       value: IGNORE
     - name: Retry
       value: RETRY
+    - name: End Execution
+      value: END_EXECUTION
+
+PIPELINE_REPAIR_ACTION_CODE:
+    - name: Manual Intervention
+      value: MANUAL_INTERVENTION
+    - name: Rollback Workflow Execution
+      value: ROLLBACK_WORKFLOW
+    - name: Rollback Phase Execution
+      value: ROLLBACK_PHASE
+    - name: Ignore
+      value: IGNORE
+    - name: Retry
+      value: RETRY
+    - name: End Execution
+      value: END_EXECUTION
 
 PHASE_STEP_TYPE:
     - name: Provision Nodes
