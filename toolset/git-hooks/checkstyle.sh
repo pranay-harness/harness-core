@@ -4,14 +4,21 @@
 BUILD=`mvn install -pl tools -pl tools/checkstyle -pl tools/config`
 if [ $? -ne 0 ]
 then
-    echo "BUILD"
+    echo "$BUILD"
+    exit 1
+fi
+
+COMPILE=`mvn install -pl commons-test -pl commons`
+if [ $? -ne 0 ]
+then
+    echo "$COMPILE"
     exit 1
 fi
 
 CHECKING=`mvn checkstyle:checkstyle`
 if [ $? -ne 0 ]
 then
-    echo "CHECKING"
+    echo "$CHECKING"
     exit 1
 fi
 
