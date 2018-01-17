@@ -7,15 +7,15 @@
         <groupId>software.wings</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
+    <modelVersion>4.0.0</modelVersion>
     <artifactId>api</artifactId>
 
     <repositories>
-    <repository>
-        <id>localrepository</id>
-        <url>file://${basedir}/../repo</url>
-    </repository>
+        <repository>
+            <id>localrepository</id>
+            <url>file://${basedir}/../repo</url>
+        </repository>
     </repositories>
 
     <dependencies>
