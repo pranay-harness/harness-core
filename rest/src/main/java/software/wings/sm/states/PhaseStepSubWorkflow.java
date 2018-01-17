@@ -289,6 +289,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case PREPARE_STEPS:
       case DEPLOY_AWS_LAMBDA:
       case COLLECT_ARTIFACT:
+      case AMI_AUTOSCALING_GROUP_SETUP:
+      case AMI_DEPLOY_AUTOSCALING_GROUP:
         noop();
         break;
 
