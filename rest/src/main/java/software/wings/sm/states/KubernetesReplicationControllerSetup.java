@@ -94,7 +94,10 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
           .forEach(containerDefinition
               -> containerDefinition.setCommands(
                   containerDefinition.getCommands().stream().map(context::renderExpression).collect(toList())));
-      kubernetesContainerTask.setAdvancedConfig(context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
+      if (kubernetesContainerTask.getAdvancedConfig() != null) {
+        kubernetesContainerTask.setAdvancedConfig(
+            context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
+      }
       isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
     }
 
