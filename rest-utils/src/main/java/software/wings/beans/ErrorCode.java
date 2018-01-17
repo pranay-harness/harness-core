@@ -113,6 +113,11 @@ public enum ErrorCode {
   INVALID_KEYPATH("INVALID_KEYPATH"),
 
   /**
+   * Invalid token error codes.
+   */
+  INVALID_VARIABLE("INVALID_VARIABLE"),
+
+  /**
    * Unknown host error codes.
    */
   UNKNOWN_HOST("UNKNOWN_HOST", "Invalid hostname"),
