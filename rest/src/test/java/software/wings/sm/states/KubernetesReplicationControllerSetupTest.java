@@ -3,10 +3,12 @@ package software.wings.sm.states;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
@@ -47,6 +49,7 @@ import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
@@ -58,6 +61,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -66,7 +70,9 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -226,5 +232,15 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
 
     kubernetesReplicationControllerSetup.execute(context);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
+    ContainerSetupParams params = executionContext.getContainerSetupParams();
+    assertThat(params.getAppName()).isEqualTo(APP_NAME);
+    assertThat(params.getEnvName()).isEqualTo(ENV_NAME);
+    assertThat(params.getServiceName()).isEqualTo(SERVICE_NAME);
+    assertThat(params.getClusterName()).isEqualTo(CLUSTER_NAME);
   }
 }
