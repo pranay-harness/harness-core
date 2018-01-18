@@ -170,6 +170,7 @@ public class StateMachine extends Base {
       } else if (i < pipeline.getPipelineStages().size() - 1 && pipeline.getPipelineStages().get(i + 1).isParallel()) {
         // start of a fork - not a parallel, but following stage has parallel flag
         String forkName = getForkStateName(pipelineStage);
+        forkName += "-" + i;
         ForkState forkState = new ForkState(forkName);
         forkState.addForkState(state);
         addState(forkState);
