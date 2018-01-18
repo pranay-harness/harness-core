@@ -64,8 +64,6 @@ import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.LogAnalysisPurgeManager;
-import software.wings.scheduler.PersistentLockCleanupJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
@@ -327,11 +325,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerCronJobs(Injector injector) {
-    logger.info("Register cron jobs...");
-    final QuartzScheduler jobScheduler =
-        injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler")));
-
-    PersistentLockCleanupJob.add(jobScheduler);
+    // TODO: Register the persistent cleanup job safely
   }
 
   private void registerJerseyProviders(Environment environment) {
