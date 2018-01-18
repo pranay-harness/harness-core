@@ -254,7 +254,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
     PageRequest<ServiceInstance> req = pageRequest.build();
     // Just for safety
-    if (req.getFilters() == null || req.getFilters().isEmpty()) {
+    if (isEmpty(req.getFilters())) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
           .addParam("args", "No Filter attached to filter service instances");
     }

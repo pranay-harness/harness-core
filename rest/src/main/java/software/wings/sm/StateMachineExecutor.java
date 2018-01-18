@@ -778,7 +778,7 @@ public class StateMachineExecutor {
 
   private void notify(StateExecutionInstance stateExecutionInstance, ExecutionStatus status) {
     ElementNotifyResponseData notifyResponseData = anElementNotifyResponseData().withExecutionStatus(status).build();
-    if (stateExecutionInstance.getNotifyElements() != null && !stateExecutionInstance.getNotifyElements().isEmpty()) {
+    if (isNotEmpty(stateExecutionInstance.getNotifyElements())) {
       notifyResponseData.setContextElements(stateExecutionInstance.getNotifyElements());
     }
     waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), notifyResponseData);

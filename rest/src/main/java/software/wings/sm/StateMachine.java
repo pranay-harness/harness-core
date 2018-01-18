@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
@@ -313,8 +314,7 @@ public class StateMachine extends Base {
 
       state.resolveProperties();
 
-      if (node.getVariableOverrides() != null && !node.getVariableOverrides().isEmpty()
-          && state instanceof SubWorkflowState) {
+      if (isNotEmpty(node.getVariableOverrides()) && state instanceof SubWorkflowState) {
         ((SubWorkflowState) state).setVariableOverrides(node.getVariableOverrides());
       }
 

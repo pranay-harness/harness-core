@@ -182,7 +182,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                       .withPhaseNameForRollback(phaseNameForRollback)
                                       .build();
 
-      if (getVariableOverrides() != null && !getVariableOverrides().isEmpty()) {
+      if (isNotEmpty(getVariableOverrides())) {
         phaseElement.setVariableOverrides(getVariableOverrides());
       }
       spawningInstance.getContextElements().push(phaseElement);

@@ -482,8 +482,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow != null) {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-        if (canaryOrchestrationWorkflow.getWorkflowPhases() != null
-            && !canaryOrchestrationWorkflow.getWorkflowPhases().isEmpty()) {
+        if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
           List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
           canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
@@ -501,8 +500,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         MultiServiceOrchestrationWorkflow canaryOrchestrationWorkflow =
             (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-        if (canaryOrchestrationWorkflow.getWorkflowPhases() != null
-            && !canaryOrchestrationWorkflow.getWorkflowPhases().isEmpty()) {
+        if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
           List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
           canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));

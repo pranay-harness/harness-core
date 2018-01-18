@@ -11,7 +11,6 @@ import java.util.Map;
 public class ExclusiveStaticImportCheck extends AbstractCheck {
   private static final String MSG_KEY = "code.dependencies.hell.exclusive.static.import";
 
-  // TODO: take this as arguments
   private Map<String, String> staticImports = new HashMap();
 
   public void setStaticImports(String... imports) {

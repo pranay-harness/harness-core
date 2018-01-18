@@ -50,7 +50,7 @@ public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest 
       return;
     }
     System.out.println("Updating " + apps.size() + " applications.");
-    StringBuilder result = new StringBuilder();
+    StringBuilder result = new StringBuilder(64);
     for (Application app : apps) {
       List<Workflow> workflows = workflowService
                                      .listWorkflows(aPageRequest()

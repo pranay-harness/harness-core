@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableMap;
@@ -126,7 +127,7 @@ public class DelegateResource {
       delegate.setIncludeScopes(null);
       delegate.setExcludeScopes(null);
     } else {
-      if (delegateScopes.getIncludeScopeIds() != null && !delegateScopes.getIncludeScopeIds().isEmpty()) {
+      if (isNotEmpty(delegateScopes.getIncludeScopeIds())) {
         delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
                                       .stream()
                                       .map(s -> delegateScopeService.get(accountId, s))
@@ -134,7 +135,7 @@ public class DelegateResource {
       } else {
         delegate.setIncludeScopes(null);
       }
-      if (delegateScopes.getExcludeScopeIds() != null && !delegateScopes.getExcludeScopeIds().isEmpty()) {
+      if (isNotEmpty(delegateScopes.getExcludeScopeIds())) {
         delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
                                       .stream()
                                       .map(s -> delegateScopeService.get(accountId, s))

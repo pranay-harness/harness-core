@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -354,7 +355,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   public void populatePhaseStepIds(WorkflowPhase workflowPhase) {
-    if (workflowPhase.getPhaseSteps() == null || workflowPhase.getPhaseSteps().isEmpty()) {
+    if (isEmpty(workflowPhase.getPhaseSteps())) {
       return;
     }
     workflowPhase.getPhaseSteps().forEach(this ::populatePhaseStepIds);
@@ -374,7 +375,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       logger.error("Incorrect arguments to populate phaseStep: {}, graph: {}", phaseStep, graph);
       return;
     }
-    if (phaseStep.getStepsIds() == null || phaseStep.getStepsIds().isEmpty()) {
+    if (isEmpty(phaseStep.getStepsIds())) {
       //      logger.info("Empty stepList for the phaseStep: {}", phaseStep);
       return;
     }
@@ -468,7 +469,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         if (phase == null || phase.checkInfraTemplatized()) {
           continue;
         }
-        if (phase.getInfraMappingId() == null || phase.getInfraMappingId().isEmpty()) {
+        if (isEmpty(phase.getInfraMappingId())) {
           invalidInfraPhaseIds.add(phase.getName());
         }
       }

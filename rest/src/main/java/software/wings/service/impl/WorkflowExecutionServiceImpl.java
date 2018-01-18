@@ -707,11 +707,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
-    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
+    if (isNotEmpty(executionArgs.getArtifacts())) {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
-    if (executionArgs.getWorkflowVariables() != null && !executionArgs.getWorkflowVariables().isEmpty()) {
+    if (isNotEmpty(executionArgs.getWorkflowVariables())) {
       stdParams.setWorkflowVariables(executionArgs.getWorkflowVariables());
     }
     User user = UserThreadLocal.get();
@@ -830,7 +830,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
-    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
+    if (isNotEmpty(executionArgs.getArtifacts())) {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
@@ -931,7 +931,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
       }
 
-      if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
+      if (isNotEmpty(executionArgs.getArtifacts())) {
         List<String> artifactIds =
             executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList());
         PageRequest<Artifact> pageRequest = aPageRequest()
@@ -1179,7 +1179,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           throw new WingsException(ErrorCode.INVALID_REQUEST)
               .addParam("message", "serviceId is null for a simple execution");
         }
-        if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().isEmpty()) {
+        if (isEmpty(executionArgs.getServiceInstances())) {
           logger.error("serviceInstances are empty for a simple execution");
           throw new WingsException(ErrorCode.INVALID_REQUEST)
               .addParam("message", "serviceInstances are empty for a simple execution");
@@ -1226,7 +1226,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
-    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
+    if (isNotEmpty(executionArgs.getArtifacts())) {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
@@ -1353,7 +1353,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         throw new WingsException(ErrorCode.INVALID_REQUEST)
             .addParam("message", "serviceId is null for a simple execution");
       }
-      if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().isEmpty()) {
+      if (isEmpty(executionArgs.getServiceInstances())) {
         logger.error("serviceInstances are empty for a simple execution");
         throw new WingsException(ErrorCode.INVALID_REQUEST)
             .addParam("message", "serviceInstances are empty for a simple execution");
@@ -1661,8 +1661,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       ElementStateExecutionData elementStateExecutionData =
           (ElementStateExecutionData) stateExecutionInstance.getStateExecutionData();
-      if (elementStateExecutionData.getElementStatusSummary() == null
-          || elementStateExecutionData.getElementStatusSummary().isEmpty()) {
+      if (isEmpty(elementStateExecutionData.getElementStatusSummary())) {
         continue;
       }
       for (ElementExecutionSummary summary : elementStateExecutionData.getElementStatusSummary()) {

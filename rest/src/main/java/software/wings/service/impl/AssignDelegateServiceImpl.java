@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -48,7 +49,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegate == null) {
       return false;
     }
-    boolean assign = delegate.getIncludeScopes() == null || delegate.getIncludeScopes().isEmpty();
+    boolean assign = isEmpty(delegate.getIncludeScopes());
     if (delegate.getIncludeScopes() != null) {
       for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
         if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup)) {
