@@ -1,5 +1,6 @@
 package software.wings.common;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.api.AwsLambdaFunctionElement.Builder.anAwsLambdaFunctionElement;
 
 import org.slf4j.Logger;
@@ -80,7 +81,7 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
       return null;
     }
 
-    if (awsLambdaContextElement.getFunctionArns() == null || awsLambdaContextElement.getFunctionArns().isEmpty()) {
+    if (isEmpty(awsLambdaContextElement.getFunctionArns())) {
       logger.error("awsLambdaContextElement.getFunctionArns() is null or empty in the context");
     }
     List<AwsLambdaFunctionElement> awsLambdaFunctionElementList = new ArrayList<>();

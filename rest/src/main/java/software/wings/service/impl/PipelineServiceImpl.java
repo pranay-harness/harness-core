@@ -120,10 +120,7 @@ public class PipelineServiceImpl implements PipelineService {
         for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
           if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
             try {
-              if (pipelineStageElement.getWorkflowVariables() == null
-                  || pipelineStageElement.getWorkflowVariables().isEmpty()) {
-                // No need to validate pipeline
-              } else {
+              if (isNotEmpty(pipelineStageElement.getWorkflowVariables())) {
                 pipeline.setTemplatized(true);
                 Workflow workflow = workflowService.readWorkflow(
                     pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
@@ -334,7 +331,7 @@ public class PipelineServiceImpl implements PipelineService {
           try {
             Workflow workflow =
                 workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-            if (pse.getWorkflowVariables() == null || pse.getWorkflowVariables().isEmpty()) {
+            if (isEmpty(pse.getWorkflowVariables())) {
               workflow.getServices().forEach(service -> {
                 if (!serviceIds.contains(service.getUuid())) {
                   services.add(service);
@@ -454,7 +451,7 @@ public class PipelineServiceImpl implements PipelineService {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "At least one pipeline stage required");
     }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-      if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().isEmpty()) {
+      if (isEmpty(pipelineStage.getPipelineStageElements())) {
         throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid pipeline stage");
       }
 

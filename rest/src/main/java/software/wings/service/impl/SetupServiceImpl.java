@@ -168,7 +168,7 @@ public class SetupServiceImpl implements SetupService {
   }
 
   private SetupAction fetchIncompleteMandatoryApplicationAction(Application app) {
-    if (app.getServices() == null || app.getServices().isEmpty()) {
+    if (isEmpty(app.getServices())) {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one service.")
@@ -176,7 +176,7 @@ public class SetupServiceImpl implements SetupService {
           .build();
     }
 
-    if (app.getEnvironments() == null || app.getEnvironments().isEmpty()) {
+    if (isEmpty(app.getEnvironments())) {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one environment.")

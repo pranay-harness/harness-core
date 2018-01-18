@@ -581,7 +581,7 @@ public class UserServiceImpl implements UserService {
       builder.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       builder.put("passwordChangedAt", System.currentTimeMillis());
     }
-    if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+    if (isNotEmpty(user.getRoles())) {
       builder.put("roles", user.getRoles());
     }
     wingsPersistence.updateFields(User.class, user.getUuid(), builder.build());

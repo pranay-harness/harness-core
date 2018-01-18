@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
@@ -126,7 +127,7 @@ public class YamlHelper {
 
     rr.setResponseMessages(yp.getResponseMessages());
 
-    if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
+    if (isNotEmpty(yp.getYaml())) {
       rr.setResource(yp);
     }
 

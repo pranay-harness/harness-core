@@ -17,5 +17,10 @@ public class UseIsEmptyCheckIssues {
     }
     if (null != list && list.isNotEmpty()) {
     }
+
+    if (list.foo() == null || list.foo().isEmpty()) {
+    }
+    if (list.foo() != null && !list.foo().isEmpty()) {
+    }
   }
 }

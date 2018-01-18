@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Log.Builder.aLog;
@@ -244,7 +245,7 @@ public class AwsLambdaState extends State {
                                                                  .withActivityId(activity.getUuid());
 
     LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
-    if (specification.getFunctions() == null || specification.getFunctions().isEmpty()) {
+    if (isEmpty(specification.getFunctions())) {
       logService.save(logBuilder.but().withLogLine("No Lambda function to deploy.").build());
     } else {
       for (FunctionSpecification functionSpecification : specification.getFunctions()) {

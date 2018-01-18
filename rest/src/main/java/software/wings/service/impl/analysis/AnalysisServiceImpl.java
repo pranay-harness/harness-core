@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
@@ -410,8 +411,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     RiskLevel riskLevel = RiskLevel.NA;
-    String analysisSummaryMsg =
-        analysisRecord.getAnalysisSummaryMessage() == null || analysisRecord.getAnalysisSummaryMessage().isEmpty()
+    String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
         ? analysisSummary.getControlClusters().isEmpty()
             ? "No baseline data for the given queries. This will be baseline for the next run."
             : analysisSummary.getTestClusters().isEmpty()
