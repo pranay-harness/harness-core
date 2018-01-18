@@ -102,7 +102,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     ContainerServiceElementBuilder containerServiceElementBuilder =
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
-            .useFixedInstances(isUseFixedInstances())
+            .useFixedInstances(FIXED_INSTANCES.equals(getDesiredInstanceCount()))
             .fixedInstances(fixedInstances)
             .maxInstances(maxInstances)
             .resizeStrategy(resizeStrategy)
