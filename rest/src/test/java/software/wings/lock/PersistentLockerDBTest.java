@@ -54,23 +54,54 @@ public class PersistentLockerDBTest extends WingsBaseTest {
   @Test
   @Ignore // The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.
   public void testAcquireAfterTimeout() throws InterruptedException {
-    Duration timeout = Duration.ofMillis(1);
+    class AnotherLock implements Runnable {
+      public boolean locked = false;
+      public boolean tested = false;
 
-    boolean great = false;
-    try (AcquiredLock lock1 = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
-      Thread.sleep(10);
-      for (int i = 0; i < 10; ++i) {
-        try (AcquiredLock lock2 = persistentLocker.tryToAcquireLock(AcquiredLock.class, "cba", timeout)) {
-          if (lock2 != null) {
-            great = true;
-            break;
+      @Override
+      public void run() {
+        try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMillis(1))) {
+          sleep(Duration.ofMillis(5));
+          synchronized (this) {
+            locked = true;
+            this.notify();
+          }
+
+          synchronized (this) {
+            while (!tested) {
+              try {
+                this.wait();
+              } catch (InterruptedException e) {
+                e.printStackTrace();
+              }
+            }
           }
         }
-        sleep(Duration.ofMillis(100));
       }
-    } catch (WingsException exception) {
     }
 
+    AnotherLock run = new AnotherLock();
+    Thread thread = new Thread(run);
+    thread.start();
+
+    synchronized (run) {
+      while (!run.locked) {
+        run.wait();
+      }
+    }
+
+    boolean great = false;
+    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMillis(100))) {
+      great = true;
+    }
+    sleep(Duration.ofMillis(5));
+
+    synchronized (run) {
+      run.tested = true;
+      run.notify();
+    }
+
+    thread.join();
     assertTrue(great);
   }
 }
