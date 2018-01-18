@@ -5,6 +5,7 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.CollaborationProviderYaml;
@@ -13,6 +14,7 @@ import software.wings.yaml.setting.CollaborationProviderYaml;
  * Created by anubhaw on 12/14/16.
  */
 @JsonTypeName("SLACK")
+@ToString
 public class SlackConfig extends SettingValue {
   @Attributes(title = "Slack Webhook URL", required = true) @NotEmpty private String outgoingWebhookUrl;
 
@@ -40,7 +42,6 @@ public class SlackConfig extends SettingValue {
   public void setOutgoingWebhookUrl(String outgoingWebhookUrl) {
     this.outgoingWebhookUrl = outgoingWebhookUrl;
   }
-
   /**
    * The type Builder.
    */
