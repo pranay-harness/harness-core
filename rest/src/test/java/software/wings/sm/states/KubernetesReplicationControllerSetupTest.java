@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static java.util.Collections.emptyList;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,6 +67,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -96,6 +98,8 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_REPLICATION_CONTROLLER_NAME = "kubernetes-rc-name.1";
@@ -172,6 +176,14 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                                                              .build())
                                               .build();
 
+  private List<ServiceVariable> serviceVariableList =
+      asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
+          ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("value2".toCharArray()).build());
+
+  private List<ServiceVariable> safeDisplayServiceVariableList =
+      asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
+          ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
+
   @Before
   public void setup() {
     when(appService.get(APP_ID)).thenReturn(app);
@@ -215,7 +227,9 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, false))
-        .thenReturn(emptyList());
+        .thenReturn(serviceVariableList);
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, true))
+        .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(kubernetesReplicationControllerSetup, "secretManager", secretManager);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
@@ -236,7 +250,19 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
+
     CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
+
+    Map<String, String> serviceVariables = executionContext.getServiceVariables();
+    assertThat(serviceVariables.size()).isEqualTo(2);
+    assertThat(serviceVariables.get("VAR_1")).isEqualTo("value1");
+    assertThat(serviceVariables.get("VAR_2")).isEqualTo("value2");
+
+    Map<String, String> safeDisplayServiceVariables = executionContext.getSafeDisplayServiceVariables();
+    assertThat(safeDisplayServiceVariables.size()).isEqualTo(2);
+    assertThat(safeDisplayServiceVariables.get("VAR_1")).isEqualTo("value1");
+    assertThat(safeDisplayServiceVariables.get("VAR_2")).isEqualTo("*******");
+
     ContainerSetupParams params = executionContext.getContainerSetupParams();
     assertThat(params.getAppName()).isEqualTo(APP_NAME);
     assertThat(params.getEnvName()).isEqualTo(ENV_NAME);
