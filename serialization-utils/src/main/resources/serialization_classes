@@ -260,3 +260,4 @@ software.wings.beans.NameValuePair, 5226
 software.wings.sm.WorkflowStandardParams, 5227
 software.wings.api.AwsLambdaContextElement, 5228
 software.wings.api.AwsLambdaContextElement$FunctionMeta, 5229
+software.wings.api.AwsLambdaFunctionElement, 5230
