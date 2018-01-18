@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -73,6 +76,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         logger.info("No change set found in queued state");
       }
       return modifiedChangeSet;
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(BACKGROUND_JOB);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
