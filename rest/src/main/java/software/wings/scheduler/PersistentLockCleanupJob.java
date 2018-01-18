@@ -42,9 +42,13 @@ public class PersistentLockCleanupJob implements Job {
 
     JobDetail job = JobBuilder.newJob(PersistentLockCleanupJob.class).withIdentity(NAME, GROUP).build();
 
+    Calendar startTime = Calendar.getInstance();
+    startTime.add(Calendar.MINUTE, 10);
+
     Trigger trigger =
         TriggerBuilder.newTrigger()
             .withIdentity(NAME, GROUP)
+            .startAt(startTime.getTime())
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
             .build();
 
