@@ -9,6 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -219,14 +220,17 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withHostNames(singletonList(HOST_NAME))
             .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
             .build();
+
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(wingsPersistence.saveAndGet(InfrastructureMapping.class, physicalInfrastructureMapping))
-        .thenReturn(savedPhysicalInfrastructureMapping);
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
-        .thenReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build());
-    when(settingsService.get(COMPUTE_PROVIDER_ID))
-        .thenReturn(
-            aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build());
+    doReturn(savedPhysicalInfrastructureMapping)
+        .when(wingsPersistence)
+        .saveAndGet(InfrastructureMapping.class, physicalInfrastructureMapping);
+    doReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build())
+        .when(serviceTemplateService)
+        .get(APP_ID, TEMPLATE_ID);
+    doReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build())
+        .when(settingsService)
+        .get(COMPUTE_PROVIDER_ID);
 
     InfrastructureMapping returnedInfrastructureMapping =
         infrastructureMappingService.save(physicalInfrastructureMapping);
@@ -287,13 +291,19 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withHostNames(singletonList("HOST_NAME_1"))
                                                      .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                                      .build();
+
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID)).thenReturn(savedInfra);
-    when(settingsService.get(COMPUTE_PROVIDER_ID))
-        .thenReturn(
-            aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build());
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
-        .thenReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build());
+
+    doReturn(savedInfra).when(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+
+    doReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build())
+        .when(settingsService)
+        .get(COMPUTE_PROVIDER_ID);
+
+    doReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build())
+        .when(serviceTemplateService)
+        .get(APP_ID, TEMPLATE_ID);
+
     Host host = aHost()
                     .withAppId(APP_ID)
                     .withEnvId(ENV_ID)
