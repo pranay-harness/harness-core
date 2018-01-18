@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
@@ -120,7 +121,9 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     if (setupParams.isUseLoadBalancer()) {
       executionLogCallback.saveExecutionLog("Load Balancer Name: " + setupParams.getLoadBalancerName(), LogLevel.INFO);
       executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), LogLevel.INFO);
-      executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), LogLevel.INFO);
+      if (isNotBlank(setupParams.getRoleArn())) {
+        executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), LogLevel.INFO);
+      }
     }
 
     return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
