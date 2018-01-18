@@ -43,7 +43,11 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
   @Override
   protected void onMessage(ExecutionEvent message) throws Exception {
     try (AcquiredLock lock =
-             persistentLocker.acquireLock(Workflow.class, message.getWorkflowId(), Duration.ofMinutes(1))) {
+             persistentLocker.tryToAcquireLock(Workflow.class, message.getWorkflowId(), Duration.ofMinutes(1))) {
+      if (lock == null) {
+        return;
+      }
+
       PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                        .addFilter("appId", EQ, message.getAppId())
                                                        .addFilter("workflowId", EQ, message.getWorkflowId())
