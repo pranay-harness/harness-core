@@ -37,18 +37,23 @@ public class PersistentLocker implements Locker {
     if (lock.tryLock()) {
       return AcquiredLock.builder().lock(lock).startTimestamp(start).build();
     }
+
     throw new WingsException(aResponseMessage().code(GENERAL_ERROR).acuteness(IGNORABLE).build())
         .addParam("args", format("Failed to acquire distributed lock for %s", name));
   }
 
   @Override
   public AcquiredLock acquireLock(Class entityClass, String entityId, Duration timeout) {
-    return acquireLock(entityClass.getName(), entityId, timeout);
+    return acquireLock(entityClass.getName() + "-" + entityId, timeout);
   }
 
   @Override
-  public AcquiredLock acquireLock(String entityType, String entityId, Duration timeout) {
-    return acquireLock(entityType + "-" + entityId, timeout);
+  public AcquiredLock tryToAcquireLock(Class entityClass, String entityId, Duration timeout) {
+    try {
+      return acquireLock(entityClass.getName() + "-" + entityId, timeout);
+    } catch (WingsException exception) {
+      return null;
+    }
   }
 
   @Override

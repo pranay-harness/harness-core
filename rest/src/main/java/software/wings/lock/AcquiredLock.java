@@ -51,7 +51,10 @@ public class AcquiredLock implements Closeable {
       // process potentially overlapped with some other process working at the same time.
       // Lets not make the things even worse with releasing potentially someones else lock.
       // NOTE: letting the lock as is, is not a problem. It being timeout is as good as releasing it.
-      return;
+
+      // TODO: All this is very good only if the timeout functionality is working. The library we currently using
+      //       does not respect the timeing out. Return from here when it is fixed.
+      // return;
     }
 
     if (!lock.isLocked()) {

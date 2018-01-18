@@ -32,10 +32,12 @@ public class PersistentLockCleanupJobTest extends WingsBaseTest {
     Calendar before = Calendar.getInstance();
     before.add(Calendar.SECOND, -1);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock("foo", "bar1", Duration.ofSeconds(1))) {
+    try (AcquiredLock lock =
+             persistentLocker.acquireLock(PersistentLockCleanupJob.class, "bar1", Duration.ofSeconds(1))) {
     }
 
-    try (AcquiredLock lock = persistentLocker.acquireLock("foo", "bar2", Duration.ofSeconds(1))) {
+    try (AcquiredLock lock =
+             persistentLocker.acquireLock(PersistentLockCleanupJob.class, "bar2", Duration.ofSeconds(1))) {
     }
 
     Calendar after = Calendar.getInstance();
@@ -51,10 +53,10 @@ public class PersistentLockCleanupJobTest extends WingsBaseTest {
       while (dbObjects.hasNext()) {
         final DBObject object = dbObjects.next();
         final Object id = object.get("_id");
-        if ("foo-bar1".equals(id)) {
+        if (id.equals(PersistentLockCleanupJob.class.getName() + "-bar1")) {
           fooBar1 = true;
         }
-        if ("foo-bar2".equals(id)) {
+        if (id.equals(PersistentLockCleanupJob.class.getName() + "-bar2")) {
           fooBar2 = true;
         }
       }

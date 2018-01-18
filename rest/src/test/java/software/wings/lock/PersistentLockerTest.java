@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -47,9 +48,9 @@ public class PersistentLockerTest extends MockTest {
 
     when(distributedLock.tryLock()).thenReturn(true);
     when(distributedLock.isLocked()).thenReturn(true);
-    when(distributedLockSvc.create(matches("abc-cba"), any())).thenReturn(distributedLock);
+    when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba", Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     }
 
     InOrder inOrder = inOrder(distributedLock);
@@ -61,16 +62,35 @@ public class PersistentLockerTest extends MockTest {
   public void testAcquireLockDoNotRunTheBody() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
-    when(distributedLockSvc.create(matches("abc-cba"), any())).thenReturn(distributedLock);
+    when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     boolean body = false;
-    try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba", Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
       body = true;
     } catch (RuntimeException ex) {
       assertThat(ex.getMessage()).isEqualTo("GENERAL_ERROR");
     }
 
     assertThat(body).isFalse();
+
+    InOrder inOrder = inOrder(distributedLock);
+    inOrder.verify(distributedLock, times(1)).tryLock();
+    inOrder.verify(distributedLock, times(0)).unlock();
+  }
+
+  @Test
+  public void testTryAcquireLockDoNotThrowException() {
+    DistributedLock distributedLock = mock(DistributedLock.class);
+    when(distributedLock.tryLock()).thenReturn(false);
+    when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
+
+    boolean body = false;
+    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
+      assertThat(lock).isNull();
+      body = true;
+    }
+
+    assertThat(body).isTrue();
 
     InOrder inOrder = inOrder(distributedLock);
     inOrder.verify(distributedLock, times(1)).tryLock();
@@ -89,12 +109,12 @@ public class PersistentLockerTest extends MockTest {
 
     when(distributedLock.tryLock()).thenReturn(true);
     when(distributedLock.isLocked()).thenReturn(false);
-    when(distributedLockSvc.create(matches("abc-cba"), any())).thenReturn(distributedLock);
+    when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger logger = mock(Logger.class);
     Whitebox.setInternalState(new AcquiredLock(null, 0L), "logger", logger);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba", timeout)) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
     }
 
     verify(logger).error(matches("attempt to release lock that is not currently locked"), any(Throwable.class));
@@ -104,14 +124,14 @@ public class PersistentLockerTest extends MockTest {
   public void testAcquireLockLogging() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
-    when(distributedLockSvc.create(matches("abc-cba"), any())).thenReturn(distributedLock);
+    when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger logger = mock(Logger.class);
 
     Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", logger);
     Whitebox.setInternalState(new WingsException(""), "logger", logger);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba", Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {
       exception.logProcessedMessages(BACKGROUND_JOB);
     }
@@ -120,6 +140,7 @@ public class PersistentLockerTest extends MockTest {
   }
 
   @Test
+  @Ignore // TODO: enable when we can have timeout logic
   public void testAcquireTimeout() throws InterruptedException {
     Duration timeout = Duration.ofMillis(1);
 
@@ -128,15 +149,15 @@ public class PersistentLockerTest extends MockTest {
 
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.getOptions()).thenReturn(options);
-    when(distributedLock.getName()).thenReturn("abc-cba");
+    when(distributedLock.getName()).thenReturn(AcquiredLock.class.getName() + "-cba");
     when(distributedLock.tryLock()).thenReturn(true);
-    when(distributedLockSvc.create(matches("abc-cba"), any())).thenReturn(distributedLock);
+    when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger logger = mock(Logger.class);
 
     Whitebox.setInternalState(new AcquiredLock(null, 0L), "logger", logger);
 
-    try (AcquiredLock lock = persistentLocker.acquireLock("abc", "cba", timeout)) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
       Thread.sleep(10);
     } catch (WingsException exception) {
       exception.logProcessedMessages(BACKGROUND_JOB);

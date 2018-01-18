@@ -1055,8 +1055,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution == null) {
       return;
     }
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(Workflow.class, workflowExecution.getWorkflowId(), Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(
+             Workflow.class, workflowExecution.getWorkflowId(), Duration.ofMinutes(1))) {
+      if (lock == null) {
+        return;
+      }
+
       List<WorkflowExecution> runningWorkflowExecutions =
           getRunningWorkflowExecutions(ORCHESTRATION, workflowExecution.getAppId(), workflowExecution.getWorkflowId());
       if (isNotEmpty(runningWorkflowExecutions)) {

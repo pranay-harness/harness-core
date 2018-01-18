@@ -123,7 +123,11 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
     boolean isError = notifyResponses.stream().filter(NotifyResponse::isError).findFirst().isPresent();
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(WaitInstance.class, waitInstanceId, Duration.ofMinutes(1))) {
+    try (AcquiredLock lock =
+             persistentLocker.tryToAcquireLock(WaitInstance.class, waitInstanceId, Duration.ofMinutes(1))) {
+      if (lock == null) {
+        return;
+      }
       ExecutionStatus status = ExecutionStatus.SUCCESS;
       NotifyCallback callback = waitInstance.getCallback();
       injector.injectMembers(callback);
