@@ -65,7 +65,7 @@ public enum ErrorCode {
   /**
    * Resource not found error code.
    */
-  RESOURCE_NOT_FOUND("NOT_FOUND", NOT_FOUND),
+  RESOURCE_NOT_FOUND("RESOURCE_NOT_FOUND", NOT_FOUND),
 
   /**
    * Role does not exist error codes.
