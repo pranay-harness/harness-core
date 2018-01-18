@@ -1,6 +1,9 @@
 package software.wings.cloudprovider.aws;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.awaitility.Awaitility.with;
@@ -61,7 +64,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.HttpUtil;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -78,8 +80,8 @@ import java.util.stream.IntStream;
  */
 @Singleton
 public class EcsContainerServiceImpl implements EcsContainerService {
-  private static final int SLEEP_INTERVAL = 10;
-  private static final int RETRY_COUNTER = (10 * 60) / SLEEP_INTERVAL; // 10 minutes
+  private static final java.time.Duration SLEEP_INTERVAL = ofSeconds(10);
+  private static final long RETRY_COUNTER = ofMinutes(10).getSeconds() / SLEEP_INTERVAL.getSeconds();
   private static final Logger logger = LoggerFactory.getLogger(EcsContainerServiceImpl.class);
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -421,7 +423,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
-      Misc.sleep(1, TimeUnit.SECONDS);
+      sleep(ofSeconds(1));
     }
 
     stack.getOutputs().forEach(output -> System.out.println(output.getOutputKey() + " = " + output.getOutputValue()));
@@ -765,7 +767,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
-      Misc.sleep(1, TimeUnit.SECONDS);
+      sleep(ofSeconds(1));
     }
 
     stack.getOutputs().forEach(output -> System.out.println(output.getOutputKey() + " = " + output.getOutputValue()));
@@ -811,24 +813,24 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private void waitForAllInstanceToRegisterWithCluster(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, Integer clusterSize) {
-    int retryCount = RETRY_COUNTER;
+    long retryCount = RETRY_COUNTER;
     while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT).addParam("message", "All instances didn't registered with cluster");
       }
-      Misc.quietSleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
+      sleep(SLEEP_INTERVAL);
     }
   }
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String region, String autoscalingGroupName, Integer clusterSize) {
-    int retryCount = RETRY_COUNTER;
+    long retryCount = RETRY_COUNTER;
     while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT)
             .addParam("message", "Not all instances ready to registered with cluster");
       }
-      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
+      sleep(SLEEP_INTERVAL);
     }
   }
 
@@ -882,26 +884,26 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForTasksToBeInRunningState(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
-    int retryCount = RETRY_COUNTER;
+    long retryCount = RETRY_COUNTER;
     while (!allDesiredTaskRunning(
         region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT).addParam("message", "Some tasks are still not in running state");
       }
-      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
+      sleep(SLEEP_INTERVAL);
     }
   }
 
   private void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
-    int retryCount = RETRY_COUNTER;
+    long retryCount = RETRY_COUNTER;
     while (!allDesiredTaskRunning(
         region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         break;
       }
-      Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
+      sleep(SLEEP_INTERVAL);
     }
   }
 
@@ -1061,7 +1063,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    int retryCount = (serviceSteadyStateTimeout * 60) / SLEEP_INTERVAL;
+    long retryCount = (serviceSteadyStateTimeout * 60) / SLEEP_INTERVAL.getSeconds();
 
     if (retryCount == 0) {
       return;
@@ -1093,7 +1095,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           excludedEventId[0] = events.get(0).getId();
         }
 
-        Misc.sleep(SLEEP_INTERVAL, TimeUnit.SECONDS);
+        sleep(SLEEP_INTERVAL);
       } while (retryCount-- > 0);
     } catch (Exception ex) {
       logger.error("Wait for service steady state failed with exception ", ex);

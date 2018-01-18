@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
+import static io.harness.threading.Morpheus.sleep;
+import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
 
@@ -246,8 +247,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   if (retry == 1) {
                     taskResult.setErrorMessage(e.getMessage());
                   }
-                  logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
-                  Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
+                  logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", e);
+                  sleep(RETRY_SLEEP);
                 }
               }
             }

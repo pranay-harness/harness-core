@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.quietSleep;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -72,6 +73,7 @@ import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -1011,7 +1013,7 @@ public class StateMachineExecutor {
         || stateExecutionInstance.getStatus() == STARTING) {
       logger.warn("stateExecutionInstance: {} status is not in RUNNING state yet", stateExecutionInstance.getUuid());
       // TODO - more elegant way
-      Misc.quietSleep(500);
+      quietSleep(Duration.ofMillis(500));
       stateExecutionInstance = getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     }
     if (stateExecutionInstance.getStatus() != RUNNING && stateExecutionInstance.getStatus() != PAUSED

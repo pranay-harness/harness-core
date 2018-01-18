@@ -1,5 +1,6 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
@@ -32,10 +33,10 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -290,7 +290,7 @@ public class MetricAnalysisJob implements Job {
           default:
             logger.warn("time series analysis failed for " + context.getStateExecutionId() + " for minute "
                 + analysisMinute + " trial: " + (attempt + 1));
-            Misc.sleep(2, TimeUnit.SECONDS);
+            sleep(Duration.ofSeconds(2));
         }
       }
 

@@ -3,6 +3,7 @@ package software.wings.cloudprovider.aws;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Failed;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
+import static io.harness.threading.Morpheus.quietSleep;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.collect.Sets;
@@ -38,8 +39,8 @@ import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.utils.Misc;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -50,8 +51,8 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
-  private static final int SLEEP_INTERVAL = 10 * 1000;
-  private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
+  private static final Duration SLEEP_INTERVAL = Duration.ofSeconds(10);
+  private static final long RETRY_COUNTER = Duration.ofMinutes(10).getSeconds() / SLEEP_INTERVAL.getSeconds();
   private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceImpl.class);
 
   @Inject private AwsHelperService awsHelperService;
@@ -189,13 +190,13 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
 
   private void waitForDeploymentToComplete(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId) {
-    int retryCount = RETRY_COUNTER;
+    long retryCount = RETRY_COUNTER;
     Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
     while (!deploymentCompleted(awsConfig, encryptedDataDetails, region, deploymentId, finalDeploymentStatus)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT).addParam("message", "All instances didn't registered with cluster");
       }
-      Misc.quietSleep(SLEEP_INTERVAL);
+      quietSleep(SLEEP_INTERVAL);
     }
   }
 

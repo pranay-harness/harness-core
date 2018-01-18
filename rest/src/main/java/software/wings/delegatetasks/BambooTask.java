@@ -1,6 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 
@@ -20,13 +22,11 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.FilePathAssertionEntry;
 import software.wings.sm.states.ParameterEntry;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -115,7 +115,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
     Result result;
     do {
       logger.info("Waiting for build execution {} to finish", buildResultKey);
-      Misc.sleep(5, TimeUnit.SECONDS);
+      sleep(ofSeconds(5));
       result = bambooService.getBuildResult(bambooConfig, encryptionDetails, buildResultKey);
       logger.info("Build result for build key {} is {}", buildResultKey, result);
     } while (result.getBuildState() == null || result.getBuildState().equalsIgnoreCase("Unknown"));

@@ -8,7 +8,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,42 +41,6 @@ public class Misc {
   public static String normalizeExpression(String expression, String replacement) {
     Matcher matcher = wildCharPattern.matcher(expression);
     return matcher.replaceAll(replacement);
-  }
-
-  /**
-   * sleep without throwing InterruptedExeception.
-   *
-   * @param delay sleep interval in millis.
-   */
-  public static void quietSleep(int delay) {
-    try {
-      Thread.sleep(delay);
-    } catch (InterruptedException exception) {
-      // Ignore
-    }
-  }
-
-  /**
-   * Quiet sleep.
-   *
-   * @param delay the delay
-   * @param unit  the unit
-   */
-  public static void quietSleep(int delay, TimeUnit unit) {
-    quietSleep((int) unit.toMillis(delay));
-  }
-
-  /**
-   * Sleep with runtime exception.
-   *
-   * @param delay the delay
-   */
-  public static void sleep(int delay, TimeUnit timeUnit) {
-    try {
-      Thread.sleep(timeUnit.toMillis(delay));
-    } catch (InterruptedException exception) {
-      Thread.currentThread().interrupt();
-    }
   }
 
   /**

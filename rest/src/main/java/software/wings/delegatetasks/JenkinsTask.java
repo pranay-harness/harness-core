@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
@@ -27,13 +28,12 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -145,7 +145,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     AtomicInteger consoleLogsSent = new AtomicInteger();
     do {
       logger.info("Waiting for Job  {} to finish execution", jenkinsBuild.getUrl());
-      Misc.sleep(5, TimeUnit.SECONDS);
+      sleep(Duration.ofSeconds(5));
       try {
         jenkinsBuildWithDetails = jenkinsBuild.details();
         saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName);
@@ -196,7 +196,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) throws IOException {
     Build jenkinsBuild = null;
     do {
-      Misc.sleep(1, TimeUnit.SECONDS);
+      sleep(Duration.ofSeconds(1));
       try {
         jenkinsBuild = jenkins.getBuild(queueItem);
       } catch (IOException ex) {

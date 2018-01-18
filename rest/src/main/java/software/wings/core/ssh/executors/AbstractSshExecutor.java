@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -16,7 +17,6 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.utils.Misc.getMessage;
-import static software.wings.utils.Misc.sleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.inject.Inject;
@@ -45,11 +45,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -187,7 +187,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           saveExecutionLog("Command finished with status " + commandExecutionStatus);
           return commandExecutionStatus;
         }
-        sleep(1, TimeUnit.SECONDS);
+        sleep(Duration.ofSeconds(1));
       }
     } catch (Exception ex) {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);

@@ -1,5 +1,6 @@
 package software.wings.lock;
 
+import static io.harness.threading.Morpheus.sleep;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -15,10 +16,8 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.utils.Misc;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The Class PersistentLockerTest.
@@ -67,7 +66,7 @@ public class PersistentLockerDBTest extends WingsBaseTest {
             break;
           }
         }
-        Misc.sleep(100, TimeUnit.MILLISECONDS);
+        sleep(Duration.ofMillis(100));
       }
     } catch (WingsException exception) {
     }

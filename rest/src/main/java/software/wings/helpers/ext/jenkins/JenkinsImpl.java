@@ -2,6 +2,8 @@ package software.wings.helpers.ext.jenkins;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.quietSleep;
+import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.awaitility.Awaitility.with;
@@ -38,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.utils.HttpUtil;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -230,7 +231,7 @@ public class JenkinsImpl implements Jenkins {
         while (!futures.isEmpty() && futures.peek().isDone()) {
           futures.poll().get();
         }
-        Misc.quietSleep(10, TimeUnit.MILLISECONDS); // avoid busy wait
+        quietSleep(ofMillis(10));
       }
       return result;
     } catch (Exception ex) {
