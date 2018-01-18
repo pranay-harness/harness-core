@@ -24,7 +24,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .type(config.getType())
-        .region(config.getRegion().getName())
+        .region(config.getRegion().name())
         .loadBalancerName(config.getLoadBalancerName())
         .accessKey(config.getAccessKey())
         .secretKey(getEncryptedValue(config, "secretKey", false))
@@ -44,6 +44,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
       throw new HarnessException("Exception while decrypting the secret key ref:" + yaml.getSecretKey());
     }
 
+    // Regions region = Regions.fromName(yaml.getRegion());
     Regions region = Util.getEnumFromString(Regions.class, yaml.getRegion());
     ElasticLoadBalancerConfig config = ElasticLoadBalancerConfig.builder()
                                            .accountId(accountId)

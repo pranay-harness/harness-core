@@ -215,11 +215,13 @@ public class SettingsServiceImpl implements SettingsService {
 
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].",
-                  connectorSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
-                  Joiner.on(", ").join(infraMappingNames)));
+      if (!infraMappingNames.isEmpty()) {
+        throw new WingsException(INVALID_REQUEST)
+            .addParam("message",
+                String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].",
+                    connectorSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+                    Joiner.on(", ").join(infraMappingNames)));
+      }
     } else {
       List<ArtifactStream> artifactStreams =
           artifactStreamService.list(aPageRequest().addFilter("settingId", EQ, connectorSetting.getUuid()).build())
