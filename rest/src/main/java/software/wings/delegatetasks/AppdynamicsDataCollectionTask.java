@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
+import static io.harness.threading.Morpheus.sleep;
+import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
@@ -25,7 +26,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -235,9 +235,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                 }
               }
               logger.warn("error fetching appdynamics metrics for minute " + dataCollectionMinute + ". retrying in "
-                      + RETRY_SLEEP_SECS + "s",
+                      + RETRY_SLEEP + "s",
                   ex);
-              Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
+              sleep(RETRY_SLEEP);
             }
           }
         }
@@ -265,7 +265,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         if (response) {
           return true;
         }
-        Misc.sleep(RETRY_SLEEP_SECS, TimeUnit.SECONDS);
+        sleep(RETRY_SLEEP);
       } while (++retrySave != RETRIES);
       return false;
     }

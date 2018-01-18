@@ -2,7 +2,9 @@ package software.wings.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
@@ -85,7 +87,6 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.security.TokenGenerator;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.Misc;
 import software.wings.utils.message.Message;
 import software.wings.utils.message.MessageService;
 import software.wings.waitnotify.NotifyResponseData;
@@ -488,7 +489,7 @@ public class DelegateServiceImpl implements DelegateService {
         long started = clock.millis();
         long now = started;
         while (!currentlyExecutingTasks.isEmpty() && now - started < UPGRADE_TIMEOUT) {
-          Misc.sleep(1, TimeUnit.SECONDS);
+          sleep(ofSeconds(1));
           now = clock.millis();
           logger.info("[Old] Completing {} tasks... ({} seconds elapsed): {}", currentlyExecutingTasks.size(),
               (now - started) / 1000L, currentlyExecutingTasks.keySet());
@@ -791,7 +792,7 @@ public class DelegateServiceImpl implements DelegateService {
             int delay = POLL_INTERVAL + 2;
             logger.info(
                 "Waiting {} to give other delegates a chance to register as validators for task {}", delay, taskId);
-            Misc.sleep(delay, TimeUnit.SECONDS);
+            sleep(ofSeconds(delay));
             try {
               logger.info("Checking whether all delegates failed for task {}", taskId);
               DelegateTask delegateTask2 = execute(
@@ -878,7 +879,7 @@ public class DelegateServiceImpl implements DelegateService {
     boolean stillRunning = true;
     long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
     while (stillRunning && clock.millis() - startTime < timeout) {
-      Misc.sleep(5, TimeUnit.SECONDS);
+      sleep(ofSeconds(5));
       Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }

@@ -1,5 +1,6 @@
 package software.wings.core.queue;
 
+import static io.harness.threading.Morpheus.sleep;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 
@@ -10,9 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
-import software.wings.utils.Misc;
 import software.wings.utils.ThreadContext;
 
+import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +50,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
       T message = null;
       try {
         while (isMaintenance()) {
-          Misc.sleep(1, TimeUnit.SECONDS);
+          sleep(Duration.ofSeconds(1));
         }
         logger.trace("Waiting for message");
         message = queue.get();

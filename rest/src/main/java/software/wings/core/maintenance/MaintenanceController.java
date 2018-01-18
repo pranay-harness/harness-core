@@ -1,5 +1,6 @@
 package software.wings.core.maintenance;
 
+import static io.harness.threading.Morpheus.sleep;
 import static java.util.Collections.synchronizedSet;
 
 import com.google.inject.Inject;
@@ -9,13 +10,12 @@ import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
-import software.wings.utils.Misc;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -60,7 +60,7 @@ public class MaintenanceController implements Managed {
                 -> executorService.submit(isMaintenance ? listener::onEnterMaintenance : listener::onLeaveMaintenance));
           }
         }
-        Misc.sleep(1, TimeUnit.SECONDS);
+        sleep(Duration.ofSeconds(1));
       }
     });
   }

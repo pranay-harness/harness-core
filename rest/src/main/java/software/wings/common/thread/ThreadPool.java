@@ -1,7 +1,8 @@
 package software.wings.common.thread;
 
-import software.wings.utils.Misc;
+import static io.harness.threading.Morpheus.quietSleep;
 
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -114,7 +115,7 @@ public class ThreadPool {
 
     @Override
     public void run() {
-      Misc.quietSleep(delay);
+      quietSleep(Duration.ofMillis(delay));
       runnable.run();
     }
   }

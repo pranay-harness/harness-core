@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.threading.Morpheus.quietSleep;
+import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -56,7 +58,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.HttpUtil;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
@@ -496,7 +497,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             while (!futures.isEmpty() && futures.peek().isDone()) {
               futures.poll().get();
             }
-            Misc.quietSleep(10, TimeUnit.MILLISECONDS); // avoid busy wait
+            quietSleep(ofMillis(10)); // avoid busy wait
           }
         } catch (Exception e) {
           logger.error("Failed to fetch all the groupIds in time. Sending the groupIds collected so far", e);

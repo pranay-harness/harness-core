@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static io.harness.threading.Morpheus.sleep;
+
 import com.google.inject.Inject;
 
 import com.splunk.HttpService;
@@ -25,6 +27,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.InputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +41,7 @@ import java.util.function.Supplier;
 public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
   public static final int DELAY_MINUTES = 1;
-  public static final int RETRY_SLEEP_SECS = 30;
+  public static final Duration RETRY_SLEEP = Duration.ofSeconds(30);
 
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
@@ -237,8 +240,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                 if (retry == 1) {
                   taskResult.setErrorMessage(e.getMessage());
                 }
-                logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
-                Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
+                logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP + "s", e);
+                sleep(RETRY_SLEEP);
               }
             }
           }

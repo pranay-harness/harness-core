@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.quietSleep;
+import static io.harness.threading.Morpheus.sleep;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -11,7 +13,6 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.utils.Misc.sleep;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -199,11 +200,11 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1228,8 +1229,9 @@ public class AwsHelperService {
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback executionLogCallback,
       Integer autoScalingSteadyStateTimeout) {
-    long sleepInterval = TimeUnit.SECONDS.toSeconds(30);
-    long retryCount = TimeUnit.SECONDS.convert(autoScalingSteadyStateTimeout, TimeUnit.MINUTES) / sleepInterval;
+    Duration sleepInterval = Duration.ofSeconds(30);
+    long retryCount =
+        TimeUnit.SECONDS.convert(autoScalingSteadyStateTimeout, TimeUnit.MINUTES) / sleepInterval.getSeconds();
     logger.info("Total #retries for stead state check", retryCount);
     List<String> instanceIds =
         listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
@@ -1245,7 +1247,7 @@ public class AwsHelperService {
         throw new WingsException(INIT_TIMEOUT).addParam("message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
-      sleep((int) sleepInterval, TimeUnit.SECONDS);
+      sleep(sleepInterval);
       instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
     }
     executionLogCallback.saveExecutionLog(String.format("AutoScaling reached to steady state"));
@@ -1464,7 +1466,7 @@ public class AwsHelperService {
     int retry_counter = 12;
     DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult();
     do {
-      Misc.quietSleep(5, TimeUnit.SECONDS);
+      quietSleep(Duration.ofSeconds(5));
       describeAutoScalingGroupsResult = amazonAutoScalingClient.describeAutoScalingGroups(
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroup.getAutoScalingGroupName()));
     } while (--retry_counter > 0 && !describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty());

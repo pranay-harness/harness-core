@@ -1,7 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
+import static io.harness.threading.Morpheus.sleep;
+import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
@@ -29,7 +30,6 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -394,9 +394,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 }
               }
               logger.warn("error fetching new relic metrics for minute " + dataCollectionMinute + ". retrying in "
-                      + RETRY_SLEEP_SECS + "s",
+                      + RETRY_SLEEP + "s",
                   ex);
-              Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
+              sleep(RETRY_SLEEP);
             }
           }
         }
@@ -441,8 +441,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           return true;
         }
         logger.warn("Unable to save NewRelic metrics to Harness manger {}. Retrying in {} ",
-            dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP_SECS);
-        Misc.sleep(RETRY_SLEEP_SECS, TimeUnit.SECONDS);
+            dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP);
+        sleep(RETRY_SLEEP);
       } while (++retrySave != RETRIES);
       return false;
     }
