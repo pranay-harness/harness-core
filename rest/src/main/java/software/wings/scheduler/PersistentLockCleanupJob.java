@@ -67,7 +67,7 @@ public class PersistentLockCleanupJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(1))) {
       Calendar date = Calendar.getInstance();
-      date.add(Calendar.HOUR, 7 * 24);
+      date.add(Calendar.HOUR, -7 * 24);
 
       final DBCursor locks = queryOldLocks(date);
 
@@ -80,6 +80,7 @@ public class PersistentLockCleanupJob implements Job {
         // The lock needs to be deleted only if successfully acquired
 
         try (AcquiredLock lk = persistentLocker.acquireLock(object.toString(), Duration.ofSeconds(10))) {
+          logger.info("Destroy outdated lock " + object.toString());
           persistentLocker.destroy(lk);
         } catch (WingsException exception) {
           // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
