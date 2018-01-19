@@ -238,7 +238,7 @@ public class AwsAmiServiceSetup extends State {
       }
       awsHelperService.createLaunchConfiguration(awsConfig, encryptionDetails, region,
           createNewLaunchConfigurationRequest(
-              artifact, userDataSpecification, baseLaunchConfiguration, newAutoScalingGroupName));
+              context, artifact, userDataSpecification, baseLaunchConfiguration, newAutoScalingGroupName));
       executionLogCallback.saveExecutionLog(String.format(
           "Creating new launch configuration [%s]", baseLaunchConfiguration.getLaunchConfigurationName()));
       awsHelperService.createAutoScalingGroup(awsConfig, encryptionDetails, region,
@@ -337,8 +337,8 @@ public class AwsAmiServiceSetup extends State {
     return oldAutoScalingGroupName;
   }
 
-  private CreateLaunchConfigurationRequest createNewLaunchConfigurationRequest(Artifact artifact,
-      UserDataSpecification userDataSpecification, LaunchConfiguration cloneBaseLaunchConfiguration,
+  private CreateLaunchConfigurationRequest createNewLaunchConfigurationRequest(ExecutionContext context,
+      Artifact artifact, UserDataSpecification userDataSpecification, LaunchConfiguration cloneBaseLaunchConfiguration,
       String newAutoScalingGroupName) {
     CreateLaunchConfigurationRequest createLaunchConfigurationRequest =
         new CreateLaunchConfigurationRequest()
@@ -352,8 +352,10 @@ public class AwsAmiServiceSetup extends State {
 
     if (userDataSpecification != null && userDataSpecification.getData() != null) {
       try {
+        String userData = userDataSpecification.getData();
+        String userDataAfterEvaluation = context.renderExpression(userData);
         createLaunchConfigurationRequest.setUserData(
-            BaseEncoding.base64().encode(userDataSpecification.getData().getBytes("UTF-8")));
+            BaseEncoding.base64().encode(userDataAfterEvaluation.getBytes("UTF-8")));
       } catch (UnsupportedEncodingException e) {
         logger.error("Error in setting user data ", e);
       }
