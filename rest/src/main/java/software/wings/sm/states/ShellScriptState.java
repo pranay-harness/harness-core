@@ -48,6 +48,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
@@ -94,27 +95,37 @@ public class ShellScriptState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    CommandExecutionResult executionData = (CommandExecutionResult) response.values().iterator().next();
-
     ExecutionResponse executionResponse = new ExecutionResponse();
 
-    switch (executionData.getStatus()) {
-      case SUCCESS:
-        executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
-        break;
-      case FAILURE:
-        executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-        break;
-      case RUNNING:
-        executionResponse.setExecutionStatus(ExecutionStatus.RUNNING);
-        break;
-      case QUEUED:
-        executionResponse.setExecutionStatus(ExecutionStatus.QUEUED);
-        break;
-      default:
-        throw new WingsException("Unhandled type CommandExecutionStatus: " + executionData.getStatus().name());
+    NotifyResponseData data = response.values().iterator().next();
+
+    if (data instanceof CommandExecutionResult) {
+      CommandExecutionResult executionData = (CommandExecutionResult) data;
+
+      switch (executionData.getStatus()) {
+        case SUCCESS:
+          executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
+          break;
+        case FAILURE:
+          executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+          break;
+        case RUNNING:
+          executionResponse.setExecutionStatus(ExecutionStatus.RUNNING);
+          break;
+        case QUEUED:
+          executionResponse.setExecutionStatus(ExecutionStatus.QUEUED);
+          break;
+        default:
+          throw new WingsException("Unhandled type CommandExecutionStatus: " + executionData.getStatus().name());
+      }
+      executionResponse.setErrorMessage(executionData.getErrorMessage());
+    } else if (data instanceof ErrorNotifyResponseData) {
+      ErrorNotifyResponseData executionData = (ErrorNotifyResponseData) data;
+      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+      executionResponse.setErrorMessage(((ErrorNotifyResponseData) data).getErrorMessage());
+    } else {
+      logger.error("Unhandled NotifyResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
-    executionResponse.setErrorMessage(executionData.getErrorMessage());
 
     String activityId = null;
 
@@ -169,7 +180,7 @@ public class ShellScriptState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().name("foo").activityId(activityId).build())
+        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
   }
 
