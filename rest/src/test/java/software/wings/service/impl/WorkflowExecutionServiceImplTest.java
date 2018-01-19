@@ -1268,13 +1268,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    int i = 0;
-    do {
-      i++;
-      Thread.sleep(1000);
-      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
-    } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
-    Thread.sleep(1000);
+    pullFor(Duration.ofSeconds(10), () -> {
+      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+      return pull.getStatus() == ExecutionStatus.PAUSED;
+    });
+
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
 
@@ -1321,7 +1319,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   @Ignore
-  public void shouldAbortAllStates() throws InterruptedException {
+  public void shouldAbortAllStates() {
     Service service1 = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(

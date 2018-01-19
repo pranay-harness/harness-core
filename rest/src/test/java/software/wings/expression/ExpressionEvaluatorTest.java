@@ -66,7 +66,13 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldEvaluateHostUrl() {
+  public void shouldSubstituteWithNull() {
+    assertThat(expressionEvaluator.substitute(null, persons)).isNull();
+    assertThat(expressionEvaluator.substitute(null, persons, null)).isNull();
+  }
+
+  @Test
+  public void shouldSubstituteHostUrl() {
     Host host = new Host();
     host.setHostName("app123.application.com");
     Map<String, Object> context = new HashMap<>();
@@ -77,7 +83,7 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldEvaluatePartially() {
+  public void shouldSubstitutePartially() {
     Host host = new Host();
     host.setHostName("${HOST}.$DOMAIN.${COM}");
     Map<String, Object> context = new HashMap<>();
@@ -112,6 +118,12 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     };
     assertThatThrownBy(() -> expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context))
         .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  public void shouldEvaluateWithNull() {
+    assertThat(expressionEvaluator.evaluate(null, persons)).isNull();
+    assertThat(expressionEvaluator.evaluate(null, persons, null)).isNull();
   }
 
   @Test
