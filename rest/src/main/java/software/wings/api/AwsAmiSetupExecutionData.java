@@ -52,8 +52,8 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Noti
         anExecutionDataValue().withValue(maxInstances).withDisplayName("Desired Capacity").build());
     putNotNull(executionDetails, "oldAutoScalingGroupName",
         anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old ASG Name").build());
-    putNotNull(executionDetails, Constants.SHOW_LOGS,
-        anExecutionDataValue().withValue(true).withDisplayName(Constants.SHOW_LOGS).build());
+    putNotNull(executionDetails, Constants.ACTIVITY_ID,
+        anExecutionDataValue().withValue(activityId).withDisplayName(Constants.ACTIVITY_ID).build());
     return executionDetails;
   }
 }
