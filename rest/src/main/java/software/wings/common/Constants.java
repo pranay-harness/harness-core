@@ -239,6 +239,11 @@ public interface Constants {
   String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";
 
   /**
+   * The constant AMI setup commands
+   */
+  String AMI_SETUP_COMMAND_NAME = "AMI Service Setup";
+
+  /**
    * The constant ROLLBACK_AWS_LAMBDA.
    */
   String ROLLBACK_AWS_LAMBDA = "Rollback AWS Lambda";
@@ -559,4 +564,5 @@ public interface Constants {
    * The constant STAGING_PATH.
    */
   String STAGING_PATH = "STAGING_PATH";
+  String SHOW_LOGS = "SHOW_LOGS";
 }

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
@@ -27,16 +28,23 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.PhaseElement;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Log.Builder;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -44,6 +52,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -55,13 +64,13 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.AsgConvention;
+import software.wings.utils.Misc;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-
 /**
  * Created by anubhaw on 12/19/17.
  */
@@ -81,9 +90,11 @@ public class AwsAmiServiceSetup extends State {
   @Inject @Transient protected transient SecretManager secretManager;
   @Inject @Transient protected transient ActivityService activityService;
   @Inject @Transient protected transient ExecutorService executorService;
+  @Inject @Transient protected transient LogService logService;
 
   @Transient private static final Logger logger = LoggerFactory.getLogger(AwsAmiServiceSetup.class);
 
+  private String commandName = Constants.AMI_SETUP_COMMAND_NAME;
   /**
    * Instantiates a new state.
    *
@@ -118,6 +129,45 @@ public class AwsAmiServiceSetup extends State {
     AmiServiceSetupElement amiServiceElement = AmiServiceSetupElement.builder().build();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage = null;
+
+    String envId = env.getUuid();
+    Command command =
+        serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
+
+    List<CommandUnit> commandUnitList =
+        serviceResourceService.getFlattenCommandUnitList(app.getUuid(), serviceId, envId, command.getName());
+
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .environmentId(envId)
+                                          .environmentName(env.getName())
+                                          .environmentType(env.getEnvironmentType())
+                                          .serviceId(service.getUuid())
+                                          .serviceName(service.getName())
+                                          .commandName(command.getName())
+                                          .type(Type.Command)
+                                          .workflowExecutionId(context.getWorkflowExecutionId())
+                                          .workflowId(context.getWorkflowId())
+                                          .workflowType(context.getWorkflowType())
+                                          .workflowExecutionName(context.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                          .commandUnits(commandUnitList)
+                                          .commandType(command.getCommandUnitType().name())
+                                          .serviceVariables(context.getServiceVariables())
+                                          .status(ExecutionStatus.RUNNING);
+
+    Activity build = activityBuilder.build();
+    build.setAppId(app.getUuid());
+    Activity activity = activityService.save(build);
+
+    String commandUnitName = commandUnitList.get(0).getName();
+
+    Builder logBuilder =
+        aLog().withAppId(activity.getAppId()).withActivityId(activity.getUuid()).withCommandUnitName(commandUnitName);
+
+    ManagerExecutionLogCallback executionLogCallback =
+        new ManagerExecutionLogCallback(logService, logBuilder, activity.getUuid());
 
     try {
       UserDataSpecification userDataSpecification =
@@ -159,6 +209,7 @@ public class AwsAmiServiceSetup extends State {
       awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
                                 .newAutoScalingGroupName(newAutoScalingGroupName)
                                 .oldAutoScalingGroupName(lastDeployedAsgName)
+                                .activityId(activity.getUuid())
                                 .maxInstances(maxInstances)
                                 .newVersion(harnessRevision)
                                 .resizeStrategy(resizeStrategy)
@@ -184,12 +235,13 @@ public class AwsAmiServiceSetup extends State {
               infrastructureMapping, newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision));
       deleteOldHarnessManagedAutoScalingGroups(encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups,
           amiServiceElement.getOldAutoScalingGroupName());
-    } catch (Exception ex) {
-      logger.error("Ami setup step failed with error ", ex);
+    } catch (Throwable throwable) {
+      logger.error("Ami setup step failed with error ", throwable);
       executionStatus = ExecutionStatus.FAILED;
-      errorMessage = ex.getMessage();
+      errorMessage = throwable.getMessage();
       awsAmiExecutionData.setStatus(executionStatus);
       awsAmiExecutionData.setErrorMsg(errorMessage);
+      Misc.logAllMessages(throwable, executionLogCallback, CommandExecutionStatus.FAILURE);
     }
 
     return anExecutionResponse()
@@ -345,7 +397,7 @@ public class AwsAmiServiceSetup extends State {
             .withAutoScalingGroupName(newAutoScalingGroupName)
             .withLaunchConfigurationName(newAutoScalingGroupName)
             .withDesiredCapacity(0)
-            .withMinSize(baseAutoScalingGroup.getMinSize())
+            .withMinSize(0)
             .withMaxSize(baseAutoScalingGroup.getMaxSize())
             .withTags(tags)
             .withDefaultCooldown(baseAutoScalingGroup.getDefaultCooldown())
@@ -470,5 +522,13 @@ public class AwsAmiServiceSetup extends State {
 
   public void setMaxInstances(int maxInstances) {
     this.maxInstances = maxInstances;
+  }
+
+  public String getCommandName() {
+    return commandName;
+  }
+
+  public void setCommandName(String commandName) {
+    this.commandName = commandName;
   }
 }

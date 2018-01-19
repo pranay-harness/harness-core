@@ -13,7 +13,6 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
-import com.google.common.base.Objects;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -42,7 +41,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.ResizeStrategy;
@@ -321,7 +319,8 @@ public class AwsAmiServiceDeployState extends State {
                              .withCommandUnitName(getCommandName())
                              .withExecutionResult(CommandExecutionStatus.RUNNING);
 
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(logService, logBuilder, activity.getUuid());
+    ManagerExecutionLogCallback executionLogCallback =
+        new ManagerExecutionLogCallback(logService, logBuilder, activity.getUuid());
 
     InstanceElementListParam instanceElementListParam = InstanceElementListParamBuilder.anInstanceElementListParam()
                                                             .withInstanceElements(Collections.emptyList())
@@ -369,7 +368,7 @@ public class AwsAmiServiceDeployState extends State {
 
   protected List<InstanceElement> handleAsyncInternal(ExecutionContext context, String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, AmiServiceSetupElement serviceSetupElement,
-      ExecutionLogCallback executionLogCallback) {
+      ManagerExecutionLogCallback executionLogCallback) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
@@ -440,7 +439,7 @@ public class AwsAmiServiceDeployState extends State {
 
   protected void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
-      Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst,
+      Integer oldAsgFinalDesiredCount, ManagerExecutionLogCallback executionLogCallback, boolean resizeNewFirst,
       Integer autoScalingSteadyStateTimeout) {
     if (isBlank(newAutoScalingGroupName) && isBlank(oldAutoScalingGroupName)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
@@ -541,66 +540,5 @@ public class AwsAmiServiceDeployState extends State {
    */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
-  }
-
-  public static class ExecutionLogCallback {
-    private transient LogService logService;
-    private Builder logBuilder;
-    private String activityId;
-    private static final Logger logger = LoggerFactory.getLogger(ExecutionLogCallback.class);
-
-    public ExecutionLogCallback() {}
-
-    public ExecutionLogCallback(LogService logService, Builder logBuilder, String activityId) {
-      this.logService = logService;
-      this.logBuilder = logBuilder;
-      this.activityId = activityId;
-    }
-
-    public void saveExecutionLog(String line) {
-      saveExecutionLog(line, CommandExecutionStatus.RUNNING, LogLevel.INFO);
-    }
-
-    public void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
-      saveExecutionLog(line, commandExecutionStatus, LogLevel.INFO);
-    }
-
-    public void saveExecutionLog(String line, LogLevel logLevel) {
-      saveExecutionLog(line, CommandExecutionStatus.RUNNING, logLevel);
-    }
-
-    public void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus, LogLevel logLevel) {
-      if (logService != null) {
-        Log log = logBuilder.but()
-                      .withLogLevel(logLevel)
-                      .withExecutionResult(commandExecutionStatus)
-                      .withLogLine(line)
-                      .build();
-        logService.batchedSaveCommandUnitLogs(activityId, log.getCommandUnitName(), log);
-      } else {
-        logger.warn("No logService injected. Couldn't save log [{}]", line);
-      }
-    }
-
-    public void setLogService(LogService logService) {
-      this.logService = logService;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ExecutionLogCallback that = (ExecutionLogCallback) o;
-      return Objects.equal(activityId, that.activityId);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(activityId);
-    }
   }
 }

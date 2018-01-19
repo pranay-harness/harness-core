@@ -18,6 +18,7 @@ import static software.wings.beans.command.CommandUnitType.RESIZE;
 import static software.wings.beans.command.CommandUnitType.RESIZE_KUBERNETES;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
+import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 
 import software.wings.beans.command.Command;
@@ -794,7 +795,24 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(getAmiDeployCommandUnit());
+      return asList(getAmiSetupCommandUnit(), getAmiDeployCommandUnit());
+    }
+
+    private Command getAmiSetupCommandUnit() {
+      return aCommand()
+          .withCommandType(CommandType.SETUP)
+          .withGraph(aGraph()
+                         .withGraphName(AMI_SETUP_COMMAND_NAME)
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName(AMI_SETUP_COMMAND_NAME)
+                                       .withType(AWS_AMI.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
     }
 
     /**

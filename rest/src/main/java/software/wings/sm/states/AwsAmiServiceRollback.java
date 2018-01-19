@@ -43,7 +43,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Override
   protected List<InstanceElement> handleAsyncInternal(ExecutionContext context, String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, AmiServiceSetupElement serviceSetupElement,
-      ExecutionLogCallback executionLogCallback) {
+      ManagerExecutionLogCallback executionLogCallback) {
     AmiServiceDeployElement amiServiceDeployElement = context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
     // TODO: old and new both should be present with 1 element atleast
     ContainerServiceData oldContainerServiceData = amiServiceDeployElement.getOldInstanceData().get(0);

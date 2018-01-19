@@ -44,7 +44,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.Collections;
 import java.util.List;
@@ -205,7 +205,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     verify(awsHelperService)
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, Collections.emptyList(),
             infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
-            infrastructureMapping.getDesiredCapacity(), new ExecutionLogCallback());
+            infrastructureMapping.getDesiredCapacity(), new ManagerExecutionLogCallback());
     verify(awsHelperService)
         .listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
             infrastructureMapping.getAutoScalingGroupName());
