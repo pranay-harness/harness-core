@@ -89,6 +89,10 @@ public class ExpressionEvaluator {
   }
 
   public String substitute(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    if (expression == null) {
+      return expression;
+    }
+
     JexlContext jc = prepareContext(context);
 
     final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
