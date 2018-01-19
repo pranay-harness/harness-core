@@ -1165,7 +1165,6 @@ public class StateMachineExecutor {
           ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
           injector.injectMembers(context);
           abortMarkedInstance(context, stateExecutionInstance);
-          endTransition(context, stateExecutionInstance, ABORTED, null);
         }
       }
     }
