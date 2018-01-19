@@ -10,5 +10,4 @@ public enum FeatureName {
   KUBERNETES_CREATE_CLUSTER,
   TIME_SERIES_ML,
   KMS,
-  SHELL_SCRIPT_AS_A_STEP,
 }
