@@ -52,6 +52,18 @@ public class PersistentLockerDBTest extends WingsBaseTest {
   }
 
   @Test
+  public void testAcquireLockAfterDestroy() {
+    try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
+      persistentLocker.destroy(lock);
+    } catch (WingsException exception) {
+      // Do nothing. This is just to suppress the exception
+    }
+
+    try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
+    }
+  }
+
+  @Test
   @Ignore // The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.
   public void testAcquireAfterTimeout() throws InterruptedException {
     class AnotherLock implements Runnable {
