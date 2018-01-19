@@ -30,6 +30,8 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.beans.Base;
@@ -66,6 +68,8 @@ import java.util.UUID;
  */
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
+  protected static Logger logger = LoggerFactory.getLogger(WingsMongoPersistence.class);
+
   @Inject private SecretManager secretManager;
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;

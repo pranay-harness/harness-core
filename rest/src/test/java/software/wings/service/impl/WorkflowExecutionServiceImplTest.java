@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static io.harness.threading.Puller.pullFor;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -112,6 +113,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -1373,7 +1375,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    Thread.sleep(3000);
+    pullFor(Duration.ofSeconds(5), () -> {
+      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+      return pull.getStatus() == ExecutionStatus.RUNNING;
+    });
 
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -1384,14 +1389,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    int i = 0;
-    do {
-      i++;
-      Thread.sleep(1000);
-      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
-    } while ((execution.getStatus() != ExecutionStatus.ABORTED && i < 15)
-        || execution.getExecutionNode().getGroup() == null);
-    Thread.sleep(1000);
+    pullFor(Duration.ofSeconds(15), () -> {
+      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+      return pull.getStatus() == ExecutionStatus.ABORTED;
+    });
+
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
 
     assertThat(execution)

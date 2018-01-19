@@ -70,7 +70,7 @@ public class NotifyResponse<T extends NotifyResponseData> extends Base {
    * @return the expiry ts
    */
   public Date getExpiryTs() {
-    return new Date(expiryTs.getTime());
+    return expiryTs == null ? null : new Date(expiryTs.getTime());
   }
 
   /**
