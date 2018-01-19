@@ -564,5 +564,6 @@ public interface Constants {
    * The constant STAGING_PATH.
    */
   String STAGING_PATH = "STAGING_PATH";
-  String SHOW_LOGS = "SHOW_LOGS";
+
+  String ACTIVITY_ID = "activityId";
 }
