@@ -199,7 +199,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -1157,7 +1157,7 @@ public class AwsHelperService {
 
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
-      ExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
+      ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonAutoScalingClient amazonAutoScalingClient =
@@ -1178,7 +1178,7 @@ public class AwsHelperService {
 
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
-      ExecutionLogCallback executionLogCallback) {
+      ManagerExecutionLogCallback executionLogCallback) {
     setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
         awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity, executionLogCallback, 10);
   }
@@ -1227,8 +1227,8 @@ public class AwsHelperService {
   }
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback executionLogCallback,
-      Integer autoScalingSteadyStateTimeout) {
+      String region, String autoScalingGroupName, Integer desiredCount,
+      ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
     Duration sleepInterval = Duration.ofSeconds(30);
     long retryCount =
         TimeUnit.SECONDS.convert(autoScalingSteadyStateTimeout, TimeUnit.MINUTES) / sleepInterval.getSeconds();
@@ -1254,7 +1254,7 @@ public class AwsHelperService {
   }
 
   private boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, List<String> instanceIds, ExecutionLogCallback executionLogCallback) {
+      String region, List<String> instanceIds, ManagerExecutionLogCallback executionLogCallback) {
     DescribeInstancesResult describeInstancesResult = describeEc2Instances(
         awsConfig, encryptionDetails, region, new DescribeInstancesRequest().withInstanceIds(instanceIds));
     boolean allRunning = instanceIds.isEmpty()

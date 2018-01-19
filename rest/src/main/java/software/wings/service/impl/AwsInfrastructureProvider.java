@@ -46,7 +46,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.states.AwsAmiServiceDeployState.ExecutionLogCallback;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -171,7 +171,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     if (infrastructureMapping.isSetDesiredCapacity()) {
       awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
           infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
-          infrastructureMapping.getDesiredCapacity(), new ExecutionLogCallback());
+          infrastructureMapping.getDesiredCapacity(), new ManagerExecutionLogCallback());
     }
     List<String> instancesIds = awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails,
         infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName());

@@ -4,9 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,6 +129,19 @@ public class Misc {
       String msg = getMessage(t);
       if (isNotBlank(msg)) {
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      }
+      t = t.getCause();
+    }
+  }
+
+  public static void logAllMessages(
+      Throwable ex, ManagerExecutionLogCallback executionLogCallback, CommandExecutionStatus commandExecutionStatus) {
+    int i = 0;
+    Throwable t = ex;
+    while (t != null && i++ < MAX_CAUSES) {
+      String msg = getMessage(t);
+      if (isNotBlank(msg)) {
+        executionLogCallback.saveExecutionLog(msg, commandExecutionStatus, LogLevel.ERROR);
       }
       t = t.getCause();
     }
