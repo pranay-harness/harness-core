@@ -64,6 +64,7 @@ import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.LogAnalysisPurgeManager;
+import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
@@ -331,7 +332,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler")));
 
     // TODO: add the job after make sure that destroying locks is safe
-    // PersistentLockCleanupJob.add(jobScheduler);
+    PersistentLockCleanupJob.remove(jobScheduler);
   }
 
   private void registerJerseyProviders(Environment environment) {
