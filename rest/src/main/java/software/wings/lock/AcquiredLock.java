@@ -28,6 +28,7 @@ public class AcquiredLock implements Closeable {
   }
 
   public void release() {
+    lock.unlock();
     lock = null;
   }
 
@@ -53,7 +54,7 @@ public class AcquiredLock implements Closeable {
       // NOTE: letting the lock as is, is not a problem. It being timeout is as good as releasing it.
 
       // TODO: All this is very good only if the timeout functionality is working. The library we currently using
-      //       does not respect the timeing out. Return from here when it is fixed.
+      //       does not respect the timing out. Return from here when it is fixed.
       // return;
     }
 
