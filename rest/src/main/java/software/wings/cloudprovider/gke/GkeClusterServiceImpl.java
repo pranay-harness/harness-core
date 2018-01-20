@@ -1,6 +1,6 @@
 package software.wings.cloudprovider.gke;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;

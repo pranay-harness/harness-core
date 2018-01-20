@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static org.apache.commons.lang.StringUtils.removeEnd;
+import static org.apache.commons.lang3.StringUtils.removeEnd;
 
 import com.google.common.collect.ImmutableMap;
 

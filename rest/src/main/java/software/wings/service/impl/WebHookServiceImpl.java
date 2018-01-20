@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Inject;
 

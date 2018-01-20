@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -27,7 +27,7 @@ import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHost;
@@ -398,7 +398,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public String checkStatus(String jobname) {
-    throw new NotImplementedException();
+    throw new NotImplementedException("Not implemented");
   }
 
   /* (non-Javadoc)
@@ -406,7 +406,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public String checkStatus(String jobname, String buildNo) {
-    throw new NotImplementedException();
+    throw new NotImplementedException("Not implemented");
   }
 
   /* (non-Javadoc)
@@ -414,7 +414,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public String checkArtifactStatus(String jobname, String artifactpathRegex) {
-    throw new NotImplementedException();
+    throw new NotImplementedException("Not implemented");
   }
 
   /* (non-Javadoc)
@@ -423,7 +423,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public String checkArtifactStatus(String jobname, String buildNo, String artifactpathRegex) {
-    throw new NotImplementedException();
+    throw new NotImplementedException("Not implemented");
   }
 
   /* (non-Javadoc)

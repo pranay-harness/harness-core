@@ -6,7 +6,7 @@ import com.google.common.math.Stats;
 
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.text.WordUtils;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;

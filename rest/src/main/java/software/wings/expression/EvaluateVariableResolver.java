@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import lombok.Builder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlException;
-import org.apache.commons.lang.text.StrLookup;
+import org.apache.commons.text.StrLookup;
 
 @Builder
 public class EvaluateVariableResolver extends StrLookup {

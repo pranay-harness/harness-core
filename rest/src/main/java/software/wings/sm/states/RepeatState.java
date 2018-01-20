@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.abbreviate;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.base.Joiner;

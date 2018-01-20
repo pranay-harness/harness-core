@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static org.apache.commons.lang.StringUtils.abbreviate;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import lombok.Builder;

@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

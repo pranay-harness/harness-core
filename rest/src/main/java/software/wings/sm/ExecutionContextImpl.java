@@ -9,7 +9,7 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;

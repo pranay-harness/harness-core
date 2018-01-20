@@ -1,12 +1,12 @@
 package software.wings.beans.alert;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.CatalogItem;

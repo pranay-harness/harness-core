@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Singleton;
 

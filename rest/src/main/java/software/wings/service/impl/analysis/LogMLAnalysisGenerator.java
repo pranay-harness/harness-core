@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.github.reinert.jjschema.Attributes;

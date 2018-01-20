@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.FILE_INTEGRITY_CHECK_FAILED;
 
 import com.google.inject.Inject;

@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

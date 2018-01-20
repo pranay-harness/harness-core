@@ -2,7 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;

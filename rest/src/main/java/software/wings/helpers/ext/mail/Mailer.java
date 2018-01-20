@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.mail;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 

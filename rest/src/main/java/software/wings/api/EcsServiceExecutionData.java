@@ -1,10 +1,10 @@
 package software.wings.api;
 
 import static com.google.common.base.Strings.emptyToNull;
-import static org.apache.commons.lang.ArrayUtils.getLength;
-import static org.apache.commons.lang.StringUtils.split;
-import static org.apache.commons.lang.StringUtils.strip;
-import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static org.apache.commons.lang3.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.strip;
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

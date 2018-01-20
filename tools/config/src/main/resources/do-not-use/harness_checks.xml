@@ -57,20 +57,24 @@
         if you spot a missed alternative.
          -->
         <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.commons.lang"/>
+
             <!-- use com.google.inject instead -->
             <property name="illegalPkgs" value="javax.inject"/>
 
-            <!-- use org.apache.commons.lang.StringUtils instead -->
-            <property name="illegalPkgs" value="org.apache.commons.lang3.StringUtils,
-                                                org.apache.commons.codec.binary.StringUtils,
+            <!-- use org.apache.commons.lang3.StringUtils instead -->
+            <property name="illegalPkgs" value="org.apache.commons.codec.binary.StringUtils,
                                                 ro.fortsoft.pf4j.util.StringUtils,
-                                                wiremock.org.apache.commons.lang.StringUtils"/>
+                                                wiremock.org.apache.commons.lang3.StringUtils"/>
 
-            <!-- use org.apache.commons.lang.ArrayUtils instead -->
-            <property name="illegalPkgs" value="org.apache.commons.lang3.ArrayUtils"/>
+            <!-- use org.apache.commons.lang3.ArrayUtils instead -->
+            <property name="illegalPkgs" value="org.apache.commons.lang.ArrayUtils"/>
 
             <!-- use org.slf4j.Logger instead -->
             <property name="illegalPkgs" value="java.util.logging.Logger"/>
+
+            <!-- use org.apache.commons.text.StrSubstitutor instead -->
+            <property name="illegalClasses" value="org.apache.commons.lang3.text.StrSubstitutor"/>
 
             <!-- use org.assertj.core.api.Assertions.assertThat instead -->
             <property name="illegalClasses" value="com.google.common.truth.Truth.assertThat,
@@ -87,8 +91,8 @@
             <property name="staticImports" value="io.harness.data.structure.EmptyPredicate.isEmpty"/>
             <property name="staticImports" value="io.harness.data.structure.EmptyPredicate.isNotEmpty"/>
 
-            <property name="staticImports" value="org.apache.commons.lang.StringUtils.isBlank"/>
-            <property name="staticImports" value="org.apache.commons.lang.StringUtils.isNotBlank"/>
+            <property name="staticImports" value="org.apache.commons.lang3.StringUtils.isBlank"/>
+            <property name="staticImports" value="org.apache.commons.lang3.StringUtils.isNotBlank"/>
         </module>
 
         <!-- ERROR PREVENTION -->

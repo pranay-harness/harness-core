@@ -6,7 +6,7 @@ import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.ssh.executors.SshSessionConfig;

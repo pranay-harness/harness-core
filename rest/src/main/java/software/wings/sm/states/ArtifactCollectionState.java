@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.DEFAULT_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.Constants.URL;

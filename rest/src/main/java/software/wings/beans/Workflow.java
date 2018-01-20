@@ -4,7 +4,7 @@
 
 package software.wings.beans;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import org.mongodb.morphia.annotations.Entity;

@@ -2,8 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trim;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;

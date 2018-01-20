@@ -7,7 +7,7 @@ import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.a
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StrSubstitutor;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;

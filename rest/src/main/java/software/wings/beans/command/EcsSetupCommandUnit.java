@@ -2,7 +2,7 @@ package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
