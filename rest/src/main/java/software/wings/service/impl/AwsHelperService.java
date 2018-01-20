@@ -1258,7 +1258,7 @@ public class AwsHelperService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, e)
           .addParam("message", "Error while waiting for all instances to be in running state");
     }
     executionLogCallback.saveExecutionLog("AutoScaling group reached steady state");
@@ -1493,7 +1493,7 @@ public class AwsHelperService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, e)
           .addParam("message", "Error while waiting for autoscaling group to be deleted");
     }
   }

@@ -163,7 +163,7 @@ public class JenkinsImpl implements Jenkins {
       }, 120L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Jenkins server request did not succeed within 25 secs even after 5 retries", e);
-      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Failed to get job details for " + jobname);
       wingsException.addParam("jenkinsResponse", "Server Error");
       throw wingsException;
@@ -171,7 +171,7 @@ public class JenkinsImpl implements Jenkins {
       throw e;
     } catch (Exception e) {
       logger.warn("Jenkins server request failed", e);
-      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, e);
       wingsException.addParam("message", "Failed to get job details for " + jobname);
       wingsException.addParam("jenkinsResponse", "Server Error");
       throw wingsException;

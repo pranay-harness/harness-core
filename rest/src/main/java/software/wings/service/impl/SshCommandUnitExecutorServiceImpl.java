@@ -168,7 +168,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                 .withCommandUnitName(commandUnit.getName())
                 .withExecutionResult(commandExecutionStatus)
                 .build());
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
       }
     } catch (Exception e) {
       logger.error("Error while executing command", e);
@@ -182,7 +182,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
               .withCommandUnitName(commandUnit.getName())
               .withExecutionResult(commandExecutionStatus)
               .build());
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }
 
     logService.save(context.getAccountId(),

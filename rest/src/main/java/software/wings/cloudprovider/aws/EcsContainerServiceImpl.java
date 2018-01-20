@@ -61,7 +61,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.HttpUtil;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -825,7 +824,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, e)
           .addParam("message", "Error while waiting for instances to register with cluster");
     }
   }
@@ -844,7 +843,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Error while waiting for instances to be ready");
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", "Error while waiting for instances to be ready");
     }
   }
 
@@ -911,7 +910,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, e)
           .addParam("message", "Error while waiting for tasks to be in running state");
     }
   }
@@ -1125,7 +1124,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (e instanceof InterruptedException) {
         String msg = "Interrupted while waiting for service to reach steady state";
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-        throw new WingsException(INVALID_REQUEST).addParam("message", msg);
+        throw new WingsException(INVALID_REQUEST, e).addParam("message", msg);
       }
       throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
@@ -1160,8 +1159,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      Misc.logAllMessages(e, executionLogCallback);
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service update failed");
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", "Service update failed");
     }
   }
 
