@@ -1,6 +1,7 @@
 package software.wings.lock;
 
 import static io.harness.threading.Morpheus.sleep;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -60,6 +61,16 @@ public class PersistentLockerDBTest extends WingsBaseTest {
     }
 
     try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
+    }
+  }
+
+  @Test
+  public void testTryToAcquireLock() {
+    try (AcquiredLock outer = persistentLocker.tryToAcquireLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
+      assertThat(outer).isNotNull();
+      try (AcquiredLock inner = persistentLocker.tryToAcquireLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
+        assertThat(inner).isNull();
+      }
     }
   }
 
