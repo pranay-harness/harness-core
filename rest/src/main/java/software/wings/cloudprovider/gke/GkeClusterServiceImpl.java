@@ -1,7 +1,8 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
@@ -21,6 +22,8 @@ import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -49,7 +52,9 @@ import javax.annotation.Nullable;
 @Singleton
 public class GkeClusterServiceImpl implements GkeClusterService {
   private static final Logger logger = LoggerFactory.getLogger(GkeClusterServiceImpl.class);
+
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
+  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public KubernetesConfig createCluster(SettingAttribute computeProviderSetting,
@@ -153,38 +158,29 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   private String waitForOperationToComplete(
       Operation operation, Container gkeContainerService, String projectId, String zone, String operationLogMessage) {
     logger.info(operationLogMessage + "...");
-    int i = 0;
-    with()
-        .pollInterval(gcpHelperService.getSleepIntervalSecs(), TimeUnit.SECONDS)
-        .await()
-        .atMost(gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES)
-        .until(() -> {
-          try {
-            return !gkeContainerService.projects()
-                        .zones()
-                        .operations()
-                        .get(projectId, zone, operation.getName())
-                        .execute()
-                        .getStatus()
-                        .equals("RUNNING");
-          } catch (IOException e) {
-            logger.error("Error checking operation status", e);
-            return true;
-          }
-        });
-    String status;
     try {
-      status = gkeContainerService.projects()
-                   .zones()
-                   .operations()
-                   .get(projectId, zone, operation.getName())
-                   .execute()
-                   .getStatus();
-    } catch (IOException e) {
-      status = "UNKNOWN";
+      return timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          String status = gkeContainerService.projects()
+                              .zones()
+                              .operations()
+                              .get(projectId, zone, operation.getName())
+                              .execute()
+                              .getStatus();
+          if (!status.equals("RUNNING")) {
+            logger.info(operationLogMessage + ": Running");
+            return status;
+          }
+          sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
+        }
+      }, gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.error("Timed out checking operation status");
+      return "UNKNOWN";
+    } catch (Exception e) {
+      logger.error("Error checking operation status", e);
+      return "UNKNOWN";
     }
-    logger.info(operationLogMessage + ": " + status);
-    return status;
   }
 
   @Override

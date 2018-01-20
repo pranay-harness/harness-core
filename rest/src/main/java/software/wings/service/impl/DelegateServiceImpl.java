@@ -3,12 +3,12 @@ package software.wings.service.impl;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static org.awaitility.Awaitility.with;
-import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -28,6 +28,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -124,6 +125,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CacheHelper cacheHelper;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
+  @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
 
   @Override
@@ -942,31 +944,36 @@ public class DelegateServiceImpl implements DelegateService {
   public void deleteOldTasks(long retentionMillis) {
     final int batchSize = 1000;
     final int limit = 5000;
-    final long hours = retentionMillis / (60 * 60 * 1000L);
+    final long hours = TimeUnit.HOURS.convert(retentionMillis, TimeUnit.MILLISECONDS);
     try {
       logger.info("Start: Deleting delegate tasks older than {} hours", hours);
-      with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {
-        List<DelegateTask> delegateTasks = new ArrayList<>();
-        try {
-          Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                          .field("createdAt")
-                                          .lessThan(clock.millis() - retentionMillis);
-          query.or(query.criteria("status").equal(ABORTED), query.criteria("status").equal(ERROR));
-          delegateTasks.addAll(query.asList(new FindOptions().limit(limit).batchSize(batchSize)));
-          if (isEmpty(delegateTasks)) {
-            logger.info("No more delegate tasks older than {} hours", hours);
+      timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          List<DelegateTask> delegateTasks = new ArrayList<>();
+          try {
+            Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                            .field("createdAt")
+                                            .lessThan(clock.millis() - retentionMillis);
+            query.or(query.criteria("status").equal(ABORTED), query.criteria("status").equal(ERROR));
+            delegateTasks.addAll(query.asList(new FindOptions().limit(limit).batchSize(batchSize)));
+            if (isEmpty(delegateTasks)) {
+              logger.info("No more delegate tasks older than {} hours", hours);
+              return true;
+            }
+            logger.info("Deleting {} delegate tasks", delegateTasks.size());
+            wingsPersistence.getCollection("delegateTasks")
+                .remove(new BasicDBObject(
+                    "_id", new BasicDBObject("$in", delegateTasks.stream().map(DelegateTask::getUuid).toArray())));
+          } catch (Exception ex) {
+            logger.warn("Failed to delete {} delegate tasks", delegateTasks.size(), ex);
+          }
+          logger.info("Successfully deleted {} delegate tasks", delegateTasks.size());
+          if (delegateTasks.size() < limit) {
             return true;
           }
-          logger.info("Deleting {} delegate tasks", delegateTasks.size());
-          wingsPersistence.getCollection("delegateTasks")
-              .remove(new BasicDBObject(
-                  "_id", new BasicDBObject("$in", delegateTasks.stream().map(DelegateTask::getUuid).toArray())));
-        } catch (Exception ex) {
-          logger.warn("Failed to delete {} delegate tasks", delegateTasks.size(), ex);
+          sleep(ofSeconds(2L));
         }
-        logger.info("Successfully deleted {} delegate tasks", delegateTasks.size());
-        return delegateTasks.size() < limit;
-      });
+      }, 10L, TimeUnit.MINUTES, true);
     } catch (Exception ex) {
       logger.warn("Failed to delete delegate tasks older than {} hours within 10 minutes.", hours, ex);
     }

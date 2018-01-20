@@ -448,12 +448,13 @@
             <artifactId>java-jwt</artifactId>
         </dependency>
 
+        <!-- Test Dependencies -->
+
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
+            <scope>test</scope>
         </dependency>
-
-        <!-- Test Dependencies -->
 
         <dependency>
             <groupId>software.wings</groupId>
@@ -466,11 +467,13 @@
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-testing</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.zeroturnaround</groupId>
             <artifactId>zt-exec</artifactId>
             <version>1.9</version>
         </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -545,6 +548,7 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

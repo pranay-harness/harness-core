@@ -3,10 +3,14 @@ package software.wings.cloudprovider.aws;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Failed;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
-import static io.harness.threading.Morpheus.quietSleep;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -40,10 +44,10 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -51,11 +55,10 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
-  private static final Duration SLEEP_INTERVAL = Duration.ofSeconds(10);
-  private static final long RETRY_COUNTER = Duration.ofMinutes(10).getSeconds() / SLEEP_INTERVAL.getSeconds();
   private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceImpl.class);
 
   @Inject private AwsHelperService awsHelperService;
+  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public List<String> listApplications(
@@ -190,13 +193,20 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
 
   private void waitForDeploymentToComplete(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId) {
-    long retryCount = RETRY_COUNTER;
-    Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
-    while (!deploymentCompleted(awsConfig, encryptedDataDetails, region, deploymentId, finalDeploymentStatus)) {
-      if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT).addParam("message", "All instances didn't registered with cluster");
-      }
-      quietSleep(SLEEP_INTERVAL);
+    try {
+      Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
+      timeLimiter.callWithTimeout(() -> {
+        while (!deploymentCompleted(awsConfig, encryptedDataDetails, region, deploymentId, finalDeploymentStatus)) {
+          sleep(ofSeconds(10));
+        }
+        return true;
+      }, 10L, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for deployment to complete");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Error while waiting for deployment to complete");
     }
   }
 
