@@ -2,10 +2,11 @@ package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.awaitility.Awaitility.with;
 import static software.wings.utils.KubernetesConvention.getKubernetesSecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
@@ -13,6 +14,8 @@ import static software.wings.utils.KubernetesConvention.getRevisionFromControlle
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -46,7 +49,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.collections.MapUtils;
-import org.awaitility.core.ConditionTimeoutException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +67,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,8 +92,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
-
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
+  @Inject @Transient private transient TimeLimiter timeLimiter;
 
   public KubernetesSetupCommandUnit() {
     super(CommandUnitType.KUBERNETES_SETUP);
@@ -307,43 +310,43 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, Service service, String loadBalancerIP,
       ExecutionLogCallback executionLogCallback) {
-    String loadBalancerEndpoint = null;
     String serviceName = service.getMetadata().getName();
     LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-    if (loadBalancer != null) {
-      if (loadBalancer.getIngress().isEmpty()) {
-        executionLogCallback.saveExecutionLog(
-            "Waiting for service " + serviceName + " load balancer to be ready.", LogLevel.INFO);
-        try {
-          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(5, TimeUnit.MINUTES).until(() -> {
+    if (loadBalancer != null
+        && (loadBalancer.getIngress().isEmpty()
+               || (isNotEmpty(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
+      executionLogCallback.saveExecutionLog(
+          "Waiting for service " + serviceName + " load balancer to be ready", LogLevel.INFO);
+      try {
+        return timeLimiter.callWithTimeout(() -> {
+          while (true) {
             LoadBalancerStatus loadBalancerStatus =
                 kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, serviceName)
                     .getStatus()
                     .getLoadBalancer();
-            boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
-            if (loadBalancerReady && isNotEmpty(loadBalancerIP)) {
-              loadBalancerReady = loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp());
+            if (!loadBalancerStatus.getIngress().isEmpty()
+                && (isEmpty(loadBalancerIP) || loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp()))) {
+              LoadBalancerIngress loadBalancerIngress = loadBalancerStatus.getIngress().get(0);
+              String loadBalancerEndpoint = isNotEmpty(loadBalancerIngress.getHostname())
+                  ? loadBalancerIngress.getHostname()
+                  : loadBalancerIngress.getIp();
+              executionLogCallback.saveExecutionLog(
+                  String.format(
+                      "Service [%s] load balancer is ready with endpoint [%s]", serviceName, loadBalancerEndpoint),
+                  LogLevel.INFO);
+              return loadBalancerEndpoint;
             }
-            return loadBalancerReady;
-          });
-        } catch (ConditionTimeoutException e) {
-          executionLogCallback.saveExecutionLog(
-              String.format("Timed out waiting for service [%s] load balancer to be ready.", serviceName),
-              LogLevel.INFO);
-          return null;
-        }
-        loadBalancer = kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, serviceName)
-                           .getStatus()
-                           .getLoadBalancer();
+            sleep(ofSeconds(1));
+          }
+        }, 5L, TimeUnit.MINUTES, true);
+      } catch (UncheckedTimeoutException e) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);
+      } catch (Exception e) {
+        Misc.logAllMessages(e, executionLogCallback);
       }
-      LoadBalancerIngress loadBalancerIngress = loadBalancer.getIngress().get(0);
-      loadBalancerEndpoint = isNotEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname()
-                                                                           : loadBalancerIngress.getIp();
     }
-    executionLogCallback.saveExecutionLog(
-        String.format("Service [%s] load balancer is ready with endpoint [%s].", serviceName, loadBalancerEndpoint),
-        LogLevel.INFO);
-    return loadBalancerEndpoint;
+    return null;
   }
 
   private String lastController(

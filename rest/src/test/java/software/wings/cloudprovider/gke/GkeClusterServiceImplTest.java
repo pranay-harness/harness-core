@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
@@ -26,6 +27,7 @@ import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -128,6 +130,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     notFoundException = new GoogleJsonResponseException(
         new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "not found", httpHeaders),
         googleJsonError);
+    on(gkeClusterService).set("timeLimiter", new FakeTimeLimiter());
   }
 
   @Test

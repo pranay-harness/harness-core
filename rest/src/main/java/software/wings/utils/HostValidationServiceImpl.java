@@ -1,17 +1,16 @@
 package software.wings.utils;
 
-import static org.awaitility.Awaitility.with;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -33,7 +32,9 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class HostValidationServiceImpl implements HostValidationService {
   private static final Logger logger = LoggerFactory.getLogger(HostValidationServiceImpl.class);
+
   @Inject private EncryptionService encryptionService;
+  @Inject private TimeLimiter timeLimiter;
 
   public List<HostValidationResponse> validateHost(List<String> hostNames, SettingAttribute connectionSetting,
       List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
@@ -41,7 +42,7 @@ public class HostValidationServiceImpl implements HostValidationService {
 
     encryptionService.decrypt((Encryptable) connectionSetting.getValue(), encryptionDetails);
     try {
-      with().pollInterval(3L, TimeUnit.SECONDS).atMost(new Duration(60L, TimeUnit.SECONDS)).until(() -> {
+      timeLimiter.callWithTimeout(() -> {
         hostNames.forEach(hostName -> {
           CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                                 .withHostConnectionAttributes(connectionSetting)
@@ -65,8 +66,9 @@ public class HostValidationServiceImpl implements HostValidationService {
           }
           hostValidationResponses.add(response);
         });
-      });
-    } catch (ConditionTimeoutException ex) {
+        return true;
+      }, 1, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException ex) {
       logger.warn("Host validation timed out", ex);
       // populate timeout error for rest of the hosts
       for (int idx = hostValidationResponses.size(); idx < hostNames.size(); idx++) {
@@ -75,6 +77,17 @@ public class HostValidationServiceImpl implements HostValidationService {
                                         .withStatus(ExecutionStatus.FAILED.name())
                                         .withErrorCode(ErrorCode.REQUEST_TIMEOUT.getCode())
                                         .withErrorDescription(ErrorCode.REQUEST_TIMEOUT.getDescription())
+                                        .build());
+      }
+    } catch (Exception ex) {
+      logger.warn("Host validation failed", ex);
+      // populate error for rest of the hosts
+      for (int idx = hostValidationResponses.size(); idx < hostNames.size(); idx++) {
+        hostValidationResponses.add(HostValidationResponse.Builder.aHostValidationResponse()
+                                        .withHostName(hostNames.get(idx))
+                                        .withStatus(ExecutionStatus.FAILED.name())
+                                        .withErrorCode(ErrorCode.UNKNOWN_ERROR.getCode())
+                                        .withErrorDescription(ErrorCode.UNKNOWN_ERROR.getDescription())
                                         .build());
       }
     }

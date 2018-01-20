@@ -5,16 +5,19 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,6 +40,11 @@ public class JenkinsTest {
 
   public JenkinsTest() throws URISyntaxException {}
 
+  @Before
+  public void setupMocks() {
+    on(jenkins).set("timeLimiter", new FakeTimeLimiter());
+  }
+
   /**
    * Should get job from jenkins.
    *
@@ -44,7 +52,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  public void shouldGetJobFromJenkins() throws URISyntaxException, IOException {
+  public void shouldGetJobFromJenkins() throws IOException {
     assertThat(jenkins.getJob("scheduler")).isNotNull();
   }
 
@@ -55,7 +63,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  public void shouldGetJobsFromJenkins() throws URISyntaxException, IOException {
+  public void shouldGetJobsFromJenkins() throws IOException {
     wireMockRule.stubFor(
         get(urlEqualTo("/job/parentJob/api/json"))
             .willReturn(
@@ -148,11 +156,10 @@ public class JenkinsTest {
   /**
    * Should get last n build details for git jobs.
    *
-   * @throws URISyntaxException the URI syntax exception
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  public void shouldGetLastNBuildDetailsForGitJobs() throws URISyntaxException, IOException {
+  public void shouldGetLastNBuildDetailsForGitJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler", 5);
     assertThat(buildDetails)
         .hasSize(4)

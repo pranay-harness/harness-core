@@ -1,11 +1,12 @@
 package software.wings.helpers.ext.bamboo;
 
 import static java.util.Arrays.asList;
-import static org.awaitility.Awaitility.with;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -15,8 +16,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -45,7 +44,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 11/29/16.
@@ -53,7 +51,9 @@ import java.util.stream.Collectors;
 @Singleton
 public class BambooServiceImpl implements BambooService {
   private static final Logger logger = LoggerFactory.getLogger(BambooServiceImpl.class);
+
   @Inject private EncryptionService encryptionService;
+  @Inject private TimeLimiter timeLimiter;
 
   private BambooRestClient getBambooClient(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
@@ -133,7 +133,7 @@ public class BambooServiceImpl implements BambooService {
    * @param bambooConfig the bamboo config
    * @return the basic auth credentials
    */
-  public String getBasicAuthCredentials(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
+  private String getBasicAuthCredentials(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(bambooConfig, encryptionDetails);
     return Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword()));
   }
@@ -143,10 +143,10 @@ public class BambooServiceImpl implements BambooService {
     return getPlanKeys(bambooConfig, encryptionDetails, 10000);
   }
 
-  public Map<String, String> getPlanKeys(
+  private Map<String, String> getPlanKeys(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int maxResults) {
     try {
-      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+      return timeLimiter.callWithTimeout(() -> {
         logger.info("Retrieving plan keys for bamboo server {}", bambooConfig);
         Call<JsonNode> request =
             getBambooClient(bambooConfig, encryptionDetails)
@@ -164,9 +164,7 @@ public class BambooServiceImpl implements BambooService {
               planNameMap.put(planKey, planName);
             });
           }
-        } catch (WingsException e) {
-          throw e;
-        } catch (IOException e) {
+        } catch (Exception e) {
           if (response != null && !response.isSuccessful()) {
             IOUtils.closeQuietly(response.errorBody());
           }
@@ -176,11 +174,16 @@ public class BambooServiceImpl implements BambooService {
         }
         logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
         return planNameMap;
-      }, notNullValue());
-    } catch (ConditionTimeoutException e) {
-      logger.warn("Bamboo server request did not succeed within 20 secs", e);
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Bamboo server took too long to respond");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error("Error getting artifact path from Bamboo server", e);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
 
@@ -207,7 +210,7 @@ public class BambooServiceImpl implements BambooService {
   public List<BuildDetails> getBuilds(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey, int maxNumberOfBuilds) {
     try {
-      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+      return timeLimiter.callWithTimeout(() -> {
         List<BuildDetails> buildDetailsList = new ArrayList<>();
         Call<JsonNode> request =
             getBambooClient(bambooConfig, encryptionDetails)
@@ -236,11 +239,16 @@ public class BambooServiceImpl implements BambooService {
               .addParam("message",
                   "Error in fetching builds from bamboo server. Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }
-      }, notNullValue());
-    } catch (ConditionTimeoutException e) {
-      logger.warn("Bamboo server request did not succeed within 20 secs", e);
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Bamboo server took too long to respond");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error("Error getting artifact path from Bamboo server", e);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
 
@@ -248,22 +256,28 @@ public class BambooServiceImpl implements BambooService {
   public List<String> getArtifactPath(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
     try {
-      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+      return timeLimiter.callWithTimeout(() -> {
         List<String> artifactPaths = new ArrayList<>();
         BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, encryptionDetails, planKey);
         if (lastSuccessfulBuild != null) {
-          Map<String, Artifact> buildArtifactsUrlMap =
-              getBuildArtifactsUrlMap(bambooConfig, encryptionDetails, planKey, lastSuccessfulBuild.getNumber());
           artifactPaths.addAll(getArtifactRelativePaths(
-              buildArtifactsUrlMap.values().stream().map(Artifact::getLink).collect(Collectors.toList())));
+              getBuildArtifactsUrlMap(bambooConfig, encryptionDetails, planKey, lastSuccessfulBuild.getNumber())
+                  .values()
+                  .stream()
+                  .map(Artifact::getLink)
+                  .collect(toList())));
         }
         return artifactPaths;
-
-      }, notNullValue());
-    } catch (ConditionTimeoutException e) {
-      logger.warn("Bamboo server request did not succeed within 20 secs", e);
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Bamboo server took too long to respond");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error("Error getting artifact path from Bamboo server", e);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
 
@@ -366,7 +380,7 @@ public class BambooServiceImpl implements BambooService {
   }
 
   private List<String> getArtifactRelativePaths(Collection<String> paths) {
-    return paths.stream().map(this ::extractRelativePath).filter(Objects::nonNull).collect(Collectors.toList());
+    return paths.stream().map(this ::extractRelativePath).filter(Objects::nonNull).collect(toList());
   }
 
   private String extractRelativePath(String path) {

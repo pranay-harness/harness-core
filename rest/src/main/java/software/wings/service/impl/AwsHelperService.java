@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -13,9 +13,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -194,6 +197,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.exception.WingsException;
@@ -204,7 +208,6 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -223,6 +226,7 @@ public class AwsHelperService {
   private static final String AWS_AVAILABILITY_ZONE_CHECK =
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   @Inject private EncryptionService encryptionService;
+  @Inject private TimeLimiter timeLimiter;
 
   private static final Logger logger = LoggerFactory.getLogger(AwsHelperService.class);
 
@@ -1229,28 +1233,35 @@ public class AwsHelperService {
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String autoScalingGroupName, Integer desiredCount,
       ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
-    Duration sleepInterval = Duration.ofSeconds(30);
-    long retryCount =
-        TimeUnit.SECONDS.convert(autoScalingSteadyStateTimeout, TimeUnit.MINUTES) / sleepInterval.getSeconds();
-    logger.info("Total #retries for stead state check", retryCount);
-    List<String> instanceIds =
-        listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
-    while (instanceIds.size() != desiredCount
-        || !allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, executionLogCallback)) {
+    try {
+      timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          List<String> instanceIds =
+              listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
+          String msg =
+              String.format("Waiting for AutoScaling group to meet desired count. %s/%s instances registered ...",
+                  instanceIds.size(), desiredCount);
+          logger.info(msg);
+          executionLogCallback.saveExecutionLog(msg, LogLevel.INFO);
+          if (instanceIds.size() == desiredCount
+              && allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, executionLogCallback)) {
+            return true;
+          }
+          sleep(ofSeconds(30));
+        }
+      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
       executionLogCallback.saveExecutionLog(
-          String.format("Waiting for AutoScaling group to meet desired count. %s/%s instances registered ...",
-              instanceIds.size(), desiredCount));
-      if (retryCount-- <= 0) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Request timeout. AutoScaling group couldn't reach in steady state"),
-            CommandExecutionStatus.FAILURE);
-        throw new WingsException(INIT_TIMEOUT).addParam("message", "Not all instances in running state");
-      }
-      logger.info("Waiting for all instances to be in running state");
-      sleep(sleepInterval);
-      instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
+          "Request timeout. AutoScaling group couldn't reach steady state", CommandExecutionStatus.FAILURE);
+      throw new WingsException(INIT_TIMEOUT)
+          .addParam("message", "Timed out waiting for all instances to be in running state");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Error while waiting for all instances to be in running state");
     }
-    executionLogCallback.saveExecutionLog(String.format("AutoScaling reached to steady state"));
+    executionLogCallback.saveExecutionLog("AutoScaling group reached steady state");
   }
 
   private boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -1463,13 +1474,28 @@ public class AwsHelperService {
 
   private void waitForAutoScalingGroupToBeDeleted(
       AmazonAutoScalingClient amazonAutoScalingClient, AutoScalingGroup autoScalingGroup) {
-    int retry_counter = 12;
-    DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult();
-    do {
-      quietSleep(Duration.ofSeconds(5));
-      describeAutoScalingGroupsResult = amazonAutoScalingClient.describeAutoScalingGroups(
-          new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroup.getAutoScalingGroupName()));
-    } while (--retry_counter > 0 && !describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty());
+    try {
+      timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          if (amazonAutoScalingClient
+                  .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
+                      autoScalingGroup.getAutoScalingGroupName()))
+                  .getAutoScalingGroups()
+                  .isEmpty()) {
+            return true;
+          }
+          sleep(ofSeconds(5));
+        }
+      }, 1L, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      throw new WingsException(INIT_TIMEOUT)
+          .addParam("message", "Timed out waiting for autoscaling group to be deleted");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Error while waiting for autoscaling group to be deleted");
+    }
   }
 
   public Datapoint getCloudWatchMetricStatistics(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,

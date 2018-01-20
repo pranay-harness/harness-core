@@ -2,16 +2,15 @@ package software.wings.cloudprovider.aws;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.awaitility.Awaitility.with;
-import static org.hamcrest.core.IsEqual.equalTo;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.io.CharStreams;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -49,8 +48,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -64,6 +61,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.HttpUtil;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -80,10 +78,11 @@ import java.util.stream.IntStream;
  */
 @Singleton
 public class EcsContainerServiceImpl implements EcsContainerService {
-  private static final java.time.Duration SLEEP_INTERVAL = ofSeconds(10);
-  private static final long RETRY_COUNTER = ofMinutes(10).getSeconds() / SLEEP_INTERVAL.getSeconds();
   private static final Logger logger = LoggerFactory.getLogger(EcsContainerServiceImpl.class);
+
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
+  @Inject private TimeLimiter timeLimiter;
+
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   /**
@@ -813,24 +812,39 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private void waitForAllInstanceToRegisterWithCluster(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, Integer clusterSize) {
-    long retryCount = RETRY_COUNTER;
-    while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
-      if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT).addParam("message", "All instances didn't registered with cluster");
-      }
-      sleep(SLEEP_INTERVAL);
+    try {
+      timeLimiter.callWithTimeout(() -> {
+        while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
+          sleep(ofSeconds(10));
+        }
+        return true;
+      }, 10L, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      throw new WingsException(INIT_TIMEOUT)
+          .addParam("message", "Timed out waiting for instances to register with cluster");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Error while waiting for instances to register with cluster");
     }
   }
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String region, String autoscalingGroupName, Integer clusterSize) {
-    long retryCount = RETRY_COUNTER;
-    while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
-      if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT)
-            .addParam("message", "Not all instances ready to registered with cluster");
-      }
-      sleep(SLEEP_INTERVAL);
+    try {
+      timeLimiter.callWithTimeout(() -> {
+        while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
+          sleep(ofSeconds(10));
+        }
+        return true;
+      }, 10L, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for instances to be ready");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Error while waiting for instances to be ready");
     }
   }
 
@@ -884,30 +898,38 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForTasksToBeInRunningState(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
-    long retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRunning(
-        region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
-      if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT).addParam("message", "Some tasks are still not in running state");
-      }
-      sleep(SLEEP_INTERVAL);
+    try {
+      timeLimiter.callWithTimeout(() -> {
+        while (notAllDesiredTasksRunning(
+            region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
+          sleep(ofSeconds(10));
+        }
+        return true;
+      }, 10L, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for tasks to be in running state");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Error while waiting for tasks to be in running state");
     }
   }
 
   private void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
-    long retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRunning(
-        region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
-      if (retryCount-- <= 0) {
-        break;
+    try {
+      waitForTasksToBeInRunningState(
+          region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
+    } catch (WingsException e) {
+      if (e.getResponseMessageList().stream().noneMatch(responseMessage -> responseMessage.getCode() == INIT_TIMEOUT)) {
+        throw e;
       }
-      sleep(SLEEP_INTERVAL);
     }
   }
 
-  private boolean allDesiredTaskRunning(String region, AwsConfig awsConfig,
+  private boolean notAllDesiredTasksRunning(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
     Service service = awsHelperService
@@ -922,7 +944,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     executionLogCallback.saveExecutionLog(String.format("Waiting for pending tasks to finish. %s/%s running ...",
                                               service.getRunningCount(), service.getDesiredCount()),
         LogLevel.INFO);
-    return service.getDesiredCount().equals(service.getRunningCount());
+    return !service.getDesiredCount().equals(service.getRunningCount());
   }
 
   @Override
@@ -1063,51 +1085,50 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    long retryCount = (serviceSteadyStateTimeout * 60) / SLEEP_INTERVAL.getSeconds();
-
-    if (retryCount == 0) {
-      return;
-    }
-
     try {
       final String[] excludedEventId = {latestExcludedEventId};
-      do {
-        executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
-        Service service = awsHelperService
-                              .describeServices(region, awsConfig, encryptedDataDetails,
-                                  new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                              .getServices()
-                              .get(0);
-        List<ServiceEvent> events = service.getEvents();
-        int excludedEndIndex = IntStream.range(0, events.size())
-                                   .filter(idx -> events.get(idx).getId().equals(excludedEventId[0]))
-                                   .findFirst()
-                                   .orElse(events.size());
+      timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
+          Service service = awsHelperService
+                                .describeServices(region, awsConfig, encryptedDataDetails,
+                                    new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                                .getServices()
+                                .get(0);
+          List<ServiceEvent> events = service.getEvents();
+          int excludedEndIndex = IntStream.range(0, events.size())
+                                     .filter(idx -> events.get(idx).getId().equals(excludedEventId[0]))
+                                     .findFirst()
+                                     .orElse(events.size());
 
-        for (int i = excludedEndIndex - 1; i >= 0; i--) {
-          executionLogCallback.saveExecutionLog("EVENT: " + events.get(i).getMessage(), LogLevel.INFO);
-          if (events.get(i).getMessage().endsWith("has reached a steady state.")) {
-            executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
-            return;
+          for (int i = excludedEndIndex - 1; i >= 0; i--) {
+            executionLogCallback.saveExecutionLog("EVENT: " + events.get(i).getMessage(), LogLevel.INFO);
+            if (events.get(i).getMessage().endsWith("has reached a steady state.")) {
+              executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
+              return true;
+            }
           }
+          if (!events.isEmpty()) {
+            excludedEventId[0] = events.get(0).getId();
+          }
+          sleep(ofSeconds(10));
         }
-        if (!events.isEmpty()) {
-          excludedEventId[0] = events.get(0).getId();
-        }
-
-        sleep(SLEEP_INTERVAL);
-      } while (retryCount-- > 0);
-    } catch (Exception ex) {
-      logger.error("Wait for service steady state failed with exception ", ex);
-      if (ex instanceof InterruptedException) {
-        String msg = "Timed out waiting for service to reach steady state.";
+      }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      String msg = "Timed out waiting for service to reach steady state";
+      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      throw new WingsException(INIT_TIMEOUT).addParam("message", msg);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error("Wait for service steady state failed with exception ", e);
+      if (e instanceof InterruptedException) {
+        String msg = "Interrupted while waiting for service to reach steady state";
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
         throw new WingsException(INVALID_REQUEST).addParam("message", msg);
       }
-      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
-    executionLogCallback.saveExecutionLog("Service failed to reach a steady state", LogLevel.ERROR);
-    throw new WingsException(INVALID_REQUEST).addParam("message", "Service failed to reach a steady state");
   }
 
   private void waitForServiceUpdateToComplete(UpdateServiceResult updateServiceResult, String region,
@@ -1115,21 +1136,31 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     final Service[] service = {updateServiceResult.getService()};
     try {
-      with().pollInterval(10L, TimeUnit.SECONDS).atMost(new Duration(60L, TimeUnit.SECONDS)).until(() -> {
-        service[0] = awsHelperService
-                         .describeServices(region, awsConfig, encryptedDataDetails,
-                             new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                         .getServices()
-                         .get(0);
-        return Objects.equals(service[0].getDesiredCount(), desiredCount);
-      }, equalTo(true));
-    } catch (ConditionTimeoutException e) {
+      timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          service[0] = awsHelperService
+                           .describeServices(region, awsConfig, encryptedDataDetails,
+                               new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                           .getServices()
+                           .get(0);
+          if (Objects.equals(service[0].getDesiredCount(), desiredCount)) {
+            return true;
+          }
+          sleep(ofSeconds(1));
+        }
+      }, 60L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Service update failed {}", service[0]);
       executionLogCallback.saveExecutionLog(
-          String.format("Service desired count didn't match. expected: [%s], found [%s]", desiredCount,
-              service[0].getDesiredCount()),
+          String.format("Timed out waiting for service desired count to match. expected: [%s], found [%s]",
+              desiredCount, service[0].getDesiredCount()),
           LogLevel.ERROR);
       executionLogCallback.saveExecutionLog("Service resize operation failed.", LogLevel.ERROR);
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service update timed out");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      Misc.logAllMessages(e, executionLogCallback);
       throw new WingsException(INVALID_REQUEST).addParam("message", "Service update failed");
     }
   }

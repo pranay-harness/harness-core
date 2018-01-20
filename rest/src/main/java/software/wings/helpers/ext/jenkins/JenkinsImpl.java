@@ -3,14 +3,18 @@ package software.wings.helpers.ext.jenkins;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
+import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.awaitility.Awaitility.with;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
@@ -33,8 +37,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHost;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -49,7 +51,6 @@ import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,12 +70,16 @@ import javax.net.ssl.HostnameVerifier;
  * The Class JenkinsImpl.
  */
 public class JenkinsImpl implements Jenkins {
+  private static final Logger logger = LoggerFactory.getLogger(JenkinsImpl.class);
+
   private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
+
+  @Inject private ExecutorService executorService;
+  @Inject private TimeLimiter timeLimiter;
+
   private JenkinsServer jenkinsServer;
   private JenkinsHttpClient jenkinsHttpClient;
   private String jenkinsBaseUrl;
-  private static final Logger logger = LoggerFactory.getLogger(JenkinsImpl.class);
-  @Inject private ExecutorService executorService;
 
   /**
    * Instantiates a new jenkins impl.
@@ -110,57 +115,62 @@ public class JenkinsImpl implements Jenkins {
    * @see software.wings.helpers.ext.jenkins.Jenkins#getJob(java.lang.String)
    */
   @Override
-  public JobWithDetails getJob(String jobname) throws IOException {
+  public JobWithDetails getJob(String jobname) {
     logger.info("Retrieving job {}", jobname);
     try {
-      return with()
-          .pollInterval(1L, TimeUnit.SECONDS)
-          .atMost(new Duration(120L, TimeUnit.SECONDS))
-          .until(
-              ()
-                  -> {
-                if (jobname == null) {
-                  return null;
-                }
+      return timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          if (jobname == null) {
+            sleep(ofSeconds(1L));
+            continue;
+          }
 
-                String decodedJobName = URLDecoder.decode(jobname, "UTF-8");
-                String parentJobName = null;
-                String parentJobUrl = null;
-                String childJobName;
-                String[] jobNameSplit = decodedJobName.split("/");
-                int parts = jobNameSplit.length;
-                if (parts > 1) {
-                  parentJobUrl = constructParentJobUrl(jobNameSplit);
-                  parentJobName = jobNameSplit[parts - 2];
-                  childJobName = jobNameSplit[parts - 1];
-                } else {
-                  childJobName = decodedJobName;
-                }
+          String decodedJobName = URLDecoder.decode(jobname, "UTF-8");
+          String parentJobName = null;
+          String parentJobUrl = null;
+          String childJobName;
+          String[] jobNameSplit = decodedJobName.split("/");
+          int parts = jobNameSplit.length;
+          if (parts > 1) {
+            parentJobUrl = constructParentJobUrl(jobNameSplit);
+            parentJobName = jobNameSplit[parts - 2];
+            childJobName = jobNameSplit[parts - 1];
+          } else {
+            childJobName = decodedJobName;
+          }
 
-                JobWithDetails jobWithDetails;
-                FolderJob folderJob = null;
+          JobWithDetails jobWithDetails;
+          FolderJob folderJob = null;
 
-                try {
-                  if (parentJobName != null && parentJobName.length() > 0) {
-                    folderJob = new FolderJob(parentJobName, parentJobUrl);
-                  }
+          try {
+            if (parentJobName != null && parentJobName.length() > 0) {
+              folderJob = new FolderJob(parentJobName, parentJobUrl);
+            }
 
-                  jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
-                } catch (HttpResponseException e) {
-                  if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-                    logger.warn(String.format("Error occurred while retrieving job %s. Retrying ", jobname), e);
-                    return null;
-                  } else {
-                    throw e;
-                  }
-                }
-                logger.info("Retrieving job {} success", jobname);
-                return Collections.singletonList(jobWithDetails);
-              },
-              notNullValue())
-          .get(0);
-    } catch (ConditionTimeoutException e) {
+            jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
+          } catch (HttpResponseException e) {
+            if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
+              logger.warn(String.format("Error occurred while retrieving job %s. Retrying ", jobname), e);
+              sleep(ofSeconds(1L));
+              continue;
+            } else {
+              throw e;
+            }
+          }
+          logger.info("Retrieving job {} success", jobname);
+          return singletonList(jobWithDetails).get(0);
+        }
+      }, 120L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Jenkins server request did not succeed within 25 secs even after 5 retries", e);
+      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      wingsException.addParam("message", "Failed to get job details for " + jobname);
+      wingsException.addParam("jenkinsResponse", "Server Error");
+      throw wingsException;
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.warn("Jenkins server request failed", e);
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Failed to get job details for " + jobname);
       wingsException.addParam("jenkinsResponse", "Server Error");
@@ -190,14 +200,19 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public List<JobDetails> getJobs(String parentJob) {
     try {
-      return with()
-          .pollInterval(100L, TimeUnit.MILLISECONDS)
-          .atMost(new Duration(120L, TimeUnit.SECONDS))
-          .until(() -> getJobDetails(parentJob), notNullValue());
-    } catch (ConditionTimeoutException e) {
+      return timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          List<JobDetails> details = getJobDetails(parentJob);
+          if (details != null) {
+            return details;
+          }
+          sleep(ofMillis(100L));
+        }
+      }, 120L, TimeUnit.SECONDS, true);
+    } catch (Exception e) {
       jenkinsExceptionHandler(e);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private List<JobDetails> getJobDetails(String parentJob) {
@@ -488,7 +503,7 @@ public class JenkinsImpl implements Jenkins {
       wingsException.addParam("message", "Jenkins server may not be running");
       wingsException.addParam("jenkinsResponse", e.getMessage());
       throw wingsException;
-    } else if (e instanceof ConditionTimeoutException) {
+    } else if (e instanceof UncheckedTimeoutException) {
       logger.warn("Jenkins server request did not succeed within 25 secs", e);
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Failed to get job details");

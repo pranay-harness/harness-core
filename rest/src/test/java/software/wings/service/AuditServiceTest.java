@@ -1,10 +1,13 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 
+import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
@@ -19,7 +22,6 @@ import software.wings.dl.PageResponse;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
-import software.wings.utils.JsonUtils;
 
 import java.io.ByteArrayInputStream;
 
@@ -28,20 +30,20 @@ import java.io.ByteArrayInputStream;
  */
 public class AuditServiceTest extends WingsBaseTest {
   @Inject private AuditService auditService;
-
-  @Inject private JsonUtils jsonUtils;
-
   @Inject private FileService fileService;
 
   private String appId = UUIDGenerator.getUuid();
 
+  @Before
+  public void setupMocks() {
+    on(auditService).set("timeLimiter", new FakeTimeLimiter());
+  }
+
   /**
    * Should create.
-   *
-   * @throws Exception the exception
    */
   @Test
-  public void shouldCreate() throws Exception {
+  public void shouldCreate() {
     createAuditHeader();
   }
 
@@ -158,7 +160,7 @@ public class AuditServiceTest extends WingsBaseTest {
     createAuditHeader();
     createAuditHeader();
 
-    auditService.deleteAuditRecords(1000);
+    auditService.deleteAuditRecords(0);
     assertThat(auditService.list(new PageRequest<>())).hasSize(0);
   }
 
@@ -192,7 +194,7 @@ public class AuditServiceTest extends WingsBaseTest {
     assertThat(header2.getResponsePayloadUuid()).isNotNull();
     assertThat(header2.getResponsePayloadUuid()).isEqualTo(responseFileId);
 
-    auditService.deleteAuditRecords(1000);
+    auditService.deleteAuditRecords(0);
     assertThat(auditService.list(new PageRequest<>())).hasSize(0);
     assertThat(fileService.getAllFileIds(header2.getRequestPayloadUuid(), AUDITS)).hasSize(0);
     assertThat(fileService.getAllFileIds(header2.getResponsePayloadUuid(), AUDITS)).hasSize(0);

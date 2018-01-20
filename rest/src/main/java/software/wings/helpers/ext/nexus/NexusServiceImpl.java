@@ -1,20 +1,18 @@
 package software.wings.helpers.ext.nexus;
 
 import static java.lang.String.format;
-import static org.awaitility.Awaitility.with;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Converter;
@@ -46,8 +44,8 @@ public class NexusServiceImpl implements NexusService {
   private static final Logger logger = LoggerFactory.getLogger(NexusServiceImpl.class);
 
   @Inject private NexusThreeServiceImpl nexusThreeService;
-
   @Inject private NexusTwoServiceImpl nexusTwoService;
+  @Inject private TimeLimiter timeLimiter;
 
   public static void handleException(IOException e) {
     List<ResponseMessage> responseMessages = new ArrayList<>();
@@ -59,7 +57,7 @@ public class NexusServiceImpl implements NexusService {
     if (response == null) {
       return false;
     }
-    if (response != null && !response.isSuccessful()) {
+    if (!response.isSuccessful()) {
       logger.error("Request not successful. Reason: {}", response);
       int code = response.code();
       switch (code) {
@@ -97,38 +95,35 @@ public class NexusServiceImpl implements NexusService {
   public Map<String, String> getRepositories(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType) {
     try {
-      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
-        try {
-          if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
-            if (!DOCKER.equals(artifactType)) {
-              return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
-            }
-            throw new WingsException(INVALID_ARTIFACT_SERVER)
-                .addParam("message", "Nexus 2.x does not support Docker artifact type");
-          } else {
-            if (DOCKER.equals(artifactType)) {
-              return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
-            } else {
-              throw new WingsException(INVALID_ARTIFACT_SERVER)
-                  .addParam("message", "Not supported for Nexus 3.x version");
-            }
-          }
-        } catch (WingsException e) {
-          throw e;
-        } catch (Exception e) {
-          logger.error(
-              "Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
-          if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
-            throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      return timeLimiter.callWithTimeout(() -> {
+        if (isNexusTwo) {
+          if (!DOCKER.equals(artifactType)) {
+            return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
           }
           throw new WingsException(INVALID_ARTIFACT_SERVER)
-              .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
+              .addParam("message", "Nexus 2.x does not support Docker artifact type");
+        } else {
+          if (DOCKER.equals(artifactType)) {
+            return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
+          } else {
+            throw new WingsException(INVALID_ARTIFACT_SERVER)
+                .addParam("message", "Not supported for Nexus 3.x version");
+          }
         }
-      }, notNullValue());
-
-    } catch (ConditionTimeoutException e) {
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs", e);
       throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus server took too long to respond");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
+      if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
+      }
+      throw new WingsException(INVALID_ARTIFACT_SERVER)
+          .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
     }
   }
 
@@ -136,30 +131,25 @@ public class NexusServiceImpl implements NexusService {
   public List<String> getGroupIdPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
     try {
-      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
-        try {
-          if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
-            return nexusTwoService.getGroupIdPaths(nexusConfig, encryptionDetails, repoId);
-          } else {
-            return nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId);
-          }
-        } catch (WingsException e) {
-          throw e;
-        } catch (Exception e) {
-          logger.error(
-              "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
-              e);
-          if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
-            throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
-          }
-          throw new WingsException(INVALID_ARTIFACT_SERVER)
-              .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
-        }
-      }, notNullValue());
-
-    } catch (ConditionTimeoutException e) {
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      return timeLimiter.callWithTimeout(()
+                                             -> isNexusTwo
+              ? nexusTwoService.getGroupIdPaths(nexusConfig, encryptionDetails, repoId)
+              : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId),
+          20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs", e);
       throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus server took too long to respond");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error(
+          "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
+      if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus may not be running");
+      }
+      throw new WingsException(INVALID_ARTIFACT_SERVER)
+          .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
     }
   }
 

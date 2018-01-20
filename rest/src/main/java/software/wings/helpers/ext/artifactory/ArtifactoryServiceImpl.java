@@ -1,13 +1,12 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.awaitility.Awaitility.with;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.JSON;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.TEXT;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.GET;
@@ -27,6 +26,8 @@ import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -34,8 +35,6 @@ import groovyx.net.http.HttpResponseException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.http.HttpHost;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionTimeoutException;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClient.ProxyConfig;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
@@ -91,6 +90,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Inject private ExecutorService executorService;
   @Inject private EncryptionService encryptionService;
+  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public Map<String, String> getRepositories(
@@ -466,48 +466,46 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    */
   private List<String> listGroupIds(Artifactory artifactory, String repoKey) {
     logger.info("Retrieving groupIds with anonymous user access");
-    List<String> paths = gerGroupIdPathsAsync(artifactory, repoKey);
+    List<String> paths = getGroupIdPathsAsync(artifactory, repoKey);
     logger.info("Retrieved unique groupIds size {}", paths == null ? 0 : paths.size());
     return paths;
   }
 
-  private List<String> gerGroupIdPathsAsync(Artifactory artifactory, String repoKey) {
+  private List<String> getGroupIdPathsAsync(Artifactory artifactory, String repoKey) {
     Set<String> groupIds = new HashSet<>();
     try {
-      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
-        try {
-          Queue<Future> futures = new ConcurrentLinkedQueue<>();
-          Stack<FolderPath> paths = new Stack<>();
-          paths.addAll(getFolderPaths(artifactory, repoKey, ""));
-          while (!paths.isEmpty() || !futures.isEmpty()) {
-            while (!paths.isEmpty()) {
-              FolderPath folderPath = paths.pop();
-              String path = folderPath.getPath();
-              if (folderPath.isFolder()) {
-                traverseInParallel(artifactory, repoKey, futures, paths, folderPath, path);
-              } else {
-                // Strip out the version
-                String[] pathElems = path.substring(1).split("/");
-                if (pathElems.length >= 3) {
-                  groupIds.add(
-                      getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 2).collect(Collectors.toList())));
-                }
+      return timeLimiter.callWithTimeout(() -> {
+        Queue<Future> futures = new ConcurrentLinkedQueue<>();
+        Stack<FolderPath> paths = new Stack<>();
+        paths.addAll(getFolderPaths(artifactory, repoKey, ""));
+        while (isNotEmpty(paths) || isNotEmpty(futures)) {
+          while (isNotEmpty(paths)) {
+            FolderPath folderPath = paths.pop();
+            String path = folderPath.getPath();
+            if (folderPath.isFolder()) {
+              traverseInParallel(artifactory, repoKey, futures, paths, folderPath, path);
+            } else {
+              // Strip out the version
+              String[] pathElems = path.substring(1).split("/");
+              if (pathElems.length >= 3) {
+                groupIds.add(
+                    getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 2).collect(Collectors.toList())));
               }
             }
-            while (!futures.isEmpty() && futures.peek().isDone()) {
-              futures.poll().get();
-            }
-            quietSleep(ofMillis(10)); // avoid busy wait
           }
-        } catch (Exception e) {
-          logger.error("Failed to fetch all the groupIds in time. Sending the groupIds collected so far", e);
+          while (isNotEmpty(futures) && futures.peek().isDone()) {
+            futures.poll().get();
+          }
+          quietSleep(ofMillis(10)); // avoid busy wait
         }
         return new ArrayList<>(groupIds);
-      }, notNullValue());
-    } catch (ConditionTimeoutException e) {
-      logger.warn("Failed to fetch all groupId within 20 secs. Returning all groupIds collected so far", e);
-      return new ArrayList<>(groupIds);
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.warn("Failed to fetch all groupIds within 20 secs. Returning all groupIds collected so far", e);
+    } catch (Exception e) {
+      logger.warn("Error fetching all groupIds. Returning all groupIds collected so far", e);
     }
+    return new ArrayList<>(groupIds);
   }
 
   private void traverseInParallel(Artifactory artifactory, String repoKey, Queue<Future> futures,

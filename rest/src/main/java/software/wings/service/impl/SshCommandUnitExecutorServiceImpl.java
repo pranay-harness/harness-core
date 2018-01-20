@@ -95,7 +95,6 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       commandExecutionStatus = timeLimiter.callWithTimeout(()
                                                                -> commandUnit.execute(sshCommandExecutionContext),
           commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS, true);
-
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
           aLog()

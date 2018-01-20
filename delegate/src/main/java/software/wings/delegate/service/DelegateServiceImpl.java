@@ -4,13 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
@@ -62,8 +61,6 @@ import org.atmosphere.wasync.Request.TRANSPORT;
 import org.atmosphere.wasync.RequestBuilder;
 import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -82,7 +79,6 @@ import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
-import software.wings.exception.WingsException;
 import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.security.TokenGenerator;
@@ -427,39 +423,33 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String registerDelegate(Builder builder) throws IOException {
-    try {
-      AtomicInteger attempts = new AtomicInteger(0);
-      return await().with().timeout(Duration.FOREVER).pollInterval(Duration.FIVE_SECONDS).until(() -> {
-        RestResponse<Delegate> delegateResponse;
-        try {
-          attempts.incrementAndGet();
-          String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
-          logger.info("Registering delegate" + attemptString);
-          delegateResponse = execute(managerClient.registerDelegate(
-              accountId, builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).build()));
-        } catch (Exception e) {
-          String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
-          logger.error(msg, e);
-          Thread.sleep(55000);
-          return null;
-        }
-        if (delegateResponse == null || delegateResponse.getResource() == null) {
-          logger.error(
-              "Error occurred while registering delegate with manager for account {}. Please see the manager log for more information",
-              accountId);
-          Thread.sleep(55000);
-          return null;
-        }
-        builder.withUuid(delegateResponse.getResource().getUuid())
-            .withStatus(delegateResponse.getResource().getStatus());
-        logger.info("Delegate registered with id {} and status {} ", delegateResponse.getResource().getUuid(),
-            delegateResponse.getResource().getStatus());
-        return delegateResponse.getResource().getUuid();
-      }, notNullValue());
-    } catch (ConditionTimeoutException e) {
-      String msg = "Timeout occurred while registering Delegate [" + accountId + "] with manager";
-      logger.error(msg, e);
-      throw new WingsException(msg, e);
+    AtomicInteger attempts = new AtomicInteger(0);
+    while (true) {
+      RestResponse<Delegate> delegateResponse;
+      try {
+        attempts.incrementAndGet();
+        String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
+        logger.info("Registering delegate" + attemptString);
+        delegateResponse = execute(managerClient.registerDelegate(
+            accountId, builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).build()));
+      } catch (Exception e) {
+        String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
+        logger.error(msg, e);
+        sleep(ofMinutes(1));
+        continue;
+      }
+      if (delegateResponse == null || delegateResponse.getResource() == null) {
+        logger.error(
+            "Error occurred while registering delegate with manager for account {}. Please see the manager log for more information",
+            accountId);
+        sleep(ofMinutes(1));
+        continue;
+      }
+      String delegateId = delegateResponse.getResource().getUuid();
+      builder.withUuid(delegateId).withStatus(delegateResponse.getResource().getStatus());
+      logger.info(
+          "Delegate registered with id {} and status {} ", delegateId, delegateResponse.getResource().getStatus());
+      return delegateId;
     }
   }
 
@@ -547,24 +537,20 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void pollForTask() {
     try {
-      List<DelegateTaskEvent> taskEvents = new ArrayList<>();
-      timeLimiter.callWithTimeout(() -> {
-        List<DelegateTaskEvent> delegateTaskEvents = execute(managerClient.pollTaskEvents(delegateId, accountId));
-        if (isNotEmpty(delegateTaskEvents)) {
-          taskEvents.addAll(delegateTaskEvents);
-        }
-        return true;
-      }, 15L, TimeUnit.SECONDS, true);
-      logger.info("Processing DelegateTaskEvents {}", taskEvents);
-      for (DelegateTaskEvent taskEvent : taskEvents) {
-        if (taskEvent instanceof DelegateTaskAbortEvent) {
-          abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
-        } else {
-          dispatchDelegateTask(taskEvent);
+      List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
+          () -> execute(managerClient.pollTaskEvents(delegateId, accountId)), 15L, TimeUnit.SECONDS, true);
+      if (isNotEmpty(taskEvents)) {
+        logger.info("Processing DelegateTaskEvents {}", taskEvents);
+        for (DelegateTaskEvent taskEvent : taskEvents) {
+          if (taskEvent instanceof DelegateTaskAbortEvent) {
+            abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
+          } else {
+            dispatchDelegateTask(taskEvent);
+          }
         }
       }
     } catch (UncheckedTimeoutException tex) {
-      logger.warn("Fetch delegateTaskEvents timed out");
+      logger.warn("Timed out fetching delegate task events");
     } catch (Exception e) {
       logger.error("Exception while decoding task", e);
     }
