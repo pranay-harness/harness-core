@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.integration.service.impl;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
@@ -24,7 +24,6 @@ import com.google.inject.Inject;
 import com.amazonaws.regions.Regions;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -83,10 +82,11 @@ import java.util.UUID;
 
 /**
  * Created by rsingh on 10/9/17.
+ * Integration test that goes against a test instance of Jenkins (among other things) and verifies behaviours.
  */
 @RunWith(Parameterized.class)
-@Ignore // For now to make build success.
-public class BuildSourceServiceTest extends WingsBaseTest {
+public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
+  public static final String TEST_JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
   @Parameter public boolean isKmsEnabled;
   @Parameter(1) public SettingVariableTypes type;
   @Parameter(2) public ArtifactStreamType streamType;
@@ -184,9 +184,9 @@ public class BuildSourceServiceTest extends WingsBaseTest {
                                .withAccountId(accountId)
                                .withValue(JenkinsConfig.builder()
                                               .accountId(accountId)
-                                              .jenkinsUrl("https://jenkins.wings.software")
-                                              .username("wingsbuild")
-                                              .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                                              .jenkinsUrl(TEST_JENKINS_URL)
+                                              .username("admin")
+                                              .password("admin".toCharArray())
                                               .build())
                                .build();
         artifactStream = new JenkinsArtifactStream();
