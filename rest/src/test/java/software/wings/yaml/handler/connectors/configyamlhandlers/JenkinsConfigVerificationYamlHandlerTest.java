@@ -23,11 +23,6 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   @InjectMocks @Inject private JenkinsConfigVerificationYamlHandler yamlHandler;
   public static final String url = "https://jenkins.wings.software";
 
-  private String invalidYamlContent = "url_jenkins: https://jenkins.wings.software\n"
-      + "username: username\n"
-      + "password: safeharness:#\n"
-      + "type: JENKINS";
-
   private Class yamlClass = JenkinsConfig.VerificationYaml.class;
 
   @Before
@@ -71,6 +66,10 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {
+    String invalidYamlContent = "url_jenkins: https://jenkins.example.com\n"
+        + "username: username\n"
+        + "password: safeharness:#\n"
+        + "type: JENKINS";
     return SettingValueYamlConfig.builder()
         .yamlHandler(yamlHandler)
         .yamlClass(yamlClass)
