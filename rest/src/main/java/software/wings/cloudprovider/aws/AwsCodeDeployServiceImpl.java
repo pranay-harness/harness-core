@@ -206,7 +206,8 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Error while waiting for deployment to complete");
+      throw new WingsException(INVALID_REQUEST, e)
+          .addParam("message", "Error while waiting for deployment to complete");
     }
   }
 

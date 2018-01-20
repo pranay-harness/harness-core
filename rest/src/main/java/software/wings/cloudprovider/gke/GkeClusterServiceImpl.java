@@ -168,7 +168,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                               .execute()
                               .getStatus();
           if (!status.equals("RUNNING")) {
-            logger.info(operationLogMessage + ": Running");
+            logger.info(operationLogMessage + ": " + status);
             return status;
           }
           sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));

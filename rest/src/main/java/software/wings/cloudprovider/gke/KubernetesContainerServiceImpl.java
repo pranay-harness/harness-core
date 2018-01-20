@@ -61,7 +61,6 @@ import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.KubernetesHelperService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -543,7 +542,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      Misc.logAllMessages(e, executionLogCallback);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e).addParam("message", "Error while waiting for pods to stop");
     }
   }
 
@@ -630,7 +629,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e)
+          .addParam("message", "Error while waiting for pods to be ready");
     }
 
     return kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
