@@ -75,7 +75,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 12/19/17.
  */
 public class AwsAmiServiceSetup extends State {
-  private static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
+  protected static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
 
   private String autoScalingGroupName;
@@ -227,6 +227,7 @@ public class AwsAmiServiceSetup extends State {
                               .maxInstances(maxInstances)
                               .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
                               .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
+                              .commandName(commandName)
                               .build();
 
       LaunchConfiguration oldLaunchConfiguration =
