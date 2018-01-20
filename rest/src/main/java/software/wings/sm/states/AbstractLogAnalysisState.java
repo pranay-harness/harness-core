@@ -9,7 +9,7 @@ import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;

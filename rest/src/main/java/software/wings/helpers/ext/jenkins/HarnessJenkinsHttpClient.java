@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.jenkins;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.offbytwo.jenkins.client.JenkinsHttpClient;
 import org.apache.http.impl.auth.BasicScheme;

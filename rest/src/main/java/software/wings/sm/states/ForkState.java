@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static org.apache.commons.lang.StringUtils.abbreviate;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 import static software.wings.api.ForkElement.Builder.aForkElement;
 

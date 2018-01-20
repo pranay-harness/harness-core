@@ -9,7 +9,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DelegateTask;

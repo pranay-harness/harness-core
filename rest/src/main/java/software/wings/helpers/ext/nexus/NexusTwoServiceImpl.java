@@ -2,7 +2,7 @@ package software.wings.helpers.ext.nexus;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyMap;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;

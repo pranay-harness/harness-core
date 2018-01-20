@@ -8,7 +8,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.common.base.MoreObjects;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;

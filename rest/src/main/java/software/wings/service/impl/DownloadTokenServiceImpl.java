@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

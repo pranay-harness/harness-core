@@ -1,6 +1,6 @@
 package software.wings.rules;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
 import org.apache.sshd.common.util.SecurityUtils;
 import org.apache.sshd.server.SshServer;

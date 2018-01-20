@@ -3,7 +3,7 @@ package software.wings.common.cache;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;

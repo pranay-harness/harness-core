@@ -8,7 +8,7 @@ import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
 import software.wings.annotation.Encryptable;

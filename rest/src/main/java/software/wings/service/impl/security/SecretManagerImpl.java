@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;

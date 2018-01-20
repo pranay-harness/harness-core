@@ -17,7 +17,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

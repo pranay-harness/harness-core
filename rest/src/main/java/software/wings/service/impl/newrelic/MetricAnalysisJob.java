@@ -1,7 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.threading.Morpheus.sleep;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

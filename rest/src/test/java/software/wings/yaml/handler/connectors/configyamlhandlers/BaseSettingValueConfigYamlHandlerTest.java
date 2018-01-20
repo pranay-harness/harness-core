@@ -9,7 +9,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.AppDynamicsConfig.Yaml;

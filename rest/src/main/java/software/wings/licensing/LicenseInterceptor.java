@@ -1,7 +1,7 @@
 package software.wings.licensing;
 
 import static java.util.Arrays.stream;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
