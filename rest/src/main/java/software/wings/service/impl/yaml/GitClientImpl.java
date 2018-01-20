@@ -155,29 +155,42 @@ public class GitClientImpl implements GitClient {
         newTreeIter.reset(reader, head);
 
         List<DiffEntry> diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-        for (DiffEntry entry : diffs) {
-          ObjectId objectId = entry.getNewId().toObjectId();
-          String content = null;
-          if (!entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
-            ObjectLoader loader = repository.open(objectId);
-            content = new String(loader.getBytes(), Charset.forName("utf-8"));
-          }
-          GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
-                                            .withCommitId(headCommitId.getName())
-                                            .withChangeType(getChangeType(entry.getChangeType()))
-                                            .withFilePath(entry.getNewPath())
-                                            .withFileContent(content)
-                                            .withObjectId(objectId.name())
-                                            .withAccountId(gitConfig.getAccountId())
-                                            .build();
-          diffResult.addChangeFile(gitFileChange);
-        }
+        addToGitDiffResult(diffs, diffResult, headCommitId, gitConfig, repository);
       }
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
     return diffResult;
+  }
+
+  private void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId,
+      GitConfig gitConfig, Repository repository) throws IOException {
+    for (DiffEntry entry : diffs) {
+      String content = null;
+      String filePath;
+      ObjectId objectId;
+      if (entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
+        filePath = entry.getOldPath();
+        // we still want to collect content for deleted file, as it will be needed to decide yamlhandlerSubType in
+        // many cases. so getting oldObjectId
+        objectId = entry.getOldId().toObjectId();
+      } else {
+        filePath = entry.getNewPath();
+        objectId = entry.getNewId().toObjectId();
+      }
+      ObjectLoader loader = repository.open(objectId);
+      content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
+                                        .withCommitId(headCommitId.getName())
+                                        .withChangeType(getChangeType(entry.getChangeType()))
+                                        .withFilePath(filePath)
+                                        .withFileContent(content)
+                                        .withObjectId(objectId.name())
+                                        .withAccountId(gitConfig.getAccountId())
+                                        .build();
+      diffResult.addChangeFile(gitFileChange);
+    }
   }
 
   @Override
