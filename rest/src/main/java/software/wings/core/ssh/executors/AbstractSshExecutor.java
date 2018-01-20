@@ -184,7 +184,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
         if (channel.isClosed()) {
           commandExecutionStatus = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
-          saveExecutionLog("Command finished with status " + commandExecutionStatus);
+          saveExecutionLog("Command finished with status " + commandExecutionStatus, commandExecutionStatus);
           return commandExecutionStatus;
         }
         sleep(Duration.ofSeconds(1));
@@ -363,6 +363,10 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   private void saveExecutionLog(String line) {
+    saveExecutionLog(line, RUNNING);
+  }
+
+  private void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
     logService.save(config.getAccountId(),
         aLog()
             .withAppId(config.getAppId())
@@ -371,7 +375,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
             .withCommandUnitName(config.getCommandUnitName())
             .withHostName(config.getHost())
             .withLogLine(line)
-            .withExecutionResult(RUNNING)
+            .withExecutionResult(commandExecutionStatus)
             .build());
   }
 
