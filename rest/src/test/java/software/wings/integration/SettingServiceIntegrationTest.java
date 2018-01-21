@@ -161,8 +161,4 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   private WebTarget getListWebTarget(String accountId) {
     return client.target(String.format("%s/settings/?accountId=%s", API_BASE, accountId));
   }
-
-  private WebTarget getEntityWebTarget(String accountId, String entityId) {
-    return client.target(String.format("%s/settings/%s/?accountId=%s", API_BASE, entityId, accountId));
-  }
 }

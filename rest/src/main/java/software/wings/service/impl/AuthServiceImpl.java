@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
@@ -12,8 +11,6 @@ import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
-import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
-import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -42,7 +39,6 @@ import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
-import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
@@ -302,48 +298,5 @@ public class AuthServiceImpl implements AuthService {
     }
 
     return false;
-  }
-
-  private boolean hasMatchingPermissionType(boolean requiresEnvironmentPermission, PermissionScope permissionScope) {
-    return requiresEnvironmentPermission ? permissionScope.equals(PermissionScope.ENV)
-                                         : permissionScope.equals(PermissionScope.APP);
-  }
-
-  private boolean forApplication(String appId, Permission permission, PageRequestType requestType) {
-    return requestType.equals(LIST_WITHOUT_APP_ID) || GLOBAL_APP_ID.equals(permission.getAppId())
-        || (appId != null && appId.equals(permission.getAppId()));
-  }
-
-  private boolean allowedInEnv(
-      String envId, boolean requiresEnvironmentPermission, Permission permission, PageRequestType requestType) {
-    return !requiresEnvironmentPermission || requestType.equals(LIST_WITHOUT_ENV_ID)
-        || allowedInSpecificEnvironment(envId, permission);
-  }
-
-  private boolean allowedInSpecificEnvironment(String envId, Permission permission) {
-    if (envId != null) {
-      Environment environment = dbCache.get(Environment.class, envId);
-      return hasAccessByEnvType(environment, permission) || hasAccessByEnvId(environment, permission);
-    } else {
-      return hasAccessByEnvType(null, permission);
-    }
-  }
-
-  private boolean hasAccessByEnvId(Environment environment, Permission permission) {
-    return GLOBAL_ENV_ID.equals(permission.getEnvId())
-        || (environment != null && environment.getUuid().equals(permission.getEnvId()));
-  }
-
-  private boolean hasAccessByEnvType(Environment environment, Permission permission) {
-    return ALL.equals(permission.getEnvironmentType())
-        || (environment != null && environment.getEnvironmentType().equals(permission.getEnvironmentType()));
-  }
-
-  private boolean canPerformAction(Action reqAction, Permission permission) {
-    return reqAction.equals(permission.getAction());
-  }
-
-  private boolean hasResourceAccess(ResourceType reqResource, Permission permission) {
-    return reqResource.equals(permission.getResourceType());
   }
 }

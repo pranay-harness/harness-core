@@ -4,8 +4,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.QUEUED;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
 import com.google.inject.Inject;
@@ -228,12 +226,5 @@ public class ActivityServiceImpl implements ActivityService {
               .set("commandUnits.$.commandExecutionStatus", log.getCommandExecutionStatus());
       wingsPersistence.update(query, updateOperations);
     });
-  }
-
-  private boolean isCommandUnitStatusUpdatableByLogStatus(CommandUnit commandUnit, Log log) {
-    return log != null
-        && (QUEUED.equals(commandUnit.getCommandExecutionStatus())
-               || RUNNING.equals(commandUnit.getCommandExecutionStatus()))
-        && !log.getCommandExecutionStatus().equals(commandUnit.getCommandExecutionStatus());
   }
 }

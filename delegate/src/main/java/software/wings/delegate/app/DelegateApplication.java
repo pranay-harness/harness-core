@@ -28,6 +28,7 @@ import software.wings.utils.YamlUtils;
 import software.wings.utils.message.MessageService;
 
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,7 @@ public class DelegateApplication {
     return processId;
   }
 
-  public static void main(String... args) throws Exception {
+  public static void main(String... args) throws IOException {
     processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
@@ -75,9 +76,9 @@ public class DelegateApplication {
     logger.info("Starting Delegate");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
-    delegateApplication.run(
-        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class),
-        watcherProcess);
+    final DelegateConfiguration configuration =
+        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class);
+    delegateApplication.run(configuration, watcherProcess);
   }
 
   private void run(DelegateConfiguration configuration, String watcherProcess) {

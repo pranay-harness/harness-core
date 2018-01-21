@@ -81,7 +81,7 @@ public class MessageServiceImpl implements MessageService {
       File channel = getMessageChannel(targetType, targetProcessId);
       List<String> messageContent = new ArrayList<>();
       messageContent.add(isOutput ? OUT : IN);
-      messageContent.add(Long.valueOf(clock.millis()).toString());
+      messageContent.add("" + clock.millis());
       messageContent.add(messengerType.name());
       messageContent.add(processId);
       messageContent.add(message);

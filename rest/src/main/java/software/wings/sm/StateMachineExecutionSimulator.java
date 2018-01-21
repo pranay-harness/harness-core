@@ -24,7 +24,6 @@ import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.Command;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -33,7 +32,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.sm.states.CommandState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.utils.KryoUtils;
@@ -291,40 +289,6 @@ public class StateMachineExecutionSimulator {
     } else {
       return parentPath + "__" + stateExecutionInstance.getContextElement().getName() + "__"
           + stateExecutionInstance.getStateName();
-    }
-  }
-
-  private boolean isArtifactNeeded(ExecutionContextImpl context, CommandState state, Map<String, Command> commandMap) {
-    return commandMap
-        .computeIfAbsent(state.getName(),
-            key
-            -> serviceResourceService
-                   .getCommandByName(context.getApp().getUuid(),
-                       context.getContextElement(ContextElementType.SERVICE).getUuid(), context.getEnv().getUuid(),
-                       state.getCommandName())
-                   .getCommand())
-        .isArtifactNeeded();
-  }
-
-  /**
-   * @param contextElementType
-   * @return
-   */
-  private void addArgsTypeFromContextElement(Set<EntityType> argsInContext, ContextElementType contextElementType) {
-    if (contextElementType == null) {
-      return;
-    }
-    switch (contextElementType) {
-      case SERVICE: {
-        argsInContext.add(EntityType.SERVICE);
-        return;
-      }
-      case INSTANCE: {
-        argsInContext.add(EntityType.SERVICE);
-        return;
-      }
-      default:
-        unhandled(contextElementType);
     }
   }
 

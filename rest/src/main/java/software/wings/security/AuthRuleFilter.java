@@ -7,7 +7,6 @@ import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
@@ -26,12 +25,9 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.Permission;
-import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
@@ -334,17 +330,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     return resourceMethod.getAnnotation(ExternalServiceAuth.class) != null
         || resourceClass.getAnnotation(ExternalServiceAuth.class) != null;
-  }
-
-  private List<String> getAppIds(List<Role> roles) {
-    return roles.stream()
-        .flatMap(role -> role.getPermissions().stream())
-        .filter(permission
-            -> permission.getPermissionScope() == PermissionScope.APP && permission.getAction() == Action.READ
-                && permission.getAppId() != null && !permission.getAppId().equals(GLOBAL_APP_ID))
-        .map(Permission::getAppId)
-        .distinct()
-        .collect(Collectors.toList());
   }
 
   private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {
