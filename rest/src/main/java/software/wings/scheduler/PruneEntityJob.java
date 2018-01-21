@@ -5,6 +5,7 @@ import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.exception.CauseCollection;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -26,7 +27,6 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.CauseCollection;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
