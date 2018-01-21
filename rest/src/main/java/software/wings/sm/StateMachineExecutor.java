@@ -29,6 +29,7 @@ import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -1036,7 +1037,8 @@ public class StateMachineExecutor {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class,
         workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid(), CRITICAL);
 
-    switch (workflowExecutionInterrupt.getExecutionInterruptType()) {
+    final ExecutionInterruptType type = workflowExecutionInterrupt.getExecutionInterruptType();
+    switch (type) {
       case IGNORE: {
         StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
             workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
@@ -1110,9 +1112,9 @@ public class StateMachineExecutor {
       case RESUME_ALL: {
         break;
       }
-      default: {}
+      default:
+        unhandled(type);
     }
-    // TODO - more cases
   }
 
   private void endExecution(ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution) {

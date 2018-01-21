@@ -173,8 +173,6 @@ public class LogClusterManagerJob implements Job {
         } catch (Exception e) {
           logger.error("Verification cluster manager cleanup failed", e);
         }
-      } finally {
-        // Nothing to do
       }
     }
   }

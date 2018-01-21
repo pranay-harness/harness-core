@@ -57,14 +57,11 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
    */
   public void flushStream() {
     try {
-    } finally {
-      try {
-        if (null != copy) {
-          copy.close();
-        }
-      } catch (IOException io) {
-        io.printStackTrace();
+      if (null != copy) {
+        copy.close();
       }
+    } catch (IOException io) {
+      io.printStackTrace();
     }
   }
 

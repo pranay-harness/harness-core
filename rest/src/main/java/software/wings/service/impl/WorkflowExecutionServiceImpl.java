@@ -47,6 +47,7 @@ import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummar
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
@@ -1698,7 +1699,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (contextElement == null) {
       return null;
     }
-    switch (contextElement.getElementType()) {
+    final ContextElementType elementType = contextElement.getElementType();
+    switch (elementType) {
       case SERVICE: {
         return (ServiceElement) contextElement;
       }
@@ -1714,7 +1716,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
         break;
       }
-      default: {}
+      default:
+        unhandled(elementType);
     }
     return null;
   }
