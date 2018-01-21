@@ -58,7 +58,7 @@ public class EncryptedData extends Base {
 
   @SchemaIgnore @Transient private transient int setupUsage;
 
-  @SchemaIgnore @Transient private transient int runTimeUsage;
+  @SchemaIgnore @Transient private transient long runTimeUsage;
 
   @SchemaIgnore @Transient private transient int changeLog;
 

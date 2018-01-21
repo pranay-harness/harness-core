@@ -264,6 +264,14 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
+    final List<String> secretIds = getSecretIds(entityId, variableType);
+    final PageRequest<SecretUsageLog> request =
+        PageRequest.Builder.aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
+    return wingsPersistence.getCount(SecretUsageLog.class, request);
+  }
+
+  @Override
   public List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
@@ -732,7 +740,7 @@ public class SecretManagerImpl implements SecretManager {
           type, encryptedData.getUuid(), encryptedData.getKmsId(), encryptedData.getEncryptionType()));
 
       encryptedData.setSetupUsage(getSecretUsage(accountId, encryptedData.getUuid()).size());
-      encryptedData.setRunTimeUsage(getUsageLogs(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
+      encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
       encryptedData.setChangeLog(getChangeLogs(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
       rv.add(encryptedData);
     }
