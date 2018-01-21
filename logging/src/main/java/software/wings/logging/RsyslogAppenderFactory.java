@@ -108,7 +108,6 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
   @Override
   public Appender<E> build(LoggerContext context, String applicationName, LayoutFactory<E> layoutFactory,
       LevelFilterFactory<E> levelFilterFactory, AsyncAppenderFactory<E> asyncAppenderFactory) {
-    //   CloudBeesSyslogAppender<E> appender = new CloudBeesSyslogAppender<E>(programName, key, host, port);
     RestLogAppender<E> appender = new RestLogAppender<>(programName, key);
     appender.setName(name);
     appender.setContext(context);
