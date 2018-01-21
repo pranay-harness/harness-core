@@ -272,41 +272,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   /**
-   * @return
-   */
-  private Graph createInitialGraph() {
-    return aGraph()
-        .addNodes(aNode()
-                      .withId("n1")
-                      .withName("IT")
-                      .withX(250)
-                      .withY(50)
-                      .withType(StateType.ENV_STATE.name())
-                      .withOrigin(true)
-                      .addProperty("envId", "12345")
-                      .build())
-        .addNodes(aNode()
-                      .withId("n2")
-                      .withName("QA")
-                      .withX(300)
-                      .withY(50)
-                      .withType(StateType.ENV_STATE.name())
-                      .addProperty("envId", "23456")
-                      .build())
-        .addNodes(aNode()
-                      .withId("n3")
-                      .withName("UAT")
-                      .withX(300)
-                      .withY(50)
-                      .withType(StateType.ENV_STATE.name())
-                      .addProperty("envId", "34567")
-                      .build())
-        .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-        .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-        .build();
-  }
-
-  /**
    * Should create workflow.
    */
   @Test

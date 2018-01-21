@@ -64,12 +64,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
-import software.wings.sm.Transition;
-import software.wings.sm.TransitionType;
-import software.wings.sm.states.ApprovalState;
-import software.wings.sm.states.EnvState;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.WingsTestConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -315,44 +310,6 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     InOrder inOrder = inOrder(wingsPersistence, workflowService, triggerService);
     inOrder.verify(triggerService).pruneByPipeline(APP_ID, PIPELINE_ID);
-  }
-
-  private StateMachine createPipelineStateMachine() {
-    /*
-    pipeline: |DEV--->APPROVAL-->PROD|
-     */
-    StateMachine sm = new StateMachine();
-    sm.setAppId(APP_ID);
-    sm.setUuid(WingsTestConstants.STATE_MACHINE_ID);
-
-    EnvState devEnvState = new EnvState("DEV");
-    devEnvState.setEnvId("DEV_ENV_ID");
-    devEnvState.setWorkflowId(WORKFLOW_ID);
-    sm.addState(devEnvState);
-
-    ApprovalState approvalState = new ApprovalState("APPROVAL");
-    sm.addState(approvalState);
-
-    EnvState prodEnvState = new EnvState("PROD");
-    devEnvState.setEnvId("PROD_ENV_ID");
-    devEnvState.setWorkflowId(WORKFLOW_ID);
-    sm.addState(prodEnvState);
-
-    sm.setInitialStateName(devEnvState.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(devEnvState)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(approvalState)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(approvalState)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(prodEnvState)
-                         .build());
-
-    assertThat(sm.validate()).isTrue();
-    return sm;
   }
 
   String PIPELINE = "{\n"

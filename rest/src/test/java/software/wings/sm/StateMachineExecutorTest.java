@@ -662,49 +662,6 @@ public class StateMachineExecutorTest extends WingsBaseTest {
         .isEqualTo(true);
   }
 
-  private StateMachine createAsyncSM(WorkflowService svc, String appId) {
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-
-    State stateAB = new StateAsync("StateAB", 2000);
-    sm.addState(stateAB);
-    State stateBC = new StateAsync("StateBC", 500);
-    sm.addState(stateBC);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateAB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateBC)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateBC)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-
-    sm = svc.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-    return sm;
-  }
-
   /**
    * Should trigger simple fork.
    *

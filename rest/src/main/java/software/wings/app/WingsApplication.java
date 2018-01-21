@@ -63,12 +63,10 @@ import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.ArchivalManager;
-import software.wings.scheduler.LogAnalysisPurgeManager;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
@@ -368,12 +366,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void startArchival(Injector injector) {
     final ArchivalManager archivalManager = new ArchivalManager(injector.getInstance(WingsPersistence.class));
     archivalManager.startArchival();
-  }
-
-  private void startAnalysisLogPurger(Injector injector) {
-    final LogAnalysisPurgeManager logAnalysisPurgeManager =
-        new LogAnalysisPurgeManager(injector.getInstance(AnalysisService.class));
-    logAnalysisPurgeManager.startArchival();
   }
 
   private void initializeFeatureFlags(Injector injector) {

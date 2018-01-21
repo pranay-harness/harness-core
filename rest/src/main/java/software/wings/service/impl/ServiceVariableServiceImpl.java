@@ -17,9 +17,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -46,7 +43,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 /**
@@ -141,27 +137,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     executorService.submit(() -> savewServiceVariableYamlChangeSet(serviceVariable));
 
     return updatedServiceVariable;
-  }
-
-  private void updateVariableNameForServiceAndOverrides(ServiceVariable existingServiceVariable, String name) {
-    List<Object> templateIds = serviceTemplateService
-                                   .getTemplateRefKeysByService(
-                                       existingServiceVariable.getAppId(), existingServiceVariable.getEntityId(), null)
-                                   .stream()
-                                   .map(Key::getId)
-                                   .collect(Collectors.toList());
-
-    Query<ServiceVariable> query = wingsPersistence.createQuery(ServiceVariable.class)
-                                       .field("appId")
-                                       .equal(existingServiceVariable.getAppId())
-                                       .field("name")
-                                       .equal(existingServiceVariable.getName());
-    query.or(query.criteria("entityId").equal(existingServiceVariable.getEntityId()),
-        query.criteria("templateId").in(templateIds));
-
-    UpdateOperations<ServiceVariable> updateOperations =
-        wingsPersistence.createUpdateOperations(ServiceVariable.class).set("name", name);
-    wingsPersistence.update(query, updateOperations);
   }
 
   @Override

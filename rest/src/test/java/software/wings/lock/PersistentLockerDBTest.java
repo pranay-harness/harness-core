@@ -78,8 +78,8 @@ public class PersistentLockerDBTest extends WingsBaseTest {
   @Ignore // The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.
   public void testAcquireAfterTimeout() throws InterruptedException {
     class AnotherLock implements Runnable {
-      public boolean locked = false;
-      public boolean tested = false;
+      public boolean locked;
+      public boolean tested;
 
       @Override
       public void run() {

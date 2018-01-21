@@ -25,7 +25,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
@@ -547,10 +546,5 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void pruneByHost(String appId, String hostId) {
     deleteByEntityId(appId, hostId);
-  }
-
-  private boolean shouldUseKms(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.KMS, accountId)
-        && secretManager.getEncryptionType(accountId) != EncryptionType.LOCAL;
   }
 }

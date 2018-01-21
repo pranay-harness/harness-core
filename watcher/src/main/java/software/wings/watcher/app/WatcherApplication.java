@@ -67,9 +67,9 @@ public class WatcherApplication {
     logger.info("Starting Watcher");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     WatcherApplication watcherApplication = new WatcherApplication();
-    watcherApplication.run(
-        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), WatcherConfiguration.class), upgrade,
-        previousWatcherProcess);
+    final WatcherConfiguration configuration =
+        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), WatcherConfiguration.class);
+    watcherApplication.run(configuration, upgrade, previousWatcherProcess);
   }
 
   private void run(WatcherConfiguration configuration, boolean upgrade, String previousWatcherProcess)

@@ -158,11 +158,6 @@ public class StencilPostProcessor {
     return returnValue;
   }
 
-  private boolean hasStencilPostProcessAnnotation(Field field) {
-    return field.getAnnotation(EnumData.class) != null || field.getAnnotation(Expand.class) != null
-        || field.getAnnotation(DefaultValue.class) != null;
-  }
-
   private <T extends Stencil> Stencil addDefaultValueToStencil(T stencil, String fieldName, String value) {
     try {
       if (value != null) {
@@ -181,28 +176,6 @@ public class StencilPostProcessor {
           e);
     }
     return stencil;
-  }
-
-  private <T extends Stencil> Stream<Stencil> expandBasedOnEnumData(T t, Map<String, String> data, String fieldName) {
-    try {
-      if (data != null) {
-        return data.keySet().stream().map(key -> {
-          JsonNode jsonSchema = t.getJsonSchema();
-          ObjectNode jsonSchemaField = (ObjectNode) jsonSchema.get("properties").get(fieldName);
-          jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
-          jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
-          jsonSchemaField.set("default", JsonUtils.asTree(key));
-          OverridingStencil overridingStencil = t.getOverridingStencil();
-          overridingStencil.setOverridingJsonSchema(jsonSchema);
-          overridingStencil.setOverridingName(data.get(key));
-          return overridingStencil;
-        });
-      }
-    } catch (Exception e) {
-      logger.warn(
-          String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
-    }
-    return Stream.of(t);
   }
 
   private <T extends Stencil> Stream<Stencil> expandBasedOnData(T t, Map<String, String> data, String fieldName) {
@@ -241,13 +214,5 @@ public class StencilPostProcessor {
           String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return t;
-  }
-
-  private static Stream<Field> fieldStream(Class<?> klass) {
-    if (klass != null && klass != Object.class) {
-      return Stream.concat(stream(klass.getDeclaredFields()), fieldStream(klass.getSuperclass()));
-    } else {
-      return Stream.empty();
-    }
   }
 }

@@ -1169,7 +1169,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-pmd-plugin</artifactId>
-                    <version>3.6</version>
+                    <version>3.8</version>
                     <configuration>
                         <rulesets>do-not-use/harness_pmd_ruleset.xml</rulesets>
                     </configuration>

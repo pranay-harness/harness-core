@@ -881,17 +881,6 @@ public class StateMachine extends Base {
     return ind;
   }
 
-  private Map<String, List<Transition>> fromStateTransitionMap() {
-    Map<String, List<Transition>> fromTransitionMap = new HashMap<>();
-    getTransitions().forEach(transition -> {
-      if (fromTransitionMap.get(transition.getFromState().getName()) == null) {
-        fromTransitionMap.put(transition.getFromState().getName(), new ArrayList<>());
-      }
-      fromTransitionMap.get(transition.getFromState().getName()).add(transition);
-    });
-    return fromTransitionMap;
-  }
-
   private ContextElementType scanRequiredContextElementType(List<String> patternsForRequiredContextElementType) {
     if (patternsForRequiredContextElementType.stream().anyMatch(pattern
             -> pattern != null

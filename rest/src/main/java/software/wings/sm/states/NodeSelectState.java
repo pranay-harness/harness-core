@@ -141,7 +141,7 @@ public abstract class NodeSelectState extends State {
   private int getCumulativeTotal(int maxInstances) {
     if (instanceUnitType == PERCENTAGE) {
       int percent = Math.min(instanceCount, 100);
-      int percentInstanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
+      int percentInstanceCount = (int) Math.round(percent * maxInstances / 100.0);
       return Math.max(percentInstanceCount, 1);
     } else {
       return instanceCount;

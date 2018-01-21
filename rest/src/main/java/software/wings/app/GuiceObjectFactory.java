@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 8/18/16.
@@ -43,7 +44,7 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
   }
 
   @Override
-  public void configure(AtmosphereConfig config) {
+  public void configure(@NotNull AtmosphereConfig config) {
     if (config == null) {
       throw new NullPointerException("AtmosphereConfig can't be null");
     }

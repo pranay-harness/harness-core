@@ -26,7 +26,6 @@ import org.junit.rules.Verifier;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -185,11 +184,5 @@ public class ActivityResourceTest {
     assertThat(response.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=FILE_NAME");
     assertThat(response.getHeaderString("Content-type")).isEqualTo("application/x-unknown");
     verify(LOG_SERVICE).exportLogs(APP_ID, ACTIVITY_ID);
-  }
-
-  private void assertThatFilterMatches(SearchFilter filter, String name, String value, Operator op) {
-    assertThat(filter.getFieldName()).isEqualTo(name);
-    assertThat(filter.getFieldValues()[0]).isEqualTo(value);
-    assertThat(filter.getOp()).isEqualTo(op);
   }
 }

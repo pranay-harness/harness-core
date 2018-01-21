@@ -16,7 +16,7 @@ public class EvaluateVariableResolver extends StrLookup {
   private JexlContext context;
   private ExpressionEvaluator expressionEvaluator;
   private String objectPrefix;
-  private int varIndex = 0;
+  private int varIndex;
   private Set<String> previous;
   private Set<String> visited;
   private String unique;
