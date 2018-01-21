@@ -95,18 +95,46 @@ public class ExpressionEvaluator {
 
     JexlContext jc = prepareContext(context);
 
+    // TODO: unique string not seen in the expression and the context.
+    String unique = "xJzQ";
+    Pattern pattern = Pattern.compile(unique + "[0-9]+" + unique);
+
     final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
                                                           .expressionEvaluator(this)
                                                           .objectPrefix(defaultObjectPrefix)
                                                           .context(jc)
+                                                          .unique(unique)
                                                           .build();
 
     StrSubstitutor substitutor = new StrSubstitutor();
     substitutor.setEnableSubstitutionInVariables(true);
     substitutor.setVariableResolver(variableResolver);
 
-    StringBuffer sb = new StringBuffer(expression);
-    return substitutor.replace(sb);
+    String result = expression;
+    String original = "";
+    while (!original.equals(result)) {
+      original = result;
+
+      variableResolver.startSession();
+      result = substitutor.replace(new StringBuffer(original));
+
+      for (;;) {
+        final Matcher matcher = pattern.matcher(result);
+        if (!matcher.find()) {
+          break;
+        }
+
+        StringBuffer sb = new StringBuffer();
+        do {
+          String name = matcher.group(0);
+          String value = String.valueOf(jc.get(name));
+          matcher.appendReplacement(sb, value.replace("$", "\\$"));
+        } while (matcher.find());
+        matcher.appendTail(sb);
+        result = sb.toString();
+      }
+    }
+    return result;
   }
 
   public static void isValidVariableName(String name) {
@@ -129,7 +157,7 @@ public class ExpressionEvaluator {
       }
     }
 
-    jc.set("re", regexFunctor);
+    jc.set("regex", regexFunctor);
     return jc;
   }
 }

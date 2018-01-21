@@ -20,6 +20,7 @@ import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 import static software.wings.utils.ArtifactType.RPM;
 
 import com.google.common.collect.ImmutableMap;
@@ -37,7 +38,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -124,16 +124,10 @@ public class ArtifactCollectionJob implements Job {
 
     try {
       artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStream);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(BACKGROUND_JOB);
     } catch (Exception e) {
-      if (e instanceof WingsException
-          && ((WingsException) e)
-                 .getResponseMessageList()
-                 .stream()
-                 .anyMatch(responseMessage -> responseMessage.getCode() == ErrorCode.UNAVAILABLE_DELEGATES)) {
-        logger.warn("No delegate available to collect artifact for app {}, artifact stream {}", appId, artifactStream);
-      } else {
-        logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, e);
-      }
+      logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, e);
     }
     if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());

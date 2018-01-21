@@ -7,10 +7,13 @@ public class RegexFunctor {
   public String extract(String pattern, String source) {
     final Pattern compiled = Pattern.compile(pattern);
     final Matcher matcher = compiled.matcher(source);
-    if (!matcher.find()) {
-      return "";
+    while (matcher.find()) {
+      String match = matcher.group();
+      if (!match.isEmpty()) {
+        return match;
+      }
     }
-    return matcher.group();
+    return "";
   }
 
   public String replace(String pattern, String replacement, String source) {
