@@ -28,6 +28,8 @@ public interface SecretManager {
   PageResponse<SecretUsageLog> getUsageLogs(String entityId, SettingValue.SettingVariableTypes variableType)
       throws IllegalAccessException;
 
+  long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
+
   List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
 
   EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
