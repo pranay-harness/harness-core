@@ -1,4 +1,4 @@
-package software.wings.exception;
+package io.harness.exception;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,8 +15,6 @@ public class CauseCollection {
   private Throwable last;
 
   private Set<Throwable> deduplicate = new HashSet<>();
-
-  public CauseCollection() {}
 
   public CauseCollection addCause(Throwable cause) {
     // For the incoming chain make sure that we start from the first that is not already hooked.

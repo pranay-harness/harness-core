@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.FastUnitTests;
+import io.harness.exception.CauseCollection;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
