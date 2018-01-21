@@ -4,6 +4,8 @@
 
 package software.wings.common;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import software.wings.api.HostElement;
@@ -123,7 +125,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
             .build();
-    if (hostNames == null || hostNames.length == 0) {
+    if (isEmpty(hostNames)) {
       hosts = hostService.list(pageRequest);
     } else {
       // TODO :

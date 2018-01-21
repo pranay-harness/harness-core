@@ -317,7 +317,7 @@ public class PhaseStep {
            }
          }*/
         Node clonedStep = step.clone();
-        if (clonedPhaseStep.getPhaseStepType() != null && clonedPhaseStep.getPhaseStepType().equals(PROVISION_NODE)) {
+        if (PROVISION_NODE.equals(clonedPhaseStep.getPhaseStepType())) {
           if (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
               || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name())) {
             Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());
