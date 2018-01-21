@@ -13,5 +13,5 @@ then
 else
     echo '\033[0;34m' checking style  ... to disable: '\033[0;37m'git config --add $CHECKSTYLE_PROPERTY false '\033[0m'
 
-    $BASEDIR/toolset/git-hooks/checkstyle.sh
+    . $BASEDIR/toolset/git-hooks/checkstyle.sh
 fi

@@ -61,8 +61,8 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
 
   @Test
   public void testNormalizeExpressionDoNotExpandRe() {
-    assertThat(expressionEvaluator.normalizeExpression("${re.match('', '')}", persons, "bob"))
-        .isEqualTo("re.match('', '')");
+    assertThat(expressionEvaluator.normalizeExpression("${regex.match('', '')}", persons, "bob"))
+        .isEqualTo("regex.match('', '')");
   }
 
   @Test
@@ -100,10 +100,14 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
       {
         put("host", host);
         put("COM", "io");
+        put("name", "bob");
+        put("bob", bob);
       }
     };
     String retValue = expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context);
     assertThat(retValue).isEqualTo("http://${HOST}.$DOMAIN.io:${PORT}/health/status");
+
+    assertThat(expressionEvaluator.substitute("${${name}.address.city}", context)).isEqualTo("New York");
   }
 
   @Test
@@ -175,49 +179,49 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
 
   @Test
   public void shouldSubstituteReExtract() {
-    assertThat(expressionEvaluator.substitute("${re.extract('has matching', 'text has matching pattern')}", persons))
+    assertThat(expressionEvaluator.substitute("${regex.extract('Y..k', ${bob.address.city})}", persons))
+        .isEqualTo("York");
+
+    assertThat(expressionEvaluator.substitute("${regex.extract('has matching', 'text has matching pattern')}", persons))
         .isEqualTo("has matching");
 
-    assertThat(expressionEvaluator.substitute("${re.extract('has matching', 'no matching pattern')}", persons))
+    assertThat(expressionEvaluator.substitute("${regex.extract('has matching', 'no matching pattern')}", persons))
         .isEqualTo("");
-
-    assertThat(expressionEvaluator.substitute("${re.extract('Y..k', '${bob.address.city}')}", persons))
-        .isEqualTo("York");
   }
 
   @Test
   public void testSubstituteDoNotExpandRe() {
-    assertThat(expressionEvaluator.substitute("${re.extract('match', 'has matching pattern')}", persons, "bob"))
+    assertThat(expressionEvaluator.substitute("${regex.extract('match', 'has matching pattern')}", persons, "bob"))
         .isEqualTo("match");
   }
 
   @Test
   public void shouldSubstituteReReplace() {
-    assertThat(expressionEvaluator.substitute("${re.replace('foo', 'bar', 'foo bar baz')}", persons))
-        .isEqualTo("bar bar baz");
-
-    assertThat(expressionEvaluator.substitute("${re.replace('foo', '${bob.address.city}', 'foo bar baz')}", persons))
+    assertThat(expressionEvaluator.substitute("${regex.replace('foo', ${bob.address.city}, 'foo bar baz')}", persons))
         .isEqualTo("New York bar baz");
 
+    assertThat(expressionEvaluator.substitute("${regex.replace('foo', 'bar', 'foo bar baz')}", persons))
+        .isEqualTo("bar bar baz");
+
     assertThat(
-        expressionEvaluator.substitute("${re.replace('.*(York)', 'New $1, New $1', '${bob.address.city}')}", persons))
+        expressionEvaluator.substitute("${regex.replace('.*(York)', 'New $1, New $1', ${bob.address.city})}", persons))
         .isEqualTo("New York, New York");
   }
 
   @Test
   public void shouldSubstituteReMatch() {
-    assertThat(expressionEvaluator.evaluate("re.match('has matching', 'text has matching pattern')", persons))
+    assertThat(expressionEvaluator.evaluate("regex.match('has matching', 'text has matching pattern')", persons))
         .isEqualTo(true);
 
-    assertThat(expressionEvaluator.evaluate("re.match('.*has matching.*', 'text has matching pattern')", persons))
+    assertThat(expressionEvaluator.evaluate("regex.match('.*has matching.*', 'text has matching pattern')", persons))
         .isEqualTo(true);
 
-    assertThat(expressionEvaluator.evaluate("re.match('^has matching$', 'text has matching pattern')", persons))
+    assertThat(expressionEvaluator.evaluate("regex.match('^has matching$', 'text has matching pattern')", persons))
         .isEqualTo(false);
 
-    assertThat(expressionEvaluator.evaluate("re.match('has matching', 'no matching pattern')", persons))
+    assertThat(expressionEvaluator.evaluate("regex.match('has matching', 'no matching pattern')", persons))
         .isEqualTo(false);
 
-    assertThat(expressionEvaluator.evaluate("re.match('York', ${bob.address.city})", persons)).isEqualTo(true);
+    assertThat(expressionEvaluator.evaluate("regex.match('York', ${bob.address.city})", persons)).isEqualTo(true);
   }
 }
