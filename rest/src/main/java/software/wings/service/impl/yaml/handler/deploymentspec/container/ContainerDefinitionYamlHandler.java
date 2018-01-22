@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
-import software.wings.beans.ObjectType;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerDefinition.Yaml;
 import software.wings.beans.container.LogConfiguration;
@@ -35,30 +34,26 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   @Override
   public ContainerDefinition.Yaml toYaml(ContainerDefinition containerDefinition, String appId) {
     // Log Configuration
-    BaseYamlHandler logConfigYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION, ObjectType.LOG_CONFIGURATION);
+    LogConfigurationYamlHandler logConfigYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION);
     LogConfiguration.Yaml logConfigYaml = null;
     if (containerDefinition.getLogConfiguration() != null) {
-      logConfigYaml =
-          (LogConfiguration.Yaml) logConfigYamlHandler.toYaml(containerDefinition.getLogConfiguration(), appId);
+      logConfigYaml = logConfigYamlHandler.toYaml(containerDefinition.getLogConfiguration(), appId);
     }
 
     // Port Mappings
     List<PortMapping.Yaml> portMappingYamlList = Collections.emptyList();
-    BaseYamlHandler portMappingYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING, ObjectType.PORT_MAPPING);
+    PortMappingYamlHandler portMappingYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING);
     List<PortMapping> portMappings = containerDefinition.getPortMappings();
     if (isNotEmpty(portMappings)) {
-      portMappingYamlList =
-          portMappings.stream()
-              .map(portMapping -> (PortMapping.Yaml) portMappingYamlHandler.toYaml(portMapping, appId))
-              .collect(Collectors.toList());
+      portMappingYamlList = portMappings.stream()
+                                .map(portMapping -> portMappingYamlHandler.toYaml(portMapping, appId))
+                                .collect(Collectors.toList());
     }
 
     // Storage Configurations
     List<StorageConfiguration.Yaml> storageConfigYamlList = Collections.emptyList();
-    BaseYamlHandler storageConfigYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION, ObjectType.STORAGE_CONFIGURATION);
+    StorageConfigurationYamlHandler storageConfigYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION);
     List<StorageConfiguration> storageConfigurations = containerDefinition.getStorageConfigurations();
     if (isNotEmpty(storageConfigurations)) {
       storageConfigYamlList =
@@ -66,8 +61,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
               .filter(storageConfiguration
                   -> isNotBlank(storageConfiguration.getHostSourcePath())
                       && isNotBlank(storageConfiguration.getContainerPath()))
-              .map(storageConfiguration
-                  -> (StorageConfiguration.Yaml) storageConfigYamlHandler.toYaml(storageConfiguration, appId))
+              .map(storageConfiguration -> storageConfigYamlHandler.toYaml(storageConfiguration, appId))
               .collect(Collectors.toList());
     }
 
@@ -95,35 +89,32 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     // port mappings
     List<PortMapping> portMappings = Lists.newArrayList();
     if (yaml.getPortMappings() != null) {
-      BaseYamlHandler portMappingYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING, ObjectType.PORT_MAPPING);
-      portMappings =
-          yaml.getPortMappings()
-              .stream()
-              .map(portMapping -> {
-                try {
-                  ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, portMapping);
-                  return (PortMapping) portMappingYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
-                } catch (HarnessException e) {
-                  throw new WingsException(e);
-                }
-              })
-              .collect(Collectors.toList());
+      PortMappingYamlHandler portMappingYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING);
+      portMappings = yaml.getPortMappings()
+                         .stream()
+                         .map(portMapping -> {
+                           try {
+                             ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, portMapping);
+                             return portMappingYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+                           } catch (HarnessException e) {
+                             throw new WingsException(e);
+                           }
+                         })
+                         .collect(Collectors.toList());
     }
 
     // storage configurations
     List<StorageConfiguration> storageConfigs = Lists.newArrayList();
     if (isNotEmpty(yaml.getStorageConfigurations())) {
-      BaseYamlHandler storageConfigYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION, ObjectType.STORAGE_CONFIGURATION);
+      StorageConfigurationYamlHandler storageConfigYamlHandler =
+          yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION);
       storageConfigs = yaml.getStorageConfigurations()
                            .stream()
                            .map(storageConfig -> {
                              try {
                                ChangeContext.Builder clonedContext =
                                    cloneFileChangeContext(changeContext, storageConfig);
-                               return (StorageConfiguration) storageConfigYamlHandler.upsertFromYaml(
-                                   clonedContext.build(), changeSetContext);
+                               return storageConfigYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
                              } catch (HarnessException e) {
                                throw new WingsException(e);
                              }
@@ -135,10 +126,9 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     LogConfiguration logConfig = null;
     LogConfiguration.Yaml logConfigYaml = yaml.getLogConfiguration();
     if (logConfigYaml != null) {
-      BaseYamlHandler logConfigYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION, ObjectType.LOG_CONFIGURATION);
+      LogConfigurationYamlHandler logConfigYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION);
       ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, logConfigYaml);
-      logConfig = (LogConfiguration) logConfigYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+      logConfig = logConfigYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
     }
 
     return ContainerDefinition.builder()

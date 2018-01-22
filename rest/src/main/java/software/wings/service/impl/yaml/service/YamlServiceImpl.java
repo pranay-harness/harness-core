@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
+import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
+import static software.wings.beans.yaml.YamlType.APPLICATION_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
@@ -37,6 +39,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -59,6 +62,7 @@ import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Misc;
@@ -90,10 +94,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
   private List<YamlType> getEntityProcessingOrder() {
-    return Lists.newArrayList(CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER,
-        VERIFICATION_PROVIDER, APPLICATION, SERVICE, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION,
-        CONFIG_FILE_CONTENT, CONFIG_FILE, ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE_CONTENT,
-        CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
+    return Lists.newArrayList(ACCOUNT_DEFAULTS, CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER,
+        LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER, APPLICATION, APPLICATION_DEFAULTS, SERVICE, ARTIFACT_STREAM,
+        COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE, ENVIRONMENT, INFRA_MAPPING,
+        CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
   @Override
@@ -165,8 +169,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           entity = getResult(beanClass, pageRequest);
           appId = yamlHelper.getAppId(accountId, yamlFilePath);
           if (entity != null) {
-            BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, null);
-            yaml = yamlHandler.toYaml(entity, appId);
+            ApplicationYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType);
+            yaml = yamlHandler.toYaml((Application) entity, appId);
           }
           break;
 
@@ -177,7 +181,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           pageRequest.addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, entityName);
           entity = getResult(beanClass, pageRequest);
           if (entity != null) {
-            yaml = yamlHandlerFactory.getYamlHandler(yamlType, null).toYaml((Base) entity, appId);
+            yaml = yamlHandlerFactory.getYamlHandler(yamlType).toYaml(entity, appId);
           }
           break;
 
@@ -282,7 +286,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     Collections.sort(changeList, new FilePathComparator());
   }
 
-  private List<ChangeContext> validate(List<Change> changeList) throws YamlProcessingException {
+  private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
+      throws YamlProcessingException {
     List<ChangeContext> changeContextList = Lists.newArrayList();
 
     for (Change change : changeList) {
@@ -294,7 +299,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           YamlType yamlType = findYamlType(yamlFilePath);
           String yamlSubType = getYamlSubType(change.getFileContent());
 
-          BaseYamlHandler yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
+          T yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
           if (yamlSyncHandler != null) {
             Class yamlClass = yamlSyncHandler.getYamlClass();
             BaseYaml yaml = getYaml(change.getFileContent(), yamlClass, false);
@@ -384,8 +389,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
   }
 
-  private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
-      throws HarnessException {
+  private <T extends BaseYamlHandler> void processYamlChange(
+      ChangeContext changeContext, List<ChangeContext> changeContextList) throws HarnessException {
     Validator.notNullCheck("changeContext is null", changeContext);
     Change change = changeContext.getChange();
     Validator.notNullCheck("FileChange is null", change);

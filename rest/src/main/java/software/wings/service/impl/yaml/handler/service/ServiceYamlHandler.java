@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
-import software.wings.beans.NameValuePair.Yaml;
 import software.wings.beans.Service;
+import software.wings.beans.Service.Yaml;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/22/17
  */
 @Singleton
-public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
+public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   private static final Logger logger = LoggerFactory.getLogger(ServiceYamlHandler.class);
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
@@ -46,9 +46,9 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   @Inject SecretManager secretManager;
 
   @Override
-  public Service.Yaml toYaml(Service service, String appId) {
+  public Yaml toYaml(Service service, String appId) {
     List<NameValuePair.Yaml> nameValuePairList = convertToNameValuePair(service.getServiceVariables());
-    return Service.Yaml.builder()
+    return Yaml.builder()
         .type(SERVICE.name())
         .harnessApiVersion(getHarnessApiVersion())
         .description(service.getDescription())
@@ -57,7 +57,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
         .build();
   }
 
-  private List<Yaml> convertToNameValuePair(List<ServiceVariable> serviceVariables) {
+  private List<NameValuePair.Yaml> convertToNameValuePair(List<ServiceVariable> serviceVariables) {
     if (serviceVariables == null) {
       return Lists.newArrayList();
     }
@@ -88,7 +88,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   }
 
   @Override
-  public Service upsertFromYaml(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public Service upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     ensureValidChange(changeContext, changeSetContext);
 
@@ -98,7 +98,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
     Validator.notNullCheck("appId null for given yaml file:" + yamlFilePath, appId);
 
     String serviceName = yamlHelper.getServiceName(yamlFilePath);
-    Service.Yaml yaml = changeContext.getYaml();
+    Yaml yaml = changeContext.getYaml();
     Service current = aService().withAppId(appId).withName(serviceName).withDescription(yaml.getDescription()).build();
 
     Service previous = get(accountId, yamlFilePath);
@@ -106,7 +106,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
     if (previous != null) {
       current.setUuid(previous.getUuid());
       current = serviceResourceService.update(current, true);
-      Service.Yaml previousYaml = toYaml(previous, previous.getAppId());
+      Yaml previousYaml = toYaml(previous, previous.getAppId());
       saveOrUpdateServiceVariables(
           previousYaml, yaml, previous.getServiceVariables(), current.getAppId(), current.getUuid());
     } else {
@@ -119,13 +119,13 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   }
 
   @Override
-  public boolean validate(ChangeContext<Service.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return true;
   }
 
   @Override
   public Class getYamlClass() {
-    return Service.Yaml.class;
+    return Yaml.class;
   }
 
   @Override
@@ -134,8 +134,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
     return yamlHelper.getService(appId, yamlFilePath);
   }
 
-  private void saveOrUpdateServiceVariables(Service.Yaml previousYaml, Service.Yaml updatedYaml,
-      List<ServiceVariable> currentServiceVariables, String appId, String serviceId) throws HarnessException {
+  private void saveOrUpdateServiceVariables(Yaml previousYaml, Yaml updatedYaml,
+      List<ServiceVariable> previousServiceVariables, String appId, String serviceId) throws HarnessException {
     // what are the config variable changes? Which are additions and which are deletions?
     List<NameValuePair.Yaml> configVarsToAdd = new ArrayList<>();
     List<NameValuePair.Yaml> configVarsToDelete = new ArrayList<>();
@@ -184,7 +184,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
       }
     }
 
-    Map<String, ServiceVariable> serviceVariableMap = currentServiceVariables.stream().collect(
+    Map<String, ServiceVariable> serviceVariableMap = previousServiceVariables.stream().collect(
         Collectors.toMap(serviceVar -> serviceVar.getName(), serviceVar -> serviceVar));
 
     // do deletions
@@ -249,7 +249,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Service.Yaml, Service> {
   }
 
   @Override
-  public void delete(ChangeContext<Service.Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
     Service service = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     if (service != null) {
       serviceResourceService.delete(service.getAppId(), service.getUuid());

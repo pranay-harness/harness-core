@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +27,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -46,6 +48,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private AppService appService;
 
   private GitFileChange createGitFileChange(
       String accountId, String path, String name, String yamlContent, ChangeType changeType, boolean isDirectory) {
@@ -87,6 +90,22 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
     return createGitFileChange(
         accountId, yamlDirectoryService.getRootPathByService(service), YamlConstants.INDEX, yaml, changeType, true);
+  }
+
+  @Override
+  public GitFileChange getDefaultVarGitSyncFile(String accountId, String appId, ChangeType changeType) {
+    if (ChangeType.DELETE.equals(changeType)) {
+    }
+    String yaml = yamlResourceService.getDefaultVariables(accountId, appId).getResource().getYaml();
+
+    if (GLOBAL_APP_ID.equals(appId)) {
+      return createGitFileChange(
+          accountId, yamlDirectoryService.getRootPath(), YamlConstants.DEFAULTS, yaml, changeType, false);
+    } else {
+      Application app = appService.get(appId);
+      return createGitFileChange(
+          accountId, yamlDirectoryService.getRootPathByApp(app), YamlConstants.DEFAULTS, yaml, changeType, false);
+    }
   }
 
   @Override

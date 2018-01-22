@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.spy;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -48,9 +47,6 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Before
   public void setUp() throws IOException {
-    //    File validYamlFile = new
-    //    File(getClass().getClassLoader().getResource("./yaml/handler/app/valid.yaml").getFile()); validYamlContent =
-    //    new String(Files.readAllBytes(Paths.get(validYamlFile.getCanonicalPath())));
     application = Application.Builder.anApplication()
                       .withName(APP_NAME)
                       .withUuid(APP_ID)
@@ -98,12 +94,12 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   public void testFailures() throws HarnessException, IOException {
     // Invalid yaml path
-    GitFileChange gitFileChange = spy(GitFileChange.class);
+    GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
     gitFileChange.setFilePath(invalidYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Application.Yaml> changeContext = spy(ChangeContext.class);
+    ChangeContext<Application.Yaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.APPLICATION);
     changeContext.setYamlSyncHandler(yamlHandler);

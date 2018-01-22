@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
@@ -28,6 +30,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -298,22 +301,41 @@ public class YamlChangeSetHelper {
   public void queueSettingUpdateYamlChangeAsync(
       SettingAttribute savedSettingAttributes, SettingAttribute updatedSettingAttribute) {
     executorService.submit(() -> {
+
       if (!updatedSettingAttribute.getName().equals(updatedSettingAttribute.getName())) {
         queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
       } else {
-        queueSettingYamlChange(updatedSettingAttribute,
+        if (isDefaultVariableType(updatedSettingAttribute)) {
+          queueDefaultVariableChange(
+              updatedSettingAttribute.getAccountId(), updatedSettingAttribute.getAppId(), ChangeType.MODIFY);
+        } else {
+          queueSettingYamlChange(updatedSettingAttribute,
+              entityUpdateService.getSettingAttributeGitSyncFile(
+                  updatedSettingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
+        }
+      }
+
+    });
+  }
+
+  public void queueSettingYamlChangeAsync(SettingAttribute newSettingAttribute, ChangeType changeType) {
+    executorService.submit(() -> {
+      if (isDefaultVariableType(newSettingAttribute)) {
+        queueDefaultVariableChange(newSettingAttribute.getAccountId(), newSettingAttribute.getAppId(), changeType);
+      } else {
+        queueSettingYamlChange(newSettingAttribute,
             entityUpdateService.getSettingAttributeGitSyncFile(
-                updatedSettingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
+                newSettingAttribute.getAccountId(), newSettingAttribute, changeType));
       }
     });
   }
 
-  public void queueSettingYamlChangeAsync(
-      SettingAttribute settingAttribute, SettingAttribute newSettingAttribute, ChangeType add) {
-    executorService.submit(()
-                               -> queueSettingYamlChange(newSettingAttribute,
-                                   entityUpdateService.getSettingAttributeGitSyncFile(
-                                       settingAttribute.getAccountId(), newSettingAttribute, add)));
+  public void queueDefaultVariableChangeAsync(String accountId, String appId, ChangeType changeType) {
+    executorService.submit(() -> { queueDefaultVariableChange(accountId, appId, changeType); });
+  }
+
+  private boolean isDefaultVariableType(SettingAttribute settingAttribute) {
+    return SettingVariableTypes.STRING.name().equals(settingAttribute.getValue().getType());
   }
 
   private void queueSettingYamlChange(SettingAttribute newSettingAttribute, GitFileChange settingAttributeGitSyncFile) {
@@ -324,16 +346,35 @@ public class YamlChangeSetHelper {
     }
   }
 
+  public void queueDefaultVariableChange(String accountId, String appId, ChangeType changeType) {
+    // The default variables is a special case where one yaml is mapped to a list of setting variables.
+    // So, even if a default variable is deleted, we should not delete the whole file.
+    // Sending DELETE would do that. So, sending MODIFY
+    if (ChangeType.DELETE.equals(changeType)) {
+      changeType = ChangeType.MODIFY;
+    }
+    queueYamlChangeSet(accountId, entityUpdateService.getDefaultVarGitSyncFile(accountId, appId, changeType));
+  }
+
   private void queueMoveSettingChange(SettingAttribute oldSettingAttribute, SettingAttribute newSettingAttribute) {
     String accountId = appService.getAccountIdByAppId(newSettingAttribute.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
 
-      String oldSettingAttrPath = yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + "/"
-          + oldSettingAttribute.getName() + YAML_EXTENSION;
-      GitFileChange newSettingAttrGitSyncFile =
-          entityUpdateService.getSettingAttributeGitSyncFile(accountId, newSettingAttribute, ChangeType.MODIFY);
+      String oldSettingAttrPath;
+      GitFileChange newSettingAttrGitSyncFile;
+      if (isDefaultVariableType(newSettingAttribute)) {
+        oldSettingAttrPath =
+            yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + PATH_DELIMITER + DEFAULTS_YAML;
+        newSettingAttrGitSyncFile =
+            entityUpdateService.getDefaultVarGitSyncFile(accountId, newSettingAttribute.getAppId(), ChangeType.MODIFY);
+      } else {
+        oldSettingAttrPath = yamlDirectoryService.getRootPathBySettingAttribute(oldSettingAttribute) + PATH_DELIMITER
+            + oldSettingAttribute.getName() + YAML_EXTENSION;
+        newSettingAttrGitSyncFile =
+            entityUpdateService.getSettingAttributeGitSyncFile(accountId, newSettingAttribute, ChangeType.MODIFY);
+      }
 
       changeSet.add(GitFileChange.Builder.aGitFileChange()
                         .withAccountId(newSettingAttrGitSyncFile.getAccountId())

@@ -24,6 +24,7 @@ public interface YamlConstants {
   String ARTIFACT_SERVERS_FOLDER = "Artifact Servers";
   String COLLABORATION_PROVIDERS_FOLDER = "Collaboration Providers";
   String VERIFICATION_PROVIDERS_FOLDER = "Verification Providers";
+  String HOST_CONNECTION_ATTRIBUTES_FOLDER = "Verification Providers";
 
   String ARTIFACT_SOURCES_FOLDER = "Artifact Servers";
   String DEPLOYMENT_SPECIFICATION_FOLDER = "Deployment Specifications";
@@ -32,7 +33,9 @@ public interface YamlConstants {
 
   String YAML_EXTENSION = ".yaml";
   String INDEX_YAML = "Index.yaml";
+  String DEFAULTS_YAML = "Defaults.yaml";
   String INDEX = "Index";
+  String DEFAULTS = "Defaults";
   String ARTIFACT_SERVER = "ARTIFACT_SERVER";
   String COLLABORATION_PROVIDER = "COLLABORATION_PROVIDER";
   String LOADBALANCER_PROVIDER = "LOADBALANCER_PROVIDER";

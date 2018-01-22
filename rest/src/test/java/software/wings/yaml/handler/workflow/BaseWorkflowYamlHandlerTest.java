@@ -24,7 +24,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ObjectType;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
@@ -112,20 +111,15 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
         .thenReturn(infrastructureMapping);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 
-    when(yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE)).thenReturn(phaseYamlHandler);
-    when(yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP))
-        .thenReturn(phaseStepYamlHandler);
-    when(yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION))
-        .thenReturn(templateExpressionYamlHandler);
-    when(yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP)).thenReturn(stepYamlHandler);
-    when(yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY))
-        .thenReturn(failureStrategyYamlHandler);
-    when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE, ObjectType.NOTIFICATION_RULE))
-        .thenReturn(notificationRulesYamlHandler);
-    when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP, ObjectType.NOTIFICATION_GROUP))
-        .thenReturn(notificationGroupYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.PHASE)).thenReturn(phaseYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP)).thenReturn(phaseStepYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION)).thenReturn(templateExpressionYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.STEP)).thenReturn(stepYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY)).thenReturn(failureStrategyYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE)).thenReturn(notificationRulesYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP)).thenReturn(notificationGroupYamlHandler);
 
-    when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE, ObjectType.VARIABLE)).thenReturn(variableYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE)).thenReturn(variableYamlHandler);
   }
 
   private InfrastructureMapping getInfraMapping() {

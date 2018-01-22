@@ -14,7 +14,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
-import software.wings.beans.ObjectType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
@@ -91,8 +90,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     String envId = environment != null ? environment.getUuid() : null;
 
     try {
-      WorkflowPhaseYamlHandler phaseYamlHandler =
-          (WorkflowPhaseYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE);
+      WorkflowPhaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE);
 
       // phases
       List<WorkflowPhase> phaseList = Lists.newArrayList();
@@ -152,14 +150,34 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       // user variables
       List<Variable> userVariables = Lists.newArrayList();
       if (yaml.getUserVariables() != null) {
-        BaseYamlHandler variableYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE, ObjectType.VARIABLE);
-        userVariables =
-            yaml.getUserVariables()
+        VariableYamlHandler variableYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE);
+        userVariables = yaml.getUserVariables()
+                            .stream()
+                            .map(userVariable -> {
+                              try {
+                                ChangeContext.Builder clonedContext =
+                                    cloneFileChangeContext(changeContext, userVariable);
+                                return variableYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                              } catch (HarnessException e) {
+                                throw new WingsException(e);
+                              }
+                            })
+                            .collect(Collectors.toList());
+      }
+
+      // template expressions
+      List<TemplateExpression> templateExpressions = Lists.newArrayList();
+      if (yaml.getTemplateExpressions() != null) {
+        TemplateExpressionYamlHandler templateExprYamlHandler =
+            yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
+
+        templateExpressions =
+            yaml.getTemplateExpressions()
                 .stream()
-                .map(userVariable -> {
+                .map(templateExpr -> {
                   try {
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, userVariable);
-                    return (Variable) variableYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, templateExpr);
+                    return templateExprYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
                   } catch (HarnessException e) {
                     throw new WingsException(e);
                   }
@@ -167,46 +185,25 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                 .collect(Collectors.toList());
       }
 
-      // template expressions
-      List<TemplateExpression> templateExpressions = Lists.newArrayList();
-      if (yaml.getTemplateExpressions() != null) {
-        BaseYamlHandler templateExprYamlHandler =
-            yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
-
-        templateExpressions = yaml.getTemplateExpressions()
-                                  .stream()
-                                  .map(templateExpr -> {
-                                    try {
-                                      ChangeContext.Builder clonedContext =
-                                          cloneFileChangeContext(changeContext, templateExpr);
-                                      return (TemplateExpression) templateExprYamlHandler.upsertFromYaml(
-                                          clonedContext.build(), changeContextList);
-                                    } catch (HarnessException e) {
-                                      throw new WingsException(e);
-                                    }
-                                  })
-                                  .collect(Collectors.toList());
-      }
-
-      BaseYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
+      StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
 
       // Pre-deployment steps
       PhaseStepBuilder preDeploymentSteps =
           PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, PhaseStepType.PRE_DEPLOYMENT.name());
 
       if (yaml.getPreDeploymentSteps() != null) {
-        List<Node> stepList =
-            yaml.getPreDeploymentSteps()
-                .stream()
-                .map(stepYaml -> {
-                  try {
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, stepYaml);
-                    return (Node) stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
-                  } catch (HarnessException e) {
-                    throw new WingsException(e);
-                  }
-                })
-                .collect(Collectors.toList());
+        List<Node> stepList = yaml.getPreDeploymentSteps()
+                                  .stream()
+                                  .map(stepYaml -> {
+                                    try {
+                                      ChangeContext.Builder clonedContext =
+                                          cloneFileChangeContext(changeContext, stepYaml);
+                                      return stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                                    } catch (HarnessException e) {
+                                      throw new WingsException(e);
+                                    }
+                                  })
+                                  .collect(Collectors.toList());
         preDeploymentSteps.addAllSteps(stepList).build();
       }
 
@@ -221,7 +218,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                 .map(stepYaml -> {
                   try {
                     ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, stepYaml);
-                    return (Node) stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                    return stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
                   } catch (HarnessException e) {
                     throw new WingsException(e);
                   }
@@ -233,41 +230,39 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       // Failure strategies
       List<FailureStrategy> failureStrategies = Lists.newArrayList();
       if (yaml.getFailureStrategies() != null) {
-        BaseYamlHandler failureStrategyYamlHandler =
-            yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
-        failureStrategies = yaml.getFailureStrategies()
-                                .stream()
-                                .map(failureStrategy -> {
-                                  try {
-                                    ChangeContext.Builder clonedContext =
-                                        cloneFileChangeContext(changeContext, failureStrategy);
-                                    return (FailureStrategy) failureStrategyYamlHandler.upsertFromYaml(
-                                        clonedContext.build(), changeContextList);
-                                  } catch (HarnessException e) {
-                                    throw new WingsException(e);
-                                  }
-                                })
-                                .collect(Collectors.toList());
+        FailureStrategyYamlHandler failureStrategyYamlHandler =
+            yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
+        failureStrategies =
+            yaml.getFailureStrategies()
+                .stream()
+                .map(failureStrategy -> {
+                  try {
+                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, failureStrategy);
+                    return failureStrategyYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                  } catch (HarnessException e) {
+                    throw new WingsException(e);
+                  }
+                })
+                .collect(Collectors.toList());
       }
 
       // Notification rules
       List<NotificationRule> notificationRules = Lists.newArrayList();
       if (yaml.getNotificationRules() != null) {
-        BaseYamlHandler notificationRuleYamlHandler =
-            yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE, ObjectType.NOTIFICATION_RULE);
-        notificationRules = yaml.getNotificationRules()
-                                .stream()
-                                .map(notificationRule -> {
-                                  try {
-                                    ChangeContext.Builder clonedContext =
-                                        cloneFileChangeContext(changeContext, notificationRule);
-                                    return (NotificationRule) notificationRuleYamlHandler.upsertFromYaml(
-                                        clonedContext.build(), changeContextList);
-                                  } catch (HarnessException e) {
-                                    throw new WingsException(e);
-                                  }
-                                })
-                                .collect(Collectors.toList());
+        NotificationRulesYamlHandler notificationRuleYamlHandler =
+            yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE);
+        notificationRules =
+            yaml.getNotificationRules()
+                .stream()
+                .map(notificationRule -> {
+                  try {
+                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, notificationRule);
+                    return notificationRuleYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                  } catch (HarnessException e) {
+                    throw new WingsException(e);
+                  }
+                })
+                .collect(Collectors.toList());
       }
 
       WorkflowInfo workflowInfo = WorkflowInfo.builder()
@@ -309,8 +304,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
 
     // phases
-    WorkflowPhaseYamlHandler phaseYamlHandler =
-        (WorkflowPhaseYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE, ObjectType.PHASE);
+    WorkflowPhaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE);
     List<WorkflowPhase.Yaml> phaseYamlList = workflowPhases.stream()
                                                  .map(workflowPhase -> phaseYamlHandler.toYaml(workflowPhase, appId))
                                                  .collect(Collectors.toList());
@@ -328,16 +322,14 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     // user variables
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
-    VariableYamlHandler variableYamlHandler =
-        (VariableYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE, ObjectType.VARIABLE);
+    VariableYamlHandler variableYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE);
     List<Variable.Yaml> variableYamlList = userVariables.stream()
                                                .map(userVariable -> variableYamlHandler.toYaml(userVariable, appId))
                                                .collect(Collectors.toList());
 
     // template expressions
     TemplateExpressionYamlHandler templateExpressionYamlHandler =
-        (TemplateExpressionYamlHandler) yamlHandlerFactory.getYamlHandler(
-            YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
+        yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
     List<TemplateExpression.Yaml> templateExprYamlList = null;
     if (templateExpressions != null) {
@@ -347,8 +339,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
               .collect(Collectors.toList());
     }
 
-    StepYamlHandler stepYamlHandler =
-        (StepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
+    StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
     // Pre-deployment steps
     PhaseStep preDeploymentSteps = orchestrationWorkflow.getPreDeploymentSteps();
     List<StepYaml> preDeployStepsYamlList = preDeploymentSteps.getSteps()
@@ -365,8 +356,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     // Failure strategies
     FailureStrategyYamlHandler failureStrategyYamlHandler =
-        (FailureStrategyYamlHandler) yamlHandlerFactory.getYamlHandler(
-            YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
+        yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
     List<FailureStrategy> failureStrategies = orchestrationWorkflow.getFailureStrategies();
     List<FailureStrategy.Yaml> failureStrategyYamlList =
         failureStrategies.stream()
@@ -375,8 +365,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     // Notification rules
     NotificationRulesYamlHandler notificationRuleYamlHandler =
-        (NotificationRulesYamlHandler) yamlHandlerFactory.getYamlHandler(
-            YamlType.NOTIFICATION_RULE, ObjectType.NOTIFICATION_RULE);
+        yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE);
     List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
     List<NotificationRule.Yaml> notificationRuleYamlList =
         notificationRules.stream()

@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.ObjectType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.Builder;
 import software.wings.beans.PipelineStage;
@@ -44,9 +43,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
       List<PipelineStage> pipelineStages = Lists.newArrayList();
       if (yaml.getPipelineStages() != null) {
-        PipelineStageYamlHandler pipelineStageYamlHandler =
-            (PipelineStageYamlHandler) yamlHandlerFactory.getYamlHandler(
-                YamlType.PIPELINE_STAGE, ObjectType.PIPELINE_STAGE);
+        PipelineStageYamlHandler pipelineStageYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE);
 
         // Pipeline stages
         pipelineStages =
@@ -77,12 +74,11 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
   @Override
   public Yaml toYaml(Pipeline bean, String appId) {
-    BaseYamlHandler pipelineStageYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE, ObjectType.PIPELINE_STAGE);
+    PipelineStageYamlHandler pipelineStageYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE);
     List<PipelineStage> pipelineStages = bean.getPipelineStages();
     List<PipelineStage.Yaml> pipelineStageYamlList =
         pipelineStages.stream()
-            .map(pipelineStage -> (PipelineStage.Yaml) pipelineStageYamlHandler.toYaml(pipelineStage, bean.getAppId()))
+            .map(pipelineStage -> pipelineStageYamlHandler.toYaml(pipelineStage, bean.getAppId()))
             .collect(Collectors.toList());
 
     return Yaml.builder()

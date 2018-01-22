@@ -124,20 +124,17 @@ public class YamlResource {
   /**
    * Update a trigger that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param appId            the app id
-   * @param artifactStreamId the artifact stream id
-   * @param yamlPayload      the yaml version of the service command
-   * @param deleteEnabled    the delete enabled
+   * @param yamlPayload the yaml version of the service command
+   * @param accountId   the account id
    * @return the rest response
    */
   @PUT
   @Path("/triggers/{artifactStreamId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ArtifactStream> updateTrigger(@QueryParam("appId") String appId,
-      @PathParam("artifactStreamId") String artifactStreamId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlResourceService.updateTrigger(appId, artifactStreamId, yamlPayload, deleteEnabled);
+  public RestResponse<ArtifactStream> updateTrigger(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -169,7 +166,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<Pipeline> updatePipeline(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlResourceService.updatePipeline(accountId, yamlPayload);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   @PUT
@@ -178,7 +175,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<Workflow> updateWorkflow(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlResourceService.updateWorkflow(accountId, yamlPayload);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -210,7 +207,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<ServiceCommand> updateServiceCommand(
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlResourceService.updateServiceCommand(accountId, yamlPayload);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -226,7 +223,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<YamlPayload> getSettingAttributesList(
       @QueryParam("accountId") String accountId, @QueryParam("type") String type) {
-    return yamlResourceService.getSettingAttributesList(accountId, type);
+    return yamlResourceService.getGlobalSettingAttributesList(accountId, type);
   }
 
   /**
@@ -243,6 +240,38 @@ public class YamlResource {
   public RestResponse<YamlPayload> getSettingAttribute(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
     return yamlResourceService.getSettingAttribute(accountId, uuid);
+  }
+
+  /**
+   * Gets the yaml for a setting attribute by accountId and uuid
+   *
+   * @param accountId the account id
+   * @param uuid      the uid of the setting attribute
+   * @return the rest response
+   */
+  @GET
+  @Path("/defaults/{uuid}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getDefaults(
+      @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
+    return yamlResourceService.getDefaultVariables(accountId, uuid);
+  }
+
+  /**
+   * Update defaults that is sent as Yaml
+   *
+   * @param accountId            the account id
+   * @param yamlPayload      the yaml version of the defaults
+   * @return the rest response
+   */
+  @PUT
+  @Path("/defaults/{uuid}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ServiceCommand> updateDefaults(
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -303,7 +332,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<Environment> updateEnvironment(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlResourceService.updateEnvironment(accountId, yamlPayload);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -336,7 +365,7 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<Service> updateService(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlResourceService.updateService(accountId, yamlPayload);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -354,7 +383,7 @@ public class YamlResource {
   public RestResponse<ConfigFile> updateConfigFile(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @PathParam("configId") String configId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlResourceService.updateConfigFile(accountId, yamlPayload);
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**

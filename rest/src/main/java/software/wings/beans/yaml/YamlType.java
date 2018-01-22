@@ -9,6 +9,7 @@ import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
@@ -53,6 +54,7 @@ import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
+import software.wings.beans.defaults.Defaults;
 import software.wings.settings.SettingValue;
 
 /**
@@ -161,7 +163,12 @@ public enum YamlType {
   DEFAULT_SPECIFICATION(ObjectType.DEFAULT_SPECIFICATION, "", "", DefaultSpecification.class),
   FUNCTION_SPECIFICATION(ObjectType.FUNCTION_SPECIFICATION, "", "", FunctionSpecification.class),
   SETTING_ATTRIBUTE(ObjectType.SETTING_ATTRIBUTE, "", "", SettingAttribute.class),
-  SETTING_VALUE(ObjectType.SETTING_VALUE, "", "", SettingValue.class);
+  SETTING_VALUE(ObjectType.SETTING_VALUE, "", "", SettingValue.class),
+  APPLICATION_DEFAULTS(ObjectType.APPLICATION_DEFAULTS,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, DEFAULTS_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY), Defaults.class),
+  ACCOUNT_DEFAULTS(ObjectType.ACCOUNT_DEFAULTS, generatePath(PATH_DELIMITER, false, SETUP_FOLDER, DEFAULTS_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), Defaults.class);
 
   private String entityType;
   private String pathExpression;

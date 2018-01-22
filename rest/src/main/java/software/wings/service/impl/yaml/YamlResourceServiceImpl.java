@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
@@ -30,8 +32,8 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
@@ -42,10 +44,8 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue;
@@ -57,10 +57,11 @@ import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
+import java.util.List;
+
 @Singleton
 public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private AppService appService;
-  @Inject private YamlHistoryService yamlHistoryService;
   @Inject private CommandService commandService;
   @Inject private ConfigService configService;
   @Inject private EnvironmentService environmentService;
@@ -74,7 +75,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlService yamlService;
-  @Inject private SecretManager secretManager;
 
   private static final Logger logger = LoggerFactory.getLogger(YamlResourceServiceImpl.class);
 
@@ -97,7 +97,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       serviceCommand.setCommand(command);
 
       CommandYaml commandYaml =
-          (CommandYaml) yamlHandlerFactory.getYamlHandler(YamlType.COMMAND, null).toYaml(serviceCommand, appId);
+          (CommandYaml) yamlHandlerFactory.getYamlHandler(YamlType.COMMAND).toYaml(serviceCommand, appId);
       return YamlHelper.getYamlRestResponse(yamlGitSyncService, serviceCommand.getUuid(), accountId, commandYaml,
           serviceCommand.getName() + YAML_EXTENSION);
     } else {
@@ -108,17 +108,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               + "' was not found!");
       return rr;
     }
-  }
-
-  /**
-   * Update by app, service and service command ids and yaml payload
-   *
-   * @param accountId     the account id
-   * @param yamlPayload the yaml version of the service command
-   * @return the application
-   */
-  public RestResponse<ServiceCommand> updateServiceCommand(String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -134,21 +123,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, false);
     Validator.notNullCheck("No pipeline with the given id:" + pipelineId, pipeline);
     Pipeline.Yaml pipelineYaml =
-        (Pipeline.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE, null).toYaml(pipeline, appId);
+        (Pipeline.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE).toYaml(pipeline, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, pipeline.getUuid(), accountId, pipelineYaml, pipeline.getName() + YAML_EXTENSION);
-  }
-
-  /**
-   * Update a pipeline that is sent as Yaml (in a JSON "wrapper")
-   *
-   *
-   * @param accountId
-   * @param yamlPayload the yaml version of the service command
-   * @return the rest response
-   */
-  public RestResponse<Pipeline> updatePipeline(String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -197,20 +174,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   }
 
   /**
-   * Update a trigger that is sent as Yaml (in a JSON "wrapper")
-   *
-   * @param appId     the app id
-   * @param artifactStreamId the artifact stream id
-   * @param yamlPayload the yaml version of the service command
-   * @param deleteEnabled required to allow deletions
-   * @return the rest response
-   */
-  public RestResponse<ArtifactStream> updateTrigger(
-      String appId, String artifactStreamId, YamlPayload yamlPayload, boolean deleteEnabled) {
-    return null;
-  }
-
-  /**
    * Gets the yaml for a workflow
    *
    * @param appId     the app id
@@ -230,10 +193,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         yamlGitSyncService, workflow.getUuid(), accountId, workflowYaml, workflow.getName() + YAML_EXTENSION);
   }
 
-  public RestResponse<Workflow> updateWorkflow(String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
-  }
-
   /**
    * Gets all the setting attributes of a given type by accountId
    *
@@ -241,10 +200,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param type        the SettingVariableTypes
    * @return the rest response
    */
-  public RestResponse<YamlPayload> getSettingAttributesList(String accountId, String type) {
-    // TODO
-
-    return null;
+  public RestResponse<YamlPayload> getGlobalSettingAttributesList(String accountId, String type) {
+    List<SettingAttribute> settingAttributeList = settingsService.getSettingAttributesByType(accountId, type);
+    BaseYaml yaml =
+        yamlHandlerFactory.getYamlHandler(YamlType.ACCOUNT_DEFAULTS).toYaml(settingAttributeList, GLOBAL_APP_ID);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, null, accountId, yaml, DEFAULTS_YAML);
   }
 
   /**
@@ -257,7 +217,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public RestResponse<YamlPayload> getEnvironment(String appId, String envId) {
     Application app = appService.get(appId);
     Environment environment = environmentService.get(appId, envId, true);
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.ENVIRONMENT, null).toYaml(environment, appId);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.ENVIRONMENT).toYaml(environment, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, environment.getUuid(), app.getAccountId(), yaml, environment.getName() + YAML_EXTENSION);
   }
@@ -266,7 +226,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     Application app = appService.get(appId);
     Service service = serviceResourceService.get(appId, serviceId, true);
     Validator.notNullCheck("Service is null for Id: " + serviceId, service);
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.SERVICE, null).toYaml(service, appId);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.SERVICE).toYaml(service, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, service.getUuid(), app.getAccountId(), yaml, service.getName() + YAML_EXTENSION);
   }
@@ -338,7 +298,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     SettingAttribute settingAttribute = settingsService.get(uuid);
     Validator.notNullCheck("SettingAttribute is not null for:" + uuid, settingAttribute);
 
-    BaseYamlHandler yamlHandler = getSettingAttributeYamlHandler(settingAttribute);
+    SettingValueYamlHandler yamlHandler = getSettingValueYamlHandler(settingAttribute);
     BaseYaml yaml = null;
     if (yamlHandler != null) {
       // TODO check if this is true
@@ -349,7 +309,17 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
   }
 
-  private BaseYamlHandler getSettingAttributeYamlHandler(SettingAttribute settingAttribute) {
+  @Override
+  public RestResponse<YamlPayload> getDefaultVariables(String accountId, String appId) {
+    List<SettingAttribute> settingAttributeList =
+        settingsService.getSettingAttributesByType(accountId, appId, GLOBAL_ENV_ID, SettingVariableTypes.STRING.name());
+
+    YamlType yamlType = GLOBAL_APP_ID.equals(appId) ? YamlType.ACCOUNT_DEFAULTS : YamlType.APPLICATION_DEFAULTS;
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(yamlType).toYaml(settingAttributeList, appId);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, appId, accountId, yaml, DEFAULTS_YAML);
+  }
+
+  private SettingValueYamlHandler getSettingValueYamlHandler(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
     SettingVariableTypes settingVariableType = settingValue.getSettingType();
 
@@ -403,31 +373,12 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case YAML_GIT_SYNC:
       case DIRECT:
       case KUBERNETES:
+      case STRING:
         break;
       default:
         logger.warn("Unknown SettingVariable type:" + settingVariableType);
     }
     return null;
-  }
-
-  /**
-   * Update a environment that is sent as Yaml (in a JSON "wrapper")
-   *
-   * @param accountId  the account id
-   * @param yamlPayload the yaml version of environment
-   * @return the rest response
-   */
-  public RestResponse<Environment> updateEnvironment(String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
-  }
-
-  public RestResponse<Service> updateService(String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
-  }
-
-  @Override
-  public RestResponse<ConfigFile> updateConfigFile(String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
   }
 
   @Override
@@ -442,14 +393,14 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   @Override
   public RestResponse<YamlPayload> getConfigFileYaml(String accountId, String appId, ConfigFile configFile) {
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE, null).toYaml(configFile, appId);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE).toYaml(configFile, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, configFile.getUuid(), accountId, yaml, configFile.getRelativeFilePath() + YAML_EXTENSION);
   }
 
   @Override
   public RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile) {
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE, null).toYaml(configFile, appId);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE).toYaml(configFile, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, configFile.getUuid(), accountId, yaml, configFile.getRelativeFilePath() + YAML_EXTENSION);
   }

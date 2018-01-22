@@ -143,7 +143,9 @@ public class YamlVersion extends Base implements YamlHistory {
     TRIGGER,
     ARTIFACT_STREAM,
     INFRA_MAPPING,
-    DEPLOYMENT_SPEC
+    DEPLOYMENT_SPEC,
+    APPLICATION_DEFAULTS,
+    ACCOUNT_DEFAULTS
   }
 
   public YamlVersion clone() {
