@@ -2,13 +2,11 @@ package software.wings.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.inject.Singleton;
 
-import io.harness.data.algorithm.NonExistingSubstring;
-import io.harness.exception.SmallAlphabetException;
+import io.harness.data.algorithm.IdentifierName;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -103,20 +101,17 @@ public class ExpressionEvaluator {
     List<String> list = context.values().stream().map(String::valueOf).collect(toList());
     list.addAll(context.keySet());
 
-    String unique = "";
-    try {
-      unique = NonExistingSubstring.substring(unique, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", list);
-    } catch (SmallAlphabetException e) {
-      new WingsException(GENERAL_ERROR, e);
-    }
+    String prefix = IdentifierName.random();
+    String suffix = IdentifierName.random();
 
-    Pattern pattern = Pattern.compile(unique + "[0-9]+" + unique);
+    Pattern pattern = Pattern.compile(prefix + "[0-9]+" + suffix);
 
     final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
                                                           .expressionEvaluator(this)
                                                           .objectPrefix(defaultObjectPrefix)
                                                           .context(jc)
-                                                          .unique(unique)
+                                                          .prefix(prefix)
+                                                          .suffix(suffix)
                                                           .build();
 
     StrSubstitutor substitutor = new StrSubstitutor();
