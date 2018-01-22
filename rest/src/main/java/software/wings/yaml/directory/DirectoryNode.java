@@ -1,5 +1,7 @@
 package software.wings.yaml.directory;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -84,7 +86,7 @@ public class DirectoryNode {
     String[] pathParts = path.split("/");
     String entityId = accountId;
 
-    if (pathParts == null || pathParts.length == 0) {
+    if (isEmpty(pathParts)) {
       this.syncMode = SyncMode.NONE;
     } else {
       if (type == NodeType.FOLDER) {
