@@ -882,7 +882,7 @@ public class DelegateServiceImpl implements DelegateService {
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);
 
-      if (script != null && script.length() != 0) {
+      if (isNotEmpty(script)) {
         try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
           writer.write(script, 0, script.length());
           writer.flush();

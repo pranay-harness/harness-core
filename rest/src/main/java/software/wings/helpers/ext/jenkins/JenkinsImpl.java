@@ -179,7 +179,7 @@ public class JenkinsImpl implements Jenkins {
   }
 
   private String constructParentJobUrl(String[] jobNameSplit) {
-    if (jobNameSplit == null || jobNameSplit.length == 0) {
+    if (isEmpty(jobNameSplit)) {
       return "/";
     }
 

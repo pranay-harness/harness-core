@@ -4,6 +4,8 @@
 
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -73,7 +75,7 @@ public class CatalogServiceImpl implements CatalogService {
     if (catalogs == null) {
       return null;
     }
-    if (catalogTypes == null || catalogTypes.length == 0) {
+    if (isEmpty(catalogTypes)) {
       return catalogs;
     }
 

@@ -47,4 +47,14 @@ public class OperationMixin {
         -> identifier.getType() == TokenTypes.IDENT,
         constant -> constant.getType() == TokenTypes.LITERAL_NULL);
   }
+
+  public static DetailAST equalZero(DetailAST ast) {
+    return transitive(ast, TokenTypes.EQUAL,
+        child -> true, constant -> constant.getType() == TokenTypes.NUM_INT && constant.getText().equals("0"));
+  }
+
+  public static DetailAST notEqualZero(DetailAST ast) {
+    return transitive(ast, TokenTypes.NOT_EQUAL,
+        child -> true, constant -> constant.getType() == TokenTypes.NUM_INT && constant.getText().equals("0"));
+  }
 }

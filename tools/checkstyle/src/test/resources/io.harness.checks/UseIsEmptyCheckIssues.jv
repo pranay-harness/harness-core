@@ -22,5 +22,10 @@ public class UseIsEmptyCheckIssues {
     }
     if (list.foo() != null && !list.foo().isEmpty()) {
     }
+
+    if (foo.array == null || foo.array.length == 0) {
+    }
+    if (foo.array != null && foo.array.length != 0) {
+    }
   }
 }

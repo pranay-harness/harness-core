@@ -3,6 +3,7 @@ package io.harness.checks;
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import io.harness.checks.mixin.FieldMixin;
 import io.harness.checks.mixin.GeneralMixin;
 import io.harness.checks.mixin.MethodMixin;
 import io.harness.checks.mixin.OperationMixin;
@@ -40,9 +41,17 @@ public class UseIsEmptyCheck extends AbstractCheck {
       return;
     }
     final DetailAST right = left.getNextSibling();
-    final DetailAST rightStatement = MethodMixin.call(right, "isEmpty");
+    DetailAST rightStatement = MethodMixin.call(right, "isEmpty");
     if (rightStatement == null) {
-      return;
+      DetailAST zero = OperationMixin.equalZero(right);
+      if (zero == null) {
+        return;
+      }
+
+      rightStatement = FieldMixin.field(zero, "length");
+      if (rightStatement == null) {
+        return;
+      }
     }
 
     if (!GeneralMixin.same(leftStatement, rightStatement)) {
@@ -73,7 +82,15 @@ public class UseIsEmptyCheck extends AbstractCheck {
     DetailAST rightStatement = right.getType() != TokenTypes.LNOT ? MethodMixin.call(right, "isNotEmpty")
                                                                   : MethodMixin.call(right.getFirstChild(), "isEmpty");
     if (rightStatement == null) {
-      return;
+      DetailAST notZero = OperationMixin.notEqualZero(right);
+      if (notZero == null) {
+        return;
+      }
+
+      rightStatement = FieldMixin.field(notZero, "length");
+      if (rightStatement == null) {
+        return;
+      }
     }
 
     if (!GeneralMixin.same(leftStatement, rightStatement)) {

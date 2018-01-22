@@ -794,7 +794,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } else {
       // First get the groupId
       String[] artifactPaths = artifactPath.split("/");
-      if (artifactPaths == null || artifactPaths.length == 0) {
+      if (isEmpty(artifactPaths)) {
         prepareAndThrowException("Invalid artifact path", HARMLESS);
       }
       if (artifactPaths.length < 4) {
