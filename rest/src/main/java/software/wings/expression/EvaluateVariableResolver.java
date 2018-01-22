@@ -19,7 +19,8 @@ public class EvaluateVariableResolver extends StrLookup {
   private int varIndex;
   private Set<String> previous;
   private Set<String> visited;
-  private String unique;
+  private String prefix;
+  private String suffix;
 
   public void startSession() {
     if (visited == null) {
@@ -53,7 +54,7 @@ public class EvaluateVariableResolver extends StrLookup {
       value = "${" + variable + "}";
     }
 
-    String name = unique + ++varIndex + unique;
+    String name = prefix + ++varIndex + suffix;
     context.set(name, value);
     return name;
   }

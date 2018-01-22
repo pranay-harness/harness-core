@@ -32,6 +32,11 @@
             <artifactId>annotations</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.10</version>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>commons-test</artifactId>
             <version>${project.parent.version}</version>
