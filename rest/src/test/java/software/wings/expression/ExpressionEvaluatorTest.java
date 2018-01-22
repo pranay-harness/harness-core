@@ -224,4 +224,17 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
 
     assertThat(expressionEvaluator.evaluate("regex.match('York', ${bob.address.city})", persons)).isEqualTo(true);
   }
+
+  @Test
+  public void shouldNotCollideVars() {
+    Map<String, Object> context = new HashMap<String, Object>() {
+      {
+        put("BA1BA", "${AC1AC}");
+        put("AC1AC", "${AB1AB}");
+        put("AB1AB", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+      }
+    };
+    assertThat(expressionEvaluator.substitute("${BA1BA}", context))
+        .isEqualTo("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+  }
 }
