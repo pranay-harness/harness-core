@@ -11,12 +11,10 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.LambdaSpecification.Yaml;
-import software.wings.beans.ObjectType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -38,24 +36,23 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
   @Override
   public Yaml toYaml(LambdaSpecification lambdaSpecification, String appId) {
     // default specification
-    BaseYamlHandler defaultSpecYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION, ObjectType.DEFAULT_SPECIFICATION);
+    DefaultSpecificationYamlHandler defaultSpecYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION);
     DefaultSpecification defaultSpecification = lambdaSpecification.getDefaults();
     DefaultSpecification.Yaml defaultSpecYaml = null;
     if (defaultSpecification != null) {
-      defaultSpecYaml = (DefaultSpecification.Yaml) defaultSpecYamlHandler.toYaml(defaultSpecification, appId);
+      defaultSpecYaml = defaultSpecYamlHandler.toYaml(defaultSpecification, appId);
     }
 
     // function specification
     List<FunctionSpecification.Yaml> functionSpecYamlList = Collections.emptyList();
-    BaseYamlHandler functionSpecYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION, ObjectType.FUNCTION_SPECIFICATION);
+    FunctionSpecificationYamlHandler functionSpecYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION);
     List<FunctionSpecification> functionSpecificationList = lambdaSpecification.getFunctions();
     if (isNotEmpty(functionSpecificationList)) {
       functionSpecYamlList =
           functionSpecificationList.stream()
-              .map(functionSpecification
-                  -> (FunctionSpecification.Yaml) functionSpecYamlHandler.toYaml(functionSpecification, appId))
+              .map(functionSpecification -> functionSpecYamlHandler.toYaml(functionSpecification, appId))
               .collect(Collectors.toList());
     }
 
@@ -90,8 +87,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     DefaultSpecification.Yaml defaultSpecYaml = yaml.getDefaults();
     if (defaultSpecYaml != null) {
       DefaultSpecificationYamlHandler defaultSpecYamlHandler =
-          (DefaultSpecificationYamlHandler) yamlHandlerFactory.getYamlHandler(
-              YamlType.DEFAULT_SPECIFICATION, ObjectType.DEFAULT_SPECIFICATION);
+          yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION);
       ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, defaultSpecYaml);
       defaultSpec = defaultSpecYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
     }
@@ -99,16 +95,15 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     // function specification
     List<FunctionSpecification> functionSpecList = Lists.newArrayList();
     if (isNotEmpty(yaml.getFunctions())) {
-      BaseYamlHandler functionSpecYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION, ObjectType.FUNCTION_SPECIFICATION);
+      FunctionSpecificationYamlHandler functionSpecYamlHandler =
+          yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION);
       functionSpecList = yaml.getFunctions()
                              .stream()
                              .map(functionSpec -> {
                                try {
                                  ChangeContext.Builder clonedContext =
                                      cloneFileChangeContext(changeContext, functionSpec);
-                                 return (FunctionSpecification) functionSpecYamlHandler.upsertFromYaml(
-                                     clonedContext.build(), changeSetContext);
+                                 return functionSpecYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
                                } catch (HarnessException e) {
                                  throw new WingsException(e);
                                }

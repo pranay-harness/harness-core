@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.FeatureName.GIT_SYNC;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -9,6 +10,7 @@ import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
@@ -45,6 +47,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.defaults.Defaults;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
@@ -230,6 +233,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode configFolder = new FolderNode(accountId, SETUP_FOLDER, Account.class, directoryPath, yamlGitSyncService);
     long startTime = System.nanoTime();
 
+    String defaultVarsYamlFileName = DEFAULTS_YAML;
+    configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, defaultVarsYamlFileName, Defaults.class,
+        directoryPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.ACCOUNT_DEFAULTS));
+
     //--------------------------------------
     // parallelization using CompletionService
     final ExecutorService pool = Executors.newFixedThreadPool(6);
@@ -312,6 +319,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       String yamlFileName = INDEX_YAML;
       appFolder.addChild(new YamlNode(accountId, app.getUuid(), yamlFileName, Application.class,
           appPath.clone().add(yamlFileName), yamlGitSyncService, Type.APP));
+
+      String defaultVarsYamlFileName = DEFAULTS_YAML;
+      appFolder.addChild(new YamlNode(accountId, app.getUuid(), defaultVarsYamlFileName, Defaults.class,
+          appPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.APPLICATION_DEFAULTS));
 
       //--------------------------------------
       // parallelization using CompletionService (part 2)
@@ -765,13 +776,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private String getRootPathTop() {
+  @Override
+  public String getRootPath() {
     return SETUP_FOLDER;
   }
 
   @Override
   public String getRootPathByApp(Application app) {
-    return getRootPathTop() + PATH_DELIMITER + APPLICATIONS_FOLDER + PATH_DELIMITER + app.getName();
+    return getRootPath() + PATH_DELIMITER + APPLICATIONS_FOLDER + PATH_DELIMITER + app.getName();
   }
 
   @Override
@@ -855,7 +867,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   public String getRootPathBySettingAttribute(
       SettingAttribute settingAttribute, SettingVariableTypes settingVariableType) {
     StringBuilder sb = new StringBuilder();
-    sb.append(getRootPathTop() + PATH_DELIMITER);
+    sb.append(getRootPath() + PATH_DELIMITER);
 
     switch (settingVariableType) {
       // cloud providers
@@ -912,6 +924,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case DIRECT:
       case KUBERNETES:
         break;
+      case STRING:
+        String path = getRootPathByDefaultVariable(settingAttribute);
+        if (path != null) {
+          sb.append(path);
+        }
+        break;
       default:
         logger.warn("Unknown SettingVariable type:" + settingVariableType);
     }
@@ -921,5 +939,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public String getRootPathBySettingAttribute(SettingAttribute settingAttribute) {
     return getRootPathBySettingAttribute(settingAttribute, settingAttribute.getValue().getSettingType());
+  }
+
+  private String getRootPathByDefaultVariable(SettingAttribute settingAttribute) {
+    if (GLOBAL_APP_ID.equals(settingAttribute.getAppId())) {
+      // If its global app id, returning null since the defaults.yaml should be put in the root path (Setup)
+      return null;
+    } else {
+      Application application = appService.get(settingAttribute.getAppId());
+      return APPLICATIONS_FOLDER + PATH_DELIMITER + application.getName();
+    }
   }
 }

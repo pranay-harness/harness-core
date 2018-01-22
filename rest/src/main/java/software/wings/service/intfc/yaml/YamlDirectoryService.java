@@ -50,6 +50,8 @@ public interface YamlDirectoryService {
   List<GitFileChange> traverseDirectory(
       List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path);
 
+  String getRootPath();
+
   String getRootPathByApp(Application app);
 
   String getRootPathByService(Service service);

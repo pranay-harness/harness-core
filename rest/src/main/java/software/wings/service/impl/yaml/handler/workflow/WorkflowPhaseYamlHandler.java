@@ -10,7 +10,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ObjectType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -75,8 +74,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     // phase step
     List<PhaseStep> phaseSteps = Lists.newArrayList();
     if (yaml.getPhaseSteps() != null) {
-      PhaseStepYamlHandler phaseStepYamlHandler =
-          (PhaseStepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP);
+      PhaseStepYamlHandler phaseStepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP);
       phaseSteps = yaml.getPhaseSteps()
                        .stream()
                        .map(phaseStep -> {
@@ -94,8 +92,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     List<TemplateExpression> templateExpressions = Lists.newArrayList();
     if (yaml.getTemplateExpressions() != null) {
       TemplateExpressionYamlHandler templateExprYamlHandler =
-          (TemplateExpressionYamlHandler) yamlHandlerFactory.getYamlHandler(
-              YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
+          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
       templateExpressions =
           yaml.getTemplateExpressions()
               .stream()
@@ -149,8 +146,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
     if (bean.getTemplateExpressions() != null) {
       TemplateExpressionYamlHandler templateExpressionYamlHandler =
-          (TemplateExpressionYamlHandler) yamlHandlerFactory.getYamlHandler(
-              YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
+          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
       templateExprYamlList =
           bean.getTemplateExpressions()
               .stream()
@@ -160,8 +156,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
     List<PhaseStep.Yaml> phaseStepYamlList = Lists.newArrayList();
     if (bean.getPhaseSteps() != null) {
-      PhaseStepYamlHandler phaseStepYamlHandler =
-          (PhaseStepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP, ObjectType.PHASE_STEP);
+      PhaseStepYamlHandler phaseStepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP);
       phaseStepYamlList = bean.getPhaseSteps()
                               .stream()
                               .map(phaseStep -> phaseStepYamlHandler.toYaml(phaseStep, appId))

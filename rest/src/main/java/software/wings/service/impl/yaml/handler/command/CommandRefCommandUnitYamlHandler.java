@@ -84,8 +84,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
 
       if (commandContextOptional.isPresent()) {
         ChangeContext commandContext = commandContextOptional.get();
-        CommandYamlHandler commandYamlHandler =
-            (CommandYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.COMMAND, null);
+        CommandYamlHandler commandYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.COMMAND);
         commandYamlHandler.upsertFromYaml(commandContext, changeSetContext);
         serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, commandName);
         Validator.notNullCheck("No command found with the given name:" + commandName, serviceCommand);

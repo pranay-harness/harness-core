@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping.Yaml;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Validator;
@@ -22,10 +23,16 @@ public class PhysicalInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, PhysicalInfrastructureMapping> {
   @Override
   public Yaml toYaml(PhysicalInfrastructureMapping bean, String appId) {
+    String hostConnectionAttrsSettingId = bean.getHostConnectionAttrs();
+
+    SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsSettingId);
+    Validator.notNullCheck(
+        "Host connection attributes null for the given id: " + hostConnectionAttrsSettingId, settingAttribute);
+
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name());
-    yaml.setConnection(bean.getHostConnectionAttrs());
+    yaml.setConnection(settingAttribute.getName());
     yaml.setHostNames(bean.getHostNames());
     yaml.setLoadBalancer(bean.getLoadBalancerName());
     return yaml;
@@ -72,7 +79,12 @@ public class PhysicalInfraMappingYamlHandler
     } else {
       bean.setLoadBalancerId("");
     }
-    bean.setHostConnectionAttrs(yaml.getConnection());
+
+    String hostConnAttrsName = yaml.getConnection();
+    SettingAttribute hostConnAttributes =
+        settingsService.getSettingAttributeByName(changeContext.getChange().getAccountId(), hostConnAttrsName);
+    Validator.notNullCheck("HostConnectionAttrs is null for name:" + hostConnAttrsName, hostConnAttributes);
+    bean.setHostConnectionAttrs(hostConnAttributes.getUuid());
     bean.setHostNames(yaml.getHostNames());
   }
 

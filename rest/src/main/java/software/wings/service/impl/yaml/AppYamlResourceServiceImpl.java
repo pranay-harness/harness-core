@@ -8,8 +8,8 @@ import com.google.inject.Singleton;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.yaml.YamlType;
-import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -35,8 +35,8 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
   public RestResponse<YamlPayload> getApp(String appId) {
     Application app = appService.get(appId);
 
-    BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.APPLICATION, null);
-    Application.Yaml applicationYaml = (Application.Yaml) yamlHandler.toYaml(app, appId);
+    ApplicationYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.APPLICATION);
+    Application.Yaml applicationYaml = yamlHandler.toYaml(app, appId);
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, appId, app.getAccountId(), applicationYaml, app.getName() + YAML_EXTENSION);

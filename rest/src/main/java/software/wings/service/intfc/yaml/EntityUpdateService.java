@@ -28,6 +28,8 @@ public interface EntityUpdateService {
 
   GitFileChange getServiceGitSyncFile(String accountId, Service service, ChangeType changeType);
 
+  GitFileChange getDefaultVarGitSyncFile(String accountId, String appId, ChangeType changeType);
+
   GitFileChange getCommandGitSyncFile(
       String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType);
 

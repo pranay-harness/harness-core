@@ -1,6 +1,9 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -8,7 +11,10 @@ import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.EncryptionInterface;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.validation.Create;
+import software.wings.yaml.BaseEntityYaml;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -242,6 +248,19 @@ public class Account extends Base {
       account.setLastUpdatedBy(lastUpdatedBy);
       account.setLastUpdatedAt(lastUpdatedAt);
       return account;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class Yaml extends BaseEntityYaml {
+    private List<NameValuePair.Yaml> defaults = new ArrayList<>();
+
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, List<NameValuePair.Yaml> defaults) {
+      super(type, harnessApiVersion);
+      this.defaults = defaults;
     }
   }
 }

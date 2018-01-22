@@ -45,14 +45,10 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -69,10 +65,6 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AppService appService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private EntityUpdateService entityUpdateService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private ExecutorService executorService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   /* (non-Javadoc)
@@ -93,6 +85,11 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute) {
+    return save(settingAttribute, true);
+  }
+
+  @Override
+  public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingValidationService.validate(settingAttribute);
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof Encryptable) {
@@ -104,8 +101,20 @@ public class SettingsServiceImpl implements SettingsService {
         Validator.duplicateCheck(()
                                      -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
             "name", settingAttribute.getName());
-    yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, newSettingAttribute, ChangeType.ADD);
+    if (shouldBeSynced(newSettingAttribute, pushToGit)) {
+      yamlChangeSetHelper.queueSettingYamlChangeAsync(newSettingAttribute, ChangeType.ADD);
+    }
+
     return newSettingAttribute;
+  }
+
+  private boolean shouldBeSynced(SettingAttribute settingAttribute, boolean pushToGit) {
+    String type = settingAttribute.getValue().getType();
+
+    boolean skip = SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name().equals(type)
+        || SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name().equals(type);
+
+    return pushToGit && !skip;
   }
 
   /* (non-Javadoc)
@@ -143,12 +152,8 @@ public class SettingsServiceImpl implements SettingsService {
     return wingsPersistence.createQuery(SettingAttribute.class).field("name").equal(settingAttributeName).get();
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.SettingsService#update(software.wings.beans.SettingAttribute)
-   */
-
   @Override
-  public SettingAttribute update(SettingAttribute settingAttribute) {
+  public SettingAttribute update(SettingAttribute settingAttribute, boolean pushToGit) {
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     Validator.notNullCheck("Setting", existingSetting);
     settingAttribute.setAccountId(existingSetting.getAccountId());
@@ -170,8 +175,19 @@ public class SettingsServiceImpl implements SettingsService {
 
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
 
-    yamlChangeSetHelper.queueSettingUpdateYamlChangeAsync(savedSettingAttributes, updatedSettingAttribute);
+    if (shouldBeSynced(updatedSettingAttribute, pushToGit)) {
+      yamlChangeSetHelper.queueSettingUpdateYamlChangeAsync(savedSettingAttributes, updatedSettingAttribute);
+    }
     return updatedSettingAttribute;
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.SettingsService#update(software.wings.beans.SettingAttribute)
+   */
+
+  @Override
+  public SettingAttribute update(SettingAttribute settingAttribute) {
+    return update(settingAttribute, true);
   }
 
   /* (non-Javadoc)
@@ -179,12 +195,20 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void delete(String appId, String varId) {
+    this.delete(appId, varId, true);
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.SettingsService#delete(java.lang.String, java.lang.String)
+   */
+  @Override
+  public void delete(String appId, String varId, boolean pushToGit) {
     SettingAttribute settingAttribute = get(varId);
     Validator.notNullCheck("Setting Value", settingAttribute);
     ensureSettingAttributeSafeToDelete(settingAttribute);
     boolean deleted = wingsPersistence.delete(settingAttribute);
-    if (deleted) {
-      yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, settingAttribute, ChangeType.DELETE);
+    if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
+      yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.DELETE);
     }
   }
 
@@ -304,13 +328,17 @@ public class SettingsServiceImpl implements SettingsService {
                               .withValue(aStringValue().withValue(DEFAULT_STAGING_PATH).build())
                               .build());
 
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(appId)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName(BACKUP_PATH)
-                              .withValue(aStringValue().withValue(DEFAULT_BACKUP_PATH).build())
-                              .build());
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId(appId)
+                                            .withAccountId(accountId)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withName(BACKUP_PATH)
+                                            .withValue(aStringValue().withValue(DEFAULT_BACKUP_PATH).build())
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+
+    // We only need to queue one of them since it will fetch all the setting attributes and pushes them
+    yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.ADD);
   }
 
   @Override
@@ -337,17 +365,22 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withAccountId(accountId)
                                              .build())
                               .build());
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(GLOBAL_APP_ID)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName("User/Password :: sudo - <app-account>")
-                              .withValue(aHostConnectionAttributes()
-                                             .withConnectionType(SSH)
-                                             .withAccessType(USER_PASSWORD_SUDO_APP_USER)
-                                             .withAccountId(accountId)
-                                             .build())
-                              .build());
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId(GLOBAL_APP_ID)
+                                            .withAccountId(accountId)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withName("User/Password :: sudo - <app-account>")
+                                            .withValue(aHostConnectionAttributes()
+                                                           .withConnectionType(SSH)
+                                                           .withAccessType(USER_PASSWORD_SUDO_APP_USER)
+                                                           .withAccountId(accountId)
+                                                           .build())
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+
+    // We only need to queue one of them since it will fetch all the setting attributes and pushes them
+    yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.ADD);
   }
 
   /* (non-Javadoc)
@@ -381,6 +414,17 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public List<SettingAttribute> getSettingAttributesByType(String accountId, String appId, String envId, String type) {
+    PageRequest<SettingAttribute> pageRequest = aPageRequest()
+                                                    .addFilter("accountId", EQ, accountId)
+                                                    .addFilter("appId", EQ, appId)
+                                                    .addFilter("envId", EQ, envId)
+                                                    .addFilter("value.type", EQ, type)
+                                                    .build();
+    return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
+  }
+
+  @Override
   public List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type) {
     PageRequest<SettingAttribute> pageRequest =
         aPageRequest().addFilter("accountId", EQ, accountId).addFilter("value.type", EQ, type).build();
@@ -397,5 +441,18 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).field("accountId").equal(accountId));
+  }
+
+  @Override
+  public void deleteSettingAttributesByType(String accountId, String appId, String envId, String type) {
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
+                                .field("accountId")
+                                .equal(accountId)
+                                .field("appId")
+                                .equal(appId)
+                                .field("envId")
+                                .equal(envId)
+                                .field("value.type")
+                                .equal(type));
   }
 }

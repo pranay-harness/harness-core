@@ -7,7 +7,6 @@ import com.google.inject.Singleton;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.ObjectType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStep.Yaml;
@@ -45,8 +44,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
 
     List<Node> stepList = Lists.newArrayList();
     if (yaml.getSteps() != null) {
-      StepYamlHandler stepYamlHandler =
-          (StepYamlHandler) yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
+      StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
 
       // Steps
       stepList = yaml.getSteps()
@@ -68,8 +66,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
     List<FailureStrategy> failureStrategies = Lists.newArrayList();
     if (yaml.getFailureStrategies() != null) {
       FailureStrategyYamlHandler failureStrategyYamlHandler =
-          (FailureStrategyYamlHandler) yamlHandlerFactory.getYamlHandler(
-              YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
+          yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
       failureStrategies =
           yaml.getFailureStrategies()
               .stream()
@@ -98,20 +95,18 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   @Override
   public Yaml toYaml(PhaseStep bean, String appId) {
     // Failure strategies
-    BaseYamlHandler failureStrategyYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY, ObjectType.FAILURE_STRATEGY);
+    FailureStrategyYamlHandler failureStrategyYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
     List<FailureStrategy> failureStrategies = bean.getFailureStrategies();
     List<FailureStrategy.Yaml> failureStrategyYamlList =
         failureStrategies.stream()
-            .map(failureStrategy -> (FailureStrategy.Yaml) failureStrategyYamlHandler.toYaml(failureStrategy, appId))
+            .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
             .collect(Collectors.toList());
 
     // Phase steps
-    BaseYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP, ObjectType.STEP);
-    List<StepYaml> stepsYamlList = bean.getSteps()
-                                       .stream()
-                                       .map(step -> (StepYaml) stepYamlHandler.toYaml(step, appId))
-                                       .collect(Collectors.toList());
+    StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
+    List<StepYaml> stepsYamlList =
+        bean.getSteps().stream().map(step -> stepYamlHandler.toYaml(step, appId)).collect(Collectors.toList());
 
     return Yaml.builder()
         .failureStrategies(failureStrategyYamlList)

@@ -189,6 +189,15 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     verify(wingsPersistence).delete(any(SettingAttribute.class));
   }
 
+  /**
+   * Should delete.
+   */
+  @Test
+  public void shouldDeleteSettingAttributesByType() {
+    settingsService.deleteSettingAttributesByType(ACCOUNT_ID, APP_ID, ENV_ID, "JENKINS");
+    verify(wingsPersistence).delete(any(Query.class));
+  }
+
   @Test
   public void shouldThroeExceptionIfReferencedConnectorDeleted() {
     SettingAttribute settingAttribute = aSettingAttribute()

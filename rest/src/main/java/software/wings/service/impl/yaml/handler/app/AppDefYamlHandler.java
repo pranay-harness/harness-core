@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.handler.template;
+package software.wings.service.impl.yaml.handler.app;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.ObjectType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -13,7 +14,6 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.utils.Util;
 
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/28/17
  */
 @Singleton
-public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpression.Yaml, TemplateExpression> {
+public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
   private TemplateExpression toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
@@ -52,10 +52,11 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   public Yaml toYaml(TemplateExpression bean, String appId) {
     List<NameValuePair> nameValuePairs = Util.toYamlList(bean.getMetadata());
     // properties
-    NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
+    BaseYamlHandler nameValuePairYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR, ObjectType.NAME_VALUE_PAIR);
     List<NameValuePair.Yaml> nameValuePairYamlList =
         nameValuePairs.stream()
-            .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
+            .map(nameValuePair -> (NameValuePair.Yaml) nameValuePairYamlHandler.toYaml(nameValuePair, appId))
             .collect(Collectors.toList());
 
     return Yaml.Builder.aYaml()
@@ -78,7 +79,7 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
 
   @Override
   public Class getYamlClass() {
-    return TemplateExpression.Yaml.class;
+    return Yaml.class;
   }
 
   @Override

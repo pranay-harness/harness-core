@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
-import software.wings.beans.ObjectType;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTask.AdvancedType;
@@ -54,8 +53,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     // container definition
     if (yaml.getAdvancedConfig() == null && yaml.getContainerDefinition() != null) {
       ContainerDefinitionYamlHandler containerDefYamlHandler =
-          (ContainerDefinitionYamlHandler) yamlHandlerFactory.getYamlHandler(
-              YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
+          yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION);
       try {
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, yaml.getContainerDefinition());
         ContainerDefinition containerDefinition =
@@ -83,8 +81,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     if (bean.getAdvancedConfig() == null) {
       // container definition
       ContainerDefinitionYamlHandler containerDefYamlHandler =
-          (ContainerDefinitionYamlHandler) yamlHandlerFactory.getYamlHandler(
-              YamlType.CONTAINER_DEFINITION, ObjectType.CONTAINER_DEFINITION);
+          yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION);
       List<ContainerDefinition> containerDefinitions = bean.getContainerDefinitions();
       if (isNotEmpty(containerDefinitions)) {
         ContainerDefinition containerDefinition = containerDefinitions.get(0);

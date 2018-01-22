@@ -42,6 +42,8 @@ public class DirectoryNode {
       this.restName = "artifact-streams";
     } else if (this.shortClassName.equals("ContainerTask")) {
       this.restName = "container-tasks";
+    } else if (this.shortClassName.equals("Defaults")) {
+      this.restName = "defaults";
     } else if (this.shortClassName.equals("LambdaSpecification")) {
       this.restName = "lambda-specs";
     } else if (this.shortClassName.equals("UserDataSpecification")) {

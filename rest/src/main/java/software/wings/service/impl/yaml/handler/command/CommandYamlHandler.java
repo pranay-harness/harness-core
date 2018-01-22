@@ -69,8 +69,8 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       Node previousGraphNode = null;
 
       for (Yaml commandUnitYaml : commandUnitYamlList) {
-        CommandUnitYamlHandler commandUnitYamlHandler = (CommandUnitYamlHandler) yamlHandlerFactory.getYamlHandler(
-            YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
+        CommandUnitYamlHandler commandUnitYamlHandler =
+            yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
         CommandUnit commandUnit = commandUnitYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
         commandUnitList.add(commandUnit);
@@ -157,7 +157,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         command.getCommandUnits()
             .stream()
             .map(commandUnit -> {
-              BaseYamlHandler commandUnitsYamlHandler =
+              CommandUnitYamlHandler commandUnitsYamlHandler =
                   yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnit.getCommandUnitType().name());
               return (AbstractCommandUnit.Yaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
             })

@@ -26,10 +26,18 @@ public interface SettingsService extends OwnedByAccount {
   /**
    * Save.
    *
-   * @param envVar the env var
+   * @param settingAttribute the setting attribute
    * @return the setting attribute
    */
-  @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute envVar);
+  @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute settingAttribute);
+
+  /**
+   * Save.
+   *
+   * @param settingAttribute the setting attribute
+   * @return the setting attribute
+   */
+  @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute settingAttribute, boolean pushToGit);
 
   /**
    * Gets the.
@@ -63,10 +71,18 @@ public interface SettingsService extends OwnedByAccount {
   /**
    * Update.
    *
-   * @param envVar the env var
+   * @param settingAttribute the setting attribute
    * @return the setting attribute
    */
-  @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute envVar);
+  @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute);
+
+  /**
+   * Update.
+   *
+   * @param settingAttribute the setting attribute
+   * @return the setting attribute
+   */
+  @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute, boolean pushToGit);
 
   /**
    * Delete.
@@ -75,6 +91,11 @@ public interface SettingsService extends OwnedByAccount {
    * @param varId the var id
    */
   void delete(String appId, String varId);
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.SettingsService#delete(java.lang.String, java.lang.String)
+   */
+  void delete(String appId, String varId, boolean pushToGit);
 
   /**
    * Gets the by name.
@@ -134,6 +155,17 @@ public interface SettingsService extends OwnedByAccount {
   List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type);
 
   /**
+   * Gets setting attributes by type.
+   *
+   * @param accountId the account id
+   * @param appId     the app id
+   * @param envId     the env id
+   * @param type      the type
+   * @return the setting attributes by type
+   */
+  List<SettingAttribute> getSettingAttributesByType(String accountId, String appId, String envId, String type);
+
+  /**
    * Gets the global setting attributes by type.
    *
    * @param accountId the account id
@@ -141,6 +173,15 @@ public interface SettingsService extends OwnedByAccount {
    * @return the global setting attributes by type
    */
   List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
+
+  /**
+   *
+   * @param accountId the account id
+   * @param appId     the app id
+   * @param envId     the env Id
+   * @param type      the setting attribute type
+   */
+  void deleteSettingAttributesByType(String accountId, String appId, String envId, String type);
 
   SettingAttribute getGlobalSettingAttributesById(String accountId, String id);
 }

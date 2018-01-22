@@ -10,7 +10,6 @@ import com.google.inject.Singleton;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ObjectType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
@@ -23,6 +22,7 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -57,21 +57,20 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
     // template expressions
     List<TemplateExpression> templateExpressions = Lists.newArrayList();
     if (yaml.getTemplateExpressions() != null) {
-      BaseYamlHandler templateExprYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
-      templateExpressions = yaml.getTemplateExpressions()
-                                .stream()
-                                .map(templateExpr -> {
-                                  try {
-                                    ChangeContext.Builder clonedContext =
-                                        cloneFileChangeContext(changeContext, templateExpr);
-                                    return (TemplateExpression) templateExprYamlHandler.upsertFromYaml(
-                                        clonedContext.build(), changeContextList);
-                                  } catch (HarnessException e) {
-                                    throw new WingsException(e);
-                                  }
-                                })
-                                .collect(Collectors.toList());
+      TemplateExpressionYamlHandler templateExprYamlHandler =
+          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
+      templateExpressions =
+          yaml.getTemplateExpressions()
+              .stream()
+              .map(templateExpr -> {
+                try {
+                  ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, templateExpr);
+                  return templateExprYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                } catch (HarnessException e) {
+                  throw new WingsException(e);
+                }
+              })
+              .collect(Collectors.toList());
     }
 
     // properties
@@ -118,13 +117,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
     // template expressions
     List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
     if (bean.getTemplateExpressions() != null) {
-      BaseYamlHandler templateExpressionYamlHandler =
-          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION, ObjectType.TEMPLATE_EXPRESSION);
+      TemplateExpressionYamlHandler templateExpressionYamlHandler =
+          yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
       templateExprYamlList =
           bean.getTemplateExpressions()
               .stream()
-              .map(templateExpression
-                  -> (TemplateExpression.Yaml) templateExpressionYamlHandler.toYaml(templateExpression, appId))
+              .map(templateExpression -> templateExpressionYamlHandler.toYaml(templateExpression, appId))
               .collect(Collectors.toList());
     }
 
