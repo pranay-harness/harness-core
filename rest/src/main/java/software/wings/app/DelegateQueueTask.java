@@ -1,6 +1,7 @@
 package software.wings.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
@@ -107,7 +108,7 @@ public class DelegateQueueTask implements Runnable {
           DelegateTask updatedDelegateTask =
               wingsPersistence.getDatastore().findAndModify(updateQuery, updateOperations);
 
-          if (updatedDelegateTask != null) {
+          if (updatedDelegateTask != null && isNotBlank(updatedDelegateTask.getWaitId())) {
             logger.info("Long running delegate task [{}] is terminated", updatedDelegateTask.getUuid());
             waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
                 anErrorNotifyResponseData()
