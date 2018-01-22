@@ -27,5 +27,7 @@
     <rule ref="rulesets/java/optimizations.xml/RedundantFieldInitializer"/>
     <rule ref="rulesets/java/optimizations.xml/UnnecessaryWrapperObjectCreation"/>
 
+    <!-- this check has false negative reports. Do not enable.
     <rule ref="rulesets/java/unusedcode.xml/UnusedPrivateMethod"/>
+     -->
 </ruleset>

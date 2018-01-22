@@ -8,8 +8,11 @@ import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
+import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anUserRequestInfo;
 
@@ -24,7 +27,7 @@ import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
-import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
@@ -159,18 +162,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (accountId == null) {
       if (emptyAppIdsInReq) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "appId not specified");
+        throw new WingsException(INVALID_REQUEST).addParam("message", "appId not specified");
       }
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "accountId not specified");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "accountId not specified");
     }
 
     if (user != null) {
       final String accountIdFinal = accountId;
       if (user.getAccounts().stream().filter(account -> account.getUuid().equals(accountIdFinal)).count() != 1) {
-        String loggerMsg = "User: " + user.getName() + " is not authorized to access account: " + accountId;
-        logger.error(loggerMsg);
-        String msg = "User not authorized to access the given account";
-        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", msg);
+        throw new WingsException(ResponseMessage.aResponseMessage().code(INVALID_REQUEST).acuteness(HARMLESS).build())
+            .addParam("message", "User not authorized to access the given account");
       }
     }
 
@@ -206,7 +207,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         if (!invalidAppIdList.isEmpty()) {
           String msg = "The appIds from request %s do not belong to the given account :" + accountId;
           String formattedMsg = String.format(msg, (Object[]) invalidAppIdList.toArray());
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", formattedMsg);
+          throw new WingsException(INVALID_ARGUMENT).addParam("args", formattedMsg);
         }
       }
     }
