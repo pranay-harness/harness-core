@@ -85,6 +85,7 @@ import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
@@ -156,6 +157,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private SecretManager secretManager;
   @Inject private ExpressionEvaluator evaluator;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -514,7 +516,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     wingsPersistence.update(savedInfraMapping, updateOperations);
 
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-    executorService.submit(() -> saveYamlChangeSet(updatedInfraMapping, ChangeType.MODIFY));
+    yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId());
     return updatedInfraMapping;
   }
 
