@@ -57,6 +57,8 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
         .isEqualTo("sam.address.city.length()");
     assertThat(expressionEvaluator.normalizeExpression("${address.city.length()}", persons, "bob"))
         .isEqualTo("bob.address.city.length()");
+
+    assertThat(expressionEvaluator.normalizeExpression("${foo}", persons, "bar")).isEqualTo("foo");
   }
 
   @Test
@@ -89,6 +91,9 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     Map<String, Object> context = new HashMap<>();
     context.put("host", host);
     String retValue = expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context);
+    assertThat(retValue).isEqualTo("http://${HOST}.$DOMAIN.${COM}:${PORT}/health/status");
+
+    retValue = expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context, "bar");
     assertThat(retValue).isEqualTo("http://${HOST}.$DOMAIN.${COM}:${PORT}/health/status");
   }
 
