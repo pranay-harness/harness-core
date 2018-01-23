@@ -1,0 +1,1219 @@
+{
+  "_id" : "zEH9zdHRRS2GrfkkybqQ5w",
+  "name" : "[DRY RUN] Deploy All SHN Components",
+  "pipelineStages" : [
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnlogcollectorapp",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "DWsddTiASpWGq3GMb8Cmyg",
+            "ServiceInfra_SSH" : "s5fWaE2jTACctQOcOZIFuQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "ec-monitor-server",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "cJnSr7wyQjmVkhGo8xSvPQ",
+            "ServiceInfra_SSH" : "ASPmD63cSgGlDdrkbXTmqg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "ec-datacopier-server",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "gbuC0rpYSiuSBhnWAiUzUQ",
+            "ServiceInfra_SSH" : "ufN66JwoSiGniNNKQ8rx6g"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "overlord",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "rJGT-gsIRFikAkA5JSULQw",
+            "ServiceInfra_SSH" : "ZrcaLodsR5S9l54xltXOPg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "neo-auth-service",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "pDwCaIdET6GPOG-FOLBdyA",
+            "ServiceInfra_SSH" : "YuV38QpoQl-ceCrXSF1Qlw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "neo-api-gateway",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "lk4MQ3YaTsC8BcV3GOfzcw",
+            "ServiceInfra_SSH" : "RCD0yO4cTQapoWFZQrqh0w"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "config-audit-api",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "tE4kpJU3SKKQtDd3-KlnqQ",
+            "ServiceInfra_SSH" : "a2hXOSLeR3W_y8EzROHOIw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "config-syncer",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "aNi_Eil7S7m8henv5h3CBQ",
+            "ServiceInfra_SSH" : "-jhMxUw7RAu1RRT3WwuYHg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "watchtower-server",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "2cM_KPpJSrSDAf0BQnPEKQ",
+            "ServiceInfra_SSH" : "iqPPXtwYR2-3MiFe_VWpEg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "events-analytics-service",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "zU-gtPqUQdmLI1cvz0t-5A",
+            "ServiceInfra_SSH" : "0w61RPXbRvOBN1V7xm8ojA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "caching-service",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "VmvT5ApARyOj8XkUGJcKmg",
+            "ServiceInfra_SSH" : "xC_SC0shQaWY9XQRsxPdlA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "reporting-service",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "RBWmvtbUTxKEgy1kyqqcsw",
+            "ServiceInfra_SSH" : "BeAzcecfTVCa4fLtzHLAzQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "service-workflow",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "t-IoOImLQNqvNrGD-9ZFHQ",
+            "ServiceInfra_SSH" : "K5N6GQGtRuSNhCRZqtXbLw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "messenger-server",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "jKIMNnMHQbKyh8FfwTpRxw",
+            "ServiceInfra_SSH" : "NrBT8NOBS1WuvUgVsBZnrg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shndirectory-service",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "aNt_SxqxTU6U0PmFV55DHg",
+            "ServiceInfra_SSH" : "2EV-TRU1Qa2Cv5kt_0YxKg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "hadoop-batch-scheduler",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "omlvJxYTSU2hmjnTd2CLnw",
+            "ServiceInfra_SSH" : "xMNOdLIrTjqBOjBEfOCcbA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shndlpapi-server",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "1qQ0d9cIRV2JNFDHn1piNg",
+            "ServiceInfra_SSH" : "eLxA23hnSgiZ_mOB-UC0mQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shndirectory-ingestion",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "Js_D4IPJSmqvTIRx8SKycg",
+            "ServiceInfra_SSH" : "VOgjkEDsSay1C3Jw9ijz3Q"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnrealtimedlp",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "5wWEuhvdRhCKcNZkHAZaig",
+            "ServiceInfra_SSH" : "Nnils_LtRzSt9Mv_a4KvhA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shn-sharepoint-dlp",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "JJeIGyExQXq_41_fy3WA2A",
+            "ServiceInfra_SSH" : "LwJqKSPpTPuCehlFVJVNUg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "hadoop-batch-scripts",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "pe4raDXgRt--7WkEU7rnxg",
+            "ServiceInfra_SSH" : "6_h4uW5FTc6-ec4-OTv4jg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shn-keyviewfilter",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "Cvb8xkguRiGbjhCs3GOOzw",
+            "ServiceInfra_SSH" : "RIVTVhMsRFyO5bZRQo-Vhw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shneventsummary-processor",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "A4ED8tmxTyuNczeiroiRrQ",
+            "ServiceInfra_SSH" : "YKT93JMlR9KnqhOAguVsDg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "zeus-server",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "1KvIE-yrSCqQN0Nb4CSX2g",
+            "ServiceInfra_SSH" : "Dp9QgvpcTLKok35oPIwDZQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnwebhooks",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "NQmr6UcFROG1RP5_okrssg",
+            "ServiceInfra_SSH" : "ZLeONfv3QlOrSoU1TVzzsA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "hadoop-batch-distribution",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "XjsnCumIQ22h1hqpsvaSuQ",
+            "ServiceInfra_SSH" : "5dUIZitESgGFwR5iOjFYfw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnmapreduce",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "IhQr4SO9SP2wo8V40q5Ppw",
+            "ServiceInfra_SSH" : "lrymbMQcTP6QWDSn8skb9g"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "hadoop-logimporter",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "ZhvAQxiVS1eupnMy0YJoKQ",
+            "ServiceInfra_SSH" : "atpWD9wvQE-QWdIUks1aig"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-wf-coord",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "GIToW9esQnyX3fMTneKDxw",
+            "ServiceInfra_SSH" : "Jw-8WtjsS9ebb6FPpI50Bg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-data-bridge",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "1GpackQ6SGmRktpd30QswQ",
+            "ServiceInfra_SSH" : "esphBbadS3KxhUsGMNoqHA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-kafka-event-consumer",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "UmnggB6SS66HEuzgBNTA4A",
+            "ServiceInfra_SSH" : "tlF4tmO7RmmSad49V8yHKA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-user-detection",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "1-PLFawBSv2Ki1ZlNyd7pw",
+            "ServiceInfra_SSH" : "xGS1mF7fSOKlvzIXID6Tuw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-anomaly",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "_k82Vwt4T0eVeuUDYy9Q3Q",
+            "ServiceInfra_SSH" : "nTHhW2rWS8u-5RRZrKDkww"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-unmatched-event-summary",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "qSCJOrNdTcqBIib7BRjOlA",
+            "ServiceInfra_SSH" : "KnuZpEO6QP2Tw_pSz4bNgg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-event-summary",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "gsX443z3Tn--vjGE_dSxQg",
+            "ServiceInfra_SSH" : "Uwxk8ss2Q-yqP4aLhzl89w"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-event-drilldown",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "FNgK2gcvSGG7xFd8n-8dxw",
+            "ServiceInfra_SSH" : "jMjbNvy3TvqsktFzguXPHA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-aggregation",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "wHE7yH_GSyyntuZwHnhuZg",
+            "ServiceInfra_SSH" : "lAUt00i8TDeahlcThg8OFw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "dp-enterprise-riskscore",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "dQs4_-MHRSKbUFmfJarS1w",
+            "ServiceInfra_SSH" : "hfsO3frXT-SpVzFLROLx5A"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "si-batch",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "7iqjucVARWqLixYsFcFXCw",
+            "ServiceInfra_SSH" : "aeD4XPa6T8mm_uWoL3Trkg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "si-automation-utils",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "LEiExVs7QzSsLn6sOV2MWA",
+            "ServiceInfra_SSH" : "uVKz1QWnTNWyPsX1qoQsXQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnanalytics-model-training",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "9HLKCDRcQlKRogEgO1FcUQ",
+            "ServiceInfra_SSH" : "f1rtV-qmRYybmC8xcCHTCQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "malicious-activity-analysis",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "kR7T55x_R7OpHBUISJ0rHw",
+            "ServiceInfra_SSH" : "mqr2eyhfSbqQGrHmQK32FQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "hadoop-ipclassifier",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "YfAlBCAGTXeBzBhzKHmICQ",
+            "ServiceInfra_SSH" : "K_lEWK50QXeP12C3DKCYMw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "raw-event-drilldown",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "pdzdS7-oQVuZiOslhb8SMQ",
+            "ServiceInfra_SSH" : "_YsERQV6RfmXstWgS89gaA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnanalytics-events-microservice",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "flWnY3pPQLKrG17tHg4BWQ",
+            "ServiceInfra_SSH" : "uEVYDGeeRXydFe9-ql8swg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "stats-server",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "6g043B_jRoiTKF-UR5tb6w",
+            "ServiceInfra_SSH" : "iz49IXDYT3KCGFXsOInD6Q"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "si-ml-metadata",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "MlqHZ9oZQg-hjBFHcbDdXA",
+            "ServiceInfra_SSH" : "8Y1sJh70TgmML_ctOUM7XQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "si-serv",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "-rn3N9ZRRzeu5CR5Sbybbw",
+            "ServiceInfra_SSH" : "wrV1HyByT5O_z45PEJfxcw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "merlin",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "M0kow_JjTY2Rgqd7waJxYg",
+            "ServiceInfra_SSH" : "ZVBQuWe6QkKh8mS6AUji1A"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "content-scanner",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "oi3rFniMRtidnVJ6s8B4vQ",
+            "ServiceInfra_SSH" : "UTr-a554SnqIv1agR68J-A"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "streaming_analytics",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "-GsgaSOGROuHvs0KjMKkBw",
+            "ServiceInfra_SSH" : "DIs9OEVZS1-s4tBd5HIMcw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnproxyapi",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "P7XUAOkwQfKPU_mgiQ0Khg",
+            "ServiceInfra_SSH" : "lMXZIfUCSeCqRGL8POjcWA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "shnproxy",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "ozuzckbeQFWWflSDZpDUDQ",
+            "ServiceInfra_SSH" : "9luEsduCRDWspTADXVbNvQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "shneventprocessor",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "zmUxhemoTn2p6dNeVwygow",
+            "ServiceInfra_SSH" : "Gz1e8VZ9Skiqg6DFOHFoEA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "pivot",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "fsum0HU8R4ObLMwH-XXpVg",
+            "ServiceInfra_SSH" : "vHBsUTp6QF2v8mzQYilOGQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : false,
+      "pipelineStageElements" : [
+        {
+          "name" : "dashboard",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "B1U3sNtrSP-rGQ60sF0HfQ",
+            "ServiceInfra_SSH" : "kDRpPgURTVmGhTu6Qn13dw"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "neo-app",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "fvCFKvmuSPqrwNiiPn_4zg",
+            "ServiceInfra_SSH" : "NeK7t-jwQ5uaycADJbq7JQ"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "policy-management",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "CAidC-vXSe2OvJMPXllZVg",
+            "ServiceInfra_SSH" : "m_TC60_uRU-3TUY1CV_l9g"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "setup-and-configuration",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "6mQR9Rq1TwqexOXvnzdzUQ",
+            "ServiceInfra_SSH" : "YHLqAOeUQxqDNzkofc__zg"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    },
+    {
+      "parallel" : true,
+      "pipelineStageElements" : [
+        {
+          "name" : "usage-analytics",
+          "type" : "ENV_STATE",
+          "properties" : {
+            "envId" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "workflowId" : "7-fkKHxHS7SsDeWbRa2zCw"
+          },
+          "workflowVariables" : {
+            "Environment" : "RIDY9CCyScmx1wLkz3j1Dw",
+            "Service" : "A7hs7r_wRhSM2u6u_Xc6dA",
+            "ServiceInfra_SSH" : "q5m9pEkwRRWXz1IJHZmxLA"
+          },
+          "valid" : true
+        }
+      ],
+      "valid" : true
+    }
+  ],
+  "appId" : "BB1xpV5rSmGHersn1KwCnA",
+  "createdBy" : {
+    "uuid" : "ZQe7_SyeSDmI90r42rLVsA",
+    "name" : "User Name",
+    "email" : "abc@sdef.com"
+  },
+  "createdAt" : 1516230090707,
+  "lastUpdatedBy" : {
+    "uuid" : "ZQe7_SyeSDmI90r42rLVsA",
+    "name" : "User Name",
+    "email" : "abc@def.com"
+  },
+  "lastUpdatedAt" : 1516231870887
+}
