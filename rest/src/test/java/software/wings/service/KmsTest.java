@@ -187,6 +187,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 3, successes = 1)
   public void saveAndEditConfig() throws IOException {
     String accountId = UUID.randomUUID().toString();
     String name = UUID.randomUUID().toString();
