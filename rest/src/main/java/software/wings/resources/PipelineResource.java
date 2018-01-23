@@ -12,6 +12,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.EntityType;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
@@ -125,6 +126,23 @@ public class PipelineResource {
     pipeline.setAppId(appId);
     pipeline.setUuid(pipelineId);
     return new RestResponse<>(pipelineService.updatePipeline(pipeline));
+  }
+
+  /**
+   * Update.
+   *
+   * @param appId             the app id
+   * @param workflowId        the orchestration id
+   * @param failureStrategies the failureStrategies
+   * @return the rest response
+   */
+  @PUT
+  @Path("{pipelineId}/failure-strategies")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<FailureStrategy>> updateFailureStrategies(@QueryParam("appId") String appId,
+      @PathParam("pipelineId") String pipelineId, List<FailureStrategy> failureStrategies) {
+    return new RestResponse<>(pipelineService.updateFailureStrategies(appId, pipelineId, failureStrategies));
   }
 
   @POST
