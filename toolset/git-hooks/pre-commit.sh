@@ -6,7 +6,7 @@
 
 pushd `dirname $0` > /dev/null && cd ../.. && BASEDIR=$(pwd -L) && popd > /dev/null
 
-CHECK_CONFLICTS=hook.pre-commit.check_conflicts
+CHECK_CONFLICTS=hook.pre-commit.check-conflicts
 if [ "`git config $CHECK_CONFLICTS`" == "false" ]
 then
     echo '\033[0;31m' checking left conflicts is disabled - to enable: '\033[0;37m'git config --unset $CHECK_CONFLICTS '\033[0m'
@@ -37,7 +37,7 @@ else
     then
         against=HEAD
     else
-#Initial commit : diff against an empty tree object
+        #Initial commit : diff against an empty tree object
         against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
     fi
 
