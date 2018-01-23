@@ -81,6 +81,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.collections.MapUtils;
@@ -144,6 +145,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
 import software.wings.service.intfc.AccountService;
@@ -240,6 +242,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
   @Inject private TriggerService triggerService;
+
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -1166,36 +1170,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
-  @Override
-  public boolean deleteWorkflow(String appId, String workflowId) {
-    return deleteWorkflow(appId, workflowId, false);
-  }
-
-  private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete) {
-    Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
-    if (workflow == null) {
-      return true;
-    }
-
-    if (!forceDelete) {
-      ensureWorkflowSafeToDelete(workflow);
-    }
-
-    if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
-      return false;
-    }
-
-    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
-
-    return true;
-  }
-
   private void ensureWorkflowSafeToDelete(Workflow workflow) {
     List<Pipeline> pipelines = pipelineService.listPipelines(
         aPageRequest()
@@ -1228,6 +1202,42 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .addParam("message",
             String.format(
                 "Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+  }
+
+  private boolean pruneWorkflow(String appId, String workflowId) {
+    PruneEntityJob.addDefaultJob(jobScheduler, Workflow.class, appId, workflowId);
+
+    if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public boolean deleteWorkflow(String appId, String workflowId) {
+    return deleteWorkflow(appId, workflowId, false);
+  }
+
+  private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete) {
+    Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
+    if (workflow == null) {
+      return true;
+    }
+
+    if (!forceDelete) {
+      ensureWorkflowSafeToDelete(workflow);
+    }
+
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, ChangeType.DELETE));
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
+
+    return pruneWorkflow(appId, workflowId);
   }
 
   /**
@@ -1283,8 +1293,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<Key<Workflow>> workflowKeys =
         wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asKeyList();
     for (Key key : workflowKeys) {
-      // TODO: just prune the object
-      deleteWorkflow(appId, (String) key.getId(), true);
+      pruneWorkflow(appId, (String) key.getId());
     }
 
     // prune state machines
@@ -1299,7 +1308,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .field("envId")
         .equal(envId)
         .asKeyList()
-        .forEach(key -> deleteWorkflow(appId, key.getId().toString()));
+        .forEach(key -> pruneWorkflow(appId, key.getId().toString()));
   }
 
   private Workflow createDefaultSimpleWorkflow(String appId, String envId) {

@@ -24,6 +24,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
@@ -142,7 +143,7 @@ public class PruneEntityJob implements Job {
         pipelineService.pruneDescendingEntities(appId, entityId);
       } else if (className.equals(Service.class.getCanonicalName())) {
         serviceResourceService.pruneDescendingEntities(appId, entityId);
-      } else if (className.equals(WorkflowService.class.getCanonicalName())) {
+      } else if (className.equals(Workflow.class.getCanonicalName())) {
         workflowService.pruneDescendingEntities(appId, entityId);
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
