@@ -7,6 +7,7 @@ import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
@@ -72,9 +73,11 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -125,6 +128,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -133,6 +137,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -182,8 +187,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private YamlDirectoryService yamlDirectoryService;
-  @Mock private ArtifactStreamService arifactStreamService;
+  @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStream artifactStream;
+  @Mock private TriggerService triggerService;
+
+  @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
     @Override
@@ -508,6 +516,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowService.deleteWorkflow(APP_ID, uuid);
     workflow = workflowService.readWorkflow(APP_ID, uuid, null);
     assertThat(workflow).isNull();
+  }
+
+  @Test
+  public void shouldPruneDescendingObjects() {
+    workflowService.pruneDescendingEntities(APP_ID, WORKFLOW_ID);
+    InOrder inOrder = inOrder(triggerService);
+    inOrder.verify(triggerService).pruneByWorkflow(APP_ID, WORKFLOW_ID);
   }
 
   @Test
@@ -2991,7 +3006,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldAwsCodeDeployStateDefaults() {
-    when(arifactStreamService.getArtifactStreamsForService(APP_ID, SERVICE_ID)).thenReturn(asList(artifactStream));
+    when(artifactStreamService.getArtifactStreamsForService(APP_ID, SERVICE_ID)).thenReturn(asList(artifactStream));
     when(artifactStream.getArtifactStreamType()).thenReturn(ArtifactStreamType.AMAZON_S3.name());
     Map<String, String> defaults = workflowService.getStateDefaults(APP_ID, SERVICE_ID, StateType.AWS_CODEDEPLOY_STATE);
     assertThat(defaults).isNotEmpty();
