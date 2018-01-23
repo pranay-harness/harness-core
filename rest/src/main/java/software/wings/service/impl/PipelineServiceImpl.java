@@ -32,6 +32,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
@@ -160,6 +161,7 @@ public class PipelineServiceImpl implements PipelineService {
     setUnset(ops, "description", pipeline.getDescription());
     setUnset(ops, "name", pipeline.getName());
     setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
+    setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
 
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
                                 .field("appId")
@@ -186,6 +188,17 @@ public class PipelineServiceImpl implements PipelineService {
     });
 
     return pipeline;
+  }
+
+  @Override
+  public List<FailureStrategy> updateFailureStrategies(
+      String appId, String pipelineId, List<FailureStrategy> failureStrategies) {
+    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    notNullCheck("pipeline", savedPipeline);
+
+    savedPipeline.setFailureStrategies(failureStrategies);
+    Pipeline pipeline = updatePipeline(savedPipeline);
+    return pipeline.getFailureStrategies();
   }
 
   // TODO: Add unit tests for this function

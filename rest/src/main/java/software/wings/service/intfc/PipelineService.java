@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -61,6 +62,18 @@ public interface PipelineService extends OwnedByApplication {
    * @return the pipeline
    */
   @ValidationGroups(Update.class) Pipeline updatePipeline(@Valid Pipeline pipeline);
+
+  /**
+   * Update pipeline failure strategies.
+   *
+   * @param appId the app id
+   * @param pipelineId the pipeline id
+   * @param failureStrategies the new set of failureStrategies
+   * @return the pipeline
+   */
+  @ValidationGroups(Update.class)
+  List<FailureStrategy> updateFailureStrategies(
+      String appId, String pipelineId, List<FailureStrategy> failureStrategies);
 
   /**
    * Delete pipeline boolean.
