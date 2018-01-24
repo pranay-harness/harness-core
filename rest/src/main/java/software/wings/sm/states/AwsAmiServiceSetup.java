@@ -76,6 +76,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class AwsAmiServiceSetup extends State {
   protected static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
+  protected static final String NAME_TAG = "Name";
+  protected static final String AUTOSCALING_GROUP_RESOURCE_TYPE = "auto-scaling-group";
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
 
   private String autoScalingGroupName;
@@ -391,28 +393,28 @@ public class AwsAmiServiceSetup extends State {
     return createLaunchConfigurationRequest;
   }
 
-  private CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(
+  protected CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(
       AwsAmiInfrastructureMapping infrastructureMapping, String newAutoScalingGroupName,
       AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision) {
-    List<Tag> tags = baseAutoScalingGroup.getTags()
-                         .stream()
-                         .filter(tagDescription
-                             -> !asList(HARNESS_AUTOSCALING_GROUP_TAG, "Name")
-                                     .contains(tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG)))
-                         .map(tagDescription
-                             -> new Tag()
-                                    .withKey(tagDescription.getKey())
-                                    .withValue(tagDescription.getValue())
-                                    .withPropagateAtLaunch(tagDescription.getPropagateAtLaunch())
-                                    .withResourceType(tagDescription.getResourceType()))
-                         .collect(toList());
+    List<Tag> tags =
+        baseAutoScalingGroup.getTags()
+            .stream()
+            .filter(
+                tagDescription -> !asList(HARNESS_AUTOSCALING_GROUP_TAG, NAME_TAG).contains(tagDescription.getKey()))
+            .map(tagDescription
+                -> new Tag()
+                       .withKey(tagDescription.getKey())
+                       .withValue(tagDescription.getValue())
+                       .withPropagateAtLaunch(tagDescription.getPropagateAtLaunch())
+                       .withResourceType(tagDescription.getResourceType()))
+            .collect(toList());
 
     tags.add(new Tag()
                  .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
                  .withValue(AsgConvention.getRevisionTagValue(infrastructureMapping.getUuid(), harnessRevision))
                  .withPropagateAtLaunch(true)
-                 .withResourceType("auto-scaling-group"));
-    tags.add(new Tag().withKey("Name").withValue(newAutoScalingGroupName).withPropagateAtLaunch(true));
+                 .withResourceType(AUTOSCALING_GROUP_RESOURCE_TYPE));
+    tags.add(new Tag().withKey(NAME_TAG).withValue(newAutoScalingGroupName).withPropagateAtLaunch(true));
 
     CreateAutoScalingGroupRequest createAutoScalingGroupRequest =
         new CreateAutoScalingGroupRequest()
