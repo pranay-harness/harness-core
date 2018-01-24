@@ -20,6 +20,9 @@ import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
+import static software.wings.sm.states.AwsAmiServiceSetup.AUTOSCALING_GROUP_RESOURCE_TYPE;
+import static software.wings.sm.states.AwsAmiServiceSetup.HARNESS_AUTOSCALING_GROUP_TAG;
+import static software.wings.sm.states.AwsAmiServiceSetup.NAME_TAG;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -40,7 +43,10 @@ import com.google.common.collect.Lists;
 
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.Tag;
+import com.amazonaws.services.autoscaling.model.TagDescription;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -85,6 +91,7 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -139,6 +146,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
                                                     .withAutoScalingGroupName("TestAutoscalingGroup")
                                                     .withRegion("us-east1")
                                                     .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                    .withUuid("TestUUID")
                                                     .build();
 
   @Before
@@ -238,5 +246,79 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     assertThat(serviceElement.getInstanceCount()).isEqualTo(0);
     assertThat(serviceElement.getResizeStrategy()).isNull();
     assertThat(serviceElement.getCommandName()).isNull();
+  }
+
+  @Test
+  public void testCreateNewAutoScalingGroupRequestWithZeroTags() {
+    AutoScalingGroup baseAutoScalingGroup = new AutoScalingGroup();
+    Collection<TagDescription> tags = new ArrayList<TagDescription>();
+    baseAutoScalingGroup.setTags(tags);
+
+    CreateAutoScalingGroupRequest request = amiServiceSetup.createNewAutoScalingGroupRequest(
+        (AwsAmiInfrastructureMapping) infrastructureMapping, "NewAutoScalingGroup", baseAutoScalingGroup, 10);
+
+    assertThat(request.getTags().size()).isEqualTo(2);
+    Tag autoScalingGroupTag = request.getTags().get(0);
+    assertThat(autoScalingGroupTag.getKey()).isEqualTo(HARNESS_AUTOSCALING_GROUP_TAG);
+    assertThat(autoScalingGroupTag.getValue()).isEqualTo("TestUUID__10");
+    assertThat(autoScalingGroupTag.isPropagateAtLaunch()).isTrue();
+    assertThat(autoScalingGroupTag.getResourceType()).isEqualTo(AUTOSCALING_GROUP_RESOURCE_TYPE);
+
+    Tag nameTag = request.getTags().get(1);
+    assertThat(nameTag.getKey()).isEqualTo(NAME_TAG);
+    assertThat(nameTag.getValue()).isEqualTo("NewAutoScalingGroup");
+    assertThat(nameTag.isPropagateAtLaunch()).isTrue();
+  }
+
+  @Test
+  public void testCreateNewAutocalingGroupRequestWithAutoScalingAndNameTags() {
+    AutoScalingGroup baseAutoScalingGroup = new AutoScalingGroup();
+    baseAutoScalingGroup.getTags().add(
+        new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("OldValue"));
+    baseAutoScalingGroup.getTags().add(new TagDescription().withKey(NAME_TAG).withValue("OldName"));
+
+    CreateAutoScalingGroupRequest request = amiServiceSetup.createNewAutoScalingGroupRequest(
+        (AwsAmiInfrastructureMapping) infrastructureMapping, "NewAutoScalingGroup", baseAutoScalingGroup, 10);
+
+    assertThat(request.getTags().size()).isEqualTo(2);
+    Tag autoScalingGroupTag = request.getTags().get(0);
+    assertThat(autoScalingGroupTag.getKey()).isEqualTo(HARNESS_AUTOSCALING_GROUP_TAG);
+    assertThat(autoScalingGroupTag.getValue()).isEqualTo("TestUUID__10");
+    assertThat(autoScalingGroupTag.isPropagateAtLaunch()).isTrue();
+    assertThat(autoScalingGroupTag.getResourceType()).isEqualTo(AUTOSCALING_GROUP_RESOURCE_TYPE);
+
+    Tag nameTag = request.getTags().get(1);
+    assertThat(nameTag.getKey()).isEqualTo(NAME_TAG);
+    assertThat(nameTag.getValue()).isEqualTo("NewAutoScalingGroup");
+    assertThat(nameTag.isPropagateAtLaunch()).isTrue();
+  }
+
+  @Test
+  public void testCreateNewAutocalingGroupRequestWithExtraTags() {
+    AutoScalingGroup baseAutoScalingGroup = new AutoScalingGroup();
+    baseAutoScalingGroup.getTags().add(
+        new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("OldValue"));
+    baseAutoScalingGroup.getTags().add(new TagDescription().withKey(NAME_TAG).withValue("OldName"));
+    baseAutoScalingGroup.getTags().add(new TagDescription().withKey("TestKey").withValue("TestValue"));
+
+    CreateAutoScalingGroupRequest request = amiServiceSetup.createNewAutoScalingGroupRequest(
+        (AwsAmiInfrastructureMapping) infrastructureMapping, "NewAutoScalingGroup", baseAutoScalingGroup, 10);
+
+    assertThat(request.getTags().size()).isEqualTo(3);
+
+    Tag testTag = request.getTags().get(0);
+    assertThat(testTag.getKey()).isEqualTo("TestKey");
+    assertThat(testTag.getValue()).isEqualTo("TestValue");
+
+    Tag autoScalingGroupTag = request.getTags().get(1);
+    assertThat(autoScalingGroupTag.getKey()).isEqualTo(HARNESS_AUTOSCALING_GROUP_TAG);
+    assertThat(autoScalingGroupTag.getValue()).isEqualTo("TestUUID__10");
+    assertThat(autoScalingGroupTag.isPropagateAtLaunch()).isTrue();
+    assertThat(autoScalingGroupTag.getResourceType()).isEqualTo(AUTOSCALING_GROUP_RESOURCE_TYPE);
+
+    Tag nameTag = request.getTags().get(2);
+    assertThat(nameTag.getKey()).isEqualTo(NAME_TAG);
+    assertThat(nameTag.getValue()).isEqualTo("NewAutoScalingGroup");
+    assertThat(nameTag.isPropagateAtLaunch()).isTrue();
   }
 }
