@@ -242,4 +242,16 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     assertThat(expressionEvaluator.substitute("${BA1BA}", context))
         .isEqualTo("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
   }
+
+  @Test
+  public void shouldBeOkWithSameVarsFromDifferentIterations() {
+    Map<String, Object> context = new HashMap<String, Object>() {
+      {
+        put("A", "${B}");
+        put("B", "${C}");
+        put("C", "done");
+      }
+    };
+    assertThat(expressionEvaluator.substitute("${A}, ${B}", context)).isEqualTo("done, done");
+  }
 }
