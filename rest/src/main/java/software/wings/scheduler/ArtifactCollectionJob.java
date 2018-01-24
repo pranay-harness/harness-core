@@ -22,7 +22,6 @@ import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
-import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 import static software.wings.utils.ArtifactType.RPM;
 
 import com.google.common.collect.ImmutableMap;
@@ -126,7 +125,11 @@ public class ArtifactCollectionJob implements Job {
     try {
       artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStream);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(BACKGROUND_JOB);
+      // TODO: temporary suppress the errors coming from here - they are too many:
+      logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, exception);
+
+      // This is the way we should print this after most of the cases are resolved
+      // exception.logProcessedMessages(BACKGROUND_JOB);
     } catch (Exception e) {
       logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, e);
     }
