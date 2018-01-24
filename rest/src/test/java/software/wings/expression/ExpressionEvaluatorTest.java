@@ -14,6 +14,7 @@ import lombok.Value;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.infrastructure.Host;
+import software.wings.exception.WingsException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -126,7 +127,7 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
       }
     };
     assertThatThrownBy(() -> expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context))
-        .isInstanceOf(IllegalStateException.class);
+        .isInstanceOf(WingsException.class);
   }
 
   @Test
@@ -253,5 +254,16 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
       }
     };
     assertThat(expressionEvaluator.substitute("${A}, ${B}", context)).isEqualTo("done, done");
+  }
+
+  @Test
+  public void shouldDetectExponentialGrowth() {
+    Map<String, Object> context = new HashMap<String, Object>() {
+      {
+        put("B", "${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A}");
+        put("A", "${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B}");
+      }
+    };
+    assertThatThrownBy(() -> expressionEvaluator.substitute("${A}", context)).isInstanceOf(WingsException.class);
   }
 }

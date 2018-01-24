@@ -35,6 +35,9 @@ public class ExpressionEvaluator {
 
   private JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
   private RegexFunctor regexFunctor = new RegexFunctor();
+  private static int EXPANSION_LIMIT = 100 * 1024;
+  private static int EXPANSION_MULTIPLIER_LIMIT = 10;
+  private static int DEPTH_LIMIT = 10;
 
   /**
    * The constant wingsVariablePattern.
@@ -119,7 +122,8 @@ public class ExpressionEvaluator {
     substitutor.setVariableResolver(variableResolver);
 
     String result = expression;
-    for (int i = 0; i < 10; i++) {
+    int limit = Math.max(EXPANSION_LIMIT, EXPANSION_MULTIPLIER_LIMIT * expression.length());
+    for (int i = 0; i < DEPTH_LIMIT; i++) {
       String original = result;
       result = substitutor.replace(new StringBuffer(original));
 
@@ -141,9 +145,14 @@ public class ExpressionEvaluator {
       if (result.equals(original)) {
         return result;
       }
+      if (result.length() > limit) {
+        throw new WingsException(INVALID_ARGUMENT)
+            .addParam("args", "Interpretation grows exponentially for: " + expression);
+      }
     }
 
-    throw new IllegalStateException("Infinite loop or too deep indirection in property interpretation.");
+    throw new WingsException(INVALID_ARGUMENT)
+        .addParam("args", "Infinite loop or too deep indirection in property interpretation for: " + expression);
   }
 
   public static void isValidVariableName(String name) {
