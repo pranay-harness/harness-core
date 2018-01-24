@@ -5,7 +5,7 @@ CARD_VIEW_SORT_BY:
       value: alphabeticalAscending
     - name: Alphabetical Descending
       value: alphabeticalDescending
-      
+
 ARTIFACT_TYPE:
     - name: Docker Image
       value: DOCKER
@@ -400,3 +400,11 @@ CONNECTOR_TYPES:
     - name: ELB
       value: ELB
 
+
+AMI_RESOURCE_ATTRIBUTES_FILTER:
+    - name: AMI ID
+      value: image-id
+    - name: AMI Name
+      value: name
+    - name: Platform
+      value: platform
