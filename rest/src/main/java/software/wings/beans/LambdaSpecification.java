@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static org.apache.commons.lang3.StringUtils.trim;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,7 +11,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import software.wings.utils.Misc;
 import software.wings.yaml.BaseYaml;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class LambdaSpecification extends DeploymentSpecification {
     private Integer memorySize = 128;
     private Integer timeout = 3;
     public String getRuntime() {
-      return Misc.trim(runtime);
+      return trim(runtime);
     }
 
     @Data
@@ -77,13 +78,13 @@ public class LambdaSpecification extends DeploymentSpecification {
     @NotBlank private String handler;
 
     public String getRuntime() {
-      return Misc.trim(runtime);
+      return trim(runtime);
     }
     public String getFunctionName() {
-      return Misc.trim(functionName);
+      return trim(functionName);
     }
     public String getHandler() {
-      return Misc.trim(handler);
+      return trim(handler);
     }
 
     @Data
