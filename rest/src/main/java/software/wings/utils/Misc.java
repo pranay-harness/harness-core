@@ -118,10 +118,6 @@ public class Misc {
     return false;
   }
 
-  public static String trim(String key) {
-    return key != null ? key.trim() : null;
-  }
-
   public static void logAllMessages(Exception ex, ExecutionLogCallback executionLogCallback) {
     int i = 0;
     Throwable t = ex;

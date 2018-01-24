@@ -93,6 +93,7 @@
 
             <property name="staticImports" value="org.apache.commons.lang3.StringUtils.isBlank"/>
             <property name="staticImports" value="org.apache.commons.lang3.StringUtils.isNotBlank"/>
+            <property name="staticImports" value="org.apache.commons.lang3.StringUtils.trim"/>
         </module>
 
         <!-- ERROR PREVENTION -->
