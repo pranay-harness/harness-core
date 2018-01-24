@@ -119,11 +119,8 @@ public class ExpressionEvaluator {
     substitutor.setVariableResolver(variableResolver);
 
     String result = expression;
-    String original = "";
-    while (!original.equals(result)) {
-      original = result;
-
-      variableResolver.startSession();
+    for (int i = 0; i < 10; i++) {
+      String original = result;
       result = substitutor.replace(new StringBuffer(original));
 
       for (;;) {
@@ -141,8 +138,12 @@ public class ExpressionEvaluator {
         matcher.appendTail(sb);
         result = sb.toString();
       }
+      if (result.equals(original)) {
+        return result;
+      }
     }
-    return result;
+
+    throw new IllegalStateException("Infinite loop or too deep indirection in property interpretation.");
   }
 
   public static void isValidVariableName(String name) {
