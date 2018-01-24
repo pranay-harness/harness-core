@@ -403,8 +403,8 @@ CONNECTOR_TYPES:
 
 AMI_RESOURCE_ATTRIBUTES_FILTER:
     - name: AMI ID
-      value: image-id
+      value: ami-image-id
     - name: AMI Name
-      value: name
+      value: ami-name
     - name: Platform
-      value: platform
+      value: ami-platform
