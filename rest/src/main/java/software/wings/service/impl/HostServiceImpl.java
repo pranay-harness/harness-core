@@ -30,6 +30,7 @@ import software.wings.service.intfc.ownership.OwnedByHost;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -176,7 +177,7 @@ public class HostServiceImpl implements HostService {
       return true;
     }
 
-    PruneEntityJob.addDefaultJob(jobScheduler, Host.class, host.getAppId(), host.getUuid());
+    PruneEntityJob.addDefaultJob(jobScheduler, Host.class, host.getAppId(), host.getUuid(), Duration.ofSeconds(5));
     return wingsPersistence.delete(host);
   }
 

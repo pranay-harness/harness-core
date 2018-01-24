@@ -39,6 +39,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -66,11 +67,10 @@ public class PruneEntityJob implements Job {
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
-  public static Trigger defaultTrigger(String id) {
-    // Run the job in about 5 seconds, we do not want to run
-    // it without given enough time to the entity to be deleted.
+  public static Trigger defaultTrigger(String id, Duration delay) {
+    // Run the job with daley. This can be used to give enough time the entity to be deleted.
     Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.SECOND, 5);
+    calendar.add(Calendar.MILLISECOND, (int) delay.toMillis());
     return TriggerBuilder.newTrigger()
         .withIdentity(id, GROUP)
         .startAt(calendar.getTime())
@@ -78,7 +78,8 @@ public class PruneEntityJob implements Job {
         .build();
   }
 
-  public static void addDefaultJob(QuartzScheduler jobScheduler, Class cls, String appId, String entityId) {
+  public static void addDefaultJob(
+      QuartzScheduler jobScheduler, Class cls, String appId, String entityId, Duration delay) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
     jobScheduler.deleteJob(entityId, GROUP);
 
@@ -89,7 +90,7 @@ public class PruneEntityJob implements Job {
                             .usingJobData(ENTITY_ID_KEY, entityId)
                             .build();
 
-    org.quartz.Trigger trigger = defaultTrigger(entityId);
+    org.quartz.Trigger trigger = defaultTrigger(entityId, delay);
 
     jobScheduler.scheduleJob(details, trigger);
   }

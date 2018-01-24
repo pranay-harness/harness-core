@@ -66,6 +66,7 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -296,7 +297,7 @@ public class AppServiceImpl implements AppService {
     yamlChangeSetHelper.applicationYamlChange(application, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Application.class, appId, appId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Application.class, appId, appId, Duration.ofSeconds(5));
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting

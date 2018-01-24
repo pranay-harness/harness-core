@@ -38,6 +38,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ownership.OwnedByActivity;
 import software.wings.sm.ExecutionStatus;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -156,7 +157,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public boolean delete(String appId, String activityId) {
-    PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId, Duration.ofSeconds(5));
 
     return wingsPersistence.delete(wingsPersistence.createQuery(Activity.class)
                                        .field(Activity.APP_ID_KEY)

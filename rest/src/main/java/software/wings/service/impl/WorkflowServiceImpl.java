@@ -181,6 +181,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1205,7 +1206,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private boolean pruneWorkflow(String appId, String workflowId) {
-    PruneEntityJob.addDefaultJob(jobScheduler, Workflow.class, appId, workflowId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Workflow.class, appId, workflowId, Duration.ofSeconds(5));
 
     if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
       return false;
