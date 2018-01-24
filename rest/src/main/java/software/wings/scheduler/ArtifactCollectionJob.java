@@ -1,6 +1,8 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
@@ -52,7 +54,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.MavenVersionCompareUtil;
-import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -318,7 +319,7 @@ public class ArtifactCollectionJob implements Job {
   }
 
   private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    Service service = getService(appId, artifactStream);
+    Service service = obtainService(appId, artifactStream);
     ArtifactType artifactType = service.getArtifactType();
     if (artifactType.equals(ArtifactType.DOCKER)) {
       collectArtifactoryDockerArtifacts(appId, artifactStream, newArtifacts);
@@ -439,7 +440,7 @@ public class ArtifactCollectionJob implements Job {
   }
 
   private void collectNexusArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    Service service = getService(appId, artifactStream);
+    Service service = obtainService(appId, artifactStream);
     ArtifactType artifactType = service.getArtifactType();
     if (artifactType.equals(ArtifactType.DOCKER)) {
       collectNexusMavenArtifacts(appId, artifactStream, newArtifacts);
@@ -520,9 +521,14 @@ public class ArtifactCollectionJob implements Job {
     }
   }
 
-  private Service getService(String appId, ArtifactStream artifactStream) {
+  public Service obtainService(String appId, ArtifactStream artifactStream) {
     Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
-    Validator.notNullCheck("Service", service);
+    if (service == null) {
+      PruneEntityJob.addDefaultJob(
+          jobScheduler, Service.class, appId, artifactStream.getServiceId(), Duration.ofMillis(0));
+      throw new WingsException(GENERAL_ERROR)
+          .addParam("args", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
+    }
     return service;
   }
 

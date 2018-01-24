@@ -57,6 +57,7 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -243,7 +244,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
 
-    PruneEntityJob.addDefaultJob(jobScheduler, ArtifactStream.class, appId, artifactStreamId);
+    PruneEntityJob.addDefaultJob(jobScheduler, ArtifactStream.class, appId, artifactStreamId, Duration.ofSeconds(5));
 
     return wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
                                        .field(ID_KEY)

@@ -17,6 +17,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
+import java.time.Duration;
+
 public class PruneFileJob implements Job {
   private static Logger logger = LoggerFactory.getLogger(PruneFileJob.class);
 
@@ -43,7 +45,7 @@ public class PruneFileJob implements Job {
                             .usingJobData(PruneFileJob.BUCKET_KEY, fileBucket.name())
                             .build();
 
-    Trigger trigger = PruneEntityJob.defaultTrigger(entityId);
+    Trigger trigger = PruneEntityJob.defaultTrigger(entityId, Duration.ofSeconds(5));
 
     jobScheduler.scheduleJob(details, trigger);
   }

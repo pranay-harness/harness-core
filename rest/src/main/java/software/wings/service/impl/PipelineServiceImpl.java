@@ -66,6 +66,7 @@ import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -254,7 +255,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId);
+    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId, Duration.ofSeconds(5));
 
     return wingsPersistence.delete(pipeline);
   }

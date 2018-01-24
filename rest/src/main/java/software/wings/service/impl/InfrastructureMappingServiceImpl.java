@@ -115,6 +115,7 @@ import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -561,7 +562,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     saveYamlChangeSet(infrastructureMapping, ChangeType.DELETE);
 
-    PruneEntityJob.addDefaultJob(jobScheduler, InfrastructureMapping.class, appId, infraMappingId);
+    PruneEntityJob.addDefaultJob(
+        jobScheduler, InfrastructureMapping.class, appId, infraMappingId, Duration.ofSeconds(5));
 
     wingsPersistence.delete(infrastructureMapping);
   }

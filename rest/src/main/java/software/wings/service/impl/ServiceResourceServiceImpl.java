@@ -103,6 +103,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -475,7 +476,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     yamlChangeSetHelper.serviceYamlChange(service, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Service.class, service.getAppId(), service.getUuid());
+    PruneEntityJob.addDefaultJob(
+        jobScheduler, Service.class, service.getAppId(), service.getUuid(), Duration.ofSeconds(5));
 
     // safe to delete
     if (wingsPersistence.delete(Service.class, service.getUuid())) {

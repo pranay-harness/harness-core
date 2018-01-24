@@ -74,6 +74,7 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -325,7 +326,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     yamlChangeSetHelper.environmentYamlChange(environment, ChangeType.DELETE);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Environment.class, environment.getAppId(), environment.getUuid());
+    PruneEntityJob.addDefaultJob(
+        jobScheduler, Environment.class, environment.getAppId(), environment.getUuid(), Duration.ofSeconds(5));
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
