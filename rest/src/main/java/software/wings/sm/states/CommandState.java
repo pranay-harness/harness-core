@@ -307,6 +307,12 @@ public class CommandState extends State {
       if (artifact != null) {
         commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+        // Observed NPE in alerts
+        if (artifactStream == null) {
+          throw new StateExecutionException(String.format(
+              "Unable to find artifact stream for service %s, artifact %s", service.getName(), artifact.getUuid()));
+        }
+
         if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
             || artifactStream.getArtifactStreamType().equals(ECR.name())
             || artifactStream.getArtifactStreamType().equals(GCR.name())) {
