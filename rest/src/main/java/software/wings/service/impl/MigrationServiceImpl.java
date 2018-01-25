@@ -50,11 +50,10 @@ public class MigrationServiceImpl implements MigrationService {
         for (int i = schema.getVersion() + 1; i <= maxVersion; i++) {
           logger.info("[Migration] - Migrating to version {}...", i);
           injector.getInstance(migrations.get(i)).migrate();
+          schema.setVersion(i);
+          wingsPersistence.save(schema);
         }
         logger.info("[Migration] - Migration complete");
-
-        schema.setVersion(maxVersion);
-        wingsPersistence.save(schema);
       } else {
         logger.info("[Migration] - Schema is up to date");
       }
