@@ -13,6 +13,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SimpleScheduleBuilder;
+import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
@@ -68,14 +69,17 @@ public class PruneEntityJob implements Job {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   public static Trigger defaultTrigger(String id, Duration delay) {
-    // Run the job with daley. This can be used to give enough time the entity to be deleted.
-    Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.MILLISECOND, (int) delay.toMillis());
-    return TriggerBuilder.newTrigger()
-        .withIdentity(id, GROUP)
-        .startAt(calendar.getTime())
-        .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).withRepeatCount(24))
-        .build();
+    final TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger().withIdentity(id, GROUP).withSchedule(
+        SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).withRepeatCount(24));
+
+    if (delay.toMillis() > 5) {
+      // Run the job with daley. This can be used to give enough time the entity to be deleted.
+      Calendar calendar = Calendar.getInstance();
+      calendar.add(Calendar.MILLISECOND, (int) delay.toMillis());
+      builder.startAt(calendar.getTime());
+    }
+
+    return builder.build();
   }
 
   public static void addDefaultJob(
