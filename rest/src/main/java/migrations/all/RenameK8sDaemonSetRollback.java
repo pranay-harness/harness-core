@@ -46,7 +46,6 @@ public class RenameK8sDaemonSetRollback implements Migration {
       return;
     }
     logger.info("Updating {} applications.", apps.size());
-    StringBuilder result = new StringBuilder();
     for (Application app : apps) {
       List<Workflow> workflows =
           workflowService
@@ -80,7 +79,7 @@ public class RenameK8sDaemonSetRollback implements Migration {
         }
         if (workflowModified) {
           try {
-            result.append("\n--- Workflow updated: ").append(workflow.getName());
+            logger.info("--- Workflow updated:{}", workflow.getName());
             workflowService.updateWorkflow(workflow);
             Thread.sleep(100);
           } catch (Exception e) {
@@ -91,17 +90,9 @@ public class RenameK8sDaemonSetRollback implements Migration {
         }
       }
       if (candidateCount > 0) {
-        result.append("\nApplication migrated: ")
-            .append(app.getUuid())
-            .append(" - ")
-            .append(app.getName())
-            .append(". Updated ")
-            .append(updateCount)
-            .append(" workflows out of ")
-            .append(candidateCount)
-            .append(" candidates.\n\n");
+        logger.info("Application migrated: {} - {}. Updated {} workflows out of {} candidates.", app.getUuid(),
+            app.getName(), updateCount, candidateCount);
       }
     }
-    logger.info(result.toString());
   }
 }
