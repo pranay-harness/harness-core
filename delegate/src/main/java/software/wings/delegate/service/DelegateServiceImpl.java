@@ -448,7 +448,7 @@ public class DelegateServiceImpl implements DelegateService {
       String delegateId = delegateResponse.getResource().getUuid();
       builder.withUuid(delegateId).withStatus(delegateResponse.getResource().getStatus());
       logger.info(
-          "Delegate registered with id {} and status {} ", delegateId, delegateResponse.getResource().getStatus());
+          "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
       return delegateId;
     }
   }
@@ -735,6 +735,7 @@ public class DelegateServiceImpl implements DelegateService {
             delegateTaskEvent.getAccountId());
         logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
+        logger.info("Currently executing async tasks: {}", currentlyExecutingFutures.keySet());
         return;
       }
 
