@@ -53,15 +53,17 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     if (preExecute.get()) {
       NotifyResponseData result = null;
       try {
+        logger.info("Started executing task {}", taskId);
         result = run(parameters);
+        logger.info("Completed executing task {}", taskId);
       } catch (Throwable t) {
-        logger.error("Unexpected error executing delegate task.", t);
+        logger.error("Unexpected error executing delegate task {}", taskId, t);
         result = anErrorNotifyResponseData().withErrorMessage(t.getMessage()).build();
       } finally {
         if (consumer != null) {
           if (result == null) {
-            logger.error("Null result executing delegate task.");
-            result = anErrorNotifyResponseData().withErrorMessage("No response from delegate task.").build();
+            logger.error("Null result executing delegate task {}", taskId);
+            result = anErrorNotifyResponseData().withErrorMessage("No response from delegate task " + taskId).build();
           }
           consumer.accept(result);
         }
