@@ -22,5 +22,5 @@ public interface AmiService {
    * @return
    */
   List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      Map<String, List<String>> tags, String platform, int maxNumberOfBuilds);
+      Map<String, List<String>> tags, Map<String, String> filterMap, int maxNumberOfBuilds);
 }

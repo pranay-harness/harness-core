@@ -25,6 +25,7 @@ public class ArtifactStreamAttributes {
   private boolean metadataOnly;
   private Map<String, List<String>> tags;
   private String platform;
+  private Map<String, String> filters;
 
   /**
    * Gets job name.
@@ -218,6 +219,14 @@ public class ArtifactStreamAttributes {
     this.platform = platform;
   }
 
+  public Map<String, String> getFilters() {
+    return filters;
+  }
+
+  public void setFilters(Map<String, String> filters) {
+    this.filters = filters;
+  }
+
   /**
    * The type Builder.
    */
@@ -235,6 +244,7 @@ public class ArtifactStreamAttributes {
     private String repositoryType;
     private boolean metadataOnly;
     private Map<String, List<String>> tags;
+    private Map<String, String> filters;
     private String platform;
 
     private Builder() {}
@@ -363,6 +373,11 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withFilters(Map<String, String> filters) {
+      this.filters = filters;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -383,7 +398,8 @@ public class ArtifactStreamAttributes {
           .withRepositoryType(repositoryType)
           .withMetadataOnly(metadataOnly)
           .withTags(tags)
-          .withPlatform(platform);
+          .withPlatform(platform)
+          .withFilters(filters);
     }
 
     /**
@@ -407,6 +423,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setMedatadataOnly(metadataOnly);
       artifactStreamAttributes.setTags(tags);
       artifactStreamAttributes.setPlatform(platform);
+      artifactStreamAttributes.setFilters(filters);
       return artifactStreamAttributes;
     }
   }

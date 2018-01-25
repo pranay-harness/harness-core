@@ -33,7 +33,7 @@ public class AmiBuildServiceImpl implements AmiBuildService {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.AMI.name());
     return amiService.getBuilds(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
-        artifactStreamAttributes.getTags(), artifactStreamAttributes.getPlatform(), 50);
+        artifactStreamAttributes.getTags(), artifactStreamAttributes.getFilters(), 50);
   }
 
   @Override
