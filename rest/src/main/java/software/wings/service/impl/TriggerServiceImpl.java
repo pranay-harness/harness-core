@@ -185,7 +185,7 @@ public class TriggerServiceImpl implements TriggerService {
     List<Trigger> triggers = wingsPersistence.createQuery(Trigger.class)
                                  .field(Trigger.APP_ID_KEY)
                                  .equal(appId)
-                                 .field("pipelineId")
+                                 .field("workflowId")
                                  .equal(pipelineId)
                                  .asList();
     triggers.forEach(trigger -> deleteTrigger(trigger.getUuid()));

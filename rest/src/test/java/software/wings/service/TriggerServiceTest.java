@@ -508,6 +508,26 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldDeleteTriggersForWorkflow() {
+    when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(workflowArtifactConditionTrigger);
+
+    Trigger trigger = triggerService.save(workflowArtifactConditionTrigger);
+    assertThat(trigger).isNotNull();
+    assertThat(trigger.getUuid()).isEqualTo(TRIGGER_ID);
+    assertThat(trigger.getAppId()).isEqualTo(APP_ID);
+    assertThat(trigger.getWorkflowId()).isEqualTo(WORKFLOW_ID);
+
+    when(query.asList()).thenReturn(singletonList(workflowArtifactConditionTrigger));
+    when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(workflowArtifactConditionTrigger);
+    when(wingsPersistence.delete(Trigger.class, TRIGGER_ID)).thenReturn(true);
+    when(wingsPersistence.query(any(), any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(workflowArtifactConditionTrigger)).build());
+
+    triggerService.pruneByWorkflow(APP_ID, WORKFLOW_ID);
+    verify(wingsPersistence, times(1)).delete(Trigger.class, TRIGGER_ID);
+  }
+
+  @Test
   public void shouldDeleteTriggersForArtifactStream() {
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(artifactConditionTrigger);
 
