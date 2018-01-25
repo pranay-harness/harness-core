@@ -8,6 +8,9 @@ import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -208,7 +211,9 @@ public class KubernetesContainerTask extends ContainerTask {
 
   private String fetchYamlConfig() {
     try {
-      return KubernetesHelper.toYaml(createReplicationController())
+      YAMLFactory yamlFactory = new YAMLFactory().configure(Feature.WRITE_DOC_START_MARKER, false);
+      ObjectMapper objectMapper = new ObjectMapper(yamlFactory);
+      return objectMapper.writeValueAsString(createReplicationController())
           .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);

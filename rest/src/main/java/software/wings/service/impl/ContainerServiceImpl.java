@@ -18,7 +18,9 @@ import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
@@ -120,7 +122,9 @@ public class ContainerServiceImpl implements ContainerService {
         kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
     if (daemonSet != null) {
       try {
-        return KubernetesHelper.toYaml(daemonSet);
+        YAMLFactory yamlFactory = new YAMLFactory().configure(Feature.WRITE_DOC_START_MARKER, false);
+        ObjectMapper objectMapper = new ObjectMapper(yamlFactory);
+        return objectMapper.writeValueAsString(daemonSet);
       } catch (IOException e) {
         logger.error("Error converting DaemonSet to yaml: {}", containerServiceName);
       }
