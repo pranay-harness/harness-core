@@ -1,9 +1,0 @@
-<mongoChangeLog>
-    <changeSet changeId="application-env-service-references-migration" author="anubhawsrivastava">
-        <script>
-            db.applications.find().forEach(function(application) {
-            db.applications.update({ _id: application._id}, { $unset: {environments:"", services:""}});
-            });
-        </script>
-    </changeSet>
-</mongoChangeLog>

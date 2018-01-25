@@ -1,9 +1,0 @@
-<mongoChangeLog>
-    <changeSet changeId="tag-children-tag-references-migration" author="anubhawsrivastava">
-        <script>
-            db.tags.find().forEach(function(tag) {
-            db.tags.update({ _id: tag._id}, { $unset: {children:""}});
-            });
-        </script>
-    </changeSet>
-</mongoChangeLog>
