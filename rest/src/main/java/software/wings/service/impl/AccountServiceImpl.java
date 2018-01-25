@@ -12,18 +12,17 @@ import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Misc.generateSecretKey;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -32,7 +31,6 @@ import software.wings.beans.SystemCatalog;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -47,13 +45,10 @@ import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.lang.reflect.Field;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 /**
@@ -78,7 +73,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account save(@Valid Account account) {
-    account.setAccountKey(generateAccountKey());
+    account.setAccountKey(generateSecretKey());
     //    licenseManager.setLicense(account);
     wingsPersistence.save(account);
     createDefaultAccountEntites(account);
@@ -249,19 +244,5 @@ public class AccountServiceImpl implements AccountService {
         logger.warn("Error while creating system app container " + appContainer, e);
       }
     }
-  }
-
-  private String generateAccountKey() {
-    KeyGenerator keyGen = null;
-    try {
-      keyGen = KeyGenerator.getInstance("AES");
-    } catch (NoSuchAlgorithmException e) {
-      logger.error("Exception while generating account key", e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
-    }
-    keyGen.init(128);
-    SecretKey secretKey = keyGen.generateKey();
-    byte[] encoded = secretKey.getEncoded();
-    return Hex.encodeHexString(encoded);
   }
 }

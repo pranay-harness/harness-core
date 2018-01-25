@@ -1,8 +1,7 @@
 from __future__ import division
-
+import newrelic.agent
 import argparse
 import json
-import logging
 import sys
 import time
 from collections import OrderedDict
@@ -16,10 +15,9 @@ from core.util.TimeSeriesUtils import MetricType, simple_average, RiskLevel, Met
     ThresholdComparisonType
 from sources.HarnessLoader import HarnessLoader
 from sources.MetricTemplate import MetricTemplate
+from core.util.lelogging import get_log
 
-log_format = "%(asctime)-15s %(levelname)s %(message)s"
-logging.basicConfig(level=logging.INFO, format=log_format)
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 
 class TSAnomlyDetector(object):
@@ -82,11 +80,11 @@ class TSAnomlyDetector(object):
         :return: the grouped dictionary
         """
         result = {}
-        data_len = (self._options.analysis_minute - self._options.analysis_start_minute)+1
+        data_len = (self._options.analysis_minute - self._options.analysis_start_min)+1
         for transaction in transactions:
             txn_name = transaction.get('name')
             host = transaction.get('host')
-            data_collection_minute = transaction.get('dataCollectionMinute') - self._options.analysis_start_minute
+            data_collection_minute = transaction.get('dataCollectionMinute') - self._options.analysis_start_min
 
             if txn_name not in result:
                 result[txn_name] = OrderedDict({})
@@ -305,7 +303,7 @@ class TSAnomlyDetector(object):
                 analysis_output = self.fast_analysis_metric(self._options.smooth_window, metric_name, control_data_dict,
                                                             test_data_dict)
             else:
-                data_len = (self._options.analysis_minute - self._options.analysis_start_minute) + 1
+                data_len = (self._options.analysis_minute - self._options.analysis_start_min) + 1
                 if data_len % self._options.smooth_window > 0:
                     pad_len = self._options.smooth_window - (data_len % self._options.smooth_window)
                     control_data_dict['data'] = np.pad(control_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
@@ -489,16 +487,16 @@ def load_from_harness_server(url, nodes, options):
     """
     load input from Harness server
     """
-    raw_events = HarnessLoader.load_from_harness_raw_new(url,
-                                                               options.auth_token,
-                                                               dict(applicationId=options.application_id,
+    raw_events = HarnessLoader.load_from_harness_raw_new(url, payload=dict(applicationId=options.appId,
                                                                     workflowId=options.workflow_id,
                                                                     workflowExecutionId=options.workflow_execution_id,
                                                                     stateExecutionId=options.state_execution_id,
                                                                     serviceId=options.service_id,
                                                                     analysisMinute=options.analysis_minute,
-                                                                    analysisStartMinute=options.analysis_start_minute,
-                                                                    nodes=nodes))['resource']
+                                                                    analysisStartMinute=options.analysis_start_min,
+                                                                    nodes=nodes),
+                                                         version_file_path=options.version_file_path,
+                                                         service_secret=options.service_secret)['resource']
     return raw_events
 
 
@@ -506,7 +504,9 @@ def load_metric_template_harness_server(url, options):
     """
     load metric template from Harness server
     """
-    metric_template = HarnessLoader.load_from_harness_raw_new(url, options.auth_token, {})['resource']
+    metric_template = HarnessLoader.load_from_harness_raw_new(url, payload={},
+                                                              version_file_path=options.version_file_path,
+                                                              service_secret=options.service_secret)['resource']
     return metric_template
 
 
@@ -514,8 +514,9 @@ def post_to_wings_server(options, results):
     """
     post response to Harness server
     """
-    HarnessLoader.post_to_wings_server(options.analysis_save_url, options.auth_token,
-                                             json.dumps(results))
+    HarnessLoader.post_to_wings_server(options.analysis_save_url, json.dumps(results),
+                                       version_file_path=options.version_file_path,
+                                       service_secret=options.service_secret)
 
 
 def parse(cli_args):
@@ -553,7 +554,7 @@ def parse(cli_args):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--control_input_url", required=True)
-    parser.add_argument("--test_input_url", required=False)
+    parser.add_argument("--test_input_url", required=True)
     parser.add_argument("--auth_token", required=True)
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
@@ -564,7 +565,7 @@ def parse(cli_args):
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--analysis_save_url", required=True)
     parser.add_argument("--analysis_minute", type=int, required=True)
-    parser.add_argument("--analysis_start_minute", type=int, required=True)
+    parser.add_argument("--analysis_start_min", type=int, required=True)
     parser.add_argument("--tolerance", type=int, required=True)
     parser.add_argument("--smooth_window", type=int, required=True)
     parser.add_argument("--min_rpm", type=int, required=True)
@@ -572,6 +573,8 @@ def parse(cli_args):
     parser.add_argument("--parallel_processes", type=int, required=True)
     parser.add_argument("--metric_template_url", type=str, required=True)
     parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int, default=19)
+    parser.add_argument("--version_file_path", required=True)
+    parser.add_argument("--service_secret", required=True)
     return parser.parse_args(cli_args)
 
 
@@ -583,7 +586,7 @@ def analyze_parallel(queue, options, metric_template, control_metrics_batch, tes
     queue.put(anomaly_detector.analyze())
 
 
-
+@newrelic.agent.background_task()
 def parallelize_processing(options, metric_template, control_metrics, test_metrics):
     """
     Break the work into parallel units. Each transaction and its metrics constitute a unit.
@@ -646,7 +649,7 @@ def write_to_file(filename, data):
     file_object.write(json.dumps(data))
     file_object.close()
 
-def main(args):
+def main(options):
     """
     load data from Harness Manager, run the anomaly detector,
     and post the results back to the Harness Manager.
@@ -675,40 +678,48 @@ def main(args):
     }
 
     """
-    logger.info(args)
+    try:
+        logger.info("Running Time Series analysis ")
 
-    options = parse(args[1:])
-    logger.info(options)
+        metric_template = load_metric_template_harness_server(options.metric_template_url, options)
+        logger.info('metric_template = ' + json.dumps(metric_template))
 
-    logger.info("Running Time Series analysis ")
+        control_metrics = load_from_harness_server(options.control_input_url, options.control_nodes, options)
+        logger.info('control events = ' + str(len(control_metrics)))
 
-    metric_template = load_metric_template_harness_server(options.metric_template_url, options)
-    logger.info('metric_template = ' + json.dumps(metric_template))
+        test_metrics = load_from_harness_server(options.test_input_url, options.test_nodes, options)
+        logger.info('test_events = ' + str(len(test_metrics)))
 
-    control_metrics = load_from_harness_server(options.control_input_url, options.control_nodes, options)
-    logger.info('control events = ' + str(len(control_metrics)))
+        # Uncomment when you want to save the files for local debugging
 
-    test_metrics = load_from_harness_server(options.test_input_url, options.test_nodes, options)
-    logger.info('test_events = ' + str(len(test_metrics)))
+        # write_to_file('/Users/parnianzargham/Desktop/portal/python/splunk_intelligence/time_series/test_live_queue.json', test_metrics)
+        # write_to_file('/Users/parnianzargham/Desktop/portal/python/splunk_intelligence/time_series/control_live_queue.json',control_metrics)
 
-    # Uncomment when you want to save the files for local debugging
+        #write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/test_live_new4.json', test_metrics)
+        #
+        #write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/control_live_new4.json',control_metrics)
+        #
 
-    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/test_live_new3.json', test_metrics)
-    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/control_live_new3.json',control_metrics)
+        result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
+        #write_to_file('/Users/parnianzargham/Desktop/portal/python/splunk_intelligence/time_series/result_new_test_queue4.json', result)
 
-    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/test_live_new3.json', test_metrics)
-    #
-    # write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/control_live_new3.json',control_metrics)
-    #
-
-    result = parallelize_processing(options, metric_template, control_metrics, test_metrics)
-    #write_to_file('/Users/parnianzargham/Desktop/wings/python/splunk_intelligence/time_series/result_new_test3.json',
-    #               result)
-    post_to_wings_server(options, result)
+        post_to_wings_server(options, result)
+    except Exception as e:
+        payload = dict(applicationId=options.appId,
+                       workflowId=options.workflow_id,
+                       workflowExecutionId=options.workflow_execution_id,
+                       stateExecutionId=options.state_execution_id,
+                       serviceId=options.service_id,
+                       analysisMinute=options.analysis_minute)
+        raise Exception(str(e) + ' for '+ json.dumps(payload))
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    args = sys.argv
+    logger.info(args)
+    options = parse(args[1:])
+    logger.info(options)
+    main(options)
 
 
 

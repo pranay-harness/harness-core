@@ -4,6 +4,7 @@ import logging
 import multiprocessing
 import sys
 import time
+import newrelic
 
 import numpy as np
 import scipy.sparse as sps
@@ -15,10 +16,9 @@ from core.feature.TFIDFVectorizer import TFIDFVectorizer
 from core.feature.Tokenizer import Tokenizer
 from sources.FileLoader import FileLoader
 from sources.HarnessLoader import HarnessLoader
+from core.util.lelogging import get_log
 
-format = "%(asctime)-15s %(levelname)s %(message)s"
-logging.basicConfig(level=logging.INFO, format=format)
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 
 def create_feature_matrix_worker(job_id, chunk, queue):
@@ -151,6 +151,7 @@ class ClusterInput(object):
         logger.info("done clustering")
         return clusters, counts
 
+    @newrelic.agent.background_task()
     def run(self):
         """
         Main enrty point for the ClusterInput class.
@@ -229,8 +230,10 @@ def post_to_wings_server(options, results):
     :param results: the clustered results
 
     """
-    HarnessLoader.post_to_wings_server(options.output_url, options.auth_token,
-                                             json.dumps(results))
+
+    HarnessLoader.post_to_wings_server(options.output_url, json.dumps(results), options.version_file_path,
+                                options.service_secret)
+
 
 
 def load_from_wings_server(options):
@@ -240,15 +243,13 @@ def load_from_wings_server(options):
     :param options: the program options
 
     """
-    raw_events = HarnessLoader.load_from_harness_raw(options.input_url,
-                                                           options.auth_token,
-                                                           options.application_id,
-                                                           options.workflow_id,
-                                                           options.state_execution_id,
-                                                           options.service_id,
-                                                           options.log_collection_minute,
-                                                           options.nodes,
-                                                           options.query)['resource']
+    raw_events = HarnessLoader.load_from_harness_raw(options.input_url, options.application_id,
+                                                     options.workflow_id, options.state_execution_id,
+                                                     options.service_id, options.log_collection_minute,
+                                                     options.nodes, options.query,
+                                                     options.version_file_path,
+                                                     options.service_secret)['resource']
+
     return parse_data(raw_events, options.cluster_level)
 
 
@@ -361,7 +362,7 @@ def run_debug(options):
     logger.info('complete run with time ' + str(time.time() - start) + ' seconds')
 
 
-def main(args):
+def main(options):
     """
 
     Calls the input_url given to fetch a set of log messages (collected by the delegate) and
@@ -408,32 +409,46 @@ def main(args):
     :param args: the program args
 
     """
-    logger.info(args)
-    options = parse(args[1:])
-    options.query = ' '.join(options.query)
-    logger.info(options)
+    try:
+        logger.info(options)
+        #options.query = ' '.join(options.query)
+        logger.info(options)
 
-    logger.info("Running cluster level " + str(options.cluster_level))
+        logger.info("Running cluster level " + str(options.cluster_level))
 
-    if options.cluster_level != 1 and options.cluster_level != 2:
-        logger.error("Unknown cluster level " + str(options.cluster_level) + " . Only level 1 and 2 are supported")
-        sys.exit(-1)
+        if options.cluster_level != 1 and options.cluster_level != 2:
+            logger.error("Unknown cluster level " + str(options.cluster_level) + " . Only level 1 and 2 are supported")
+            raise Exception("Unknown cluster level " + str(options.cluster_level))
 
-    # TODO create a test and remove this
-    if options.debug:
-        run_debug(options)
-    else:
-        raw_events, texts = load_from_wings_server(options)
-        if raw_events is None or len(raw_events) == 0:
-            logger.warn("No inputs to cluster")
-            # 2 is a special exit status to indicate
-            # there is nothing to process
-            sys.exit(2)
-        cluster_input = ClusterInput(options, texts)
-        clusters, counts = cluster_input.run()
-        results = create_response(raw_events, clusters, counts, options.cluster_level)
-        post_to_wings_server(options, results)
+        # TODO create a test and remove this
+        if options.debug:
+            run_debug(options)
+        else:
+            raw_events, texts = load_from_wings_server(options)
+            if raw_events is None or len(raw_events) == 0:
+                logger.warn("No inputs to cluster")
+                # 2 is a special exit status to indicate
+                # there is nothing to process
+                post_to_wings_server(options, [])
+            else:
+                cluster_input = ClusterInput(options, texts)
+                clusters, counts = cluster_input.run()
+                results = create_response(raw_events, clusters, counts, options.cluster_level)
+                logger.info('posting')
+                post_to_wings_server(options, results)
+    except Exception as e:
+        payload = dict(applicationId=options.appId,
+                       workflowId=options.workflow_id,
+                       workflowExecutionId=options.workflow_execution_id,
+                       stateExecutionId=options.state_execution_id,
+                       serviceId=options.service_id,
+                       analysis_minute=options.log_collection_minute)
+        raise Exception(str(e) + ' for ' + json.dumps(payload))
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    args = sys.argv
+    logger.info(args)
+    options = parse(args[1:])
+    options.query = ' '.join(options.query)
+    main(options)

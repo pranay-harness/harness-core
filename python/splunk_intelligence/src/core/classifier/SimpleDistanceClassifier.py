@@ -1,9 +1,10 @@
-import logging
 import sys
 import scipy.spatial.distance as dist
 import numpy as np
 
-logger = logging.getLogger(__name__)
+from core.util.lelogging import get_log
+
+logger = get_log(__name__)
 
 '''
 Uses the "braycurtis" distance along with a threshold to predict anomalies.

@@ -69,6 +69,7 @@ import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
@@ -256,6 +257,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     initializeFeatureFlags(injector);
 
+    initializeServiceSecretKeys(injector);
+
     runMigrations(injector);
 
     logger.info("Starting app done");
@@ -374,6 +377,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void initializeFeatureFlags(Injector injector) {
     injector.getInstance(FeatureFlagService.class).initializeFeatureFlags();
+  }
+
+  private void initializeServiceSecretKeys(Injector injector) {
+    injector.getInstance(LearningEngineService.class).initializeServiceSecretKeys();
   }
 
   private void runMigrations(Injector injector) {

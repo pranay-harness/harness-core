@@ -3,6 +3,7 @@ package software.wings.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -62,6 +63,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -541,7 +543,38 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testAnalysisSummaryUnknownClusters() throws Exception {
+  public void shouldSaveLogCollectionMinuteMinusOne() throws Exception {
+    int numOfUnknownClusters = 2 + r.nextInt(10);
+    List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfUnknownClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      clusterEvents.add(cluster);
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      hosts.add(host);
+      unknownClusters.put(UUID.randomUUID().toString(), hostMap);
+    }
+
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId(stateExecutionId);
+    record.setApplicationId(appId);
+    record.setStateType(StateType.SPLUNKV2);
+    record.setLogCollectionMinute(-1);
+    record.setAnalysisSummaryMessage("This is a -1 test");
+    record.setQuery(UUID.randomUUID().toString());
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+
+    LogMLAnalysisSummary analysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    assertNotNull(analysisSummary);
+    assertEquals("This is a -1 test", analysisSummary.getAnalysisSummaryMessage());
+  }
+
+  @Test
+  public void shouldNotSaveEmptyControlAndTestEvents() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
     Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
@@ -561,9 +594,42 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     record.setApplicationId(appId);
     record.setStateType(StateType.SPLUNKV2);
     record.setLogCollectionMinute(0);
+    record.setAnalysisSummaryMessage("This is a -1 test");
     record.setQuery(UUID.randomUUID().toString());
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+
+    LogMLAnalysisSummary analysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    assertNull(analysisSummary);
+  }
+
+  @Test
+  public void testAnalysisSummaryUnknownClusters() throws Exception {
+    int numOfUnknownClusters = 2 + r.nextInt(10);
+    List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = new HashMap<>();
+    controlEvents.put("xyz", Lists.newArrayList(getRandomClusterEvent()));
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfUnknownClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      clusterEvents.add(cluster);
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      hosts.add(host);
+      unknownClusters.put(UUID.randomUUID().toString(), hostMap);
+    }
+
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId(stateExecutionId);
+    record.setApplicationId(appId);
+    record.setStateType(StateType.SPLUNKV2);
+    record.setLogCollectionMinute(0);
+    record.setQuery(UUID.randomUUID().toString());
+    record.setControl_events(controlEvents);
     record.setUnknown_clusters(unknownClusters);
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2);
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -583,13 +649,13 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
-  @Ignore
   public void testAnalysisSummaryTestClusters() throws Exception {
     int numOfTestClusters = 1 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
     Map<String, Map<String, SplunkAnalysisCluster>> testClusters = new HashMap<>();
     Set<String> hosts = new HashSet<>();
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = new HashMap<>();
+    controlEvents.put("xyz", Lists.newArrayList(getRandomClusterEvent()));
     for (int i = 0; i < numOfTestClusters; i++) {
       SplunkAnalysisCluster cluster = getRandomClusterEvent();
       clusterEvents.add(cluster);
@@ -606,8 +672,9 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     record.setStateType(StateType.SPLUNKV2);
     record.setLogCollectionMinute(0);
     record.setQuery(UUID.randomUUID().toString());
+    record.setControl_events(controlEvents);
     record.setTest_clusters(testClusters);
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2);
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
 
     int numOfUnexpectedFreq = 0;
     for (SplunkAnalysisCluster cluster : clusterEvents) {
@@ -648,6 +715,8 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
     Map<String, Map<String, SplunkAnalysisCluster>> controlClusters = new HashMap<>();
     Set<String> hosts = new HashSet<>();
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = new HashMap<>();
+    controlEvents.put("xyz", Lists.newArrayList(getRandomClusterEvent()));
     for (int i = 0; i < numOfControlClusters; i++) {
       SplunkAnalysisCluster cluster = getRandomClusterEvent();
       clusterEvents.add(cluster);
@@ -665,7 +734,8 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     record.setLogCollectionMinute(0);
     record.setQuery(UUID.randomUUID().toString());
     record.setControl_clusters(controlClusters);
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2);
+    record.setControl_events(controlEvents);
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -690,8 +760,8 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   public void getCollectionMinuteForL1NoRecords() throws Exception {
     assertEquals(-1,
-        analysisService.getCollectionMinuteForL1(
-            UUID.randomUUID().toString(), appId, stateExecutionId, StateType.SPLUNKV2, Collections.emptySet()));
+        analysisService.getCollectionMinuteForLevel(UUID.randomUUID().toString(), appId, stateExecutionId,
+            StateType.SPLUNKV2, ClusterLevel.L1, Collections.emptySet()));
   }
 
   @Test
@@ -725,8 +795,9 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       wingsPersistence.save(logDataRecords.get(i));
     }
 
-    assertEquals(
-        -1, analysisService.getCollectionMinuteForL1(query, appId, stateExecutionId, StateType.SPLUNKV2, hosts));
+    assertEquals(-1,
+        analysisService.getCollectionMinuteForLevel(
+            query, appId, stateExecutionId, StateType.SPLUNKV2, ClusterLevel.L1, hosts));
   }
 
   @Test
@@ -757,7 +828,8 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     wingsPersistence.save(Lists.newArrayList(logDataRecords));
 
     assertEquals(logCollectionMinute,
-        analysisService.getCollectionMinuteForL1(query, appId, stateExecutionId, StateType.SPLUNKV2, hosts));
+        analysisService.getCollectionMinuteForLevel(
+            query, appId, stateExecutionId, StateType.SPLUNKV2, ClusterLevel.L1, hosts));
   }
 
   @Test
@@ -796,7 +868,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   public void getLogDataRecordForL0() throws Exception {
     String query = UUID.randomUUID().toString();
-    assertFalse(analysisService.getLogDataRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2).isPresent());
+    assertFalse(analysisService.getHearbeatRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2, null).isPresent());
     int numOfHosts = 1 + r.nextInt(10);
     int logCollectionMinute = 1 + r.nextInt(10);
 
@@ -820,7 +892,9 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     }
 
     wingsPersistence.save(Lists.newArrayList(logDataRecords));
-    assertTrue(analysisService.getLogDataRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2).isPresent());
+    assertTrue(
+        analysisService.getHearbeatRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2, hosts.iterator().next())
+            .isPresent());
   }
 
   @Test
@@ -904,7 +978,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     String stateExecutionId = UUID.randomUUID().toString();
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
-    analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2);
+    analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2, Optional.empty());
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100), 0);

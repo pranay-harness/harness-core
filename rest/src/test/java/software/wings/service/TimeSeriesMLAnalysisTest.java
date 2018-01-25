@@ -75,7 +75,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     TimeSeriesMLAnalysisRecord record = JsonUtils.asObject(jsonTxt, TimeSeriesMLAnalysisRecord.class);
     newRelicResource.saveMLAnalysisRecords(
-        accountId, appId, stateExecutionId, workflowExecutionId, workflowId, 0, record);
+        accountId, appId, stateExecutionId, workflowExecutionId, workflowId, serviceId, 0, null, record);
     NewRelicMetricAnalysisRecord analysisRecord =
         newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     assertEquals(analysisRecord.getMetricAnalyses().size(), 1);

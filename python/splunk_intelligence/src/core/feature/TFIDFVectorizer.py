@@ -2,9 +2,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import MDS
 from sklearn.metrics.pairwise import cosine_similarity
 
-import logging
+from core.util.lelogging import get_log
 
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 """
 Vectorizer based on TF-IDF

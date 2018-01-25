@@ -12,7 +12,7 @@ from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--analysis_minute", type=int, required=True)
-parser.add_argument("--analysis_start_minute", type=int, required=True)
+parser.add_argument("--analysis_start_min", type=int, required=True)
 parser.add_argument("--tolerance", type=int, required=True)
 parser.add_argument("--smooth_window", type=int, required=True)
 parser.add_argument("--min_rpm", type=int, required=True)
@@ -20,7 +20,7 @@ parser.add_argument("--comparison_unit_window", type=int, required=True)
 parser.add_argument("--parallelProcesses", type=int, required=True)
 parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int, default=19)
 
-options = parser.parse_args(['--analysis_minute', '29', '--analysis_start_minute', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10',
+options = parser.parse_args(['--analysis_minute', '29', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10',
                              '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19'])
 
 metric_template = FileLoader.load_data('resources/ts/metric_template.json')
@@ -46,7 +46,7 @@ def test_run_1():
 def test_max_threshold_node():
     """Tests if max_nodes_threshold is not specified, fast method is not called """
     test_options = parser.parse_args(
-        ['--analysis_minute', '29', '--analysis_start_minute', 0, '--tolerance', '1', '--smooth_window', '3',
+        ['--analysis_minute', '29', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3',
          '--min_rpm', '10',
          '--comparison_unit_window', '1', '--parallelProcesses', '1'])
     control = FileLoader.load_data('resources/ts/nr_control_live.json')

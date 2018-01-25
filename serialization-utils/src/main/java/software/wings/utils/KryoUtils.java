@@ -143,6 +143,7 @@ public class KryoUtils {
             kryo.register(java.lang.NullPointerException.class, 65);
             kryo.register(java.lang.IllegalStateException.class, 66);
             kryo.register(java.io.IOException.class, 67);
+            kryo.register(java.lang.IllegalArgumentException.class, 68);
 
             // External Serializers
             UnmodifiableCollectionsSerializer.registerSerializers(kryo);

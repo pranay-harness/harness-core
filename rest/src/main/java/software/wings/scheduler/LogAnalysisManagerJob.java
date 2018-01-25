@@ -16,6 +16,7 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
@@ -25,6 +26,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterGenerator;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
@@ -48,6 +50,8 @@ public class LogAnalysisManagerJob implements Job {
 
   @Transient @Inject private DelegateService delegateService;
 
+  @Transient @Inject private LearningEngineService learningEngineService;
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
@@ -57,8 +61,8 @@ public class LogAnalysisManagerJob implements Job {
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
-      new LogAnalysisTask(
-          analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext, delegateTaskId)
+      new LogAnalysisTask(analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext,
+          delegateTaskId, learningEngineService)
           .run();
       logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
@@ -81,6 +85,7 @@ public class LogAnalysisManagerJob implements Job {
     private AnalysisContext context;
     private JobExecutionContext jobExecutionContext;
     private String delegateTaskId;
+    private LearningEngineService learningEngineService;
 
     protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
       if (context.getTestNodes() == null) {
@@ -94,14 +99,24 @@ public class LogAnalysisManagerJob implements Job {
         case SUMO:
         case ELK:
         case LOGZ:
-          new LogMLClusterGenerator(context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest).run();
-          analysisService.deleteClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
-              logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(), ClusterLevel.L1);
+          new LogMLClusterGenerator(
+              learningEngineService, context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest)
+              .run();
+          //          analysisService.deleteClusterLevel(context.getStateType(), context.getStateExecutionId(),
+          //          context.getAppId(),
+          //              logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(),
+          //              ClusterLevel.L1);
           break;
         case SPLUNKV2:
-          analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
-              logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(), ClusterLevel.L1,
-              ClusterLevel.L2);
+          //          analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
+          //          context.getAppId(),
+          //              logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(),
+          //              ClusterLevel.L1, ClusterLevel.L2);
+          //          analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
+          //          context.getAppId(),
+          //              context.getQueries().iterator().next(), context.getTestNodes(),
+          //              logRequest.getLogCollectionMinute(), ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
+          //              ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
           break;
         default:
           throw new RuntimeException("Unknown verification state " + context.getStateType());
@@ -139,38 +154,72 @@ public class LogAnalysisManagerJob implements Job {
           completeCron = true;
         } else {
           // TODO support multiple queries
-          int logAnalysisMinute = analysisService.getCollectionMinuteForL1(context.getQueries().iterator().next(),
-              context.getAppId(), context.getStateExecutionId(), context.getStateType(), getCollectedNodes());
-          if (logAnalysisMinute != -1) {
+          int logAnalysisClusteringTestMinute =
+              analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(), context.getAppId(),
+                  context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1, getCollectedNodes());
+          if (logAnalysisClusteringTestMinute != -1) {
             boolean hasTestRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
-                context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getTestNodes(),
-                ClusterLevel.L1, logAnalysisMinute);
+                context.getAppId(), context.getStateExecutionId(), context.getStateType(), getCollectedNodes(),
+                ClusterLevel.L1, logAnalysisClusteringTestMinute);
 
             if (hasTestRecords) {
-              preProcess(logAnalysisMinute, context.getQueries().iterator().next(), context.getTestNodes());
+              preProcess(logAnalysisClusteringTestMinute, context.getQueries().iterator().next(), getCollectedNodes());
+            } else {
+              analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
+                  context.getAppId(), context.getQueries().iterator().next(), getCollectedNodes(),
+                  logAnalysisClusteringTestMinute, ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
+                  ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
             }
+          }
 
-            if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-              boolean hasControlRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
-                  context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getControlNodes(),
-                  ClusterLevel.L1, logAnalysisMinute);
-              if (hasControlRecords) {
-                preProcess(logAnalysisMinute, context.getQueries().iterator().next(), context.getControlNodes());
-              }
+          //          if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+          //            int logAnalysisClusteringControlMinute =
+          //                analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(),
+          //                context.getAppId(),
+          //                    context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1,
+          //                    context.getControlNodes());
+          //            if (logAnalysisClusteringControlMinute != -1) {
+          //              boolean hasControlRecords =
+          //              analysisService.hasDataRecords(context.getQueries().iterator().next(),
+          //                  context.getAppId(), context.getStateExecutionId(), context.getStateType(),
+          //                  context.getControlNodes(), ClusterLevel.L1, logAnalysisClusteringControlMinute);
+          //
+          //              if (hasControlRecords) {
+          //                preProcess(logAnalysisClusteringControlMinute, context.getQueries().iterator().next(),
+          //                    context.getControlNodes());
+          //              } else {
+          //                analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
+          //                    context.getAppId(), context.getQueries().iterator().next(), context.getControlNodes(),
+          //                    logAnalysisClusteringControlMinute, ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
+          //                    ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
+          //              }
+          //            }
+          //          }
+
+          int logAnalysisMinute =
+              analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(), context.getAppId(),
+                  context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
+          if (logAnalysisMinute != -1) {
+            if (learningEngineService.hasAnalysisTimedOut(
+                    context.getWorkflowExecutionId(), context.getStateExecutionId())) {
+              learningEngineService.markStatus(context.getWorkflowExecutionId(), context.getStateExecutionId(),
+                  logAnalysisMinute, ExecutionStatus.FAILED);
+              throw new WingsException("Error running log analysis. Finished all retries. stateExecutionId: "
+                  + context.getStateExecutionId());
             }
 
             /*
              * Run even if we don't have test data, since we may have control data for this minute.
-             * If not, then the control data for this minute will be lost forever. The analysis job
-             * should fail with error code - 200 if no control and no test data is provided. The manager
-             * should ignore failures with status code - 200. If control is present and no test, the control data
-             * is processed and added to the result. If test is present, but no control, the test events
-             * are saved for future processing.
+             * If not, then the control data for this minute will be lost forever. If control is present
+             * and no test, the control data is processed and added to the result. If test is present, but no control,
+             * the test events are saved for future processing.
              */
-            new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService).run();
-            analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
-                context.getQueries().iterator().next(), context.getTestNodes(), logAnalysisMinute,
-                ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getFinal());
+            new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService, learningEngineService).run();
+            //            analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
+            //            context.getAppId(),
+            //                context.getQueries().iterator().next(), context.getTestNodes(),
+            //                logAnalysisClusteringTestMinute, ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
+            //                ClusterLevel.getFinal());
           } else {
             logger.warn("No data for log ml analysis " + context.getStateExecutionId());
           }
@@ -184,7 +233,6 @@ public class LogAnalysisManagerJob implements Job {
               context.getStateExecutionId(), StringUtils.join(context.getQueries(), ","),
               "No data found for the given queries.");
         }
-
       } catch (Exception ex) {
         completeCron = true;
         error = true;
@@ -219,21 +267,23 @@ public class LogAnalysisManagerJob implements Job {
     }
 
     private void sendStateNotification(AnalysisContext context, boolean error) {
-      final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
-      final LogAnalysisExecutionData executionData =
-          LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-              .withStateExecutionInstanceId(context.getStateExecutionId())
-              .withServerConfigID(context.getAnalysisServerConfigId())
-              .withQueries(context.getQueries())
-              .withAnalysisDuration(context.getTimeDuration())
-              .withStatus(status)
-              .withCanaryNewHostNames(context.getTestNodes())
-              .withLastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
-              .withCorrelationId(context.getCorrelationId())
-              .build();
-      final LogAnalysisResponse response =
-          aLogAnalysisResponse().withLogAnalysisExecutionData(executionData).withExecutionStatus(status).build();
-      waitNotifyEngine.notify(response.getLogAnalysisExecutionData().getCorrelationId(), response);
+      if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+        final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        final LogAnalysisExecutionData executionData =
+            LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
+                .withStateExecutionInstanceId(context.getStateExecutionId())
+                .withServerConfigID(context.getAnalysisServerConfigId())
+                .withQueries(context.getQueries())
+                .withAnalysisDuration(context.getTimeDuration())
+                .withStatus(status)
+                .withCanaryNewHostNames(context.getTestNodes())
+                .withLastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
+                .withCorrelationId(context.getCorrelationId())
+                .build();
+        final LogAnalysisResponse response =
+            aLogAnalysisResponse().withLogAnalysisExecutionData(executionData).withExecutionStatus(status).build();
+        waitNotifyEngine.notify(response.getLogAnalysisExecutionData().getCorrelationId(), response);
+      }
     }
   }
 }

@@ -1,17 +1,15 @@
 import argparse
 import json
+import sys
 
 from datetime import timedelta, datetime
-
-import sys
-import logging
 from TimeSeriesML import TSAnomlyDetector, parallelize_processing
 from sources.FileLoader import FileLoader
 from sources.NewRelicSource import NewRelicSource
 
-log_format = "%(asctime)-15s %(levelname)s %(message)s"
-logging.basicConfig(level=logging.INFO, format=log_format)
-logger = logging.getLogger(__name__)
+from core.util.lelogging import get_log
+
+logger = get_log(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--analysis_minute", type=int, required=True)

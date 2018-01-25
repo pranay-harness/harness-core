@@ -3,6 +3,7 @@ package software.wings.dl;
 import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -98,6 +99,9 @@ public interface WingsPersistence {
    * @return the t
    */
   <T extends Base> T executeGetOneQuery(Query<T> query);
+
+  <T extends Base> T findAndModify(
+      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
 
   /**
    * Merge string.

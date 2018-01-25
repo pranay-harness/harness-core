@@ -142,7 +142,7 @@ public abstract class AbstractAnalysisState extends State {
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false);
     if (workflowExecutions.isEmpty()) {
-      getLogger().warn("Could not get a successful workflow to find control nodes");
+      getLogger().info("Could not get a successful workflow to find control nodes");
       return new HashSet<>();
     }
 

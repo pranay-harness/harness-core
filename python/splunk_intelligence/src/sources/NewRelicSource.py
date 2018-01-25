@@ -1,16 +1,12 @@
 import json
 
-import requests
 import sys
 
+from core.util.lelogging import get_log
 from sources.HarnessLoader import HarnessLoader
 from datetime import datetime, timedelta
-import logging
-import time
 
-format = "%(asctime)-15s %(levelname)s %(message)s"
-logging.basicConfig(level=logging.INFO, format=format)
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 
 class NewRelicSource(object):

@@ -80,9 +80,9 @@ def run_analysis(filename, make_nan=False, comparison_unit_window=1):
                         assert str_equal(host_data['optimal_cuts'], results['optimal_test_cuts'][index])
                         assert lists_equal(host_data['optimal_data'], results['optimal_test_data'][index])
 
-
+#
 def test_1():
-    run_analysis('resources/ts/nr_out_live_2.json', True, 1)
+    run_analysis('resources/ts/nr_out_prod_2.json', True, 1)
 
 
 def test_2():
@@ -91,10 +91,13 @@ def test_2():
 def test_3():
     run_analysis('resources/ts/nr_out_prod_2.json', True, 3)
 
+def test_4():
+    run_analysis('resources/ts/nr_out_prod_3.json', True, 1)
+
 
 
 def main(args):
-    test_1()
+    test_4()
 
 
 if __name__ == "__main__":

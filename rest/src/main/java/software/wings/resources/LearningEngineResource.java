@@ -1,0 +1,41 @@
+package software.wings.resources;
+
+import static software.wings.utils.HttpUtil.parseApisVersion;
+
+import com.google.inject.Inject;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
+import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.intfc.LearningEngineService;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
+/**
+ * Created by rsingh on 09/05/17.
+ */
+@Api("learning")
+@Path("/learning")
+@Produces("application/json")
+@AuthRule(ResourceType.SERVICE)
+public class LearningEngineResource {
+  @Inject private LearningEngineService learningEngineService;
+
+  @GET
+  @Path("/get-next-task")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @Produces({"application/json", "application/v1+json"})
+  public RestResponse<LearningEngineAnalysisTask> getNextTask(@HeaderParam("Accept") String acceptHeaders) {
+    return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders)));
+  }
+}

@@ -2,13 +2,17 @@ FROM python:2.7-slim
 COPY VERSION dist/splunk_pyml /home/harness/
 WORKDIR /home/harness
 ENV SPLUNKML_ROOT /home/harness
+ARG server_url
+ARG service_secret
+ARG https_port
 RUN apt-get update && apt-get install -y make \
-    build-essential \
+    build-essential ntp \
     libssl-dev && \
     pip install -r requirements.txt  && \
-    make clean init-docker && \
+    make init-docker && \
     apt-get remove -y build-essential && \
     rm -rf /var/lib/apt/lists/* /root/.cache/
+CMD ./run_learning_engine.sh --server_url ${server_url} --service_secret ${service_secret} --https_port ${https_port}
 
 # for now, we build toli/harness-learning-engine, in the future, will build harness/learning-engine
 # to build: make clean dist; docker build -t toli/harness-learning-engine .

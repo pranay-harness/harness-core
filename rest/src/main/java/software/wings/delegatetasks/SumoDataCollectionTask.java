@@ -78,6 +78,10 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
     return new SumoDataCollector(getTaskId(), sumoClient, dataCollectionInfo, logAnalysisStoreService, taskResult);
   }
 
+  protected int getInitialDelayMinutes() {
+    return SplunkDataCollectionTask.DELAY_MINUTES + 1;
+  }
+
   private class SumoDataCollector implements Runnable {
     private String delegateTaskId;
     private SumoLogicClient sumoClient;

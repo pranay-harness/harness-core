@@ -3,10 +3,12 @@ package software.wings.utils;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -119,6 +121,32 @@ public class HttpUtil {
 
   public static boolean validUrl(String url) {
     return urlValidator.isValid(url);
+  }
+
+  public static ServiceApiVersion parseApisVersion(String acceptHeader) {
+    if (StringUtils.isEmpty(acceptHeader)) {
+      return null;
+    }
+
+    String[] headers = acceptHeader.split(",");
+    String header = headers[0].trim();
+    if (!header.startsWith("application/")) {
+      throw new IllegalArgumentException("Invalid header " + acceptHeader);
+    }
+
+    String versionHeader = header.replace("application/", "").trim();
+    if (StringUtils.isEmpty(versionHeader)) {
+      throw new IllegalArgumentException("Invalid header " + acceptHeader);
+    }
+
+    String[] versionSplit = versionHeader.split("\\+");
+
+    String version = versionSplit[0].trim();
+    if (version.toUpperCase().startsWith("V")) {
+      return ServiceApiVersion.valueOf(version.toUpperCase());
+    }
+
+    return ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
   }
 
   public static HttpHost getHttpProxyHost() {

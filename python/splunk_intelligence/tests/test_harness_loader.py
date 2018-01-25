@@ -22,16 +22,19 @@ class PostHandler(BaseHTTPRequestHandler):
 
 
 def test_timeout():
+    service_secret = '22ef5a98920448e7d3c70d9fc9566085'
+    version_file_path = '../service_version.properties'
+
     server = HTTPServer(('', 18080), PostHandler)
     thread = threading.Thread(target=server.serve_forever)
     thread.daemon = True
     try:
         thread.start()
         print('test post timeout')
-        HarnessLoader.send_request('http://localhost:18080', dict(message='Dummy'), headers=None)
+        HarnessLoader.send_request('http://localhost:18080', dict(message='Dummy'), version_file_path, service_secret)
         print('test get timeout')
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        HarnessLoader.get_request('http://localhost:18080', headers=headers)
+        HarnessLoader.get_request('http://localhost:18080', version_file_path, service_secret)
         print('finish')
     except:
         server.shutdown()

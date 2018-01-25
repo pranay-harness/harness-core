@@ -1,16 +1,15 @@
-import logging
-
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 
 from core.distance.JaccardDistance import pairwise_jaccard_similarity
+from core.util.lelogging import get_log
 
 """
 Wrapper class for Kmeans clustering
 """
 
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 class KmeansCluster(object):
 
@@ -46,7 +45,7 @@ class KmeansCluster(object):
         mid = min(100, (int)(lower + (upper - lower) / 2))
         while lower <= upper:
             logger.info("Running kemans with k = " + str(mid))
-            curr_km = KMeans(n_clusters=mid, n_jobs=-2)
+            curr_km = KMeans(n_clusters=mid, n_jobs=-4)
             curr_km.fit(self.feature_matrix)
             clusters = np.array(curr_km.labels_.tolist())
             found = True

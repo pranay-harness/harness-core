@@ -35,7 +35,7 @@ import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.ExternalServiceAuth;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
@@ -106,15 +106,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
-    if (isDelegateRequest(requestContext) && isExternalServiceRequest(requestContext)) {
+    if (isDelegateRequest(requestContext)) {
       String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
       String header = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
       if (header.contains("Delegate")) {
         authService.validateDelegateToken(
             accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
-      } else if (header.contains("ExternalService")) {
-        authService.validateExternalServiceToken(
-            accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "ExternalService "));
       } else {
         throw new IllegalStateException("Invalid header:" + header);
       }
@@ -129,10 +126,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return; // do nothing
     }
 
-    if (isExternalServiceRequest(requestContext)) {
-      String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-      authService.validateExternalServiceToken(
-          accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "ExternalService "));
+    if (isLearningEngineServiceRequest(requestContext)) {
+      authService.validateLearningEngineServiceToken(
+          substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine "));
       return; // do nothing
     }
 
@@ -287,9 +283,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return delegateAPI() && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate ");
   }
 
-  private boolean isExternalServiceRequest(ContainerRequestContext requestContext) {
-    return externalServiceAPI()
-        && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "ExternalService ");
+  private boolean isLearningEngineServiceRequest(ContainerRequestContext requestContext) {
+    return learningEngineServiceAPI()
+        && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine ");
   }
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
@@ -325,12 +321,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         || resourceClass.getAnnotation(DelegateAuth.class) != null;
   }
 
-  private boolean externalServiceAPI() {
+  private boolean learningEngineServiceAPI() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
 
-    return resourceMethod.getAnnotation(ExternalServiceAuth.class) != null
-        || resourceClass.getAnnotation(ExternalServiceAuth.class) != null;
+    return resourceMethod.getAnnotation(LearningEngineAuth.class) != null
+        || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
   }
 
   private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {

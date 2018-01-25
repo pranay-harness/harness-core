@@ -4,7 +4,6 @@ from time import sleep
 import splunklib.client as client
 import splunklib.results as results
 import datetime
-import json
 
 """
 Wraps the Splunk python sdk to read from Splunk
