@@ -400,7 +400,7 @@ CONNECTOR_TYPES:
     - name: ELB
       value: ELB
 
-
+# For AMI Resource filters, we are prefixing the filter with ami- to prevent object value conflicts in the UI
 AMI_RESOURCE_ATTRIBUTES_FILTER:
     - name: AMI ID
       value: ami-image-id
@@ -408,3 +408,5 @@ AMI_RESOURCE_ATTRIBUTES_FILTER:
       value: ami-name
     - name: Platform
       value: ami-platform
+    - name: Owner ID
+      value: ami-owner-id

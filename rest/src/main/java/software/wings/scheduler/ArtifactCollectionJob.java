@@ -178,6 +178,7 @@ public class ArtifactCollectionJob implements Job {
                                      .list(aPageRequest()
                                                .addFilter("appId", EQ, appId)
                                                .addFilter("artifactStreamId", EQ, artifactStreamId)
+                                               .addFilter("artifactSourceName", EQ, artifactStream.getSourceName())
                                                .withLimit(UNLIMITED)
                                                .build(),
                                          false)

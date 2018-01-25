@@ -29,23 +29,16 @@ import java.util.Map;
  */
 @Singleton
 public class AmiServiceImpl implements AmiService {
+  private static final String AMI_RESOURCE_FILTER_PREFIX = "ami-";
   private static final Logger logger = LoggerFactory.getLogger(AmiServiceImpl.class);
   @Inject private AwsHelperService awsHelperService;
 
   @Override
   public List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      Map<String, List<String>> tags, String platform, int maxNumberOfBuilds) {
+      Map<String, List<String>> tags, Map<String, String> filterMap, int maxNumberOfBuilds) {
     logger.info("Retrieving images from Aws");
     List<BuildDetails> buildDetails = new ArrayList<>();
-    List<Filter> filters = new ArrayList<>();
-    filters.add(new Filter("is-public").withValues("false"));
-    filters.add(new Filter("state").withValues("available"));
-    if (isNotBlank(platform)) {
-      filters.add(new Filter("platform").withValues(platform));
-    }
-    if (MapUtils.isNotEmpty(tags)) {
-      tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
-    }
+    List<Filter> filters = getFilters(tags, filterMap);
     DescribeImagesRequest describeImagesRequest = new DescribeImagesRequest().withFilters(filters);
     DescribeImagesResult describeImagesResult;
     describeImagesResult =
@@ -63,5 +56,25 @@ public class AmiServiceImpl implements AmiService {
       logger.info("Images found of size {}", buildDetails.size());
     }
     return buildDetails;
+  }
+
+  protected List<Filter> getFilters(Map<String, List<String>> tags, Map<String, String> filterMap) {
+    List<Filter> filters = new ArrayList<>();
+    filters.add(new Filter("is-public").withValues("false"));
+    filters.add(new Filter("state").withValues("available"));
+
+    if (MapUtils.isNotEmpty(tags)) {
+      tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
+    }
+
+    if (MapUtils.isNotEmpty(filterMap)) {
+      filterMap.entrySet()
+          .stream()
+          .filter(entry -> isNotBlank(entry.getKey()))
+          .filter(entry -> isNotBlank(entry.getValue()))
+          .filter(entry -> entry.getKey().startsWith(AMI_RESOURCE_FILTER_PREFIX))
+          .forEach(entry -> filters.add(new Filter(entry.getKey().substring(4)).withValues(entry.getValue())));
+    }
+    return filters;
   }
 }
