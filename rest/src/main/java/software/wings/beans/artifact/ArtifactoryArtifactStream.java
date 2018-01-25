@@ -42,6 +42,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return super.isMetadataOnly();
   }
 
+  private String dockerRepositoryServer;
+
   public String getRepositoryType() {
     return repositoryType;
   }
@@ -170,6 +172,14 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return super.isAutoApproveForProduction();
   }
 
+  public String getDockerRepositoryServer() {
+    return dockerRepositoryServer;
+  }
+
+  public void setDockerRepositoryServer(String dockerRepositoryServer) {
+    this.dockerRepositoryServer = dockerRepositoryServer;
+  }
+
   @Override
   public String generateName() {
     return Util.normalize(generateSourceName());
@@ -268,6 +278,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private String groupId;
     private String imageName;
     private String repositoryType;
+    private String dockerRepositoryServer;
 
     private Builder() {}
 
@@ -465,6 +476,10 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       return this;
     }
 
+    public Builder withDockerRepositoryServer(String dockerRepositoryServer) {
+      this.dockerRepositoryServer = dockerRepositoryServer;
+      return this;
+    }
     /**
      * But builder.
      *
@@ -490,7 +505,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
           .withMetadataOnly(metadataOnly)
           .withImageName(imageName)
           .withGroupId(groupId)
-          .withRepositoryType(repositoryType);
+          .withRepositoryType(repositoryType)
+          .withDockerRepositoryServer(dockerRepositoryServer);
     }
 
     /**
@@ -527,6 +543,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private String imageName;
     private List<String> artifactPaths;
     private String artifactPattern;
+    private String repositoryType;
+    private String dockerRepositoryServer;
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
