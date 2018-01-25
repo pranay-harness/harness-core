@@ -262,3 +262,4 @@ software.wings.api.AwsLambdaContextElement, 5228
 software.wings.api.AwsLambdaContextElement$FunctionMeta, 5229
 software.wings.api.AwsLambdaFunctionElement, 5230
 software.wings.api.ServiceArtifactElement, 5231
+software.wings.service.impl.analysis.LogAnalysisExecutionData, 5232
