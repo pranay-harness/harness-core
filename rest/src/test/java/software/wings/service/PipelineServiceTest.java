@@ -288,7 +288,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                         .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
                             "SE", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
                         .build());
-    when(wingsPersistence.delete(any(Pipeline.class))).thenReturn(true);
+    when(wingsPersistence.delete(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(true);
 
     assertThat(pipelineService.deletePipeline(APP_ID, PIPELINE_ID)).isTrue();
   }
