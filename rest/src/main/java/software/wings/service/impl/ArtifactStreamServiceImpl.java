@@ -244,6 +244,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
 
+    return pruneArtifactStream(appId, artifactStreamId);
+  }
+
+  private boolean pruneArtifactStream(String appId, String artifactStreamId) {
     PruneEntityJob.addDefaultJob(jobScheduler, ArtifactStream.class, appId, artifactStreamId, Duration.ofSeconds(5));
 
     return wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
@@ -306,7 +310,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .field("serviceId")
         .equal(serviceId)
         .asList()
-        .forEach(artifactSource -> delete((String) appId, (String) artifactSource.getUuid()));
+        .forEach(artifactSource -> pruneArtifactStream((String) appId, (String) artifactSource.getUuid()));
   }
 
   @Override
