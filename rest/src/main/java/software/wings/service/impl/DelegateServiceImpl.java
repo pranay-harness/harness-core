@@ -17,7 +17,10 @@ import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
+import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -472,7 +475,7 @@ public class DelegateServiceImpl implements DelegateService {
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
     List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
     if (isEmpty(eligibleDelegateIds)) {
-      throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
+      throw new WingsException(aResponseMessage().code(UNAVAILABLE_DELEGATES).acuteness(ALERTING).build());
     }
     String taskId = UUIDGenerator.getUuid();
     task.setQueueName(taskId);
