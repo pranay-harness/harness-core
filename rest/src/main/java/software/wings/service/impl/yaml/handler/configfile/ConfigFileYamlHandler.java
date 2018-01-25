@@ -91,7 +91,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
       //      }
       fileName = bean.getEncryptedFileId();
     } else {
-      fileName = bean.getFileName();
+      fileName = Util.normalize(bean.getRelativeFilePath());
     }
 
     return ConfigFile.Yaml.builder()
@@ -136,7 +136,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
       int index = yamlFilePath.lastIndexOf(PATH_DELIMITER);
       if (index != -1) {
         String configFileDirPath = yamlFilePath.substring(0, index);
-        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getTargetFilePath();
+        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getFileName();
 
         Optional<ChangeContext> contentChangeContext = changeSetContext.stream()
                                                            .filter(changeContext1 -> {
