@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -16,7 +18,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 public class FeatureFlagServiceImpl implements FeatureFlagService {
@@ -58,14 +59,14 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Override
   public void initializeFeatureFlags() {
     List<FeatureFlag> persistedFeatureFlags = wingsPersistence.createQuery(FeatureFlag.class).asList();
-    Set<String> definedNames = Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(Collectors.toSet());
+    Set<String> definedNames = Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet());
     persistedFeatureFlags.forEach(flag -> flag.setObsolete(!definedNames.contains(flag.getName())));
     wingsPersistence.save(persistedFeatureFlags);
-    Set<String> persistedNames = persistedFeatureFlags.stream().map(FeatureFlag::getName).collect(Collectors.toSet());
+    Set<String> persistedNames = persistedFeatureFlags.stream().map(FeatureFlag::getName).collect(toSet());
     List<FeatureFlag> newFeatureFlags = definedNames.stream()
                                             .filter(name -> !persistedNames.contains(name))
                                             .map(name -> FeatureFlag.builder().name(name).enabled(false).build())
-                                            .collect(Collectors.toList());
+                                            .collect(toList());
     wingsPersistence.save(newFeatureFlags);
   }
 }
