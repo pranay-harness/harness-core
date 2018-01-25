@@ -65,7 +65,7 @@ public class BambooServiceImpl implements BambooService {
       Retrofit retrofit = new Retrofit.Builder()
                               .baseUrl(bambooUrl)
                               .addConverterFactory(JacksonConverterFactory.create())
-                              .client(HttpUtil.getUnsafeOkHttpClient())
+                              .client(HttpUtil.getUnsafeOkHttpClient(bambooUrl))
                               .build();
       return retrofit.create(BambooRestClient.class);
     } catch (Exception e) {

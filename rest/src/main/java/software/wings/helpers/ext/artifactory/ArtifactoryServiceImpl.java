@@ -896,7 +896,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       // TODO Ignore SSL issues -
 
-      HttpHost httpProxyHost = HttpUtil.getHttpProxyHost();
+      HttpHost httpProxyHost = HttpUtil.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
       if (httpProxyHost != null) {
         builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), null, null, null));
       }

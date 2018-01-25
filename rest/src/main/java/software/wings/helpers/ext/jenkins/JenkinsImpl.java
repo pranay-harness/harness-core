@@ -89,7 +89,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl) throws URISyntaxException {
-    jenkinsHttpClient = new HarnessJenkinsHttpClient(new URI(jenkinsUrl), getUnSafeBuilder());
+    jenkinsHttpClient = new HarnessJenkinsHttpClient(new URI(jenkinsUrl), getUnSafeBuilder(jenkinsUrl));
     jenkinsServer = new JenkinsServer(jenkinsHttpClient);
     this.jenkinsBaseUrl = jenkinsUrl;
   }
@@ -106,7 +106,7 @@ public class JenkinsImpl implements Jenkins {
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "username") String username,
       @Assisted(value = "password") char[] password) throws URISyntaxException {
     jenkinsHttpClient =
-        new HarnessJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder());
+        new HarnessJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder(jenkinsUrl));
     jenkinsServer = new JenkinsServer(jenkinsHttpClient);
     this.jenkinsBaseUrl = jenkinsUrl;
   }
@@ -557,9 +557,9 @@ public class JenkinsImpl implements Jenkins {
     }
   }
 
-  private HttpClientBuilder getUnSafeBuilder() {
+  private HttpClientBuilder getUnSafeBuilder(String jenkinsUrl) {
     HttpClientBuilder builder = HttpClientBuilder.create();
-    HttpHost httpProxyHost = HttpUtil.getHttpProxyHost();
+    HttpHost httpProxyHost = HttpUtil.getHttpProxyHost(jenkinsUrl);
     try {
       // Set ssl context
       builder.setSSLContext(HttpUtil.getSslContext());

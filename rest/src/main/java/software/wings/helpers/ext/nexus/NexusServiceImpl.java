@@ -83,7 +83,7 @@ public class NexusServiceImpl implements NexusService {
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(converterFactory)
-        .client(HttpUtil.getUnsafeOkHttpClient())
+        .client(HttpUtil.getUnsafeOkHttpClient(baseUrl))
         .build();
   }
 

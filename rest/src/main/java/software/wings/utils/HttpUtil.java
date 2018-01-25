@@ -2,6 +2,8 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.base.Splitter;
+
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.Socket;
 import java.net.URL;
 import java.security.KeyManagementException;
@@ -64,8 +67,9 @@ public class HttpUtil {
       HostnameVerifier allHostsValid = (s, sslSession) -> true;
       // Install the all-trusting host verifier
       HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-
-      HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+      HttpURLConnection connection =
+          (HttpURLConnection) (shouldUseNonProxy(url) ? new URL(url).openConnection(Proxy.NO_PROXY)
+                                                      : new URL(url).openConnection());
       connection.setRequestMethod(
           "GET"); // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
       connection.setConnectTimeout(15000); // 20ms otherwise delegate times out
@@ -106,14 +110,16 @@ public class HttpUtil {
     return new TrustManager[] {new SslTrustManager()};
   }
 
-  public static OkHttpClient getUnsafeOkHttpClient() {
+  public static OkHttpClient getUnsafeOkHttpClient(String url) {
     try {
       return new OkHttpClient.Builder()
           .sslSocketFactory(HttpUtil.getSslContext().getSocketFactory())
           .hostnameVerifier((s, sslSession) -> true)
           .connectTimeout(15000, TimeUnit.SECONDS)
+          .proxy(shouldUseNonProxy(url) ? Proxy.NO_PROXY : null)
           .readTimeout(15000, TimeUnit.SECONDS)
           .build();
+
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -176,5 +182,79 @@ public class HttpUtil {
       }
     }
     return isNotEmpty(proxyHost) ? new HttpHost(proxyHost, proxyPort, proxyScheme) : null;
+  }
+
+  public static HttpHost getHttpProxyHost(String url) {
+    if (shouldUseNonProxy(url, System.getProperty("http.nonProxyHosts"))) {
+      return null;
+    }
+
+    return getHttpProxyHost();
+  }
+
+  public static boolean shouldUseNonProxy(String url) {
+    return shouldUseNonProxy(url, System.getProperty("http.nonProxyHosts"));
+  }
+  /**
+   * as per Oracle doc,
+   * http.nonProxyHosts:a list of hosts that should be reached directly, bypassing the proxy. This is a list of patterns
+   * separated by '|'. The patterns may start or end with a '*' for wildcards. Any host matching one of these patterns
+   * will be reached through a direct connection instead of through a proxy.
+   *
+   * Currently, we only support suffix format (and not prefix). e.g. localhost, *localhost
+   * e.g. *localhost
+   * @param url
+   * @param nonProxyConfigString
+   * @return
+   */
+  public static boolean shouldUseNonProxy(String url, String nonProxyConfigString) {
+    if (!StringUtils.isEmpty(url) && !StringUtils.isEmpty(nonProxyConfigString)) {
+      String domain = getDomain(url);
+      logger.info("checking if nonproxy setting applies for domain: " + domain);
+
+      if (Splitter.on("|")
+              .splitToList(nonProxyConfigString)
+              .stream()
+              .anyMatch(suffix -> checkPattern(suffix, domain))) {
+        logger.info(new StringBuilder()
+                        .append("DELEGATE_NO_PROXY Found matching nonProxy suffix for domain: ")
+                        .append(domain)
+                        .append(", using nonProxy setting")
+                        .toString());
+        return true;
+      }
+    }
+
+    logger.info("noproxy does not apply, getting proxy");
+    return false;
+  }
+
+  public static String getDomain(String url) {
+    String domain = url;
+    if (domain.toLowerCase().startsWith("http://")) {
+      domain = domain.substring(7);
+    } else if (domain.toLowerCase().startsWith("https://")) {
+      domain = domain.substring(8);
+    }
+
+    int index = domain.indexOf('/');
+    if (index != -1) {
+      domain = domain.substring(0, index);
+    }
+
+    index = domain.indexOf(':');
+    if (index != -1) {
+      domain = domain.substring(0, index);
+    }
+
+    return domain;
+  }
+
+  private static boolean checkPattern(String pattern, String domain) {
+    if (pattern.startsWith("*")) { // remove *, *.jenkins.com to .jenkins.com
+      pattern = new StringBuilder().append(pattern.substring(1)).toString();
+    }
+
+    return domain.toLowerCase().endsWith(pattern.toLowerCase());
   }
 }
