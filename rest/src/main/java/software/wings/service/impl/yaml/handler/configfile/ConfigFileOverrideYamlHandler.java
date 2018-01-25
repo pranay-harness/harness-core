@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.Key;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.ConfigFile;
@@ -36,6 +38,7 @@ import java.util.Optional;
  */
 @Singleton
 public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml, ConfigFile> {
+  private static final Logger logger = LoggerFactory.getLogger(ConfigFileOverrideYamlHandler.class);
   @Inject private YamlHelper yamlHelper;
   @Inject private ConfigService configService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -65,7 +68,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       //      }
       fileName = bean.getEncryptedFileId();
     } else {
-      fileName = bean.getFileName();
+      fileName = Util.normalize(bean.getRelativeFilePath());
     }
 
     String serviceName = null;
@@ -112,7 +115,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       int index = yamlFilePath.lastIndexOf(PATH_DELIMITER);
       if (index != -1) {
         String configFileDirPath = yamlFilePath.substring(0, index);
-        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getTargetFilePath();
+        String configFilePath = configFileDirPath + PATH_DELIMITER + yaml.getFileName();
 
         Optional<ChangeContext> contentChangeContext = changeSetContext.stream()
                                                            .filter(changeContext1 -> {

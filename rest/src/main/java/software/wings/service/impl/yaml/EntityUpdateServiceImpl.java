@@ -33,6 +33,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Util;
 
 import java.util.List;
 
@@ -180,12 +181,12 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
                  .getYaml();
     }
 
-    GitFileChange gitFileChange = createGitFileChange(accountId, yamlDirectoryService.getRootPathByConfigFile(service),
-        configFile.getRelativeFilePath(), yaml, changeType, false);
+    String fileName = Util.normalize(configFile.getRelativeFilePath());
+    GitFileChange gitFileChange = createGitFileChange(
+        accountId, yamlDirectoryService.getRootPathByConfigFile(service), fileName, yaml, changeType, false);
     if (fileContent != null) {
-      GitFileChange configFileChange =
-          createConfigFileChange(accountId, yamlDirectoryService.getRootPathByConfigFile(service),
-              configFile.getRelativeFilePath(), fileContent, changeType);
+      GitFileChange configFileChange = createConfigFileChange(
+          accountId, yamlDirectoryService.getRootPathByConfigFile(service), fileName, fileContent, changeType);
       return asList(gitFileChange, configFileChange);
     } else {
       return asList(gitFileChange);
@@ -202,13 +203,12 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
                  .getYaml();
     }
 
-    GitFileChange gitFileChange =
-        createGitFileChange(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
-            configFile.getRelativeFilePath(), yaml, changeType, false);
+    String fileName = Util.normalize(configFile.getRelativeFilePath());
+    GitFileChange gitFileChange = createGitFileChange(accountId,
+        yamlDirectoryService.getRootPathByConfigFileOverride(environment), fileName, yaml, changeType, false);
     if (fileContent != null) {
-      GitFileChange configFileChange =
-          createConfigFileChange(accountId, yamlDirectoryService.getRootPathByConfigFileOverride(environment),
-              configFile.getRelativeFilePath(), fileContent, changeType);
+      GitFileChange configFileChange = createConfigFileChange(accountId,
+          yamlDirectoryService.getRootPathByConfigFileOverride(environment), fileName, fileContent, changeType);
       return asList(gitFileChange, configFileChange);
     } else {
       return asList(gitFileChange);

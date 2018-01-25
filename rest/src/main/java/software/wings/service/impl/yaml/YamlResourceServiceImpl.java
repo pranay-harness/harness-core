@@ -393,15 +393,18 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   @Override
   public RestResponse<YamlPayload> getConfigFileYaml(String accountId, String appId, ConfigFile configFile) {
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE).toYaml(configFile, appId);
+    ConfigFile.Yaml yaml =
+        (ConfigFile.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE).toYaml(configFile, appId);
     return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, configFile.getUuid(), accountId, yaml, configFile.getRelativeFilePath() + YAML_EXTENSION);
+        yamlGitSyncService, configFile.getUuid(), accountId, yaml, yaml.getFileName() + YAML_EXTENSION);
   }
 
   @Override
   public RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile) {
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE).toYaml(configFile, appId);
+    ConfigFile.OverrideYaml yaml =
+        (ConfigFile.OverrideYaml) yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE)
+            .toYaml(configFile, appId);
     return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, configFile.getUuid(), accountId, yaml, configFile.getRelativeFilePath() + YAML_EXTENSION);
+        yamlGitSyncService, configFile.getUuid(), accountId, yaml, yaml.getFileName() + YAML_EXTENSION);
   }
 }
