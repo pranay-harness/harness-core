@@ -1,4 +1,4 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -20,19 +20,17 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.scheduler.ContainerSyncJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.scheduler.StateMachineExecutionCleanupJob;
 
 /**
- * @author rktummala on 09/18/17
+ * Created by sgurubelli on 6/13/17.
  */
 @Integration
 @Ignore
-public class ContainerSyncJobTriggerMigratorUtil extends WingsBaseTest {
-  private static final String CONTAINER_SYNC_CRON_GROUP = "CONTAINER_SYNC_CRON_GROUP";
-  // This was the old cron group name, dropping that job and adding the new cron group for all apps.
-  private static final String INSTANCE_SYNC_CRON_GROUP = "INSTANCE_SYNC_CRON_GROUP";
-  private static final int POLL_INTERVAL = 600;
+public class QuartzJobTriggerMigratorUtil extends WingsBaseTest {
+  private static final String SM_CLEANUP_CRON_GROUP = "SM_CLEANUP_CRON_GROUP";
+  private static final int SM_CLEANUP_POLL_INTERVAL = 60;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
@@ -41,7 +39,7 @@ public class ContainerSyncJobTriggerMigratorUtil extends WingsBaseTest {
    * Run this test by specifying VM argument -DsetupScheduler="true"
    */
   @Test
-  public void scheduleCronForContainerSync() {
+  public void scheduleCronForStateMachineExecutionCleanup() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     System.out.println("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
@@ -52,23 +50,22 @@ public class ContainerSyncJobTriggerMigratorUtil extends WingsBaseTest {
     }
     pageResponse.getResponse().forEach(application -> {
       System.out.println("Creating scheduler for application " + application);
-      // deleting the old
-      jobScheduler.deleteJob(application.getUuid(), INSTANCE_SYNC_CRON_GROUP);
-      jobScheduler.deleteJob(application.getUuid(), CONTAINER_SYNC_CRON_GROUP);
-      addCronForContainerSync(application);
+      jobScheduler.deleteJob(application.getUuid(), "SM_CLEANUP_CRON_GROUP");
+      addCronForStateMachineExecutionCleanup(application);
     });
   }
 
-  void addCronForContainerSync(Application application) {
-    JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
-                        .withIdentity(application.getUuid(), CONTAINER_SYNC_CRON_GROUP)
+  void addCronForStateMachineExecutionCleanup(Application application) {
+    JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
+                        .withIdentity(application.getUuid(), SM_CLEANUP_CRON_GROUP)
                         .usingJobData("appId", application.getUuid())
                         .build();
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
-            .withIdentity(application.getUuid(), CONTAINER_SYNC_CRON_GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
+            .withIdentity(application.getUuid(), SM_CLEANUP_CRON_GROUP)
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(SM_CLEANUP_POLL_INTERVAL).repeatForever())
             .build();
 
     jobScheduler.scheduleJob(job, trigger);

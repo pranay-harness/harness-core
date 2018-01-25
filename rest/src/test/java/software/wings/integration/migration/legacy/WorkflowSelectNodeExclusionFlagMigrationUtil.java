@@ -1,7 +1,8 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.PROVISION_NODE;
+import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -28,15 +29,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Migration script to set node select exclusion true by default
+ * @author brett on 10/11/17
  */
 @Integration
 @Ignore
-public class ContainerSetupStateMigrationUtil extends WingsBaseTest {
+public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 
   @Test
-  public void setupStateMigration() {
+  public void setSelectNodeExclusionFlag() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     System.out.println("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
@@ -47,7 +50,7 @@ public class ContainerSetupStateMigrationUtil extends WingsBaseTest {
       return;
     }
     System.out.println("Updating " + apps.size() + " applications.");
-    StringBuilder result = new StringBuilder();
+    StringBuilder result = new StringBuilder(64);
     for (Application app : apps) {
       List<Workflow> workflows = workflowService
                                      .listWorkflows(aPageRequest()
@@ -64,18 +67,16 @@ public class ContainerSetupStateMigrationUtil extends WingsBaseTest {
           CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
           for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhases()) {
             for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-              if (CONTAINER_SETUP == phaseStep.getPhaseStepType()) {
+              if (SELECT_NODE == phaseStep.getPhaseStepType() || PROVISION_NODE == phaseStep.getPhaseStepType()) {
                 candidateFound = true;
                 for (Graph.Node node : phaseStep.getSteps()) {
-                  if (StateType.ECS_SERVICE_SETUP.name().equals(node.getType())) {
-                    workflowModified = true;
+                  if (StateType.AWS_NODE_SELECT.name().equals(node.getType())
+                      || StateType.DC_NODE_SELECT.name().equals(node.getType())) {
                     Map<String, Object> properties = node.getProperties();
-                    properties.put("commandName", "Setup Service Cluster");
-                  }
-                  if (StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name().equals(node.getType())) {
-                    workflowModified = true;
-                    Map<String, Object> properties = node.getProperties();
-                    properties.put("commandName", "Setup Replication Controller");
+                    if (!properties.containsKey("excludeSelectedHostsFromFuturePhases")) {
+                      workflowModified = true;
+                      properties.put("excludeSelectedHostsFromFuturePhases", true);
+                    }
                   }
                 }
               }
@@ -86,9 +87,17 @@ public class ContainerSetupStateMigrationUtil extends WingsBaseTest {
           candidateCount++;
         }
         if (workflowModified) {
+          result.append("\n***** account: [")
+              .append(app.getAccountId())
+              .append("], app: [")
+              .append(app.getName())
+              .append("], workflow: {")
+              .append(workflow.getName())
+              .append("]\n\n");
+
           try {
-            workflowService.updateWorkflow(workflow);
-            Thread.sleep(100);
+            //            workflowService.updateWorkflow(workflow);
+            //            Thread.sleep(500);
           } catch (Exception e) {
             e.printStackTrace();
           }

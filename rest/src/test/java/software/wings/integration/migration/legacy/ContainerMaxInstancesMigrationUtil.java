@@ -1,4 +1,4 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.InstanceUnitType.COUNT;
