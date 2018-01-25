@@ -1,10 +1,13 @@
 package software.wings.lock;
 
+import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.time.Duration.ofMillis;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ResponseMessage.Acuteness.IGNORABLE;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -18,12 +21,14 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class PersistentLocker implements Locker {
   private static final Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
   @Inject private DistributedLockSvc distributedLockSvc;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public AcquiredLock acquireLock(String name, Duration timeout) {
@@ -53,6 +58,28 @@ public class PersistentLocker implements Locker {
       return acquireLock(entityClass.getName() + "-" + entityId, timeout);
     } catch (WingsException exception) {
       return null;
+    }
+  }
+
+  @Override
+  public AcquiredLock waitToAcquireLock(
+      Class entityClass, String entityId, Duration lockTimeout, long timeoutDuration, TimeUnit timeoutUnit) {
+    String name = entityClass.getName() + "-" + entityId;
+    try {
+      return timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          try {
+            return acquireLock(name, lockTimeout);
+          } catch (WingsException exception) {
+            sleep(ofMillis(100));
+          }
+        }
+      }, timeoutDuration, timeoutUnit, true);
+    } catch (Exception e) {
+      throw new WingsException(aResponseMessage().code(GENERAL_ERROR).acuteness(IGNORABLE).build())
+          .addParam("args",
+              format("Failed to acquire distributed lock for %s within %s %s", name, timeoutDuration,
+                  timeoutUnit.name().toLowerCase()));
     }
   }
 

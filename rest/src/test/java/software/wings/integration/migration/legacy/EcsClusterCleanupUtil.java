@@ -1,4 +1,4 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 

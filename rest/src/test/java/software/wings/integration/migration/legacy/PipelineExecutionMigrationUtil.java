@@ -1,4 +1,4 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;

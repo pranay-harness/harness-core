@@ -1,4 +1,4 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import com.google.inject.Inject;
 

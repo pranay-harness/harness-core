@@ -12,11 +12,13 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "schema", noClassnameStored = true)
 public class Schema extends Base {
+  public static final String SCHEMA_ID = "schema";
+
   private int version;
 
   public static final class SchemaBuilder {
     private int version;
-    private String uuid = "schema";
+    private String uuid = SCHEMA_ID;
 
     private SchemaBuilder() {}
 

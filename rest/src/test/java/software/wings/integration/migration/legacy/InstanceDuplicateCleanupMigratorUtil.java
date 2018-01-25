@@ -1,4 +1,4 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import static java.util.Arrays.asList;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;

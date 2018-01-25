@@ -1,4 +1,4 @@
-package software.wings.integration.migration;
+package software.wings.integration.migration.legacy;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
