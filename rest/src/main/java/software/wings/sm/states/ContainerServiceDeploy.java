@@ -35,7 +35,6 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -155,18 +154,7 @@ public abstract class ContainerServiceDeploy extends State {
   }
 
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                        .settingAttribute(contextData.settingAttribute)
-                                                        .containerServiceName(contextData.containerElement.getName())
-                                                        .encryptionDetails(contextData.encryptedDataDetails)
-                                                        .clusterName(contextData.containerElement.getClusterName())
-                                                        .namespace(contextData.containerElement.getNamespace())
-                                                        .region(contextData.region)
-                                                        .build();
-    Optional<Integer> previousDesiredCount = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                                                 .getServiceDesiredCount(containerServiceParams);
+    Optional<Integer> previousDesiredCount = getServiceDesiredCount(contextData);
 
     if (!previousDesiredCount.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
@@ -196,21 +184,7 @@ public abstract class ContainerServiceDeploy extends State {
       if (contextData.containerElement.isUseFixedInstances()) {
         totalInstancesAvailable = contextData.containerElement.getFixedInstances();
       } else {
-        SyncTaskContext syncTaskContext =
-            aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-        ContainerServiceParams containerServiceParams =
-            ContainerServiceParams.builder()
-                .settingAttribute(contextData.settingAttribute)
-                .containerServiceName(contextData.containerElement.getName())
-                .encryptionDetails(contextData.encryptedDataDetails)
-                .clusterName(contextData.containerElement.getClusterName())
-                .namespace(contextData.containerElement.getNamespace())
-                .region(contextData.region)
-                .build();
-        LinkedHashMap<String, Integer> activeServiceCounts =
-            delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                .getActiveServiceCounts(containerServiceParams);
-        int activeCount = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
+        int activeCount = getActiveServiceCounts(contextData).values().stream().mapToInt(Integer::intValue).sum();
         totalInstancesAvailable = activeCount > 0 ? activeCount : contextData.containerElement.getMaxInstances();
       }
       return (int) Math.round(Math.min(getInstanceCount(), 100) * totalInstancesAvailable / 100.0);
@@ -223,32 +197,12 @@ public abstract class ContainerServiceDeploy extends State {
     }
   }
 
-  private boolean downsizeAllPrevious(ContextData contextData) {
-    if (getInstanceUnitType() == PERCENTAGE) {
-      return getInstanceCount() >= 100;
-    } else {
-      return contextData.containerElement.isUseFixedInstances()
-          && getInstanceCount() >= contextData.containerElement.getFixedInstances();
-    }
-  }
-
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
     List<ContainerServiceData> desiredCounts = new ArrayList<>();
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build();
-    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                        .settingAttribute(contextData.settingAttribute)
-                                                        .containerServiceName(contextData.containerElement.getName())
-                                                        .encryptionDetails(contextData.encryptedDataDetails)
-                                                        .clusterName(contextData.containerElement.getClusterName())
-                                                        .namespace(contextData.containerElement.getNamespace())
-                                                        .region(contextData.region)
-                                                        .build();
-    LinkedHashMap<String, Integer> previousCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                                                        .getActiveServiceCounts(containerServiceParams);
+    LinkedHashMap<String, Integer> previousCounts = getActiveServiceCounts(contextData);
     previousCounts.remove(newServiceData.getName());
 
-    int downsizeCount = downsizeAllPrevious(contextData)
+    int downsizeCount = contextData.deployingToHundredPercent
         ? previousCounts.values().stream().mapToInt(Integer::intValue).sum()
         : Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
 
@@ -265,6 +219,19 @@ public abstract class ContainerServiceDeploy extends State {
       downsizeCount -= previousCount - desiredCount;
     }
     return desiredCounts;
+  }
+
+  private LinkedHashMap<String, Integer> getActiveServiceCounts(ContextData contextData) {
+    return getContainerService(contextData).getActiveServiceCounts(contextData.containerServiceParams);
+  }
+
+  private Optional<Integer> getServiceDesiredCount(ContextData contextData) {
+    return getContainerService(contextData).getServiceDesiredCount(contextData.containerServiceParams);
+  }
+
+  private ContainerService getContainerService(ContextData contextData) {
+    return delegateProxyFactory.get(ContainerService.class,
+        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build());
   }
 
   private ExecutionResponse addNewInstances(ContextData contextData, CommandStateExecutionData executionData) {
@@ -501,11 +468,13 @@ public abstract class ContainerServiceDeploy extends State {
     final ContainerRollbackRequestElement rollbackElement;
     final SettingAttribute settingAttribute;
     final List<EncryptedDataDetail> encryptedDataDetails;
+    final ContainerServiceParams containerServiceParams;
     final String appId;
     final String serviceId;
     final String region;
     final String commandUnitName;
     final String infrastructureMappingId;
+    final boolean deployingToHundredPercent;
 
     ContextData(ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -541,8 +510,20 @@ public abstract class ContainerServiceDeploy extends State {
                                  -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name())
                                      && phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
                              .findFirst()
-                             .orElse(null);
+                             .orElse(ContainerServiceElement.builder().build());
       rollbackElement = context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+      containerServiceParams = ContainerServiceParams.builder()
+                                   .settingAttribute(settingAttribute)
+                                   .containerServiceName(containerElement.getName())
+                                   .encryptionDetails(encryptedDataDetails)
+                                   .clusterName(containerElement.getClusterName())
+                                   .namespace(containerElement.getNamespace())
+                                   .region(region)
+                                   .build();
+      deployingToHundredPercent = containerServiceDeploy.getInstanceUnitType() == PERCENTAGE
+          ? containerServiceDeploy.getInstanceCount() >= 100
+          : containerElement.isUseFixedInstances()
+              && containerServiceDeploy.getInstanceCount() >= containerElement.getFixedInstances();
     }
   }
 }

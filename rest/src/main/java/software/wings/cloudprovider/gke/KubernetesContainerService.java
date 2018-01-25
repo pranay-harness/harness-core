@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.gke;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -32,6 +33,22 @@ public interface KubernetesContainerService {
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   void deleteController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+
+  HorizontalPodAutoscaler createAutoscaler(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, HorizontalPodAutoscaler definition);
+
+  HorizontalPodAutoscaler getAutoscaler(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+
+  List<HorizontalPodAutoscaler> listAutoscalers(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+
+  void disableAutoscaler(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+
+  void enableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+
+  void deleteAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,

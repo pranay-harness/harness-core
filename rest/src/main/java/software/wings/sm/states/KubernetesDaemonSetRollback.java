@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Created by brett on 12/18/17
  */
+@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
@@ -98,7 +99,7 @@ public class KubernetesDaemonSetRollback extends ContainerServiceSetup {
         .withServiceType(serviceType)
         .withTargetPort(targetPort)
         .withControllerNamePrefix(controllerName)
-        .withRollbackDaemonSet(true)
+        .withRollback(true)
         .withPreviousDaemonSetYaml(rollbackElement.getPreviousDaemonSetYaml())
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .build();

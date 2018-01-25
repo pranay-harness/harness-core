@@ -2,6 +2,8 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddK8sSetupRollbackToAllK8sWorkflows;
+import migrations.all.RenameK8sDaemonSetRollback;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -15,6 +17,8 @@ public class MigrationList {
   public static List<Pair<Integer, Class<? extends Migration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends Migration>>>()
         .add(Pair.of(100, BaseMigration.class))
+        .add(Pair.of(101, RenameK8sDaemonSetRollback.class))
+        .add(Pair.of(102, AddK8sSetupRollbackToAllK8sWorkflows.class))
         .build();
   }
 }

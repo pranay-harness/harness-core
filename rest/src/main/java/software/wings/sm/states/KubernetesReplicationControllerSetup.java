@@ -21,7 +21,6 @@ import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -54,7 +53,7 @@ import java.util.List;
 public class KubernetesReplicationControllerSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
-  static final int DEFAULT_STEADY_STATE_TIMEOUT = 15;
+  static final int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   private String replicationControllerName;
   private KubernetesServiceType serviceType;
@@ -66,11 +65,13 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   private String loadBalancerIP;
   private Integer nodePort;
   private String externalName;
+  private boolean useAutoscaler;
+  private int minAutoscaleInstances;
+  private int maxAutoscaleInstances;
+  private int targetCpuUtilizationPercentage;
+
   private String commandName = "Setup Replication Controller";
 
-  /**
-   * Instantiates a new state.
-   */
   public KubernetesReplicationControllerSetup(String name) {
     super(name, KUBERNETES_REPLICATION_CONTROLLER_SETUP.name());
   }
@@ -101,29 +102,12 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
       isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
     }
 
-    String previousDaemonSetYaml = null;
-    if (isDaemonSet) {
-      DelegateTask.SyncTaskContext syncTaskContext =
-          aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
-      SettingAttribute settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
-          ? aSettingAttribute()
-                .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
-                .build()
-          : settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-          (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
-      ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                          .settingAttribute(settingAttribute)
-                                                          .containerServiceName(controllerNamePrefix)
-                                                          .encryptionDetails(encryptionDetails)
-                                                          .clusterName(clusterName)
-                                                          .build();
-      previousDaemonSetYaml =
-          delegateProxyFactory.get(ContainerService.class, syncTaskContext).getDaemonSetYaml(containerServiceParams);
-    }
-
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
+    ContextData contextData = buildContextData(context, app, infrastructureMapping, controllerNamePrefix, clusterName);
+    String previousDaemonSetYaml = isDaemonSet ? getDaemonSetYaml(contextData) : null;
+    List<String> activeAutoscalers = isDaemonSet ? null : getActiveAutoscalers(contextData);
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -143,7 +127,12 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .withTargetPort(targetPort)
         .withControllerNamePrefix(controllerNamePrefix)
         .withPreviousDaemonSetYaml(previousDaemonSetYaml)
+        .withActiveAutoscalers(activeAutoscalers)
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
+        .withUseAutoscaler(useAutoscaler)
+        .withMinAutoscaleInstances(minAutoscaleInstances)
+        .withMaxAutoscaleInstances(maxAutoscaleInstances)
+        .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
         .build();
   }
 
@@ -151,7 +140,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    int maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
+    int maxInstances = getMaxInstances() == 0 ? 2 : getMaxInstances();
     int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout =
@@ -175,6 +164,14 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName());
       }
     }
+
+    if (useAutoscaler) {
+      containerServiceElementBuilder.useAutoscaler(true)
+          .minAutoscaleInstances(minAutoscaleInstances)
+          .maxAutoscaleInstances(maxAutoscaleInstances)
+          .targetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
+    }
+
     return containerServiceElementBuilder.build();
   }
 
@@ -192,6 +189,19 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   @Override
   public String getCommandName() {
     return commandName;
+  }
+
+  private String getDaemonSetYaml(ContextData contextData) {
+    return getContainerService(contextData.app).getDaemonSetYaml(contextData.containerServiceParams);
+  }
+
+  private List<String> getActiveAutoscalers(ContextData contextData) {
+    return getContainerService(contextData.app).getActiveAutoscalers(contextData.containerServiceParams);
+  }
+
+  private ContainerService getContainerService(Application app) {
+    return delegateProxyFactory.get(
+        ContainerService.class, aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build());
   }
 
   public void setCommandName(String commandName) {
@@ -290,5 +300,65 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
 
   public void setExternalName(String externalName) {
     this.externalName = externalName;
+  }
+
+  public boolean isUseAutoscaler() {
+    return useAutoscaler;
+  }
+
+  public void setUseAutoscaler(boolean useAutoscaler) {
+    this.useAutoscaler = useAutoscaler;
+  }
+
+  public int getMinAutoscaleInstances() {
+    return minAutoscaleInstances;
+  }
+
+  public void setMinAutoscaleInstances(int minAutoscaleInstances) {
+    this.minAutoscaleInstances = minAutoscaleInstances;
+  }
+
+  public int getMaxAutoscaleInstances() {
+    return maxAutoscaleInstances;
+  }
+
+  public void setMaxAutoscaleInstances(int maxAutoscaleInstances) {
+    this.maxAutoscaleInstances = maxAutoscaleInstances;
+  }
+
+  public int getTargetCpuUtilizationPercentage() {
+    return targetCpuUtilizationPercentage;
+  }
+
+  public void setTargetCpuUtilizationPercentage(int targetCpuUtilizationPercentage) {
+    this.targetCpuUtilizationPercentage = targetCpuUtilizationPercentage;
+  }
+
+  private ContextData buildContextData(ExecutionContext context, Application app,
+      InfrastructureMapping infrastructureMapping, String controllerNamePrefix, String clusterName) {
+    return new ContextData(context, app, infrastructureMapping, controllerNamePrefix, clusterName, this);
+  }
+
+  protected static class ContextData {
+    final Application app;
+    final ContainerServiceParams containerServiceParams;
+
+    ContextData(ExecutionContext context, Application app, InfrastructureMapping infrastructureMapping,
+        String controllerNamePrefix, String clusterName, KubernetesReplicationControllerSetup setup) {
+      this.app = app;
+      SettingAttribute settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+          ? aSettingAttribute()
+                .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
+                .build()
+          : setup.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      List<EncryptedDataDetail> encryptionDetails = setup.secretManager.getEncryptionDetails(
+          (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+      containerServiceParams = ContainerServiceParams.builder()
+                                   .settingAttribute(settingAttribute)
+                                   .containerServiceName(controllerNamePrefix)
+                                   .encryptionDetails(encryptionDetails)
+                                   .clusterName(clusterName)
+                                   .build();
+    }
   }
 }

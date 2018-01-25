@@ -76,6 +76,7 @@ import software.wings.sm.states.KubernetesDaemonSetRollback;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
 import software.wings.sm.states.KubernetesReplicationControllerRollback;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
+import software.wings.sm.states.KubernetesSetupRollback;
 import software.wings.sm.states.LogzAnalysisState;
 import software.wings.sm.states.NewRelicDeploymentMarkerState;
 import software.wings.sm.states.NewRelicState;
@@ -309,6 +310,10 @@ public enum StateType implements StateTypeDescriptor {
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   KUBERNETES_DAEMON_SET_ROLLBACK(KubernetesDaemonSetRollback.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+
+  KUBERNETES_SETUP_ROLLBACK(KubernetesSetupRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 

@@ -137,9 +137,13 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
     }
     if (containerSetupParams != null && containerSetupParams instanceof KubernetesSetupParams) {
-      String previousDaemonSetYaml = ((KubernetesSetupParams) containerSetupParams).getPreviousDaemonSetYaml();
-      if (previousDaemonSetYaml != null) {
-        commandStepExecutionSummary.setPreviousDaemonSetYaml(previousDaemonSetYaml);
+      KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
+      commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
+      if (kubernetesSetupParams.getActiveAutoscalers() != null) {
+        commandStepExecutionSummary.setPreviousActiveAutoscalers(kubernetesSetupParams.getActiveAutoscalers());
+      }
+      if (kubernetesSetupParams.getPreviousDaemonSetYaml() != null) {
+        commandStepExecutionSummary.setPreviousDaemonSetYaml(kubernetesSetupParams.getPreviousDaemonSetYaml());
       }
     }
     commandStepExecutionSummary.setClusterName(clusterName);

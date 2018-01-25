@@ -4,6 +4,7 @@ import static software.wings.beans.Schema.SCHEMA_ID;
 import static software.wings.beans.Schema.SchemaBuilder.aSchema;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import migrations.Migration;
 import migrations.MigrationList;
@@ -26,6 +27,7 @@ public class MigrationServiceImpl implements MigrationService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private Injector injector;
 
   @Override
   public void runMigrations() {
@@ -47,7 +49,7 @@ public class MigrationServiceImpl implements MigrationService {
         logger.info("[Migration] - Updating schema version from {} to {}", schema.getVersion(), maxVersion);
         for (int i = schema.getVersion() + 1; i <= maxVersion; i++) {
           logger.info("[Migration] - Migrating to version {}...", i);
-          migrations.get(i).newInstance().migrate();
+          injector.getInstance(migrations.get(i)).migrate();
         }
         logger.info("[Migration] - Migration complete");
 
