@@ -194,9 +194,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
   }
 
-  private char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
-                                                     InvalidKeyException, IllegalBlockSizeException,
-                                                     BadPaddingException, InvalidAlgorithmParameterException {
+  public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
+                                                           InvalidKeyException, IllegalBlockSizeException,
+                                                           BadPaddingException, InvalidAlgorithmParameterException {
     Cipher cipher = Cipher.getInstance("AES");
     cipher.init(Cipher.ENCRYPT_MODE, key);
 
@@ -204,9 +204,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return Base64.getEncoder().encodeToString(enc).toCharArray();
   }
 
-  private String decrypt(char[] src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
-                                                     InvalidKeyException, IllegalBlockSizeException,
-                                                     BadPaddingException, InvalidAlgorithmParameterException {
+  public static String decrypt(char[] src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
+                                                           InvalidKeyException, IllegalBlockSizeException,
+                                                           BadPaddingException, InvalidAlgorithmParameterException {
     if (src == null) {
       return null;
     }
@@ -218,7 +218,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return new String(cipher.doFinal(decodeBase64src));
   }
 
-  private byte[] getByteArray(ByteBuffer b) {
+  public byte[] getByteArray(ByteBuffer b) {
     byte[] byteArray = new byte[b.remaining()];
     b.get(byteArray);
     return byteArray;

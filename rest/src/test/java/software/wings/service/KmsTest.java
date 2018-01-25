@@ -11,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -22,7 +23,6 @@ import com.google.inject.Inject;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
@@ -95,10 +95,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import javax.crypto.spec.SecretKeySpec;
+
 /**
  * Created by rsingh on 9/29/17.
  */
 public class KmsTest extends WingsBaseTest {
+  private static final String plainTextKey = "1234567890123456";
+
   @Inject private KmsService kmsService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
@@ -107,6 +111,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private EncryptionService encryptionService;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
+  @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   final int numOfEncryptedValsForKms = 3;
@@ -120,15 +125,23 @@ public class KmsTest extends WingsBaseTest {
   private KmsTransitionEventListener transitionEventListener;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     initMocks(this);
     appId = UUID.randomUUID().toString();
     workflowName = UUID.randomUUID().toString();
     envId = UUID.randomUUID().toString();
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecutionBuilder.aWorkflowExecution().withName(workflowName).withEnvId(envId).build());
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-        .thenReturn(new SecretManagementDelegateServiceImpl());
+    when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyObject())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
+    });
+
+    when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
+    });
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(secretManagementDelegateService);
     doNothing().when(newRelicService).validateConfig(anyObject(), anyObject());
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
@@ -136,6 +149,7 @@ public class KmsTest extends WingsBaseTest {
     setInternalState(configService, "secretManager", secretManager);
     setInternalState(settingValidationService, "newRelicService", newRelicService);
     setInternalState(settingsService, "settingValidationService", settingValidationService);
+    setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
   }
@@ -162,7 +176,7 @@ public class KmsTest extends WingsBaseTest {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
-    kmsConfig.setSecretKey(UUID.randomUUID().toString());
+    kmsConfig.setAccessKey("invalidKey");
 
     try {
       kmsService.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
@@ -1613,7 +1627,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore // TODO: This test is intermittent - fix it
   public void listKmsConfigMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig1 = getKmsConfig();
@@ -2873,5 +2886,30 @@ public class KmsTest extends WingsBaseTest {
   private void stopTransitionListener(Thread thread) throws InterruptedException {
     transitionEventListener.shutDown();
     thread.join();
+  }
+
+  private EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
+    if (kmsConfig.getAccessKey().equals("invalidKey")) {
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR);
+    }
+    char[] encryptedValue = value == null ? null
+                                          : SecretManagementDelegateServiceImpl.encrypt(
+                                                new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+
+    return EncryptedData.builder()
+        .encryptionKey(plainTextKey)
+        .encryptedValue(encryptedValue)
+        .encryptionType(EncryptionType.KMS)
+        .kmsId(kmsConfig.getUuid())
+        .enabled(true)
+        .parentIds(new HashSet<>())
+        .accountId(accountId)
+        .build();
+  }
+
+  public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws Exception {
+    return SecretManagementDelegateServiceImpl
+        .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
+        .toCharArray();
   }
 }
