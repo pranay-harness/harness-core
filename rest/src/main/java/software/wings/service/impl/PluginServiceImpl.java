@@ -24,7 +24,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
-import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.NewRelicConfig;
@@ -100,15 +99,6 @@ public class PluginServiceImpl implements PluginService {
             .withType("ARTIFACTORY")
             .withPluginCategories(asList(Artifact))
             .withUiSchema(readUiSchema("ARTIFACTORY"))
-            .build(),
-        anAccountPlugin()
-            .withSettingClass(GitConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("Git")
-            .withType("GIT")
-            .withPluginCategories(asList(Artifact))
-            .withUiSchema(readUiSchema("GIT"))
             .build(),
         anAccountPlugin()
             .withSettingClass(AppDynamicsConfig.class)
