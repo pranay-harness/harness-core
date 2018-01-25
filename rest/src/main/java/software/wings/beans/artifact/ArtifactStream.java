@@ -251,6 +251,8 @@ public abstract class ArtifactStream extends Base {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("uuid", getUuid())
+        .add("serviceId", serviceId)
         .add("sourceName", sourceName)
         .add("artifactStreamType", artifactStreamType)
         .add("settingId", settingId)
