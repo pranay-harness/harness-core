@@ -6,6 +6,16 @@
 
 pushd `dirname $0` > /dev/null && cd ../.. && BASEDIR=$(pwd -L) && popd > /dev/null
 
+CHECK_CONFLICTS=hook.pre-push.check-conflicts
+if [ "`git config $CHECK_CONFLICTS`" == "false" ]
+then
+    echo '\033[0;31m' checking left conflicts is disabled - to enable: '\033[0;37m'git config --unset $CHECK_CONFLICTS '\033[0m'
+else
+    echo '\033[0;34m' checking left conflicts  ... to disable: '\033[0;37m'git config --add $CHECK_CONFLICTS false '\033[0m'
+
+    . $BASEDIR/toolset/git-hooks/check_conflicts.sh
+fi
+
 CHECKSTYLE_PROPERTY=hook.pre-push.stylecheck
 if [ "`git config $CHECKSTYLE_PROPERTY`" == "false" ]
 then
